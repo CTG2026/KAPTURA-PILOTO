@@ -746,7 +746,7 @@ async function guardarAsignacion() {
   const fecha     = document.getElementById('asig-fecha').value;
   if (!patente||!conductor||!cliente) { mostrarToast('Completa todos los campos'); return; }
   const svId = 'SV-' + Date.now().toString().slice(-5);
-  const nuevo = {id: svId, patente, conductor, cliente, origen, fecha, estado:'asignado', margen:0, puntos_entrega:1, puntos_done:0, created_at: new Date().toISOString()};
+  const nuevo = {servicio_id: svId, patente, conductor, cliente, origen, fecha, estado:'asignado', margen:0, puntos_entrega:1, puntos_done:0, created_at: new Date().toISOString()};
   const {error} = await supa.from('servicios_piloto').insert(nuevo);
   if (error) { mostrarToast('Error guardando: ' + error.message); return; }
   DB.servicios.unshift(nuevo);
