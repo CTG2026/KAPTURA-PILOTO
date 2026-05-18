@@ -736,6 +736,8 @@ async function iniciarSvc(idx) {
   mostrarToast('✓ Servicio iniciado');
 }
 
+function abrirAsignar() { document.getElementById('modal-asignar').style.display = 'flex'; poblarSelects(); }
+
 async function guardarAsignacion() {
   const patente   = document.getElementById('asig-patente').value;
   const conductor = document.getElementById('asig-conductor').value;
