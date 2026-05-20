@@ -800,7 +800,7 @@ function guiaHTML(pi,gi,g) {
     <div class="form-grid" style="margin-top:6px">
       <div class="form-field"><label class="lbl">N° Guía</label><input class="inp ${g.num_guia?'ok':''}" value="${g.num_guia||''}" placeholder="Número" onchange="puntosData[${pi}].guias[${gi}].num_guia=this.value"></div>
       <div class="form-field"><label class="lbl">Fecha Guía</label><input class="inp ${g.fecha?'ok':''}" value="${g.fecha||''}" placeholder="DD/MM/AAAA" onchange="puntosData[${pi}].guias[${gi}].fecha=this.value"></div>
-      <div class="form-field full"><label class="lbl">Cliente en Guía</label><input class="inp" value="${g.cliente_guia||''}" placeholder="Nombre en guía" onchange="puntosData[${pi}].guias[${gi}].cliente_guia=this.value"></div>
+
     </div>
     ${gi>0 ? `<button class="btn btn-red btn-sm" onclick="eliminarGuia(${pi},${gi})" style="margin-top:6px;width:100%">✕ Eliminar guía</button>` : ''}
   </div>`;
