@@ -364,7 +364,7 @@ body{font-family:'Barlow',sans-serif;background:var(--gray-50);color:var(--gray-
 // ══════════════════════════════════════════
 const SUPA_URL  = 'https://aqunzrukuruwzwywnurq.supabase.co';
 const SUPA_KEY  = 'sb_publishable_70t9UxFlcqYDj7AMybsrHg__IMGNA8C';
-const CLAUDE_KEY= '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';
+let CLAUDE_KEY = localStorage.getItem('kaptura_claude_key') || '';
 
 const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
@@ -381,6 +381,7 @@ let puntosData = []; // [{guias:[], destino:''}]
 // INIT
 // ══════════════════════════════════════════
 async function init() {
+  CLAUDE_KEY = localStorage.getItem('kaptura_claude_key') || '';
   document.getElementById('filtro-fecha').value = hoyStr;
   const hdrFecha = `${hoy.getDate()} ${MESES[hoy.getMonth()]} ${hoy.getFullYear()}`;
   document.getElementById('hdr-info').textContent = hdrFecha;
@@ -964,6 +965,8 @@ async function guardarConfig() {
     DB.config[c.clave] = parseFloat(c.val)||0;
     await supa.from('kaptura_config').upsert({clave:c.clave, valor:c.val},{onConflict:'clave'});
   }
+  const ck = document.getElementById('cfg-claude-key').value.trim();
+  if (ck) { localStorage.setItem('kaptura_claude_key', ck); CLAUDE_KEY = ck; }
   toast('✓ Configuración guardada');
 }
 
@@ -971,6 +974,11 @@ async function guardarConfig() {
 // UTILS
 // ══════════════════════════════════════════
 function setTab(nombre,btn) {
+  if (nombre==='config') {
+    const stored = localStorage.getItem('kaptura_claude_key')||'';
+    const el = document.getElementById('cfg-claude-key');
+    if (el) el.value = stored ? '••••••••••••••••' : '';
+  }
   ['servicios','flota','clientes','config'].forEach(t=>{
     document.getElementById(`tab-${t}`).style.display = t===nombre?'block':'none';
   });
@@ -979,6 +987,7 @@ function setTab(nombre,btn) {
 }
 
 function resetFecha() {
+  CLAUDE_KEY = localStorage.getItem('kaptura_claude_key') || '';
   document.getElementById('filtro-fecha').value = hoyStr;
   renderServicios();
 }
