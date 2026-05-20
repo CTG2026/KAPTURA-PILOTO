@@ -736,8 +736,20 @@ async function procesarFotoGuia(input,pi,gi) {
         })
       });
       const data = await resp.json();
-      const txt = data.content[0].text;
-      try { json = JSON.parse(txt.replace(/```json|```/g,'').trim()); } catch(e){}
+      // Manejar respuesta de Claude correctamente
+      let txt = '';
+      if (data && data.content && Array.isArray(data.content)) {
+        const textBlock = data.content.find(b => b.type === 'text');
+        txt = textBlock ? textBlock.text : '';
+      } else if (data && data.error) {
+        throw new Error(data.error.message || 'Error API Claude');
+      }
+      try { 
+        const cleaned = txt.replace(/```json|```/g,'').trim();
+        json = JSON.parse(cleaned); 
+      } catch(e){ 
+        console.warn('Parse error:', txt);
+      }
     }
     if (json?.num_guia) {
       puntosData[pi].guias[gi] = {
