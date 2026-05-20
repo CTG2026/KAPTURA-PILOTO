@@ -737,7 +737,23 @@ async function procesarFotoGuia(input,pi,gi) {
           max_tokens:500,
           messages:[{role:'user',content:[
             {type:'image',source:{type:'base64',media_type:file.type,data:b64}},
-            {type:'text',text:'Lee esta guía de despacho chilena y extrae en JSON: {num_guia, fecha_emision, cliente, destino, kg, rut_emisor}. El num_guia es crítico y debe ser un número. Solo JSON, sin explicación.'}
+            {type:'text',text:`Lee esta guía de despacho chilena.
+
+IMPORTANTE: El campo "cliente" debe ser la EMPRESA QUE EMITE O DESPACHA la guía (quien aparece en el encabezado superior como empresa emisora, su razón social o nombre comercial). NO es el destinatario del producto.
+
+Nuestros clientes registrados son: ${DB.clientes.map(c=>c.nombre).join(', ')}.
+
+Si el emisor de la guía coincide o es similar a alguno de nuestros clientes registrados, usa exactamente ese nombre. Si no coincide, usa el nombre que aparece en la guía.
+
+Extrae en JSON: {num_guia, fecha_emision, cliente, destino, kg, rut_emisor}
+- num_guia: número de la guía (solo dígitos)
+- fecha_emision: fecha en formato DD/MM/AAAA
+- cliente: empresa emisora de la guía
+- destino: lugar o dirección de entrega
+- kg: cantidad en kg si aparece
+- rut_emisor: RUT del emisor
+
+Solo JSON, sin explicación.`}
           ]}]
         })
       });
