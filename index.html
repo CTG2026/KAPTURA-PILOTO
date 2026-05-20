@@ -891,7 +891,6 @@ async function guardarSvc(estado) {
     fecha_guia:g0.fecha, cliente_guia:g0.cliente_guia,
     dias_servicio:dias, margen_servicio:margen, margen:margen,
     puntos_entrega:totalPts,
-    updated_at:new Date().toISOString()
   };
   const {error} = await supa.from('servicios_piloto').update(upd).eq('id',svcActivo.id);
   if (error) { toast('Error: '+error.message); return; }
