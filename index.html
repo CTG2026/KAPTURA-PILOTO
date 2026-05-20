@@ -285,6 +285,7 @@ body{font-family:'Barlow',sans-serif;background:var(--gray-50);color:var(--gray-
         <div class="form-field"><label class="lbl">Combustible <span class="badge-auto">AUTO</span></label><input class="inp auto" id="reg-comb" readonly></div>
         <div class="form-field"><label class="lbl">Peajes/TAG <span class="badge-pend">MANUAL</span></label><input class="inp pend" id="reg-peajes" type="number" placeholder="0" oninput="calcMargen()"></div>
         <div class="form-field"><label class="lbl">Días Servicio</label><input class="inp" id="reg-dias" type="number" value="1" min="1" oninput="calcMargen()"></div>
+        <div class="form-field"><label class="lbl">Fecha en Ruta <span class="badge-pend">GPS</span></label><input class="inp pend" id="reg-fecha-ruta" type="date" onchange="recargarGPSyTAG()"></div>
         <div class="form-field"><label class="lbl">Costo Conductor <span class="badge-auto">AUTO</span></label><input class="inp auto" id="reg-cond-costo" readonly></div>
       </div>
 
@@ -301,7 +302,7 @@ body{font-family:'Barlow',sans-serif;background:var(--gray-50);color:var(--gray-
       <div class="sec-title">C — Comercial</div>
       <div class="form-grid">
         <div class="form-field"><label class="lbl">Cliente</label><select class="inp" id="reg-cliente" onchange="buscarTarifa()"></select></div>
-        <div class="form-field"><label class="lbl">Destino</label><input class="inp" id="reg-destino" placeholder="ej: Valparaíso" oninput="buscarTarifa()"></div>
+        <div class="form-field"><label class="lbl">Destino <span id="lbl-destino-alerta" style="display:none;font-size:9px;font-weight:800;background:#FEF3C7;color:#92400E;padding:1px 5px;border-radius:3px">⚠ CONFIRMAR</span></label><input class="inp" id="reg-destino" placeholder="ej: Valparaíso" oninput="onDestinoChange()"></div>
         <div class="form-field"><label class="lbl">Tarifa <span id="lbl-tarifa-badge" class="badge-pend">PENDIENTE</span></label><input class="inp pend" id="reg-tarifa" type="number" placeholder="0" oninput="calcMargen()"></div>
         <div class="form-field"><label class="lbl">Bono Estadía ($)</label><input class="inp" id="reg-bono" type="number" placeholder="0" oninput="calcMargen()"></div>
         <div class="form-field"><label class="lbl">Total Ingreso <span class="badge-auto">AUTO</span></label><input class="inp auto" id="reg-ingreso" readonly></div>
@@ -643,6 +644,8 @@ function abrirRegistrar(i) {
   document.getElementById('reg-bono').value   = s.bono_estadia||'';
   document.getElementById('reg-nguia').value  = s.num_guia||'';
   document.getElementById('reg-destino').value= s.destino||'';
+  // Fecha en ruta: usar fecha del servicio por defecto
+  document.getElementById('reg-fecha-ruta').value = s.fecha||hoyStr;
   if (s.cliente) document.getElementById('reg-cliente').value = s.cliente;
   // CF y mantención
   const c = DB.config;
@@ -653,7 +656,26 @@ function abrirRegistrar(i) {
   calcMargen();
   document.getElementById('modal-registrar').style.display='flex';
   // Auto-cargar GPS y calcular peajes TAG
-  cargarGPSyTAG(s.patente, s.fecha);
+  cargarGPSyTAG(s.patente, s.fecha||hoyStr);
+}
+
+function recargarGPSyTAG() {
+  if (!svcActivo) return;
+  const fecha = document.getElementById('reg-fecha-ruta').value;
+  if (fecha) cargarGPSyTAG(svcActivo.patente, fecha);
+}
+
+function onDestinoChange() {
+  // Cuando el usuario escribe destino manualmente, recalcular todo
+  buscarTarifa();
+  // Mostrar alerta de confirmación
+  const alerta = document.getElementById('lbl-destino-alerta');
+  if (alerta) alerta.style.display = 'inline';
+  // Recalcular TAG con el destino nuevo
+  if (svcActivo) {
+    const fecha = document.getElementById('reg-fecha-ruta').value || svcActivo.fecha;
+    cargarGPSyTAG(svcActivo.patente, fecha);
+  }
 }
 
 async function cargarGPSyTAG(patente, fecha) {
@@ -675,13 +697,14 @@ async function cargarGPSyTAG(patente, fecha) {
       // Sugerir destino desde GPS si el campo está vacío
       if (gps.ultimo_destino) {
         const destEl = document.getElementById('reg-destino');
-        if (!destEl.value) {
-          // Extraer ciudad del destino GPS
+        if (!destEl.value || destEl.value.length < 3) {
           const parts = gps.ultimo_destino.split(',');
           const ciudad = parts.length > 1 ? parts[1].trim() : parts[0].trim();
           destEl.value = ciudad;
-          destEl.className = 'inp pend'; // amarillo = requiere confirmación
+          destEl.className = 'inp pend';
           destEl.title = `GPS sugiere: ${gps.ultimo_destino}`;
+          const alerta = document.getElementById('lbl-destino-alerta');
+          if (alerta) alerta.style.display = 'inline';
           buscarTarifa();
         }
       }
