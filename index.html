@@ -224,7 +224,7 @@ body{font-family:'Barlow',sans-serif;background:var(--gray-50);color:var(--gray-
         </div>
         <div class="form-field">
           <label class="lbl">Cliente</label>
-          <select class="inp" id="asig-cliente"></select>
+          <select class="inp" id="asig-cliente" onchange="checkOtroCliente()"></select>
         </div>
         <div class="form-field">
           <label class="lbl">Origen</label>
@@ -241,6 +241,10 @@ body{font-family:'Barlow',sans-serif;background:var(--gray-50);color:var(--gray-
         <div class="form-field full" id="origen-custom-wrap" style="display:none">
           <label class="lbl">Especifica el origen</label>
           <input class="inp" id="asig-origen-custom" placeholder="Escribe el origen">
+        </div>
+        <div class="form-field full" id="cliente-custom-wrap" style="display:none">
+          <label class="lbl">Nombre del cliente nuevo</label>
+          <input class="inp" id="asig-cliente-custom" placeholder="Escribe el nombre del cliente">
         </div>
         <div class="form-field full">
           <label class="lbl">Fecha del Servicio</label>
@@ -360,7 +364,7 @@ body{font-family:'Barlow',sans-serif;background:var(--gray-50);color:var(--gray-
 // ══════════════════════════════════════════
 const SUPA_URL  = 'https://aqunzrukuruwzwywnurq.supabase.co';
 const SUPA_KEY  = 'sb_publishable_70t9UxFlcqYDj7AMybsrHg__IMGNA8C';
-const CLAUDE_KEY= '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';
+const CLAUDE_KEY= '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';
 
 const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
@@ -472,7 +476,7 @@ function cardHTML(s,i) {
         ${s.estado==='asignado' ? `<button class="btn btn-primary btn-sm" onclick="iniciarSvc(${i})">▶ Iniciar</button>` : ''}
         ${['en_proceso','registrando','borrador','asignado'].includes(s.estado) ? `<button class="btn btn-purple btn-sm" onclick="abrirRegistrar(${i})">📋 Registrar</button>` : ''}
         <button class="btn btn-outline btn-sm" onclick="abrirAvance(${i})">Ver ${s.margen_servicio||s.margen ? fmt(s.margen_servicio||s.margen) : ''}</button>
-        <button class="btn btn-red btn-sm" onclick="confirmarEliminar(${i})">✕</button>
+        <button class="btn btn-red btn-sm" onclick="confirmarEliminar(${i})">Eliminar</button>
       </div>
     </div>
   </div>`;
@@ -493,7 +497,7 @@ function filaHTML(s,i) {
       ${s.estado==='asignado' ? `<button class="btn btn-primary btn-sm" onclick="iniciarSvc(${i})">▶</button>` : ''}
       ${['en_proceso','registrando','borrador','asignado'].includes(s.estado) ? `<button class="btn btn-purple btn-sm" onclick="abrirRegistrar(${i})">📋</button>` : ''}
       <button class="btn btn-outline btn-sm" onclick="abrirAvance(${i})">Ver</button>
-      <button class="btn btn-red btn-sm" onclick="confirmarEliminar(${i})">✕</button>
+      <button class="btn btn-red btn-sm" onclick="confirmarEliminar(${i})">Eliminar</button>
     </div></td>
   </tr>`;
 }
@@ -552,6 +556,11 @@ function abrirAsignar() {
   document.getElementById('modal-asignar').style.display='flex';
 }
 
+function checkOtroCliente() {
+  const v = document.getElementById('asig-cliente').value;
+  document.getElementById('cliente-custom-wrap').style.display = v==='__otro__' ? 'block' : 'none';
+}
+
 function checkOtroOrigen() {
   const v = document.getElementById('asig-origen').value;
   document.getElementById('origen-custom-wrap').style.display = v==='otro' ? 'block' : 'none';
@@ -562,16 +571,24 @@ async function siguienteNumSvc() {
   const {data} = await supa.from('servicios_piloto').select('servicio_id').not('servicio_id','is',null).order('created_at',{ascending:false}).limit(100);
   let max = 0;
   (data||[]).forEach(r=>{
-    const m = (r.servicio_id||'').match(/S-(\d+)/);
+    const m = (r.servicio_id||'').match(/S-(\d+)/) || (r.servicio_id||'').match(/SV-(\d+)/);
     if (m) max = Math.max(max, parseInt(m[1]));
   });
-  return `S-${String(max+1).padStart(2,'0')}`;
+  return `S-${String(max+1).padStart(2,'0')}`;  // correlativo
 }
 
 async function guardarAsignacion() {
   const patente   = document.getElementById('asig-patente').value;
   const conductor = document.getElementById('asig-conductor').value;
-  const cliente   = document.getElementById('asig-cliente').value;
+  const clienteSel = document.getElementById('asig-cliente').value;
+  const clienteNuevo = document.getElementById('asig-cliente-custom').value.trim();
+  const cliente = clienteSel==='__otro__' ? clienteNuevo : clienteSel;
+  if (clienteSel==='__otro__' && clienteNuevo) {
+    // Guardar nuevo cliente en Supabase
+    await supa.from('kaptura_clientes').insert({nombre:clienteNuevo, condicion_pago:'30 días'});
+    DB.clientes.push({nombre:clienteNuevo, condicion_pago:'30 días'});
+    poblarSelects();
+  }
   const origenSel = document.getElementById('asig-origen').value;
   const origen    = origenSel==='otro' ? document.getElementById('asig-origen-custom').value : origenSel;
   const fecha     = document.getElementById('asig-fecha').value;
