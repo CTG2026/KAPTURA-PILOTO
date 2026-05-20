@@ -273,6 +273,12 @@ body{font-family:'Barlow',sans-serif;background:var(--gray-50);color:var(--gray-
     </div>
     <div class="modal-body">
 
+      <!-- FECHA EN RUTA - PRIMERO -->
+      <div style="background:#FEF3C7;border-radius:8px;padding:10px 12px;margin-bottom:12px;border:1px solid #F59E0B">
+        <div style="font-size:9px;font-weight:800;color:#92400E;letter-spacing:0.1em;margin-bottom:6px">⚠ FECHA EN QUE SE REALIZÓ EL SERVICIO (para leer GPS correcto)</div>
+        <input class="inp" id="reg-fecha-ruta" type="date" onchange="recargarGPSyTAG()" style="border-color:#F59E0B">
+      </div>
+
       <!-- PUNTOS Y GUÍAS -->
       <div id="puntos-container"></div>
       <button class="btn btn-outline btn-sm" onclick="agregarPunto()" style="margin-bottom:14px;width:100%">+ Agregar Punto de Entrega</button>
@@ -285,7 +291,7 @@ body{font-family:'Barlow',sans-serif;background:var(--gray-50);color:var(--gray-
         <div class="form-field"><label class="lbl">Combustible <span class="badge-auto">AUTO</span></label><input class="inp auto" id="reg-comb" readonly></div>
         <div class="form-field"><label class="lbl">Peajes/TAG <span class="badge-pend">MANUAL</span></label><input class="inp pend" id="reg-peajes" type="number" placeholder="0" oninput="calcMargen()"></div>
         <div class="form-field"><label class="lbl">Días Servicio</label><input class="inp" id="reg-dias" type="number" value="1" min="1" oninput="calcMargen()"></div>
-        <div class="form-field"><label class="lbl">Fecha en Ruta <span class="badge-pend">GPS</span></label><input class="inp pend" id="reg-fecha-ruta" type="date" onchange="recargarGPSyTAG()"></div>
+
         <div class="form-field"><label class="lbl">Costo Conductor <span class="badge-auto">AUTO</span></label><input class="inp auto" id="reg-cond-costo" readonly></div>
       </div>
 
@@ -619,7 +625,15 @@ async function iniciarSvc(i) {
 
 async function confirmarEliminar(i) {
   const s = DB.servicios[i];
+  if (!s) { toast('Error: servicio no encontrado'); return; }
   if (!confirm(`¿Eliminar ${s.servicio_id||'este servicio'}?`)) return;
+  if (!s.id) {
+    // Sin ID en Supabase, solo eliminar localmente
+    DB.servicios.splice(i,1);
+    renderServicios(); renderKPIs();
+    toast('✓ Servicio eliminado');
+    return;
+  }
   const {error} = await supa.from('servicios_piloto').delete().eq('id',s.id);
   if (error) { toast('Error: '+error.message); return; }
   DB.servicios.splice(i,1);
@@ -1010,7 +1024,15 @@ async function guardarSvc(estado) {
     dias_servicio:dias, margen_servicio:margen, margen:margen,
     puntos_entrega:totalPts,
   };
-  const {error} = await supa.from('servicios_piloto').update(upd).eq('id',svcActivo.id);
+  let error = null;
+  if (svcActivo.id) {
+    const res = await supa.from('servicios_piloto').update(upd).eq('id',svcActivo.id);
+    error = res.error;
+  } else {
+    // Insert nuevo si no tiene ID
+    const res = await supa.from('servicios_piloto').insert({...upd, servicio_id:svcActivo.servicio_id, patente:svcActivo.patente, conductor:svcActivo.conductor, cliente:svcActivo.cliente, origen:svcActivo.origen, fecha:svcActivo.fecha});
+    error = res.error;
+  }
   if (error) { toast('Error: '+error.message); return; }
   Object.assign(DB.servicios[svcActivo._idx], upd, {_puntos:puntosData});
   cerrar('modal-registrar');
@@ -1021,8 +1043,10 @@ async function guardarSvc(estado) {
 async function eliminarServicio() {
   if (!svcActivo) return;
   if (!confirm('¿Eliminar este servicio?')) return;
-  const {error} = await supa.from('servicios_piloto').delete().eq('id',svcActivo.id);
-  if (error) { toast('Error: '+error.message); return; }
+  if (svcActivo.id) {
+    const {error} = await supa.from('servicios_piloto').delete().eq('id',svcActivo.id);
+    if (error) { toast('Error: '+error.message); return; }
+  }
   DB.servicios.splice(svcActivo._idx,1);
   cerrar('modal-registrar');
   renderServicios(); renderKPIs();
