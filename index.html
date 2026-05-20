@@ -652,6 +652,85 @@ function abrirRegistrar(i) {
   calcCombustible();
   calcMargen();
   document.getElementById('modal-registrar').style.display='flex';
+  // Auto-cargar GPS y calcular peajes TAG
+  cargarGPSyTAG(s.patente, s.fecha);
+}
+
+async function cargarGPSyTAG(patente, fecha) {
+  if (!patente || !fecha) return;
+  try {
+    // 1. Buscar GPS del equipo en la fecha
+    const {data: gps} = await supa.from('kaptura_gps_sessions')
+      .select('*').eq('patente', patente).eq('fecha', fecha).single();
+    
+    if (gps && gps.km_total > 0) {
+      // Cargar km automáticamente
+      const kmEl = document.getElementById('reg-km');
+      if (!kmEl.value || parseFloat(kmEl.value) === 0) {
+        kmEl.value = Math.round(gps.km_total);
+        kmEl.className = 'inp ok';
+        calcCombustible();
+        toast(`✓ GPS: ${Math.round(gps.km_total)} km cargados para ${patente}`);
+      }
+      // Sugerir destino desde GPS si el campo está vacío
+      if (gps.ultimo_destino) {
+        const destEl = document.getElementById('reg-destino');
+        if (!destEl.value) {
+          // Extraer ciudad del destino GPS
+          const parts = gps.ultimo_destino.split(',');
+          const ciudad = parts.length > 1 ? parts[1].trim() : parts[0].trim();
+          destEl.value = ciudad;
+          destEl.className = 'inp pend'; // amarillo = requiere confirmación
+          destEl.title = `GPS sugiere: ${gps.ultimo_destino}`;
+          buscarTarifa();
+        }
+      }
+      // 2. Calcular peajes TAG cruzando addresses con porticos_tag
+      if (gps.addresses_json && DB.porticos.length > 0) {
+        let addresses = [];
+        try { addresses = JSON.parse(gps.addresses_json); } catch(e) {}
+        
+        const porticosDetectados = [];
+        const cobrosYaContados = new Set();
+        
+        for (const addr of addresses) {
+          if (!addr) continue;
+          for (const p of DB.porticos) {
+            if (p.valor_3_ejes <= 0) continue;
+            // Buscar coincidencia en texto_gps_blackgps, texto_gps_forguard o palabras_clave
+            const textos = [p.texto_gps_blackgps, p.texto_gps_forguard, p.palabras_clave, p.cobro_oficial].filter(Boolean);
+            const addrLower = addr.toLowerCase();
+            const match = textos.some(t => {
+              const palabras = t.toLowerCase().split(',').map(x=>x.trim()).filter(x=>x.length>3);
+              return palabras.some(pal => addrLower.includes(pal));
+            });
+            if (match && !cobrosYaContados.has(p.cobro_oficial)) {
+              cobrosYaContados.add(p.cobro_oficial);
+              porticosDetectados.push({nombre: p.cobro_oficial, valor: p.valor_3_ejes, tipo: p.tipo});
+            }
+          }
+        }
+        
+        if (porticosDetectados.length > 0) {
+          const totalTag = porticosDetectados.reduce((a,p) => a + p.valor, 0);
+          const peajesEl = document.getElementById('reg-peajes');
+          if (!peajesEl.value || parseFloat(peajesEl.value) === 0) {
+            peajesEl.value = totalTag;
+            peajesEl.className = 'inp ok';
+            calcMargen();
+            const detalle = porticosDetectados.map(p=>`${p.nombre}: $${p.valor.toLocaleString('es-CL')}`).join(' | ');
+            toast(`✓ TAG detectados: ${porticosDetectados.length} pórticos = $${totalTag.toLocaleString('es-CL')}`);
+            // Guardar detalle en svcActivo para referencia
+            if (svcActivo) svcActivo._tagDetalle = detalle;
+          }
+        }
+      }
+    } else {
+      console.log('Sin GPS para', patente, fecha);
+    }
+  } catch(e) {
+    console.warn('Error GPS:', e.message);
+  }
 }
 
 // ── PUNTOS Y GUÍAS ──
