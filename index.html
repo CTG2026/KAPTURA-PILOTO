@@ -199,6 +199,11 @@ body{font-family:'Barlow',sans-serif;background:var(--gray-50);color:var(--gray-
         <div class="form-field"><label class="lbl">Conductor/día ($)</label><input class="inp" id="cfg-cond" type="number" placeholder="33000"></div>
         <div class="form-field"><label class="lbl">Viático/día ($)</label><input class="inp" id="cfg-viatico" type="number" placeholder="12000"></div>
       </div>
+      <div class="form-field full" style="margin-top:10px;grid-column:1/-1">
+        <label class="lbl">API Key Claude</label>
+        <input class="inp" id="cfg-claude-key" type="password" placeholder="sk-ant-api03-...">
+        <div style="font-size:9px;color:var(--gray-400);margin-top:3px">Se guarda solo en este navegador</div>
+      </div>
       <div style="margin-top:12px;text-align:right"><button class="btn btn-primary" onclick="guardarConfig()">Guardar</button></div>
     </div>
   </div>
