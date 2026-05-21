@@ -825,8 +825,13 @@ function recargarGPSyTAG(){
 async function cargarGPSyTAG(patente,fecha){
   if(!patente||!fecha)return;
   try{
-    const {data:gps}=await supa.from('kaptura_gps_sessions').select('*').eq('patente',patente).eq('fecha',fecha).maybeSingle();
-    if(gps&&gps.km_total>0){
+    // Try both date formats
+    const {data:gpsRows}=await supa.from('kaptura_gps_sessions').select('*').eq('patente',patente).limit(50);
+    const gps=(gpsRows||[]).find(r=>{
+      const f=String(r.fecha||'');
+      return f===fecha||f===fecha.split('-').reverse().join('-')||f.startsWith(fecha)||fecha.startsWith(f.substring(0,10));
+    });
+    if(gps&&(gps.km_total||0)>0){
       const kmEl=document.getElementById('reg-km');
       if(!kmEl.value||parseFloat(kmEl.value)===0){
         kmEl.value=Math.round(gps.km_total);
