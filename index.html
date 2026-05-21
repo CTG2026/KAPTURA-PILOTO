@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>KAPTURA</title>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700;800;900&family=Barlow+Condensed:wght@600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -377,6 +380,13 @@ async function init() {
   document.getElementById('filtro-fecha').value = hoyStr;
   document.getElementById('hdr-info').textContent = `${hoy.getDate()} ${MESES[hoy.getMonth()]} ${hoy.getFullYear()}`;
   CLAUDE_KEY = localStorage.getItem('kaptura_claude_key')||'';
+  // Also try to load from Supabase if localStorage is empty
+  if(!CLAUDE_KEY){
+    try{
+      const {data:ckData}=await supa.from('kaptura_config').select('valor').eq('clave','claude_api_key').single();
+      if(ckData?.valor){CLAUDE_KEY=ckData.valor;localStorage.setItem('kaptura_claude_key',ckData.valor);}
+    }catch(e){}
+  }
   try {
     const [f,c,cl,t,cfg,s,p] = await Promise.all([
       supa.from('kaptura_flota').select('*').order('patente'),
@@ -565,9 +575,9 @@ async function confirmarEliminar(i){
 function abrirRegistrar(i){
   const s=DB.servicios[i];
   svcActivo={...s,_idx:i};
-  puntosData=s._puntos||[{num_guia:'',fecha:'',destino:'',capturada:false}];
+  puntosData=s._puntos||[{num_guia:'',fecha:'',destino:'',capturada:false,tipo:'final',valor:null}];
   document.getElementById('reg-title').textContent=`Registrar — ${s.servicio_id||'—'}`;
-  document.getElementById('reg-sub').textContent=`${s.patente} · ${s.conductor}`;
+  document.getElementById('reg-sub').textContent=`${s.patente} · ${s.conductor} · ${s.cliente}`;
   document.getElementById('info-cliente').textContent=s.cliente||'—';
   document.getElementById('info-patente').textContent=s.patente||'—';
   document.getElementById('info-fecha').textContent=s.fecha||'—';
@@ -597,6 +607,18 @@ function renderPuntos(){
         <div class="punto-title">📍 PUNTO ${pi+1} ${p.capturada?'<span style="color:var(--green)">✓</span>':''}</div>
         ${puntosData.length>1?`<button class="btn btn-red btn-sm" onclick="eliminarPunto(${pi})">✕</button>`:''}
       </div>
+      <div style="display:flex;gap:6px;margin-bottom:8px">
+        <button class="btn btn-sm ${p.tipo==='intermedio'?'btn-primary':'btn-outline'}" onclick="setPuntoTipo(${pi},'intermedio')">🔁 Punto Intermedio</button>
+        <button class="btn btn-sm ${p.tipo==='final'?'btn-primary':'btn-outline'}" onclick="setPuntoTipo(${pi},'final')">🏁 Destino Final</button>
+      </div>
+      <div class="fld" style="margin-bottom:8px">
+        <label class="lbl">Destino del punto <span class="badge-pend">MANUAL</span></label>
+        <input class="inp pend" value="${p.destino||''}" placeholder="${p.tipo==='final'?'Ciudad destino final':'Ciudad punto intermedio'}" onchange="setPuntoDestino(${pi},this.value)">
+      </div>
+      <div class="fld" style="margin-bottom:8px">
+        <label class="lbl">${p.tipo==='final'?'Tarifa servicio':'Valor punto'} <span id="badge-valor-${pi}" class="${p.valor?'badge-ok':'badge-pend'}">${p.valor?'AUTO':'PENDIENTE'}</span></label>
+        <input class="inp ${p.valor?'ok':'pend'}" id="valor-punto-${pi}" value="${p.valor||''}" type="number" placeholder="0" onchange="setPuntoValor(${pi},this.value)">
+      </div>
       <div class="foto-zone ${p.capturada?'captured':p.procesando?'procesando':''}" onclick="document.getElementById('foto-p${pi}').click()">
         <div style="font-size:24px">${p.procesando?'⏳':p.capturada?'✓':'📷'}</div>
         <div style="font-size:12px;font-weight:800;color:var(--navy);margin-top:4px">${p.procesando?'Procesando...':p.capturada?'Guía leída':'Fotografiar / Subir Guía'}</div>
@@ -624,7 +646,73 @@ function renderPuntos(){
     </div>`).join('');
 }
 
-function agregarPunto(){puntosData.push({num_guia:'',fecha:'',destino:'',capturada:false});renderPuntos();}
+function agregarPunto(){
+  // El nuevo punto es intermedio por defecto, el anterior sigue siendo lo que era
+  // Cambiar el último punto actual a intermedio si era final
+  if(puntosData.length>0 && puntosData[puntosData.length-1].tipo==='final'){
+    puntosData[puntosData.length-1].tipo='intermedio';
+  }
+  puntosData.push({num_guia:'',fecha:'',destino:'',capturada:false,tipo:'final',valor:null});
+  renderPuntos();
+}
+
+function setPuntoTipo(pi,tipo){
+  puntosData[pi].tipo=tipo;
+  // Si se marca como final, los demás se marcan como intermedio
+  if(tipo==='final'){
+    puntosData.forEach((p,i)=>{if(i!==pi)p.tipo='intermedio';});
+  }
+  // Buscar tarifa automática si hay destino
+  if(puntosData[pi].destino) buscarValorPunto(pi);
+  renderPuntos();
+}
+
+function setPuntoDestino(pi,val){
+  puntosData[pi].destino=val;
+  if(val) buscarValorPunto(pi);
+}
+
+function setPuntoValor(pi,val){
+  puntosData[pi].valor=parseFloat(val)||null;
+  calcMargenDesdePuntos();
+}
+
+function buscarValorPunto(pi){
+  const p=puntosData[pi];
+  if(!p.destino||!svcActivo?.cliente)return;
+  const dl=p.destino.toLowerCase().trim();
+  const match=DB.tarifarios.find(t=>{
+    const cli=(t.cliente||'').toLowerCase();
+    const dest=(t.destino||t.localidad||'').toLowerCase();
+    return cli.includes((svcActivo.cliente||'').toLowerCase().split(' ')[0])&&
+      (dest.includes(dl.split(',')[0].trim())||dl.includes(dest.split(',')[0].trim()));
+  });
+  if(match){
+    const val=match.tarifa||match.precio||match.valor||0;
+    puntosData[pi].valor=val;
+    toast(`✓ ${p.tipo==='final'?'Tarifa':'Valor punto'}: ${fmt(val)} — ${p.destino}`);
+    renderPuntos();
+    calcMargenDesdePuntos();
+  }
+}
+
+function calcMargenDesdePuntos(){
+  // Sumar tarifa final + valores puntos intermedios
+  const final=puntosData.find(p=>p.tipo==='final');
+  const intermedios=puntosData.filter(p=>p.tipo==='intermedio');
+  const tarifaFinal=final?.valor||0;
+  const valorPuntos=intermedios.reduce((a,p)=>a+(p.valor||0),0);
+  if(tarifaFinal>0){
+    document.getElementById('reg-tarifa').value=tarifaFinal;
+    document.getElementById('reg-tarifa').className='inp ok';
+    document.getElementById('lbl-tarifa-badge').textContent='AUTO';
+    document.getElementById('lbl-tarifa-badge').className='badge-ok';
+  }
+  if(valorPuntos>0){
+    document.getElementById('reg-puntos-valor').value=valorPuntos;
+  }
+  calcMargen();
+}
 function eliminarPunto(pi){if(puntosData.length<=1)return;puntosData.splice(pi,1);renderPuntos();}
 
 function corregirDestinoPunto(pi,val){
@@ -664,7 +752,7 @@ Extrae estos datos en JSON:
 1. num_guia: número de la guía (solo dígitos, es el número grande destacado)
 2. fecha_emision: fecha en formato DD/MM/AAAA
 3. cliente: empresa que EMITE o DESPACHA (su nombre en el encabezado). Lista de clientes válidos: ${DB.clientes.map(c=>c.nombre).join(', ')}. Usa el nombre más similar de esa lista.
-4. destino: lugar donde el camión debe ENTREGAR la carga. Busca en campos como "Dir. Destino", "Dirección Destino", "Dirección de Entrega", "Destino", sección "Transporte" u "Observaciones" al pie. NUNCA uses la dirección del encabezado del emisor. Responde solo ciudad o lugar.
+4. destino: responde siempre null. El destino lo ingresa el usuario manualmente.
 5. kg: kilogramos si aparece, si no null
 6. rut_emisor: RUT del emisor
 
@@ -945,7 +1033,11 @@ async function guardarConfig(){
   ];
   for(const c of campos){DB.config[c.clave]=parseFloat(c.val)||0;await supa.from('kaptura_config').upsert({clave:c.clave,valor:c.val},{onConflict:'clave'});}
   const ck=document.getElementById('cfg-claude-key').value.trim();
-  if(ck){localStorage.setItem('kaptura_claude_key',ck);CLAUDE_KEY=ck;}
+  if(ck&&!ck.startsWith('•')){
+    localStorage.setItem('kaptura_claude_key',ck);
+    CLAUDE_KEY=ck;
+    await supa.from('kaptura_config').upsert({clave:'claude_api_key',valor:ck},{onConflict:'clave'});
+  }
   toast('✓ Configuración guardada');
 }
 
