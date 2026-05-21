@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>KAPTURA v3.0</title>
+<title>KAPTURA v3.1</title>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700;800;900&family=Barlow+Condensed:wght@600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -276,6 +276,73 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
   </div>
 </div>
 
+
+<!-- ══ MODAL INICIAR (PASO 1) ══ -->
+<div class="overlay" id="modal-iniciar" style="display:none">
+  <div class="modal">
+    <div class="modal-hdr">
+      <div>
+        <div class="modal-ttl">Iniciar Servicio — <span id="ini-id"></span></div>
+        <div class="modal-sub" id="ini-sub">Paso 1 · Conductor</div>
+      </div>
+      <button class="modal-cls" onclick="cerrar('modal-iniciar')">✕</button>
+    </div>
+    <div class="modal-body">
+      <!-- Info del servicio -->
+      <div style="background:var(--g50);border-radius:8px;padding:10px 12px;margin-bottom:14px;border:1px solid var(--g200)">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:11px">
+          <div><span style="color:var(--g400);font-weight:700">CLIENTE</span><br><span style="font-weight:800;color:var(--navy)" id="ini-cliente">—</span></div>
+          <div><span style="color:var(--g400);font-weight:700">PATENTE</span><br><span style="font-weight:800;font-family:'Barlow Condensed',sans-serif" id="ini-patente">—</span></div>
+          <div><span style="color:var(--g400);font-weight:700">CONDUCTOR</span><br><span style="font-weight:700" id="ini-conductor">—</span></div>
+          <div><span style="color:var(--g400);font-weight:700">ORIGEN</span><br><span style="font-weight:700" id="ini-origen">—</span></div>
+        </div>
+      </div>
+
+      <!-- Hora y fecha inicio -->
+      <div class="fld2">
+        <div class="fld">
+          <label class="lbl">Fecha inicio (asignación)</label>
+          <input class="inp" id="ini-fecha-inicio" type="date" readonly style="background:var(--g50);color:var(--navy);font-weight:700">
+        </div>
+        <div class="fld">
+          <label class="lbl">Hora inicio</label>
+          <input class="inp" id="ini-hora" type="time" style="color:var(--navy);font-weight:700">
+        </div>
+      </div>
+
+      <!-- Fecha término estimada -->
+      <div class="fld">
+        <label class="lbl">Fecha término estimada del servicio</label>
+        <input class="inp" id="ini-fecha-termino" type="date" onchange="calcDiasIni()">
+        <div style="font-size:9px;color:var(--g400);margin-top:3px">Fecha en que se completará la entrega</div>
+      </div>
+
+      <!-- Días calculados -->
+      <div class="fld2">
+        <div class="fld">
+          <label class="lbl">Días en ruta <span style="font-size:8px;font-weight:800;background:#D1FAE5;color:#065F46;padding:1px 5px;border-radius:3px">AUTO</span></label>
+          <input class="inp" id="ini-dias" type="number" step="0.5" min="0.5" readonly style="background:var(--g50);color:var(--navy);font-weight:700">
+        </div>
+        <div class="fld">
+          <label class="lbl">¿Viene desde?</label>
+          <select class="inp" id="ini-viene-desde">
+            <option value="base">Base / Casa</option>
+            <option value="servicio_anterior">Servicio anterior</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="background:#EEF2FF;border-radius:8px;padding:10px 12px;font-size:11px;color:#3730A3;font-weight:700">
+        ℹ️ Al confirmar, el servicio cambia a EN PROCESO y queda registrada la hora de salida.
+      </div>
+    </div>
+    <div class="modal-ftr">
+      <button class="btn btn-outline" onclick="cerrar('modal-iniciar')">Cancelar</button>
+      <button class="btn btn-navy" onclick="confirmarInicio()">▶ Iniciar Servicio</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -283,7 +350,7 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
 const SUPA_URL = 'https://aqunzrukuruwzwywnurq.supabase.co';
 const SUPA_KEY = 'sb_publishable_70t9UxFlcqYDj7AMybsrHg__IMGNA8C';
 const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
-const KAPTURA_VERSION = '3.0';
+const KAPTURA_VERSION = '3.1';
 const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 const hoy = new Date();
 const hoyStr = hoy.toISOString().split('T')[0];
@@ -575,17 +642,75 @@ async function guardarAsignacion() {
 }
 
 // ══ INICIAR (PASO 1) ══
-async function iniciarSvc(i) {
+let svcIniciarIdx = -1;
+
+function iniciarSvc(i) {
   const s = DB.servicios[i];
+  svcIniciarIdx = i;
+  document.getElementById('ini-id').textContent        = s.servicio_id||'—';
+  document.getElementById('ini-sub').textContent       = `Paso 1 · ${s.conductor}`;
+  document.getElementById('ini-cliente').textContent   = s.cliente||'—';
+  document.getElementById('ini-patente').textContent   = s.patente||'—';
+  document.getElementById('ini-conductor').textContent = s.conductor||'—';
+  document.getElementById('ini-origen').textContent    = s.origen||'—';
+  document.getElementById('ini-fecha-inicio').value    = s.fecha||hoyStr;
+  // Hora actual
+  const ahora = new Date();
+  document.getElementById('ini-hora').value =
+    `${String(ahora.getHours()).padStart(2,'0')}:${String(ahora.getMinutes()).padStart(2,'0')}`;
+  // Fecha término = misma fecha por defecto
+  document.getElementById('ini-fecha-termino').value = s.fecha||hoyStr;
+  document.getElementById('ini-dias').value = 1;
+  document.getElementById('modal-iniciar').style.display = 'flex';
+}
+
+function calcDiasIni() {
+  const inicio  = document.getElementById('ini-fecha-inicio').value;
+  const termino = document.getElementById('ini-fecha-termino').value;
+  if(inicio && termino) {
+    const d1 = new Date(inicio);
+    const d2 = new Date(termino);
+    const dias = Math.round((d2-d1)/(1000*60*60*24))+1;
+    document.getElementById('ini-dias').value = Math.max(1, dias);
+  }
+}
+
+async function confirmarInicio() {
+  if(svcIniciarIdx < 0) return;
+  const s = DB.servicios[svcIniciarIdx];
   if(!s.id) { toast('Error: servicio sin ID'); return; }
-  const {error} = await supa.from('servicios_piloto')
-    .update({estado:'en_proceso', hora_inicio: new Date().toISOString()})
-    .eq('id', s.id);
+
+  const hora        = document.getElementById('ini-hora').value;
+  const fechaInicio = document.getElementById('ini-fecha-inicio').value;
+  const fechaTerm   = document.getElementById('ini-fecha-termino').value;
+  const dias        = parseFloat(document.getElementById('ini-dias').value)||1;
+  const vieneDe     = document.getElementById('ini-viene-desde').value;
+
+  const horaISOStr  = fechaInicio + 'T' + hora + ':00';
+
+  const {error} = await supa.from('servicios_piloto').update({
+    estado: 'en_proceso',
+    hora_inicio: horaISOStr,
+    hora_termino: null,
+    dias_servicio: dias,
+    fecha: fechaInicio,
+    notas: vieneDe === 'servicio_anterior' ? 'Viene de servicio anterior' : null
+  }).eq('id', s.id);
+
   if(error) { toast('Error: ' + error.message); return; }
-  DB.servicios[i].estado = 'en_proceso';
+
+  DB.servicios[svcIniciarIdx] = {
+    ...s,
+    estado: 'en_proceso',
+    hora_inicio: horaISOStr,
+    dias_servicio: dias,
+    _fecha_termino: fechaTerm
+  };
+
+  cerrar('modal-iniciar');
   renderServicios();
   renderKPIs();
-  toast(`▶ ${s.servicio_id} iniciado`);
+  toast(`▶ ${s.servicio_id} iniciado · ${dias} día${dias>1?'s':''} estimados`);
 }
 
 // ══ VER SERVICIO ══
