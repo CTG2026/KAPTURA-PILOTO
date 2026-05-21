@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>KAPTURA v2.2</title>
+<title>KAPTURA v2.3</title>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -367,7 +367,7 @@ const SUPA_URL = 'https://aqunzrukuruwzwywnurq.supabase.co';
 const SUPA_KEY = 'sb_publishable_70t9UxFlcqYDj7AMybsrHg__IMGNA8C';
 let CLAUDE_KEY = localStorage.getItem('kaptura_claude_key')||'';
 const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
-const KAPTURA_VERSION = '2.2';
+const KAPTURA_VERSION = '2.3';
 if(localStorage.getItem('kaptura_version')!==KAPTURA_VERSION){
   localStorage.setItem('kaptura_version',KAPTURA_VERSION);
   // Keep the key but reload fresh
@@ -617,8 +617,7 @@ function abrirRegistrar(i){
   document.getElementById('reg-mant').value=fmt(parseInt(c.mantencion||c.costo_mantencion||25000));
   renderPuntos(); calcCombustible(); calcMargen();
   document.getElementById('modal-registrar').style.display='flex';
-  // Auto-cargar GPS
-  cargarGPSyTAG(s.patente, s.fecha||hoyStr);
+  // GPS se carga solo cuando usuario cambia fecha término manualmente
 }
 
 // ══ PUNTOS ══
