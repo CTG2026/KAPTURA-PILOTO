@@ -563,10 +563,11 @@ async function guardarAsignacion() {
     puntos_done: 0
   };
 
-  const {error} = await supa.from('servicios_piloto').insert(nuevo);
+  const {data:inserted, error} = await supa.from('servicios_piloto').insert(nuevo).select();
   if(error) { toast('Error: ' + error.message); return; }
 
-  DB.servicios.unshift({...nuevo, created_at: new Date().toISOString()});
+  const nuevoConId = inserted?.[0] || {...nuevo, created_at: new Date().toISOString()};
+  DB.servicios.unshift(nuevoConId);
   cerrar('modal-asignar');
   renderServicios();
   renderKPIs();
