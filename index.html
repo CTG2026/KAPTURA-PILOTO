@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>KAPTURA v1.8</title>
+<title>KAPTURA v1.9</title>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -367,7 +367,7 @@ const SUPA_URL = 'https://aqunzrukuruwzwywnurq.supabase.co';
 const SUPA_KEY = 'sb_publishable_70t9UxFlcqYDj7AMybsrHg__IMGNA8C';
 let CLAUDE_KEY = localStorage.getItem('kaptura_claude_key')||'';
 const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
-const KAPTURA_VERSION = '1.8';
+const KAPTURA_VERSION = '1.9';
 if(localStorage.getItem('kaptura_version')!==KAPTURA_VERSION){
   localStorage.setItem('kaptura_version',KAPTURA_VERSION);
   // Keep the key but reload fresh
@@ -829,53 +829,78 @@ function recargarGPSyTAG(){
   if(fecha) cargarGPSyTAG(svcActivo.patente,fecha);
 }
 
-async function cargarGPSyTAG(patente,fecha){
-  if(!patente||!fecha)return;
+async function cargarGPSyTAG(patente, fechaTermino){
+  if(!patente||!fechaTermino)return;
+  // Fecha inicio = fecha de asignación del servicio
+  const fechaInicio = svcActivo?.fecha || fechaTermino;
   try{
-    // Try both date formats
-    const {data:gpsRows}=await supa.from('kaptura_gps_sessions').select('*').eq('patente',patente).limit(50);
-    const gps=(gpsRows||[]).find(r=>{
-      const f=String(r.fecha||'');
-      return f===fecha||f===fecha.split('-').reverse().join('-')||f.startsWith(fecha)||fecha.startsWith(f.substring(0,10));
-    });
-    if(gps&&(gps.km_total||0)>0){
+    // Obtener todos los registros GPS del equipo en el rango fecha inicio → fecha término
+    const {data:gpsRows}=await supa.from('kaptura_gps_sessions')
+      .select('*')
+      .eq('patente',patente)
+      .gte('fecha', fechaInicio)
+      .lte('fecha', fechaTermino)
+      .order('fecha',{ascending:true});
+
+    if(!gpsRows||gpsRows.length===0){
+      console.warn('Sin GPS para',patente,'entre',fechaInicio,'y',fechaTermino);
+      return;
+    }
+
+    // Sumar km totales del rango
+    const kmTotal = gpsRows.reduce((a,r)=>a+(r.km_total||0),0);
+
+    if(kmTotal>0){
       const kmEl=document.getElementById('reg-km');
       if(!kmEl.value||parseFloat(kmEl.value)===0){
-        kmEl.value=Math.round(gps.km_total);
+        kmEl.value=Math.round(kmTotal);
         kmEl.className='inp ok';
         document.getElementById('lbl-km-badge').textContent='GPS';
         document.getElementById('lbl-km-badge').className='badge-ok';
         calcCombustible();
-        toast(`✓ GPS: ${Math.round(gps.km_total)} km — ${patente}`);
+        const dias = gpsRows.length;
+        toast(`✓ GPS: ${Math.round(kmTotal)} km (${fechaInicio} → ${fechaTermino}, ${dias} día${dias>1?'s':''}) — ${patente}`);
       }
-      // Calcular TAG desde addresses
-      if(gps.addresses_json&&DB.porticos.length>0){
-        let addresses=[];
-        try{addresses=JSON.parse(gps.addresses_json);}catch(e){}
-        const cobros=new Set(), detectados=[];
-        for(const addr of addresses){
-          if(!addr)continue;
-          for(const p of DB.porticos){
-            if(p.valor_3_ejes<=0||cobros.has(p.cobro_oficial))continue;
-            const textos=[p.texto_gps_blackgps,p.texto_gps_forguard,p.palabras_clave].filter(Boolean);
-            const al=addr.toLowerCase();
-            if(textos.some(t=>t.toLowerCase().split(',').map(x=>x.trim()).filter(x=>x.length>3).some(pal=>al.includes(pal)))){
-              cobros.add(p.cobro_oficial);
-              detectados.push({nombre:p.cobro_oficial,valor:p.valor_3_ejes});
-            }
+    }
+
+    // Juntar todas las addresses del rango para cruzar TAG
+    let allAddresses = [];
+    for(const r of gpsRows){
+      if(r.addresses_json){
+        try{
+          const addrs = JSON.parse(r.addresses_json);
+          allAddresses = allAddresses.concat(addrs);
+        }catch(e){}
+      }
+    }
+
+    // Cruzar con porticos_tag
+    if(allAddresses.length>0 && DB.porticos.length>0){
+      const cobros=new Set(), detectados=[];
+      for(const addr of allAddresses){
+        if(!addr)continue;
+        for(const p of DB.porticos){
+          if(p.valor_3_ejes<=0||cobros.has(p.cobro_oficial))continue;
+          const textos=[p.texto_gps_blackgps,p.texto_gps_forguard,p.palabras_clave].filter(Boolean);
+          const al=addr.toLowerCase();
+          if(textos.some(t=>t.toLowerCase().split(',').map(x=>x.trim()).filter(x=>x.length>3).some(pal=>al.includes(pal)))){
+            cobros.add(p.cobro_oficial);
+            detectados.push({nombre:p.cobro_oficial,valor:p.valor_3_ejes,tipo:p.tipo});
           }
         }
-        if(detectados.length>0){
-          const total=detectados.reduce((a,p)=>a+p.valor,0);
-          const peEl=document.getElementById('reg-peajes');
-          if(!peEl.value||parseFloat(peEl.value)===0){
-            peEl.value=total;
-            peEl.className='inp ok';
-            document.getElementById('lbl-peajes-badge').textContent='TAG AUTO';
-            document.getElementById('lbl-peajes-badge').className='badge-ok';
-            calcMargen();
-            toast(`✓ TAG: ${detectados.length} pórticos = ${fmt(total)}`);
-          }
+      }
+      if(detectados.length>0){
+        const total=detectados.reduce((a,p)=>a+p.valor,0);
+        const peEl=document.getElementById('reg-peajes');
+        if(!peEl.value||parseFloat(peEl.value)===0){
+          peEl.value=total;
+          peEl.className='inp ok';
+          document.getElementById('lbl-peajes-badge').textContent='TAG AUTO';
+          document.getElementById('lbl-peajes-badge').className='badge-ok';
+          calcMargen();
+          const detalle=detectados.map(p=>`${p.nombre}($${p.valor.toLocaleString('es-CL')})`).join(' + ');
+          toast(`✓ Pórticos: ${detalle} = ${fmt(total)}`);
+          if(svcActivo) svcActivo._tagDetalle=detalle;
         }
       }
     }
