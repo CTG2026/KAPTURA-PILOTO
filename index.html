@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>KAPTURA v3.1</title>
+<title>KAPTURA v3.2</title>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700;800;900&family=Barlow+Condensed:wght@600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -113,6 +113,8 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
 .lbl{font-size:9px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:var(--g600);margin-bottom:3px}
 .inp{font-family:'Barlow',sans-serif;font-size:13px;font-weight:600;padding:8px 10px;border:1.5px solid var(--g200);border-radius:6px;color:var(--g800);background:var(--white);outline:none;width:100%}
 .inp:focus{border-color:var(--navy)}
+.inp.pend{border-color:var(--orange);background:#FFFBEB}
+.inp.ok{border-color:var(--green);background:#ECFDF5}
 
 /* EMPTY */
 .empty{text-align:center;padding:40px 20px;color:var(--g400)}
@@ -306,7 +308,7 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
         </div>
         <div class="fld">
           <label class="lbl">Hora inicio</label>
-          <input class="inp" id="ini-hora" type="time" style="color:var(--navy);font-weight:700">
+          <input class="inp" id="ini-hora" type="time" disabled style="background:var(--g100);color:var(--g400);cursor:not-allowed" placeholder="En producción">
         </div>
       </div>
 
@@ -343,6 +345,49 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
   </div>
 </div>
 
+
+<!-- ══ MODAL REGISTRAR (PASO 2) ══ -->
+<div class="overlay" id="modal-registrar" style="display:none">
+  <div class="modal" style="max-width:680px">
+    <div class="modal-hdr">
+      <div>
+        <div class="modal-ttl">Registrar — <span id="reg-id"></span></div>
+        <div class="modal-sub" id="reg-sub"></div>
+      </div>
+      <button class="modal-cls" onclick="cerrar('modal-registrar')">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- INFO SERVICIO -->
+      <div style="background:var(--g50);border-radius:8px;padding:10px 12px;margin-bottom:14px;border:1px solid var(--g200)">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:11px">
+          <div><span style="color:var(--g400);font-weight:700">CLIENTE</span><br><span style="font-weight:800;color:var(--navy)" id="reg-cliente-info">—</span></div>
+          <div><span style="color:var(--g400);font-weight:700">PATENTE</span><br><span style="font-weight:800;font-family:'Barlow Condensed',sans-serif" id="reg-patente-info">—</span></div>
+          <div><span style="color:var(--g400);font-weight:700">FECHA INICIO</span><br><span style="font-weight:700" id="reg-fecha-inicio-info">—</span></div>
+          <div><span style="color:var(--g400);font-weight:700">ORIGEN</span><br><span style="font-weight:700" id="reg-origen-info">—</span></div>
+        </div>
+        <div style="margin-top:8px">
+          <label style="font-size:9px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:var(--g600);display:block;margin-bottom:3px">Fecha término del servicio <span style="font-size:8px;font-weight:800;background:#FEF3C7;color:#92400E;padding:1px 5px;border-radius:3px">GPS</span></label>
+          <input class="inp" id="reg-fecha-termino" type="date" onchange="onFechaTermino()" style="border-color:var(--orange);background:#FFFBEB">
+        </div>
+      </div>
+
+      <!-- PUNTOS DE ENTREGA -->
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:var(--navy);padding:6px 0 5px;border-bottom:2px solid var(--blue);margin-bottom:10px">
+        📍 Puntos de Entrega
+      </div>
+      <div id="puntos-container"></div>
+      <button class="btn btn-outline btn-full btn-sm" onclick="agregarPunto()" style="margin-bottom:14px">+ Agregar Punto de Entrega</button>
+
+    </div>
+    <div class="modal-ftr">
+      <button class="btn btn-outline" onclick="cerrar('modal-registrar')">Cancelar</button>
+      <button class="btn btn-orange" onclick="guardarBorrador()">Borrador</button>
+      <button class="btn btn-navy" onclick="abrirConfirmacion()">✓ Confirmar</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -350,7 +395,7 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
 const SUPA_URL = 'https://aqunzrukuruwzwywnurq.supabase.co';
 const SUPA_KEY = 'sb_publishable_70t9UxFlcqYDj7AMybsrHg__IMGNA8C';
 const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
-const KAPTURA_VERSION = '3.1';
+const KAPTURA_VERSION = '3.2';
 const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 const hoy = new Date();
 const hoyStr = hoy.toISOString().split('T')[0];
@@ -686,11 +731,8 @@ async function confirmarInicio() {
   const dias        = parseFloat(document.getElementById('ini-dias').value)||1;
   const vieneDe     = document.getElementById('ini-viene-desde').value;
 
-  const horaISOStr  = fechaInicio + 'T' + hora + ':00';
-
   const {error} = await supa.from('servicios_piloto').update({
     estado: 'en_proceso',
-    hora_inicio: horaISOStr,
     hora_termino: null,
     dias_servicio: dias,
     fecha: fechaInicio,
@@ -702,7 +744,6 @@ async function confirmarInicio() {
   DB.servicios[svcIniciarIdx] = {
     ...s,
     estado: 'en_proceso',
-    hora_inicio: horaISOStr,
     dias_servicio: dias,
     _fecha_termino: fechaTerm
   };
@@ -789,6 +830,299 @@ function toast(msg, dur=2800) {
 document.querySelectorAll('.overlay').forEach(el => {
   el.addEventListener('click', e => { if(e.target===el) el.style.display='none'; });
 });
+
+
+// ══ PASO 2 — REGISTRO ══
+let svcActivoIdx = -1;
+let puntosData = [];
+let CLAUDE_KEY = localStorage.getItem('kaptura_claude_key') || '';
+
+function verServicio(i) {
+  abrirRegistrar(i);
+}
+
+function abrirRegistrar(i) {
+  const s = DB.servicios[i];
+  svcActivoIdx = i;
+
+  // Restaurar puntos guardados o iniciar con uno vacío
+  puntosData = s._puntos || [{
+    tipo: null, destino: '', valor: null,
+    num_guia: '', fecha_guia: '', capturada: false, procesando: false
+  }];
+
+  document.getElementById('reg-id').textContent           = s.servicio_id||'—';
+  document.getElementById('reg-sub').textContent          = `${s.patente} · ${s.conductor} · ${s.cliente}`;
+  document.getElementById('reg-cliente-info').textContent = s.cliente||'—';
+  document.getElementById('reg-patente-info').textContent = s.patente||'—';
+  document.getElementById('reg-fecha-inicio-info').textContent = s.fecha||'—';
+  document.getElementById('reg-origen-info').textContent  = s.origen||'—';
+  document.getElementById('reg-fecha-termino').value      = s._fecha_termino || s.fecha || hoyStr;
+
+  renderPuntos();
+  document.getElementById('modal-registrar').style.display = 'flex';
+}
+
+function onFechaTermino() {
+  // Solo guarda la fecha término en memoria — GPS se usa en Paso 3
+  const s = DB.servicios[svcActivoIdx];
+  if(s) s._fecha_termino = document.getElementById('reg-fecha-termino').value;
+}
+
+// ── PUNTOS ──
+function renderPuntos() {
+  document.getElementById('puntos-container').innerHTML =
+    puntosData.map((p, pi) => puntosHTML(p, pi)).join('');
+}
+
+function puntosHTML(p, pi) {
+  return `
+    <div style="background:var(--g50);border-radius:10px;padding:12px;margin-bottom:10px;border:1px solid var(--g200)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;color:var(--blue)">
+          📍 PUNTO ${pi+1} ${p.capturada ? '<span style="color:var(--green)">✓</span>' : ''}
+        </div>
+        ${puntosData.length > 1
+          ? `<button class="btn btn-red btn-sm" onclick="eliminarPunto(${pi})">✕</button>`
+          : ''}
+      </div>
+
+      <!-- TIPO DE PUNTO -->
+      <div style="display:flex;gap:6px;margin-bottom:10px">
+        <button class="btn btn-sm ${p.tipo==='intermedio' ? 'btn-navy' : 'btn-outline'}"
+          onclick="setTipo(${pi},'intermedio')">🔁 Intermedio</button>
+        <button class="btn btn-sm ${p.tipo==='final' ? 'btn-navy' : 'btn-outline'}"
+          onclick="setTipo(${pi},'final')">🏁 Destino Final</button>
+      </div>
+
+      <!-- DESTINO -->
+      <div style="margin-bottom:8px">
+        <label style="font-size:9px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:var(--g600);display:block;margin-bottom:3px">
+          Destino del Punto
+          ${p.tipo ? `<span style="font-size:8px;font-weight:800;background:#FEF3C7;color:#92400E;padding:1px 5px;border-radius:3px">⚠ CONFIRMAR</span>` : ''}
+        </label>
+        <input class="inp ${p.destino ? '' : 'pend'}" style="${p.destino ? '' : 'border-color:var(--orange)'}"
+          value="${p.destino||''}" placeholder="Ciudad o lugar de entrega"
+          onchange="setDestino(${pi},this.value)" oninput="setDestino(${pi},this.value)">
+      </div>
+
+      <!-- VALOR -->
+      ${p.tipo ? `
+      <div style="margin-bottom:10px">
+        <label style="font-size:9px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:var(--g600);display:block;margin-bottom:3px">
+          ${p.tipo==='final' ? 'Tarifa del servicio' : 'Valor del punto'}
+          <span style="font-size:8px;font-weight:800;background:${p.valor ? '#D1FAE5' : '#FEF3C7'};color:${p.valor ? '#065F46' : '#92400E'};padding:1px 5px;border-radius:3px">
+            ${p.valor ? 'AUTO' : 'PENDIENTE'}
+          </span>
+        </label>
+        <input class="inp ${p.valor ? 'ok' : 'pend'}" style="${p.valor ? 'border-color:var(--green);background:#ECFDF5' : 'border-color:var(--orange)'}"
+          type="number" value="${p.valor||''}" placeholder="0"
+          onchange="setValorManual(${pi},this.value)">
+      </div>` : ''}
+
+      <!-- FOTO / GUÍA -->
+      <div style="border:2px dashed ${p.capturada ? 'var(--green)' : 'var(--g200)'};border-radius:8px;padding:14px;text-align:center;cursor:pointer;background:${p.capturada ? '#ECFDF5' : p.procesando ? '#FFFBEB' : 'var(--white)'}"
+        onclick="document.getElementById('foto-p${pi}').click()">
+        <div style="font-size:22px">${p.procesando ? '⏳' : p.capturada ? '✓' : '📷'}</div>
+        <div style="font-size:11px;font-weight:800;color:var(--navy);margin-top:4px">
+          ${p.procesando ? 'Procesando guía...' : p.capturada ? `Guía N° ${p.num_guia}` : 'Fotografiar / Subir Guía'}
+        </div>
+        <div style="font-size:10px;color:var(--g400);margin-top:2px">
+          ${p.capturada ? `Fecha: ${p.fecha_guia||'—'}` : 'Toca para capturar'}
+        </div>
+      </div>
+      <input type="file" id="foto-p${pi}" accept="image/*" capture="environment"
+        style="display:none" onchange="procesarGuia(this,${pi})">
+    </div>`;
+}
+
+function agregarPunto() {
+  // Si hay un punto final, el nuevo es intermedio; si no, el nuevo es final
+  const hayFinal = puntosData.some(p => p.tipo === 'final');
+  puntosData.push({
+    tipo: hayFinal ? 'intermedio' : 'final',
+    destino: '', valor: null,
+    num_guia: '', fecha_guia: '', capturada: false, procesando: false
+  });
+  renderPuntos();
+}
+
+function eliminarPunto(pi) {
+  puntosData.splice(pi, 1);
+  renderPuntos();
+}
+
+function setTipo(pi, tipo) {
+  puntosData[pi].tipo = tipo;
+  // Si marca como final, los demás pasan a intermedio
+  if(tipo === 'final') {
+    puntosData.forEach((p,i) => { if(i !== pi) p.tipo = 'intermedio'; });
+  }
+  // Buscar valor automático
+  buscarValor(pi);
+  renderPuntos();
+}
+
+function setDestino(pi, val) {
+  puntosData[pi].destino = val.trim();
+  if(puntosData[pi].tipo === 'final' && val.trim()) buscarValor(pi);
+  renderPuntos();
+}
+
+function setValorManual(pi, val) {
+  puntosData[pi].valor = parseFloat(val) || null;
+  renderPuntos();
+}
+
+function buscarValor(pi) {
+  const p = puntosData[pi];
+  const svc = DB.servicios[svcActivoIdx];
+  if(!svc) return;
+
+  if(p.tipo === 'intermedio') {
+    // Valor fijo por cliente
+    const match = DB.tarifarios.find(t =>
+      (t.cliente||'').toLowerCase().includes((svc.cliente||'').toLowerCase().split(' ')[0])
+    );
+    if(match && match.valor_punto > 0) {
+      puntosData[pi].valor = match.valor_punto;
+      toast(`✓ Punto ${pi+1}: ${fmt(match.valor_punto)}`);
+      renderPuntos();
+    }
+    return;
+  }
+
+  if(p.tipo === 'final' && p.destino) {
+    const dl = p.destino.toLowerCase().trim();
+    const match = DB.tarifarios.find(t => {
+      const cli  = (t.cliente||'').toLowerCase();
+      const dest = (t.destino||'').toLowerCase();
+      return cli.includes((svc.cliente||'').toLowerCase().split(' ')[0]) &&
+        (dest.includes(dl.split(',')[0].trim()) || dl.includes(dest.split(',')[0].trim()));
+    });
+    if(match && match.tarifa_neta > 0) {
+      puntosData[pi].valor = match.tarifa_neta;
+      toast(`✓ Tarifa ${fmt(match.tarifa_neta)} — ${p.destino}`);
+      renderPuntos();
+    } else {
+      toast(`⚠ Sin tarifa para "${p.destino}" — ingresa manual`);
+    }
+  }
+}
+
+// ── LECTURA GUÍA CON IA ──
+async function procesarGuia(input, pi) {
+  if(!input.files||!input.files[0]) return;
+  CLAUDE_KEY = localStorage.getItem('kaptura_claude_key') || '';
+  if(!CLAUDE_KEY) { toast('⚠ Configura la API Key Claude en Config'); return; }
+
+  const file = input.files[0];
+  puntosData[pi].procesando = true;
+  renderPuntos();
+
+  try {
+    const b64 = await fileToB64(file);
+    let json = null, intentos = 0;
+
+    while(intentos < 3 && !json?.num_guia) {
+      intentos++;
+      const resp = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': CLAUDE_KEY,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true'
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-5',
+          max_tokens: 400,
+          messages:[{role:'user', content:[
+            {type:'image', source:{type:'base64', media_type:file.type, data:b64}},
+            {type:'text', text:`Lee esta guía de despacho chilena.
+Extrae en JSON:
+- num_guia: número de la guía (solo dígitos)
+- fecha_emision: fecha DD/MM/AAAA
+- cliente: empresa emisora (compara con: ${DB.clientes.map(c=>c.nombre).join(', ')})
+- destino: solo responde null (se ingresa manual)
+- kg: kilogramos si aparece, si no null
+Solo JSON sin explicación.`}
+          ]}]
+        })
+      });
+      const data = await resp.json();
+      if(data.error) throw new Error(data.error.message);
+      const txt = (data.content?.find(b=>b.type==='text')?.text)||'';
+      try { json = JSON.parse(txt.replace(/\`\`\`json|\`\`\`/g,'').trim()); } catch(e){}
+    }
+
+    if(json?.num_guia) {
+      puntosData[pi] = {
+        ...puntosData[pi],
+        capturada: true, procesando: false,
+        num_guia: json.num_guia,
+        fecha_guia: json.fecha_emision || '',
+        kg: json.kg || null
+      };
+      toast(`✓ Guía ${json.num_guia} leída — Punto ${pi+1}`);
+    } else {
+      puntosData[pi].procesando = false;
+      toast(`⚠ No se pudo leer la guía — ingresa manual`);
+    }
+  } catch(e) {
+    puntosData[pi].procesando = false;
+    toast('Error: ' + e.message);
+  }
+  renderPuntos();
+}
+
+// ── GUARDAR BORRADOR ──
+async function guardarBorrador() {
+  const s = DB.servicios[svcActivoIdx];
+  if(!s?.id) { toast('Error: servicio sin ID'); return; }
+
+  const fechaTerm = document.getElementById('reg-fecha-termino').value;
+  const final = puntosData.find(p => p.tipo === 'final');
+  const intermedios = puntosData.filter(p => p.tipo === 'intermedio');
+  const tarifa = final?.valor || 0;
+  const valorPuntos = intermedios.reduce((a,p) => a+(p.valor||0), 0);
+  const nguia = puntosData[0]?.num_guia || '';
+  const destino = final?.destino || '';
+
+  const {error} = await supa.from('servicios_piloto').update({
+    estado: 'borrador',
+    destino,
+    num_guia: nguia,
+    tarifa_neta: tarifa,
+    puntos_entrega: puntosData.length,
+    dias_servicio: s.dias_servicio || 1
+  }).eq('id', s.id);
+
+  if(error) { toast('Error: ' + error.message); return; }
+
+  DB.servicios[svcActivoIdx] = {
+    ...s, estado:'borrador', destino, num_guia:nguia,
+    tarifa_neta:tarifa, _puntos:puntosData, _fecha_termino:fechaTerm
+  };
+
+  cerrar('modal-registrar');
+  renderServicios(); renderKPIs();
+  toast(`✓ Borrador guardado — ${s.servicio_id}`);
+}
+
+// ── ABRIR CONFIRMACIÓN (Paso 4 - próxima entrega) ──
+function abrirConfirmacion() {
+  toast('⚠ Confirmación disponible en próxima versión');
+}
+
+function fileToB64(file) {
+  return new Promise((res,rej) => {
+    const r = new FileReader();
+    r.onload = () => res(r.result.split(',')[1]);
+    r.onerror = rej;
+    r.readAsDataURL(file);
+  });
+}
 
 init();
 </script>
