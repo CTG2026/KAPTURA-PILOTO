@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>KAPTURA v2.0</title>
+<title>KAPTURA v2.1</title>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -257,7 +257,7 @@ body{font-family:'Barlow',sans-serif;background:var(--gray-50);color:var(--gray-
         </div>
         <div style="margin-top:8px">
           <label class="lbl">Fecha término del servicio <span class="badge-pend">GPS</span></label>
-          <input class="inp pend" id="reg-fecha-ruta" type="date" onchange="recargarGPSyTAG()">
+          <input class="inp pend" id="reg-fecha-ruta" type="date" onchange="onFechaTerminoChange()">
         </div>
       </div>
 
@@ -367,7 +367,7 @@ const SUPA_URL = 'https://aqunzrukuruwzwywnurq.supabase.co';
 const SUPA_KEY = 'sb_publishable_70t9UxFlcqYDj7AMybsrHg__IMGNA8C';
 let CLAUDE_KEY = localStorage.getItem('kaptura_claude_key')||'';
 const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
-const KAPTURA_VERSION = '2.0';
+const KAPTURA_VERSION = '2.1';
 if(localStorage.getItem('kaptura_version')!==KAPTURA_VERSION){
   localStorage.setItem('kaptura_version',KAPTURA_VERSION);
   // Keep the key but reload fresh
@@ -582,7 +582,7 @@ async function confirmarEliminar(i){
 function abrirRegistrar(i){
   const s=DB.servicios[i];
   svcActivo={...s,_idx:i};
-  puntosData=s._puntos||[{num_guia:'',fecha:'',destino:'',capturada:false,tipo:'final',valor:null}];
+  puntosData=s._puntos||[{num_guia:'',fecha:'',destino:'',capturada:false,tipo:null,valor:null}];
   document.getElementById('reg-title').textContent=`Registrar — ${s.servicio_id||'—'}`;
   document.getElementById('reg-sub').textContent=`${s.patente} · ${s.conductor} · ${s.cliente}`;
   document.getElementById('info-cliente').textContent=s.cliente||'—';
@@ -590,6 +590,7 @@ function abrirRegistrar(i){
   document.getElementById('info-fecha').textContent=s.fecha||'—';
   document.getElementById('info-origen').textContent=s.origen||'—';
   document.getElementById('reg-fecha-ruta').value=s.fecha||hoyStr;
+  // No auto-calculate dias on open - wait for user to change fecha termino
   // Precargar campos guardados
   document.getElementById('reg-km').value=s.km_total||'';
   document.getElementById('reg-peajes').value=s.costo_peajes||s.peajes_tag||'';
@@ -668,9 +669,14 @@ function setPuntoTipo(pi,tipo){
   if(tipo==='final'){
     puntosData.forEach((p,i)=>{if(i!==pi){p.tipo='intermedio';}});
   }
-  // Auto-buscar valor al cambiar tipo
-  buscarValorPunto(pi);
-  // Re-buscar intermedios también
+  // Para intermedios: buscar siempre (valor fijo por cliente, no necesita destino)
+  // Para final: solo buscar si ya tiene destino ingresado
+  if(tipo==='intermedio'){
+    buscarValorPunto(pi);
+  } else if(tipo==='final' && puntosData[pi].destino){
+    buscarValorPunto(pi);
+  }
+  // Re-buscar intermedios cuando se marca uno como final
   if(tipo==='final'){
     puntosData.forEach((p,i)=>{if(i!==pi) buscarValorPunto(i);});
   }
@@ -823,6 +829,22 @@ Solo JSON sin explicación: {"num_guia":"","fecha_emision":"","cliente":"","dest
 }
 
 // ══ GPS y TAG ══
+function onFechaTerminoChange(){
+  // Calcular días automáticamente entre fecha asignación y fecha término
+  const fechaInicio = svcActivo?.fecha;
+  const fechaTermino = document.getElementById('reg-fecha-ruta').value;
+  if(fechaInicio && fechaTermino){
+    const d1 = new Date(fechaInicio);
+    const d2 = new Date(fechaTermino);
+    const dias = Math.round((d2-d1)/(1000*60*60*24))+1;
+    if(dias>0){
+      document.getElementById('reg-dias').value=dias;
+      calcMargen();
+    }
+  }
+  recargarGPSyTAG();
+}
+
 function recargarGPSyTAG(){
   if(!svcActivo)return;
   const fecha=document.getElementById('reg-fecha-ruta').value;
@@ -898,6 +920,7 @@ async function cargarGPSyTAG(patente, fechaTermino){
           document.getElementById('lbl-peajes-badge').textContent='TAG AUTO';
           document.getElementById('lbl-peajes-badge').className='badge-ok';
           calcMargen();
+          setTimeout(()=>{calcMargen();},200);
           const detalle=detectados.map(p=>`${p.nombre}($${p.valor.toLocaleString('es-CL')})`).join(' + ');
           toast(`✓ Pórticos: ${detalle} = ${fmt(total)}`);
           if(svcActivo) svcActivo._tagDetalle=detalle;
