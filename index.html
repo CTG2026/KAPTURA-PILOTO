@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>KAPTURA v2.4</title>
+<title>KAPTURA v2.6</title>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -277,12 +277,18 @@ body{font-family:'Barlow',sans-serif;background:var(--gray-50);color:var(--gray-
       <!-- COSTOS OPERACIONALES -->
       <div class="sec">⚙ Costos Operacionales</div>
       <div class="fld2">
-        <div class="fld"><label class="lbl">Km GPS <span id="lbl-km-badge" class="badge-pend">INGRESAR</span></label><input class="inp pend" id="reg-km" type="number" placeholder="ej: 395" oninput="calcCombustible()"></div>
+        <div class="fld"><label class="lbl">Km GPS <span id="lbl-km-badge" class="badge-pend">INGRESAR</span></label>
+          <div style="display:flex;gap:6px">
+            <input class="inp pend" id="reg-km" type="number" placeholder="ej: 395" oninput="calcCombustible()" style="flex:1">
+            <button class="btn btn-outline btn-sm" onclick="recargarGPSyTAG()" title="Recargar GPS">↺</button>
+          </div>
+        </div>
         <div class="fld"><label class="lbl">Litros <span class="badge-auto">AUTO</span></label><input class="inp auto" id="reg-litros" readonly></div>
         <div class="fld"><label class="lbl">Combustible <span class="badge-auto">AUTO</span></label><input class="inp auto" id="reg-comb" readonly></div>
         <div class="fld"><label class="lbl">Peajes/TAG <span id="lbl-peajes-badge" class="badge-pend">MANUAL</span></label><input class="inp pend" id="reg-peajes" type="number" placeholder="0" oninput="calcMargen()"></div>
-        <div class="fld"><label class="lbl">Días Servicio</label><input class="inp" id="reg-dias" type="number" value="1" min="1" oninput="calcMargen()"></div>
+        <div class="fld"><label class="lbl">Días Servicio</label><input class="inp" id="reg-dias" type="number" value="1" min="0.5" step="0.5" oninput="calcMargen()"></div>
         <div class="fld"><label class="lbl">Costo Conductor <span class="badge-auto">AUTO</span></label><input class="inp auto" id="reg-cond-costo" readonly></div>
+        <div class="fld"><label class="lbl">Comisión Conductor <span class="badge-auto">AUTO 8%</span></label><input class="inp auto" id="reg-comision" type="number" oninput="calcMargen()"></div>
       </div>
       <div class="fld2">
         <div class="fld"><label class="lbl">Km Base→Carga</label><input class="inp" id="reg-km-vacio" type="number" placeholder="km vacío" oninput="calcRetorno()"></div>
@@ -367,7 +373,7 @@ const SUPA_URL = 'https://aqunzrukuruwzwywnurq.supabase.co';
 const SUPA_KEY = 'sb_publishable_70t9UxFlcqYDj7AMybsrHg__IMGNA8C';
 let CLAUDE_KEY = localStorage.getItem('kaptura_claude_key')||'';
 const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
-const KAPTURA_VERSION = '2.4';
+const KAPTURA_VERSION = '2.6';
 if(localStorage.getItem('kaptura_version')!==KAPTURA_VERSION){
   localStorage.setItem('kaptura_version',KAPTURA_VERSION);
   // Keep the key but reload fresh
@@ -689,6 +695,9 @@ function setPuntoTipo(pi,tipo){
     buscarValorPunto(pi);
   } else if(tipo==='final' && puntosData[pi].destino){
     buscarValorPunto(pi);
+    // Cargar GPS y TAG ahora que tenemos destino final
+    const fecha = document.getElementById('reg-fecha-ruta').value || svcActivo?.fecha;
+    if(fecha) cargarGPSyTAG(svcActivo.patente, fecha);
   }
   // Re-buscar intermedios cuando se marca uno como final
   if(tipo==='final'){
@@ -700,6 +709,11 @@ function setPuntoTipo(pi,tipo){
 function setPuntoDestino(pi,val){
   puntosData[pi].destino=val.trim();
   buscarValorPunto(pi);
+  // Si es destino final con destino ingresado, cargar GPS y TAG
+  if(puntosData[pi].tipo==='final' && val.trim()){
+    const fecha = document.getElementById('reg-fecha-ruta').value || svcActivo?.fecha;
+    if(fecha) cargarGPSyTAG(svcActivo.patente, fecha);
+  }
 }
 
 function setPuntoValor(pi,val){
@@ -844,7 +858,7 @@ Solo JSON sin explicación: {"num_guia":"","fecha_emision":"","cliente":"","dest
 
 // ══ GPS y TAG ══
 function onFechaTerminoChange(){
-  // Calcular días automáticamente entre fecha asignación y fecha término
+  // Solo calcular días — GPS se carga cuando hay destino final confirmado
   const fechaInicio = svcActivo?.fecha;
   const fechaTermino = document.getElementById('reg-fecha-ruta').value;
   if(fechaInicio && fechaTermino){
@@ -856,7 +870,7 @@ function onFechaTerminoChange(){
       calcMargen();
     }
   }
-  recargarGPSyTAG();
+  // NO cargar GPS aquí — esperar destino final
 }
 
 function recargarGPSyTAG(){
@@ -905,9 +919,9 @@ async function cargarGPSyTAG(patente, fechaTermino){
       }
     }
 
-    // Juntar todas las addresses del rango para cruzar TAG
+    // Juntar addresses por tramo según origen asignación y destino final
     let allAddresses = [];
-    for(const r of gpsRows){
+    for(const r of diasActivos){
       if(r.addresses_json){
         try{
           const addrs = JSON.parse(r.addresses_json);
@@ -916,34 +930,96 @@ async function cargarGPSyTAG(patente, fechaTermino){
       }
     }
 
-    // Cruzar con porticos_tag
     if(allAddresses.length>0 && DB.porticos.length>0){
-      const cobros=new Set(), detectados=[];
-      for(const addr of allAddresses){
-        if(!addr)continue;
-        for(const p of DB.porticos){
-          if(p.valor_3_ejes<=0||cobros.has(p.cobro_oficial))continue;
-          const textos=[p.texto_gps_blackgps,p.texto_gps_forguard,p.palabras_clave].filter(Boolean);
-          const al=addr.toLowerCase();
-          if(textos.some(t=>t.toLowerCase().split(',').map(x=>x.trim()).filter(x=>x.length>3).some(pal=>al.includes(pal)))){
-            cobros.add(p.cobro_oficial);
-            detectados.push({nombre:p.cobro_oficial,valor:p.valor_3_ejes,tipo:p.tipo});
+      const origen = (svcActivo?.origen||'').toLowerCase();
+      const ultimoDestino = (puntosData[puntosData.length-1]?.destino||'').toLowerCase();
+      
+      // Detectar índices de tramos en las addresses
+      let idxCarga = -1; // donde aparece el origen (ej: Casablanca)
+      let idxFinal = -1; // donde aparece el último destino (ej: San Vicente)
+      
+      if(origen){
+        idxCarga = allAddresses.findIndex(a=>a.toLowerCase().includes(origen.split(',')[0].trim()));
+      }
+      if(ultimoDestino){
+        for(let i=allAddresses.length-1;i>=0;i--){
+          if(allAddresses[i].toLowerCase().includes(ultimoDestino.split(',')[0].trim())){
+            idxFinal=i; break;
           }
         }
       }
-      if(detectados.length>0){
-        const total=detectados.reduce((a,p)=>a+p.valor,0);
+
+      // Separar addresses por tramo
+      const addrServicio = idxCarga>=0 && idxFinal>idxCarga 
+        ? allAddresses.slice(idxCarga, idxFinal+1)
+        : allAddresses; // si no detecta tramos, usar todas
+      
+      const addrRetorno = idxFinal>=0 
+        ? allAddresses.slice(idxFinal+1)
+        : [];
+
+      // Verificar si hay otra asignación posterior
+      const hayNuevaAsignacion = DB.servicios.some(s => 
+        s.id !== svcActivo?.id && 
+        s.patente === patente && 
+        s.fecha >= fechaTermino &&
+        ['asignado','en_proceso','confirmado'].includes(s.estado)
+      );
+
+      // Cruzar pórticos del tramo servicio
+      const cobrosServicio=new Set(), detectadosServicio=[];
+      for(const addr of addrServicio){
+        if(!addr)continue;
+        for(const p of DB.porticos){
+          if(p.valor_3_ejes<=0||cobrosServicio.has(p.cobro_oficial))continue;
+          const textos=[p.texto_gps_blackgps,p.texto_gps_forguard,p.palabras_clave].filter(Boolean);
+          const al=addr.toLowerCase();
+          if(textos.some(t=>t.toLowerCase().split(',').map(x=>x.trim()).filter(x=>x.length>3).some(pal=>al.includes(pal)))){
+            cobrosServicio.add(p.cobro_oficial);
+            detectadosServicio.push({nombre:p.cobro_oficial,valor:p.valor_3_ejes});
+          }
+        }
+      }
+
+      // Cruzar pórticos del retorno (solo si NO hay nueva asignación)
+      const cobrosRetorno=new Set(), detectadosRetorno=[];
+      if(!hayNuevaAsignacion && addrRetorno.length>0){
+        for(const addr of addrRetorno){
+          if(!addr)continue;
+          for(const p of DB.porticos){
+            if(p.valor_3_ejes<=0||cobrosRetorno.has(p.cobro_oficial))continue;
+            const textos=[p.texto_gps_blackgps,p.texto_gps_forguard,p.palabras_clave].filter(Boolean);
+            const al=addr.toLowerCase();
+            if(textos.some(t=>t.toLowerCase().split(',').map(x=>x.trim()).filter(x=>x.length>3).some(pal=>al.includes(pal)))){
+              cobrosRetorno.add(p.cobro_oficial);
+              detectadosRetorno.push({nombre:p.cobro_oficial,valor:p.valor_3_ejes});
+            }
+          }
+        }
+      }
+
+      const totalServicio = detectadosServicio.reduce((a,p)=>a+p.valor,0);
+      const totalRetorno  = detectadosRetorno.reduce((a,p)=>a+p.valor,0);
+      const totalTag = totalServicio + totalRetorno;
+
+      if(totalTag>0){
         const peEl=document.getElementById('reg-peajes');
         if(!peEl.value||parseFloat(peEl.value)===0){
-          peEl.value=total;
+          peEl.value=totalTag;
           peEl.className='inp ok';
           document.getElementById('lbl-peajes-badge').textContent='TAG AUTO';
           document.getElementById('lbl-peajes-badge').className='badge-ok';
           calcMargen();
           setTimeout(()=>{calcMargen();},200);
-          const detalle=detectados.map(p=>`${p.nombre}($${p.valor.toLocaleString('es-CL')})`).join(' + ');
-          toast(`✓ Pórticos: ${detalle} = ${fmt(total)}`);
-          if(svcActivo) svcActivo._tagDetalle=detalle;
+          const detalleS = detectadosServicio.map(p=>p.nombre).join('+');
+          const detalleR = detectadosRetorno.length>0 ? ` | Retorno: ${detectadosRetorno.map(p=>p.nombre).join('+')}` : '';
+          toast(`✓ TAG servicio: ${fmt(totalServicio)}${totalRetorno>0?' + retorno: '+fmt(totalRetorno):''}  = ${fmt(totalTag)}`);
+          if(svcActivo){
+            svcActivo._tagDetalle=detalleS;
+            svcActivo._tagRetorno=detalleR;
+            svcActivo._tagServicio=totalServicio;
+            svcActivo._tagRetornoVal=totalRetorno;
+          }
         }
       }
     }
@@ -981,6 +1057,15 @@ function calcMargen(){
   const comb=km?Math.round((km/rend)*prec):0;
   const peajes=parseFloat(document.getElementById('reg-peajes').value)||0;
   const cond=dias*parseInt(c.sueldo_conductor||c.costo_conductor_dia||33000);
+  // Comisión conductor: 8% tarifa neta, editable manual
+  const comisionPct = 0.08;
+  const comisionAuto = Math.round(tarifa * comisionPct);
+  const comisionEl = document.getElementById('reg-comision');
+  if(comisionEl && (!comisionEl.value || comisionEl.dataset.auto==='true')){
+    comisionEl.value = comisionAuto;
+    comisionEl.dataset.auto = 'true';
+  }
+  const comision = parseFloat(comisionEl?.value)||0;
   const cf=dias*parseInt(c.costo_fijo||c.costo_fijo_dia||44000);
   const mant=dias*parseInt(c.mantencion||c.costo_mantencion||25000);
   const tarifa=parseFloat(document.getElementById('reg-tarifa').value)||0;
@@ -990,7 +1075,7 @@ function calcMargen(){
   const fact=Math.round(tarifa*pctF/100);
   const viat=dias*parseInt(c.viatico||c.costo_viatico||12000);
   const ingreso=tarifa+puntosCobro+bono;
-  const costos=comb+peajes+cond+cf+mant+fact+viat;
+  const costos=comb+peajes+cond+comision+cf+mant+fact+viat;
   const margen=ingreso-costos;
   const pct=tarifa?Math.round(margen/tarifa*100):0;
   document.getElementById('reg-cond-costo').value=fmt(cond);
