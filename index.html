@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>KAPTURA v2.1</title>
+<title>KAPTURA v2.2</title>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -367,7 +367,7 @@ const SUPA_URL = 'https://aqunzrukuruwzwywnurq.supabase.co';
 const SUPA_KEY = 'sb_publishable_70t9UxFlcqYDj7AMybsrHg__IMGNA8C';
 let CLAUDE_KEY = localStorage.getItem('kaptura_claude_key')||'';
 const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
-const KAPTURA_VERSION = '2.1';
+const KAPTURA_VERSION = '2.2';
 if(localStorage.getItem('kaptura_version')!==KAPTURA_VERSION){
   localStorage.setItem('kaptura_version',KAPTURA_VERSION);
   // Keep the key but reload fresh
@@ -590,12 +590,27 @@ function abrirRegistrar(i){
   document.getElementById('info-fecha').textContent=s.fecha||'—';
   document.getElementById('info-origen').textContent=s.origen||'—';
   document.getElementById('reg-fecha-ruta').value=s.fecha||hoyStr;
-  // No auto-calculate dias on open - wait for user to change fecha termino
-  // Precargar campos guardados
-  document.getElementById('reg-km').value=s.km_total||'';
-  document.getElementById('reg-peajes').value=s.costo_peajes||s.peajes_tag||'';
-  document.getElementById('reg-tarifa').value=s.tarifa_neta||'';
-  document.getElementById('reg-bono').value=s.bono_estadia||'';
+  // Limpiar TODOS los campos calculados antes de precargar
+  ['reg-km','reg-litros','reg-comb','reg-peajes','reg-tarifa','reg-bono',
+   'reg-ingreso','reg-cond-costo','reg-factoring','reg-viatico',
+   'reg-km-vacio','reg-km-carga','reg-km-retorno','reg-pct-retorno',
+   'reg-puntos-valor'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el){el.value='';el.className=el.readOnly?'inp auto':'inp';}
+  });
+  document.getElementById('lbl-km-badge').textContent='INGRESAR';
+  document.getElementById('lbl-km-badge').className='badge-pend';
+  document.getElementById('lbl-peajes-badge').textContent='MANUAL';
+  document.getElementById('lbl-peajes-badge').className='badge-pend';
+  document.getElementById('lbl-tarifa-badge').textContent='PENDIENTE';
+  document.getElementById('lbl-tarifa-badge').className='badge-pend';
+  document.getElementById('reg-margen-sv').textContent='$—';
+  document.getElementById('reg-margen-acum').textContent='$—';
+  // Precargar solo si hay datos guardados previamente
+  if(s.km_total) document.getElementById('reg-km').value=s.km_total;
+  if(s.costo_peajes||s.peajes_tag) document.getElementById('reg-peajes').value=s.costo_peajes||s.peajes_tag;
+  if(s.tarifa_neta) document.getElementById('reg-tarifa').value=s.tarifa_neta;
+  if(s.bono_estadia) document.getElementById('reg-bono').value=s.bono_estadia;
   document.getElementById('reg-dias').value=s.dias_servicio||1;
   const c=DB.config;
   document.getElementById('reg-cf').value=fmt(parseInt(c.costo_fijo||c.costo_fijo_dia||44000));
