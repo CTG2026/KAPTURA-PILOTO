@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>KAPTURA v2.6</title>
+<title>KAPTURA v2.7</title>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -373,7 +373,7 @@ const SUPA_URL = 'https://aqunzrukuruwzwywnurq.supabase.co';
 const SUPA_KEY = 'sb_publishable_70t9UxFlcqYDj7AMybsrHg__IMGNA8C';
 let CLAUDE_KEY = localStorage.getItem('kaptura_claude_key')||'';
 const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
-const KAPTURA_VERSION = '2.6';
+const KAPTURA_VERSION = '2.7';
 if(localStorage.getItem('kaptura_version')!==KAPTURA_VERSION){
   localStorage.setItem('kaptura_version',KAPTURA_VERSION);
   // Keep the key but reload fresh
@@ -1057,6 +1057,8 @@ function calcMargen(){
   const comb=km?Math.round((km/rend)*prec):0;
   const peajes=parseFloat(document.getElementById('reg-peajes').value)||0;
   const cond=dias*parseInt(c.sueldo_conductor||c.costo_conductor_dia||33000);
+  const tarifa=parseFloat(document.getElementById('reg-tarifa').value)||0;
+  const bono=parseFloat(document.getElementById('reg-bono').value)||0;
   // Comisión conductor: 8% tarifa neta, editable manual
   const comisionPct = 0.08;
   const comisionAuto = Math.round(tarifa * comisionPct);
@@ -1068,9 +1070,7 @@ function calcMargen(){
   const comision = parseFloat(comisionEl?.value)||0;
   const cf=dias*parseInt(c.costo_fijo||c.costo_fijo_dia||44000);
   const mant=dias*parseInt(c.mantencion||c.costo_mantencion||25000);
-  const tarifa=parseFloat(document.getElementById('reg-tarifa').value)||0;
   const puntosCobro=parseFloat(document.getElementById('reg-puntos-valor').value)||0;
-  const bono=parseFloat(document.getElementById('reg-bono').value)||0;
   const pctF=parseFloat(document.getElementById('reg-plazo').value)||1.5;
   const fact=Math.round(tarifa*pctF/100);
   const viat=dias*parseInt(c.viatico||c.costo_viatico||12000);
