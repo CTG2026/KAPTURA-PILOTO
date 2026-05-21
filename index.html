@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>KAPTURA v2.3</title>
+<title>KAPTURA v2.4</title>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -367,7 +367,7 @@ const SUPA_URL = 'https://aqunzrukuruwzwywnurq.supabase.co';
 const SUPA_KEY = 'sb_publishable_70t9UxFlcqYDj7AMybsrHg__IMGNA8C';
 let CLAUDE_KEY = localStorage.getItem('kaptura_claude_key')||'';
 const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
-const KAPTURA_VERSION = '2.3';
+const KAPTURA_VERSION = '2.4';
 if(localStorage.getItem('kaptura_version')!==KAPTURA_VERSION){
   localStorage.setItem('kaptura_version',KAPTURA_VERSION);
   // Keep the key but reload fresh
@@ -883,8 +883,9 @@ async function cargarGPSyTAG(patente, fechaTermino){
       return;
     }
 
-    // Sumar km totales del rango
-    const kmTotal = gpsRows.reduce((a,r)=>a+(r.km_total||0),0);
+    // Filtrar solo días con km > 0 (días activos)
+    const diasActivos = gpsRows.filter(r=>(r.km_total||0)>0);
+    const kmTotal = diasActivos.reduce((a,r)=>a+(r.km_total||0),0);
 
     if(kmTotal>0){
       const kmEl=document.getElementById('reg-km');
@@ -894,8 +895,13 @@ async function cargarGPSyTAG(patente, fechaTermino){
         document.getElementById('lbl-km-badge').textContent='GPS';
         document.getElementById('lbl-km-badge').className='badge-ok';
         calcCombustible();
-        const dias = gpsRows.length;
-        toast(`✓ GPS: ${Math.round(kmTotal)} km (${fechaInicio} → ${fechaTermino}, ${dias} día${dias>1?'s':''}) — ${patente}`);
+        // Actualizar días servicio con días activos reales
+        const diasEl=document.getElementById('reg-dias');
+        if(diasActivos.length>0){
+          diasEl.value=diasActivos.length;
+          calcMargen();
+        }
+        toast(`✓ GPS: ${Math.round(kmTotal)} km · ${diasActivos.length} día${diasActivos.length>1?'s':''} activo${diasActivos.length>1?'s':''} (${fechaInicio}→${fechaTermino}) — ${patente}`);
       }
     }
 
