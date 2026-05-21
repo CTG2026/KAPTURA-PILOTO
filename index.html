@@ -658,18 +658,21 @@ function agregarPunto(){
 
 function setPuntoTipo(pi,tipo){
   puntosData[pi].tipo=tipo;
-  // Si se marca como final, los demás se marcan como intermedio
   if(tipo==='final'){
-    puntosData.forEach((p,i)=>{if(i!==pi)p.tipo='intermedio';});
+    puntosData.forEach((p,i)=>{if(i!==pi){p.tipo='intermedio';}});
   }
-  // Buscar tarifa automática si hay destino
-  if(puntosData[pi].destino) buscarValorPunto(pi);
+  // Auto-buscar valor al cambiar tipo
+  buscarValorPunto(pi);
+  // Re-buscar intermedios también
+  if(tipo==='final'){
+    puntosData.forEach((p,i)=>{if(i!==pi) buscarValorPunto(i);});
+  }
   renderPuntos();
 }
 
 function setPuntoDestino(pi,val){
-  puntosData[pi].destino=val;
-  if(val) buscarValorPunto(pi);
+  puntosData[pi].destino=val.trim();
+  buscarValorPunto(pi);
 }
 
 function setPuntoValor(pi,val){
@@ -679,20 +682,38 @@ function setPuntoValor(pi,val){
 
 function buscarValorPunto(pi){
   const p=puntosData[pi];
-  if(!p.destino||!svcActivo?.cliente)return;
+  if(!svcActivo?.cliente)return;
+
+  // Punto intermedio: usar valor_punto del tarifario del cliente (fijo $40.000 para Sollem/Citrus)
+  if(p.tipo==='intermedio'){
+    const matchCli=DB.tarifarios.find(t=>(t.cliente||'').toLowerCase().includes((svcActivo.cliente||'').toLowerCase().split(' ')[0]));
+    if(matchCli&&matchCli.valor_punto>0){
+      puntosData[pi].valor=matchCli.valor_punto;
+      toast(`✓ Valor punto: ${fmt(matchCli.valor_punto)} — ${svcActivo.cliente}`);
+      renderPuntos();
+      calcMargenDesdePuntos();
+    }
+    return;
+  }
+
+  // Destino final: buscar tarifa_neta por destino
+  if(!p.destino)return;
   const dl=p.destino.toLowerCase().trim();
   const match=DB.tarifarios.find(t=>{
     const cli=(t.cliente||'').toLowerCase();
-    const dest=(t.destino||t.localidad||'').toLowerCase();
+    const dest=(t.destino||'').toLowerCase();
     return cli.includes((svcActivo.cliente||'').toLowerCase().split(' ')[0])&&
-      (dest.includes(dl.split(',')[0].trim())||dl.includes(dest.split(',')[0].trim()));
+      (dest.includes(dl.split(',')[0].trim())||dl.includes(dest.split(',')[0].trim())||
+       dest.replace(/\s/g,'').includes(dl.replace(/\s/g,'').substring(0,6)));
   });
   if(match){
-    const val=match.tarifa||match.precio||match.valor||0;
+    const val=match.tarifa_neta||0;
     puntosData[pi].valor=val;
-    toast(`✓ ${p.tipo==='final'?'Tarifa':'Valor punto'}: ${fmt(val)} — ${p.destino}`);
+    toast(`✓ Tarifa: ${fmt(val)} — ${p.destino}`);
     renderPuntos();
     calcMargenDesdePuntos();
+  } else {
+    toast(`⚠ Sin tarifa para ${p.destino} — ingresa manual`);
   }
 }
 
@@ -912,11 +933,12 @@ function buscarTarifaPorDestino(cliente,destino){
   const dl=destino.toLowerCase().trim();
   const match=DB.tarifarios.find(t=>{
     const cli=(t.cliente||'').toLowerCase();
-    const dest=(t.destino||t.localidad||'').toLowerCase();
-    return cli.includes((cliente||'').toLowerCase().split(' ')[0])&&(dest.includes(dl.split(' ')[0])||dl.includes(dest.split(' ')[0]));
+    const dest=(t.destino||'').toLowerCase();
+    return cli.includes((cliente||'').toLowerCase().split(' ')[0])&&
+      (dest.includes(dl.split(',')[0].trim())||dl.includes(dest.split(',')[0].trim()));
   });
   if(match){
-    const tarifa=match.tarifa||match.precio||match.valor||0;
+    const tarifa=match.tarifa_neta||0;
     document.getElementById('reg-tarifa').value=tarifa;
     document.getElementById('reg-tarifa').className='inp ok';
     document.getElementById('lbl-tarifa-badge').textContent='AUTO';
