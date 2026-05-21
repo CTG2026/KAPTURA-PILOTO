@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>KAPTURA v1.9</title>
+<title>KAPTURA v2.0</title>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -256,7 +256,7 @@ body{font-family:'Barlow',sans-serif;background:var(--gray-50);color:var(--gray-
           <div><span style="color:var(--gray-400);font-weight:700">ORIGEN</span><br><span style="font-weight:700" id="info-origen">—</span></div>
         </div>
         <div style="margin-top:8px">
-          <label class="lbl">Fecha en que se realizó el servicio <span class="badge-pend">GPS</span></label>
+          <label class="lbl">Fecha término del servicio <span class="badge-pend">GPS</span></label>
           <input class="inp pend" id="reg-fecha-ruta" type="date" onchange="recargarGPSyTAG()">
         </div>
       </div>
@@ -367,7 +367,7 @@ const SUPA_URL = 'https://aqunzrukuruwzwywnurq.supabase.co';
 const SUPA_KEY = 'sb_publishable_70t9UxFlcqYDj7AMybsrHg__IMGNA8C';
 let CLAUDE_KEY = localStorage.getItem('kaptura_claude_key')||'';
 const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
-const KAPTURA_VERSION = '1.9';
+const KAPTURA_VERSION = '2.0';
 if(localStorage.getItem('kaptura_version')!==KAPTURA_VERSION){
   localStorage.setItem('kaptura_version',KAPTURA_VERSION);
   // Keep the key but reload fresh
