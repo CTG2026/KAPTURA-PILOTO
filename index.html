@@ -27,7 +27,7 @@ body{font-family:'Barlow',sans-serif;background:var(--gray-50);color:var(--gray-
 .main{padding:12px;max-width:100%}
 @media(min-width:768px){.main{padding:24px 32px;max-width:1400px;margin:0 auto}}
 .kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
-@media(min-width:768px){.kpi-grid{grid-template-columns:repeat(4,1fr);gap:12px}}
+@media(min-width:768px){.kpi-grid{grid-template-columns:repeat(4,1fr)}}
 .kpi-card{background:var(--white);border-radius:8px;padding:12px 14px;box-shadow:var(--shadow-sm);border:1px solid var(--gray-200);position:relative;overflow:hidden}
 .kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--navy)}
 .kpi-card.red::before{background:var(--red)}.kpi-card.green::before{background:var(--green)}.kpi-card.orange::before{background:var(--orange)}
@@ -37,23 +37,23 @@ body{font-family:'Barlow',sans-serif;background:var(--gray-50);color:var(--gray-
 .kpi-sub{font-size:9px;color:var(--gray-400);margin-top:3px;font-weight:600}
 .section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:8px}
 .section-title{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;color:var(--navy)}
-.filtro-fecha{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
-.filtro-fecha input{font-family:'Barlow',sans-serif;font-size:12px;padding:6px 10px;border:1.5px solid var(--gray-200);border-radius:6px;outline:none}
-.filtro-fecha input:focus{border-color:var(--navy)}
-.btn{font-family:'Barlow',sans-serif;font-size:11px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;padding:8px 14px;border-radius:6px;cursor:pointer;border:none;transition:all 0.15s;white-space:nowrap}
+.filtro-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.filtro-row input{font-family:'Barlow',sans-serif;font-size:12px;padding:6px 10px;border:1.5px solid var(--gray-200);border-radius:6px;outline:none}
+.btn{font-family:'Barlow',sans-serif;font-size:11px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;padding:8px 14px;border-radius:6px;cursor:pointer;border:none;transition:all 0.15s;white-space:nowrap;display:inline-flex;align-items:center;gap:4px}
 .btn-primary{background:var(--navy);color:var(--white)}
 .btn-outline{background:var(--white);color:var(--navy);border:1.5px solid var(--navy)}
 .btn-ghost{background:var(--gray-100);color:var(--gray-400);cursor:default}
 .btn-purple{background:#EDE9FE;color:#5B21B6}
 .btn-green{background:#D1FAE5;color:#065F46}
-.btn-red{background:#FEE2E2;color:#B91C1C}
+.btn-red{background:#FEE2E2;color:#B91C1C;border:1px solid #FECACA}
 .btn-orange{background:#FEF3C7;color:#92400E;border:1.5px solid #F59E0B}
 .btn-sm{padding:5px 9px;font-size:10px}
+.btn-full{width:100%;justify-content:center}
 .card-list{display:flex;flex-direction:column;gap:8px}
 .svc-card{background:var(--white);border-radius:8px;box-shadow:var(--shadow-sm);border:1px solid var(--gray-200);overflow:hidden}
 .svc-top{padding:10px 12px 8px;display:flex;align-items:flex-start;justify-content:space-between;gap:6px}
 .svc-id{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:var(--navy)}
-.svc-pat{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--gray-800)}
+.svc-pat{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700}
 .svc-cond{font-size:11px;color:var(--gray-600);font-weight:600;margin-top:1px}
 .svc-cli{font-size:11px;color:var(--gray-400);font-weight:600;margin-top:1px}
 .svc-body{padding:8px 12px 10px;border-top:1px solid var(--gray-100)}
@@ -71,35 +71,39 @@ body{font-family:'Barlow',sans-serif;background:var(--gray-50);color:var(--gray-
 @media(min-width:640px){.overlay{align-items:center;padding:20px}}
 .modal{background:var(--white);border-radius:16px 16px 0 0;width:100%;max-height:95vh;overflow-y:auto;box-shadow:var(--shadow-lg)}
 @media(min-width:640px){.modal{border-radius:16px;max-width:680px}}
-.modal-header{padding:16px 16px 12px;border-bottom:1px solid var(--gray-200);display:flex;align-items:flex-start;justify-content:space-between;position:sticky;top:0;background:var(--white);z-index:1}
+.modal-header{padding:14px 16px 12px;border-bottom:1px solid var(--gray-200);display:flex;align-items:flex-start;justify-content:space-between;position:sticky;top:0;background:var(--white);z-index:1}
 .modal-title{font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:900;text-transform:uppercase;letter-spacing:0.05em;color:var(--navy)}
 .modal-sub{font-size:11px;color:var(--gray-400);font-weight:600;margin-top:2px}
 .modal-close{background:var(--gray-100);border:none;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:13px;color:var(--gray-600);display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .modal-body{padding:16px}
 .modal-footer{padding:12px 16px;border-top:1px solid var(--gray-200);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;position:sticky;bottom:0;background:var(--white)}
-.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.form-field{display:flex;flex-direction:column;gap:3px}
-.form-field.full{grid-column:1/-1}
-.lbl{font-size:9px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:var(--gray-600);display:flex;justify-content:space-between;align-items:center}
+.lbl{font-size:9px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:var(--gray-600);display:flex;justify-content:space-between;align-items:center;margin-bottom:3px}
 .badge-auto{font-size:8px;font-weight:800;background:var(--blue-col);color:white;padding:1px 5px;border-radius:3px}
 .badge-pend{font-size:8px;font-weight:800;background:#FEF3C7;color:#92400E;padding:1px 5px;border-radius:3px}
 .badge-ok{font-size:8px;font-weight:800;background:#D1FAE5;color:#065F46;padding:1px 5px;border-radius:3px}
+.badge-warn{font-size:8px;font-weight:800;background:#FEE2E2;color:#B91C1C;padding:1px 5px;border-radius:3px}
 .inp{font-family:'Barlow',sans-serif;font-size:13px;font-weight:600;padding:8px 10px;border:1.5px solid var(--gray-200);border-radius:6px;color:var(--gray-800);background:var(--white);outline:none;width:100%}
 .inp:focus{border-color:var(--navy)}
 .inp.auto{background:var(--gray-50);color:var(--navy);font-weight:700}
 .inp.pend{border-color:var(--orange);background:#FFFBEB}
 .inp.ok{border-color:var(--green);background:#ECFDF5}
-.sec-title{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:var(--navy);padding:6px 0 5px;border-bottom:2px solid var(--blue-col);margin-bottom:9px;margin-top:14px}
-.foto-zone{border:2px dashed var(--gray-200);border-radius:10px;padding:18px;text-align:center;cursor:pointer;margin-bottom:14px;transition:all 0.2s;background:var(--gray-50)}
+.fld{display:flex;flex-direction:column;margin-bottom:10px}
+.fld2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.sec{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:var(--navy);padding:6px 0 5px;border-bottom:2px solid var(--blue-col);margin-bottom:10px;margin-top:16px}
+.punto-card{background:var(--gray-50);border-radius:10px;padding:12px;margin-bottom:10px;border:1px solid var(--gray-200)}
+.punto-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.punto-title{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;color:var(--blue-col)}
+.foto-zone{border:2px dashed var(--gray-200);border-radius:8px;padding:16px;text-align:center;cursor:pointer;background:var(--white);margin-bottom:8px}
+.foto-zone:active{background:var(--gray-50)}
 .foto-zone.captured{border-color:var(--green);background:#ECFDF5}
 .foto-zone.procesando{border-color:var(--orange);background:#FFFBEB}
-.margen-box{background:#152038;border-radius:10px;padding:16px;margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.margen-lbl{font-size:9px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.45);margin-bottom:5px}
-.margen-val{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:900;line-height:1}
+.guia-leida{background:white;border-radius:6px;padding:8px 10px;margin-top:6px;border:1px solid var(--gray-200);font-size:11px}
+.margen-box{background:#152038;border-radius:10px;padding:14px;margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.margen-lbl{font-size:9px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.45);margin-bottom:4px}
+.margen-val{font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:900;line-height:1}
 .margen-val.pos{color:#34D399}.margen-val.neg{color:#F87171}
-.margen-pct{font-size:10px;font-weight:700;color:rgba(255,255,255,0.4);margin-top:3px}
-.guia-item{background:var(--gray-50);border-radius:8px;padding:10px 12px;margin-bottom:8px;border:1px solid var(--gray-200)}
-.punto-section{background:#EEF2FF;border-radius:8px;padding:10px 12px;margin-bottom:8px;border:1px solid #C7D2FE}
+.margen-pct{font-size:10px;font-weight:700;color:rgba(255,255,255,0.4);margin-top:2px}
+.resumen-confirm{background:#EEF2FF;border-radius:8px;padding:12px;margin-bottom:14px;border:1px solid #C7D2FE}
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--navy);color:white;padding:10px 18px;border-radius:8px;font-size:12px;font-weight:700;z-index:999;opacity:0;transition:opacity 0.3s;pointer-events:none;max-width:90vw;text-align:center}
 .toast.show{opacity:1}
 .loading-overlay{position:fixed;inset:0;background:rgba(255,255,255,0.9);z-index:300;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px}
@@ -139,8 +143,6 @@ body{font-family:'Barlow',sans-serif;background:var(--gray-50);color:var(--gray-
 </nav>
 
 <main class="main">
-
-  <!-- SERVICIOS -->
   <div id="tab-servicios">
     <div class="kpi-grid">
       <div class="kpi-card"><div class="kpi-label">Servicios Hoy</div><div class="kpi-value" id="k-hoy">—</div><div class="kpi-sub" id="k-hoy-sub">—</div></div>
@@ -148,91 +150,60 @@ body{font-family:'Barlow',sans-serif;background:var(--gray-50);color:var(--gray-
       <div class="kpi-card green"><div class="kpi-label">Margen Mes</div><div class="kpi-value green" id="k-margen">—</div><div class="kpi-sub" id="k-margen-sub">—</div></div>
       <div class="kpi-card red"><div class="kpi-label">Margen Prom.</div><div class="kpi-value" id="k-prom">—</div><div class="kpi-sub">por servicio</div></div>
     </div>
-
-    <div class="filtro-fecha">
+    <div class="filtro-row">
       <input type="date" id="filtro-fecha" onchange="renderServicios()">
       <button class="btn btn-outline btn-sm" onclick="resetFecha()">Hoy</button>
     </div>
-
     <div class="section-header">
       <div class="section-title">Servicios</div>
       <button class="btn btn-primary" onclick="abrirAsignar()">+ Asignar</button>
     </div>
-
     <div class="card-list" id="cards-mobile"></div>
-    <div class="desktop-table">
-      <div style="overflow-x:auto">
-        <table>
-          <thead><tr><th>ID</th><th>Fecha</th><th>Patente</th><th>Conductor</th><th>Cliente</th><th>Estado</th><th>Avance</th><th>Acción</th></tr></thead>
-          <tbody id="tabla-svc"></tbody>
-        </table>
-      </div>
-    </div>
+    <div class="desktop-table"><div style="overflow-x:auto"><table>
+      <thead><tr><th>ID</th><th>Fecha</th><th>Patente</th><th>Conductor</th><th>Cliente</th><th>Estado</th><th>Pts</th><th>Acciones</th></tr></thead>
+      <tbody id="tabla-svc"></tbody>
+    </table></div></div>
     <div id="empty-svc" class="empty" style="display:none">
       <div style="font-size:32px;margin-bottom:8px">📋</div>
       <div style="font-weight:700;color:var(--gray-600)">Sin servicios para esta fecha</div>
-      <div style="font-size:11px;margin-top:4px">Asigna un equipo para comenzar</div>
     </div>
   </div>
-
-  <!-- FLOTA -->
-  <div id="tab-flota" style="display:none">
-    <div class="section-title" style="margin-bottom:12px">Flota</div>
-    <div class="card-list" id="lista-flota"></div>
-  </div>
-
-  <!-- CLIENTES -->
-  <div id="tab-clientes" style="display:none">
-    <div class="section-title" style="margin-bottom:12px">Clientes</div>
-    <div class="card-list" id="lista-clientes"></div>
-  </div>
-
-  <!-- CONFIG -->
+  <div id="tab-flota" style="display:none"><div class="section-title" style="margin-bottom:12px">Flota</div><div id="lista-flota"></div></div>
+  <div id="tab-clientes" style="display:none"><div class="section-title" style="margin-bottom:12px">Clientes</div><div id="lista-clientes"></div></div>
   <div id="tab-config" style="display:none">
     <div class="section-title" style="margin-bottom:12px">Configuración</div>
     <div style="background:var(--white);border-radius:10px;padding:16px;box-shadow:var(--shadow-sm);border:1px solid var(--gray-200)">
-      <div class="form-grid">
-        <div class="form-field"><label class="lbl">Precio Litro ($)</label><input class="inp" id="cfg-lt" type="number" placeholder="1300"></div>
-        <div class="form-field"><label class="lbl">Rendimiento km/lt</label><input class="inp" id="cfg-rend" type="number" step="0.1" placeholder="2.5"></div>
-        <div class="form-field"><label class="lbl">Costo Fijo/día ($)</label><input class="inp" id="cfg-cf" type="number" placeholder="44000"></div>
-        <div class="form-field"><label class="lbl">Mantención/día ($)</label><input class="inp" id="cfg-mant" type="number" placeholder="25000"></div>
-        <div class="form-field"><label class="lbl">Conductor/día ($)</label><input class="inp" id="cfg-cond" type="number" placeholder="33000"></div>
-        <div class="form-field"><label class="lbl">Viático/día ($)</label><input class="inp" id="cfg-viatico" type="number" placeholder="12000"></div>
+      <div class="fld2">
+        <div class="fld"><label class="lbl">Precio Litro ($)</label><input class="inp" id="cfg-lt" type="number" placeholder="1300"></div>
+        <div class="fld"><label class="lbl">Rendimiento km/lt</label><input class="inp" id="cfg-rend" type="number" step="0.1" placeholder="2.5"></div>
+        <div class="fld"><label class="lbl">Costo Fijo/día ($)</label><input class="inp" id="cfg-cf" type="number" placeholder="44000"></div>
+        <div class="fld"><label class="lbl">Mantención/día ($)</label><input class="inp" id="cfg-mant" type="number" placeholder="25000"></div>
+        <div class="fld"><label class="lbl">Conductor/día ($)</label><input class="inp" id="cfg-cond" type="number" placeholder="33000"></div>
+        <div class="fld"><label class="lbl">Viático/día ($)</label><input class="inp" id="cfg-viatico" type="number" placeholder="12000"></div>
       </div>
-      <div class="form-field full" style="margin-top:10px;grid-column:1/-1">
-        <label class="lbl">API Key Claude</label>
+      <div class="fld">
+        <label class="lbl">API Key Claude (para leer guías)</label>
         <input class="inp" id="cfg-claude-key" type="password" placeholder="sk-ant-api03-...">
         <div style="font-size:9px;color:var(--gray-400);margin-top:3px">Se guarda solo en este navegador</div>
       </div>
       <div style="margin-top:12px;text-align:right"><button class="btn btn-primary" onclick="guardarConfig()">Guardar</button></div>
     </div>
   </div>
-
 </main>
 
-<!-- MODAL ASIGNAR -->
+<!-- ══ MODAL ASIGNAR ══ -->
 <div class="overlay" id="modal-asignar" style="display:none">
   <div class="modal">
     <div class="modal-header">
-      <div><div class="modal-title">Asignar Servicio</div><div class="modal-sub">Equipo · Conductor · Cliente</div></div>
+      <div><div class="modal-title">Asignar Servicio</div><div class="modal-sub">Paso 1 de 2</div></div>
       <button class="modal-close" onclick="cerrar('modal-asignar')">✕</button>
     </div>
     <div class="modal-body">
-      <div class="form-grid">
-        <div class="form-field">
-          <label class="lbl">Equipo (Patente)</label>
-          <select class="inp" id="asig-patente"></select>
-        </div>
-        <div class="form-field">
-          <label class="lbl">Conductor</label>
-          <select class="inp" id="asig-conductor"></select>
-        </div>
-        <div class="form-field">
-          <label class="lbl">Cliente</label>
-          <select class="inp" id="asig-cliente" onchange="checkOtroCliente()"></select>
-        </div>
-        <div class="form-field">
-          <label class="lbl">Origen</label>
+      <div class="fld2">
+        <div class="fld"><label class="lbl">Equipo</label><select class="inp" id="asig-patente"></select></div>
+        <div class="fld"><label class="lbl">Conductor</label><select class="inp" id="asig-conductor"></select></div>
+        <div class="fld"><label class="lbl">Cliente</label><select class="inp" id="asig-cliente" onchange="checkOtroCliente()"></select></div>
+        <div class="fld"><label class="lbl">Origen</label>
           <select class="inp" id="asig-origen" onchange="checkOtroOrigen()">
             <option value="Casablanca">Casablanca</option>
             <option value="Coltauco">Coltauco</option>
@@ -243,117 +214,135 @@ body{font-family:'Barlow',sans-serif;background:var(--gray-50);color:var(--gray-
             <option value="otro">Otro...</option>
           </select>
         </div>
-        <div class="form-field full" id="origen-custom-wrap" style="display:none">
-          <label class="lbl">Especifica el origen</label>
-          <input class="inp" id="asig-origen-custom" placeholder="Escribe el origen">
-        </div>
-        <div class="form-field full" id="cliente-custom-wrap" style="display:none">
-          <label class="lbl">Nombre del cliente nuevo</label>
-          <input class="inp" id="asig-cliente-custom" placeholder="Escribe el nombre del cliente">
-        </div>
-        <div class="form-field full">
-          <label class="lbl">Fecha del Servicio</label>
-          <input class="inp" id="asig-fecha" type="date">
-        </div>
+      </div>
+      <div class="fld" id="origen-custom-wrap" style="display:none">
+        <label class="lbl">Especifica origen</label>
+        <input class="inp" id="asig-origen-custom" placeholder="Escribe el origen">
+      </div>
+      <div class="fld" id="cliente-custom-wrap" style="display:none">
+        <label class="lbl">Nombre del cliente nuevo</label>
+        <input class="inp" id="asig-cliente-custom" placeholder="Escribe el nombre">
+      </div>
+      <div class="fld">
+        <label class="lbl">Fecha del Servicio</label>
+        <input class="inp" id="asig-fecha" type="date">
       </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="cerrar('modal-asignar')">Cancelar</button>
-      <button class="btn btn-primary" onclick="guardarAsignacion()">Asignar</button>
+      <button class="btn btn-primary" onclick="guardarAsignacion()">Asignar →</button>
     </div>
   </div>
 </div>
 
-<!-- MODAL REGISTRAR -->
+<!-- ══ MODAL REGISTRAR ══ -->
 <div class="overlay" id="modal-registrar" style="display:none">
   <div class="modal">
     <div class="modal-header">
-      <div><div class="modal-title">Registrar — <span id="reg-id"></span></div><div class="modal-sub" id="reg-sub"></div></div>
+      <div><div class="modal-title" id="reg-title">Registrar</div><div class="modal-sub" id="reg-sub"></div></div>
       <button class="modal-close" onclick="cerrar('modal-registrar')">✕</button>
     </div>
     <div class="modal-body">
 
-      <!-- FECHA EN RUTA - PRIMERO -->
-      <div style="background:#FEF3C7;border-radius:8px;padding:10px 12px;margin-bottom:12px;border:1px solid #F59E0B">
-        <div style="font-size:9px;font-weight:800;color:#92400E;letter-spacing:0.1em;margin-bottom:6px">⚠ FECHA EN QUE SE REALIZÓ EL SERVICIO (para leer GPS correcto)</div>
-        <input class="inp" id="reg-fecha-ruta" type="date" onchange="recargarGPSyTAG()" style="border-color:#F59E0B">
+      <!-- INFO DEL SERVICIO -->
+      <div style="background:var(--gray-50);border-radius:8px;padding:10px 12px;margin-bottom:14px;border:1px solid var(--gray-200)">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:11px">
+          <div><span style="color:var(--gray-400);font-weight:700">CLIENTE</span><br><span style="font-weight:800;color:var(--navy)" id="info-cliente">—</span></div>
+          <div><span style="color:var(--gray-400);font-weight:700">PATENTE</span><br><span style="font-weight:800;font-family:'Barlow Condensed',sans-serif" id="info-patente">—</span></div>
+          <div><span style="color:var(--gray-400);font-weight:700">FECHA ASIGNACIÓN</span><br><span style="font-weight:700" id="info-fecha">—</span></div>
+          <div><span style="color:var(--gray-400);font-weight:700">ORIGEN</span><br><span style="font-weight:700" id="info-origen">—</span></div>
+        </div>
+        <div style="margin-top:8px">
+          <label class="lbl">Fecha en que se realizó el servicio <span class="badge-pend">GPS</span></label>
+          <input class="inp pend" id="reg-fecha-ruta" type="date" onchange="recargarGPSyTAG()">
+        </div>
       </div>
 
-      <!-- PUNTOS Y GUÍAS -->
+      <!-- PUNTOS DE ENTREGA -->
       <div id="puntos-container"></div>
-      <button class="btn btn-outline btn-sm" onclick="agregarPunto()" style="margin-bottom:14px;width:100%">+ Agregar Punto de Entrega</button>
+      <button class="btn btn-outline btn-full" onclick="agregarPunto()" style="margin-bottom:14px">+ Agregar Punto de Entrega</button>
 
-      <!-- A COSTOS DIRECTOS -->
-      <div class="sec-title">A — Costos Directos</div>
-      <div class="form-grid">
-        <div class="form-field"><label class="lbl">Km Recorridos <span class="badge-pend">INGRESAR</span></label><input class="inp pend" id="reg-km" type="number" placeholder="ej: 395" oninput="calcCombustible()"></div>
-        <div class="form-field"><label class="lbl">Litros <span class="badge-auto">AUTO</span></label><input class="inp auto" id="reg-litros" readonly></div>
-        <div class="form-field"><label class="lbl">Combustible <span class="badge-auto">AUTO</span></label><input class="inp auto" id="reg-comb" readonly></div>
-        <div class="form-field"><label class="lbl">Peajes/TAG <span class="badge-pend">MANUAL</span></label><input class="inp pend" id="reg-peajes" type="number" placeholder="0" oninput="calcMargen()"></div>
-        <div class="form-field"><label class="lbl">Días Servicio</label><input class="inp" id="reg-dias" type="number" value="1" min="1" oninput="calcMargen()"></div>
-
-        <div class="form-field"><label class="lbl">Costo Conductor <span class="badge-auto">AUTO</span></label><input class="inp auto" id="reg-cond-costo" readonly></div>
+      <!-- RESUMEN INGRESOS -->
+      <div class="sec">💰 Ingresos del Servicio</div>
+      <div class="fld2">
+        <div class="fld"><label class="lbl">Tarifa <span id="lbl-tarifa-badge" class="badge-pend">PENDIENTE</span></label><input class="inp pend" id="reg-tarifa" type="number" placeholder="0" oninput="calcMargen()"></div>
+        <div class="fld"><label class="lbl">Puntos cobrados ($)</label><input class="inp" id="reg-puntos-valor" type="number" placeholder="0" oninput="calcMargen()"></div>
+        <div class="fld"><label class="lbl">Bono Estadía ($)</label><input class="inp" id="reg-bono" type="number" placeholder="0" oninput="calcMargen()"></div>
+        <div class="fld"><label class="lbl">Total Ingreso <span class="badge-auto">AUTO</span></label><input class="inp auto" id="reg-ingreso" readonly></div>
       </div>
 
-      <!-- B OPERACIONAL -->
-      <div class="sec-title">B — Operacional</div>
-      <div class="form-grid">
-        <div class="form-field"><label class="lbl">Km Base→Carga</label><input class="inp" id="reg-km-vacio" type="number" placeholder="km vacío" oninput="calcRetorno()"></div>
-        <div class="form-field"><label class="lbl">Km Carga→Destino</label><input class="inp" id="reg-km-carga" type="number" placeholder="km cargado" oninput="calcRetorno()"></div>
-        <div class="form-field"><label class="lbl">Km Retorno</label><input class="inp" id="reg-km-retorno" type="number" placeholder="km retorno" oninput="calcRetorno()"></div>
-        <div class="form-field"><label class="lbl">% Retorno Vacío <span class="badge-auto">AUTO</span></label><input class="inp auto" id="reg-pct-retorno" readonly></div>
+      <!-- COSTOS OPERACIONALES -->
+      <div class="sec">⚙ Costos Operacionales</div>
+      <div class="fld2">
+        <div class="fld"><label class="lbl">Km GPS <span id="lbl-km-badge" class="badge-pend">INGRESAR</span></label><input class="inp pend" id="reg-km" type="number" placeholder="ej: 395" oninput="calcCombustible()"></div>
+        <div class="fld"><label class="lbl">Litros <span class="badge-auto">AUTO</span></label><input class="inp auto" id="reg-litros" readonly></div>
+        <div class="fld"><label class="lbl">Combustible <span class="badge-auto">AUTO</span></label><input class="inp auto" id="reg-comb" readonly></div>
+        <div class="fld"><label class="lbl">Peajes/TAG <span id="lbl-peajes-badge" class="badge-pend">MANUAL</span></label><input class="inp pend" id="reg-peajes" type="number" placeholder="0" oninput="calcMargen()"></div>
+        <div class="fld"><label class="lbl">Días Servicio</label><input class="inp" id="reg-dias" type="number" value="1" min="1" oninput="calcMargen()"></div>
+        <div class="fld"><label class="lbl">Costo Conductor <span class="badge-auto">AUTO</span></label><input class="inp auto" id="reg-cond-costo" readonly></div>
+      </div>
+      <div class="fld2">
+        <div class="fld"><label class="lbl">Km Base→Carga</label><input class="inp" id="reg-km-vacio" type="number" placeholder="km vacío" oninput="calcRetorno()"></div>
+        <div class="fld"><label class="lbl">Km Carga→Destino</label><input class="inp" id="reg-km-carga" type="number" placeholder="km cargado" oninput="calcRetorno()"></div>
+        <div class="fld"><label class="lbl">Km Retorno</label><input class="inp" id="reg-km-retorno" type="number" placeholder="km retorno" oninput="calcRetorno()"></div>
+        <div class="fld"><label class="lbl">% Retorno Vacío <span class="badge-auto">AUTO</span></label><input class="inp auto" id="reg-pct-retorno" readonly></div>
       </div>
 
-      <!-- C COMERCIAL -->
-      <div class="sec-title">C — Comercial</div>
-      <div class="form-grid">
-        <div class="form-field"><label class="lbl">Cliente</label><select class="inp" id="reg-cliente" onchange="buscarTarifa()"></select></div>
-        <div class="form-field"><label class="lbl">Destino <span id="lbl-destino-alerta" style="display:none;font-size:9px;font-weight:800;background:#FEF3C7;color:#92400E;padding:1px 5px;border-radius:3px">⚠ CONFIRMAR</span></label><input class="inp" id="reg-destino" placeholder="ej: Valparaíso" oninput="onDestinoChange()"></div>
-        <div class="form-field"><label class="lbl">Tarifa <span id="lbl-tarifa-badge" class="badge-pend">PENDIENTE</span></label><input class="inp pend" id="reg-tarifa" type="number" placeholder="0" oninput="calcMargen()"></div>
-        <div class="form-field"><label class="lbl">Bono Estadía ($)</label><input class="inp" id="reg-bono" type="number" placeholder="0" oninput="calcMargen()"></div>
-        <div class="form-field"><label class="lbl">Total Ingreso <span class="badge-auto">AUTO</span></label><input class="inp auto" id="reg-ingreso" readonly></div>
-        <div class="form-field"><label class="lbl">N° Guía principal</label><input class="inp" id="reg-nguia" placeholder="ej: G-12345"></div>
+      <!-- COSTOS FIJOS -->
+      <div class="sec">🏢 Costos Fijos</div>
+      <div class="fld2">
+        <div class="fld"><label class="lbl">Costo Fijo/día <span class="badge-auto">AUTO</span></label><input class="inp auto" id="reg-cf" readonly></div>
+        <div class="fld"><label class="lbl">Mantención <span class="badge-auto">AUTO</span></label><input class="inp auto" id="reg-mant" readonly></div>
       </div>
 
-      <!-- D COSTOS FIJOS -->
-      <div class="sec-title">D — Costos Fijos</div>
-      <div class="form-grid">
-        <div class="form-field"><label class="lbl">Costo Fijo/día <span class="badge-auto">AUTO</span></label><input class="inp auto" id="reg-cf" readonly></div>
-        <div class="form-field"><label class="lbl">Mantención <span class="badge-auto">AUTO</span></label><input class="inp auto" id="reg-mant" readonly></div>
-      </div>
-
-      <!-- E FINANCIERO -->
-      <div class="sec-title">E — Financiero</div>
-      <div class="form-grid">
-        <div class="form-field"><label class="lbl">Plazo Cobro</label>
+      <!-- FINANCIERO -->
+      <div class="sec">💳 Financiero</div>
+      <div class="fld2">
+        <div class="fld"><label class="lbl">Plazo Cobro</label>
           <select class="inp" id="reg-plazo" onchange="calcMargen()">
             <option value="1">15 días — 1%</option>
             <option value="1.5" selected>30 días — 1,5%</option>
             <option value="3">60 días — 3%</option>
           </select>
         </div>
-        <div class="form-field"><label class="lbl">Factoring <span class="badge-auto">AUTO</span></label><input class="inp auto" id="reg-factoring" readonly></div>
-        <div class="form-field"><label class="lbl">Viático <span class="badge-auto">AUTO</span></label><input class="inp auto" id="reg-viatico" readonly></div>
+        <div class="fld"><label class="lbl">Factoring <span class="badge-auto">AUTO</span></label><input class="inp auto" id="reg-factoring" readonly></div>
+        <div class="fld"><label class="lbl">Viático <span class="badge-auto">AUTO</span></label><input class="inp auto" id="reg-viatico" readonly></div>
       </div>
 
+      <!-- MARGEN -->
       <div class="margen-box">
         <div><div class="margen-lbl">Margen Servicio</div><div class="margen-val pos" id="reg-margen-sv">$—</div><div class="margen-pct" id="reg-margen-pct">—</div></div>
         <div><div class="margen-lbl">Acumulado Mes</div><div class="margen-val pos" id="reg-margen-acum">$—</div><div class="margen-pct" id="reg-margen-acum-sub">—</div></div>
       </div>
 
       <div style="margin-top:12px">
-        <button class="btn btn-red btn-sm" onclick="eliminarServicio()" style="width:100%">🗑 Eliminar este servicio</button>
+        <button class="btn btn-red btn-full" onclick="eliminarServicio()">🗑 Eliminar servicio</button>
       </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="cerrar('modal-registrar')">Cancelar</button>
       <button class="btn btn-orange" onclick="guardarSvc('borrador')">Borrador</button>
-      <button class="btn btn-primary" onclick="guardarSvc('confirmado')">✓ Confirmar</button>
+      <button class="btn btn-primary" onclick="pedirConfirmacion()">✓ Confirmar</button>
     </div>
   </div>
 </div>
 
-<!-- MODAL AVANCE -->
+<!-- ══ MODAL CONFIRMACION ══ -->
+<div class="overlay" id="modal-confirmacion" style="display:none">
+  <div class="modal">
+    <div class="modal-header">
+      <div><div class="modal-title">Confirmar Servicio</div><div class="modal-sub">Revisa los datos antes de confirmar</div></div>
+      <button class="modal-close" onclick="cerrar('modal-confirmacion')">✕</button>
+    </div>
+    <div class="modal-body" id="confirmacion-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="cerrar('modal-confirmacion')">Corregir</button>
+      <button class="btn btn-primary" onclick="confirmarDefinitivo()">✓ Sí, Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL AVANCE ══ -->
 <div class="overlay" id="modal-avance" style="display:none">
   <div class="modal">
     <div class="modal-header">
@@ -371,35 +360,25 @@ body{font-family:'Barlow',sans-serif;background:var(--gray-50);color:var(--gray-
 <div class="toast" id="toast"></div>
 
 <script>
-// ══════════════════════════════════════════
-// CONFIG
-// ══════════════════════════════════════════
-const SUPA_URL  = 'https://aqunzrukuruwzwywnurq.supabase.co';
-const SUPA_KEY  = 'sb_publishable_70t9UxFlcqYDj7AMybsrHg__IMGNA8C';
-let CLAUDE_KEY = localStorage.getItem('kaptura_claude_key') || '';
-
+const SUPA_URL = 'https://aqunzrukuruwzwywnurq.supabase.co';
+const SUPA_KEY = 'sb_publishable_70t9UxFlcqYDj7AMybsrHg__IMGNA8C';
+let CLAUDE_KEY = localStorage.getItem('kaptura_claude_key')||'';
 const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
-
 const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 const hoy = new Date();
 const hoyStr = hoy.toISOString().split('T')[0];
-
-let DB = { flota:[], conductores:[], clientes:[], tarifarios:[], config:{}, servicios:[], porticos:[] };
+let DB = {flota:[],conductores:[],clientes:[],tarifarios:[],config:{},servicios:[],porticos:[]};
 let svcActivo = null;
 let avIdx = 0;
-let puntosData = []; // [{guias:[], destino:''}]
+let puntosData = [];
 
-// ══════════════════════════════════════════
-// INIT
-// ══════════════════════════════════════════
+// ══ INIT ══
 async function init() {
-  CLAUDE_KEY = localStorage.getItem('kaptura_claude_key') || '';
   document.getElementById('filtro-fecha').value = hoyStr;
-  const hdrFecha = `${hoy.getDate()} ${MESES[hoy.getMonth()]} ${hoy.getFullYear()}`;
-  document.getElementById('hdr-info').textContent = hdrFecha;
-
+  document.getElementById('hdr-info').textContent = `${hoy.getDate()} ${MESES[hoy.getMonth()]} ${hoy.getFullYear()}`;
+  CLAUDE_KEY = localStorage.getItem('kaptura_claude_key')||'';
   try {
-    const [flota,cond,cli,tarif,cfg,svcs,porticos] = await Promise.all([
+    const [f,c,cl,t,cfg,s,p] = await Promise.all([
       supa.from('kaptura_flota').select('*').order('patente'),
       supa.from('kaptura_conductores').select('*').eq('activo',true).order('nombre'),
       supa.from('kaptura_clientes').select('*').order('nombre'),
@@ -408,68 +387,43 @@ async function init() {
       supa.from('servicios_piloto').select('*').order('created_at',{ascending:false}).limit(200),
       supa.from('porticos_tag').select('*').eq('activo',true)
     ]);
-    DB.flota       = flota.data||[];
-    DB.conductores = cond.data||[];
-    DB.clientes    = cli.data||[];
-    DB.tarifarios  = tarif.data||[];
-    DB.servicios   = svcs.data||[];
-    DB.porticos    = porticos.data||[];
-    (cfg.data||[]).forEach(r=>{ DB.config[r.clave||r.key||r.nombre] = r.valor||r.value; });
+    DB.flota=f.data||[]; DB.conductores=c.data||[]; DB.clientes=cl.data||[];
+    DB.tarifarios=t.data||[]; DB.servicios=s.data||[]; DB.porticos=p.data||[];
+    (cfg.data||[]).forEach(r=>{DB.config[r.clave||r.key||r.nombre]=r.valor||r.value;});
     renderTodo();
-  } catch(e) {
-    toast('Error conectando: '+e.message);
-  } finally {
-    document.getElementById('loading').style.display='none';
-  }
+  } catch(e){ toast('Error: '+e.message); }
+  finally{ document.getElementById('loading').style.display='none'; }
 }
 
-// ══════════════════════════════════════════
-// RENDER
-// ══════════════════════════════════════════
-function renderTodo() {
-  renderKPIs();
-  renderServicios();
-  renderFlota();
-  renderClientes();
-  poblarSelects();
-  poblarConfig();
+function renderTodo(){ renderKPIs(); renderServicios(); renderFlota(); renderClientes(); poblarSelects(); poblarConfig(); }
+
+function renderKPIs(){
+  const mes=hoy.getMonth();
+  const svcsHoy=DB.servicios.filter(s=>(s.fecha||'').startsWith(hoyStr));
+  const borradores=DB.servicios.filter(s=>s.estado==='borrador');
+  const conf=DB.servicios.filter(s=>{const f=new Date(s.created_at||'2026-01-01');return f.getMonth()===mes&&['confirmado','cerrado'].includes(s.estado);});
+  const mt=conf.reduce((a,s)=>a+(s.margen_servicio||s.margen||0),0);
+  const pr=conf.length?Math.round(mt/conf.length):0;
+  document.getElementById('k-hoy').textContent=svcsHoy.length;
+  document.getElementById('k-hoy-sub').textContent=`${svcsHoy.filter(s=>['en_proceso','registrando'].includes(s.estado)).length} en proceso`;
+  document.getElementById('k-pend').textContent=borradores.length;
+  document.getElementById('k-margen').textContent=fmt(mt);
+  document.getElementById('k-margen-sub').textContent=`${conf.length} servicios · ${MESES[mes]}`;
+  document.getElementById('k-prom').textContent=fmt(pr);
 }
 
-function renderKPIs() {
-  const mes = hoy.getMonth();
-  const svcsHoy = DB.servicios.filter(s=>(s.fecha||'').startsWith(hoyStr));
-  const borradores = DB.servicios.filter(s=>s.estado==='borrador');
-  const confirmados = DB.servicios.filter(s=>{
-    const f = new Date(s.created_at||'2026-01-01');
-    return f.getMonth()===mes && ['confirmado','cerrado'].includes(s.estado);
-  });
-  const margenTotal = confirmados.reduce((a,s)=>a+(s.margen_servicio||s.margen||0),0);
-  const prom = confirmados.length ? Math.round(margenTotal/confirmados.length) : 0;
-  document.getElementById('k-hoy').textContent = svcsHoy.length;
-  document.getElementById('k-hoy-sub').textContent = `${svcsHoy.filter(s=>['en_proceso','registrando'].includes(s.estado)).length} en proceso`;
-  document.getElementById('k-pend').textContent = borradores.length;
-  document.getElementById('k-margen').textContent = fmt(margenTotal);
-  document.getElementById('k-margen-sub').textContent = `${confirmados.length} servicios · ${MESES[mes]}`;
-  document.getElementById('k-prom').textContent = fmt(prom);
-}
-
-function renderServicios() {
-  const fecha = document.getElementById('filtro-fecha').value || hoyStr;
-  const svcs = DB.servicios.filter(s=>(s.fecha||'').startsWith(fecha)||(s.created_at||'').startsWith(fecha));
-  const emptyEl = document.getElementById('empty-svc');
-  if (!svcs.length) {
-    document.getElementById('cards-mobile').innerHTML='';
-    document.getElementById('tabla-svc').innerHTML='';
-    emptyEl.style.display='block'; return;
-  }
+function renderServicios(){
+  const fecha=document.getElementById('filtro-fecha').value||hoyStr;
+  const svcs=DB.servicios.filter(s=>(s.fecha||'').startsWith(fecha)||(s.created_at||'').startsWith(fecha));
+  const emptyEl=document.getElementById('empty-svc');
+  if(!svcs.length){document.getElementById('cards-mobile').innerHTML='';document.getElementById('tabla-svc').innerHTML='';emptyEl.style.display='block';return;}
   emptyEl.style.display='none';
-  document.getElementById('cards-mobile').innerHTML = svcs.map((s,i)=>cardHTML(s,i)).join('');
-  document.getElementById('tabla-svc').innerHTML = svcs.map((s,i)=>filaHTML(s,i)).join('');
+  document.getElementById('cards-mobile').innerHTML=svcs.map((s,i)=>cardHTML(s,i)).join('');
+  document.getElementById('tabla-svc').innerHTML=svcs.map((s,i)=>filaHTML(s,i)).join('');
 }
 
-function cardHTML(s,i) {
-  const pts = s.puntos_entrega||1, done = s.puntos_done||0;
-  const pct = pts ? Math.round(done/pts*100) : 0;
+function cardHTML(s,i){
+  const pts=s.puntos_entrega||1,done=s.puntos_done||0,pct=pts?Math.round(done/pts*100):0;
   return `<div class="svc-card">
     <div class="svc-top">
       <div>
@@ -486,683 +440,528 @@ function cardHTML(s,i) {
         <div class="avance-bar"><div class="avance-fill" style="width:${pct}%"></div></div>
       </div>
       <div class="svc-actions">
-        ${s.estado==='asignado' ? `<button class="btn btn-primary btn-sm" onclick="iniciarSvc(${i})">▶ Iniciar</button>` : ''}
-        ${['en_proceso','registrando','borrador','asignado'].includes(s.estado) ? `<button class="btn btn-purple btn-sm" onclick="abrirRegistrar(${i})">📋 Registrar</button>` : ''}
-        <button class="btn btn-outline btn-sm" onclick="abrirAvance(${i})">Ver ${s.margen_servicio||s.margen ? fmt(s.margen_servicio||s.margen) : ''}</button>
+        ${s.estado==='asignado'?`<button class="btn btn-primary btn-sm" onclick="iniciarSvc(${i})">▶ Iniciar</button>`:''}
+        <button class="btn btn-purple btn-sm" onclick="abrirRegistrar(${i})">📋 Registrar</button>
+        <button class="btn btn-outline btn-sm" onclick="abrirAvance(${i})">Ver ${(s.margen_servicio||s.margen)?fmt(s.margen_servicio||s.margen):''}</button>
         <button class="btn btn-red btn-sm" onclick="confirmarEliminar(${i})">Eliminar</button>
       </div>
     </div>
   </div>`;
 }
 
-function filaHTML(s,i) {
-  const pts = s.puntos_entrega||1, done = s.puntos_done||0;
-  const pct = pts ? Math.round(done/pts*100) : 0;
+function filaHTML(s,i){
+  const pts=s.puntos_entrega||1,done=s.puntos_done||0,pct=pts?Math.round(done/pts*100):0;
   return `<tr>
-    <td style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;color:var(--navy)">${s.servicio_id||s.id?.slice(0,8)||'—'}</td>
+    <td style="font-family:'Barlow Condensed',sans-serif;font-weight:800;color:var(--navy)">${s.servicio_id||s.id?.slice(0,8)||'—'}</td>
     <td>${s.fecha||'—'}</td>
     <td style="font-family:'Barlow Condensed',sans-serif;font-weight:700">${s.patente||'—'}</td>
     <td>${s.conductor||'—'}</td>
     <td>${s.cliente||'—'}</td>
     <td>${pillHTML(s.estado)}</td>
-    <td><div style="min-width:80px"><div style="font-size:9px;font-weight:700;color:var(--gray-600);margin-bottom:2px">${done}/${pts}</div><div class="avance-bar"><div class="avance-fill" style="width:${pct}%"></div></div></div></td>
-    <td><div style="display:flex;gap:5px;flex-wrap:wrap">
-      ${s.estado==='asignado' ? `<button class="btn btn-primary btn-sm" onclick="iniciarSvc(${i})">▶</button>` : ''}
-      ${['en_proceso','registrando','borrador','asignado'].includes(s.estado) ? `<button class="btn btn-purple btn-sm" onclick="abrirRegistrar(${i})">📋</button>` : ''}
+    <td>${done}/${pts}</td>
+    <td><div style="display:flex;gap:4px;flex-wrap:wrap">
+      ${s.estado==='asignado'?`<button class="btn btn-primary btn-sm" onclick="iniciarSvc(${i})">▶</button>`:''}
+      <button class="btn btn-purple btn-sm" onclick="abrirRegistrar(${i})">📋</button>
       <button class="btn btn-outline btn-sm" onclick="abrirAvance(${i})">Ver</button>
-      <button class="btn btn-red btn-sm" onclick="confirmarEliminar(${i})">Eliminar</button>
+      <button class="btn btn-red btn-sm" onclick="confirmarEliminar(${i})">✕</button>
     </div></td>
   </tr>`;
 }
 
-function pillHTML(estado) {
-  const map = {asignado:'pill-asignado',en_proceso:'pill-proceso',registrando:'pill-proceso',borrador:'pill-borrador',confirmado:'pill-confirmado',cerrado:'pill-cerrado',pendiente:'pill-borrador'};
-  const txt = {asignado:'Asignado',en_proceso:'En Proceso',registrando:'Registrando',borrador:'Borrador',confirmado:'Confirmado',cerrado:'Cerrado',pendiente:'Pendiente'};
-  return `<span class="pill ${map[estado]||'pill-asignado'}">${txt[estado]||estado}</span>`;
+function pillHTML(e){
+  const m={asignado:'pill-asignado',en_proceso:'pill-proceso',registrando:'pill-proceso',borrador:'pill-borrador',confirmado:'pill-confirmado',cerrado:'pill-cerrado',pendiente:'pill-borrador'};
+  const t={asignado:'Asignado',en_proceso:'En Proceso',registrando:'Registrando',borrador:'Borrador',confirmado:'Confirmado',cerrado:'Cerrado',pendiente:'Pendiente'};
+  return `<span class="pill ${m[e]||'pill-asignado'}">${t[e]||e}</span>`;
 }
 
-function renderFlota() {
-  document.getElementById('lista-flota').innerHTML = DB.flota.map(f=>
-    `<div class="svc-card"><div class="svc-top"><div><div class="svc-pat">${f.patente}</div><div class="svc-cond">${f.tipo||'Camión'}</div></div><span class="pill pill-confirmado">Activo</span></div></div>`
-  ).join('') || '<div class="empty">Sin datos</div>';
+function renderFlota(){
+  document.getElementById('lista-flota').innerHTML=DB.flota.map(f=>`<div class="svc-card"><div class="svc-top"><div><div class="svc-pat">${f.patente}</div><div class="svc-cond">${f.tipo||'Camión'}</div></div><span class="pill pill-confirmado">Activo</span></div></div>`).join('')||'<div class="empty">Sin datos</div>';
 }
 
-function renderClientes() {
-  document.getElementById('lista-clientes').innerHTML = DB.clientes.map(c=>{
-    const t = DB.tarifarios.filter(t=>t.cliente===c.nombre).length;
+function renderClientes(){
+  document.getElementById('lista-clientes').innerHTML=DB.clientes.map(c=>{
+    const t=DB.tarifarios.filter(x=>x.cliente===c.nombre).length;
     return `<div class="svc-card"><div class="svc-top"><div><div class="svc-pat">${c.nombre}</div><div class="svc-cond">${c.origen||'—'} · ${c.condicion_pago||'30 días'}</div><div class="svc-cli">${t} tarifas</div></div></div></div>`;
-  }).join('') || '<div class="empty">Sin datos</div>';
+  }).join('')||'<div class="empty">Sin datos</div>';
 }
 
-function poblarSelects() {
-  const opts = (arr,val,lbl) => arr.map(x=>`<option value="${x[val]}">${x[lbl]}</option>`).join('');
-  document.getElementById('asig-patente').innerHTML = DB.flota.length
-    ? opts(DB.flota,'patente','patente')
-    : '<option>XR8555</option><option>WR9192</option><option>GKFD84</option>';
-  document.getElementById('asig-conductor').innerHTML = DB.conductores.length
-    ? opts(DB.conductores,'nombre','nombre')
-    : '<option>Manuel Madrid</option><option>Felipe Madariaga</option>';
-  const cliOpts = DB.clientes.length
-    ? opts(DB.clientes,'nombre','nombre')
-    : '<option>Sollem SpA</option><option>Presmita</option>';
-  document.getElementById('asig-cliente').innerHTML = cliOpts;
-  document.getElementById('reg-cliente').innerHTML = cliOpts;
+function poblarSelects(){
+  const op=(arr,v,l)=>arr.map(x=>`<option value="${x[v]}">${x[l]}</option>`).join('');
+  document.getElementById('asig-patente').innerHTML=DB.flota.length?op(DB.flota,'patente','patente'):'<option>XR8555</option><option>WR9192</option>';
+  document.getElementById('asig-conductor').innerHTML=DB.conductores.length?op(DB.conductores,'nombre','nombre'):'<option>Manuel Madrid</option>';
+  const cliOpts=(DB.clientes.length?op(DB.clientes,'nombre','nombre'):'<option>Sollem SpA</option>')+'<option value="__otro__">+ Nuevo cliente...</option>';
+  document.getElementById('asig-cliente').innerHTML=cliOpts;
 }
 
-function poblarConfig() {
-  const c = DB.config;
-  document.getElementById('cfg-lt').value     = c.precio_litro||c.precio_combustible||1300;
-  document.getElementById('cfg-rend').value   = c.rendimiento||c.rendimiento_km_lt||2.5;
-  document.getElementById('cfg-cf').value     = c.costo_fijo||c.costo_fijo_dia||44000;
-  document.getElementById('cfg-mant').value   = c.mantencion||c.costo_mantencion||25000;
-  document.getElementById('cfg-cond').value   = c.sueldo_conductor||c.costo_conductor_dia||33000;
-  document.getElementById('cfg-viatico').value= c.viatico||c.costo_viatico||12000;
+function poblarConfig(){
+  const c=DB.config;
+  document.getElementById('cfg-lt').value=c.precio_litro||c.precio_combustible||1300;
+  document.getElementById('cfg-rend').value=c.rendimiento||c.rendimiento_km_lt||2.5;
+  document.getElementById('cfg-cf').value=c.costo_fijo||c.costo_fijo_dia||44000;
+  document.getElementById('cfg-mant').value=c.mantencion||c.costo_mantencion||25000;
+  document.getElementById('cfg-cond').value=c.sueldo_conductor||c.costo_conductor_dia||33000;
+  document.getElementById('cfg-viatico').value=c.viatico||c.costo_viatico||12000;
 }
 
-// ══════════════════════════════════════════
-// SERVICIOS — ACCIONES
-// ══════════════════════════════════════════
-function abrirAsignar() {
+// ══ ASIGNAR ══
+function abrirAsignar(){
   poblarSelects();
-  document.getElementById('asig-fecha').value = hoyStr;
+  document.getElementById('asig-fecha').value=hoyStr;
   document.getElementById('origen-custom-wrap').style.display='none';
+  document.getElementById('cliente-custom-wrap').style.display='none';
   document.getElementById('modal-asignar').style.display='flex';
 }
+function checkOtroOrigen(){document.getElementById('origen-custom-wrap').style.display=document.getElementById('asig-origen').value==='otro'?'block':'none';}
+function checkOtroCliente(){document.getElementById('cliente-custom-wrap').style.display=document.getElementById('asig-cliente').value==='__otro__'?'block':'none';}
 
-function checkOtroCliente() {
-  const v = document.getElementById('asig-cliente').value;
-  document.getElementById('cliente-custom-wrap').style.display = v==='__otro__' ? 'block' : 'none';
+async function siguienteNumSvc(){
+  const {data}=await supa.from('servicios_piloto').select('servicio_id').not('servicio_id','is',null).order('created_at',{ascending:false}).limit(100);
+  let max=0;
+  (data||[]).forEach(r=>{const m=(r.servicio_id||'').match(/S-(\d+)/);if(m)max=Math.max(max,parseInt(m[1]));});
+  return `S-${String(max+1).padStart(2,'0')}`;
 }
 
-function checkOtroOrigen() {
-  const v = document.getElementById('asig-origen').value;
-  document.getElementById('origen-custom-wrap').style.display = v==='otro' ? 'block' : 'none';
-}
-
-// Contador correlativo de servicios
-async function siguienteNumSvc() {
-  const {data} = await supa.from('servicios_piloto').select('servicio_id').not('servicio_id','is',null).order('created_at',{ascending:false}).limit(100);
-  let max = 0;
-  (data||[]).forEach(r=>{
-    const m = (r.servicio_id||'').match(/S-(\d+)/) || (r.servicio_id||'').match(/SV-(\d+)/);
-    if (m) max = Math.max(max, parseInt(m[1]));
-  });
-  return `S-${String(max+1).padStart(2,'0')}`;  // correlativo
-}
-
-async function guardarAsignacion() {
-  const patente   = document.getElementById('asig-patente').value;
-  const conductor = document.getElementById('asig-conductor').value;
-  const clienteSel = document.getElementById('asig-cliente').value;
-  const clienteNuevo = document.getElementById('asig-cliente-custom').value.trim();
-  const cliente = clienteSel==='__otro__' ? clienteNuevo : clienteSel;
-  if (clienteSel==='__otro__' && clienteNuevo) {
-    // Guardar nuevo cliente en Supabase
-    await supa.from('kaptura_clientes').insert({nombre:clienteNuevo, condicion_pago:'30 días'});
-    DB.clientes.push({nombre:clienteNuevo, condicion_pago:'30 días'});
-    poblarSelects();
+async function guardarAsignacion(){
+  const patente=document.getElementById('asig-patente').value;
+  const conductor=document.getElementById('asig-conductor').value;
+  const clienteSel=document.getElementById('asig-cliente').value;
+  const clienteNuevo=document.getElementById('asig-cliente-custom').value.trim();
+  const cliente=clienteSel==='__otro__'?clienteNuevo:clienteSel;
+  const origenSel=document.getElementById('asig-origen').value;
+  const origen=origenSel==='otro'?document.getElementById('asig-origen-custom').value:origenSel;
+  const fecha=document.getElementById('asig-fecha').value;
+  if(!patente||!conductor||!cliente||!origen){toast('Completa todos los campos');return;}
+  if(clienteSel==='__otro__'&&clienteNuevo){
+    await supa.from('kaptura_clientes').insert({nombre:clienteNuevo,condicion_pago:'30 días'});
+    DB.clientes.push({nombre:clienteNuevo,condicion_pago:'30 días'});
   }
-  const origenSel = document.getElementById('asig-origen').value;
-  const origen    = origenSel==='otro' ? document.getElementById('asig-origen-custom').value : origenSel;
-  const fecha     = document.getElementById('asig-fecha').value;
-  if (!patente||!conductor||!cliente||!origen) { toast('Completa todos los campos'); return; }
-  const svId = await siguienteNumSvc();
-  const nuevo = { servicio_id:svId, patente, conductor, cliente, origen, fecha, estado:'asignado', margen_servicio:0, puntos_entrega:1, puntos_done:0 };
-  const {error} = await supa.from('servicios_piloto').insert(nuevo);
-  if (error) { toast('Error: '+error.message); return; }
-  DB.servicios.unshift({...nuevo, created_at:new Date().toISOString()});
-  cerrar('modal-asignar');
-  renderServicios(); renderKPIs();
+  const svId=await siguienteNumSvc();
+  const nuevo={servicio_id:svId,patente,conductor,cliente,origen,fecha,estado:'asignado',margen_servicio:0,puntos_entrega:1,puntos_done:0};
+  const {error}=await supa.from('servicios_piloto').insert(nuevo);
+  if(error){toast('Error: '+error.message);return;}
+  DB.servicios.unshift({...nuevo,created_at:new Date().toISOString()});
+  cerrar('modal-asignar'); renderServicios(); renderKPIs();
   toast(`✓ ${svId} asignado`);
 }
 
-async function iniciarSvc(i) {
-  const s = DB.servicios[i];
-  await supa.from('servicios_piloto').update({estado:'en_proceso', hora_inicio:new Date().toISOString()}).eq('id',s.id);
-  s.estado='en_proceso'; renderServicios(); renderKPIs();
+async function iniciarSvc(i){
+  const s=DB.servicios[i];
+  if(s.id) await supa.from('servicios_piloto').update({estado:'en_proceso',hora_inicio:new Date().toISOString()}).eq('id',s.id);
+  DB.servicios[i].estado='en_proceso';
+  renderServicios(); renderKPIs();
   toast('▶ Servicio iniciado');
 }
 
-async function confirmarEliminar(i) {
-  const s = DB.servicios[i];
-  if (!s) { toast('Error: servicio no encontrado'); return; }
-  if (!confirm(`¿Eliminar ${s.servicio_id||'este servicio'}?`)) return;
-  if (!s.id) {
-    // Sin ID en Supabase, solo eliminar localmente
-    DB.servicios.splice(i,1);
-    renderServicios(); renderKPIs();
-    toast('✓ Servicio eliminado');
-    return;
-  }
-  const {error} = await supa.from('servicios_piloto').delete().eq('id',s.id);
-  if (error) { toast('Error: '+error.message); return; }
-  DB.servicios.splice(i,1);
-  renderServicios(); renderKPIs();
-  toast('✓ Servicio eliminado');
+async function confirmarEliminar(i){
+  const s=DB.servicios[i];
+  if(!s){toast('Error');return;}
+  if(!confirm(`¿Eliminar ${s.servicio_id||'este servicio'}?`))return;
+  if(s.id){const {error}=await supa.from('servicios_piloto').delete().eq('id',s.id);if(error){toast('Error: '+error.message);return;}}
+  DB.servicios.splice(i,1); renderServicios(); renderKPIs();
+  toast('✓ Eliminado');
 }
 
-// ══════════════════════════════════════════
-// MODAL REGISTRAR
-// ══════════════════════════════════════════
-function abrirRegistrar(i) {
-  const s = DB.servicios[i];
-  svcActivo = {...s, _idx:i};
-  puntosData = s._puntos || [{guias:[], destino:''}];
-  document.getElementById('reg-id').textContent  = s.servicio_id||s.id?.slice(0,8)||'—';
-  document.getElementById('reg-sub').textContent = `${s.patente} · ${s.conductor} · ${s.cliente}`;
-  // Precargar campos
-  document.getElementById('reg-km').value     = s.km_total||'';
-  document.getElementById('reg-peajes').value = s.costo_peajes||s.peajes_tag||'';
-  document.getElementById('reg-dias').value   = s.dias_servicio||1;
-  document.getElementById('reg-tarifa').value = s.tarifa_neta||'';
-  document.getElementById('reg-bono').value   = s.bono_estadia||'';
-  document.getElementById('reg-nguia').value  = s.num_guia||'';
-  document.getElementById('reg-destino').value= s.destino||'';
-  // Fecha en ruta: usar fecha del servicio por defecto
-  document.getElementById('reg-fecha-ruta').value = s.fecha||hoyStr;
-  if (s.cliente) document.getElementById('reg-cliente').value = s.cliente;
-  // CF y mantención
-  const c = DB.config;
-  document.getElementById('reg-cf').value   = fmt(parseInt(c.costo_fijo||c.costo_fijo_dia||44000));
-  document.getElementById('reg-mant').value = fmt(parseInt(c.mantencion||c.costo_mantencion||25000));
-  renderPuntos();
-  calcCombustible();
-  calcMargen();
+// ══ REGISTRAR ══
+function abrirRegistrar(i){
+  const s=DB.servicios[i];
+  svcActivo={...s,_idx:i};
+  puntosData=s._puntos||[{num_guia:'',fecha:'',destino:'',capturada:false}];
+  document.getElementById('reg-title').textContent=`Registrar — ${s.servicio_id||'—'}`;
+  document.getElementById('reg-sub').textContent=`${s.patente} · ${s.conductor}`;
+  document.getElementById('info-cliente').textContent=s.cliente||'—';
+  document.getElementById('info-patente').textContent=s.patente||'—';
+  document.getElementById('info-fecha').textContent=s.fecha||'—';
+  document.getElementById('info-origen').textContent=s.origen||'—';
+  document.getElementById('reg-fecha-ruta').value=s.fecha||hoyStr;
+  // Precargar campos guardados
+  document.getElementById('reg-km').value=s.km_total||'';
+  document.getElementById('reg-peajes').value=s.costo_peajes||s.peajes_tag||'';
+  document.getElementById('reg-tarifa').value=s.tarifa_neta||'';
+  document.getElementById('reg-bono').value=s.bono_estadia||'';
+  document.getElementById('reg-dias').value=s.dias_servicio||1;
+  const c=DB.config;
+  document.getElementById('reg-cf').value=fmt(parseInt(c.costo_fijo||c.costo_fijo_dia||44000));
+  document.getElementById('reg-mant').value=fmt(parseInt(c.mantencion||c.costo_mantencion||25000));
+  renderPuntos(); calcCombustible(); calcMargen();
   document.getElementById('modal-registrar').style.display='flex';
-  // Auto-cargar GPS y calcular peajes TAG
+  // Auto-cargar GPS
   cargarGPSyTAG(s.patente, s.fecha||hoyStr);
 }
 
-function recargarGPSyTAG() {
-  if (!svcActivo) return;
-  const fecha = document.getElementById('reg-fecha-ruta').value;
-  if (fecha) cargarGPSyTAG(svcActivo.patente, fecha);
-}
-
-function onDestinoChange() {
-  // Cuando el usuario escribe destino manualmente, recalcular todo
-  buscarTarifa();
-  // Mostrar alerta de confirmación
-  const alerta = document.getElementById('lbl-destino-alerta');
-  if (alerta) alerta.style.display = 'inline';
-  // Recalcular TAG con el destino nuevo
-  if (svcActivo) {
-    const fecha = document.getElementById('reg-fecha-ruta').value || svcActivo.fecha;
-    cargarGPSyTAG(svcActivo.patente, fecha);
-  }
-}
-
-async function cargarGPSyTAG(patente, fecha) {
-  if (!patente || !fecha) return;
-  try {
-    // 1. Buscar GPS del equipo en la fecha
-    const {data: gps} = await supa.from('kaptura_gps_sessions')
-      .select('*').eq('patente', patente).eq('fecha', fecha).single();
-    
-    if (gps && gps.km_total > 0) {
-      // Cargar km automáticamente
-      const kmEl = document.getElementById('reg-km');
-      if (!kmEl.value || parseFloat(kmEl.value) === 0) {
-        kmEl.value = Math.round(gps.km_total);
-        kmEl.className = 'inp ok';
-        calcCombustible();
-        toast(`✓ GPS: ${Math.round(gps.km_total)} km cargados para ${patente}`);
-      }
-      // Sugerir destino desde GPS si el campo está vacío
-      if (gps.ultimo_destino) {
-        const destEl = document.getElementById('reg-destino');
-        if (!destEl.value || destEl.value.length < 3) {
-          const parts = gps.ultimo_destino.split(',');
-          const ciudad = parts.length > 1 ? parts[1].trim() : parts[0].trim();
-          destEl.value = ciudad;
-          destEl.className = 'inp pend';
-          destEl.title = `GPS sugiere: ${gps.ultimo_destino}`;
-          const alerta = document.getElementById('lbl-destino-alerta');
-          if (alerta) alerta.style.display = 'inline';
-          buscarTarifa();
-        }
-      }
-      // 2. Calcular peajes TAG cruzando addresses con porticos_tag
-      if (gps.addresses_json && DB.porticos.length > 0) {
-        let addresses = [];
-        try { addresses = JSON.parse(gps.addresses_json); } catch(e) {}
-        
-        const porticosDetectados = [];
-        const cobrosYaContados = new Set();
-        
-        for (const addr of addresses) {
-          if (!addr) continue;
-          for (const p of DB.porticos) {
-            if (p.valor_3_ejes <= 0) continue;
-            // Buscar coincidencia en texto_gps_blackgps, texto_gps_forguard o palabras_clave
-            const textos = [p.texto_gps_blackgps, p.texto_gps_forguard, p.palabras_clave, p.cobro_oficial].filter(Boolean);
-            const addrLower = addr.toLowerCase();
-            const match = textos.some(t => {
-              const palabras = t.toLowerCase().split(',').map(x=>x.trim()).filter(x=>x.length>3);
-              return palabras.some(pal => addrLower.includes(pal));
-            });
-            if (match && !cobrosYaContados.has(p.cobro_oficial)) {
-              cobrosYaContados.add(p.cobro_oficial);
-              porticosDetectados.push({nombre: p.cobro_oficial, valor: p.valor_3_ejes, tipo: p.tipo});
-            }
-          }
-        }
-        
-        if (porticosDetectados.length > 0) {
-          const totalTag = porticosDetectados.reduce((a,p) => a + p.valor, 0);
-          const peajesEl = document.getElementById('reg-peajes');
-          if (!peajesEl.value || parseFloat(peajesEl.value) === 0) {
-            peajesEl.value = totalTag;
-            peajesEl.className = 'inp ok';
-            calcMargen();
-            const detalle = porticosDetectados.map(p=>`${p.nombre}: $${p.valor.toLocaleString('es-CL')}`).join(' | ');
-            toast(`✓ TAG detectados: ${porticosDetectados.length} pórticos = $${totalTag.toLocaleString('es-CL')}`);
-            // Guardar detalle en svcActivo para referencia
-            if (svcActivo) svcActivo._tagDetalle = detalle;
-          }
-        }
-      }
-    } else {
-      console.log('Sin GPS para', patente, fecha);
-    }
-  } catch(e) {
-    console.warn('Error GPS:', e.message);
-  }
-}
-
-// ── PUNTOS Y GUÍAS ──
-function renderPuntos() {
-  const cont = document.getElementById('puntos-container');
-  cont.innerHTML = puntosData.map((p,pi)=>`
-    <div class="punto-section">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <div style="font-size:11px;font-weight:800;color:var(--blue-col)">PUNTO ${pi+1}</div>
-        ${puntosData.length>1 ? `<button class="btn btn-red btn-sm" onclick="eliminarPunto(${pi})">✕</button>` : ''}
+// ══ PUNTOS ══
+function renderPuntos(){
+  const cont=document.getElementById('puntos-container');
+  cont.innerHTML=puntosData.map((p,pi)=>`
+    <div class="punto-card">
+      <div class="punto-header">
+        <div class="punto-title">📍 PUNTO ${pi+1} ${p.capturada?'<span style="color:var(--green)">✓</span>':''}</div>
+        ${puntosData.length>1?`<button class="btn btn-red btn-sm" onclick="eliminarPunto(${pi})">✕</button>`:''}
       </div>
-      <div class="form-field" style="margin-bottom:8px">
-        <label class="lbl">Destino del punto</label>
-        <input class="inp" value="${p.destino||''}" placeholder="ej: Valparaíso" onchange="puntosData[${pi}].destino=this.value">
+      <div class="foto-zone ${p.capturada?'captured':p.procesando?'procesando':''}" onclick="document.getElementById('foto-p${pi}').click()">
+        <div style="font-size:24px">${p.procesando?'⏳':p.capturada?'✓':'📷'}</div>
+        <div style="font-size:12px;font-weight:800;color:var(--navy);margin-top:4px">${p.procesando?'Procesando...':p.capturada?'Guía leída':'Fotografiar / Subir Guía'}</div>
+        <div style="font-size:10px;color:var(--gray-400);margin-top:2px">${p.num_guia||'Toca para capturar o subir archivo'}</div>
       </div>
-      ${p.guias.map((g,gi)=>guiaHTML(pi,gi,g)).join('')}
-      <button class="btn btn-outline btn-sm" onclick="agregarGuia(${pi})" style="width:100%;margin-top:6px">+ Agregar Guía al Punto ${pi+1}</button>
+      <input type="file" id="foto-p${pi}" accept="image/*" capture="environment" style="display:none" onchange="procesarGuiaPunto(this,${pi})">
+      ${p.capturada?`
+      <div class="guia-leida">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px">
+          <div><span style="font-size:9px;color:var(--gray-400);font-weight:700">N° GUÍA</span><br><span style="font-size:12px;font-weight:800">${p.num_guia||'—'}</span></div>
+          <div><span style="font-size:9px;color:var(--gray-400);font-weight:700">FECHA</span><br><span style="font-size:12px;font-weight:700">${p.fecha||'—'}</span></div>
+          <div style="grid-column:1/-1"><span style="font-size:9px;color:var(--gray-400);font-weight:700">DESTINO</span>
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="font-size:12px;font-weight:700;color:${p.destino?'var(--navy)':'var(--orange)'}">${p.destino||'⚠ Sin destino detectado'}</span>
+              <span style="font-size:8px;font-weight:800;background:#FEF3C7;color:#92400E;padding:1px 5px;border-radius:3px">⚠ CONFIRMAR</span>
+            </div>
+          </div>
+        </div>
+        <div style="margin-top:6px">
+          <label class="lbl">Corregir destino si es necesario</label>
+          <input class="inp" value="${p.destino||''}" placeholder="Destino del punto" onchange="corregirDestinoPunto(${pi},this.value)">
+        </div>
+      </div>`:''
+      }
     </div>`).join('');
 }
 
-function guiaHTML(pi,gi,g) {
-  return `<div class="guia-item">
-    <div style="font-size:10px;font-weight:800;color:var(--gray-600);margin-bottom:6px">GUÍA ${gi+1}</div>
-    <div class="foto-zone ${g.capturada?'captured':''}" onclick="fotoGuia(${pi},${gi})">
-      <div style="font-size:20px">${g.capturada?'✓':'📷'}</div>
-      <div style="font-size:11px;font-weight:800;color:var(--navy);margin-top:4px">${g.capturada?'Guía leída':'Fotografiar / Subir Guía'}</div>
-      <div style="font-size:10px;color:var(--gray-400);margin-top:2px">${g.num_guia||'Toca para capturar'}</div>
-    </div>
-    <input type="file" id="foto-input-${pi}-${gi}" accept="image/*" capture="environment" style="display:none" onchange="procesarFotoGuia(this,${pi},${gi})">
-    <div class="form-grid" style="margin-top:6px">
-      <div class="form-field"><label class="lbl">N° Guía</label><input class="inp ${g.num_guia?'ok':''}" value="${g.num_guia||''}" placeholder="Número" onchange="puntosData[${pi}].guias[${gi}].num_guia=this.value"></div>
-      <div class="form-field"><label class="lbl">Fecha Guía</label><input class="inp ${g.fecha?'ok':''}" value="${g.fecha||''}" placeholder="DD/MM/AAAA" onchange="puntosData[${pi}].guias[${gi}].fecha=this.value"></div>
+function agregarPunto(){puntosData.push({num_guia:'',fecha:'',destino:'',capturada:false});renderPuntos();}
+function eliminarPunto(pi){if(puntosData.length<=1)return;puntosData.splice(pi,1);renderPuntos();}
 
-    </div>
-    ${gi>0 ? `<button class="btn btn-red btn-sm" onclick="eliminarGuia(${pi},${gi})" style="margin-top:6px;width:100%">✕ Eliminar guía</button>` : ''}
-  </div>`;
+function corregirDestinoPunto(pi,val){
+  puntosData[pi].destino=val;
+  // Usar destino del último punto para buscar tarifa
+  const ultimoDestino=puntosData[puntosData.length-1].destino;
+  if(ultimoDestino) buscarTarifaPorDestino(svcActivo?.cliente, ultimoDestino);
 }
 
-function agregarPunto() {
-  puntosData.push({guias:[{capturada:false}], destino:''});
+async function procesarGuiaPunto(input,pi){
+  if(!input.files||!input.files[0])return;
+  if(!CLAUDE_KEY){toast('⚠ Configura la API Key Claude en Config');return;}
+  const file=input.files[0];
+  puntosData[pi]={...puntosData[pi],procesando:true,capturada:false};
   renderPuntos();
-  // Actualizar puntos_entrega
-  document.getElementById('reg-id'); // trigger
-}
-
-function eliminarPunto(pi) {
-  if (puntosData.length<=1) return;
-  puntosData.splice(pi,1);
-  renderPuntos();
-}
-
-function agregarGuia(pi) {
-  puntosData[pi].guias.push({capturada:false});
-  renderPuntos();
-}
-
-function eliminarGuia(pi,gi) {
-  puntosData[pi].guias.splice(gi,1);
-  renderPuntos();
-}
-
-function fotoGuia(pi,gi) {
-  document.getElementById(`foto-input-${pi}-${gi}`).click();
-}
-
-// ── IA LECTURA GUÍA ──
-async function procesarFotoGuia(input,pi,gi) {
-  if (!input.files||!input.files[0]) return;
-  const file = input.files[0];
-  puntosData[pi].guias[gi] = {...puntosData[pi].guias[gi], procesando:true};
-  renderPuntos();
-  try {
-    const b64 = await fileToB64(file);
-    let intentos = 0;
-    let json = null;
-    while (intentos < 3 && !json?.num_guia) {
+  try{
+    const b64=await fileToB64(file);
+    let json=null, intentos=0;
+    while(intentos<3&&!json?.num_guia){
       intentos++;
-      const resp = await fetch('https://api.anthropic.com/v1/messages',{
+      const resp=await fetch('https://api.anthropic.com/v1/messages',{
         method:'POST',
-        headers:{'Content-Type':'application/json','x-api-key':CLAUDE_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+        headers:{
+          'Content-Type':'application/json',
+          'x-api-key':CLAUDE_KEY,
+          'anthropic-version':'2023-06-01',
+          'anthropic-dangerous-direct-browser-access':'true'
+        },
         body:JSON.stringify({
           model:'claude-sonnet-4-5',
-          max_tokens:500,
+          max_tokens:600,
           messages:[{role:'user',content:[
             {type:'image',source:{type:'base64',media_type:file.type,data:b64}},
-            {type:'text',text:`Lee esta guía de despacho chilena.
+            {type:'text',text:`Eres experto en leer guías de despacho chilenas de transporte de carga.
 
-IMPORTANTE: El campo "cliente" debe ser la EMPRESA QUE EMITE O DESPACHA la guía (quien aparece en el encabezado superior como empresa emisora, su razón social o nombre comercial). NO es el destinatario del producto.
+Extrae estos datos en JSON:
+1. num_guia: número de la guía (solo dígitos, es el número grande destacado)
+2. fecha_emision: fecha en formato DD/MM/AAAA
+3. cliente: empresa que EMITE o DESPACHA (su nombre en el encabezado). Lista de clientes válidos: ${DB.clientes.map(c=>c.nombre).join(', ')}. Usa el nombre más similar de esa lista.
+4. destino: lugar donde el camión debe ENTREGAR la carga. Busca en campos como "Dir. Destino", "Dirección Destino", "Dirección de Entrega", "Destino", sección "Transporte" u "Observaciones" al pie. NUNCA uses la dirección del encabezado del emisor. Responde solo ciudad o lugar.
+5. kg: kilogramos si aparece, si no null
+6. rut_emisor: RUT del emisor
 
-Nuestros clientes registrados son: ${DB.clientes.map(c=>c.nombre).join(', ')}.
-
-Si el emisor de la guía coincide o es similar a alguno de nuestros clientes registrados, usa exactamente ese nombre. Si no coincide, usa el nombre que aparece en la guía.
-
-Extrae en JSON: {num_guia, fecha_emision, cliente, destino, kg, rut_emisor}
-- num_guia: número de la guía (solo dígitos)
-- fecha_emision: fecha en formato DD/MM/AAAA
-- cliente: empresa emisora de la guía
-- destino: lugar o dirección de entrega
-- kg: cantidad en kg si aparece
-- rut_emisor: RUT del emisor
-
-Solo JSON, sin explicación.`}
+Solo JSON sin explicación: {"num_guia":"","fecha_emision":"","cliente":"","destino":"","kg":null,"rut_emisor":""}`}
           ]}]
         })
       });
-      const data = await resp.json();
-      // Manejar respuesta de Claude correctamente
-      let txt = '';
-      if (data && data.content && Array.isArray(data.content)) {
-        const textBlock = data.content.find(b => b.type === 'text');
-        txt = textBlock ? textBlock.text : '';
-      } else if (data && data.error) {
-        throw new Error(data.error.message || 'Error API Claude');
-      }
-      try { 
-        const cleaned = txt.replace(/```json|```/g,'').trim();
-        json = JSON.parse(cleaned); 
-      } catch(e){ 
-        console.warn('Parse error:', txt);
-      }
+      const data=await resp.json();
+      if(data.error){throw new Error(data.error.message);}
+      const txt=(data.content?.find(b=>b.type==='text')?.text)||'';
+      try{json=JSON.parse(txt.replace(/```json|```/g,'').trim());}catch(e){console.warn('parse error:',txt);}
     }
-    if (json?.num_guia) {
-      puntosData[pi].guias[gi] = {
-        ...puntosData[pi].guias[gi],
-        capturada:true, procesando:false,
-        num_guia: json.num_guia,
-        fecha: json.fecha_emision,
-        cliente_guia: json.cliente,
-        destino: json.destino,
-        kg: json.kg,
-        rut_emisor: json.rut_emisor
+    if(json?.num_guia){
+      puntosData[pi]={
+        ...puntosData[pi],
+        capturada:true,procesando:false,
+        num_guia:json.num_guia,
+        fecha:json.fecha_emision,
+        destino:json.destino&&json.destino!=='null'?json.destino:'',
+        kg:json.kg,
+        rut_emisor:json.rut_emisor
       };
-      // Auto-completar destino del punto si está vacío
-      if (!puntosData[pi].destino && json.destino) puntosData[pi].destino = json.destino;
-      // Auto-completar destino general
-      if (!document.getElementById('reg-destino').value && json.destino) {
-        document.getElementById('reg-destino').value = json.destino;
-        buscarTarifa();
-      }
       renderPuntos();
-      toast(`✓ Guía ${json.num_guia} leída`);
-    } else {
-      puntosData[pi].guias[gi].procesando=false;
+      // Buscar tarifa con destino del último punto
+      const ultimoDestino=puntosData[puntosData.length-1].destino;
+      if(ultimoDestino) buscarTarifaPorDestino(svcActivo?.cliente, ultimoDestino);
+      // Actualizar campo de N° guía principal
+      if(!document.getElementById('reg-km').dataset.guia) document.getElementById('reg-km').dataset.guia=json.num_guia;
+      toast(`✓ Guía ${json.num_guia} leída — Punto ${pi+1}`);
+    }else{
+      puntosData[pi]={...puntosData[pi],procesando:false};
       renderPuntos();
-      toast('No se pudo leer el número de guía — ingresa manualmente');
+      toast(`⚠ No se pudo leer la guía del Punto ${pi+1} — ingresa manual`);
     }
-  } catch(e) {
-    puntosData[pi].guias[gi].procesando=false;
+  }catch(e){
+    puntosData[pi]={...puntosData[pi],procesando:false};
     renderPuntos();
     toast('Error: '+e.message);
   }
 }
 
-// ── CÁLCULOS ──
-function calcCombustible() {
-  const km   = parseFloat(document.getElementById('reg-km').value)||0;
-  const rend = parseFloat(DB.config.rendimiento||DB.config.rendimiento_km_lt||2.5);
-  const prec = parseFloat(DB.config.precio_litro||DB.config.precio_combustible||1300);
-  const lts  = km ? Math.round(km/rend*10)/10 : 0;
-  const cost = Math.round(lts*prec);
-  document.getElementById('reg-litros').value = lts ? `${lts} lt` : '';
-  document.getElementById('reg-comb').value   = lts ? fmt(cost) : '';
+// ══ GPS y TAG ══
+function recargarGPSyTAG(){
+  if(!svcActivo)return;
+  const fecha=document.getElementById('reg-fecha-ruta').value;
+  if(fecha) cargarGPSyTAG(svcActivo.patente,fecha);
+}
+
+async function cargarGPSyTAG(patente,fecha){
+  if(!patente||!fecha)return;
+  try{
+    const {data:gps}=await supa.from('kaptura_gps_sessions').select('*').eq('patente',patente).eq('fecha',fecha).maybeSingle();
+    if(gps&&gps.km_total>0){
+      const kmEl=document.getElementById('reg-km');
+      if(!kmEl.value||parseFloat(kmEl.value)===0){
+        kmEl.value=Math.round(gps.km_total);
+        kmEl.className='inp ok';
+        document.getElementById('lbl-km-badge').textContent='GPS';
+        document.getElementById('lbl-km-badge').className='badge-ok';
+        calcCombustible();
+        toast(`✓ GPS: ${Math.round(gps.km_total)} km — ${patente}`);
+      }
+      // Calcular TAG desde addresses
+      if(gps.addresses_json&&DB.porticos.length>0){
+        let addresses=[];
+        try{addresses=JSON.parse(gps.addresses_json);}catch(e){}
+        const cobros=new Set(), detectados=[];
+        for(const addr of addresses){
+          if(!addr)continue;
+          for(const p of DB.porticos){
+            if(p.valor_3_ejes<=0||cobros.has(p.cobro_oficial))continue;
+            const textos=[p.texto_gps_blackgps,p.texto_gps_forguard,p.palabras_clave].filter(Boolean);
+            const al=addr.toLowerCase();
+            if(textos.some(t=>t.toLowerCase().split(',').map(x=>x.trim()).filter(x=>x.length>3).some(pal=>al.includes(pal)))){
+              cobros.add(p.cobro_oficial);
+              detectados.push({nombre:p.cobro_oficial,valor:p.valor_3_ejes});
+            }
+          }
+        }
+        if(detectados.length>0){
+          const total=detectados.reduce((a,p)=>a+p.valor,0);
+          const peEl=document.getElementById('reg-peajes');
+          if(!peEl.value||parseFloat(peEl.value)===0){
+            peEl.value=total;
+            peEl.className='inp ok';
+            document.getElementById('lbl-peajes-badge').textContent='TAG AUTO';
+            document.getElementById('lbl-peajes-badge').className='badge-ok';
+            calcMargen();
+            toast(`✓ TAG: ${detectados.length} pórticos = ${fmt(total)}`);
+          }
+        }
+      }
+    }
+  }catch(e){console.warn('GPS error:',e.message);}
+}
+
+// ══ CÁLCULOS ══
+function calcCombustible(){
+  const km=parseFloat(document.getElementById('reg-km').value)||0;
+  const rend=parseFloat(DB.config.rendimiento||DB.config.rendimiento_km_lt||2.5);
+  const prec=parseFloat(DB.config.precio_litro||DB.config.precio_combustible||1300);
+  const lts=km?Math.round(km/rend*10)/10:0;
+  const cost=Math.round(lts*prec);
+  document.getElementById('reg-litros').value=lts?`${lts} lt`:'';
+  document.getElementById('reg-comb').value=lts?fmt(cost):'';
   calcMargen();
 }
 
-function calcRetorno() {
-  const v = parseFloat(document.getElementById('reg-km-vacio').value)||0;
-  const c = parseFloat(document.getElementById('reg-km-carga').value)||0;
-  const r = parseFloat(document.getElementById('reg-km-retorno').value)||0;
-  const t = v+c+r;
-  document.getElementById('reg-pct-retorno').value = t ? `${Math.round((v+r)/t*100)}%` : '';
-  if (t && !document.getElementById('reg-km').value) {
-    document.getElementById('reg-km').value = t;
-    calcCombustible();
-  }
+function calcRetorno(){
+  const v=parseFloat(document.getElementById('reg-km-vacio').value)||0;
+  const c=parseFloat(document.getElementById('reg-km-carga').value)||0;
+  const r=parseFloat(document.getElementById('reg-km-retorno').value)||0;
+  const t=v+c+r;
+  document.getElementById('reg-pct-retorno').value=t?`${Math.round((v+r)/t*100)}%`:'';
+  if(t&&!document.getElementById('reg-km').value){document.getElementById('reg-km').value=t;calcCombustible();}
   calcMargen();
 }
 
-function calcMargen() {
-  const c = DB.config;
-  const dias   = parseInt(document.getElementById('reg-dias').value)||1;
-  const km     = parseFloat(document.getElementById('reg-km').value)||0;
-  const rend   = parseFloat(c.rendimiento||c.rendimiento_km_lt||2.5);
-  const prec   = parseFloat(c.precio_litro||c.precio_combustible||1300);
-  const comb   = km ? Math.round((km/rend)*prec) : 0;
-  const peajes = parseFloat(document.getElementById('reg-peajes').value)||0;
-  const cond   = dias*parseInt(c.sueldo_conductor||c.costo_conductor_dia||33000);
-  const cf     = dias*parseInt(c.costo_fijo||c.costo_fijo_dia||44000);
-  const mant   = dias*parseInt(c.mantencion||c.costo_mantencion||25000);
-  const tarifa = parseFloat(document.getElementById('reg-tarifa').value)||0;
-  const bono   = parseFloat(document.getElementById('reg-bono').value)||0;
-  const pctF   = parseFloat(document.getElementById('reg-plazo').value)||1.5;
-  const fact   = Math.round(tarifa*pctF/100);
-  const viat   = dias*parseInt(c.viatico||c.costo_viatico||12000);
-  const ingreso= tarifa+bono;
-  const costos = comb+peajes+cond+cf+mant+fact+viat;
-  const margen = ingreso-costos;
-  const pct    = tarifa ? Math.round(margen/tarifa*100) : 0;
-  document.getElementById('reg-cond-costo').value = fmt(cond);
-  document.getElementById('reg-factoring').value  = fmt(fact);
-  document.getElementById('reg-viatico').value    = fmt(viat);
-  document.getElementById('reg-ingreso').value    = fmt(ingreso);
-  const mEl = document.getElementById('reg-margen-sv');
-  mEl.textContent = fmt(margen);
-  mEl.className = `margen-val ${margen>=0?'pos':'neg'}`;
-  document.getElementById('reg-margen-pct').textContent = `${pct}% sobre tarifa`;
-  const mes = hoy.getMonth();
-  const acum = DB.servicios.filter(s=>{
-    const f = new Date(s.created_at||'2026-01-01');
-    return f.getMonth()===mes && ['confirmado','cerrado'].includes(s.estado);
-  }).reduce((a,s)=>a+(s.margen_servicio||s.margen||0),0);
-  document.getElementById('reg-margen-acum').textContent = fmt(acum+(margen>0?margen:0));
-  document.getElementById('reg-margen-acum-sub').textContent = `${MESES[mes]} ${hoy.getFullYear()}`;
-  if (svcActivo) svcActivo._margenCalc = margen;
+function calcMargen(){
+  const c=DB.config;
+  const dias=parseInt(document.getElementById('reg-dias').value)||1;
+  const km=parseFloat(document.getElementById('reg-km').value)||0;
+  const rend=parseFloat(c.rendimiento||c.rendimiento_km_lt||2.5);
+  const prec=parseFloat(c.precio_litro||c.precio_combustible||1300);
+  const comb=km?Math.round((km/rend)*prec):0;
+  const peajes=parseFloat(document.getElementById('reg-peajes').value)||0;
+  const cond=dias*parseInt(c.sueldo_conductor||c.costo_conductor_dia||33000);
+  const cf=dias*parseInt(c.costo_fijo||c.costo_fijo_dia||44000);
+  const mant=dias*parseInt(c.mantencion||c.costo_mantencion||25000);
+  const tarifa=parseFloat(document.getElementById('reg-tarifa').value)||0;
+  const puntosCobro=parseFloat(document.getElementById('reg-puntos-valor').value)||0;
+  const bono=parseFloat(document.getElementById('reg-bono').value)||0;
+  const pctF=parseFloat(document.getElementById('reg-plazo').value)||1.5;
+  const fact=Math.round(tarifa*pctF/100);
+  const viat=dias*parseInt(c.viatico||c.costo_viatico||12000);
+  const ingreso=tarifa+puntosCobro+bono;
+  const costos=comb+peajes+cond+cf+mant+fact+viat;
+  const margen=ingreso-costos;
+  const pct=tarifa?Math.round(margen/tarifa*100):0;
+  document.getElementById('reg-cond-costo').value=fmt(cond);
+  document.getElementById('reg-factoring').value=fmt(fact);
+  document.getElementById('reg-viatico').value=fmt(viat);
+  document.getElementById('reg-ingreso').value=fmt(ingreso);
+  const mEl=document.getElementById('reg-margen-sv');
+  mEl.textContent=fmt(margen);
+  mEl.className=`margen-val ${margen>=0?'pos':'neg'}`;
+  document.getElementById('reg-margen-pct').textContent=`${pct}% sobre tarifa`;
+  const mes=hoy.getMonth();
+  const acum=DB.servicios.filter(s=>{const f=new Date(s.created_at||'2026-01-01');return f.getMonth()===mes&&['confirmado','cerrado'].includes(s.estado);}).reduce((a,s)=>a+(s.margen_servicio||s.margen||0),0);
+  document.getElementById('reg-margen-acum').textContent=fmt(acum+(margen>0?margen:0));
+  document.getElementById('reg-margen-acum-sub').textContent=`${MESES[mes]} ${hoy.getFullYear()}`;
+  if(svcActivo)svcActivo._margenCalc=margen;
 }
 
-function buscarTarifa() {
-  const cliente = document.getElementById('reg-cliente').value;
-  const destino = document.getElementById('reg-destino').value.toLowerCase().trim();
-  if (!cliente||!destino) return;
-  const match = DB.tarifarios.find(t=>{
-    const cli  = (t.cliente||'').toLowerCase();
-    const dest = (t.destino||t.localidad||'').toLowerCase();
-    return cli.includes(cliente.toLowerCase().split(' ')[0]) && (dest.includes(destino.split(' ')[0])||destino.includes(dest.split(' ')[0]));
+function buscarTarifaPorDestino(cliente,destino){
+  if(!cliente||!destino)return;
+  const dl=destino.toLowerCase().trim();
+  const match=DB.tarifarios.find(t=>{
+    const cli=(t.cliente||'').toLowerCase();
+    const dest=(t.destino||t.localidad||'').toLowerCase();
+    return cli.includes((cliente||'').toLowerCase().split(' ')[0])&&(dest.includes(dl.split(' ')[0])||dl.includes(dest.split(' ')[0]));
   });
-  if (match) {
-    const tarifa = match.tarifa||match.precio||match.valor||0;
-    document.getElementById('reg-tarifa').value = tarifa;
-    document.getElementById('reg-tarifa').className = 'inp ok';
-    document.getElementById('lbl-tarifa-badge').textContent = 'AUTO';
-    document.getElementById('lbl-tarifa-badge').className = 'badge-ok';
+  if(match){
+    const tarifa=match.tarifa||match.precio||match.valor||0;
+    document.getElementById('reg-tarifa').value=tarifa;
+    document.getElementById('reg-tarifa').className='inp ok';
+    document.getElementById('lbl-tarifa-badge').textContent='AUTO';
+    document.getElementById('lbl-tarifa-badge').className='badge-ok';
     calcMargen();
-    toast(`✓ Tarifa ${fmt(tarifa)} desde tarifario`);
+    toast(`✓ Tarifa ${fmt(tarifa)} — ${destino}`);
   }
 }
 
-async function guardarSvc(estado) {
-  if (!svcActivo) return;
-  const km      = parseFloat(document.getElementById('reg-km').value)||0;
-  const peajes  = parseFloat(document.getElementById('reg-peajes').value)||0;
-  const tarifa  = parseFloat(document.getElementById('reg-tarifa').value)||0;
-  const bono    = parseFloat(document.getElementById('reg-bono').value)||0;
-  const destino = document.getElementById('reg-destino').value;
-  const nguia   = document.getElementById('reg-nguia').value || (puntosData[0]?.guias[0]?.num_guia||'');
-  const dias    = parseInt(document.getElementById('reg-dias').value)||1;
-  const margen  = svcActivo._margenCalc||0;
-  const totalPts = puntosData.length;
-  // Primera guía del primer punto
-  const g0 = puntosData[0]?.guias[0]||{};
-  const upd = {
-    estado, km_total:km, costo_peajes:peajes, tarifa_neta:tarifa,
-    bono_estadia:bono, destino, num_guia:nguia||g0.num_guia,
-    fecha_guia:g0.fecha, cliente_guia:g0.cliente_guia,
-    dias_servicio:dias, margen_servicio:margen, margen:margen,
-    puntos_entrega:totalPts,
-  };
-  let error = null;
-  if (svcActivo.id) {
-    const res = await supa.from('servicios_piloto').update(upd).eq('id',svcActivo.id);
-    error = res.error;
-  } else {
-    // Insert nuevo si no tiene ID
-    const res = await supa.from('servicios_piloto').insert({...upd, servicio_id:svcActivo.servicio_id, patente:svcActivo.patente, conductor:svcActivo.conductor, cliente:svcActivo.cliente, origen:svcActivo.origen, fecha:svcActivo.fecha});
-    error = res.error;
+// ══ GUARDAR ══
+async function guardarSvc(estado){
+  if(!svcActivo)return;
+  const km=parseFloat(document.getElementById('reg-km').value)||0;
+  const peajes=parseFloat(document.getElementById('reg-peajes').value)||0;
+  const tarifa=parseFloat(document.getElementById('reg-tarifa').value)||0;
+  const bono=parseFloat(document.getElementById('reg-bono').value)||0;
+  const dias=parseInt(document.getElementById('reg-dias').value)||1;
+  const margen=svcActivo._margenCalc||0;
+  const totalPts=puntosData.length;
+  const g0=puntosData[0]||{};
+  const ultimoDestino=puntosData[puntosData.length-1]?.destino||'';
+  const upd={estado,km_total:km,costo_peajes:peajes,tarifa_neta:tarifa,bono_estadia:bono,
+    destino:ultimoDestino,num_guia:g0.num_guia,fecha_guia:g0.fecha,
+    dias_servicio:dias,margen_servicio:margen,margen,puntos_entrega:totalPts};
+  let error=null;
+  if(svcActivo.id){
+    const res=await supa.from('servicios_piloto').update(upd).eq('id',svcActivo.id);
+    error=res.error;
+  }else{
+    const res=await supa.from('servicios_piloto').insert({...upd,servicio_id:svcActivo.servicio_id,patente:svcActivo.patente,conductor:svcActivo.conductor,cliente:svcActivo.cliente,origen:svcActivo.origen,fecha:svcActivo.fecha});
+    error=res.error;
   }
-  if (error) { toast('Error: '+error.message); return; }
-  Object.assign(DB.servicios[svcActivo._idx], upd, {_puntos:puntosData});
+  if(error){toast('Error: '+error.message);return;}
+  Object.assign(DB.servicios[svcActivo._idx],upd,{_puntos:puntosData});
   cerrar('modal-registrar');
-  renderServicios(); renderKPIs();
+  renderServicios();renderKPIs();
   toast(`✓ Guardado como ${estado}`);
 }
 
-async function eliminarServicio() {
-  if (!svcActivo) return;
-  if (!confirm('¿Eliminar este servicio?')) return;
-  if (svcActivo.id) {
-    const {error} = await supa.from('servicios_piloto').delete().eq('id',svcActivo.id);
-    if (error) { toast('Error: '+error.message); return; }
-  }
-  DB.servicios.splice(svcActivo._idx,1);
+function pedirConfirmacion(){
+  if(!svcActivo)return;
+  const km=parseFloat(document.getElementById('reg-km').value)||0;
+  const tarifa=parseFloat(document.getElementById('reg-tarifa').value)||0;
+  const peajes=parseFloat(document.getElementById('reg-peajes').value)||0;
+  const margen=svcActivo._margenCalc||0;
+  const ultimoDestino=puntosData[puntosData.length-1]?.destino||'—';
+  const guias=puntosData.map((p,i)=>`<tr><td style="padding:6px 8px;font-weight:700">Punto ${i+1}</td><td style="padding:6px 8px">${p.num_guia||'Sin guía'}</td><td style="padding:6px 8px">${p.destino||'—'}</td></tr>`).join('');
+  document.getElementById('confirmacion-body').innerHTML=`
+    <div style="margin-bottom:14px">
+      <table style="width:100%;border-collapse:collapse;font-size:12px">
+        <thead><tr style="background:var(--blue-col);color:white"><th style="padding:6px 8px;text-align:left">Punto</th><th style="padding:6px 8px;text-align:left">Guía</th><th style="padding:6px 8px;text-align:left">Destino</th></tr></thead>
+        <tbody>${guias}</tbody>
+      </table>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px">
+      <div style="background:var(--gray-50);padding:8px;border-radius:6px"><div style="font-size:9px;color:var(--gray-400);font-weight:700">CLIENTE</div><div style="font-weight:800">${svcActivo.cliente||'—'}</div></div>
+      <div style="background:var(--gray-50);padding:8px;border-radius:6px"><div style="font-size:9px;color:var(--gray-400);font-weight:700">PATENTE</div><div style="font-weight:800">${svcActivo.patente||'—'}</div></div>
+      <div style="background:var(--gray-50);padding:8px;border-radius:6px"><div style="font-size:9px;color:var(--gray-400);font-weight:700">DESTINO FINAL</div><div style="font-weight:800">${ultimoDestino}</div></div>
+      <div style="background:var(--gray-50);padding:8px;border-radius:6px"><div style="font-size:9px;color:var(--gray-400);font-weight:700">KM GPS</div><div style="font-weight:800">${km||'—'}</div></div>
+      <div style="background:var(--gray-50);padding:8px;border-radius:6px"><div style="font-size:9px;color:var(--gray-400);font-weight:700">TARIFA</div><div style="font-weight:800">${fmt(tarifa)}</div></div>
+      <div style="background:var(--gray-50);padding:8px;border-radius:6px"><div style="font-size:9px;color:var(--gray-400);font-weight:700">PEAJES/TAG</div><div style="font-weight:800">${fmt(peajes)}</div></div>
+    </div>
+    <div class="margen-box" style="margin-top:12px">
+      <div><div class="margen-lbl">Margen Servicio</div><div class="margen-val ${margen>=0?'pos':'neg'}">${fmt(margen)}</div></div>
+      <div><div class="margen-lbl">Conductor</div><div class="margen-val pos" style="font-size:16px">${svcActivo.conductor||'—'}</div></div>
+    </div>
+    <div style="margin-top:12px;background:#FEF3C7;border-radius:8px;padding:10px;font-size:11px;color:#92400E;font-weight:700">⚠ Al confirmar el servicio quedará fijo. Verifica que el destino y los datos sean correctos.</div>`;
   cerrar('modal-registrar');
-  renderServicios(); renderKPIs();
+  document.getElementById('modal-confirmacion').style.display='flex';
+}
+
+async function confirmarDefinitivo(){
+  cerrar('modal-confirmacion');
+  await guardarSvc('confirmado');
+}
+
+async function eliminarServicio(){
+  if(!svcActivo)return;
+  if(!confirm('¿Eliminar este servicio?'))return;
+  if(svcActivo.id){const {error}=await supa.from('servicios_piloto').delete().eq('id',svcActivo.id);if(error){toast('Error: '+error.message);return;}}
+  DB.servicios.splice(svcActivo._idx,1);
+  cerrar('modal-registrar');renderServicios();renderKPIs();
   toast('✓ Servicio eliminado');
 }
 
-// ══════════════════════════════════════════
-// MODAL AVANCE
-// ══════════════════════════════════════════
-function abrirAvance(i) {
-  avIdx = i;
-  const s = DB.servicios[i];
-  document.getElementById('av-id').textContent  = s.servicio_id||s.id?.slice(0,8)||'—';
-  document.getElementById('av-sub').textContent = `${s.patente} · ${s.conductor} · ${s.cliente}`;
-  const pts = s.puntos_entrega||1, done = s.puntos_done||0;
-  let html = `
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
-      <div style="background:var(--gray-50);border-radius:8px;padding:12px;border:1px solid var(--gray-200)">
-        <div style="font-size:9px;font-weight:800;color:var(--gray-400);letter-spacing:0.1em;margin-bottom:4px">ESTADO</div>
-        <div>${pillHTML(s.estado)}</div>
-      </div>
-      <div style="background:var(--gray-50);border-radius:8px;padding:12px;border:1px solid var(--gray-200)">
-        <div style="font-size:9px;font-weight:800;color:var(--gray-400);letter-spacing:0.1em;margin-bottom:4px">DESTINO</div>
-        <div style="font-size:13px;font-weight:700">${s.destino||'—'}</div>
-      </div>
-    </div>
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-      <div style="font-size:10px;font-weight:800;color:var(--gray-400);letter-spacing:0.1em">PUNTOS ENTREGA</div>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;color:var(--navy)">${done}/${pts}</div>
-    </div>`;
-  for(let i=0;i<pts;i++){
-    const d=i<done;
-    html+=`<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--gray-100)">
-      <div style="width:26px;height:26px;border-radius:50%;background:${d?'var(--green)':'var(--gray-200)'};color:${d?'white':'var(--gray-600)'};display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex-shrink:0">${d?'✓':i+1}</div>
-      <div style="flex:1"><div style="font-size:12px;font-weight:700">Punto ${i+1}</div><div style="font-size:10px;color:var(--gray-400)">${d?'Entregado':'Pendiente'}</div></div>
-      ${d?'<div style="font-size:9px;font-weight:800;color:var(--green)">✓ FIRMADO</div>':''}
-    </div>`;
-  }
-  if (s.margen_servicio||s.margen) {
-    html+=`<div class="margen-box" style="margin-top:14px">
-      <div><div class="margen-lbl">Margen Servicio</div><div class="margen-val ${(s.margen_servicio||s.margen)>=0?'pos':'neg'}">${fmt(s.margen_servicio||s.margen)}</div></div>
-      <div><div class="margen-lbl">Tarifa</div><div class="margen-val pos">${fmt(s.tarifa_neta||0)}</div></div>
-    </div>`;
-  }
-  document.getElementById('av-body').innerHTML = html;
+// ══ AVANCE ══
+function abrirAvance(i){
+  avIdx=i;
+  const s=DB.servicios[i];
+  document.getElementById('av-id').textContent=s.servicio_id||s.id?.slice(0,8)||'—';
+  document.getElementById('av-sub').textContent=`${s.patente} · ${s.conductor} · ${s.cliente}`;
+  const pts=s.puntos_entrega||1,done=s.puntos_done||0;
+  let html=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+    <div style="background:var(--gray-50);border-radius:8px;padding:10px;border:1px solid var(--gray-200)"><div style="font-size:9px;color:var(--gray-400);font-weight:700;margin-bottom:4px">ESTADO</div>${pillHTML(s.estado)}</div>
+    <div style="background:var(--gray-50);border-radius:8px;padding:10px;border:1px solid var(--gray-200)"><div style="font-size:9px;color:var(--gray-400);font-weight:700;margin-bottom:4px">DESTINO</div><div style="font-size:12px;font-weight:700">${s.destino||'—'}</div></div>
+    <div style="background:var(--gray-50);border-radius:8px;padding:10px;border:1px solid var(--gray-200)"><div style="font-size:9px;color:var(--gray-400);font-weight:700;margin-bottom:4px">KM</div><div style="font-size:12px;font-weight:700">${s.km_total||'—'}</div></div>
+    <div style="background:var(--gray-50);border-radius:8px;padding:10px;border:1px solid var(--gray-200)"><div style="font-size:9px;color:var(--gray-400);font-weight:700;margin-bottom:4px">GUÍA</div><div style="font-size:12px;font-weight:700">${s.num_guia||'—'}</div></div>
+  </div>`;
+  for(let j=0;j<pts;j++){const d=j<done;html+=`<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--gray-100)"><div style="width:26px;height:26px;border-radius:50%;background:${d?'var(--green)':'var(--gray-200)'};color:${d?'white':'var(--gray-600)'};display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex-shrink:0">${d?'✓':j+1}</div><div style="flex:1"><div style="font-size:12px;font-weight:700">Punto ${j+1}</div><div style="font-size:10px;color:var(--gray-400)">${d?'Entregado':'Pendiente'}</div></div>${d?'<div style="font-size:9px;font-weight:800;color:var(--green)">✓ FIRMADO</div>':''}</div>`;}
+  if(s.margen_servicio||s.margen){html+=`<div class="margen-box" style="margin-top:12px"><div><div class="margen-lbl">Margen Servicio</div><div class="margen-val ${(s.margen_servicio||s.margen)>=0?'pos':'neg'}">${fmt(s.margen_servicio||s.margen)}</div></div><div><div class="margen-lbl">Tarifa</div><div class="margen-val pos">${fmt(s.tarifa_neta||0)}</div></div></div>`;}
+  document.getElementById('av-body').innerHTML=html;
   document.getElementById('modal-avance').style.display='flex';
 }
 
-// ══════════════════════════════════════════
-// CONFIG
-// ══════════════════════════════════════════
-async function guardarConfig() {
-  const campos = [
-    {clave:'precio_litro',   val:document.getElementById('cfg-lt').value},
-    {clave:'rendimiento',    val:document.getElementById('cfg-rend').value},
-    {clave:'costo_fijo',     val:document.getElementById('cfg-cf').value},
-    {clave:'mantencion',     val:document.getElementById('cfg-mant').value},
+// ══ CONFIG ══
+async function guardarConfig(){
+  const campos=[
+    {clave:'precio_litro',val:document.getElementById('cfg-lt').value},
+    {clave:'rendimiento',val:document.getElementById('cfg-rend').value},
+    {clave:'costo_fijo',val:document.getElementById('cfg-cf').value},
+    {clave:'mantencion',val:document.getElementById('cfg-mant').value},
     {clave:'sueldo_conductor',val:document.getElementById('cfg-cond').value},
-    {clave:'viatico',        val:document.getElementById('cfg-viatico').value},
+    {clave:'viatico',val:document.getElementById('cfg-viatico').value},
   ];
-  for (const c of campos) {
-    DB.config[c.clave] = parseFloat(c.val)||0;
-    await supa.from('kaptura_config').upsert({clave:c.clave, valor:c.val},{onConflict:'clave'});
-  }
-  const ck = document.getElementById('cfg-claude-key').value.trim();
-  if (ck) { localStorage.setItem('kaptura_claude_key', ck); CLAUDE_KEY = ck; }
+  for(const c of campos){DB.config[c.clave]=parseFloat(c.val)||0;await supa.from('kaptura_config').upsert({clave:c.clave,valor:c.val},{onConflict:'clave'});}
+  const ck=document.getElementById('cfg-claude-key').value.trim();
+  if(ck){localStorage.setItem('kaptura_claude_key',ck);CLAUDE_KEY=ck;}
   toast('✓ Configuración guardada');
 }
 
-// ══════════════════════════════════════════
-// UTILS
-// ══════════════════════════════════════════
-function setTab(nombre,btn) {
-  if (nombre==='config') {
-    const stored = localStorage.getItem('kaptura_claude_key')||'';
-    const el = document.getElementById('cfg-claude-key');
-    if (el) el.value = stored ? '••••••••••••••••' : '';
-  }
-  ['servicios','flota','clientes','config'].forEach(t=>{
-    document.getElementById(`tab-${t}`).style.display = t===nombre?'block':'none';
-  });
+// ══ UTILS ══
+function setTab(nombre,btn){
+  ['servicios','flota','clientes','config'].forEach(t=>{document.getElementById(`tab-${t}`).style.display=t===nombre?'block':'none';});
   document.querySelectorAll('.nav-tab').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
+  if(nombre==='config'){const s=localStorage.getItem('kaptura_claude_key')||'';document.getElementById('cfg-claude-key').value=s?'••••••••••••••••':'';}
 }
-
-function resetFecha() {
-  CLAUDE_KEY = localStorage.getItem('kaptura_claude_key') || '';
-  document.getElementById('filtro-fecha').value = hoyStr;
-  renderServicios();
-}
-
-function cerrar(id) { document.getElementById(id).style.display='none'; }
-
-function fmt(n) {
-  if (!n && n!==0) return '—';
-  return '$'+Math.round(n).toLocaleString('es-CL');
-}
-
-function toast(msg,dur=2800) {
-  const t=document.getElementById('toast');
-  t.textContent=msg; t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),dur);
-}
-
-function fileToB64(file) {
-  return new Promise((res,rej)=>{
-    const r=new FileReader();
-    r.onload=()=>res(r.result.split(',')[1]);
-    r.onerror=rej;
-    r.readAsDataURL(file);
-  });
-}
-
-document.querySelectorAll('.overlay').forEach(el=>{
-  el.addEventListener('click',e=>{ if(e.target===el) el.style.display='none'; });
-});
+function resetFecha(){document.getElementById('filtro-fecha').value=hoyStr;renderServicios();}
+function cerrar(id){document.getElementById(id).style.display='none';}
+function fmt(n){if(!n&&n!==0)return'—';return'$'+Math.round(n).toLocaleString('es-CL');}
+function toast(msg,dur=2800){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),dur);}
+function fileToB64(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(',')[1]);r.onerror=rej;r.readAsDataURL(file);});}
+document.querySelectorAll('.overlay').forEach(el=>{el.addEventListener('click',e=>{if(e.target===el)el.style.display='none';});});
 
 init();
 </script>
