@@ -320,19 +320,7 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
       </div>
 
       <!-- Días calculados -->
-      <div class="fld2">
-        <div class="fld">
-          <label class="lbl">Días en ruta <span style="font-size:8px;font-weight:800;background:#D1FAE5;color:#065F46;padding:1px 5px;border-radius:3px">AUTO</span></label>
-          <input class="inp" id="ini-dias" type="number" step="0.5" min="0.5" readonly style="background:var(--g50);color:var(--navy);font-weight:700">
-        </div>
-        <div class="fld">
-          <label class="lbl">¿Viene desde?</label>
-          <select class="inp" id="ini-viene-desde">
-            <option value="base">Base / Casa</option>
-            <option value="servicio_anterior">Servicio anterior</option>
-          </select>
-        </div>
-      </div>
+      
 
       <div style="background:#EEF2FF;border-radius:8px;padding:10px 12px;font-size:11px;color:#3730A3;font-weight:700">
         ℹ️ Al confirmar, el servicio cambia a EN PROCESO y queda registrada la hora de salida.
@@ -905,7 +893,7 @@ function puntosHTML(p, pi) {
         </label>
         <input class="inp ${p.destino ? '' : 'pend'}" style="${p.destino ? '' : 'border-color:var(--orange)'}"
           value="${p.destino||''}" placeholder="Ciudad o lugar de entrega"
-          onchange="setDestino(${pi},this.value)">
+          id="inp-dest-${pi}" onblur="setDestino(${pi},this.value)">
       </div>
 
       <!-- VALOR -->
