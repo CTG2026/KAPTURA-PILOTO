@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>KAPTURA v3.2</title>
+<title>KAPTURA v3.3</title>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700;800;900&family=Barlow+Condensed:wght@600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -365,6 +365,7 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
           <div><span style="color:var(--g400);font-weight:700">PATENTE</span><br><span style="font-weight:800;font-family:'Barlow Condensed',sans-serif" id="reg-patente-info">—</span></div>
           <div><span style="color:var(--g400);font-weight:700">FECHA INICIO</span><br><span style="font-weight:700" id="reg-fecha-inicio-info">—</span></div>
           <div><span style="color:var(--g400);font-weight:700">ORIGEN</span><br><span style="font-weight:700" id="reg-origen-info">—</span></div>
+          <div><span style="color:var(--g400);font-weight:700">CONDUCTOR</span><br><span style="font-weight:700" id="reg-conductor-info">—</span></div>
         </div>
         <div style="margin-top:8px">
           <label style="font-size:9px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:var(--g600);display:block;margin-bottom:3px">Fecha término del servicio <span style="font-size:8px;font-weight:800;background:#FEF3C7;color:#92400E;padding:1px 5px;border-radius:3px">GPS</span></label>
@@ -395,7 +396,7 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
 const SUPA_URL = 'https://aqunzrukuruwzwywnurq.supabase.co';
 const SUPA_KEY = 'sb_publishable_70t9UxFlcqYDj7AMybsrHg__IMGNA8C';
 const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
-const KAPTURA_VERSION = '3.2';
+const KAPTURA_VERSION = '3.3';
 const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 const hoy = new Date();
 const hoyStr = hoy.toISOString().split('T')[0];
@@ -857,6 +858,7 @@ function abrirRegistrar(i) {
   document.getElementById('reg-patente-info').textContent = s.patente||'—';
   document.getElementById('reg-fecha-inicio-info').textContent = s.fecha||'—';
   document.getElementById('reg-origen-info').textContent  = s.origen||'—';
+  document.getElementById('reg-conductor-info').textContent = s.conductor||'—';
   document.getElementById('reg-fecha-termino').value      = s._fecha_termino || s.fecha || hoyStr;
 
   renderPuntos();
@@ -903,7 +905,7 @@ function puntosHTML(p, pi) {
         </label>
         <input class="inp ${p.destino ? '' : 'pend'}" style="${p.destino ? '' : 'border-color:var(--orange)'}"
           value="${p.destino||''}" placeholder="Ciudad o lugar de entrega"
-          onchange="setDestino(${pi},this.value)" oninput="setDestino(${pi},this.value)">
+          onchange="setDestino(${pi},this.value)">
       </div>
 
       <!-- VALOR -->
@@ -965,8 +967,10 @@ function setTipo(pi, tipo) {
 
 function setDestino(pi, val) {
   puntosData[pi].destino = val.trim();
-  if(puntosData[pi].tipo === 'final' && val.trim()) buscarValor(pi);
-  renderPuntos();
+  if(puntosData[pi].tipo === 'final' && val.trim()) {
+    buscarValor(pi); // buscarValor llama renderPuntos si encuentra tarifa
+  }
+  // No llamar renderPuntos aquí para no interrumpir el tipeo
 }
 
 function setValorManual(pi, val) {
