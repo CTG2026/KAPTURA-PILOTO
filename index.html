@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>KAPTURA v4.2</title>
+<title>KAPTURA v4.3</title>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700;800;900&family=Barlow+Condensed:wght@600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -576,7 +576,7 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
 const SUPA_URL = 'https://aqunzrukuruwzwywnurq.supabase.co';
 const SUPA_KEY = 'sb_publishable_70t9UxFlcqYDj7AMybsrHg__IMGNA8C';
 const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
-const KAPTURA_VERSION = '4.2';
+const KAPTURA_VERSION = '4.3';
 const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 const hoy = new Date();
 const hoyStr = hoy.toISOString().split('T')[0];
@@ -1420,46 +1420,105 @@ async function cargarGPS() {
   const patente     = DB.servicios[svcActivoIdx]?.patente;
   const fechaInicio = document.getElementById('cos-fecha-inicio').value;
   const fechaTerm   = document.getElementById('cos-fecha-termino').value;
-  if(!patente||!fechaInicio||!fechaTerm) return;
+  if(!patente||!fechaInicio||!fechaTerm) { toast('Completa las fechas'); return; }
 
   toast('Cargando GPS...');
   try {
-    const {data:rows} = await supa.from('kaptura_gps_sessions')
-      .select('*').eq('patente', patente)
-      .gte('fecha', fechaInicio).lte('fecha', fechaTerm)
-      .order('fecha', {ascending:true});
+    // Usar tabla de eventos detallados para km exactos
+    const {data:eventos} = await supa.from('kaptura_gps_eventos')
+      .select('*')
+      .eq('patente', patente)
+      .gte('fecha', fechaInicio)
+      .lte('fecha', fechaTerm)
+      .order('datetime_evento', {ascending:true});
 
-    const activos = (rows||[]).filter(r => (r.km_total||0) > 0);
-    if(!activos.length) { toast('Sin GPS para ese rango'); return; }
+    if(!eventos||!eventos.length) { toast('Sin GPS para ese rango'); return; }
 
-    const kmTotal = activos.reduce((a,r) => a+(r.km_total||0), 0);
+    // Solo trips con km > 0
+    const trips = eventos.filter(e => e.evento==='trip' && (e.km_tramo||0) > 0);
+    const kmTotal = trips.reduce((a,e) => a+(e.km_tramo||0), 0);
+
+    // Días activos (con trips)
+    const diasActivos = new Set(trips.map(e => e.fecha)).size;
+
     document.getElementById('cos-km').value = Math.round(kmTotal);
     document.getElementById('lbl-km').textContent = 'GPS ✓';
     document.getElementById('lbl-km').style.background = '#D1FAE5';
     document.getElementById('lbl-km').style.color = '#065F46';
-    document.getElementById('cos-dias').value = activos.length;
+    document.getElementById('cos-dias').value = diasActivos;
+
+    // Calcular km por tramo usando eventos
+    const s = DB.servicios[svcActivoIdx];
+    const origen = (s?.origen||'').toLowerCase();
+    const finalPunto = (s?._puntos||[]).find(p=>p.tipo==='final');
+    const destino = (finalPunto?.destino||'').toLowerCase();
+
+    let kmVacioIda=0, kmCargado=0, kmRetorno=0;
+    let cargando = false, terminado = false;
+
+    for(const t of trips) {
+      if(!cargando && !terminado) {
+        // Antes de llegar al origen de carga
+        if(origen && t.address.toLowerCase().includes(origen.split(',')[0].trim())) {
+          cargando = true;
+          kmVacioIda += t.km_tramo;
+        } else {
+          kmVacioIda += t.km_tramo;
+        }
+      } else if(cargando && !terminado) {
+        // Desde el origen hasta el destino final
+        if(destino && t.address.toLowerCase().includes(destino.split(',')[0].trim())) {
+          terminado = true;
+          kmCargado += t.km_tramo;
+        } else {
+          kmCargado += t.km_tramo;
+        }
+      } else {
+        // Después del destino final = retorno
+        kmRetorno += t.km_tramo;
+      }
+    }
+
+    if(kmVacioIda > 0) document.getElementById('cos-km-vacio-ida').value = Math.round(kmVacioIda);
+    if(kmCargado > 0)  document.getElementById('cos-km-cargado').value   = Math.round(kmCargado);
+    if(kmRetorno > 0)  document.getElementById('cos-km-retorno').value   = Math.round(kmRetorno);
+    calcRetorno();
     calcCostos();
 
-    // Cruzar TAG
+    // TAG: usar solo trips con km > 5km (tramos reales, no movimientos locales)
+    // Deduplicar por día — cada pórtico se cobra max 1 vez por sentido por día
     await cargarPorticos();
-    let allAddr = [];
-    activos.forEach(r => {
-      if(r.addresses_json) try { allAddr = allAddr.concat(JSON.parse(r.addresses_json)); } catch(e){}
+
+    const cobrosTotal = new Set();
+    const detectados = [];
+    // Procesar por día para deduplicar correctamente
+    const porDia = {};
+    trips.filter(t=>t.km_tramo>5).forEach(t => {
+      if(!porDia[t.fecha]) porDia[t.fecha] = [];
+      porDia[t.fecha].push(t.address);
     });
 
-    const cobros = new Set(), detectados = [];
-    for(const addr of allAddr) {
-      if(!addr) continue;
-      for(const p of DB_porticos) {
-        if(p.valor_3_ejes<=0 || cobros.has(p.cobro_oficial)) continue;
-        const textos = [p.texto_gps_blackgps, p.texto_gps_forguard, p.palabras_clave].filter(Boolean);
+    for(const [dia, addrs] of Object.entries(porDia)) {
+      const cobrosDelDia = new Set();
+      for(const addr of addrs) {
         const al = addr.toLowerCase();
-        if(textos.some(t => t.toLowerCase().split(',').map(x=>x.trim()).filter(x=>x.length>3).some(pal=>al.includes(pal)))) {
-          cobros.add(p.cobro_oficial);
-          detectados.push({nombre:p.cobro_oficial, valor:p.valor_3_ejes});
+        for(const p of DB_porticos) {
+          if(p.valor_3_ejes<=0 || cobrosDelDia.has(p.cobro_oficial)) continue;
+          const textos = [p.texto_gps_forguard, p.palabras_clave].filter(Boolean);
+          if(textos.some(t => {
+            const pals = t.toLowerCase().split(',').map(x=>x.trim()).filter(x=>x.length>4);
+            return pals.some(pal => al.includes(pal));
+          })) {
+            cobrosDelDia.add(p.cobro_oficial);
+            if(!cobrosTotal.has(`${dia}-${p.cobro_oficial}`)) {
+              cobrosTotal.add(`${dia}-${p.cobro_oficial}`);
+              detectados.push({nombre:p.cobro_oficial, valor:p.valor_3_ejes, dia});
+            }
+          }
         }
       }
     }
+
     if(detectados.length > 0) {
       const total = detectados.reduce((a,p)=>a+p.valor,0);
       document.getElementById('cos-peajes').value = total;
@@ -1467,11 +1526,13 @@ async function cargarGPS() {
       document.getElementById('lbl-peajes').style.background = '#D1FAE5';
       document.getElementById('lbl-peajes').style.color = '#065F46';
       calcCostos();
-      toast(`✓ GPS: ${Math.round(kmTotal)} km · TAG: ${fmt(total)}`);
+      const detalle = detectados.map(p=>`${p.nombre} ${p.dia}`).join(' | ');
+      toast(`✓ GPS: ${Math.round(kmTotal)} km · ${diasActivos} días · TAG: ${fmt(total)}`);
+      console.log('Pórticos detectados:', detalle);
     } else {
-      toast(`✓ GPS: ${Math.round(kmTotal)} km · Sin TAG detectado`);
+      toast(`✓ GPS: ${Math.round(kmTotal)} km · ${diasActivos} días activos · Sin TAG`);
     }
-  } catch(e) { toast('Error GPS: ' + e.message); }
+  } catch(e) { toast('Error GPS: ' + e.message); console.error(e); }
 }
 
 async function guardarCostosBorrador() {
