@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>KAPTURA v3.7</title>
+<title>KAPTURA v3.8</title>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700;800;900&family=Barlow+Condensed:wght@600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -384,7 +384,7 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
 const SUPA_URL = 'https://aqunzrukuruwzwywnurq.supabase.co';
 const SUPA_KEY = 'sb_publishable_70t9UxFlcqYDj7AMybsrHg__IMGNA8C';
 const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
-const KAPTURA_VERSION = '3.7';
+const KAPTURA_VERSION = '3.8';
 const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 const hoy = new Date();
 const hoyStr = hoy.toISOString().split('T')[0];
@@ -712,18 +712,14 @@ async function confirmarInicio() {
   const s = DB.servicios[svcIniciarIdx];
   if(!s.id) { toast('Error: servicio sin ID'); return; }
 
-  const hora        = document.getElementById('ini-hora').value;
   const fechaInicio = document.getElementById('ini-fecha-inicio').value;
   const fechaTerm   = document.getElementById('ini-fecha-termino').value;
-  const dias = 1;
-  const vieneDe     = document.getElementById('ini-viene-desde').value;
 
   const {error} = await supa.from('servicios_piloto').update({
     estado: 'en_proceso',
     hora_termino: null,
     dias_servicio: dias,
     fecha: fechaInicio,
-    notas: vieneDe === 'servicio_anterior' ? 'Viene de servicio anterior' : null
   }).eq('id', s.id);
 
   if(error) { toast('Error: ' + error.message); return; }
