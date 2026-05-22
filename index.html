@@ -694,7 +694,6 @@ function iniciarSvc(i) {
     `${String(ahora.getHours()).padStart(2,'0')}:${String(ahora.getMinutes()).padStart(2,'0')}`;
   // Fecha término = misma fecha por defecto
   document.getElementById('ini-fecha-termino').value = s.fecha||hoyStr;
-  document.getElementById('ini-dias').value = 1;
   document.getElementById('modal-iniciar').style.display = 'flex';
 }
 
@@ -705,7 +704,6 @@ function calcDiasIni() {
     const d1 = new Date(inicio);
     const d2 = new Date(termino);
     const dias = Math.round((d2-d1)/(1000*60*60*24))+1;
-    document.getElementById('ini-dias').value = Math.max(1, dias);
   }
 }
 
@@ -717,7 +715,7 @@ async function confirmarInicio() {
   const hora        = document.getElementById('ini-hora').value;
   const fechaInicio = document.getElementById('ini-fecha-inicio').value;
   const fechaTerm   = document.getElementById('ini-fecha-termino').value;
-  const dias        = parseFloat(document.getElementById('ini-dias').value)||1;
+  const dias = 1;
   const vieneDe     = document.getElementById('ini-viene-desde').value;
 
   const {error} = await supa.from('servicios_piloto').update({
