@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>KAPTURA v4.1</title>
+<title>KAPTURA v4.2</title>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700;800;900&family=Barlow+Condensed:wght@600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -313,11 +313,6 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
       </div>
 
       <!-- Fecha término estimada -->
-      <div class="fld">
-        <label class="lbl">Fecha término estimada del servicio</label>
-        <input class="inp" id="ini-fecha-termino" type="date" onchange="calcDiasIni()">
-        <div style="font-size:9px;color:var(--g400);margin-top:3px">Fecha en que se completará la entrega</div>
-      </div>
 
       <!-- Días calculados -->
       
@@ -372,8 +367,7 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
     <div class="modal-ftr">
       <button class="btn btn-outline" onclick="cerrar('modal-registrar')">Cancelar</button>
       <button class="btn btn-orange" onclick="guardarBorrador()">Borrador</button>
-      <button class="btn btn-green" onclick="irACostos()">⚙ Costos →</button>
-      <button class="btn btn-navy" onclick="abrirConfirmacion()">✓ Confirmar</button>
+      <button class="btn btn-navy" onclick="confirmarEjecucion()">✓ Confirmar Ejecución</button>
     </div>
   </div>
 </div>
@@ -520,7 +514,57 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
     <div class="modal-ftr">
       <button class="btn btn-outline" onclick="cerrar('modal-costos')">Cancelar</button>
       <button class="btn btn-orange" onclick="guardarCostosBorrador()">Borrador</button>
-      <button class="btn btn-navy" onclick="confirmarServicio()">✓ Confirmar</button>
+      <button class="btn btn-navy" onclick="cerrarServicio()">🔒 Cerrar Servicio</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══ MODAL CONFIRMAR EJECUCIÓN (PASO 3 - CONDUCTOR) ══ -->
+<div class="overlay" id="modal-confirmar-ejec" style="display:none">
+  <div class="modal">
+    <div class="modal-hdr">
+      <div>
+        <div class="modal-ttl">Confirmar Ejecución — <span id="ejec-id"></span></div>
+        <div class="modal-sub" id="ejec-sub">Paso 3 · Conductor</div>
+      </div>
+      <button class="modal-cls" onclick="cerrar('modal-confirmar-ejec')">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- Resumen puntos -->
+      <div style="background:var(--g50);border-radius:8px;padding:10px 12px;margin-bottom:14px;border:1px solid var(--g200)">
+        <div style="font-size:9px;font-weight:800;color:var(--g400);letter-spacing:0.1em;margin-bottom:8px">RESUMEN DEL SERVICIO</div>
+        <div id="ejec-puntos-resumen"></div>
+      </div>
+
+      <!-- Fecha término real -->
+      <div class="fld">
+        <label style="font-size:9px;font-weight:800;color:var(--g600);display:block;margin-bottom:3px">
+          Fecha en que se completó el servicio
+        </label>
+        <input class="inp" id="ejec-fecha-termino" type="date">
+      </div>
+
+      <!-- Retorno -->
+      <div class="fld">
+        <label style="font-size:9px;font-weight:800;color:var(--g600);display:block;margin-bottom:3px">
+          Después del servicio, el equipo:
+        </label>
+        <select class="inp" id="ejec-retorno">
+          <option value="base">Regresa a base / Casa</option>
+          <option value="nueva_asignacion">Va directo a nueva asignación</option>
+          <option value="pernocta">Pernocta en destino</option>
+        </select>
+      </div>
+
+      <div style="background:#EEF2FF;border-radius:8px;padding:10px 12px;font-size:11px;color:#3730A3;font-weight:700">
+        ✓ Al confirmar, el servicio queda como EJECUTADO y pasa al coordinador para cierre.
+      </div>
+    </div>
+    <div class="modal-ftr">
+      <button class="btn btn-outline" onclick="cerrar('modal-confirmar-ejec')">Cancelar</button>
+      <button class="btn btn-navy" onclick="guardarEjecucion()">✓ Confirmar Ejecución</button>
     </div>
   </div>
 </div>
@@ -532,7 +576,7 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
 const SUPA_URL = 'https://aqunzrukuruwzwywnurq.supabase.co';
 const SUPA_KEY = 'sb_publishable_70t9UxFlcqYDj7AMybsrHg__IMGNA8C';
 const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
-const KAPTURA_VERSION = '4.1';
+const KAPTURA_VERSION = '4.2';
 const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 const hoy = new Date();
 const hoyStr = hoy.toISOString().split('T')[0];
@@ -649,7 +693,10 @@ function cardHTML(s,i) {
         ${s.estado==='asignado'
           ? `<button class="btn btn-navy btn-sm" onclick="iniciarSvc(${i})">▶ Iniciar</button>`
           : ''}
-        <button class="btn btn-purple btn-sm" onclick="verServicio(${i})">📋 Registrar</button>
+        ${s.estado==='borrador'
+          ? `<button class="btn btn-green btn-sm" onclick="abrirCierre(${i})">🔒 Cierre</button>`
+          : `<button class="btn btn-purple btn-sm" onclick="verServicio(${i})">📋 Registrar</button>`
+        }
         <button class="btn btn-red btn-sm" onclick="eliminarSvc(${i})">Eliminar</button>
       </div>
     </div>
@@ -841,13 +888,12 @@ function iniciarSvc(i) {
   document.getElementById('ini-hora').value =
     `${String(ahora.getHours()).padStart(2,'0')}:${String(ahora.getMinutes()).padStart(2,'0')}`;
   // Fecha término = misma fecha por defecto
-  document.getElementById('ini-fecha-termino').value = s.fecha||hoyStr;
   document.getElementById('modal-iniciar').style.display = 'flex';
 }
 
 function calcDiasIni() {
   const inicio  = document.getElementById('ini-fecha-inicio').value;
-  const termino = document.getElementById('ini-fecha-termino').value;
+  const termino = '';
   if(inicio && termino) {
     const d1 = new Date(inicio);
     const d2 = new Date(termino);
@@ -861,7 +907,7 @@ async function confirmarInicio() {
   if(!s.id) { toast('Error: servicio sin ID'); return; }
 
   const fechaInicio = document.getElementById('ini-fecha-inicio').value;
-  const fechaTerm   = document.getElementById('ini-fecha-termino').value;
+  const fechaTerm   = '';
 
   const {error} = await supa.from('servicios_piloto').update({
     estado: 'en_proceso',
@@ -1300,9 +1346,10 @@ async function irACostos() {
   const valorPuntos = intermedios.reduce((a,p) => a+(p.valor||0), 0);
   document.getElementById('cos-ingreso').textContent = fmt(tarifa + valorPuntos);
 
-  // Comisión auto
+  // Comisión auto: % de tarifa neta solamente
   const pctComision = parseFloat(c.comision_conductor||8) / 100;
-  document.getElementById('cos-comision').value = Math.round(tarifa * pctComision);
+  const comisionCalc = Math.round(tarifa * pctComision);
+  document.getElementById('cos-comision').value = comisionCalc;
 
   calcCostos();
   cerrar('modal-registrar');
@@ -1478,6 +1525,78 @@ async function confirmarServicio() {
   DB.servicios[svcActivoIdx].estado = 'confirmado';
   renderServicios(); renderKPIs();
   toast(`✓ ${s.servicio_id} CONFIRMADO`);
+}
+
+
+// ══ PASO 3 — CONFIRMAR EJECUCIÓN (CONDUCTOR) ══
+async function confirmarEjecucion() {
+  await guardarBorrador();
+  const s = DB.servicios[svcActivoIdx];
+  if(!s) return;
+
+  document.getElementById('ejec-id').textContent  = s.servicio_id||'—';
+  document.getElementById('ejec-sub').textContent = `${s.patente} · ${s.conductor}`;
+  document.getElementById('ejec-fecha-termino').value = s._fecha_termino || s.fecha || hoyStr;
+
+  // Resumen puntos
+  const puntos = s._puntos || [];
+  document.getElementById('ejec-puntos-resumen').innerHTML =
+    puntos.length ? puntos.map((p,i) => `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--g100);font-size:11px">
+        <div><span style="font-weight:800">Punto ${i+1}</span> ${p.tipo==='final'?'🏁':'🔁'} ${p.destino||'—'}</div>
+        <div style="font-weight:700;color:var(--navy)">${fmt(p.valor||0)}</div>
+      </div>`).join('')
+    : '<div style="font-size:11px;color:var(--g400)">Sin puntos registrados</div>';
+
+  cerrar('modal-registrar');
+  document.getElementById('modal-confirmar-ejec').style.display = 'flex';
+}
+
+async function guardarEjecucion() {
+  const s = DB.servicios[svcActivoIdx];
+  if(!s?.id) { toast('Error: sin ID'); return; }
+
+  const fechaTerm = document.getElementById('ejec-fecha-termino').value;
+  const retorno   = document.getElementById('ejec-retorno').value;
+
+  const {error} = await supa.from('servicios_piloto').update({
+    estado: 'borrador', // pasa a coordinador como borrador para cierre
+    hora_termino: fechaTerm ? fechaTerm + 'T23:59:00' : null,
+    notas: `Retorno: ${retorno}`
+  }).eq('id', s.id);
+
+  if(error) { toast('Error: ' + error.message); return; }
+
+  DB.servicios[svcActivoIdx] = {
+    ...s, estado:'borrador',
+    _fecha_termino: fechaTerm,
+    _retorno: retorno
+  };
+
+  cerrar('modal-confirmar-ejec');
+  renderServicios(); renderKPIs();
+  toast(`✓ ${s.servicio_id} ejecutado — pasa a coordinador`);
+}
+
+
+// ══ PASO 4 — CIERRE (COORDINADOR) ══
+async function cerrarServicio() {
+  await guardarCostosBorrador();
+  const s = DB.servicios[svcActivoIdx];
+  if(!s?.id) return;
+  if(!confirm(`¿Cerrar definitivamente el servicio ${s.servicio_id}? Esta acción es inamovible.`)) return;
+  const {error} = await supa.from('servicios_piloto').update({estado:'confirmado'}).eq('id',s.id);
+  if(error) { toast('Error: '+error.message); return; }
+  DB.servicios[svcActivoIdx].estado = 'confirmado';
+  cerrar('modal-costos');
+  renderServicios(); renderKPIs();
+  toast(`🔒 ${s.servicio_id} CERRADO`);
+}
+
+
+function abrirCierre(i) {
+  svcActivoIdx = i;
+  irACostos();
 }
 
 init();
