@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>KAPTURA v4.3</title>
+<title>KAPTURA v4.4</title>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700;800;900&family=Barlow+Condensed:wght@600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -424,7 +424,13 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
         </div>
         <div class="fld">
           <label style="font-size:9px;font-weight:800;color:var(--g600);display:flex;justify-content:space-between;margin-bottom:3px">
-            Peajes/TAG <span id="lbl-peajes" style="font-size:8px;font-weight:800;background:#FEF3C7;color:#92400E;padding:1px 5px;border-radius:3px">MANUAL</span>
+            TAG Autopista <span id="lbl-tag" style="font-size:8px;font-weight:800;background:#FEF3C7;color:#92400E;padding:1px 5px;border-radius:3px">AUTO</span>
+          </label>
+          <input class="inp" id="cos-tag" type="number" placeholder="0" oninput="calcCostos()" style="background:var(--g50);color:var(--navy);font-weight:700">
+        </div>
+        <div class="fld">
+          <label style="font-size:9px;font-weight:800;color:var(--g600);display:flex;justify-content:space-between;margin-bottom:3px">
+            Peajes Ruta <span style="font-size:8px;font-weight:800;background:#FEF3C7;color:#92400E;padding:1px 5px;border-radius:3px">MANUAL</span>
           </label>
           <input class="inp" id="cos-peajes" type="number" placeholder="0" oninput="calcCostos()">
         </div>
@@ -576,7 +582,7 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
 const SUPA_URL = 'https://aqunzrukuruwzwywnurq.supabase.co';
 const SUPA_KEY = 'sb_publishable_70t9UxFlcqYDj7AMybsrHg__IMGNA8C';
 const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
-const KAPTURA_VERSION = '4.3';
+const KAPTURA_VERSION = '4.4';
 const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 const hoy = new Date();
 const hoyStr = hoy.toISOString().split('T')[0];
@@ -1368,7 +1374,8 @@ function calcCostos() {
   document.getElementById('cos-litros').value = lts ? `${lts} lt` : '';
   document.getElementById('cos-comb').value   = lts ? fmt(comb) : '';
 
-  const peajes   = parseFloat(document.getElementById('cos-peajes').value)||0;
+  const tag     = parseFloat(document.getElementById('cos-tag')?.value)||0;
+  const peajes  = tag + (parseFloat(document.getElementById('cos-peajes').value)||0);
   const condVal  = dias * parseInt(c.sueldo_conductor||c.costo_conductor_dia||33000);
   const comision = parseFloat(document.getElementById('cos-comision').value)||0;
   const cf       = dias * parseInt(c.costo_fijo||c.costo_fijo_dia||44000);
@@ -1485,53 +1492,67 @@ async function cargarGPS() {
     calcRetorno();
     calcCostos();
 
-    // TAG: usar solo trips con km > 5km (tramos reales, no movimientos locales)
-    // Deduplicar por día — cada pórtico se cobra max 1 vez por sentido por día
+    // TAG: detectar pórticos usando trips > 10km (tramos reales)
+    // Deduplicar: cada pórtico máximo 1 vez por dirección por día
     await cargarPorticos();
 
     const cobrosTotal = new Set();
-    const detectados = [];
-    // Procesar por día para deduplicar correctamente
+    const detectadosTag = [];
+
+    // Solo trips significativos (>10km) agrupados por día
     const porDia = {};
-    trips.filter(t=>t.km_tramo>5).forEach(t => {
+    trips.filter(t => t.km_tramo > 10).forEach(t => {
       if(!porDia[t.fecha]) porDia[t.fecha] = [];
-      porDia[t.fecha].push(t.address);
+      porDia[t.fecha].push(t);
     });
 
-    for(const [dia, addrs] of Object.entries(porDia)) {
-      const cobrosDelDia = new Set();
-      for(const addr of addrs) {
-        const al = addr.toLowerCase();
+    for(const [dia, tripsDia] of Object.entries(porDia)) {
+      const cobrosIda = new Set();
+      const cobrosVuelta = new Set();
+      
+      // Detectar por cada trip significativo
+      for(const trip of tripsDia) {
+        const al = trip.address.toLowerCase();
         for(const p of DB_porticos) {
-          if(p.valor_3_ejes<=0 || cobrosDelDia.has(p.cobro_oficial)) continue;
-          const textos = [p.texto_gps_forguard, p.palabras_clave].filter(Boolean);
-          if(textos.some(t => {
-            const pals = t.toLowerCase().split(',').map(x=>x.trim()).filter(x=>x.length>4);
-            return pals.some(pal => al.includes(pal));
-          })) {
-            cobrosDelDia.add(p.cobro_oficial);
-            if(!cobrosTotal.has(`${dia}-${p.cobro_oficial}`)) {
-              cobrosTotal.add(`${dia}-${p.cobro_oficial}`);
-              detectados.push({nombre:p.cobro_oficial, valor:p.valor_3_ejes, dia});
+          if(p.valor_3_ejes <= 0) continue;
+          
+          // Usar SOLO texto_gps_forguard para matching exacto
+          const textoForguard = (p.texto_gps_forguard||'').toLowerCase();
+          if(!textoForguard) continue;
+          
+          // Split por coma y verificar coincidencia exacta de substring
+          const palabras = textoForguard.split(',').map(x=>x.trim()).filter(x=>x.length>5);
+          const coincide = palabras.some(pal => al.includes(pal));
+          
+          if(coincide) {
+            const key = `${dia}-${p.cobro_oficial}`;
+            if(!cobrosTotal.has(key)) {
+              cobrosTotal.add(key);
+              detectadosTag.push({
+                nombre: p.cobro_oficial,
+                valor: p.valor_3_ejes,
+                dia,
+                km: trip.km_tramo
+              });
             }
           }
         }
       }
     }
 
-    if(detectados.length > 0) {
-      const total = detectados.reduce((a,p)=>a+p.valor,0);
-      document.getElementById('cos-peajes').value = total;
-      document.getElementById('lbl-peajes').textContent = 'TAG ✓';
-      document.getElementById('lbl-peajes').style.background = '#D1FAE5';
-      document.getElementById('lbl-peajes').style.color = '#065F46';
-      calcCostos();
-      const detalle = detectados.map(p=>`${p.nombre} ${p.dia}`).join(' | ');
-      toast(`✓ GPS: ${Math.round(kmTotal)} km · ${diasActivos} días · TAG: ${fmt(total)}`);
-      console.log('Pórticos detectados:', detalle);
-    } else {
-      toast(`✓ GPS: ${Math.round(kmTotal)} km · ${diasActivos} días activos · Sin TAG`);
+    // Actualizar campo TAG
+    const totalTag = detectadosTag.reduce((a,p)=>a+p.valor,0);
+    const elTag = document.getElementById('cos-tag');
+    if(elTag) {
+      elTag.value = totalTag;
+      document.getElementById('lbl-tag').textContent = totalTag > 0 ? 'AUTO ✓' : 'AUTO';
+      document.getElementById('lbl-tag').style.background = totalTag > 0 ? '#D1FAE5' : '#FEF3C7';
+      document.getElementById('lbl-tag').style.color = totalTag > 0 ? '#065F46' : '#92400E';
     }
+    calcCostos();
+    const detalleTag = detectadosTag.map(p=>`${p.nombre}(${p.dia})`).join(' + ');
+    console.log('TAG detectados:', detalleTag || 'ninguno', '= $'+totalTag);
+    toast(`✓ GPS: ${Math.round(kmTotal)} km · ${diasActivos} días · TAG: ${fmt(totalTag)}`);
   } catch(e) { toast('Error GPS: ' + e.message); console.error(e); }
 }
 
@@ -1539,7 +1560,8 @@ async function guardarCostosBorrador() {
   const s = DB.servicios[svcActivoIdx];
   if(!s?.id) { toast('Error: sin ID'); return; }
   const km     = parseFloat(document.getElementById('cos-km').value)||0;
-  const peajes = parseFloat(document.getElementById('cos-peajes').value)||0;
+  const tag    = parseFloat(document.getElementById('cos-tag')?.value)||0;
+  const peajes = tag + (parseFloat(document.getElementById('cos-peajes').value)||0);
   const dias   = parseFloat(document.getElementById('cos-dias').value)||1;
   const fechaTerm = document.getElementById('cos-fecha-termino').value;
   const final  = (s._puntos||[]).find(p=>p.tipo==='final');
