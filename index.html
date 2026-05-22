@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>KAPTURA v3.9</title>
+<title>KAPTURA v4.1</title>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700;800;900&family=Barlow+Condensed:wght@600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -372,7 +372,155 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
     <div class="modal-ftr">
       <button class="btn btn-outline" onclick="cerrar('modal-registrar')">Cancelar</button>
       <button class="btn btn-orange" onclick="guardarBorrador()">Borrador</button>
+      <button class="btn btn-green" onclick="irACostos()">⚙ Costos →</button>
       <button class="btn btn-navy" onclick="abrirConfirmacion()">✓ Confirmar</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══ MODAL COSTOS (PASO 3) ══ -->
+<div class="overlay" id="modal-costos" style="display:none">
+  <div class="modal" style="max-width:680px">
+    <div class="modal-hdr">
+      <div>
+        <div class="modal-ttl">Costos — <span id="cos-id"></span></div>
+        <div class="modal-sub" id="cos-sub"></div>
+      </div>
+      <button class="modal-cls" onclick="cerrar('modal-costos')">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- FECHA TÉRMINO GPS -->
+      <div style="background:#FEF3C7;border-radius:8px;padding:10px 12px;margin-bottom:14px;border:1px solid var(--orange)">
+        <div style="font-size:9px;font-weight:800;color:#92400E;letter-spacing:0.1em;margin-bottom:6px">RANGO GPS — FECHA INICIO → FECHA TÉRMINO</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div>
+            <label style="font-size:9px;font-weight:800;color:var(--g600);display:block;margin-bottom:3px">Fecha Inicio (asignación)</label>
+            <input class="inp" id="cos-fecha-inicio" type="date" readonly style="background:var(--g50);color:var(--navy);font-weight:700">
+          </div>
+          <div>
+            <label style="font-size:9px;font-weight:800;color:var(--g600);display:block;margin-bottom:3px">Fecha Término servicio</label>
+            <input class="inp" id="cos-fecha-termino" type="date" onchange="cargarGPS()">
+          </div>
+        </div>
+        <button class="btn btn-orange btn-sm btn-full" style="margin-top:8px" onclick="cargarGPS()">↺ Cargar GPS y TAG</button>
+      </div>
+
+      <!-- A COSTOS DIRECTOS -->
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:var(--navy);padding:6px 0 5px;border-bottom:2px solid var(--blue);margin-bottom:10px">⚙ A — Costos Directos</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+        <div class="fld">
+          <label style="font-size:9px;font-weight:800;color:var(--g600);display:flex;justify-content:space-between;margin-bottom:3px">
+            Km GPS <span id="lbl-km" style="font-size:8px;font-weight:800;background:#FEF3C7;color:#92400E;padding:1px 5px;border-radius:3px">PENDIENTE</span>
+          </label>
+          <input class="inp" id="cos-km" type="number" placeholder="0" oninput="calcCostos()">
+        </div>
+        <div class="fld">
+          <label style="font-size:9px;font-weight:800;color:var(--g600);display:flex;justify-content:space-between;margin-bottom:3px">
+            Litros <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span>
+          </label>
+          <input class="inp" id="cos-litros" readonly style="background:var(--g50);color:var(--navy);font-weight:700">
+        </div>
+        <div class="fld">
+          <label style="font-size:9px;font-weight:800;color:var(--g600);display:flex;justify-content:space-between;margin-bottom:3px">
+            Combustible <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span>
+          </label>
+          <input class="inp" id="cos-comb" readonly style="background:var(--g50);color:var(--navy);font-weight:700">
+        </div>
+        <div class="fld">
+          <label style="font-size:9px;font-weight:800;color:var(--g600);display:flex;justify-content:space-between;margin-bottom:3px">
+            Peajes/TAG <span id="lbl-peajes" style="font-size:8px;font-weight:800;background:#FEF3C7;color:#92400E;padding:1px 5px;border-radius:3px">MANUAL</span>
+          </label>
+          <input class="inp" id="cos-peajes" type="number" placeholder="0" oninput="calcCostos()">
+        </div>
+      </div>
+
+      <!-- B OPERACIONAL -->
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:var(--navy);padding:6px 0 5px;border-bottom:2px solid var(--blue);margin-bottom:10px">📊 B — Operacional</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+        <div class="fld">
+          <label style="font-size:9px;font-weight:800;color:var(--g600);display:block;margin-bottom:3px">Días en ruta <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label>
+          <input class="inp" id="cos-dias" type="number" step="0.5" min="0.5" placeholder="1" oninput="calcCostos()" style="background:var(--g50);color:var(--navy);font-weight:700">
+        </div>
+        <div class="fld">
+          <label style="font-size:9px;font-weight:800;color:var(--g600);display:block;margin-bottom:3px">Km vacío ida</label>
+          <input class="inp" id="cos-km-vacio-ida" type="number" placeholder="0" oninput="calcRetorno()">
+        </div>
+        <div class="fld">
+          <label style="font-size:9px;font-weight:800;color:var(--g600);display:block;margin-bottom:3px">Km cargado</label>
+          <input class="inp" id="cos-km-cargado" type="number" placeholder="0" oninput="calcRetorno()">
+        </div>
+        <div class="fld">
+          <label style="font-size:9px;font-weight:800;color:var(--g600);display:block;margin-bottom:3px">Km retorno vacío</label>
+          <input class="inp" id="cos-km-retorno" type="number" placeholder="0" oninput="calcRetorno()">
+        </div>
+        <div class="fld">
+          <label style="font-size:9px;font-weight:800;color:var(--g600);display:block;margin-bottom:3px">% Retorno vacío <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label>
+          <input class="inp" id="cos-pct-retorno" readonly style="background:var(--g50);color:var(--navy);font-weight:700">
+        </div>
+      </div>
+
+      <!-- D COSTOS FIJOS -->
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:var(--navy);padding:6px 0 5px;border-bottom:2px solid var(--blue);margin-bottom:10px">🏢 D — Costos Fijos</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+        <div class="fld">
+          <label style="font-size:9px;font-weight:800;color:var(--g600);display:block;margin-bottom:3px">Costo conductor <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label>
+          <input class="inp" id="cos-conductor" readonly style="background:var(--g50);color:var(--navy);font-weight:700">
+        </div>
+        <div class="fld">
+          <label style="font-size:9px;font-weight:800;color:var(--g600);display:block;margin-bottom:3px">Comisión conductor <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label>
+          <input class="inp" id="cos-comision" type="number" placeholder="0" oninput="calcCostos()">
+        </div>
+        <div class="fld">
+          <label style="font-size:9px;font-weight:800;color:var(--g600);display:block;margin-bottom:3px">Costo fijo/día <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label>
+          <input class="inp" id="cos-cf" readonly style="background:var(--g50);color:var(--navy);font-weight:700">
+        </div>
+        <div class="fld">
+          <label style="font-size:9px;font-weight:800;color:var(--g600);display:block;margin-bottom:3px">Mantención <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label>
+          <input class="inp" id="cos-mant" readonly style="background:var(--g50);color:var(--navy);font-weight:700">
+        </div>
+        <div class="fld">
+          <label style="font-size:9px;font-weight:800;color:var(--g600);display:block;margin-bottom:3px">Viático <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label>
+          <input class="inp" id="cos-viatico" readonly style="background:var(--g50);color:var(--navy);font-weight:700">
+        </div>
+      </div>
+
+      <!-- E FINANCIERO -->
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:var(--navy);padding:6px 0 5px;border-bottom:2px solid var(--blue);margin-bottom:10px">💳 E — Financiero</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+        <div class="fld">
+          <label style="font-size:9px;font-weight:800;color:var(--g600);display:block;margin-bottom:3px">Plazo de cobro</label>
+          <select class="inp" id="cos-plazo" onchange="calcCostos()">
+            <option value="1">15 días — 1%</option>
+            <option value="1.5" selected>30 días — 1,5%</option>
+            <option value="3">60 días — 3%</option>
+          </select>
+        </div>
+        <div class="fld">
+          <label style="font-size:9px;font-weight:800;color:var(--g600);display:block;margin-bottom:3px">Factoring <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label>
+          <input class="inp" id="cos-factoring" readonly style="background:var(--g50);color:var(--navy);font-weight:700">
+        </div>
+      </div>
+
+      <!-- MARGEN -->
+      <div style="background:#152038;border-radius:10px;padding:14px;margin-top:4px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div>
+          <div style="font-size:9px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.45);margin-bottom:4px">Margen Servicio</div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:900;line-height:1" id="cos-margen">$—</div>
+          <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.4);margin-top:2px" id="cos-margen-pct">—</div>
+        </div>
+        <div>
+          <div style="font-size:9px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.45);margin-bottom:4px">Total Ingresos</div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:900;line-height:1;color:#34D399" id="cos-ingreso">$—</div>
+        </div>
+      </div>
+
+    </div>
+    <div class="modal-ftr">
+      <button class="btn btn-outline" onclick="cerrar('modal-costos')">Cancelar</button>
+      <button class="btn btn-orange" onclick="guardarCostosBorrador()">Borrador</button>
+      <button class="btn btn-navy" onclick="confirmarServicio()">✓ Confirmar</button>
     </div>
   </div>
 </div>
@@ -384,7 +532,7 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
 const SUPA_URL = 'https://aqunzrukuruwzwywnurq.supabase.co';
 const SUPA_KEY = 'sb_publishable_70t9UxFlcqYDj7AMybsrHg__IMGNA8C';
 const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
-const KAPTURA_VERSION = '3.9';
+const KAPTURA_VERSION = '4.1';
 const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 const hoy = new Date();
 const hoyStr = hoy.toISOString().split('T')[0];
@@ -732,7 +880,7 @@ async function confirmarInicio() {
   cerrar('modal-iniciar');
   renderServicios();
   renderKPIs();
-  toast(`▶ ${s.servicio_id} iniciado · ${dias} día${dias>1?'s':''} estimados`);
+  toast(`▶ ${s.servicio_id} iniciado`);
 }
 
 // ══ VER SERVICIO ══
@@ -1106,6 +1254,230 @@ function fileToB64(file) {
     r.onerror = rej;
     r.readAsDataURL(file);
   });
+}
+
+
+// ══ PASO 3 — COSTOS ══
+let DB_porticos = [];
+
+async function cargarPorticos() {
+  if(DB_porticos.length > 0) return;
+  const {data} = await supa.from('porticos_tag').select('*').eq('activo', true);
+  DB_porticos = data || [];
+}
+
+async function irACostos() {
+  await guardarBorrador();
+  const s = DB.servicios[svcActivoIdx];
+  if(!s) return;
+  await cargarPorticos();
+
+  document.getElementById('cos-id').textContent  = s.servicio_id||'—';
+  document.getElementById('cos-sub').textContent = `${s.patente} · ${s.conductor} · ${s.cliente}`;
+  document.getElementById('cos-fecha-inicio').value   = s.fecha || hoyStr;
+  document.getElementById('cos-fecha-termino').value  = s._fecha_termino || s.fecha || hoyStr;
+
+  // Limpiar campos
+  ['cos-km','cos-litros','cos-comb','cos-peajes','cos-pct-retorno',
+   'cos-km-vacio-ida','cos-km-cargado','cos-km-retorno'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.value = '';
+  });
+
+  // Precargar config
+  const c = DB.config;
+  const dias = s.dias_servicio || 1;
+  document.getElementById('cos-dias').value     = dias;
+  document.getElementById('cos-conductor').value= fmt(dias * parseInt(c.sueldo_conductor||c.costo_conductor_dia||33000));
+  document.getElementById('cos-cf').value       = fmt(dias * parseInt(c.costo_fijo||c.costo_fijo_dia||44000));
+  document.getElementById('cos-mant').value     = fmt(dias * parseInt(c.mantencion||c.costo_mantencion||25000));
+  document.getElementById('cos-viatico').value  = fmt(dias * parseInt(c.viatico||c.costo_viatico||12000));
+
+  // Tarifa desde puntos
+  const final = (s._puntos||[]).find(p => p.tipo==='final');
+  const intermedios = (s._puntos||[]).filter(p => p.tipo==='intermedio');
+  const tarifa = final?.valor || s.tarifa_neta || 0;
+  const valorPuntos = intermedios.reduce((a,p) => a+(p.valor||0), 0);
+  document.getElementById('cos-ingreso').textContent = fmt(tarifa + valorPuntos);
+
+  // Comisión auto
+  const pctComision = parseFloat(c.comision_conductor||8) / 100;
+  document.getElementById('cos-comision').value = Math.round(tarifa * pctComision);
+
+  calcCostos();
+  cerrar('modal-registrar');
+  document.getElementById('modal-costos').style.display = 'flex';
+}
+
+function calcCostos() {
+  const c    = DB.config;
+  const dias = parseFloat(document.getElementById('cos-dias').value)||1;
+  const km   = parseFloat(document.getElementById('cos-km').value)||0;
+  const rend = parseFloat(c.rendimiento||c.rendimiento_km_lt||2.5);
+  const prec = parseFloat(c.precio_litro||c.precio_combustible||1300);
+  const lts  = km ? Math.round(km/rend*10)/10 : 0;
+  const comb = Math.round(lts * prec);
+
+  document.getElementById('cos-litros').value = lts ? `${lts} lt` : '';
+  document.getElementById('cos-comb').value   = lts ? fmt(comb) : '';
+
+  const peajes   = parseFloat(document.getElementById('cos-peajes').value)||0;
+  const condVal  = dias * parseInt(c.sueldo_conductor||c.costo_conductor_dia||33000);
+  const comision = parseFloat(document.getElementById('cos-comision').value)||0;
+  const cf       = dias * parseInt(c.costo_fijo||c.costo_fijo_dia||44000);
+  const mant     = dias * parseInt(c.mantencion||c.costo_mantencion||25000);
+  const viat     = dias * parseInt(c.viatico||c.costo_viatico||12000);
+  const plazo    = parseFloat(document.getElementById('cos-plazo').value)||1.5;
+
+  // Actualizar autos
+  document.getElementById('cos-conductor').value = fmt(condVal);
+  document.getElementById('cos-cf').value        = fmt(cf);
+  document.getElementById('cos-mant').value      = fmt(mant);
+  document.getElementById('cos-viatico').value   = fmt(viat);
+
+  // Ingreso desde puntos
+  const s = DB.servicios[svcActivoIdx];
+  const final = (s?._puntos||[]).find(p => p.tipo==='final');
+  const ints  = (s?._puntos||[]).filter(p => p.tipo==='intermedio');
+  const tarifa = final?.valor || s?.tarifa_neta || 0;
+  const valorPts = ints.reduce((a,p) => a+(p.valor||0), 0);
+  const ingreso  = tarifa + valorPts;
+  const factoring = Math.round(tarifa * plazo / 100);
+
+  document.getElementById('cos-factoring').value = fmt(factoring);
+  document.getElementById('cos-ingreso').textContent = fmt(ingreso);
+
+  const costos = comb + peajes + condVal + comision + cf + mant + viat + factoring;
+  const margen = ingreso - costos;
+  const pct    = tarifa ? Math.round(margen/tarifa*100) : 0;
+
+  const mEl = document.getElementById('cos-margen');
+  mEl.textContent = fmt(margen);
+  mEl.style.color = margen >= 0 ? '#34D399' : '#F87171';
+  document.getElementById('cos-margen-pct').textContent = `${pct}% sobre tarifa`;
+}
+
+function calcRetorno() {
+  const vi = parseFloat(document.getElementById('cos-km-vacio-ida').value)||0;
+  const ca = parseFloat(document.getElementById('cos-km-cargado').value)||0;
+  const re = parseFloat(document.getElementById('cos-km-retorno').value)||0;
+  const tot = vi + ca + re;
+  document.getElementById('cos-pct-retorno').value = tot ? `${Math.round((vi+re)/tot*100)}%` : '';
+  if(tot && !document.getElementById('cos-km').value) {
+    document.getElementById('cos-km').value = tot;
+    calcCostos();
+  }
+}
+
+async function cargarGPS() {
+  const patente     = DB.servicios[svcActivoIdx]?.patente;
+  const fechaInicio = document.getElementById('cos-fecha-inicio').value;
+  const fechaTerm   = document.getElementById('cos-fecha-termino').value;
+  if(!patente||!fechaInicio||!fechaTerm) return;
+
+  toast('Cargando GPS...');
+  try {
+    const {data:rows} = await supa.from('kaptura_gps_sessions')
+      .select('*').eq('patente', patente)
+      .gte('fecha', fechaInicio).lte('fecha', fechaTerm)
+      .order('fecha', {ascending:true});
+
+    const activos = (rows||[]).filter(r => (r.km_total||0) > 0);
+    if(!activos.length) { toast('Sin GPS para ese rango'); return; }
+
+    const kmTotal = activos.reduce((a,r) => a+(r.km_total||0), 0);
+    document.getElementById('cos-km').value = Math.round(kmTotal);
+    document.getElementById('lbl-km').textContent = 'GPS ✓';
+    document.getElementById('lbl-km').style.background = '#D1FAE5';
+    document.getElementById('lbl-km').style.color = '#065F46';
+    document.getElementById('cos-dias').value = activos.length;
+    calcCostos();
+
+    // Cruzar TAG
+    await cargarPorticos();
+    let allAddr = [];
+    activos.forEach(r => {
+      if(r.addresses_json) try { allAddr = allAddr.concat(JSON.parse(r.addresses_json)); } catch(e){}
+    });
+
+    const cobros = new Set(), detectados = [];
+    for(const addr of allAddr) {
+      if(!addr) continue;
+      for(const p of DB_porticos) {
+        if(p.valor_3_ejes<=0 || cobros.has(p.cobro_oficial)) continue;
+        const textos = [p.texto_gps_blackgps, p.texto_gps_forguard, p.palabras_clave].filter(Boolean);
+        const al = addr.toLowerCase();
+        if(textos.some(t => t.toLowerCase().split(',').map(x=>x.trim()).filter(x=>x.length>3).some(pal=>al.includes(pal)))) {
+          cobros.add(p.cobro_oficial);
+          detectados.push({nombre:p.cobro_oficial, valor:p.valor_3_ejes});
+        }
+      }
+    }
+    if(detectados.length > 0) {
+      const total = detectados.reduce((a,p)=>a+p.valor,0);
+      document.getElementById('cos-peajes').value = total;
+      document.getElementById('lbl-peajes').textContent = 'TAG ✓';
+      document.getElementById('lbl-peajes').style.background = '#D1FAE5';
+      document.getElementById('lbl-peajes').style.color = '#065F46';
+      calcCostos();
+      toast(`✓ GPS: ${Math.round(kmTotal)} km · TAG: ${fmt(total)}`);
+    } else {
+      toast(`✓ GPS: ${Math.round(kmTotal)} km · Sin TAG detectado`);
+    }
+  } catch(e) { toast('Error GPS: ' + e.message); }
+}
+
+async function guardarCostosBorrador() {
+  const s = DB.servicios[svcActivoIdx];
+  if(!s?.id) { toast('Error: sin ID'); return; }
+  const km     = parseFloat(document.getElementById('cos-km').value)||0;
+  const peajes = parseFloat(document.getElementById('cos-peajes').value)||0;
+  const dias   = parseFloat(document.getElementById('cos-dias').value)||1;
+  const fechaTerm = document.getElementById('cos-fecha-termino').value;
+  const final  = (s._puntos||[]).find(p=>p.tipo==='final');
+  const ints   = (s._puntos||[]).filter(p=>p.tipo==='intermedio');
+  const tarifa = final?.valor || s.tarifa_neta || 0;
+  const valorPts = ints.reduce((a,p)=>a+(p.valor||0),0);
+  const c = DB.config;
+  const rend = parseFloat(c.rendimiento||2.5);
+  const prec = parseFloat(c.precio_litro||1300);
+  const comb = km ? Math.round((km/rend)*prec) : 0;
+  const condVal = dias*parseInt(c.sueldo_conductor||33000);
+  const comision = parseFloat(document.getElementById('cos-comision').value)||0;
+  const cf   = dias*parseInt(c.costo_fijo||44000);
+  const mant = dias*parseInt(c.mantencion||25000);
+  const viat = dias*parseInt(c.viatico||12000);
+  const plazo = parseFloat(document.getElementById('cos-plazo').value)||1.5;
+  const fact  = Math.round(tarifa*plazo/100);
+  const ingreso = tarifa + valorPts;
+  const costos  = comb+peajes+condVal+comision+cf+mant+viat+fact;
+  const margen  = ingreso - costos;
+
+  const {error} = await supa.from('servicios_piloto').update({
+    estado:'borrador', km_total:km, costo_peajes:peajes, peajes_tag:peajes,
+    tarifa_neta:tarifa, dias_servicio:dias, costo_combustible:comb,
+    costo_conductor:condVal, costo_viaticos:viat, costo_fijo_dia:cf,
+    costo_mantencion:mant, factoring:fact, total_costos:costos,
+    margen_servicio:margen, margen:margen, ingreso_total:ingreso
+  }).eq('id',s.id);
+
+  if(error) { toast('Error: '+error.message); return; }
+  DB.servicios[svcActivoIdx] = {...s, estado:'borrador', km_total:km,
+    tarifa_neta:tarifa, margen_servicio:margen, margen, _fecha_termino:fechaTerm};
+  cerrar('modal-costos');
+  renderServicios(); renderKPIs();
+  toast(`✓ Costos guardados — ${s.servicio_id}`);
+}
+
+async function confirmarServicio() {
+  await guardarCostosBorrador();
+  const s = DB.servicios[svcActivoIdx];
+  if(!s?.id) return;
+  const {error} = await supa.from('servicios_piloto').update({estado:'confirmado'}).eq('id',s.id);
+  if(error) { toast('Error: '+error.message); return; }
+  DB.servicios[svcActivoIdx].estado = 'confirmado';
+  renderServicios(); renderKPIs();
+  toast(`✓ ${s.servicio_id} CONFIRMADO`);
 }
 
 init();
