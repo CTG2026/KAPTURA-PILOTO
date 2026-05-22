@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>KAPTURA v3.3</title>
+<title>KAPTURA v3.7</title>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700;800;900&family=Barlow+Condensed:wght@600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -384,7 +384,7 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
 const SUPA_URL = 'https://aqunzrukuruwzwywnurq.supabase.co';
 const SUPA_KEY = 'sb_publishable_70t9UxFlcqYDj7AMybsrHg__IMGNA8C';
 const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
-const KAPTURA_VERSION = '3.3';
+const KAPTURA_VERSION = '3.7';
 const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 const hoy = new Date();
 const hoyStr = hoy.toISOString().split('T')[0];
@@ -501,7 +501,7 @@ function cardHTML(s,i) {
         ${s.estado==='asignado'
           ? `<button class="btn btn-navy btn-sm" onclick="iniciarSvc(${i})">▶ Iniciar</button>`
           : ''}
-        <button class="btn btn-outline btn-sm" onclick="verServicio(${i})">Ver</button>
+        <button class="btn btn-purple btn-sm" onclick="verServicio(${i})">📋 Registrar</button>
         <button class="btn btn-red btn-sm" onclick="eliminarSvc(${i})">Eliminar</button>
       </div>
     </div>
@@ -521,7 +521,7 @@ function filaHTML(s,i) {
       ${s.estado==='asignado'
         ? `<button class="btn btn-navy btn-sm" onclick="iniciarSvc(${i})">▶</button>`
         : ''}
-      <button class="btn btn-outline btn-sm" onclick="verServicio(${i})">Ver</button>
+      <button class="btn btn-purple btn-sm" onclick="verServicio(${i})">📋</button>
       <button class="btn btn-red btn-sm" onclick="eliminarSvc(${i})">✕</button>
     </div></td>
   </tr>`;
@@ -669,7 +669,7 @@ async function guardarAsignacion() {
 
   const nuevoConId = inserted?.[0] || {...nuevo, created_at: new Date().toISOString()};
   DB.servicios.unshift(nuevoConId);
-  cerrar('modal-asignar');
+  document.getElementById('modal-asignar').style.display='none';
   renderServicios();
   renderKPIs();
   toast(`✓ ${svId} asignado — ${patente} · ${conductor}`);
