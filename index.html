@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>KAPTURA v4.7</title>
+<title>KAPTURA v4.8</title>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700;800;900&family=Barlow+Condensed:wght@600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -582,7 +582,7 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
 const SUPA_URL = 'https://aqunzrukuruwzwywnurq.supabase.co';
 const SUPA_KEY = 'sb_publishable_70t9UxFlcqYDj7AMybsrHg__IMGNA8C';
 const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
-const KAPTURA_VERSION = '4.7';
+const KAPTURA_VERSION = '4.8';
 const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 const hoy = new Date();
 const hoyStr = hoy.toISOString().split('T')[0];
@@ -1515,9 +1515,9 @@ async function cargarGPS() {
         const al = trip.address.toLowerCase();
         for(const p of DB_porticos) {
           if(p.valor_3_ejes <= 0) continue;
-          const textoForguard = (p.texto_gps_forguard||'').toLowerCase();
-          if(!textoForguard) continue;
-          const palabras = textoForguard.split(',').map(x=>x.trim()).filter(x=>x.length>5);
+          const kwText = (p.palabras_clave||p.texto_gps_forguard||'').toLowerCase();
+          if(!kwText) continue;
+          const palabras = kwText.split(',').map(x=>x.trim()).filter(x=>x.length>4);
           const coincide = palabras.some(pal => al.includes(pal));
           if(coincide) {
             const key = `${dia}-${p.cobro_oficial}`;
