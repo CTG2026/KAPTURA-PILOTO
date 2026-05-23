@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>KAPTURA v4.8</title>
+<title>KAPTURA v4.9</title>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700;800;900&family=Barlow+Condensed:wght@600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -34,7 +34,7 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
 
 /* KPIs */
 .kpis{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
-@media(min-width:768px){.kpis{grid-template-columns:repeat(4,1fr)}}
+@media(min-width:768px){.kpis{grid-template-columns:repeat(5,1fr)}}
 .kpi{background:var(--white);border-radius:8px;padding:12px 14px;box-shadow:var(--sh);border:1px solid var(--g200);position:relative;overflow:hidden}
 .kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--navy)}
 .kpi.orange::before{background:var(--orange)}.kpi.green::before{background:var(--green)}.kpi.red::before{background:var(--red)}
@@ -79,6 +79,7 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
 .p-asignado{background:#EEF2FF;color:#3730A3}
 .p-proceso{background:#FEF3C7;color:#92400E}
 .p-borrador{background:#FEE2E2;color:#B91C1C}
+.p-ejecutado{background:#ECFDF5;color:#065F46;border:1px solid #6EE7B7}
 .p-confirmado{background:#D1FAE5;color:#065F46}
 .p-cerrado{background:var(--g100);color:#374151}
 
@@ -160,6 +161,7 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
       <div class="kpi"><div class="kpi-lbl">Servicios Hoy</div><div class="kpi-val" id="k-hoy">—</div><div class="kpi-sub" id="k-hoy-sub">—</div></div>
       <div class="kpi orange"><div class="kpi-lbl">Por Confirmar</div><div class="kpi-val orange" id="k-pend">—</div><div class="kpi-sub">borradores</div></div>
       <div class="kpi green"><div class="kpi-lbl">Margen Mes</div><div class="kpi-val green" id="k-margen">—</div><div class="kpi-sub" id="k-margen-sub">—</div></div>
+      <div class="kpi"><div class="kpi-lbl">Ingreso Mes</div><div class="kpi-val" id="k-ingreso">—</div><div class="kpi-sub" id="k-ingreso-sub">—</div></div>
       <div class="kpi red"><div class="kpi-lbl">Margen Prom.</div><div class="kpi-val" id="k-prom">—</div><div class="kpi-sub">por servicio</div></div>
     </div>
 
@@ -412,9 +414,15 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
         </div>
         <div class="fld">
           <label style="font-size:9px;font-weight:800;color:var(--g600);display:flex;justify-content:space-between;margin-bottom:3px">
-            Litros <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span>
+            Litros teórico <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span>
           </label>
           <input class="inp" id="cos-litros" readonly style="background:var(--g50);color:var(--navy);font-weight:700">
+        </div>
+        <div class="fld">
+          <label style="font-size:9px;font-weight:800;color:var(--g600);display:flex;justify-content:space-between;margin-bottom:3px">
+            Litros real Copec <span style="font-size:8px;font-weight:800;background:#D1FAE5;color:#065F46;padding:1px 5px;border-radius:3px" id="lbl-litros-real">CARGANDO</span>
+          </label>
+          <input class="inp" id="cos-litros-real" readonly style="background:var(--g50);color:var(--green);font-weight:700">
         </div>
         <div class="fld">
           <label style="font-size:9px;font-weight:800;color:var(--g600);display:flex;justify-content:space-between;margin-bottom:3px">
@@ -492,8 +500,9 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
         <div class="fld">
           <label style="font-size:9px;font-weight:800;color:var(--g600);display:block;margin-bottom:3px">Plazo de cobro</label>
           <select class="inp" id="cos-plazo" onchange="calcCostos()">
+            <option value="0" selected>Sin factoring — 0%</option>
             <option value="1">15 días — 1%</option>
-            <option value="1.5" selected>30 días — 1,5%</option>
+            <option value="1.5">30 días — 1,5%</option>
             <option value="3">60 días — 3%</option>
           </select>
         </div>
@@ -582,7 +591,7 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
 const SUPA_URL = 'https://aqunzrukuruwzwywnurq.supabase.co';
 const SUPA_KEY = 'sb_publishable_70t9UxFlcqYDj7AMybsrHg__IMGNA8C';
 const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
-const KAPTURA_VERSION = '4.8';
+const KAPTURA_VERSION = '4.9';
 const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 const hoy = new Date();
 const hoyStr = hoy.toISOString().split('T')[0];
@@ -663,6 +672,9 @@ function renderKPIs() {
   document.getElementById('k-margen-sub').textContent =
     `${conf.length} servicios · ${MESES[mes]}`;
   document.getElementById('k-prom').textContent = fmt(pr);
+  const ingresoTotal = conf.reduce((a,s) => a+(s.ingreso_total||s.tarifa_neta||0), 0);
+  document.getElementById('k-ingreso').textContent = fmt(ingresoTotal);
+  document.getElementById('k-ingreso-sub').textContent = `${conf.length} servicios · ${MESES[mes]}`;
 }
 
 function renderServicios() {
@@ -721,7 +733,8 @@ function filaHTML(s,i) {
     <td><div style="display:flex;gap:4px;flex-wrap:wrap">
       ${s.estado==='asignado' ? `<button class="btn btn-navy btn-sm" onclick="iniciarSvc(${i})">▶ Iniciar</button>` : ''}
       ${['en_proceso','registrando','asignado'].includes(s.estado) ? `<button class="btn btn-purple btn-sm" onclick="verServicio(${i})">📋 Registrar</button>` : ''}
-      ${s.estado==='borrador' ? `<button class="btn btn-purple btn-sm" onclick="verServicio(${i})">📋 Registrar</button><button class="btn btn-green btn-sm" onclick="abrirCierre(${i})">🔒 Cierre</button>` : ''}
+      ${s.estado==='confirmado'||s.estado==='cerrado' ? `<button class="btn btn-outline btn-sm" onclick="abrirInforme(${i})">📄 Informe</button>` : ''}
+      ${['borrador','ejecutado'].includes(s.estado) ? `<button class="btn btn-purple btn-sm" onclick="verServicio(${i})">📋 Registrar</button><button class="btn btn-green btn-sm" onclick="abrirCierre(${i})">🔒 Cierre</button>` : ''}
       ${['confirmado','cerrado'].includes(s.estado) ? `<button class="btn btn-outline btn-sm" onclick="verServicio(${i})">Ver</button>` : ''}
       <button class="btn btn-red btn-sm" onclick="eliminarSvc(${i})">✕</button>
     </div></td>
@@ -731,11 +744,11 @@ function filaHTML(s,i) {
 function pillHTML(e) {
   const m = {
     asignado:'p-asignado',en_proceso:'p-proceso',registrando:'p-proceso',
-    borrador:'p-borrador',confirmado:'p-confirmado',cerrado:'p-cerrado',pendiente:'p-borrador'
+    borrador:'p-borrador',ejecutado:'p-ejecutado',confirmado:'p-confirmado',cerrado:'p-cerrado',pendiente:'p-borrador'
   };
   const t = {
     asignado:'Asignado',en_proceso:'En Proceso',registrando:'Registrando',
-    borrador:'Borrador',confirmado:'Confirmado',cerrado:'Cerrado',pendiente:'Pendiente'
+    borrador:'Borrador',ejecutado:'Ejecutado',confirmado:'Confirmado',cerrado:'Cerrado',pendiente:'Pendiente'
   };
   return `<span class="pill ${m[e]||'p-asignado'}">${t[e]||e}</span>`;
 }
@@ -1285,7 +1298,7 @@ async function guardarBorrador() {
   if(error) { toast('Error: ' + error.message); return; }
 
   DB.servicios[svcActivoIdx] = {
-    ...s, estado:'borrador', destino, num_guia:nguia,
+    ...s, estado:'ejecutado', destino, num_guia:nguia,
     tarifa_neta:tarifa, _puntos:puntosData, _fecha_termino:fechaTerm
   };
 
@@ -1562,6 +1575,29 @@ async function cargarGPS() {
     console.log('TAG:', soloTag.map(p=>p.nombre).join('+'), '=$'+totalTag);
     console.log('Peajes:', soloPeajes.map(p=>p.nombre).join('+'), '=$'+totalPeajes);
     toast(`✓ GPS: ${Math.round(kmTotal)} km · TAG: ${fmt(totalTag)} · Peajes: ${fmt(totalPeajes)}`);
+
+    // Cargar combustible real desde Copec
+    try {
+      const {data:cargas} = await supa.from('kaptura_combustible')
+        .select('litros,monto,fecha,hora,direccion')
+        .eq('patente', patente)
+        .gte('fecha', fechaInicio)
+        .lte('fecha', fechaTerm)
+        .order('fecha', {ascending:true});
+      if(cargas && cargas.length > 0) {
+        const totalLitros = cargas.reduce((a,c) => a+(c.litros||0), 0);
+        const totalMonto  = cargas.reduce((a,c) => a+(c.monto||0), 0);
+        document.getElementById('cos-litros-real').value = `${Math.round(totalLitros*10)/10} lt — $${totalMonto.toLocaleString('es-CL')}`;
+        document.getElementById('lbl-litros-real').textContent = `${cargas.length} carga${cargas.length>1?'s':''}`;
+        document.getElementById('lbl-litros-real').style.background = '#D1FAE5';
+        document.getElementById('lbl-litros-real').style.color = '#065F46';
+      } else {
+        document.getElementById('cos-litros-real').value = 'Sin cargas Copec en el rango';
+        document.getElementById('lbl-litros-real').textContent = 'SIN DATOS';
+        document.getElementById('lbl-litros-real').style.background = '#FEE2E2';
+        document.getElementById('lbl-litros-real').style.color = '#B91C1C';
+      }
+    } catch(e) { console.warn('Copec error:', e.message); }
   } catch(e) { toast('Error GPS: ' + e.message); console.error(e); }
 }
 
@@ -1652,7 +1688,7 @@ async function guardarEjecucion() {
   const retorno   = document.getElementById('ejec-retorno').value;
 
   const {error} = await supa.from('servicios_piloto').update({
-    estado: 'borrador', // pasa a coordinador como borrador para cierre
+    estado: 'ejecutado', // pasa a coordinador para cierre
     hora_termino: fechaTerm ? fechaTerm + 'T23:59:00' : null,
     notas: `Retorno: ${retorno}`
   }).eq('id', s.id);
@@ -1660,7 +1696,7 @@ async function guardarEjecucion() {
   if(error) { toast('Error: ' + error.message); return; }
 
   DB.servicios[svcActivoIdx] = {
-    ...s, estado:'borrador',
+    ...s, estado:'ejecutado',
     _fecha_termino: fechaTerm,
     _retorno: retorno
   };
@@ -1689,6 +1725,12 @@ async function cerrarServicio() {
 function abrirCierre(i) {
   svcActivoIdx = i;
   irACostos();
+}
+
+
+function abrirInforme(i) {
+  const s = DB.servicios[i];
+  toast(`📄 Informe ${s.servicio_id} — disponible en próxima versión`);
 }
 
 init();
