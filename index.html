@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>KAPTURA v5.1</title>
+<title>KAPTURA v5.2</title>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700;800;900&family=Barlow+Condensed:wght@600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -591,7 +591,7 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
 const SUPA_URL = 'https://aqunzrukuruwzwywnurq.supabase.co';
 const SUPA_KEY = 'sb_publishable_70t9UxFlcqYDj7AMybsrHg__IMGNA8C';
 const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
-const KAPTURA_VERSION = '5.1';
+const KAPTURA_VERSION = '5.2';
 const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 const hoy = new Date();
 const hoyStr = hoy.toISOString().split('T')[0];
@@ -1534,40 +1534,6 @@ async function cargarGPS() {
         }
       }
     };
-    trips.filter(t => t.km_tramo > 10).forEach(t => {
-      if(!porDia[t.fecha]) porDia[t.fecha] = [];
-      porDia[t.fecha].push(t);
-    });
-
-    for(const [dia, tripsDia] of Object.entries(porDia)) {
-      const cobrosIda = new Set();
-      const cobrosVuelta = new Set();
-      
-      // Detectar por cada trip significativo - separar TAG de Peajes por columna 'tipo'
-      for(const trip of tripsDia) {
-        const al = trip.address.toLowerCase();
-        for(const p of DB_porticos) {
-          if(p.valor_3_ejes <= 0) continue;
-          const kwText = (p.palabras_clave||p.texto_gps_forguard||'').toLowerCase();
-          if(!kwText) continue;
-          const palabras = kwText.split(',').map(x=>x.trim()).filter(x=>x.length>4);
-          const coincide = palabras.some(pal => al.includes(pal));
-          if(coincide) {
-            const key = `${dia}-${p.cobro_oficial}`;
-            if(!cobrosTotal.has(key)) {
-              cobrosTotal.add(key);
-              detectadosTag.push({
-                nombre: p.cobro_oficial,
-                valor: p.valor_3_ejes,
-                tipo: (p.tipo||'tag').toLowerCase(),
-                dia
-              });
-            }
-          }
-        }
-      }
-    }
-
     // Separar por tipo
     const soloTag    = detectadosTag.filter(p => p.tipo.includes('tag') || p.tipo.includes('autopista'));
     const soloPeajes = detectadosTag.filter(p => !p.tipo.includes('tag') && !p.tipo.includes('autopista'));
