@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>KAPTURA v5.2</title>
+<title>KAPTURA v5.3</title>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700;800;900&family=Barlow+Condensed:wght@600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -403,6 +403,9 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
         <button class="btn btn-orange btn-sm btn-full" style="margin-top:8px" onclick="cargarGPS()">↺ Integrar Datos</button>
       </div>
 
+      <!-- RESUMEN PUNTOS -->
+      <div style="background:#EEF2FF;border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:11px;font-weight:700;color:#3730A3" id="cos-puntos-resumen">— puntos sin registrar</div>
+
       <!-- A COSTOS DIRECTOS -->
       <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:var(--navy);padding:6px 0 5px;border-bottom:2px solid var(--blue);margin-bottom:10px">⚙ A — Costos Directos</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
@@ -591,7 +594,7 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
 const SUPA_URL = 'https://aqunzrukuruwzwywnurq.supabase.co';
 const SUPA_KEY = 'sb_publishable_70t9UxFlcqYDj7AMybsrHg__IMGNA8C';
 const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
-const KAPTURA_VERSION = '5.2';
+const KAPTURA_VERSION = '5.3';
 const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 const hoy = new Date();
 const hoyStr = hoy.toISOString().split('T')[0];
@@ -732,10 +735,9 @@ function filaHTML(s,i) {
     <td>${pillHTML(s.estado)}</td>
     <td><div style="display:flex;gap:4px;flex-wrap:wrap">
       ${s.estado==='asignado' ? `<button class="btn btn-navy btn-sm" onclick="iniciarSvc(${i})">▶ Iniciar</button>` : ''}
-      ${['en_proceso','registrando','asignado'].includes(s.estado) ? `<button class="btn btn-purple btn-sm" onclick="verServicio(${i})">📋 Registrar</button>` : ''}
+      ${['en_proceso','registrando'].includes(s.estado) ? `<button class="btn btn-purple btn-sm" onclick="verServicio(${i})">📋 Registrar</button>` : ''}
       ${s.estado==='confirmado'||s.estado==='cerrado' ? `<button class="btn btn-outline btn-sm" onclick="abrirInforme(${i})">📄 Informe</button>` : ''}
       ${['borrador','ejecutado'].includes(s.estado) ? `<button class="btn btn-purple btn-sm" onclick="verServicio(${i})">📋 Registrar</button><button class="btn btn-green btn-sm" onclick="abrirCierre(${i})">🔒 Cierre</button>` : ''}
-      ${['confirmado','cerrado'].includes(s.estado) ? `<button class="btn btn-outline btn-sm" onclick="verServicio(${i})">Ver</button>` : ''}
       <button class="btn btn-red btn-sm" onclick="eliminarSvc(${i})">✕</button>
     </div></td>
   </tr>`;
@@ -1515,6 +1517,7 @@ async function cargarGPS() {
     // Trips >10km — max 2 detecciones por pórtico por día (ida+vuelta)
     const contadorPorDia = {};
     const MAX_POR_DIA = 2;
+    // TAG: trips > 10km; PEAJE regional: trips > 50km to avoid false positives
     const tripsSignif = trips.filter(t => t.km_tramo > 10);
     for(const trip of tripsSignif) {
       const al = trip.address.toLowerCase();
@@ -1529,7 +1532,10 @@ async function cargarGPS() {
           const cnt = contadorPorDia[key]||0;
           if(cnt < MAX_POR_DIA) {
             contadorPorDia[key] = cnt+1;
-            detectadosTag.push({nombre:p.cobro_oficial, valor:p.valor_3_ejes, tipo:(p.tipo||'peaje').toLowerCase(), dia, km:trip.km_tramo});
+            // For PEAJE tipo: only detect if trip is > 50km (avoids false regional matches)
+            const tipoP = (p.tipo||'peaje').toLowerCase();
+            if(tipoP === 'peaje' && trip.km_tramo < 50) continue;
+            detectadosTag.push({nombre:p.cobro_oficial, valor:p.valor_3_ejes, tipo:tipoP, dia, km:trip.km_tramo});
           }
         }
       }
