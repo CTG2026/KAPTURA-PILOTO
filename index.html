@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>KAPTURA v5.3</title>
+<title>KAPTURA v5.4</title>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700;800;900&family=Barlow+Condensed:wght@600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -594,7 +594,7 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
 const SUPA_URL = 'https://aqunzrukuruwzwywnurq.supabase.co';
 const SUPA_KEY = 'sb_publishable_70t9UxFlcqYDj7AMybsrHg__IMGNA8C';
 const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
-const KAPTURA_VERSION = '5.3';
+const KAPTURA_VERSION = '5.4';
 const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 const hoy = new Date();
 const hoyStr = hoy.toISOString().split('T')[0];
@@ -1367,10 +1367,8 @@ async function irACostos() {
   const valorPuntos = intermedios.reduce((a,p) => a+(p.valor||0), 0);
   document.getElementById('cos-ingreso').textContent = fmt(tarifa + valorPuntos);
 
-  // Comisión auto: % de tarifa neta solamente
-  const pctComision = parseFloat(c.comision_conductor||8) / 100;
-  const comisionCalc = Math.round(tarifa * pctComision);
-  document.getElementById('cos-comision').value = comisionCalc;
+  // Comisión: se calcula al integrar GPS, no al abrir
+  document.getElementById('cos-comision').value = 0;
 
   calcCostos();
   cerrar('modal-registrar');
@@ -1527,6 +1525,17 @@ async function cargarGPS() {
         const kwText = (p.palabras_clave||p.texto_gps_forguard||'').toLowerCase();
         if(!kwText) continue;
         const palabras = kwText.split(',').map(x=>x.trim()).filter(x=>x.length>4);
+        // Region-aware: verify GPS address is in same region as portico
+        const pRegion = (p.region||'').toLowerCase();
+        const regionMap = {
+          'metropolitana': ['metropolitana','paine','buin','san bernardo','pudahuel'],
+          'valparaíso': ['valparaíso','casablanca','curacaví','quilpué','viña del mar'],
+          "o'higgins": ["o'higgins",'rancagua','san fernando','doñihue','coltauco','peumo','mostazal','malloa','requínoa','chépica','san vicente'],
+          'maule': ['maule','talca','curicó','linares','romeral','san clemente'],
+          'biobío': ['biobío','chillán','cabrero','concepción','santa juana'],
+        };
+        const rKws = regionMap[pRegion]||[];
+        if(rKws.length > 0 && !rKws.some(rk => al.includes(rk))) continue;
         if(palabras.some(pal => al.includes(pal))) {
           const key = `${dia}-${p.cobro_oficial}`;
           const cnt = contadorPorDia[key]||0;
