@@ -1521,11 +1521,17 @@ async function cargarGPS() {
     const tripsSignif = trips.filter(t => t.km_tramo > 10);
     const allAddrs = tripsSignif.map(t => t.address.toLowerCase()).join(' | ');
 
-    // Detectar corredor según keywords GPS
+    // Detectar corredor usando keywords exclusivas + lógica NEVER
     let corridorDetected = null;
     let corridorScore = 0;
     for(const corredor of DB_corredores) {
       const kwsIda = (corredor.keywords_ida||'').split(',').map(k=>k.trim().toLowerCase());
+      // Extract NEVER keywords from nota field
+      const neverMatch = (corredor.nota||'').match(/NEVER:([^|]*)/);
+      const neverKws = neverMatch ? neverMatch[1].split(',').map(k=>k.trim().toLowerCase()).filter(k=>k.length>2) : [];
+      // Skip if any NEVER keyword appears in GPS
+      if(neverKws.some(nk => nk && allAddrs.includes(nk))) continue;
+      // Score based on keyword matches
       const score = kwsIda.filter(kw => kw.length > 3 && allAddrs.includes(kw)).length;
       if(score > corridorScore) { corridorScore = score; corridorDetected = corredor; }
     }
