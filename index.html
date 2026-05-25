@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>KAPTURA v7.0</title>
+<title>KAPTURA v7.1</title>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700;800;900&family=Barlow+Condensed:wght@600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -424,7 +424,7 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
 const SUPA_URL = 'https://aqunzrukuruwzwywnurq.supabase.co';
 const SUPA_KEY = 'sb_publishable_70t9UxFlcqYDj7AMybsrHg__IMGNA8C';
 const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
-const KAPTURA_VERSION = '7.0';
+const KAPTURA_VERSION = '7.1';
 const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 const hoy = new Date();
 const hoyStr = hoy.toISOString().split('T')[0];
@@ -1054,12 +1054,7 @@ function calcCostos() {
   const viat    = dias * parseInt(c.viatico||c.costo_viatico||12000);
   const plazo   = parseFloat(document.getElementById('cos-plazo').value??'0');
 
-  document.getElementById('cos-conductor').value = fmt(condVal);
-  document.getElementById('cos-cf').value        = fmt(cf);
-  document.getElementById('cos-mant').value      = fmt(mant);
-  document.getElementById('cos-viatico').value   = fmt(viat);
-
-  // Get tarifa BEFORE using it
+  // Declare tarifa FIRST before any use
   const s = DB.servicios[svcActivoIdx];
   const puntos = s?._puntos || puntosData || [];
   const final  = puntos.find(p=>p.tipo==='final');
@@ -1068,6 +1063,11 @@ function calcCostos() {
   const valorPts = ints.reduce((a,p)=>a+(p.valor||0),0);
   const ingreso  = tarifa + valorPts;
   const factoring = plazo > 0 ? Math.round(tarifa * plazo / 100) : 0;
+
+  document.getElementById('cos-conductor').value = fmt(condVal);
+  document.getElementById('cos-cf').value        = fmt(cf);
+  document.getElementById('cos-mant').value      = fmt(mant);
+  document.getElementById('cos-viatico').value   = fmt(viat);
 
   // Auto-set comision when GPS loaded and tarifa>0
   const comisionEl = document.getElementById('cos-comision');
@@ -1266,12 +1266,17 @@ async function guardarCostosBorrador() {
   const margen  = ingreso - costos;
   const puntosJSON = JSON.stringify(puntos.map(p=>({tipo:p.tipo,destino:p.destino,valor:p.valor||0,num_guia:p.num_guia||''})));
 
+  const kmVacioIda = parseFloat(document.getElementById('cos-km-vacio-ida')?.value)||0;
+  const kmCargado  = parseFloat(document.getElementById('cos-km-cargado')?.value)||0;
+  const kmRetorno  = parseFloat(document.getElementById('cos-km-retorno')?.value)||0;
+
   const {error} = await supa.from('servicios_piloto').update({
     estado:'borrador', km_total:km, costo_peajes:peajes, peajes_tag:tag,
     tarifa_neta:tarifa, dias_servicio:dias, costo_combustible:comb,
     costo_conductor:condVal, costo_viaticos:viat, costo_fijo_dia:cf,
     costo_mantencion:mant, factoring:fact, total_costos:costos,
     margen_servicio:margen, margen:margen, ingreso_total:ingreso,
+    km_base_carga:kmVacioIda, km_carga_destino:kmCargado, km_retorno:kmRetorno,
     notas: `Retorno: base|_PUNTOS:${puntosJSON}`
   }).eq('id',s.id);
   if(error) { toast('Error: '+error.message); return; }
