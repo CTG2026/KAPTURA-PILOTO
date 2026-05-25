@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>KAPTURA v6.4</title>
+<title>KAPTURA v7.0</title>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700;800;900&family=Barlow+Condensed:wght@600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -16,134 +16,109 @@
   --sh:0 1px 4px rgba(28,43,74,0.08);--shl:0 8px 36px rgba(28,43,74,0.16);
 }
 body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min-height:100vh;font-size:14px}
-
-/* HEADER */
-.hdr{background:var(--white);border-bottom:2px solid var(--g100);padding:0 16px;display:flex;align-items:center;justify-content:space-between;height:52px;box-shadow:var(--sh);position:sticky;top:0;z-index:100}
+.hdr{background:#fff;border-bottom:2px solid var(--g100);padding:0 16px;display:flex;align-items:center;justify-content:space-between;height:52px;box-shadow:var(--sh);position:sticky;top:0;z-index:100}
 .logo{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:#808080;letter-spacing:-0.5px}
 .hdr-info{font-size:11px;color:var(--g400);font-weight:700;text-align:right;line-height:1.4}
-
-/* NAV */
-.nav{background:var(--white);border-bottom:1px solid var(--g200);display:flex;overflow-x:auto;scrollbar-width:none}
+.nav{background:#fff;border-bottom:1px solid var(--g200);display:flex;overflow-x:auto;scrollbar-width:none}
 .nav::-webkit-scrollbar{display:none}
 .ntab{padding:10px 16px;font-size:11px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--g400);cursor:pointer;border-bottom:3px solid transparent;border-top:none;border-left:none;border-right:none;background:none;font-family:'Barlow',sans-serif;white-space:nowrap}
 .ntab.active{color:var(--navy);border-bottom-color:var(--red)}
-
-/* MAIN */
 .main{padding:12px;max-width:100%}
-@media(min-width:768px){.main{padding:24px 32px;max-width:1400px;margin:0 auto}}
-
-/* KPIs */
+@media(min-width:768px){.main{padding:24px 32px;max-width:1600px;margin:0 auto}}
 .kpis{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
 @media(min-width:768px){.kpis{grid-template-columns:repeat(7,1fr)}}
-.kpi{background:var(--white);border-radius:8px;padding:12px 14px;box-shadow:var(--sh);border:1px solid var(--g200);position:relative;overflow:hidden}
+.kpi{background:#fff;border-radius:8px;padding:12px 14px;box-shadow:var(--sh);border:1px solid var(--g200);position:relative;overflow:hidden}
 .kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--navy)}
 .kpi.orange::before{background:var(--orange)}.kpi.green::before{background:var(--green)}.kpi.red::before{background:var(--red)}
 .kpi-lbl{font-size:9px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:var(--g400);margin-bottom:5px}
 .kpi-val{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;color:var(--navy);line-height:1}
 .kpi-val.green{color:var(--green)}.kpi-val.orange{color:var(--orange)}.kpi-val.red{color:var(--red)}
 .kpi-sub{font-size:9px;color:var(--g400);margin-top:3px;font-weight:600}
-
-/* SECTION */
 .sec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:8px}
 .sec-ttl{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;color:var(--navy)}
 .filtro{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
-.filtro input{font-family:'Barlow',sans-serif;font-size:12px;padding:6px 10px;border:1.5px solid var(--g200);border-radius:6px;outline:none;background:var(--white)}
-
-/* BUTTONS */
+.filtro input{font-family:'Barlow',sans-serif;font-size:12px;padding:6px 10px;border:1.5px solid var(--g200);border-radius:6px;outline:none;background:#fff}
 .btn{font-family:'Barlow',sans-serif;font-size:11px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;padding:8px 14px;border-radius:6px;cursor:pointer;border:none;transition:all 0.15s;white-space:nowrap;display:inline-flex;align-items:center;gap:5px}
-.btn-navy{background:var(--navy);color:var(--white)}
-.btn-navy:active{opacity:0.85}
-.btn-outline{background:var(--white);color:var(--navy);border:1.5px solid var(--navy)}
+.btn-navy{background:var(--navy);color:#fff}.btn-navy:active{opacity:0.85}
+.btn-outline{background:#fff;color:var(--navy);border:1.5px solid var(--navy)}
 .btn-ghost{background:var(--g100);color:var(--g400);cursor:default}
-.btn-green{background:#D1FAE5;color:#065F46}
-.btn-orange{background:#FEF3C7;color:#92400E;border:1.5px solid var(--orange)}
-.btn-red{background:#FEE2E2;color:#B91C1C}
-.btn-purple{background:#EDE9FE;color:#5B21B6}
-.btn-sm{padding:5px 10px;font-size:10px}
-.btn-full{width:100%;justify-content:center}
-
-/* SERVICE CARDS (mobile) */
+.btn-green{background:#D1FAE5;color:#065F46}.btn-orange{background:#FEF3C7;color:#92400E;border:1.5px solid var(--orange)}
+.btn-red{background:#FEE2E2;color:#B91C1C}.btn-purple{background:#EDE9FE;color:#5B21B6}
+.btn-sm{padding:5px 10px;font-size:10px}.btn-full{width:100%;justify-content:center}
 .svc-list{display:flex;flex-direction:column;gap:8px}
-.svc-card{background:var(--white);border-radius:8px;box-shadow:var(--sh);border:1px solid var(--g200);overflow:hidden}
+.svc-card{background:#fff;border-radius:8px;box-shadow:var(--sh);border:1px solid var(--g200);overflow:hidden}
 .svc-top{padding:10px 12px 8px;display:flex;align-items:flex-start;justify-content:space-between;gap:6px}
 .svc-id{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:var(--navy)}
 .svc-pat{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--g800)}
 .svc-line{font-size:11px;color:var(--g600);font-weight:600;margin-top:2px}
 .svc-body{padding:8px 12px 10px;border-top:1px solid var(--g100)}
 .svc-acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
-.avbar{flex:1;height:4px;background:var(--g200);border-radius:2px;overflow:hidden}
-.avfill{height:100%;background:linear-gradient(90deg,var(--blue),var(--red));border-radius:2px}
-
-/* STATUS PILLS */
 .pill{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:9px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;white-space:nowrap}
-.p-asignado{background:#EEF2FF;color:#3730A3}
-.p-proceso{background:#FEF3C7;color:#92400E}
-.p-borrador{background:#FEE2E2;color:#B91C1C}
-.p-ejecutado{background:#ECFDF5;color:#065F46;border:1px solid #6EE7B7}
-.p-confirmado{background:#D1FAE5;color:#065F46}
-.p-cerrado{background:var(--g100);color:#374151}
-
-/* DESKTOP TABLE */
+.p-asignado{background:#EEF2FF;color:#3730A3}.p-proceso{background:#FEF3C7;color:#92400E}
+.p-borrador{background:#FEE2E2;color:#B91C1C}.p-ejecutado{background:#ECFDF5;color:#065F46;border:1px solid #6EE7B7}
+.p-confirmado{background:#D1FAE5;color:#065F46}.p-cerrado{background:var(--g100);color:#374151}
 .desk-tbl{display:none}
 @media(min-width:900px){
   .svc-list{display:none}
-  .desk-tbl{display:block;background:var(--white);border-radius:10px;box-shadow:var(--sh);border:1px solid var(--g200);overflow:hidden}
-  table{width:100%;border-collapse:collapse;min-width:800px}
-  thead{background:var(--blue)}
-  thead th{padding:10px 12px;text-align:left;font-size:9px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.75);white-space:nowrap}
-  tbody tr{border-bottom:1px solid var(--g100)}
-  tbody tr:hover{background:var(--g50)}
-  tbody td{padding:10px 12px;font-size:12px;vertical-align:middle}
+  .desk-tbl{display:block;background:#fff;border-radius:10px;box-shadow:var(--sh);border:1px solid var(--g200);overflow:hidden}
+  .desk-tbl table{width:100%;border-collapse:collapse;min-width:1200px}
+  .desk-tbl thead{background:var(--blue)}
+  .desk-tbl thead th{padding:10px 10px;text-align:left;font-size:9px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.75);white-space:nowrap}
+  .desk-tbl tbody tr{border-bottom:1px solid var(--g100)}
+  .desk-tbl tbody tr:hover{background:var(--g50)}
+  .desk-tbl tbody td{padding:9px 10px;font-size:12px;vertical-align:middle}
 }
-
-/* MODAL */
 .overlay{position:fixed;inset:0;background:rgba(21,32,56,0.55);backdrop-filter:blur(3px);z-index:200;display:flex;align-items:flex-end;justify-content:center}
 @media(min-width:640px){.overlay{align-items:center;padding:20px}}
-.modal{background:var(--white);border-radius:16px 16px 0 0;width:100%;max-height:95vh;overflow-y:auto;box-shadow:var(--shl)}
-@media(min-width:640px){.modal{border-radius:16px;max-width:600px}}
-.modal-hdr{padding:14px 16px 12px;border-bottom:1px solid var(--g200);display:flex;align-items:flex-start;justify-content:space-between;position:sticky;top:0;background:var(--white);z-index:1}
+.modal{background:#fff;border-radius:16px 16px 0 0;width:100%;max-height:95vh;overflow-y:auto;box-shadow:var(--shl)}
+@media(min-width:640px){.modal{border-radius:16px;max-width:620px}}
+.modal-hdr{padding:14px 16px 12px;border-bottom:1px solid var(--g200);display:flex;align-items:flex-start;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:1}
 .modal-ttl{font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:900;text-transform:uppercase;letter-spacing:0.05em;color:var(--navy)}
 .modal-sub{font-size:11px;color:var(--g400);font-weight:600;margin-top:2px}
 .modal-cls{background:var(--g100);border:none;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:13px;color:var(--g600);display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .modal-body{padding:16px}
-.modal-ftr{padding:12px 16px;border-top:1px solid var(--g200);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;position:sticky;bottom:0;background:var(--white)}
-
-/* FORM */
+.modal-ftr{padding:12px 16px;border-top:1px solid var(--g200);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;position:sticky;bottom:0;background:#fff}
 .fld{display:flex;flex-direction:column;margin-bottom:10px}
 .fld2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
 .lbl{font-size:9px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:var(--g600);margin-bottom:3px}
-.inp{font-family:'Barlow',sans-serif;font-size:13px;font-weight:600;padding:8px 10px;border:1.5px solid var(--g200);border-radius:6px;color:var(--g800);background:var(--white);outline:none;width:100%}
-.inp:focus{border-color:var(--navy)}
-.inp.pend{border-color:var(--orange);background:#FFFBEB}
-.inp.ok{border-color:var(--green);background:#ECFDF5}
-
-/* EMPTY */
+.inp{font-family:'Barlow',sans-serif;font-size:13px;font-weight:600;padding:8px 10px;border:1.5px solid var(--g200);border-radius:6px;color:var(--g800);background:#fff;outline:none;width:100%}
+.inp:focus{border-color:var(--navy)}.inp.pend{border-color:var(--orange);background:#FFFBEB}.inp.ok{border-color:var(--green);background:#ECFDF5}
+.info-box{background:var(--g50);border-radius:8px;padding:10px 12px;margin-bottom:14px;border:1px solid var(--g200)}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:11px}
+.info-item .lbl2{color:var(--g400);font-weight:700;font-size:9px;text-transform:uppercase;letter-spacing:0.1em}
+.info-item .val{font-weight:800;color:var(--navy);margin-top:2px}
+.section-ttl{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:var(--navy);padding:6px 0 5px;border-bottom:2px solid var(--blue);margin-bottom:10px}
 .empty{text-align:center;padding:40px 20px;color:var(--g400)}
-
-/* TOAST */
-.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--navy);color:white;padding:10px 18px;border-radius:8px;font-size:12px;font-weight:700;z-index:999;opacity:0;transition:opacity 0.3s;pointer-events:none;max-width:90vw;text-align:center}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 18px;border-radius:8px;font-size:12px;font-weight:700;z-index:999;opacity:0;transition:opacity 0.3s;pointer-events:none;max-width:90vw;text-align:center}
 .toast.show{opacity:1}
-
-/* LOADING */
 .loading{position:fixed;inset:0;background:rgba(255,255,255,0.9);z-index:300;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px}
 .spin{width:32px;height:32px;border:3px solid var(--g200);border-top-color:var(--navy);border-radius:50%;animation:spin 0.8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
+/* Informe styles - all hardcoded, no CSS vars */
+.inf-hdr{background:#1C2B4A;color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;border-radius:8px 8px 0 0}
+.inf-grid{display:grid;grid-template-columns:1fr 1fr;border:1px solid #DDE2EC;border-top:none}
+.inf-cell{padding:8px 12px;border-right:1px solid #DDE2EC;border-bottom:1px solid #DDE2EC}
+.inf-cell:nth-child(even){border-right:none}
+.inf-lbl{font-size:9px;font-weight:800;color:#4E5A78;letter-spacing:0.1em;text-transform:uppercase}
+.inf-val{font-weight:700;color:#1C2B4A;margin-top:2px;font-size:13px}
+.inf-section{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:#1C2B4A;padding:10px 0 5px;border-bottom:2px solid #1E3A5F;margin:14px 0 8px}
+.inf-table{width:100%;border-collapse:collapse;font-size:11px;color:#2A3350}
+.inf-table th{background:#1E3A5F;color:rgba(255,255,255,0.8);padding:6px 8px;text-align:left;font-size:9px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase}
+.inf-table td{padding:5px 8px;border-bottom:1px solid #EEF1F6;color:#2A3350}
+.inf-margen{background:#1C2B4A;color:#fff;padding:12px 16px;display:grid;grid-template-columns:1fr 1fr;gap:12px;border-radius:0 0 8px 8px;margin-top:4px}
 </style>
 </head>
 <body>
-
 <div class="loading" id="loading">
   <div class="spin"></div>
-  <div style="font-size:12px;font-weight:700;color:var(--g600);letter-spacing:0.1em">CARGANDO...</div>
+  <div style="font-size:12px;font-weight:700;color:var(--g600);letter-spacing:0.1em">CARGANDO KAPTURA...</div>
 </div>
 
-<!-- HEADER -->
 <header class="hdr">
   <div class="logo">KAPTURA</div>
   <div class="hdr-info" id="hdr-info"></div>
 </header>
 
-<!-- NAV -->
 <nav class="nav">
   <button class="ntab active" onclick="setTab('servicios',this)">Servicios</button>
   <button class="ntab" onclick="setTab('flota',this)">Flota</button>
@@ -151,12 +126,9 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
   <button class="ntab" onclick="setTab('config',this)">Config</button>
 </nav>
 
-<!-- MAIN -->
 <main class="main">
-
   <!-- TAB SERVICIOS -->
   <div id="tab-servicios">
-    <!-- KPIs -->
     <div class="kpis">
       <div class="kpi"><div class="kpi-lbl">Servicios Hoy</div><div class="kpi-val" id="k-hoy">—</div><div class="kpi-sub" id="k-hoy-sub">—</div></div>
       <div class="kpi orange"><div class="kpi-lbl">Ejecutados Hoy</div><div class="kpi-val orange" id="k-ejec-hoy">—</div><div class="kpi-sub" id="k-ejec-mes">— este mes</div></div>
@@ -166,8 +138,6 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
       <div class="kpi green"><div class="kpi-lbl">Margen Mes</div><div class="kpi-val green" id="k-margen">—</div><div class="kpi-sub" id="k-margen-sub">—</div></div>
       <div class="kpi"><div class="kpi-lbl">Margen Prom.</div><div class="kpi-val" id="k-prom">—</div><div class="kpi-sub">por servicio</div></div>
     </div>
-
-    <!-- FILTRO Y ACCIONES -->
     <div class="filtro">
       <input type="date" id="filtro-fecha" onchange="renderServicios()">
       <button class="btn btn-outline btn-sm" onclick="resetFecha()">Todos</button>
@@ -176,22 +146,21 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
       <div class="sec-ttl">Servicios</div>
       <button class="btn btn-navy" onclick="abrirAsignar()">+ Asignar</button>
     </div>
-
-    <!-- LISTA MOBILE -->
     <div class="svc-list" id="cards-mobile"></div>
-
-    <!-- TABLA DESKTOP -->
     <div class="desk-tbl">
       <div style="overflow-x:auto"><table>
-        <thead><tr><th>ID</th><th>Fecha</th><th>Patente</th><th>Conductor</th><th>Cliente</th><th>Origen</th><th>Destino</th><th>Guía</th><th>Tarifa $</th><th>Cant Ptos</th><th>Total Ptos $</th><th>Total Ingreso</th><th>Costos</th><th>Margen</th><th>Estado</th><th>Acciones</th></tr></thead>
+        <thead><tr>
+          <th>ID</th><th>Fecha</th><th>Patente</th><th>Conductor</th><th>Cliente</th>
+          <th>Origen</th><th>Destino</th><th>Guía</th><th>Tarifa $</th>
+          <th>Cant Ptos</th><th>Total Ptos $</th><th>Total Ingreso</th>
+          <th>Costos</th><th>Margen</th><th>Estado</th><th>Acciones</th>
+        </tr></thead>
         <tbody id="tabla-svc"></tbody>
       </table></div>
     </div>
-
-    <!-- EMPTY -->
     <div id="empty-svc" class="empty" style="display:none">
       <div style="font-size:32px;margin-bottom:8px">📋</div>
-      <div style="font-weight:700;color:var(--g600)">Sin servicios para esta fecha</div>
+      <div style="font-weight:700;color:var(--g600)">Sin servicios</div>
       <div style="font-size:11px;margin-top:4px">Usa + Asignar para crear uno</div>
     </div>
   </div>
@@ -211,7 +180,7 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
   <!-- TAB CONFIG -->
   <div id="tab-config" style="display:none">
     <div class="sec-ttl" style="margin-bottom:12px">Configuración</div>
-    <div style="background:var(--white);border-radius:10px;padding:16px;box-shadow:var(--sh);border:1px solid var(--g200)">
+    <div style="background:#fff;border-radius:10px;padding:16px;box-shadow:var(--sh);border:1px solid var(--g200)">
       <div class="fld2">
         <div class="fld"><label class="lbl">Precio Litro ($)</label><input class="inp" id="cfg-lt" type="number" placeholder="1300"></div>
         <div class="fld"><label class="lbl">Rendimiento km/lt</label><input class="inp" id="cfg-rend" type="number" step="0.1" placeholder="2.5"></div>
@@ -224,22 +193,18 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
       <div class="fld">
         <label class="lbl">API Key Claude (lectura guías)</label>
         <input class="inp" id="cfg-claude" type="password" placeholder="sk-ant-api03-...">
-        <div style="font-size:9px;color:var(--g400);margin-top:3px">Guardada solo en este navegador</div>
       </div>
       <div style="margin-top:12px;text-align:right"><button class="btn btn-navy" onclick="guardarConfig()">Guardar</button></div>
     </div>
   </div>
-
 </main>
 
-<!-- ══ MODAL ASIGNAR (PASO 0) ══ -->
+
+<!-- MODAL ASIGNAR -->
 <div class="overlay" id="modal-asignar" style="display:none">
   <div class="modal">
     <div class="modal-hdr">
-      <div>
-        <div class="modal-ttl">Asignar Servicio</div>
-        <div class="modal-sub">Paso 0 · Coordinador</div>
-      </div>
+      <div><div class="modal-ttl">Asignar Servicio</div><div class="modal-sub">Paso 0 · Coordinador</div></div>
       <button class="modal-cls" onclick="cerrar('modal-asignar')">✕</button>
     </div>
     <div class="modal-body">
@@ -247,33 +212,18 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
         <div class="fld"><label class="lbl">Equipo (Patente)</label><select class="inp" id="asig-patente"></select></div>
         <div class="fld"><label class="lbl">Conductor</label><select class="inp" id="asig-conductor"></select></div>
       </div>
-      <div class="fld">
-        <label class="lbl">Cliente</label>
-        <select class="inp" id="asig-cliente" onchange="checkOtroCliente()"></select>
-      </div>
-      <div class="fld" id="wrap-cliente-custom" style="display:none">
-        <label class="lbl">Nombre del cliente nuevo</label>
-        <input class="inp" id="asig-cliente-custom" placeholder="Escribe el nombre del cliente">
-      </div>
+      <div class="fld"><label class="lbl">Cliente</label><select class="inp" id="asig-cliente" onchange="checkOtroCliente()"></select></div>
+      <div class="fld" id="wrap-cliente-custom" style="display:none"><label class="lbl">Nombre del cliente nuevo</label><input class="inp" id="asig-cliente-custom" placeholder="Nombre del cliente"></div>
       <div class="fld2">
-        <div class="fld">
-          <label class="lbl">Origen</label>
-          <select class="inp" id="asig-origen" onchange="checkOtroOrigen()">
-            <option value="Casablanca">Casablanca</option>
-            <option value="Coltauco">Coltauco</option>
-            <option value="Curacaví">Curacaví</option>
-            <option value="Romeral">Romeral</option>
-            <option value="Rancagua">Rancagua</option>
-            <option value="Santiago">Santiago</option>
-            <option value="otro">Otro...</option>
-          </select>
-        </div>
+        <div class="fld"><label class="lbl">Origen</label><select class="inp" id="asig-origen" onchange="checkOtroOrigen()">
+          <option value="Casablanca">Casablanca</option><option value="Coltauco">Coltauco</option>
+          <option value="Curacaví">Curacaví</option><option value="Romeral">Romeral</option>
+          <option value="Rancagua">Rancagua</option><option value="Santiago">Santiago</option>
+          <option value="San Antonio">San Antonio</option><option value="otro">Otro...</option>
+        </select></div>
         <div class="fld"><label class="lbl">Fecha del Servicio</label><input class="inp" id="asig-fecha" type="date"></div>
       </div>
-      <div class="fld" id="wrap-origen-custom" style="display:none">
-        <label class="lbl">Especifica el origen</label>
-        <input class="inp" id="asig-origen-custom" placeholder="Escribe el origen">
-      </div>
+      <div class="fld" id="wrap-origen-custom" style="display:none"><label class="lbl">Especifica el origen</label><input class="inp" id="asig-origen-custom" placeholder="Ciudad de origen"></div>
     </div>
     <div class="modal-ftr">
       <button class="btn btn-outline" onclick="cerrar('modal-asignar')">Cancelar</button>
@@ -282,47 +232,26 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
   </div>
 </div>
 
-
-<!-- ══ MODAL INICIAR (PASO 1) ══ -->
+<!-- MODAL INICIAR -->
 <div class="overlay" id="modal-iniciar" style="display:none">
   <div class="modal">
     <div class="modal-hdr">
-      <div>
-        <div class="modal-ttl">Iniciar Servicio — <span id="ini-id"></span></div>
-        <div class="modal-sub" id="ini-sub">Paso 1 · Conductor</div>
-      </div>
+      <div><div class="modal-ttl">Iniciar Servicio — <span id="ini-id"></span></div><div class="modal-sub" id="ini-sub">Paso 1 · Conductor</div></div>
       <button class="modal-cls" onclick="cerrar('modal-iniciar')">✕</button>
     </div>
     <div class="modal-body">
-      <!-- Info del servicio -->
-      <div style="background:var(--g50);border-radius:8px;padding:10px 12px;margin-bottom:14px;border:1px solid var(--g200)">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:11px">
-          <div><span style="color:var(--g400);font-weight:700">CLIENTE</span><br><span style="font-weight:800;color:var(--navy)" id="ini-cliente">—</span></div>
-          <div><span style="color:var(--g400);font-weight:700">PATENTE</span><br><span style="font-weight:800;font-family:'Barlow Condensed',sans-serif" id="ini-patente">—</span></div>
-          <div><span style="color:var(--g400);font-weight:700">CONDUCTOR</span><br><span style="font-weight:700" id="ini-conductor">—</span></div>
-          <div><span style="color:var(--g400);font-weight:700">ORIGEN</span><br><span style="font-weight:700" id="ini-origen">—</span></div>
-        </div>
-      </div>
-
-      <!-- Hora y fecha inicio -->
+      <div class="info-box"><div class="info-grid">
+        <div class="info-item"><div class="lbl2">CLIENTE</div><div class="val" id="ini-cliente">—</div></div>
+        <div class="info-item"><div class="lbl2">PATENTE</div><div class="val" id="ini-patente">—</div></div>
+        <div class="info-item"><div class="lbl2">CONDUCTOR</div><div class="val" id="ini-conductor">—</div></div>
+        <div class="info-item"><div class="lbl2">ORIGEN</div><div class="val" id="ini-origen">—</div></div>
+      </div></div>
       <div class="fld2">
-        <div class="fld">
-          <label class="lbl">Fecha inicio (asignación)</label>
-          <input class="inp" id="ini-fecha-inicio" type="date" readonly style="background:var(--g50);color:var(--navy);font-weight:700">
-        </div>
-        <div class="fld">
-          <label class="lbl">Hora inicio</label>
-          <input class="inp" id="ini-hora" type="time" disabled style="background:var(--g100);color:var(--g400);cursor:not-allowed" placeholder="En producción">
-        </div>
+        <div class="fld"><label class="lbl">Fecha inicio</label><input class="inp" id="ini-fecha-inicio" type="date" readonly style="background:var(--g50)"></div>
+        <div class="fld"><label class="lbl">Hora inicio (producción)</label><input class="inp" id="ini-hora" type="time" disabled style="background:var(--g100);color:var(--g400);cursor:not-allowed"></div>
       </div>
-
-      <!-- Fecha término estimada -->
-
-      <!-- Días calculados -->
-      
-
       <div style="background:#EEF2FF;border-radius:8px;padding:10px 12px;font-size:11px;color:#3730A3;font-weight:700">
-        ℹ️ Al confirmar, el servicio cambia a EN PROCESO y queda registrada la hora de salida.
+        ℹ️ Al confirmar, el servicio cambia a EN PROCESO.
       </div>
     </div>
     <div class="modal-ftr">
@@ -332,41 +261,28 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
   </div>
 </div>
 
-
-<!-- ══ MODAL REGISTRAR (PASO 2) ══ -->
+<!-- MODAL REGISTRAR -->
 <div class="overlay" id="modal-registrar" style="display:none">
   <div class="modal" style="max-width:680px">
     <div class="modal-hdr">
-      <div>
-        <div class="modal-ttl">Registrar — <span id="reg-id"></span></div>
-        <div class="modal-sub" id="reg-sub"></div>
-      </div>
+      <div><div class="modal-ttl">Registrar — <span id="reg-id"></span></div><div class="modal-sub" id="reg-sub"></div></div>
       <button class="modal-cls" onclick="cerrar('modal-registrar')">✕</button>
     </div>
     <div class="modal-body">
-
-      <!-- INFO SERVICIO -->
-      <div style="background:var(--g50);border-radius:8px;padding:10px 12px;margin-bottom:14px;border:1px solid var(--g200)">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:11px">
-          <div><span style="color:var(--g400);font-weight:700">CLIENTE</span><br><span style="font-weight:800;color:var(--navy)" id="reg-cliente-info">—</span></div>
-          <div><span style="color:var(--g400);font-weight:700">PATENTE</span><br><span style="font-weight:800;font-family:'Barlow Condensed',sans-serif" id="reg-patente-info">—</span></div>
-          <div><span style="color:var(--g400);font-weight:700">FECHA INICIO</span><br><span style="font-weight:700" id="reg-fecha-inicio-info">—</span></div>
-          <div><span style="color:var(--g400);font-weight:700">ORIGEN</span><br><span style="font-weight:700" id="reg-origen-info">—</span></div>
-          <div><span style="color:var(--g400);font-weight:700">CONDUCTOR</span><br><span style="font-weight:700" id="reg-conductor-info">—</span></div>
-        </div>
-        <div style="margin-top:8px">
-          <label style="font-size:9px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:var(--g600);display:block;margin-bottom:3px">Fecha término del servicio <span style="font-size:8px;font-weight:800;background:#FEF3C7;color:#92400E;padding:1px 5px;border-radius:3px">GPS</span></label>
-          <input class="inp" id="reg-fecha-termino" type="date" onchange="onFechaTermino()" style="border-color:var(--orange);background:#FFFBEB">
-        </div>
+      <div class="info-box"><div class="info-grid">
+        <div class="info-item"><div class="lbl2">CLIENTE</div><div class="val" id="reg-cliente-info">—</div></div>
+        <div class="info-item"><div class="lbl2">PATENTE</div><div class="val" id="reg-patente-info">—</div></div>
+        <div class="info-item"><div class="lbl2">FECHA INICIO</div><div class="val" id="reg-fecha-inicio-info">—</div></div>
+        <div class="info-item"><div class="lbl2">ORIGEN</div><div class="val" id="reg-origen-info">—</div></div>
+        <div class="info-item"><div class="lbl2">CONDUCTOR</div><div class="val" id="reg-conductor-info">—</div></div>
       </div>
-
-      <!-- PUNTOS DE ENTREGA -->
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:var(--navy);padding:6px 0 5px;border-bottom:2px solid var(--blue);margin-bottom:10px">
-        📍 Puntos de Entrega
-      </div>
+      <div style="margin-top:8px">
+        <label class="lbl">Fecha término del servicio</label>
+        <input class="inp" id="reg-fecha-termino" type="date" onchange="onFechaTermino()" style="border-color:var(--orange);background:#FFFBEB">
+      </div></div>
+      <div class="section-ttl">📍 Puntos de Entrega</div>
       <div id="puntos-container"></div>
       <button class="btn btn-outline btn-full btn-sm" onclick="agregarPunto()" style="margin-bottom:14px">+ Agregar Punto de Entrega</button>
-
     </div>
     <div class="modal-ftr">
       <button class="btn btn-outline" onclick="cerrar('modal-registrar')">Cancelar</button>
@@ -376,208 +292,23 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
   </div>
 </div>
 
-
-<!-- ══ MODAL COSTOS (PASO 3) ══ -->
-<div class="overlay" id="modal-costos" style="display:none">
-  <div class="modal" style="max-width:680px">
-    <div class="modal-hdr">
-      <div>
-        <div class="modal-ttl">Costos — <span id="cos-id"></span></div>
-        <div class="modal-sub" id="cos-sub"></div>
-      </div>
-      <button class="modal-cls" onclick="cerrar('modal-costos')">✕</button>
-    </div>
-    <div class="modal-body">
-
-      <!-- FECHA TÉRMINO GPS -->
-      <div style="background:#FEF3C7;border-radius:8px;padding:10px 12px;margin-bottom:14px;border:1px solid var(--orange)">
-        <div style="font-size:9px;font-weight:800;color:#92400E;letter-spacing:0.1em;margin-bottom:6px">RANGO GPS — FECHA INICIO → FECHA TÉRMINO</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-          <div>
-            <label style="font-size:9px;font-weight:800;color:var(--g600);display:block;margin-bottom:3px">Fecha Inicio (asignación)</label>
-            <input class="inp" id="cos-fecha-inicio" type="date" readonly style="background:var(--g50);color:var(--navy);font-weight:700">
-          </div>
-          <div>
-            <label style="font-size:9px;font-weight:800;color:var(--g600);display:block;margin-bottom:3px">Fecha Término servicio</label>
-            <input class="inp" id="cos-fecha-termino" type="date" onchange="cargarGPS()">
-          </div>
-        </div>
-        <button class="btn btn-orange btn-sm btn-full" style="margin-top:8px" onclick="cargarGPS()">↺ Integrar Datos</button>
-      </div>
-
-      <!-- RESUMEN PUNTOS -->
-      <div style="background:#EEF2FF;border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:11px;font-weight:700;color:#3730A3" id="cos-puntos-resumen">— puntos sin registrar</div>
-
-      <!-- A COSTOS DIRECTOS -->
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:var(--navy);padding:6px 0 5px;border-bottom:2px solid var(--blue);margin-bottom:10px">⚙ A — Costos Directos</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
-        <div class="fld">
-          <label style="font-size:9px;font-weight:800;color:var(--g600);display:flex;justify-content:space-between;margin-bottom:3px">
-            Km GPS <span id="lbl-km" style="font-size:8px;font-weight:800;background:#FEF3C7;color:#92400E;padding:1px 5px;border-radius:3px">PENDIENTE</span>
-          </label>
-          <input class="inp" id="cos-km" type="number" placeholder="0" oninput="calcCostos()">
-        </div>
-        <div class="fld">
-          <label style="font-size:9px;font-weight:800;color:var(--g600);display:flex;justify-content:space-between;margin-bottom:3px">
-            Litros teórico <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span>
-          </label>
-          <input class="inp" id="cos-litros" readonly style="background:var(--g50);color:var(--navy);font-weight:700">
-        </div>
-        <div class="fld">
-          <label style="font-size:9px;font-weight:800;color:var(--g600);display:flex;justify-content:space-between;margin-bottom:3px">
-            Litros real Copec <span style="font-size:8px;font-weight:800;background:#D1FAE5;color:#065F46;padding:1px 5px;border-radius:3px" id="lbl-litros-real">CARGANDO</span>
-          </label>
-          <input class="inp" id="cos-litros-real" readonly style="background:var(--g50);color:var(--green);font-weight:700">
-        </div>
-        <div class="fld">
-          <label style="font-size:9px;font-weight:800;color:var(--g600);display:flex;justify-content:space-between;margin-bottom:3px">
-            Combustible <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span>
-          </label>
-          <input class="inp" id="cos-comb" readonly style="background:var(--g50);color:var(--navy);font-weight:700">
-        </div>
-        <div class="fld">
-          <label style="font-size:9px;font-weight:800;color:var(--g600);display:flex;justify-content:space-between;margin-bottom:3px">
-            TAG Autopista <span id="lbl-tag" style="font-size:8px;font-weight:800;background:#FEF3C7;color:#92400E;padding:1px 5px;border-radius:3px">AUTO</span>
-          </label>
-          <input class="inp" id="cos-tag" type="number" placeholder="0" oninput="calcCostos()" style="background:var(--g50);color:var(--navy);font-weight:700">
-        </div>
-        <div class="fld">
-          <label style="font-size:9px;font-weight:800;color:var(--g600);display:flex;justify-content:space-between;margin-bottom:3px">
-            Peajes Ruta <span style="font-size:8px;font-weight:800;background:#FEF3C7;color:#92400E;padding:1px 5px;border-radius:3px" id="lbl-peajes">AUTO</span>
-          </label>
-          <input class="inp" id="cos-peajes" type="number" placeholder="0" oninput="calcCostos()">
-        </div>
-      </div>
-
-      <!-- B OPERACIONAL -->
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:var(--navy);padding:6px 0 5px;border-bottom:2px solid var(--blue);margin-bottom:10px">📊 B — Operacional</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
-        <div class="fld">
-          <label style="font-size:9px;font-weight:800;color:var(--g600);display:block;margin-bottom:3px">Días en ruta <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label>
-          <input class="inp" id="cos-dias" type="number" step="0.5" min="0.5" placeholder="1" oninput="calcCostos()" style="background:var(--g50);color:var(--navy);font-weight:700">
-        </div>
-        <div class="fld">
-          <label style="font-size:9px;font-weight:800;color:var(--g600);display:block;margin-bottom:3px">Km vacío ida</label>
-          <input class="inp" id="cos-km-vacio-ida" type="number" placeholder="0" oninput="calcRetorno()">
-        </div>
-        <div class="fld">
-          <label style="font-size:9px;font-weight:800;color:var(--g600);display:block;margin-bottom:3px">Km cargado</label>
-          <input class="inp" id="cos-km-cargado" type="number" placeholder="0" oninput="calcRetorno()">
-        </div>
-        <div class="fld">
-          <label style="font-size:9px;font-weight:800;color:var(--g600);display:block;margin-bottom:3px">Km retorno vacío</label>
-          <input class="inp" id="cos-km-retorno" type="number" placeholder="0" oninput="calcRetorno()">
-        </div>
-        <div class="fld">
-          <label style="font-size:9px;font-weight:800;color:var(--g600);display:block;margin-bottom:3px">% Retorno vacío <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label>
-          <input class="inp" id="cos-pct-retorno" readonly style="background:var(--g50);color:var(--navy);font-weight:700">
-        </div>
-      </div>
-
-      <!-- D COSTOS FIJOS -->
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:var(--navy);padding:6px 0 5px;border-bottom:2px solid var(--blue);margin-bottom:10px">🏢 D — Costos Fijos</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
-        <div class="fld">
-          <label style="font-size:9px;font-weight:800;color:var(--g600);display:block;margin-bottom:3px">Costo conductor <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label>
-          <input class="inp" id="cos-conductor" readonly style="background:var(--g50);color:var(--navy);font-weight:700">
-        </div>
-        <div class="fld">
-          <label style="font-size:9px;font-weight:800;color:var(--g600);display:block;margin-bottom:3px">Comisión conductor <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label>
-          <input class="inp" id="cos-comision" type="number" placeholder="0" oninput="calcCostos()">
-        </div>
-        <div class="fld">
-          <label style="font-size:9px;font-weight:800;color:var(--g600);display:block;margin-bottom:3px">Costo fijo/día <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label>
-          <input class="inp" id="cos-cf" readonly style="background:var(--g50);color:var(--navy);font-weight:700">
-        </div>
-        <div class="fld">
-          <label style="font-size:9px;font-weight:800;color:var(--g600);display:block;margin-bottom:3px">Mantención <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label>
-          <input class="inp" id="cos-mant" readonly style="background:var(--g50);color:var(--navy);font-weight:700">
-        </div>
-        <div class="fld">
-          <label style="font-size:9px;font-weight:800;color:var(--g600);display:block;margin-bottom:3px">Viático <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label>
-          <input class="inp" id="cos-viatico" readonly style="background:var(--g50);color:var(--navy);font-weight:700">
-        </div>
-      </div>
-
-      <!-- E FINANCIERO -->
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:var(--navy);padding:6px 0 5px;border-bottom:2px solid var(--blue);margin-bottom:10px">💳 E — Financiero</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
-        <div class="fld">
-          <label style="font-size:9px;font-weight:800;color:var(--g600);display:block;margin-bottom:3px">Plazo de cobro</label>
-          <select class="inp" id="cos-plazo" onchange="calcCostos()">
-            <option value="0" selected>Sin factoring — 0%</option>
-            <option value="1">15 días — 1%</option>
-            <option value="1.5">30 días — 1,5%</option>
-            <option value="3">60 días — 3%</option>
-          </select>
-        </div>
-        <div class="fld">
-          <label style="font-size:9px;font-weight:800;color:var(--g600);display:block;margin-bottom:3px">Factoring <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label>
-          <input class="inp" id="cos-factoring" readonly style="background:var(--g50);color:var(--navy);font-weight:700">
-        </div>
-      </div>
-
-      <!-- MARGEN -->
-      <div style="background:#152038;border-radius:10px;padding:14px;margin-top:4px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div>
-          <div style="font-size:9px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.45);margin-bottom:4px">Margen Servicio</div>
-          <div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:900;line-height:1" id="cos-margen">$—</div>
-          <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.4);margin-top:2px" id="cos-margen-pct">—</div>
-        </div>
-        <div>
-          <div style="font-size:9px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.45);margin-bottom:4px">Total Ingresos</div>
-          <div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:900;line-height:1;color:#34D399" id="cos-ingreso">$—</div>
-        </div>
-      </div>
-
-    </div>
-    <div class="modal-ftr">
-      <button class="btn btn-outline" onclick="cerrar('modal-costos')">Cancelar</button>
-      <button class="btn btn-orange" onclick="guardarCostosBorrador()">Borrador</button>
-      <button class="btn btn-navy" onclick="cerrarServicio()">🔒 Cerrar Servicio</button>
-    </div>
-  </div>
-</div>
-
-
-<!-- ══ MODAL CONFIRMAR EJECUCIÓN (PASO 3 - CONDUCTOR) ══ -->
+<!-- MODAL CONFIRMAR EJECUCION -->
 <div class="overlay" id="modal-confirmar-ejec" style="display:none">
   <div class="modal">
     <div class="modal-hdr">
-      <div>
-        <div class="modal-ttl">Confirmar Ejecución — <span id="ejec-id"></span></div>
-        <div class="modal-sub" id="ejec-sub">Paso 3 · Conductor</div>
-      </div>
+      <div><div class="modal-ttl">Confirmar Ejecución — <span id="ejec-id"></span></div><div class="modal-sub" id="ejec-sub">Paso 3 · Conductor</div></div>
       <button class="modal-cls" onclick="cerrar('modal-confirmar-ejec')">✕</button>
     </div>
     <div class="modal-body">
-
-      <!-- Resumen puntos -->
-      <div style="background:var(--g50);border-radius:8px;padding:10px 12px;margin-bottom:14px;border:1px solid var(--g200)">
-        <div style="font-size:9px;font-weight:800;color:var(--g400);letter-spacing:0.1em;margin-bottom:8px">RESUMEN DEL SERVICIO</div>
-        <div id="ejec-puntos-resumen"></div>
-      </div>
-
-      <!-- Fecha término real -->
-      <div class="fld">
-        <label style="font-size:9px;font-weight:800;color:var(--g600);display:block;margin-bottom:3px">
-          Fecha en que se completó el servicio
-        </label>
-        <input class="inp" id="ejec-fecha-termino" type="date">
-      </div>
-
-      <!-- Retorno -->
-      <div class="fld">
-        <label style="font-size:9px;font-weight:800;color:var(--g600);display:block;margin-bottom:3px">
-          Después del servicio, el equipo:
-        </label>
+      <div class="info-box"><div id="ejec-puntos-resumen"></div></div>
+      <div class="fld"><label class="lbl">Fecha en que se completó el servicio</label><input class="inp" id="ejec-fecha-termino" type="date"></div>
+      <div class="fld"><label class="lbl">Después del servicio, el equipo:</label>
         <select class="inp" id="ejec-retorno">
           <option value="base">Regresa a base / Casa</option>
           <option value="nueva_asignacion">Va directo a nueva asignación</option>
           <option value="pernocta">Pernocta en destino</option>
         </select>
       </div>
-
       <div style="background:#EEF2FF;border-radius:8px;padding:10px 12px;font-size:11px;color:#3730A3;font-weight:700">
         ✓ Al confirmar, el servicio queda como EJECUTADO y pasa al coordinador para cierre.
       </div>
@@ -590,21 +321,98 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
 </div>
 
 
-<!-- ══ MODAL INFORME SERVICIO ══ -->
-<div class="overlay" id="modal-informe" style="display:none">
-  <div class="modal" style="max-width:800px">
+<!-- MODAL COSTOS -->
+<div class="overlay" id="modal-costos" style="display:none">
+  <div class="modal" style="max-width:700px">
     <div class="modal-hdr">
-      <div>
-        <div class="modal-ttl">Informe de Servicio — <span id="inf-id"></span></div>
-        <div class="modal-sub" id="inf-sub"></div>
+      <div><div class="modal-ttl">Costos — <span id="cos-id"></span></div><div class="modal-sub" id="cos-sub"></div></div>
+      <button class="modal-cls" onclick="cerrar('modal-costos')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="background:#FEF3C7;border-radius:8px;padding:10px 12px;margin-bottom:14px;border:1px solid var(--orange)">
+        <div style="font-size:9px;font-weight:800;color:#92400E;letter-spacing:0.1em;margin-bottom:6px">RANGO GPS — FECHA INICIO → FECHA TÉRMINO</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div><label class="lbl">Fecha Inicio (asignación)</label><input class="inp" id="cos-fecha-inicio" type="date" readonly style="background:var(--g50)"></div>
+          <div><label class="lbl">Fecha Término servicio</label><input class="inp" id="cos-fecha-termino" type="date" onchange="cargarGPS()"></div>
+        </div>
+        <button class="btn btn-orange btn-sm btn-full" style="margin-top:8px" onclick="cargarGPS()">↺ Integrar Datos</button>
       </div>
+      <!-- Resumen puntos -->
+      <div style="background:#EEF2FF;border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:11px;font-weight:700;color:#3730A3" id="cos-puntos-resumen">— puntos sin registrar</div>
+      <!-- A COSTOS DIRECTOS -->
+      <div class="section-ttl">⚙ A — Costos Directos</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+        <div class="fld"><label class="lbl">Km GPS <span id="lbl-km" style="font-size:8px;font-weight:800;background:#FEF3C7;color:#92400E;padding:1px 5px;border-radius:3px">PENDIENTE</span></label><input class="inp" id="cos-km" type="number" placeholder="0" oninput="calcCostos()"></div>
+        <div class="fld"><label class="lbl">Litros teórico <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-litros" readonly style="background:var(--g50)"></div>
+        <div class="fld"><label class="lbl">Litros real Copec <span style="font-size:8px;font-weight:800;background:#D1FAE5;color:#065F46;padding:1px 5px;border-radius:3px" id="lbl-litros-real">—</span></label><input class="inp" id="cos-litros-real" readonly style="background:var(--g50);color:#065F46"></div>
+        <div class="fld"><label class="lbl">Combustible <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-comb" readonly style="background:var(--g50)"></div>
+        <div class="fld"><label class="lbl">TAG Autopista <span id="lbl-tag" style="font-size:8px;font-weight:800;background:#FEF3C7;color:#92400E;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-tag" type="number" placeholder="0" oninput="calcCostos()"></div>
+        <div class="fld"><label class="lbl">Peajes Ruta <span id="lbl-peajes" style="font-size:8px;font-weight:800;background:#FEF3C7;color:#92400E;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-peajes" type="number" placeholder="0" oninput="calcCostos()"></div>
+      </div>
+      <!-- B OPERACIONAL -->
+      <div class="section-ttl">📊 B — Operacional</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+        <div class="fld"><label class="lbl">Días en ruta <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-dias" type="number" step="0.5" min="0.5" placeholder="1" oninput="calcCostos()" style="background:var(--g50)"></div>
+        <div class="fld"><label class="lbl">Km vacío ida</label><input class="inp" id="cos-km-vacio-ida" type="number" placeholder="0" oninput="calcRetorno()"></div>
+        <div class="fld"><label class="lbl">Km cargado</label><input class="inp" id="cos-km-cargado" type="number" placeholder="0" oninput="calcRetorno()"></div>
+        <div class="fld"><label class="lbl">Km retorno vacío</label><input class="inp" id="cos-km-retorno" type="number" placeholder="0" oninput="calcRetorno()"></div>
+        <div class="fld"><label class="lbl">% Retorno vacío <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-pct-retorno" readonly style="background:var(--g50)"></div>
+      </div>
+      <!-- D COSTOS FIJOS -->
+      <div class="section-ttl">🏢 D — Costos Fijos</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+        <div class="fld"><label class="lbl">Costo conductor <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-conductor" readonly style="background:var(--g50)"></div>
+        <div class="fld"><label class="lbl">Comisión conductor <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-comision" type="number" placeholder="0" oninput="calcCostos()"></div>
+        <div class="fld"><label class="lbl">Costo fijo/día <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-cf" readonly style="background:var(--g50)"></div>
+        <div class="fld"><label class="lbl">Mantención <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-mant" readonly style="background:var(--g50)"></div>
+        <div class="fld"><label class="lbl">Viático <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-viatico" readonly style="background:var(--g50)"></div>
+      </div>
+      <!-- E FINANCIERO -->
+      <div class="section-ttl">💳 E — Financiero</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+        <div class="fld"><label class="lbl">Plazo de cobro</label>
+          <select class="inp" id="cos-plazo" onchange="calcCostos()">
+            <option value="0" selected>Sin factoring — 0%</option>
+            <option value="1">15 días — 1%</option>
+            <option value="1.5">30 días — 1,5%</option>
+            <option value="3">60 días — 3%</option>
+          </select>
+        </div>
+        <div class="fld"><label class="lbl">Factoring <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-factoring" readonly style="background:var(--g50)"></div>
+      </div>
+      <!-- MARGEN -->
+      <div style="background:#152038;border-radius:10px;padding:14px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div>
+          <div style="font-size:9px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.45);margin-bottom:4px">Margen Servicio</div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:900;line-height:1" id="cos-margen">$—</div>
+          <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.4);margin-top:2px" id="cos-margen-pct">—</div>
+        </div>
+        <div>
+          <div style="font-size:9px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.45);margin-bottom:4px">Total Ingresos</div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:900;line-height:1;color:#34D399" id="cos-ingreso">$—</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-ftr">
+      <button class="btn btn-outline" onclick="cerrar('modal-costos')">Cancelar</button>
+      <button class="btn btn-orange" onclick="guardarCostosBorrador()">Borrador</button>
+      <button class="btn btn-navy" onclick="cerrarServicio()">🔒 Cerrar Servicio</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL INFORME -->
+<div class="overlay" id="modal-informe" style="display:none">
+  <div class="modal" style="max-width:95vw;width:95vw">
+    <div class="modal-hdr">
+      <div><div class="modal-ttl">Informe de Servicio — <span id="inf-id"></span></div><div class="modal-sub" id="inf-sub"></div></div>
       <div style="display:flex;gap:8px;align-items:center">
         <button class="btn btn-navy btn-sm" onclick="imprimirInforme()">🖨 Imprimir</button>
         <button class="modal-cls" onclick="cerrar('modal-informe')">✕</button>
       </div>
     </div>
-    <div class="modal-body" id="inf-body" style="font-size:12px;color:#2A3350;overflow-x:auto">
-      <!-- contenido dinámico -->
+    <div class="modal-body" id="inf-body" style="overflow-x:auto;color:#2A3350">
+      <div style="text-align:center;padding:20px;color:var(--g400)">Cargando...</div>
     </div>
   </div>
 </div>
@@ -616,26 +424,21 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
 const SUPA_URL = 'https://aqunzrukuruwzwywnurq.supabase.co';
 const SUPA_KEY = 'sb_publishable_70t9UxFlcqYDj7AMybsrHg__IMGNA8C';
 const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
-const KAPTURA_VERSION = '6.4';
+const KAPTURA_VERSION = '7.0';
 const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 const hoy = new Date();
 const hoyStr = hoy.toISOString().split('T')[0];
 
 // ══ ESTADO GLOBAL ══
 let DB = { flota:[], conductores:[], clientes:[], tarifarios:[], config:{}, servicios:[] };
+let DB_porticos = [];
+let DB_corredores = [];
 
 // ══ INIT ══
 async function init() {
-  // Cache busting
-  if(localStorage.getItem('kv') !== KAPTURA_VERSION){
-    localStorage.setItem('kv', KAPTURA_VERSION);
-    const ck = localStorage.getItem('kaptura_claude_key');
-    if(ck) localStorage.setItem('kaptura_claude_key', ck);
-  }
-
   document.getElementById('filtro-fecha').value = '';
   document.getElementById('hdr-info').innerHTML =
-    `${hoy.getDate()} ${MESES[hoy.getMonth()]} ${hoy.getFullYear()}`;
+    `${hoy.getDate()} ${MESES[hoy.getMonth()]} ${hoy.getFullYear()} · v${KAPTURA_VERSION}`;
 
   try {
     const [f,c,cl,t,cfg,s] = await Promise.all([
@@ -644,7 +447,7 @@ async function init() {
       supa.from('kaptura_clientes').select('*').order('nombre'),
       supa.from('kaptura_tarifarios').select('*'),
       supa.from('kaptura_config').select('*'),
-      supa.from('servicios_piloto').select('*').order('created_at',{ascending:false}).limit(300)
+      supa.from('servicios_piloto').select('*').order('created_at',{ascending:false}).limit(500)
     ]);
     DB.flota       = f.data  || [];
     DB.conductores = c.data  || [];
@@ -653,11 +456,10 @@ async function init() {
     DB.servicios   = s.data  || [];
     (cfg.data||[]).forEach(r => { DB.config[r.clave||r.nombre] = r.valor||r.value; });
 
-    // Cargar API key desde Supabase si no está en localStorage
     let ck = localStorage.getItem('kaptura_claude_key') || '';
-    if(!ck) {
-      const r = DB.config['claude_api_key'];
-      if(r){ ck = r; localStorage.setItem('kaptura_claude_key', ck); }
+    if(!ck && DB.config['claude_api_key']) {
+      ck = DB.config['claude_api_key'];
+      localStorage.setItem('kaptura_claude_key', ck);
     }
 
     renderTodo();
@@ -688,28 +490,28 @@ function renderKPIs() {
   });
   const mt = conf.reduce((a,s) => a+(s.margen_servicio||s.margen||0), 0);
   const pr = conf.length ? Math.round(mt/conf.length) : 0;
+  const ingresoTotal = conf.reduce((a,s) => a+(s.ingreso_total||s.tarifa_neta||0), 0);
+  const costosTotal  = conf.reduce((a,s) => a+(s.total_costos||0), 0);
+  const ejHoy = DB.servicios.filter(s =>
+    (s.fecha||'').startsWith(hoyStr) && ['ejecutado','borrador','confirmado','cerrado'].includes(s.estado)
+  ).length;
+  const ejMes = DB.servicios.filter(s => {
+    const f = new Date(s.created_at||'2026-01-01');
+    return f.getMonth()===mes && ['ejecutado','borrador','confirmado','cerrado'].includes(s.estado);
+  }).length;
 
   document.getElementById('k-hoy').textContent = svcsHoy.length;
-  document.getElementById('k-hoy-sub').textContent =
-    `${svcsHoy.filter(s=>['en_proceso','registrando'].includes(s.estado)).length} en proceso`;
+  document.getElementById('k-hoy-sub').textContent = svcsHoy.filter(s=>['en_proceso','registrando'].includes(s.estado)).length + ' en proceso';
+  document.getElementById('k-ejec-hoy').textContent = ejHoy;
+  document.getElementById('k-ejec-mes').textContent = ejMes + ' este mes';
   document.getElementById('k-pend').textContent = borradores.length;
-  document.getElementById('k-margen').textContent = fmt(mt);
-  document.getElementById('k-margen-sub').textContent =
-    `${conf.length} servicios · ${MESES[mes]}`;
-  document.getElementById('k-prom').textContent = fmt(pr);
-
-  const ingresoTotal = conf.reduce((a,s)=>a+(s.ingreso_total||s.tarifa_neta||0),0);
   document.getElementById('k-ingreso').textContent = fmt(ingresoTotal);
   document.getElementById('k-ingreso-sub').textContent = `${conf.length} servicios · ${MESES[mes]}`;
-
-  const costosTotal = conf.reduce((a,s)=>a+(s.total_costos||0),0);
   document.getElementById('k-costos').textContent = fmt(costosTotal);
   document.getElementById('k-costos-sub').textContent = MESES[mes];
-
-  const ejHoy = DB.servicios.filter(s=>((s.fecha||'').startsWith(hoyStr))&&['ejecutado','borrador','confirmado','cerrado'].includes(s.estado)).length;
-  const ejMes = DB.servicios.filter(s=>{const f=new Date(s.created_at||'2026-01-01');return f.getMonth()===mes&&['ejecutado','borrador','confirmado','cerrado'].includes(s.estado);}).length;
-  document.getElementById('k-ejec-hoy').textContent = ejHoy;
-  document.getElementById('k-ejec-mes').textContent = ejMes+' este mes';
+  document.getElementById('k-margen').textContent = fmt(mt);
+  document.getElementById('k-margen-sub').textContent = `${conf.length} servicios · ${MESES[mes]}`;
+  document.getElementById('k-prom').textContent = fmt(pr);
 }
 
 function renderServicios() {
@@ -718,7 +520,6 @@ function renderServicios() {
     ? DB.servicios.filter(s => (s.fecha||'').startsWith(fecha) || (s.created_at||'').startsWith(fecha))
     : DB.servicios;
   const empty = document.getElementById('empty-svc');
-
   if(!svcs.length) {
     document.getElementById('cards-mobile').innerHTML = '';
     document.getElementById('tabla-svc').innerHTML = '';
@@ -730,49 +531,58 @@ function renderServicios() {
   document.getElementById('tabla-svc').innerHTML    = svcs.map((s,i) => filaHTML(s,i)).join('');
 }
 
+function pillHTML(e) {
+  const m = {
+    asignado:'p-asignado', en_proceso:'p-proceso', registrando:'p-proceso',
+    borrador:'p-borrador', ejecutado:'p-ejecutado',
+    confirmado:'p-confirmado', cerrado:'p-cerrado', pendiente:'p-borrador'
+  };
+  const t = {
+    asignado:'Asignado', en_proceso:'En Proceso', registrando:'Registrando',
+    borrador:'Borrador', ejecutado:'Ejecutado',
+    confirmado:'Confirmado', cerrado:'Cerrado', pendiente:'Pendiente'
+  };
+  return `<span class="pill ${m[e]||'p-asignado'}">${t[e]||e}</span>`;
+}
+
 function cardHTML(s,i) {
   return `<div class="svc-card">
     <div class="svc-top">
       <div>
-        <div class="svc-id">${s.servicio_id||s.id?.slice(0,8)||'—'}</div>
+        <div class="svc-id">${s.servicio_id||'—'}</div>
         <div class="svc-pat">${s.patente||'—'}</div>
         <div class="svc-line">${s.conductor||'—'}</div>
         <div class="svc-line" style="color:var(--g400)">${s.cliente||'—'} · ${s.origen||'—'}</div>
       </div>
       ${pillHTML(s.estado)}
     </div>
-    <div class="svc-body">
-      <div class="svc-acts">
-        ${s.estado==='asignado'
-          ? `<button class="btn btn-navy btn-sm" onclick="iniciarSvc(${i})">▶ Iniciar</button>`
-          : ''}
-        ${s.estado==='borrador'
-          ? `<button class="btn btn-green btn-sm" onclick="abrirCierre(${i})">🔒 Cierre</button>`
-          : `<button class="btn btn-purple btn-sm" onclick="verServicio(${i})">📋 Registrar</button>`
-        }
-        <button class="btn btn-red btn-sm" onclick="eliminarSvc(${i})">Eliminar</button>
-      </div>
-    </div>
+    <div class="svc-body"><div class="svc-acts">
+      ${s.estado==='asignado' ? `<button class="btn btn-navy btn-sm" onclick="iniciarSvc(${i})">▶ Iniciar</button>` : ''}
+      ${['en_proceso','registrando'].includes(s.estado) ? `<button class="btn btn-purple btn-sm" onclick="verServicio(${i})">📋 Registrar</button>` : ''}
+      ${['borrador','ejecutado'].includes(s.estado) ? `<button class="btn btn-purple btn-sm" onclick="verServicio(${i})">📋 Registrar</button><button class="btn btn-green btn-sm" onclick="abrirCierre(${i})">🔒 Cierre</button>` : ''}
+      ${['confirmado','cerrado'].includes(s.estado) ? `<button class="btn btn-outline btn-sm" onclick="abrirInforme(${i})">📄 Informe</button>` : ''}
+      <button class="btn btn-red btn-sm" onclick="eliminarSvc(${i})">✕</button>
+    </div></div>
   </div>`;
 }
 
 function filaHTML(s,i) {
   const pInts  = (s._puntos||[]).filter(p=>p.tipo==='intermedio');
   const pFinal = (s._puntos||[]).find(p=>p.tipo==='final');
-  const cantPtos  = pInts.length || '—';
-  const totalPtos = pInts.length ? fmt(pInts.reduce((a,p)=>a+(p.valor||0),0)) : '—';
+  const cantPtos  = pInts.length > 0 ? pInts.length : '—';
+  const totalPtos = pInts.length > 0 ? fmt(pInts.reduce((a,p)=>a+(p.valor||0),0)) : '—';
   const destino   = pFinal?.destino || s.destino || '—';
-  const guia      = [...pInts,(pFinal||{})].find(p=>p.num_guia)?.num_guia || s.num_guia || '—';
+  const guia      = [...pInts,(pFinal||{})].find(p=>p&&p.num_guia)?.num_guia || s.num_guia || '—';
   const tarifa    = s.tarifa_neta ? fmt(s.tarifa_neta) : '—';
-  // Total ingreso = saved ingreso_total OR tarifa + puntos
   const ptsVal    = pInts.reduce((a,p)=>a+(p.valor||0),0);
   const totalIngVal = s.ingreso_total || ((s.tarifa_neta||0) + ptsVal) || 0;
   const totalIng  = totalIngVal ? fmt(totalIngVal) : '—';
   const costos    = s.total_costos ? fmt(s.total_costos) : '—';
-  const margen    = (s.margen_servicio||s.margen) ? fmt(s.margen_servicio||s.margen) : '—';
-  const mColor    = (s.margen_servicio||s.margen||0)>=0 ? '#065F46' : '#B91C1C';
+  const margenVal = s.margen_servicio||s.margen||0;
+  const margen    = margenVal ? fmt(margenVal) : '—';
+  const mColor    = margenVal >= 0 ? '#065F46' : '#B91C1C';
   return `<tr>
-    <td style="font-family:'Barlow Condensed',sans-serif;font-weight:800;color:var(--navy)">${s.servicio_id||s.id?.slice(0,8)||'—'}</td>
+    <td style="font-family:'Barlow Condensed',sans-serif;font-weight:800;color:var(--navy)">${s.servicio_id||'—'}</td>
     <td>${s.fecha||'—'}</td>
     <td style="font-family:'Barlow Condensed',sans-serif;font-weight:700">${s.patente||'—'}</td>
     <td>${s.conductor||'—'}</td>
@@ -797,65 +607,30 @@ function filaHTML(s,i) {
   </tr>`;
 }
 
-function pillHTML(e) {
-  const m = {
-    asignado:'p-asignado',en_proceso:'p-proceso',registrando:'p-proceso',
-    borrador:'p-borrador',ejecutado:'p-ejecutado',confirmado:'p-confirmado',cerrado:'p-cerrado',pendiente:'p-borrador'
-  };
-  const t = {
-    asignado:'Asignado',en_proceso:'En Proceso',registrando:'Registrando',
-    borrador:'Borrador',ejecutado:'Ejecutado',confirmado:'Confirmado',cerrado:'Cerrado',pendiente:'Pendiente'
-  };
-  return `<span class="pill ${m[e]||'p-asignado'}">${t[e]||e}</span>`;
-}
-
 function renderFlota() {
   document.getElementById('lista-flota').innerHTML =
-    DB.flota.map(f => `
-      <div class="svc-card">
-        <div class="svc-top">
-          <div><div class="svc-pat">${f.patente}</div><div class="svc-line">${f.tipo||'Camión'}</div></div>
-          <span class="pill p-confirmado">Activo</span>
-        </div>
-      </div>`).join('') || '<div class="empty">Sin datos</div>';
+    DB.flota.map(f => `<div class="svc-card"><div class="svc-top"><div><div class="svc-pat">${f.patente}</div><div class="svc-line">${f.tipo||'Camión'}</div></div><span class="pill p-confirmado">Activo</span></div></div>`).join('') || '<div class="empty">Sin datos</div>';
 }
 
 function renderClientes() {
   document.getElementById('lista-clientes').innerHTML =
     DB.clientes.map(c => {
       const tarifas = DB.tarifarios.filter(t => t.cliente===c.nombre).length;
-      return `
-        <div class="svc-card">
-          <div class="svc-top">
-            <div>
-              <div class="svc-pat">${c.nombre}</div>
-              <div class="svc-line">${c.origen||'—'} · ${c.condicion_pago||'30 días'}</div>
-              <div class="svc-line" style="color:var(--g400)">${tarifas} tarifas cargadas</div>
-            </div>
-          </div>
-        </div>`;
+      return `<div class="svc-card"><div class="svc-top"><div><div class="svc-pat">${c.nombre}</div><div class="svc-line">${c.condicion_pago||'30 días'}</div><div class="svc-line" style="color:var(--g400)">${tarifas} tarifas</div></div></div></div>`;
     }).join('') || '<div class="empty">Sin datos</div>';
 }
 
 function poblarSelects() {
-  // Patentes
   document.getElementById('asig-patente').innerHTML =
-    DB.flota.length
-      ? DB.flota.map(f => `<option value="${f.patente}">${f.patente}</option>`).join('')
-      : '<option>XR8555</option><option>WR9192</option><option>GKFD84</option>';
-
-  // Conductores
+    DB.flota.map(f => `<option value="${f.patente}">${f.patente}</option>`).join('');
+  // Conductores: Tercero al final
+  const conds = [...DB.conductores.filter(c=>!c.nombre.toLowerCase().includes('tercero')),
+                 ...DB.conductores.filter(c=>c.nombre.toLowerCase().includes('tercero'))];
   document.getElementById('asig-conductor').innerHTML =
-    DB.conductores.length
-      ? DB.conductores.map(c => `<option value="${c.nombre}">${c.nombre}</option>`).join('')
-      : '<option>Manuel Madrid</option><option>Felipe Madariaga</option>';
-
-  // Clientes
-  const cliOpts = (DB.clientes.length
-    ? DB.clientes.map(c => `<option value="${c.nombre}">${c.nombre}</option>`).join('')
-    : '<option>Sollem SpA</option><option>Presmita</option>')
-    + '<option value="__otro__">+ Nuevo cliente...</option>';
-  document.getElementById('asig-cliente').innerHTML = cliOpts;
+    conds.map(c => `<option value="${c.nombre}">${c.nombre}</option>`).join('');
+  document.getElementById('asig-cliente').innerHTML =
+    DB.clientes.map(c => `<option value="${c.nombre}">${c.nombre}</option>`).join('') +
+    '<option value="__otro__">+ Nuevo cliente...</option>';
 }
 
 function poblarConfig() {
@@ -867,41 +642,32 @@ function poblarConfig() {
   document.getElementById('cfg-cond').value    = c.sueldo_conductor||c.costo_conductor_dia||33000;
   document.getElementById('cfg-viatico').value = c.viatico||c.costo_viatico||12000;
   document.getElementById('cfg-comision').value= c.comision_conductor||8;
-  const ck = localStorage.getItem('kaptura_claude_key')||'';
-  document.getElementById('cfg-claude').value  = ck ? '••••••••••••••••' : '';
 }
 
-// ══ ASIGNAR ══
+
+// ══ PASO 0 — ASIGNAR ══
 function abrirAsignar() {
   poblarSelects();
   document.getElementById('asig-fecha').value = hoyStr;
-  document.getElementById('wrap-origen-custom').style.display  = 'none';
+  document.getElementById('wrap-origen-custom').style.display = 'none';
   document.getElementById('wrap-cliente-custom').style.display = 'none';
   document.getElementById('modal-asignar').style.display = 'flex';
 }
-
 function checkOtroOrigen() {
   document.getElementById('wrap-origen-custom').style.display =
     document.getElementById('asig-origen').value === 'otro' ? 'block' : 'none';
 }
-
 function checkOtroCliente() {
   document.getElementById('wrap-cliente-custom').style.display =
     document.getElementById('asig-cliente').value === '__otro__' ? 'block' : 'none';
 }
-
 async function siguienteId() {
-  const {data} = await supa.from('servicios_piloto')
-    .select('servicio_id').not('servicio_id','is',null)
-    .order('created_at',{ascending:false}).limit(100);
+  const {data} = await supa.from('servicios_piloto').select('servicio_id')
+    .not('servicio_id','is',null).order('created_at',{ascending:false}).limit(200);
   let max = 0;
-  (data||[]).forEach(r => {
-    const m = (r.servicio_id||'').match(/S-(\d+)/);
-    if(m) max = Math.max(max, parseInt(m[1]));
-  });
+  (data||[]).forEach(r => { const m=(r.servicio_id||'').match(/S-(\d+)/); if(m) max=Math.max(max,parseInt(m[1])); });
   return `S-${String(max+1).padStart(2,'0')}`;
 }
-
 async function guardarAsignacion() {
   const patente   = document.getElementById('asig-patente').value;
   const conductor = document.getElementById('asig-conductor').value;
@@ -909,45 +675,25 @@ async function guardarAsignacion() {
   const clienteNew= document.getElementById('asig-cliente-custom').value.trim();
   const cliente   = clienteSel === '__otro__' ? clienteNew : clienteSel;
   const origenSel = document.getElementById('asig-origen').value;
-  const origen    = origenSel === 'otro'
-    ? document.getElementById('asig-origen-custom').value.trim()
-    : origenSel;
+  const origen    = origenSel === 'otro' ? document.getElementById('asig-origen-custom').value.trim() : origenSel;
   const fecha     = document.getElementById('asig-fecha').value;
-
-  if(!patente||!conductor||!cliente||!origen||!fecha) {
-    toast('⚠ Completa todos los campos'); return;
-  }
-
-  // Guardar cliente nuevo si aplica
+  if(!patente||!conductor||!cliente||!origen||!fecha) { toast('⚠ Completa todos los campos'); return; }
   if(clienteSel === '__otro__' && clienteNew) {
     await supa.from('kaptura_clientes').insert({nombre:clienteNew, condicion_pago:'30 días'});
-    DB.clientes.push({nombre:clienteNew, condicion_pago:'30 días'});
+    DB.clientes.push({nombre:clienteNew});
   }
-
   const svId = await siguienteId();
-  const nuevo = {
-    servicio_id: svId,
-    patente, conductor, cliente, origen, fecha,
-    estado: 'asignado',
-    margen_servicio: 0,
-    puntos_entrega: 0,
-    puntos_done: 0
-  };
-
+  const nuevo = { servicio_id:svId, patente, conductor, cliente, origen, fecha, estado:'asignado', margen_servicio:0, puntos_entrega:0 };
   const {data:inserted, error} = await supa.from('servicios_piloto').insert(nuevo).select();
-  if(error) { toast('Error: ' + error.message); return; }
-
-  const nuevoConId = inserted?.[0] || {...nuevo, created_at: new Date().toISOString()};
-  DB.servicios.unshift(nuevoConId);
-  document.getElementById('modal-asignar').style.display='none';
-  renderServicios();
-  renderKPIs();
+  if(error) { toast('Error: '+error.message); return; }
+  DB.servicios.unshift(inserted?.[0] || {...nuevo, created_at:new Date().toISOString()});
+  cerrar('modal-asignar');
+  renderServicios(); renderKPIs();
   toast(`✓ ${svId} asignado — ${patente} · ${conductor}`);
 }
 
-// ══ INICIAR (PASO 1) ══
+// ══ PASO 1 — INICIAR ══
 let svcIniciarIdx = -1;
-
 function iniciarSvc(i) {
   const s = DB.servicios[i];
   svcIniciarIdx = i;
@@ -958,149 +704,34 @@ function iniciarSvc(i) {
   document.getElementById('ini-conductor').textContent = s.conductor||'—';
   document.getElementById('ini-origen').textContent    = s.origen||'—';
   document.getElementById('ini-fecha-inicio').value    = s.fecha||hoyStr;
-  // Hora actual
-  const ahora = new Date();
-  document.getElementById('ini-hora').value =
-    `${String(ahora.getHours()).padStart(2,'0')}:${String(ahora.getMinutes()).padStart(2,'0')}`;
-  // Fecha término = misma fecha por defecto
   document.getElementById('modal-iniciar').style.display = 'flex';
 }
-
-function calcDiasIni() {
-  const inicio  = document.getElementById('ini-fecha-inicio').value;
-  const termino = '';
-  if(inicio && termino) {
-    const d1 = new Date(inicio);
-    const d2 = new Date(termino);
-    const dias = Math.round((d2-d1)/(1000*60*60*24))+1;
-  }
-}
-
 async function confirmarInicio() {
   if(svcIniciarIdx < 0) return;
   const s = DB.servicios[svcIniciarIdx];
   if(!s.id) { toast('Error: servicio sin ID'); return; }
-
   const fechaInicio = document.getElementById('ini-fecha-inicio').value;
-  const fechaTerm   = '';
-
   const {error} = await supa.from('servicios_piloto').update({
-    estado: 'en_proceso',
-    hora_termino: null,
-    fecha: fechaInicio,
-  }).eq('id', s.id);
-
-  if(error) { toast('Error: ' + error.message); return; }
-
-  DB.servicios[svcIniciarIdx] = {
-    ...s,
-    estado: 'en_proceso',
-    _fecha_termino: fechaTerm
-  };
-
+    estado:'en_proceso', fecha:fechaInicio
+  }).eq('id',s.id);
+  if(error) { toast('Error: '+error.message); return; }
+  DB.servicios[svcIniciarIdx] = {...s, estado:'en_proceso'};
   cerrar('modal-iniciar');
-  renderServicios();
-  renderKPIs();
+  renderServicios(); renderKPIs();
   toast(`▶ ${s.servicio_id} iniciado`);
 }
 
-// ══ VER SERVICIO ══
-function verServicio(i) {
-  const s = DB.servicios[i];
-  toast(`${s.servicio_id} — ${s.estado} — ${s.patente} · ${s.conductor}`);
-  // Paso 2 se construye en la siguiente entrega
-}
-
-// ══ ELIMINAR ══
-async function eliminarSvc(i) {
-  const s = DB.servicios[i];
-  if(!confirm(`¿Eliminar ${s.servicio_id||'este servicio'}?`)) return;
-  if(s.id) {
-    const {error} = await supa.from('servicios_piloto').delete().eq('id', s.id);
-    if(error) { toast('Error: ' + error.message); return; }
-  }
-  DB.servicios.splice(i, 1);
-  renderServicios();
-  renderKPIs();
-  toast('✓ Servicio eliminado');
-}
-
-// ══ CONFIG ══
-async function guardarConfig() {
-  const campos = [
-    {clave:'precio_litro',    val: document.getElementById('cfg-lt').value},
-    {clave:'rendimiento',     val: document.getElementById('cfg-rend').value},
-    {clave:'costo_fijo',      val: document.getElementById('cfg-cf').value},
-    {clave:'mantencion',      val: document.getElementById('cfg-mant').value},
-    {clave:'sueldo_conductor',val: document.getElementById('cfg-cond').value},
-    {clave:'viatico',         val: document.getElementById('cfg-viatico').value},
-    {clave:'comision_conductor', val: document.getElementById('cfg-comision').value},
-  ];
-  for(const c of campos) {
-    DB.config[c.clave] = parseFloat(c.val)||0;
-    await supa.from('kaptura_config').upsert({clave:c.clave, valor:c.val},{onConflict:'clave'});
-  }
-  // API Key
-  const ck = document.getElementById('cfg-claude').value.trim();
-  if(ck && !ck.startsWith('•')) {
-    localStorage.setItem('kaptura_claude_key', ck);
-    await supa.from('kaptura_config').upsert({clave:'claude_api_key', valor:ck},{onConflict:'clave'});
-  }
-  toast('✓ Configuración guardada');
-}
-
-// ══ UTILS ══
-function setTab(nombre, btn) {
-  ['servicios','flota','clientes','config'].forEach(t => {
-    document.getElementById(`tab-${t}`).style.display = t===nombre ? 'block' : 'none';
-  });
-  document.querySelectorAll('.ntab').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-}
-
-function resetFecha() {
-  document.getElementById('filtro-fecha').value = '';
-  renderServicios();
-}
-
-function cerrar(id) { document.getElementById(id).style.display = 'none'; }
-
-function fmt(n) {
-  if(!n && n!==0) return '—';
-  return '$' + Math.round(n).toLocaleString('es-CL');
-}
-
-function toast(msg, dur=2800) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), dur);
-}
-
-document.querySelectorAll('.overlay').forEach(el => {
-  el.addEventListener('click', e => { if(e.target===el) el.style.display='none'; });
-});
-
-
-// ══ PASO 2 — REGISTRO ══
+// ══ PASO 2 — REGISTRAR ══
 let svcActivoIdx = -1;
 let puntosData = [];
-let CLAUDE_KEY = localStorage.getItem('kaptura_claude_key') || '';
+let CLAUDE_KEY = '';
 
-function verServicio(i) {
-  abrirRegistrar(i);
-}
+function verServicio(i) { abrirRegistrar(i); }
 
 function abrirRegistrar(i) {
   const s = DB.servicios[i];
   svcActivoIdx = i;
-
-  // Restaurar puntos guardados o iniciar con uno vacío
-  puntosData = s._puntos || [{
-    tipo: null, destino: '', valor: null,
-    num_guia: '', fecha_guia: '', capturada: false, procesando: false
-  }];
-
+  puntosData = s._puntos && s._puntos.length > 0 ? [...s._puntos] : [{tipo:null,destino:'',valor:null,num_guia:'',capturada:false,procesando:false}];
   document.getElementById('reg-id').textContent           = s.servicio_id||'—';
   document.getElementById('reg-sub').textContent          = `${s.patente} · ${s.conductor} · ${s.cliente}`;
   document.getElementById('reg-cliente-info').textContent = s.cliente||'—';
@@ -1109,349 +740,299 @@ function abrirRegistrar(i) {
   document.getElementById('reg-origen-info').textContent  = s.origen||'—';
   document.getElementById('reg-conductor-info').textContent = s.conductor||'—';
   document.getElementById('reg-fecha-termino').value      = s._fecha_termino || s.fecha || hoyStr;
-
   renderPuntos();
   document.getElementById('modal-registrar').style.display = 'flex';
 }
 
 function onFechaTermino() {
-  // Solo guarda la fecha término en memoria — GPS se usa en Paso 3
   const s = DB.servicios[svcActivoIdx];
   if(s) s._fecha_termino = document.getElementById('reg-fecha-termino').value;
 }
 
-// ── PUNTOS ──
 function renderPuntos() {
   document.getElementById('puntos-container').innerHTML =
-    puntosData.map((p, pi) => puntosHTML(p, pi)).join('');
+    puntosData.map((p,pi) => puntosHTML(p,pi)).join('');
 }
 
 function puntosHTML(p, pi) {
-  return `
-    <div style="background:var(--g50);border-radius:10px;padding:12px;margin-bottom:10px;border:1px solid var(--g200)">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;color:var(--blue)">
-          📍 PUNTO ${pi+1} ${p.capturada ? '<span style="color:var(--green)">✓</span>' : ''}
-        </div>
-        ${puntosData.length > 1
-          ? `<button class="btn btn-red btn-sm" onclick="eliminarPunto(${pi})">✕</button>`
-          : ''}
+  return `<div style="background:var(--g50);border-radius:10px;padding:12px;margin-bottom:10px;border:1px solid var(--g200)">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;color:var(--blue)">
+        📍 PUNTO ${pi+1} ${p.capturada ? '<span style="color:var(--green)">✓</span>' : ''}
       </div>
-
-      <!-- TIPO DE PUNTO -->
-      <div style="display:flex;gap:6px;margin-bottom:10px">
-        <button class="btn btn-sm ${p.tipo==='intermedio' ? 'btn-navy' : 'btn-outline'}"
-          onclick="setTipo(${pi},'intermedio')">🔁 Intermedio</button>
-        <button class="btn btn-sm ${p.tipo==='final' ? 'btn-navy' : 'btn-outline'}"
-          onclick="setTipo(${pi},'final')">🏁 Destino Final</button>
+      ${puntosData.length > 1 ? `<button class="btn btn-red btn-sm" onclick="eliminarPunto(${pi})">✕</button>` : ''}
+    </div>
+    <div style="display:flex;gap:6px;margin-bottom:10px">
+      <button class="btn btn-sm ${p.tipo==='intermedio'?'btn-navy':'btn-outline'}" onclick="setTipo(${pi},'intermedio')">🔁 Intermedio</button>
+      <button class="btn btn-sm ${p.tipo==='final'?'btn-navy':'btn-outline'}" onclick="setTipo(${pi},'final')">🏁 Destino Final</button>
+    </div>
+    <div style="margin-bottom:8px">
+      <label class="lbl">Destino del Punto</label>
+      <input class="inp ${p.destino?'':'pend'}" style="${p.destino?'':'border-color:var(--orange)'}"
+        value="${p.destino||''}" placeholder="Ciudad o lugar de entrega"
+        id="dest-${pi}" onblur="setDestino(${pi},this.value)">
+    </div>
+    ${p.tipo ? `<div style="margin-bottom:10px">
+      <label class="lbl">${p.tipo==='final'?'Tarifa del servicio':'Valor del punto'}
+        <span style="font-size:8px;font-weight:800;background:${p.valor?'#D1FAE5':'#FEF3C7'};color:${p.valor?'#065F46':'#92400E'};padding:1px 5px;border-radius:3px">${p.valor?'AUTO':'PENDIENTE'}</span>
+      </label>
+      <input class="inp ${p.valor?'ok':'pend'}" style="${p.valor?'border-color:var(--green);background:#ECFDF5':'border-color:var(--orange)'}"
+        type="number" value="${p.valor||''}" placeholder="0" onchange="setValorManual(${pi},this.value)">
+    </div>` : ''}
+    <div style="border:2px dashed ${p.capturada?'var(--green)':'var(--g200)'};border-radius:8px;padding:14px;text-align:center;cursor:pointer;background:${p.capturada?'#ECFDF5':p.procesando?'#FFFBEB':'#fff'}"
+      onclick="document.getElementById('foto-p${pi}').click()">
+      <div style="font-size:22px">${p.procesando?'⏳':p.capturada?'✓':'📷'}</div>
+      <div style="font-size:11px;font-weight:800;color:var(--navy);margin-top:4px">
+        ${p.procesando?'Procesando guía...':p.capturada?`Guía N° ${p.num_guia}`:'Fotografiar / Subir Guía'}
       </div>
-
-      <!-- DESTINO -->
-      <div style="margin-bottom:8px">
-        <label style="font-size:9px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:var(--g600);display:block;margin-bottom:3px">
-          Destino del Punto
-          ${p.tipo ? `<span style="font-size:8px;font-weight:800;background:#FEF3C7;color:#92400E;padding:1px 5px;border-radius:3px">⚠ CONFIRMAR</span>` : ''}
-        </label>
-        <input class="inp ${p.destino ? '' : 'pend'}" style="${p.destino ? '' : 'border-color:var(--orange)'}"
-          value="${p.destino||''}" placeholder="Ciudad o lugar de entrega"
-          id="inp-dest-${pi}" onblur="setDestino(${pi},this.value)">
+      <div style="font-size:10px;color:var(--g400);margin-top:2px">
+        ${p.capturada?`Fecha: ${p.fecha_guia||'—'}`:'Toca para capturar'}
       </div>
-
-      <!-- VALOR -->
-      ${p.tipo ? `
-      <div style="margin-bottom:10px">
-        <label style="font-size:9px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:var(--g600);display:block;margin-bottom:3px">
-          ${p.tipo==='final' ? 'Tarifa del servicio' : 'Valor del punto'}
-          <span style="font-size:8px;font-weight:800;background:${p.valor ? '#D1FAE5' : '#FEF3C7'};color:${p.valor ? '#065F46' : '#92400E'};padding:1px 5px;border-radius:3px">
-            ${p.valor ? 'AUTO' : 'PENDIENTE'}
-          </span>
-        </label>
-        <input class="inp ${p.valor ? 'ok' : 'pend'}" style="${p.valor ? 'border-color:var(--green);background:#ECFDF5' : 'border-color:var(--orange)'}"
-          type="number" value="${p.valor||''}" placeholder="0"
-          onchange="setValorManual(${pi},this.value)">
-      </div>` : ''}
-
-      <!-- FOTO / GUÍA -->
-      <div style="border:2px dashed ${p.capturada ? 'var(--green)' : 'var(--g200)'};border-radius:8px;padding:14px;text-align:center;cursor:pointer;background:${p.capturada ? '#ECFDF5' : p.procesando ? '#FFFBEB' : 'var(--white)'}"
-        onclick="document.getElementById('foto-p${pi}').click()">
-        <div style="font-size:22px">${p.procesando ? '⏳' : p.capturada ? '✓' : '📷'}</div>
-        <div style="font-size:11px;font-weight:800;color:var(--navy);margin-top:4px">
-          ${p.procesando ? 'Procesando guía...' : p.capturada ? `Guía N° ${p.num_guia}` : 'Fotografiar / Subir Guía'}
-        </div>
-        <div style="font-size:10px;color:var(--g400);margin-top:2px">
-          ${p.capturada ? `Fecha: ${p.fecha_guia||'—'}` : 'Toca para capturar'}
-        </div>
-      </div>
-      <input type="file" id="foto-p${pi}" accept="image/*" capture="environment"
-        style="display:none" onchange="procesarGuia(this,${pi})">
-    </div>`;
+    </div>
+    <input type="file" id="foto-p${pi}" accept="image/*" capture="environment"
+      style="display:none" onchange="procesarGuia(this,${pi})">
+  </div>`;
 }
 
 function agregarPunto() {
-  // Si hay un punto final, el nuevo es intermedio; si no, el nuevo es final
   const hayFinal = puntosData.some(p => p.tipo === 'final');
-  puntosData.push({
-    tipo: hayFinal ? 'intermedio' : 'final',
-    destino: '', valor: null,
-    num_guia: '', fecha_guia: '', capturada: false, procesando: false
-  });
+  puntosData.push({tipo:hayFinal?'intermedio':'final', destino:'', valor:null, num_guia:'', capturada:false, procesando:false});
   renderPuntos();
 }
-
-function eliminarPunto(pi) {
-  puntosData.splice(pi, 1);
-  renderPuntos();
-}
-
+function eliminarPunto(pi) { puntosData.splice(pi,1); renderPuntos(); }
 function setTipo(pi, tipo) {
   puntosData[pi].tipo = tipo;
-  // Si marca como final, los demás pasan a intermedio
-  if(tipo === 'final') {
-    puntosData.forEach((p,i) => { if(i !== pi) p.tipo = 'intermedio'; });
-  }
-  // Buscar valor automático
-  buscarValor(pi);
-  renderPuntos();
+  if(tipo==='final') puntosData.forEach((p,i) => { if(i!==pi) p.tipo='intermedio'; });
+  buscarValor(pi); renderPuntos();
 }
-
 function setDestino(pi, val) {
   puntosData[pi].destino = val.trim();
-  if(puntosData[pi].tipo === 'final' && val.trim()) {
-    buscarValor(pi); // buscarValor llama renderPuntos si encuentra tarifa
-  }
-  // No llamar renderPuntos aquí para no interrumpir el tipeo
+  if(puntosData[pi].tipo === 'final' && val.trim()) buscarValor(pi);
 }
-
-function setValorManual(pi, val) {
-  puntosData[pi].valor = parseFloat(val) || null;
-  renderPuntos();
-}
+function setValorManual(pi, val) { puntosData[pi].valor = parseFloat(val)||null; renderPuntos(); }
 
 function buscarValor(pi) {
   const p = puntosData[pi];
   const svc = DB.servicios[svcActivoIdx];
   if(!svc) return;
-
   if(p.tipo === 'intermedio') {
-    // Valor fijo por cliente
-    const match = DB.tarifarios.find(t =>
-      (t.cliente||'').toLowerCase().includes((svc.cliente||'').toLowerCase().split(' ')[0])
-    );
-    if(match && match.valor_punto > 0) {
-      puntosData[pi].valor = match.valor_punto;
-      toast(`✓ Punto ${pi+1}: ${fmt(match.valor_punto)}`);
-      renderPuntos();
-    }
+    const match = DB.tarifarios.find(t => (t.cliente||'').toLowerCase().includes((svc.cliente||'').toLowerCase().split(' ')[0]));
+    if(match && match.valor_punto > 0) { puntosData[pi].valor = match.valor_punto; toast(`✓ Punto ${pi+1}: ${fmt(match.valor_punto)}`); renderPuntos(); }
     return;
   }
-
   if(p.tipo === 'final' && p.destino) {
     const dl = p.destino.toLowerCase().trim();
     const match = DB.tarifarios.find(t => {
-      const cli  = (t.cliente||'').toLowerCase();
+      const cli = (t.cliente||'').toLowerCase();
       const dest = (t.destino||'').toLowerCase();
       return cli.includes((svc.cliente||'').toLowerCase().split(' ')[0]) &&
         (dest.includes(dl.split(',')[0].trim()) || dl.includes(dest.split(',')[0].trim()));
     });
-    if(match && match.tarifa_neta > 0) {
-      puntosData[pi].valor = match.tarifa_neta;
-      toast(`✓ Tarifa ${fmt(match.tarifa_neta)} — ${p.destino}`);
-      renderPuntos();
-    } else {
-      toast(`⚠ Sin tarifa para "${p.destino}" — ingresa manual`);
-    }
+    if(match && match.tarifa_neta > 0) { puntosData[pi].valor = match.tarifa_neta; toast(`✓ Tarifa ${fmt(match.tarifa_neta)}`); renderPuntos(); }
+    else { toast(`⚠ Sin tarifa para "${p.destino}" — ingresa manual`); }
   }
 }
 
-// ── LECTURA GUÍA CON IA ──
 async function procesarGuia(input, pi) {
   if(!input.files||!input.files[0]) return;
   CLAUDE_KEY = localStorage.getItem('kaptura_claude_key') || '';
   if(!CLAUDE_KEY) { toast('⚠ Configura la API Key Claude en Config'); return; }
-
   const file = input.files[0];
-  puntosData[pi].procesando = true;
-  renderPuntos();
-
+  puntosData[pi].procesando = true; renderPuntos();
   try {
-    const b64 = await fileToB64(file);
+    const b64 = await new Promise((res,rej) => { const r=new FileReader(); r.onload=()=>res(r.result.split(',')[1]); r.onerror=rej; r.readAsDataURL(file); });
     let json = null, intentos = 0;
-
     while(intentos < 3 && !json?.num_guia) {
       intentos++;
       const resp = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': CLAUDE_KEY,
-          'anthropic-version': '2023-06-01',
-          'anthropic-dangerous-direct-browser-access': 'true'
-        },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-5',
-          max_tokens: 400,
-          messages:[{role:'user', content:[
-            {type:'image', source:{type:'base64', media_type:file.type, data:b64}},
-            {type:'text', text:`Lee esta guía de despacho chilena.
-Extrae en JSON:
-- num_guia: número de la guía (solo dígitos)
-- fecha_emision: fecha DD/MM/AAAA
-- cliente: empresa emisora (compara con: ${DB.clientes.map(c=>c.nombre).join(', ')})
-- destino: solo responde null (se ingresa manual)
-- kg: kilogramos si aparece, si no null
-Solo JSON sin explicación.`}
-          ]}]
-        })
+        method:'POST', headers:{'Content-Type':'application/json','x-api-key':CLAUDE_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+        body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:400,messages:[{role:'user',content:[
+          {type:'image',source:{type:'base64',media_type:file.type,data:b64}},
+          {type:'text',text:`Lee esta guía de despacho chilena. Extrae en JSON: num_guia (solo dígitos), fecha_emision (DD/MM/AAAA), cliente (compara con: ${DB.clientes.map(c=>c.nombre).join(', ')}). Solo JSON sin explicación.`}
+        ]}]})
       });
       const data = await resp.json();
       if(data.error) throw new Error(data.error.message);
       const txt = (data.content?.find(b=>b.type==='text')?.text)||'';
-      try { json = JSON.parse(txt.replace(/\`\`\`json|\`\`\`/g,'').trim()); } catch(e){}
+      try { json = JSON.parse(txt.replace(/```json|```/g,'').trim()); } catch(e){}
     }
-
     if(json?.num_guia) {
-      puntosData[pi] = {
-        ...puntosData[pi],
-        capturada: true, procesando: false,
-        num_guia: json.num_guia,
-        fecha_guia: json.fecha_emision || '',
-        kg: json.kg || null
-      };
-      toast(`✓ Guía ${json.num_guia} leída — Punto ${pi+1}`);
-    } else {
-      puntosData[pi].procesando = false;
-      toast(`⚠ No se pudo leer la guía — ingresa manual`);
-    }
-  } catch(e) {
-    puntosData[pi].procesando = false;
-    toast('Error: ' + e.message);
-  }
+      puntosData[pi] = {...puntosData[pi], capturada:true, procesando:false, num_guia:json.num_guia, fecha_guia:json.fecha_emision||''};
+      toast(`✓ Guía ${json.num_guia} leída`);
+    } else { puntosData[pi].procesando = false; toast('⚠ No se pudo leer — ingresa manual'); }
+  } catch(e) { puntosData[pi].procesando = false; toast('Error: '+e.message); }
   renderPuntos();
 }
 
-// ── GUARDAR BORRADOR ──
 async function guardarBorrador() {
   const s = DB.servicios[svcActivoIdx];
-  if(!s?.id) { toast('Error: servicio sin ID'); return; }
-
+  if(!s?.id) { toast('Error: sin ID'); return; }
   const fechaTerm = document.getElementById('reg-fecha-termino').value;
-  const final = puntosData.find(p => p.tipo === 'final');
-  const intermedios = puntosData.filter(p => p.tipo === 'intermedio');
+  const final = puntosData.find(p=>p.tipo==='final');
+  const ints  = puntosData.filter(p=>p.tipo==='intermedio');
   const tarifa = final?.valor || 0;
-  const valorPuntos = intermedios.reduce((a,p) => a+(p.valor||0), 0);
-  const nguia = puntosData[0]?.num_guia || '';
+  const nguia  = puntosData[0]?.num_guia || '';
   const destino = final?.destino || '';
-
+  const puntosJSON = JSON.stringify(puntosData.map(p=>({tipo:p.tipo,destino:p.destino,valor:p.valor||0,num_guia:p.num_guia||''})));
   const {error} = await supa.from('servicios_piloto').update({
-    estado: 'borrador',
-    destino,
-    num_guia: nguia,
-    tarifa_neta: tarifa,
-    puntos_entrega: puntosData.length,
-    dias_servicio: s.dias_servicio || 1
-  }).eq('id', s.id);
-
-  if(error) { toast('Error: ' + error.message); return; }
-
-  DB.servicios[svcActivoIdx] = {
-    ...s, estado:'ejecutado', destino, num_guia:nguia,
-    tarifa_neta:tarifa, _puntos:puntosData, _fecha_termino:fechaTerm
-  };
-
-  cerrar('modal-registrar');
-  renderServicios(); renderKPIs();
+    estado:'borrador', destino, num_guia:nguia, tarifa_neta:tarifa,
+    puntos_entrega:puntosData.length, notas:`_PUNTOS:${puntosJSON}`
+  }).eq('id',s.id);
+  if(error) { toast('Error: '+error.message); return; }
+  DB.servicios[svcActivoIdx] = {...s, estado:'borrador', destino, num_guia:nguia, tarifa_neta:tarifa, _puntos:puntosData, _fecha_termino:fechaTerm};
+  cerrar('modal-registrar'); renderServicios(); renderKPIs();
   toast(`✓ Borrador guardado — ${s.servicio_id}`);
 }
 
-// ── ABRIR CONFIRMACIÓN (Paso 4 - próxima entrega) ──
-function abrirConfirmacion() {
-  toast('⚠ Confirmación disponible en próxima versión');
+// ══ PASO 3 — CONFIRMAR EJECUCION ══
+function confirmarEjecucion() {
+  const s = DB.servicios[svcActivoIdx];
+  if(!s) return;
+  document.getElementById('ejec-id').textContent  = s.servicio_id||'—';
+  document.getElementById('ejec-sub').textContent = `${s.patente} · ${s.conductor}`;
+  document.getElementById('ejec-fecha-termino').value = s._fecha_termino || s.fecha || hoyStr;
+  const puntos = puntosData.length > 0 ? puntosData : (s._puntos||[]);
+  document.getElementById('ejec-puntos-resumen').innerHTML =
+    puntos.length ? puntos.map((p,i) => `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--g100);font-size:11px">
+        <div><span style="font-weight:800">Punto ${i+1}</span> ${p.tipo==='final'?'🏁':'🔁'} ${p.destino||'—'}</div>
+        <div style="font-weight:700;color:var(--navy)">${fmt(p.valor||0)}</div>
+      </div>`).join('') : '<div style="font-size:11px;color:var(--g400)">Sin puntos registrados</div>';
+  cerrar('modal-registrar');
+  document.getElementById('modal-confirmar-ejec').style.display = 'flex';
 }
 
-function fileToB64(file) {
-  return new Promise((res,rej) => {
-    const r = new FileReader();
-    r.onload = () => res(r.result.split(',')[1]);
-    r.onerror = rej;
-    r.readAsDataURL(file);
-  });
+async function guardarEjecucion() {
+  const s = DB.servicios[svcActivoIdx];
+  if(!s?.id) { toast('Error: sin ID'); return; }
+  const fechaTerm = document.getElementById('ejec-fecha-termino').value;
+  const retorno   = document.getElementById('ejec-retorno').value;
+  const puntos = puntosData.length > 0 ? puntosData : (s._puntos||[]);
+  const puntosJSON = JSON.stringify(puntos.map(p=>({tipo:p.tipo,destino:p.destino,valor:p.valor||0,num_guia:p.num_guia||''})));
+  const {error} = await supa.from('servicios_piloto').update({
+    estado:'ejecutado',
+    hora_termino: fechaTerm ? fechaTerm+'T23:59:00' : null,
+    notas: `Retorno: ${retorno}|_PUNTOS:${puntosJSON}`
+  }).eq('id',s.id);
+  if(error) { toast('Error: '+error.message); return; }
+  DB.servicios[svcActivoIdx] = {...s, estado:'ejecutado', _fecha_termino:fechaTerm, _puntos:puntos};
+  cerrar('modal-confirmar-ejec'); renderServicios(); renderKPIs();
+  toast(`✓ ${s.servicio_id} ejecutado — pasa a coordinador`);
 }
 
 
-// ══ PASO 3 — COSTOS ══
-let DB_porticos = [];
-
+// ══ PASO 4 — COSTOS (COORDINADOR) ══
 async function cargarPorticos() {
   if(DB_porticos.length > 0) return;
-  const {data} = await supa.from('porticos_tag').select('*').eq('activo', true);
+  const {data} = await supa.from('porticos_tag').select('*').eq('activo',true);
   DB_porticos = data || [];
 }
-
-let DB_corredores = [];
 async function cargarCorredores() {
   if(DB_corredores.length > 0) return;
-  const {data} = await supa.from('kaptura_corredores').select('*').eq('activo', true);
+  const {data} = await supa.from('kaptura_corredores').select('*').eq('activo',true);
   DB_corredores = data || [];
-  console.log('Corredores cargados:', DB_corredores.length);
+}
+
+function parsePuntos(s) {
+  // Try _puntos in memory first
+  if(s._puntos && s._puntos.length > 0) return s._puntos;
+  // Try notas field
+  const notas = s.notas || '';
+  const marker = notas.includes('|_PUNTOS:') ? '|_PUNTOS:' : notas.includes('_PUNTOS:') ? '_PUNTOS:' : null;
+  if(marker) {
+    try { return JSON.parse(notas.split(marker)[1]); } catch(e) {}
+  }
+  return [];
+}
+
+async function loadPuntosFromDB(s) {
+  let puntos = parsePuntos(s);
+  if(puntos.length > 0) return puntos;
+  // Fetch fresh from Supabase
+  const {data:sv} = await supa.from('servicios_piloto')
+    .select('notas,tarifa_neta,ingreso_total,puntos_entrega,destino')
+    .eq('id', s.id).single();
+  if(sv) {
+    const notas = sv.notas || '';
+    const marker = notas.includes('|_PUNTOS:') ? '|_PUNTOS:' : notas.includes('_PUNTOS:') ? '_PUNTOS:' : null;
+    if(marker) { try { puntos = JSON.parse(notas.split(marker)[1]); } catch(e) {} }
+    if(puntos.length === 0) {
+      // Build from available data
+      const nInts = Math.max(0,(sv.puntos_entrega||1)-1);
+      const vp = DB.tarifarios.find(t=>(t.cliente||'').toLowerCase().includes((s.cliente||'').toLowerCase().split(' ')[0]))?.valor_punto||40000;
+      for(let pi=0; pi<nInts; pi++) puntos.push({tipo:'intermedio',destino:`Punto ${pi+1}`,valor:vp,num_guia:''});
+      if(sv.destino||s.destino) puntos.push({tipo:'final',destino:sv.destino||s.destino||'—',valor:sv.tarifa_neta||s.tarifa_neta||0,num_guia:''});
+    }
+    s._puntos = puntos;
+    if(sv.km_total) s.km_total = sv.km_total;
+    if(sv.dias_servicio) s.dias_servicio = sv.dias_servicio;
+  }
+  return puntos;
 }
 
 async function irACostos() {
-  await guardarBorrador();
   const s = DB.servicios[svcActivoIdx];
   if(!s) return;
   await cargarPorticos();
+  await cargarCorredores();
+
+  // Load puntos
+  const puntos = await loadPuntosFromDB(s);
+  s._puntos = puntos;
+  puntosData = puntos;
 
   document.getElementById('cos-id').textContent  = s.servicio_id||'—';
   document.getElementById('cos-sub').textContent = `${s.patente} · ${s.conductor} · ${s.cliente}`;
   document.getElementById('cos-fecha-inicio').value   = s.fecha || hoyStr;
-  document.getElementById('cos-fecha-termino').value  = s._fecha_termino || s.fecha || hoyStr;
+  document.getElementById('cos-fecha-termino').value  = s._fecha_termino || (s.hora_termino ? s.hora_termino.substring(0,10) : s.fecha) || hoyStr;
 
-  // Limpiar campos
-  ['cos-km','cos-litros','cos-comb','cos-peajes','cos-tag','cos-pct-retorno',
-   'cos-km-vacio-ida','cos-km-cargado','cos-km-retorno','cos-litros-real'].forEach(id => {
-    const el = document.getElementById(id);
-    if(el) el.value = '';
+  // Clear all calculated fields
+  ['cos-km','cos-litros','cos-litros-real','cos-comb','cos-tag','cos-peajes',
+   'cos-pct-retorno','cos-km-vacio-ida','cos-km-cargado','cos-km-retorno'].forEach(id => {
+    const el = document.getElementById(id); if(el) el.value = '';
   });
+  document.getElementById('cos-comision').value = 0;
+  document.getElementById('lbl-litros-real').textContent = '—';
+  document.getElementById('lbl-tag').textContent = 'AUTO';
+  document.getElementById('lbl-peajes').textContent = 'AUTO';
+  document.getElementById('lbl-km').textContent = 'PENDIENTE';
 
-  // Precargar config
-  const c = DB.config;
+  // Pre-load config costs (days will update after GPS)
   const dias = s.dias_servicio || 1;
+  const c = DB.config;
   document.getElementById('cos-dias').value     = dias;
-  document.getElementById('cos-conductor').value= fmt(dias * parseInt(c.sueldo_conductor||c.costo_conductor_dia||33000));
-  document.getElementById('cos-cf').value       = fmt(dias * parseInt(c.costo_fijo||c.costo_fijo_dia||44000));
-  document.getElementById('cos-mant').value     = fmt(dias * parseInt(c.mantencion||c.costo_mantencion||25000));
-  document.getElementById('cos-viatico').value  = fmt(dias * parseInt(c.viatico||c.costo_viatico||12000));
+  document.getElementById('cos-conductor').value= fmt(dias * parseInt(c.sueldo_conductor||33000));
+  document.getElementById('cos-cf').value       = fmt(dias * parseInt(c.costo_fijo||44000));
+  document.getElementById('cos-mant').value     = fmt(dias * parseInt(c.mantencion||25000));
+  document.getElementById('cos-viatico').value  = fmt(dias * parseInt(c.viatico||12000));
 
-  // Load puntos from Supabase if not in memory
-  if(!s._puntos || s._puntos.length === 0) {
-    const {data:sv} = await supa.from('servicios_piloto')
-      .select('notas,tarifa_neta,ingreso_total,puntos_entrega,destino')
-      .eq('id', s.id).single();
-    if(sv?.notas?.includes('|PUNTOS:')) {
-      try { s._puntos = JSON.parse(sv.notas.split('|PUNTOS:')[1]); } catch(e) {}
-    }
-    if((!s._puntos||s._puntos.length===0) && sv) {
-      const nInts = Math.max(0,(sv.puntos_entrega||1)-1);
-      const vp = DB.tarifarios.find(t=>(t.cliente||'').toLowerCase().includes((s.cliente||'').toLowerCase().split(' ')[0]))?.valor_punto||40000;
-      s._puntos = [];
-      for(let pi=0;pi<nInts;pi++) s._puntos.push({tipo:'intermedio',destino:'Punto '+(pi+1),valor:vp,num_guia:''});
-      if(sv.destino||s.destino) s._puntos.push({tipo:'final',destino:sv.destino||s.destino||'—',valor:sv.tarifa_neta||s.tarifa_neta||0,num_guia:''});
+  // Show ingreso from puntos
+  const final = puntos.find(p=>p.tipo==='final');
+  const ints  = puntos.filter(p=>p.tipo==='intermedio');
+  const tarifa = final?.valor || s.tarifa_neta || 0;
+  const valorPts = ints.reduce((a,p)=>a+(p.valor||0),0);
+  document.getElementById('cos-ingreso').textContent = fmt(tarifa + valorPts);
+  document.getElementById('cos-margen').textContent = '$—';
+  document.getElementById('cos-margen-pct').textContent = '—';
+
+  // Puntos summary
+  const pSummary = document.getElementById('cos-puntos-resumen');
+  if(pSummary) {
+    if(puntos.length > 0) {
+      pSummary.textContent = `${puntos.length} puntos: ${ints.length} intermedios (${fmt(valorPts)}) + 1 final (${fmt(tarifa)})`;
+    } else {
+      pSummary.textContent = '— puntos sin registrar';
     }
   }
-  // Tarifa desde puntos
-  const final = (s._puntos||[]).find(p => p.tipo==='final');
-  const intermedios = (s._puntos||[]).filter(p => p.tipo==='intermedio');
-  const tarifa = final?.valor || s.tarifa_neta || 0;
-  const valorPuntos = intermedios.reduce((a,p) => a+(p.valor||0), 0);
-  document.getElementById('cos-ingreso').textContent = fmt(tarifa + valorPuntos);
 
-  // Comisión: se calcula al integrar GPS, no al abrir
-  const cosComEl = document.getElementById('cos-comision');
-  if(cosComEl) cosComEl.value = 0;
-
-  calcCostos();
   cerrar('modal-registrar');
+  cerrar('modal-confirmar-ejec');
   document.getElementById('modal-costos').style.display = 'flex';
+}
+
+function abrirCierre(i) {
+  svcActivoIdx = i;
+  irACostos();
 }
 
 function calcCostos() {
@@ -1462,41 +1043,38 @@ function calcCostos() {
   const prec = parseFloat(c.precio_litro||c.precio_combustible||1300);
   const lts  = km ? Math.round(km/rend*10)/10 : 0;
   const comb = Math.round(lts * prec);
-
   document.getElementById('cos-litros').value = lts ? `${lts} lt` : '';
   document.getElementById('cos-comb').value   = lts ? fmt(comb) : '';
 
   const tag     = parseFloat(document.getElementById('cos-tag')?.value)||0;
   const peajes  = tag + (parseFloat(document.getElementById('cos-peajes').value)||0);
-  const condVal  = dias * parseInt(c.sueldo_conductor||c.costo_conductor_dia||33000);
-  // Auto-set comision when GPS loaded and tarifa exists
-  const comisionEl = document.getElementById('cos-comision');
-  const kmLoaded = parseFloat(document.getElementById('cos-km')?.value)||0;
-  if(kmLoaded > 0 && tarifa > 0 && (!comisionEl.value || parseFloat(comisionEl.value)===0)) {
-    comisionEl.value = Math.round(tarifa * (parseFloat(c.comision_conductor||8)/100));
-  }
-  let comision = parseFloat(comisionEl?.value)||0;
-  const cf       = dias * parseInt(c.costo_fijo||c.costo_fijo_dia||44000);
-  const mant     = dias * parseInt(c.mantencion||c.costo_mantencion||25000);
-  const viat     = dias * parseInt(c.viatico||c.costo_viatico||12000);
-  const plazo    = parseFloat(document.getElementById('cos-plazo').value??'0');
+  const condVal = dias * parseInt(c.sueldo_conductor||c.costo_conductor_dia||33000);
+  const cf      = dias * parseInt(c.costo_fijo||c.costo_fijo_dia||44000);
+  const mant    = dias * parseInt(c.mantencion||c.costo_mantencion||25000);
+  const viat    = dias * parseInt(c.viatico||c.costo_viatico||12000);
+  const plazo   = parseFloat(document.getElementById('cos-plazo').value??'0');
 
-  // Actualizar autos
   document.getElementById('cos-conductor').value = fmt(condVal);
   document.getElementById('cos-cf').value        = fmt(cf);
   document.getElementById('cos-mant').value      = fmt(mant);
   document.getElementById('cos-viatico').value   = fmt(viat);
 
-  // Ingreso desde puntos
+  // Get tarifa BEFORE using it
   const s = DB.servicios[svcActivoIdx];
-  const final = (s?._puntos||[]).find(p => p.tipo==='final');
-  const ints  = (s?._puntos||[]).filter(p => p.tipo==='intermedio');
+  const puntos = s?._puntos || puntosData || [];
+  const final  = puntos.find(p=>p.tipo==='final');
+  const ints   = puntos.filter(p=>p.tipo==='intermedio');
   const tarifa = final?.valor || s?.tarifa_neta || 0;
-  const valorPts = ints.reduce((a,p) => a+(p.valor||0), 0);
+  const valorPts = ints.reduce((a,p)=>a+(p.valor||0),0);
   const ingreso  = tarifa + valorPts;
   const factoring = plazo > 0 ? Math.round(tarifa * plazo / 100) : 0;
 
-  comision = parseFloat(document.getElementById('cos-comision')?.value)||0;
+  // Auto-set comision when GPS loaded and tarifa>0
+  const comisionEl = document.getElementById('cos-comision');
+  if(km > 0 && tarifa > 0 && (!comisionEl.value || parseFloat(comisionEl.value)===0)) {
+    comisionEl.value = Math.round(tarifa * (parseFloat(c.comision_conductor||8)/100));
+  }
+  const comision = parseFloat(comisionEl?.value)||0;
 
   document.getElementById('cos-factoring').value = fmt(factoring);
   document.getElementById('cos-ingreso').textContent = fmt(ingreso);
@@ -1504,7 +1082,6 @@ function calcCostos() {
   const costos = comb + peajes + condVal + comision + cf + mant + viat + factoring;
   const margen = ingreso - costos;
   const pct    = tarifa ? Math.round(margen/tarifa*100) : 0;
-
   const mEl = document.getElementById('cos-margen');
   mEl.textContent = fmt(margen);
   mEl.style.color = margen >= 0 ? '#34D399' : '#F87171';
@@ -1524,29 +1101,25 @@ function calcRetorno() {
 }
 
 async function cargarGPS() {
-  const patente     = DB.servicios[svcActivoIdx]?.patente;
+  const s = DB.servicios[svcActivoIdx];
+  const patente     = s?.patente;
   const fechaInicio = document.getElementById('cos-fecha-inicio').value;
   const fechaTerm   = document.getElementById('cos-fecha-termino').value;
   if(!patente||!fechaInicio||!fechaTerm) { toast('Completa las fechas'); return; }
 
-  toast('Cargando GPS...');
+  toast('Integrando datos...');
   try {
-    // Usar tabla de eventos detallados para km exactos
+    // GPS eventos
     const {data:eventos} = await supa.from('kaptura_gps_eventos')
-      .select('*')
-      .eq('patente', patente)
-      .gte('fecha', fechaInicio)
-      .lte('fecha', fechaTerm)
-      .order('datetime_evento', {ascending:true});
+      .select('*').eq('patente',patente)
+      .gte('fecha',fechaInicio).lte('fecha',fechaTerm)
+      .order('datetime_evento',{ascending:true});
 
     if(!eventos||!eventos.length) { toast('Sin GPS para ese rango'); return; }
 
-    // Solo trips con km > 0
     const trips = eventos.filter(e => e.evento==='trip' && (e.km_tramo||0) > 0);
-    const kmTotal = trips.reduce((a,e) => a+(e.km_tramo||0), 0);
-
-    // Días activos (con trips)
-    const diasActivos = new Set(trips.map(e => e.fecha)).size;
+    const kmTotal = trips.reduce((a,e)=>a+(e.km_tramo||0),0);
+    const diasActivos = new Set(trips.map(e=>e.fecha)).size;
 
     document.getElementById('cos-km').value = Math.round(kmTotal);
     document.getElementById('lbl-km').textContent = 'GPS ✓';
@@ -1554,153 +1127,114 @@ async function cargarGPS() {
     document.getElementById('lbl-km').style.color = '#065F46';
     document.getElementById('cos-dias').value = diasActivos;
 
-    // Calcular km por tramo usando eventos
-    const s = DB.servicios[svcActivoIdx];
-    const origen = (s?.origen||'').toLowerCase();
-    const finalPunto = (s?._puntos||[]).find(p=>p.tipo==='final');
+    // Km por tramo usando origen/destino
+    const origen  = (s?.origen||'').toLowerCase();
+    const puntosArr = s?._puntos || puntosData || [];
+    const finalPunto = puntosArr.find(p=>p.tipo==='final');
     const destino = (finalPunto?.destino||'').toLowerCase();
-
     let kmVacioIda=0, kmCargado=0, kmRetorno=0;
-    let cargando = false, terminado = false;
-
+    let cargando=false, terminado=false;
     for(const t of trips) {
+      const al = t.address.toLowerCase();
       if(!cargando && !terminado) {
-        // Antes de llegar al origen de carga
-        if(origen && t.address.toLowerCase().includes(origen.split(',')[0].trim())) {
-          cargando = true;
-          kmVacioIda += t.km_tramo;
-        } else {
-          kmVacioIda += t.km_tramo;
-        }
+        if(origen && al.includes(origen.split(',')[0].trim())) { cargando=true; kmVacioIda+=t.km_tramo; }
+        else kmVacioIda+=t.km_tramo;
       } else if(cargando && !terminado) {
-        // Desde el origen hasta el destino final
-        if(destino && t.address.toLowerCase().includes(destino.split(',')[0].trim())) {
-          terminado = true;
-          kmCargado += t.km_tramo;
-        } else {
-          kmCargado += t.km_tramo;
-        }
+        if(destino && al.includes(destino.split(',')[0].trim())) { terminado=true; kmCargado+=t.km_tramo; }
+        else kmCargado+=t.km_tramo;
       } else {
-        // Después del destino final = retorno
-        kmRetorno += t.km_tramo;
+        kmRetorno+=t.km_tramo;
       }
     }
-
-    if(kmVacioIda > 0) document.getElementById('cos-km-vacio-ida').value = Math.round(kmVacioIda);
-    if(kmCargado > 0)  document.getElementById('cos-km-cargado').value   = Math.round(kmCargado);
-    if(kmRetorno > 0)  document.getElementById('cos-km-retorno').value   = Math.round(kmRetorno);
+    if(kmVacioIda>0) document.getElementById('cos-km-vacio-ida').value = Math.round(kmVacioIda);
+    if(kmCargado>0)  document.getElementById('cos-km-cargado').value   = Math.round(kmCargado);
+    if(kmRetorno>0)  document.getElementById('cos-km-retorno').value   = Math.round(kmRetorno);
     calcRetorno();
     calcCostos();
 
-    // TAG/PEAJES: detección por corredor de ruta
-    await cargarPorticos();
-    await cargarCorredores();
-
-    const detectadosTag = [];
-    const tripsSignif = trips.filter(t => t.km_tramo > 10);
-    const allAddrs = tripsSignif.map(t => t.address.toLowerCase()).join(' | ');
-
-    // Detectar corredor usando keywords exclusivas + lógica NEVER
-    let corridorDetected = null;
-    let corridorScore = 0;
-    for(const corredor of DB_corredores) {
-      const kwsIda = (corredor.keywords_ida||'').split(',').map(k=>k.trim().toLowerCase());
-      // Extract NEVER keywords from nota field
-      const neverMatch = (corredor.nota||'').match(/NEVER:([^|]*)/);
+    // Detección TAG por corredor
+    const allAddrs = trips.filter(t=>t.km_tramo>10).map(t=>t.address.toLowerCase()).join(' | ');
+    let corridorDetected = null, corridorScore = 0;
+    for(const corr of DB_corredores) {
+      const kwsIda = (corr.keywords_ida||'').split(',').map(k=>k.trim().toLowerCase());
+      const neverMatch = (corr.nota||'').match(/NEVER:([^|]*)/);
       const neverKws = neverMatch ? neverMatch[1].split(',').map(k=>k.trim().toLowerCase()).filter(k=>k.length>2) : [];
-      // Skip if any NEVER keyword appears in GPS
-      if(neverKws.some(nk => nk && allAddrs.includes(nk))) continue;
-      // Score based on keyword matches
-      const score = kwsIda.filter(kw => kw.length > 3 && allAddrs.includes(kw)).length;
-      if(score > corridorScore) { corridorScore = score; corridorDetected = corredor; }
+      if(neverKws.some(nk=>nk&&allAddrs.includes(nk))) continue;
+      const score = kwsIda.filter(kw=>kw.length>3&&allAddrs.includes(kw)).length;
+      if(score > corridorScore) { corridorScore=score; corridorDetected=corr; }
     }
 
+    const detectadosTag = [];
     if(corridorDetected && corridorScore >= 2) {
-      console.log('Corredor:', corridorDetected.id, corridorDetected.nombre, 'score:'+corridorScore);
+      console.log('Corredor:', corridorDetected.id, corridorDetected.nombre);
       const portIda    = (corridorDetected.porticos_ida||'').split(',').map(p=>p.trim());
       const portVuelta = (corridorDetected.porticos_vuelta||'').split(',').map(p=>p.trim());
       const processed  = new Set();
       for(const pNombre of portIda) {
-        const found = DB_porticos.find(p => p.cobro_oficial===pNombre && p.valor_3_ejes>0);
-        if(found && !processed.has('I-'+pNombre)) {
-          processed.add('I-'+pNombre);
-          detectadosTag.push({nombre:pNombre, valor:found.valor_3_ejes, tipo:(found.tipo||'tag').toLowerCase(), sentido:'ida'});
-        }
+        const found = DB_porticos.find(p=>p.cobro_oficial===pNombre&&p.valor_3_ejes>0);
+        if(found && !processed.has('I-'+pNombre)) { processed.add('I-'+pNombre); detectadosTag.push({nombre:pNombre,valor:found.valor_3_ejes,tipo:(found.tipo||'tag').toLowerCase()}); }
       }
       for(const pNombre of portVuelta) {
-        const found = DB_porticos.find(p => p.cobro_oficial===pNombre && p.valor_3_ejes>0);
-        if(found && !processed.has('V-'+pNombre)) {
-          processed.add('V-'+pNombre);
-          detectadosTag.push({nombre:pNombre, valor:found.valor_3_ejes, tipo:(found.tipo||'tag').toLowerCase(), sentido:'vuelta'});
-        }
+        const found = DB_porticos.find(p=>p.cobro_oficial===pNombre&&p.valor_3_ejes>0);
+        if(found && !processed.has('V-'+pNombre)) { processed.add('V-'+pNombre); detectadosTag.push({nombre:pNombre,valor:found.valor_3_ejes,tipo:(found.tipo||'tag').toLowerCase()}); }
       }
     } else {
-      console.log('Sin corredor detectado score:'+corridorScore+'. Fallback básico.');
+      console.log('Sin corredor (score:'+corridorScore+'). Fallback básico.');
       const contFallback = {};
-      for(const trip of tripsSignif) {
+      for(const trip of trips.filter(t=>t.km_tramo>10)) {
         const al = trip.address.toLowerCase();
         for(const p of DB_porticos) {
           if(p.valor_3_ejes<=0) continue;
-          const kw = (p.palabras_clave||'').toLowerCase();
-          const pals = kw.split(',').map(x=>x.trim()).filter(x=>x.length>4);
-          if(pals.some(pal=>al.includes(pal))) {
+          const kw = (p.palabras_clave||'').toLowerCase().split(',').map(x=>x.trim()).filter(x=>x.length>4);
+          if(kw.some(pal=>al.includes(pal))) {
             const key = trip.fecha+'-'+p.cobro_oficial;
-            if(!contFallback[key]) { contFallback[key]=1; detectadosTag.push({nombre:p.cobro_oficial, valor:p.valor_3_ejes, tipo:(p.tipo||'tag').toLowerCase(), sentido:'?'}); }
+            if(!contFallback[key]) { contFallback[key]=1; detectadosTag.push({nombre:p.cobro_oficial,valor:p.valor_3_ejes,tipo:(p.tipo||'tag').toLowerCase()}); }
           }
         }
       }
     }
-    // Separar por tipo
-    const soloTag    = detectadosTag.filter(p => p.tipo.includes('tag') || p.tipo.includes('autopista'));
-    const soloPeajes = detectadosTag.filter(p => !p.tipo.includes('tag') && !p.tipo.includes('autopista'));
 
+    // Separate TAG vs Peajes
+    const soloTag    = detectadosTag.filter(p=>p.tipo.includes('tag'));
+    const soloPeajes = detectadosTag.filter(p=>!p.tipo.includes('tag'));
     const totalTag    = soloTag.reduce((a,p)=>a+p.valor,0);
     const totalPeajes = soloPeajes.reduce((a,p)=>a+p.valor,0);
 
-    // Campo TAG Autopista
     const elTag = document.getElementById('cos-tag');
     if(elTag) {
       elTag.value = totalTag;
-      document.getElementById('lbl-tag').textContent = totalTag > 0 ? 'AUTO ✓' : 'AUTO';
-      document.getElementById('lbl-tag').style.background = totalTag > 0 ? '#D1FAE5' : '#FEF3C7';
-      document.getElementById('lbl-tag').style.color = totalTag > 0 ? '#065F46' : '#92400E';
+      document.getElementById('lbl-tag').textContent = totalTag>0 ? 'AUTO ✓' : 'AUTO';
+      document.getElementById('lbl-tag').style.background = totalTag>0 ? '#D1FAE5' : '#FEF3C7';
+      document.getElementById('lbl-tag').style.color = totalTag>0 ? '#065F46' : '#92400E';
     }
-
-    // Campo Peajes Ruta
     const elPeajes = document.getElementById('cos-peajes');
     if(elPeajes) {
       elPeajes.value = totalPeajes;
-      if(totalPeajes > 0) elPeajes.className = 'inp ok';
+      document.getElementById('lbl-peajes').textContent = totalPeajes>0 ? 'AUTO ✓' : 'AUTO';
+      document.getElementById('lbl-peajes').style.background = totalPeajes>0 ? '#D1FAE5' : '#FEF3C7';
+      document.getElementById('lbl-peajes').style.color = totalPeajes>0 ? '#065F46' : '#92400E';
     }
-
-    calcCostos();
     console.log('TAG:', soloTag.map(p=>p.nombre).join('+'), '=$'+totalTag);
     console.log('Peajes:', soloPeajes.map(p=>p.nombre).join('+'), '=$'+totalPeajes);
-    toast(`✓ GPS: ${Math.round(kmTotal)} km · TAG: ${fmt(totalTag)} · Peajes: ${fmt(totalPeajes)}`);
+    calcCostos();
 
-    // Cargar combustible real desde Copec
+    // Copec litros reales
     try {
-      const {data:cargas} = await supa.from('kaptura_combustible')
-        .select('litros,monto,fecha,hora,direccion')
-        .eq('patente', patente)
-        .gte('fecha', fechaInicio)
-        .lte('fecha', fechaTerm)
-        .order('fecha', {ascending:true});
+      const {data:cargas} = await supa.from('kaptura_combustible').select('litros,monto,fecha')
+        .eq('patente',patente).gte('fecha',fechaInicio).lte('fecha',fechaTerm);
       if(cargas && cargas.length > 0) {
-        const totalLitros = cargas.reduce((a,c) => a+(c.litros||0), 0);
-        const totalMonto  = cargas.reduce((a,c) => a+(c.monto||0), 0);
-        document.getElementById('cos-litros-real').value = `${Math.round(totalLitros*10)/10} lt — $${totalMonto.toLocaleString('es-CL')}`;
+        const totalLt = cargas.reduce((a,c)=>a+(c.litros||0),0);
+        const totalMonto = cargas.reduce((a,c)=>a+(c.monto||0),0);
+        document.getElementById('cos-litros-real').value = `${Math.round(totalLt*10)/10} lt — $${totalMonto.toLocaleString('es-CL')}`;
         document.getElementById('lbl-litros-real').textContent = `${cargas.length} carga${cargas.length>1?'s':''}`;
-        document.getElementById('lbl-litros-real').style.background = '#D1FAE5';
-        document.getElementById('lbl-litros-real').style.color = '#065F46';
       } else {
         document.getElementById('cos-litros-real').value = 'Sin cargas Copec en el rango';
         document.getElementById('lbl-litros-real').textContent = 'SIN DATOS';
-        document.getElementById('lbl-litros-real').style.background = '#FEE2E2';
-        document.getElementById('lbl-litros-real').style.color = '#B91C1C';
       }
-    } catch(e) { console.warn('Copec error:', e.message); }
-  } catch(e) { toast('Error GPS: ' + e.message); console.error(e); }
+    } catch(e) { console.warn('Copec:', e.message); }
+
+    toast(`✓ GPS: ${Math.round(kmTotal)} km · ${diasActivos} días · TAG: ${fmt(totalTag)} · Peajes: ${fmt(totalPeajes)}`);
+  } catch(e) { toast('Error GPS: '+e.message); console.error(e); }
 }
 
 async function guardarCostosBorrador() {
@@ -1711,8 +1245,9 @@ async function guardarCostosBorrador() {
   const peajes = tag + (parseFloat(document.getElementById('cos-peajes').value)||0);
   const dias   = parseFloat(document.getElementById('cos-dias').value)||1;
   const fechaTerm = document.getElementById('cos-fecha-termino').value;
-  const final  = (s._puntos||[]).find(p=>p.tipo==='final');
-  const ints   = (s._puntos||[]).filter(p=>p.tipo==='intermedio');
+  const puntos = s._puntos || puntosData || [];
+  const final  = puntos.find(p=>p.tipo==='final');
+  const ints   = puntos.filter(p=>p.tipo==='intermedio');
   const tarifa = final?.valor || s.tarifa_neta || 0;
   const valorPts = ints.reduce((a,p)=>a+(p.valor||0),0);
   const c = DB.config;
@@ -1720,102 +1255,33 @@ async function guardarCostosBorrador() {
   const prec = parseFloat(c.precio_litro||1300);
   const comb = km ? Math.round((km/rend)*prec) : 0;
   const condVal = dias*parseInt(c.sueldo_conductor||33000);
-  // Auto-set comision when GPS loaded and tarifa exists
-  const comisionEl = document.getElementById('cos-comision');
-  const kmLoaded = parseFloat(document.getElementById('cos-km')?.value)||0;
-  if(kmLoaded > 0 && tarifa > 0 && (!comisionEl.value || parseFloat(comisionEl.value)===0)) {
-    comisionEl.value = Math.round(tarifa * (parseFloat(c.comision_conductor||8)/100));
-  }
-  let comision = parseFloat(comisionEl?.value)||0;
+  const comision = parseFloat(document.getElementById('cos-comision').value)||0;
   const cf   = dias*parseInt(c.costo_fijo||44000);
   const mant = dias*parseInt(c.mantencion||25000);
   const viat = dias*parseInt(c.viatico||12000);
-  const plazo = parseFloat(document.getElementById('cos-plazo').value)||1.5;
-  const fact  = Math.round(tarifa*plazo/100);
+  const plazo = parseFloat(document.getElementById('cos-plazo').value??'0');
+  const fact  = plazo > 0 ? Math.round(tarifa*plazo/100) : 0;
   const ingreso = tarifa + valorPts;
   const costos  = comb+peajes+condVal+comision+cf+mant+viat+fact;
   const margen  = ingreso - costos;
+  const puntosJSON = JSON.stringify(puntos.map(p=>({tipo:p.tipo,destino:p.destino,valor:p.valor||0,num_guia:p.num_guia||''})));
 
   const {error} = await supa.from('servicios_piloto').update({
-    estado:'borrador', km_total:km, costo_peajes:peajes, peajes_tag:peajes,
+    estado:'borrador', km_total:km, costo_peajes:peajes, peajes_tag:tag,
     tarifa_neta:tarifa, dias_servicio:dias, costo_combustible:comb,
     costo_conductor:condVal, costo_viaticos:viat, costo_fijo_dia:cf,
     costo_mantencion:mant, factoring:fact, total_costos:costos,
-    margen_servicio:margen, margen:margen, ingreso_total:ingreso
+    margen_servicio:margen, margen:margen, ingreso_total:ingreso,
+    notas: `Retorno: base|_PUNTOS:${puntosJSON}`
   }).eq('id',s.id);
-
   if(error) { toast('Error: '+error.message); return; }
-  DB.servicios[svcActivoIdx] = {...s, estado:'borrador', km_total:km,
-    tarifa_neta:tarifa, margen_servicio:margen, margen, _fecha_termino:fechaTerm};
-  cerrar('modal-costos');
-  renderServicios(); renderKPIs();
+  DB.servicios[svcActivoIdx] = {...s, estado:'borrador', km_total:km, tarifa_neta:tarifa,
+    margen_servicio:margen, margen, total_costos:costos, ingreso_total:ingreso,
+    _fecha_termino:fechaTerm, _puntos:puntos};
+  cerrar('modal-costos'); renderServicios(); renderKPIs();
   toast(`✓ Costos guardados — ${s.servicio_id}`);
 }
 
-async function confirmarServicio() {
-  await guardarCostosBorrador();
-  const s = DB.servicios[svcActivoIdx];
-  if(!s?.id) return;
-  const {error} = await supa.from('servicios_piloto').update({estado:'confirmado'}).eq('id',s.id);
-  if(error) { toast('Error: '+error.message); return; }
-  DB.servicios[svcActivoIdx].estado = 'confirmado';
-  renderServicios(); renderKPIs();
-  toast(`✓ ${s.servicio_id} CONFIRMADO`);
-}
-
-
-// ══ PASO 3 — CONFIRMAR EJECUCIÓN (CONDUCTOR) ══
-async function confirmarEjecucion() {
-  await guardarBorrador();
-  const s = DB.servicios[svcActivoIdx];
-  if(!s) return;
-
-  document.getElementById('ejec-id').textContent  = s.servicio_id||'—';
-  document.getElementById('ejec-sub').textContent = `${s.patente} · ${s.conductor}`;
-  document.getElementById('ejec-fecha-termino').value = s._fecha_termino || s.fecha || hoyStr;
-
-  // Resumen puntos
-  const puntos = s._puntos || [];
-  document.getElementById('ejec-puntos-resumen').innerHTML =
-    puntos.length ? puntos.map((p,i) => `
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--g100);font-size:11px">
-        <div><span style="font-weight:800">Punto ${i+1}</span> ${p.tipo==='final'?'🏁':'🔁'} ${p.destino||'—'}</div>
-        <div style="font-weight:700;color:var(--navy)">${fmt(p.valor||0)}</div>
-      </div>`).join('')
-    : '<div style="font-size:11px;color:var(--g400)">Sin puntos registrados</div>';
-
-  cerrar('modal-registrar');
-  document.getElementById('modal-confirmar-ejec').style.display = 'flex';
-}
-
-async function guardarEjecucion() {
-  const s = DB.servicios[svcActivoIdx];
-  if(!s?.id) { toast('Error: sin ID'); return; }
-
-  const fechaTerm = document.getElementById('ejec-fecha-termino').value;
-  const retorno   = document.getElementById('ejec-retorno').value;
-
-  const {error} = await supa.from('servicios_piloto').update({
-    estado: 'ejecutado',
-    hora_termino: fechaTerm ? fechaTerm + 'T23:59:00' : null,
-    notas: 'Retorno: ' + retorno + '|PUNTOS:' + JSON.stringify((s._puntos||[]).map(p=>({tipo:p.tipo,destino:p.destino,valor:p.valor||0,num_guia:p.num_guia||''})))
-  }).eq('id', s.id);
-
-  if(error) { toast('Error: ' + error.message); return; }
-
-  DB.servicios[svcActivoIdx] = {
-    ...s, estado:'ejecutado',
-    _fecha_termino: fechaTerm,
-    _retorno: retorno
-  };
-
-  cerrar('modal-confirmar-ejec');
-  renderServicios(); renderKPIs();
-  toast(`✓ ${s.servicio_id} ejecutado — pasa a coordinador`);
-}
-
-
-// ══ PASO 4 — CIERRE (COORDINADOR) ══
 async function cerrarServicio() {
   await guardarCostosBorrador();
   const s = DB.servicios[svcActivoIdx];
@@ -1824,204 +1290,167 @@ async function cerrarServicio() {
   const {error} = await supa.from('servicios_piloto').update({estado:'cerrado'}).eq('id',s.id);
   if(error) { toast('Error: '+error.message); return; }
   DB.servicios[svcActivoIdx].estado = 'cerrado';
-  cerrar('modal-costos');
-  renderServicios(); renderKPIs();
+  cerrar('modal-costos'); renderServicios(); renderKPIs();
   toast(`🔒 ${s.servicio_id} CERRADO`);
 }
 
 
-function abrirCierre(i) {
-  svcActivoIdx = i;
-  irACostos();
-}
-
-
-function abrirInforme(i) {
-  const s = DB.servicios[i];
-  toast(`📄 Informe ${s.servicio_id} — disponible en próxima versión`);
-}
-
-
-// ══ INFORME DE SERVICIO ══
+// ══ INFORME ══
 async function abrirInforme(i) {
   const s = DB.servicios[i];
   if(!s) return;
-
   document.getElementById('inf-id').textContent  = s.servicio_id||'—';
   document.getElementById('inf-sub').textContent = `${s.patente} · ${s.conductor} · ${s.cliente}`;
-
   const body = document.getElementById('inf-body');
-  body.innerHTML = '<div style="text-align:center;padding:20px;color:var(--g400)">Cargando...</div>';
+  body.innerHTML = '<div style="text-align:center;padding:20px;color:#8C96B0">Cargando informe...</div>';
   document.getElementById('modal-informe').style.display = 'flex';
 
-  // Build informe HTML
-  const puntos = s._puntos || [];
-  const final  = puntos.find(p => p.tipo==='final');
-  const ints   = puntos.filter(p => p.tipo==='intermedio');
-  const tarifa = final?.valor || s.tarifa_neta || 0;
-  const valorPts = ints.reduce((a,p) => a+(p.valor||0), 0);
-  const ingreso  = tarifa + valorPts;
+  // Load puntos
+  const puntos = await loadPuntosFromDB(s);
+  const final  = puntos.find(p=>p.tipo==='final');
+  const ints   = puntos.filter(p=>p.tipo==='intermedio');
+  const tarifa   = final?.valor || s.tarifa_neta || 0;
+  const valorPts = ints.reduce((a,p)=>a+(p.valor||0),0);
+  const ingreso  = s.ingreso_total || (tarifa + valorPts);
+
+  // Get fecha termino
+  const fechaTerm = s._fecha_termino || (s.hora_termino ? s.hora_termino.substring(0,10) : '—');
 
   let html = `
-  <div style="border:2px solid var(--navy);border-radius:8px;overflow:hidden;margin-bottom:16px">
-    <div style="background:#1C2B4A;color:white;padding:10px 14px;display:flex;justify-content:space-between;align-items:center">
+  <div style="border:2px solid #DDE2EC;border-radius:8px;overflow:hidden;margin-bottom:16px">
+    <div class="inf-hdr">
       <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900">KAPTURA — INFORME DE SERVICIO</div>
       <div style="font-size:11px;opacity:0.7">${new Date().toLocaleDateString('es-CL')}</div>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;border-bottom:1px solid var(--g200)">
-      ${infoRow('Servicio', s.servicio_id||'—')}
-      ${infoRow('Estado', s.estado?.toUpperCase()||'—')}
-      ${infoRow('Patente', s.patente||'—')}
-      ${infoRow('Conductor', s.conductor||'—')}
-      ${infoRow('Cliente', s.cliente||'—')}
-      ${infoRow('Origen', s.origen||'—')}
-      ${infoRow('Fecha Inicio', s.fecha||'—')}
-      ${infoRow('Fecha Término', s._fecha_termino||'—')}
-      ${infoRow('Días en ruta', s.dias_servicio||'—')}
-      ${infoRow('Km GPS', s.km_total ? s.km_total+' km' : '—')}
+    <div class="inf-grid">
+      <div class="inf-cell"><div class="inf-lbl">Servicio</div><div class="inf-val">${s.servicio_id||'—'}</div></div>
+      <div class="inf-cell"><div class="inf-lbl">Estado</div><div class="inf-val">${(s.estado||'').toUpperCase()}</div></div>
+      <div class="inf-cell"><div class="inf-lbl">Patente</div><div class="inf-val">${s.patente||'—'}</div></div>
+      <div class="inf-cell"><div class="inf-lbl">Conductor</div><div class="inf-val">${s.conductor||'—'}</div></div>
+      <div class="inf-cell"><div class="inf-lbl">Cliente</div><div class="inf-val">${s.cliente||'—'}</div></div>
+      <div class="inf-cell"><div class="inf-lbl">Origen</div><div class="inf-val">${s.origen||'—'}</div></div>
+      <div class="inf-cell"><div class="inf-lbl">Fecha Inicio</div><div class="inf-val">${s.fecha||'—'}</div></div>
+      <div class="inf-cell"><div class="inf-lbl">Fecha Término</div><div class="inf-val">${fechaTerm}</div></div>
+      <div class="inf-cell"><div class="inf-lbl">Días en ruta</div><div class="inf-val">${s.dias_servicio||'—'}</div></div>
+      <div class="inf-cell"><div class="inf-lbl">KM GPS</div><div class="inf-val">${s.km_total ? s.km_total+' km' : '—'}</div></div>
     </div>
   </div>
 
-  <!-- PUNTOS DE ENTREGA -->
-  <div style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:#1C2B4A;padding:6px 0 5px;border-bottom:2px solid #1E3A5F;margin-bottom:8px">
-    📍 Puntos de Entrega
-  </div>
-  <table style="width:100%;border-collapse:collapse;margin-bottom:16px;font-size:11px">
-    <thead><tr style="background:var(--g100)">
-      <th style="padding:6px 8px;text-align:left;font-weight:800">Punto</th>
-      <th style="padding:6px 8px;text-align:left;font-weight:800">Tipo</th>
-      <th style="padding:6px 8px;text-align:left;font-weight:800">Destino</th>
-      <th style="padding:6px 8px;text-align:left;font-weight:800">N° Guía</th>
-      <th style="padding:6px 8px;text-align:right;font-weight:800">Valor</th>
-    </tr></thead>
-    <tbody>
-      ${puntos.map((p,i) => `<tr style="border-bottom:1px solid var(--g100)">
-        <td style="padding:5px 8px">${i+1}</td>
-        <td style="padding:5px 8px">${p.tipo==='final'?'🏁 Final':'🔁 Intermedio'}</td>
-        <td style="padding:5px 8px;font-weight:700">${p.destino||'—'}</td>
-        <td style="padding:5px 8px">${p.num_guia||'—'}</td>
-        <td style="padding:5px 8px;text-align:right;font-weight:700">${fmt(p.valor||0)}</td>
-      </tr>`).join('')}
-      <tr style="background:var(--g50);font-weight:800">
-        <td colspan="4" style="padding:6px 8px;text-align:right">TOTAL INGRESOS</td>
-        <td style="padding:6px 8px;text-align:right;color:var(--navy)">${fmt(ingreso)}</td>
-      </tr>
-    </tbody>
-  </table>
+  <div class="inf-section">📍 Puntos de Entrega</div>
+  <div style="overflow-x:auto;margin-bottom:16px">
+  <table class="inf-table">
+    <thead><tr><th>Punto</th><th>Tipo</th><th>Destino</th><th>N° Guía</th><th style="text-align:right">Valor</th></tr></thead>
+    <tbody>`;
 
-  <!-- COSTOS -->
-  <div style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:#1C2B4A;padding:6px 0 5px;border-bottom:2px solid #1E3A5F;margin-bottom:8px">
-    ⚙ Costos del Servicio
-  </div>
-  <table style="width:100%;border-collapse:collapse;margin-bottom:16px;font-size:11px">
-    <tbody>
-      ${costoRow('Combustible', s.costo_combustible)}
-      ${costoRow('TAG Autopista', s.peajes_tag)}
-      ${costoRow('Costo Conductor', s.costo_conductor)}
-      ${costoRow('Comisión Conductor', s.costo_conductor ? Math.round((s.tarifa_neta||0)*0.08) : null)}
-      ${costoRow('Costo Fijo', s.costo_fijo_dia)}
-      ${costoRow('Mantención', s.mantencion_prorrateada)}
-      ${costoRow('Viático', s.costo_viaticos)}
-      ${costoRow('Factoring', s.factoring)}
-      <tr style="background:var(--navy);color:white;font-weight:800">
-        <td style="padding:8px 12px">MARGEN SERVICIO</td>
-        <td style="padding:8px 12px;text-align:right;font-size:14px">${fmt(s.margen_servicio||s.margen||0)}</td>
-      </tr>
-    </tbody>
-  </table>`;
+  if(puntos.length > 0) {
+    puntos.forEach((p,idx) => {
+      html += `<tr>
+        <td style="color:#2A3350">${idx+1}</td>
+        <td style="color:#2A3350">${p.tipo==='final'?'🏁 Final':'🔁 Intermedio'}</td>
+        <td style="font-weight:700;color:#1C2B4A">${p.destino||'—'}</td>
+        <td style="color:#2A3350">${p.num_guia||'—'}</td>
+        <td style="text-align:right;font-weight:700;color:#065F46">${fmt(p.valor||0)}</td>
+      </tr>`;
+    });
+  } else {
+    html += `<tr><td colspan="5" style="text-align:center;color:#8C96B0;padding:12px">Sin puntos registrados</td></tr>`;
+  }
+  html += `<tr style="background:#F5F7FA">
+    <td colspan="4" style="text-align:right;font-weight:800;color:#1C2B4A;padding:8px">TOTAL INGRESOS</td>
+    <td style="text-align:right;font-weight:800;color:#065F46;padding:8px">${fmt(ingreso)}</td>
+  </tr></tbody></table></div>
 
-  // TIMELINE GPS
-  html += `
-  <div style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:#1C2B4A;padding:6px 0 5px;border-bottom:2px solid #1E3A5F;margin-bottom:8px">
-    🗺 Timeline de Ruta (GPS)
+  <div class="inf-section">⚙ Costos del Servicio</div>
+  <div style="overflow-x:auto;margin-bottom:16px">
+  <table class="inf-table"><tbody>`;
+
+  const costoItems = [
+    ['Combustible', s.costo_combustible],
+    ['TAG Autopista', s.peajes_tag],
+    ['Peajes Ruta', s.costo_peajes > s.peajes_tag ? s.costo_peajes - s.peajes_tag : null],
+    ['Costo Conductor', s.costo_conductor],
+    ['Comisión Conductor', s.tarifa_neta ? Math.round((s.tarifa_neta||0)*((parseFloat(DB.config.comision_conductor||8))/100)) : null],
+    ['Costo Fijo', s.costo_fijo_dia],
+    ['Mantención', s.mantencion_prorrateada || (s.dias_servicio ? s.dias_servicio * parseInt(DB.config.mantencion||25000) : null)],
+    ['Viático', s.costo_viaticos],
+    ['Factoring', s.factoring],
+  ];
+  costoItems.forEach(([label, val]) => {
+    if(!val && val !== 0) return;
+    html += `<tr><td style="color:#2A3350;padding:6px 8px">${label}</td><td style="text-align:right;font-weight:700;color:#2A3350;padding:6px 8px">${fmt(val)}</td></tr>`;
+  });
+  html += `</tbody></table></div>
+
+  <div class="inf-margen">
+    <div>
+      <div style="font-size:9px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.45);margin-bottom:4px">Margen Servicio</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;color:${(s.margen_servicio||s.margen||0)>=0?'#34D399':'#F87171'}">${fmt(s.margen_servicio||s.margen||0)}</div>
+    </div>
+    <div>
+      <div style="font-size:9px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.45);margin-bottom:4px">Total Costos</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;color:#F87171">${fmt(s.total_costos||0)}</div>
+    </div>
   </div>`;
 
+  // Timeline GPS
+  html += `<div class="inf-section" style="margin-top:16px">🗺 Timeline de Ruta (GPS)</div>`;
   try {
-    // Load porticos for TAG detection in timeline
-    if(!window.DB_porticos_inf || window.DB_porticos_inf.length === 0) {
-      const {data:pdata} = await supa.from('porticos_tag').select('cobro_oficial,palabras_clave,valor_3_ejes,tipo').eq('activo',true);
-      window.DB_porticos_inf = pdata || [];
-    }
-    const {data:eventos} = await supa.from('kaptura_gps_eventos')
-      .select('*')
-      .eq('patente', s.patente)
-      .gte('fecha', s.fecha)
-      .lte('fecha', s._fecha_termino || s.fecha)
-      .order('datetime_evento', {ascending:true});
+    const {data:eventos} = await supa.from('kaptura_gps_eventos').select('*')
+      .eq('patente',s.patente).gte('fecha',s.fecha)
+      .lte('fecha',fechaTerm !== '—' ? fechaTerm : s.fecha)
+      .order('datetime_evento',{ascending:true});
 
     if(eventos && eventos.length > 0) {
+      // Load porticos for timeline
+      if(DB_porticos.length === 0) await cargarPorticos();
       let acumMin = 0;
-      html += `<table style="width:100%;border-collapse:collapse;font-size:10px">
-        <thead><tr style="background:var(--blue);color:white">
-          <th style="padding:5px 6px;text-align:left">Hora</th>
-          <th style="padding:5px 6px;text-align:left">Tipo</th>
-          <th style="padding:5px 6px;text-align:left">Lugar</th>
-          <th style="padding:5px 6px;text-align:right">Km</th>
-          <th style="padding:5px 6px;text-align:left">TAG/Peaje</th>
-          <th style="padding:5px 6px;text-align:right">Duración</th>
-          <th style="padding:5px 6px;text-align:right">Acum.</th>
-        </tr></thead><tbody>`;
+      html += `<div style="overflow-x:auto"><table class="inf-table">
+        <thead><tr><th>Hora</th><th>Tipo</th><th>Lugar</th><th style="text-align:right">Km</th><th>TAG/Peaje</th><th style="text-align:right">Duración</th><th style="text-align:right">Acum.</th></tr></thead><tbody>`;
 
       for(const e of eventos) {
         const hora = (e.datetime_evento||'').split('T')[1]?.substring(0,5)||'—';
-        const tipo = e.evento==='trip' ? '🚗' : '⏸';
+        const tipo = e.evento==='trip' ? '🚗 trip' : '⏸ '+e.evento;
         const addr = (e.address||'').split(',')[0];
-        const durMin = parseDuracion(e.duracion||'');
+        // Parse duration
+        let durMin = 0;
+        const ds = e.duracion||'';
+        const dm = ds.match(/(\d+)\s*d/); if(dm) durMin+=parseInt(dm[1])*1440;
+        const dh = ds.match(/(\d+)\s*h/); if(dh) durMin+=parseInt(dh[1])*60;
+        const dmm = ds.match(/(\d+)\s*min/); if(dmm) durMin+=parseInt(dmm[1]);
         acumMin += durMin;
-        const acumH = Math.floor(acumMin/60);
-        const acumM = acumMin%60;
-        // Detect porticos for this trip
-      let porticoLabel = '';
-      if(e.evento==='trip' && e.km_tramo > 10) {
-        const al = (e.address||'').toLowerCase();
-        const found = (window.DB_porticos_inf||[]).filter(p => {
-          const kw = (p.palabras_clave||'').toLowerCase().split(',').map(x=>x.trim()).filter(x=>x.length>4);
-          return kw.some(k => al.includes(k)) && p.valor_3_ejes > 0;
-        });
-        if(found.length > 0) porticoLabel = found.map(p=>`${p.cobro_oficial} ${fmt(p.valor_3_ejes)}`).join('<br>');
-      }
-      html += `<tr style="border-bottom:1px solid #EEF1F6;${e.evento==='trip'?'':'background:#F5F7FA'}">
-          <td style="padding:4px 6px;font-weight:700;color:#1C2B4A">${hora}</td>
-          <td style="padding:4px 6px;color:#2A3350">${tipo} ${e.evento}</td>
-          <td style="padding:4px 6px;color:#2A3350">${addr}</td>
-          <td style="padding:4px 6px;text-align:right;color:#2A3350">${e.km_tramo>0?e.km_tramo.toFixed(1):''}</td>
-          <td style="padding:4px 6px;font-size:9px;color:#3730A3">${porticoLabel}</td>
-          <td style="padding:4px 6px;text-align:right;color:#2A3350">${e.duracion||''}</td>
-          <td style="padding:4px 6px;text-align:right;font-weight:700;color:#1C2B4A">${acumH}h ${String(acumM).padStart(2,'0')}m</td>
+        const acumH = Math.floor(acumMin/60), acumM = acumMin%60;
+        // Detect portico for this trip
+        let porticoLabel = '';
+        if(e.evento==='trip' && e.km_tramo > 10) {
+          const al = (e.address||'').toLowerCase();
+          const found = DB_porticos.filter(p => {
+            const kw = (p.palabras_clave||'').toLowerCase().split(',').map(x=>x.trim()).filter(x=>x.length>4);
+            return kw.some(k=>al.includes(k)) && p.valor_3_ejes > 0;
+          });
+          // Deduplicate by cobro_oficial
+          const seen = new Set();
+          const unique = found.filter(p => { if(seen.has(p.cobro_oficial)) return false; seen.add(p.cobro_oficial); return true; });
+          if(unique.length > 0) porticoLabel = unique.map(p=>`<span style="color:#1E3A5F;font-weight:700">${p.cobro_oficial} ${fmt(p.valor_3_ejes)}</span>`).join('<br>');
+        }
+        html += `<tr style="${e.evento!=='trip'?'background:#F5F7FA':''}">
+          <td style="font-weight:700;color:#1C2B4A">${hora}</td>
+          <td style="color:#2A3350">${tipo}</td>
+          <td style="color:#2A3350">${addr}</td>
+          <td style="text-align:right;color:#2A3350">${e.km_tramo>0?e.km_tramo.toFixed(1):''}</td>
+          <td style="font-size:9px">${porticoLabel}</td>
+          <td style="text-align:right;color:#2A3350">${e.duracion||''}</td>
+          <td style="text-align:right;font-weight:700;color:#1C2B4A">${acumH}h ${String(acumM).padStart(2,'0')}m</td>
         </tr>`;
       }
-      html += '</tbody></table>';
+      html += '</tbody></table></div>';
     } else {
-      html += '<div style="color:var(--g400);padding:10px">Sin datos GPS para este servicio</div>';
+      html += '<div style="color:#8C96B0;padding:10px">Sin datos GPS para este servicio</div>';
     }
   } catch(e) {
-    html += `<div style="color:var(--g400);padding:10px">Error cargando GPS: ${e.message}</div>`;
+    html += `<div style="color:#8C96B0;padding:10px">Error cargando GPS: ${e.message}</div>`;
   }
 
   body.innerHTML = html;
-}
-
-function infoRow(label, val) {
-  return `<div style="padding:7px 12px;border-right:1px solid #DDE2EC;border-bottom:1px solid #DDE2EC">
-    <div style="font-size:9px;font-weight:800;color:#4E5A78;letter-spacing:0.1em;text-transform:uppercase">${label}</div>
-    <div style="font-weight:700;color:#1C2B4A;margin-top:2px">${val||'—'}</div>
-  </div>`;
-}
-
-function costoRow(label, val) {
-  if(!val && val!==0) return '';
-  return `<tr style="border-bottom:1px solid #EEF1F6">
-    <td style="padding:5px 12px;color:#2A3350">${label}</td>
-    <td style="padding:5px 12px;text-align:right;font-weight:700;color:#2A3350">${fmt(val)}</td>
-  </tr>`;
-}
-
-function parseDuracion(s) {
-  let total = 0;
-  const d = s.match(/(\d+)\s*d/); if(d) total += parseInt(d[1])*1440;
-  const h = s.match(/(\d+)\s*h/); if(h) total += parseInt(h[1])*60;
-  const m = s.match(/(\d+)\s*min/); if(m) total += parseInt(m[1]);
-  return total;
 }
 
 function imprimirInforme() {
@@ -2029,11 +1458,87 @@ function imprimirInforme() {
   const win = window.open('','_blank');
   win.document.write(`<html><head><title>Informe Kaptura</title>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700;800&display=swap" rel="stylesheet">
-    <style>body{font-family:'Barlow',sans-serif;font-size:11px;padding:20px}table{width:100%;border-collapse:collapse}@media print{button{display:none}}</style>
+    <style>
+      body{font-family:'Barlow',sans-serif;font-size:11px;padding:20px;color:#2A3350}
+      table{width:100%;border-collapse:collapse}
+      th{background:#1E3A5F;color:rgba(255,255,255,0.8);padding:6px 8px;text-align:left;font-size:9px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase}
+      td{padding:5px 8px;border-bottom:1px solid #EEF1F6;color:#2A3350}
+      .inf-hdr{background:#1C2B4A;color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center}
+      .inf-grid{display:grid;grid-template-columns:1fr 1fr;border:1px solid #DDE2EC;border-top:none}
+      .inf-cell{padding:8px 12px;border-right:1px solid #DDE2EC;border-bottom:1px solid #DDE2EC}
+      .inf-cell:nth-child(even){border-right:none}
+      .inf-lbl{font-size:9px;font-weight:800;color:#4E5A78;letter-spacing:0.1em;text-transform:uppercase}
+      .inf-val{font-weight:700;color:#1C2B4A;margin-top:2px}
+      .inf-section{font-size:12px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:#1C2B4A;padding:10px 0 5px;border-bottom:2px solid #1E3A5F;margin:14px 0 8px}
+      .inf-margen{background:#1C2B4A;color:#fff;padding:12px 16px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+      @media print{button{display:none}}
+    </style>
   </head><body>${body}</body></html>`);
   win.document.close();
   setTimeout(() => win.print(), 500);
 }
+
+// ══ ELIMINAR ══
+async function eliminarSvc(i) {
+  const s = DB.servicios[i];
+  if(!confirm(`¿Eliminar ${s.servicio_id||'este servicio'}?`)) return;
+  if(s.id) {
+    const {error} = await supa.from('servicios_piloto').delete().eq('id',s.id);
+    if(error) { toast('Error: '+error.message); return; }
+  }
+  DB.servicios.splice(i,1); renderServicios(); renderKPIs();
+  toast('✓ Servicio eliminado');
+}
+
+// ══ CONFIG ══
+async function guardarConfig() {
+  const campos = [
+    {clave:'precio_litro',    val:document.getElementById('cfg-lt').value},
+    {clave:'rendimiento',     val:document.getElementById('cfg-rend').value},
+    {clave:'costo_fijo',      val:document.getElementById('cfg-cf').value},
+    {clave:'mantencion',      val:document.getElementById('cfg-mant').value},
+    {clave:'sueldo_conductor',val:document.getElementById('cfg-cond').value},
+    {clave:'viatico',         val:document.getElementById('cfg-viatico').value},
+    {clave:'comision_conductor',val:document.getElementById('cfg-comision').value},
+  ];
+  for(const c of campos) {
+    DB.config[c.clave] = parseFloat(c.val)||0;
+    await supa.from('kaptura_config').upsert({clave:c.clave, valor:c.val},{onConflict:'clave'});
+  }
+  const ck = document.getElementById('cfg-claude').value.trim();
+  if(ck && !ck.startsWith('•')) {
+    localStorage.setItem('kaptura_claude_key', ck);
+    await supa.from('kaptura_config').upsert({clave:'claude_api_key',valor:ck},{onConflict:'clave'});
+  }
+  toast('✓ Configuración guardada');
+}
+
+// ══ UTILS ══
+function setTab(nombre, btn) {
+  ['servicios','flota','clientes','config'].forEach(t => {
+    document.getElementById(`tab-${t}`).style.display = t===nombre ? 'block' : 'none';
+  });
+  document.querySelectorAll('.ntab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+function resetFecha() {
+  document.getElementById('filtro-fecha').value = '';
+  renderServicios();
+}
+function cerrar(id) { document.getElementById(id).style.display = 'none'; }
+function fmt(n) {
+  if(!n && n!==0) return '—';
+  return '$' + Math.round(n).toLocaleString('es-CL');
+}
+function toast(msg, dur=2800) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), dur);
+}
+
+document.querySelectorAll('.overlay').forEach(el => {
+  el.addEventListener('click', e => { if(e.target===el) el.style.display='none'; });
+});
 
 init();
 </script>
