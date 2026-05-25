@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>KAPTURA v5.8</title>
+<title>KAPTURA v5.9</title>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700;800;900&family=Barlow+Condensed:wght@600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -181,7 +181,7 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
     <!-- TABLA DESKTOP -->
     <div class="desk-tbl">
       <div style="overflow-x:auto"><table>
-        <thead><tr><th>ID</th><th>Fecha</th><th>Patente</th><th>Conductor</th><th>Cliente</th><th>Origen</th><th>Estado</th><th>Acciones</th></tr></thead>
+        <thead><tr><th>ID</th><th>Fecha</th><th>Patente</th><th>Conductor</th><th>Cliente</th><th>Origen</th><th>Destino</th><th>Puntos</th><th>Tarifa</th><th>Costos</th><th>Margen</th><th>Estado</th><th>Acciones</th></tr></thead>
         <tbody id="tabla-svc"></tbody>
       </table></div>
     </div>
@@ -601,7 +601,7 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
         <button class="modal-cls" onclick="cerrar('modal-informe')">✕</button>
       </div>
     </div>
-    <div class="modal-body" id="inf-body" style="font-size:12px">
+    <div class="modal-body" id="inf-body" style="font-size:12px;color:#2A3350;overflow-x:auto">
       <!-- contenido dinámico -->
     </div>
   </div>
@@ -614,7 +614,7 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
 const SUPA_URL = 'https://aqunzrukuruwzwywnurq.supabase.co';
 const SUPA_KEY = 'sb_publishable_70t9UxFlcqYDj7AMybsrHg__IMGNA8C';
 const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
-const KAPTURA_VERSION = '5.8';
+const KAPTURA_VERSION = '5.9';
 const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 const hoy = new Date();
 const hoyStr = hoy.toISOString().split('T')[0];
@@ -752,6 +752,11 @@ function filaHTML(s,i) {
     <td>${s.conductor||'—'}</td>
     <td>${s.cliente||'—'}</td>
     <td>${s.origen||'—'}</td>
+    <td style="font-weight:700">${(s._puntos||[]).find(p=>p.tipo==='final')?.destino || s.destino || '—'}</td>
+    <td style="text-align:center">${(s._puntos||[]).filter(p=>p.tipo==='intermedio').length || s.puntos_entrega || '—'}</td>
+    <td style="font-weight:700;color:#065F46">${s.tarifa_neta ? fmt(s.tarifa_neta) : '—'}</td>
+    <td>${s.total_costos ? fmt(s.total_costos) : '—'}</td>
+    <td style="font-weight:700;color:${(s.margen_servicio||s.margen||0)>=0?'#065F46':'#B91C1C'}">${s.margen_servicio||s.margen ? fmt(s.margen_servicio||s.margen) : '—'}</td>
     <td>${pillHTML(s.estado)}</td>
     <td><div style="display:flex;gap:4px;flex-wrap:wrap">
       ${s.estado==='asignado' ? `<button class="btn btn-navy btn-sm" onclick="iniciarSvc(${i})">▶ Iniciar</button>` : ''}
@@ -1807,7 +1812,7 @@ async function abrirInforme(i) {
 
   let html = `
   <div style="border:2px solid var(--navy);border-radius:8px;overflow:hidden;margin-bottom:16px">
-    <div style="background:var(--navy);color:white;padding:10px 14px;display:flex;justify-content:space-between;align-items:center">
+    <div style="background:#1C2B4A;color:white;padding:10px 14px;display:flex;justify-content:space-between;align-items:center">
       <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900">KAPTURA — INFORME DE SERVICIO</div>
       <div style="font-size:11px;opacity:0.7">${new Date().toLocaleDateString('es-CL')}</div>
     </div>
@@ -1826,7 +1831,7 @@ async function abrirInforme(i) {
   </div>
 
   <!-- PUNTOS DE ENTREGA -->
-  <div style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:var(--navy);padding:6px 0 5px;border-bottom:2px solid var(--blue);margin-bottom:8px">
+  <div style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:#1C2B4A;padding:6px 0 5px;border-bottom:2px solid #1E3A5F;margin-bottom:8px">
     📍 Puntos de Entrega
   </div>
   <table style="width:100%;border-collapse:collapse;margin-bottom:16px;font-size:11px">
@@ -1853,7 +1858,7 @@ async function abrirInforme(i) {
   </table>
 
   <!-- COSTOS -->
-  <div style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:var(--navy);padding:6px 0 5px;border-bottom:2px solid var(--blue);margin-bottom:8px">
+  <div style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:#1C2B4A;padding:6px 0 5px;border-bottom:2px solid #1E3A5F;margin-bottom:8px">
     ⚙ Costos del Servicio
   </div>
   <table style="width:100%;border-collapse:collapse;margin-bottom:16px;font-size:11px">
@@ -1875,11 +1880,16 @@ async function abrirInforme(i) {
 
   // TIMELINE GPS
   html += `
-  <div style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:var(--navy);padding:6px 0 5px;border-bottom:2px solid var(--blue);margin-bottom:8px">
+  <div style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:#1C2B4A;padding:6px 0 5px;border-bottom:2px solid #1E3A5F;margin-bottom:8px">
     🗺 Timeline de Ruta (GPS)
   </div>`;
 
   try {
+    // Load porticos for TAG detection in timeline
+    if(!window.DB_porticos_inf || window.DB_porticos_inf.length === 0) {
+      const {data:pdata} = await supa.from('porticos_tag').select('cobro_oficial,palabras_clave,valor_3_ejes,tipo').eq('activo',true);
+      window.DB_porticos_inf = pdata || [];
+    }
     const {data:eventos} = await supa.from('kaptura_gps_eventos')
       .select('*')
       .eq('patente', s.patente)
@@ -1895,6 +1905,7 @@ async function abrirInforme(i) {
           <th style="padding:5px 6px;text-align:left">Tipo</th>
           <th style="padding:5px 6px;text-align:left">Lugar</th>
           <th style="padding:5px 6px;text-align:right">Km</th>
+          <th style="padding:5px 6px;text-align:left">TAG/Peaje</th>
           <th style="padding:5px 6px;text-align:right">Duración</th>
           <th style="padding:5px 6px;text-align:right">Acum.</th>
         </tr></thead><tbody>`;
@@ -1907,13 +1918,24 @@ async function abrirInforme(i) {
         acumMin += durMin;
         const acumH = Math.floor(acumMin/60);
         const acumM = acumMin%60;
-        html += `<tr style="border-bottom:1px solid var(--g100);${e.evento==='trip'?'':'background:var(--g50)'}">
-          <td style="padding:4px 6px;font-weight:700">${hora}</td>
-          <td style="padding:4px 6px">${tipo} ${e.evento}</td>
-          <td style="padding:4px 6px">${addr}</td>
-          <td style="padding:4px 6px;text-align:right">${e.km_tramo>0?e.km_tramo.toFixed(1):''}</td>
-          <td style="padding:4px 6px;text-align:right">${e.duracion||''}</td>
-          <td style="padding:4px 6px;text-align:right;font-weight:700">${acumH}h ${String(acumM).padStart(2,'0')}m</td>
+        // Detect porticos for this trip
+      let porticoLabel = '';
+      if(e.evento==='trip' && e.km_tramo > 10) {
+        const al = (e.address||'').toLowerCase();
+        const found = (window.DB_porticos_inf||[]).filter(p => {
+          const kw = (p.palabras_clave||'').toLowerCase().split(',').map(x=>x.trim()).filter(x=>x.length>4);
+          return kw.some(k => al.includes(k)) && p.valor_3_ejes > 0;
+        });
+        if(found.length > 0) porticoLabel = found.map(p=>`${p.cobro_oficial} ${fmt(p.valor_3_ejes)}`).join('<br>');
+      }
+      html += `<tr style="border-bottom:1px solid #EEF1F6;${e.evento==='trip'?'':'background:#F5F7FA'}">
+          <td style="padding:4px 6px;font-weight:700;color:#1C2B4A">${hora}</td>
+          <td style="padding:4px 6px;color:#2A3350">${tipo} ${e.evento}</td>
+          <td style="padding:4px 6px;color:#2A3350">${addr}</td>
+          <td style="padding:4px 6px;text-align:right;color:#2A3350">${e.km_tramo>0?e.km_tramo.toFixed(1):''}</td>
+          <td style="padding:4px 6px;font-size:9px;color:#3730A3">${porticoLabel}</td>
+          <td style="padding:4px 6px;text-align:right;color:#2A3350">${e.duracion||''}</td>
+          <td style="padding:4px 6px;text-align:right;font-weight:700;color:#1C2B4A">${acumH}h ${String(acumM).padStart(2,'0')}m</td>
         </tr>`;
       }
       html += '</tbody></table>';
@@ -1928,17 +1950,17 @@ async function abrirInforme(i) {
 }
 
 function infoRow(label, val) {
-  return `<div style="padding:7px 12px;border-right:1px solid var(--g200);border-bottom:1px solid var(--g200)">
-    <div style="font-size:9px;font-weight:800;color:var(--g400);letter-spacing:0.1em;text-transform:uppercase">${label}</div>
-    <div style="font-weight:700;color:var(--navy);margin-top:2px">${val}</div>
+  return `<div style="padding:7px 12px;border-right:1px solid #DDE2EC;border-bottom:1px solid #DDE2EC">
+    <div style="font-size:9px;font-weight:800;color:#4E5A78;letter-spacing:0.1em;text-transform:uppercase">${label}</div>
+    <div style="font-weight:700;color:#1C2B4A;margin-top:2px">${val||'—'}</div>
   </div>`;
 }
 
 function costoRow(label, val) {
   if(!val && val!==0) return '';
-  return `<tr style="border-bottom:1px solid var(--g100)">
-    <td style="padding:5px 12px">${label}</td>
-    <td style="padding:5px 12px;text-align:right;font-weight:700">${fmt(val)}</td>
+  return `<tr style="border-bottom:1px solid #EEF1F6">
+    <td style="padding:5px 12px;color:#2A3350">${label}</td>
+    <td style="padding:5px 12px;text-align:right;font-weight:700;color:#2A3350">${fmt(val)}</td>
   </tr>`;
 }
 
