@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>KAPTURA v5.9</title>
+<title>KAPTURA v6.0</title>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700;800;900&family=Barlow+Condensed:wght@600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -590,7 +590,7 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
 
 <!-- ══ MODAL INFORME SERVICIO ══ -->
 <div class="overlay" id="modal-informe" style="display:none">
-  <div class="modal" style="max-width:800px">
+  <div class="modal" style="max-width:95vw;width:95vw">
     <div class="modal-hdr">
       <div>
         <div class="modal-ttl">Informe de Servicio — <span id="inf-id"></span></div>
@@ -601,7 +601,7 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
         <button class="modal-cls" onclick="cerrar('modal-informe')">✕</button>
       </div>
     </div>
-    <div class="modal-body" id="inf-body" style="font-size:12px;color:#2A3350;overflow-x:auto">
+    <div class="modal-body" id="inf-body" style="font-size:12px;color:#2A3350;overflow-x:auto;min-width:0">
       <!-- contenido dinámico -->
     </div>
   </div>
@@ -614,7 +614,7 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
 const SUPA_URL = 'https://aqunzrukuruwzwywnurq.supabase.co';
 const SUPA_KEY = 'sb_publishable_70t9UxFlcqYDj7AMybsrHg__IMGNA8C';
 const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
-const KAPTURA_VERSION = '5.9';
+const KAPTURA_VERSION = '6.0';
 const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 const hoy = new Date();
 const hoyStr = hoy.toISOString().split('T')[0];
@@ -753,7 +753,7 @@ function filaHTML(s,i) {
     <td>${s.cliente||'—'}</td>
     <td>${s.origen||'—'}</td>
     <td style="font-weight:700">${(s._puntos||[]).find(p=>p.tipo==='final')?.destino || s.destino || '—'}</td>
-    <td style="text-align:center">${(s._puntos||[]).filter(p=>p.tipo==='intermedio').length || s.puntos_entrega || '—'}</td>
+    <td style="text-align:center">${(s._puntos||[]).filter(p=>p.tipo==='intermedio').length || '—'}</td>
     <td style="font-weight:700;color:#065F46">${s.tarifa_neta ? fmt(s.tarifa_neta) : '—'}</td>
     <td>${s.total_costos ? fmt(s.total_costos) : '—'}</td>
     <td style="font-weight:700;color:${(s.margen_servicio||s.margen||0)>=0?'#065F46':'#B91C1C'}">${s.margen_servicio||s.margen ? fmt(s.margen_servicio||s.margen) : '—'}</td>
@@ -1799,24 +1799,26 @@ async function abrirInforme(i) {
   document.getElementById('inf-sub').textContent = `${s.patente} · ${s.conductor} · ${s.cliente}`;
 
   const body = document.getElementById('inf-body');
-  body.innerHTML = '<div style="text-align:center;padding:20px;color:var(--g400)">Cargando...</div>';
+  body.innerHTML = '<div style="text-align:center;padding:20px;color:#8C96B0">Cargando...</div>';
   document.getElementById('modal-informe').style.display = 'flex';
 
   // Build informe HTML
   const puntos = s._puntos || [];
   const final  = puntos.find(p => p.tipo==='final');
   const ints   = puntos.filter(p => p.tipo==='intermedio');
-  const tarifa = final?.valor || s.tarifa_neta || 0;
+  // Fallback desde Supabase si _puntos no está en memoria
+  const tarifa   = final?.valor || s.tarifa_neta || 0;
+  const nInts    = ints.length || Math.max(0, (s.puntos_entrega||1) - 1);
   const valorPts = ints.reduce((a,p) => a+(p.valor||0), 0);
-  const ingreso  = tarifa + valorPts;
+  const ingreso  = s.ingreso_total || (tarifa + valorPts);
 
   let html = `
-  <div style="border:2px solid var(--navy);border-radius:8px;overflow:hidden;margin-bottom:16px">
+  <div style="border:2px solid #1C2B4A;border-radius:8px;overflow:hidden;margin-bottom:16px">
     <div style="background:#1C2B4A;color:white;padding:10px 14px;display:flex;justify-content:space-between;align-items:center">
       <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900">KAPTURA — INFORME DE SERVICIO</div>
       <div style="font-size:11px;opacity:0.7">${new Date().toLocaleDateString('es-CL')}</div>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;border-bottom:1px solid var(--g200)">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;border-bottom:1px solid #DDE2EC">
       ${infoRow('Servicio', s.servicio_id||'—')}
       ${infoRow('Estado', s.estado?.toUpperCase()||'—')}
       ${infoRow('Patente', s.patente||'—')}
@@ -1824,7 +1826,7 @@ async function abrirInforme(i) {
       ${infoRow('Cliente', s.cliente||'—')}
       ${infoRow('Origen', s.origen||'—')}
       ${infoRow('Fecha Inicio', s.fecha||'—')}
-      ${infoRow('Fecha Término', s._fecha_termino||'—')}
+      ${infoRow('Fecha Término', s._fecha_termino || (s.hora_termino ? s.hora_termino.split('T')[0] : '—'))}
       ${infoRow('Días en ruta', s.dias_servicio||'—')}
       ${infoRow('Km GPS', s.km_total ? s.km_total+' km' : '—')}
     </div>
@@ -1835,7 +1837,7 @@ async function abrirInforme(i) {
     📍 Puntos de Entrega
   </div>
   <table style="width:100%;border-collapse:collapse;margin-bottom:16px;font-size:11px">
-    <thead><tr style="background:var(--g100)">
+    <thead><tr style="background:#EEF1F6">
       <th style="padding:6px 8px;text-align:left;font-weight:800">Punto</th>
       <th style="padding:6px 8px;text-align:left;font-weight:800">Tipo</th>
       <th style="padding:6px 8px;text-align:left;font-weight:800">Destino</th>
@@ -1843,16 +1845,22 @@ async function abrirInforme(i) {
       <th style="padding:6px 8px;text-align:right;font-weight:800">Valor</th>
     </tr></thead>
     <tbody>
-      ${puntos.map((p,i) => `<tr style="border-bottom:1px solid var(--g100)">
-        <td style="padding:5px 8px">${i+1}</td>
-        <td style="padding:5px 8px">${p.tipo==='final'?'🏁 Final':'🔁 Intermedio'}</td>
-        <td style="padding:5px 8px;font-weight:700">${p.destino||'—'}</td>
-        <td style="padding:5px 8px">${p.num_guia||'—'}</td>
-        <td style="padding:5px 8px;text-align:right;font-weight:700">${fmt(p.valor||0)}</td>
-      </tr>`).join('')}
-      <tr style="background:var(--g50);font-weight:800">
-        <td colspan="4" style="padding:6px 8px;text-align:right">TOTAL INGRESOS</td>
-        <td style="padding:6px 8px;text-align:right;color:var(--navy)">${fmt(ingreso)}</td>
+      ${puntos.length > 0
+      ? puntos.map((p,i) => `<tr style="border-bottom:1px solid #EEF1F6">
+          <td style="padding:5px 8px;color:#2A3350">${i+1}</td>
+          <td style="padding:5px 8px;color:#2A3350">${p.tipo==='final'?'🏁 Final':'🔁 Intermedio'}</td>
+          <td style="padding:5px 8px;font-weight:700;color:#1C2B4A">${p.destino||'—'}</td>
+          <td style="padding:5px 8px;color:#2A3350">${p.num_guia||'—'}</td>
+          <td style="padding:5px 8px;text-align:right;font-weight:700;color:#065F46">${fmt(p.valor||0)}</td>
+        </tr>`).join('')
+      : `<tr><td colspan="5" style="padding:8px;color:#4E5A78;text-align:center">
+          ${nInts} puntos intermedios + destino ${s.destino||'—'}<br>
+          <small>Detalle disponible al ver servicio en proceso</small>
+        </td></tr>`
+    }
+      <tr style="background:#F5F7FA;font-weight:800">
+        <td colspan="4" style="padding:6px 8px;text-align:right;color:#1C2B4A;font-weight:800">TOTAL INGRESOS</td>
+        <td style="padding:6px 8px;text-align:right;color:#065F46;font-weight:800">${fmt(ingreso)}</td>
       </tr>
     </tbody>
   </table>
@@ -1871,7 +1879,7 @@ async function abrirInforme(i) {
       ${costoRow('Mantención', s.mantencion_prorrateada)}
       ${costoRow('Viático', s.costo_viaticos)}
       ${costoRow('Factoring', s.factoring)}
-      <tr style="background:var(--navy);color:white;font-weight:800">
+      <tr style="background:#1C2B4A;color:white;font-weight:800">
         <td style="padding:8px 12px">MARGEN SERVICIO</td>
         <td style="padding:8px 12px;text-align:right;font-size:14px">${fmt(s.margen_servicio||s.margen||0)}</td>
       </tr>
@@ -1899,8 +1907,8 @@ async function abrirInforme(i) {
 
     if(eventos && eventos.length > 0) {
       let acumMin = 0;
-      html += `<table style="width:100%;border-collapse:collapse;font-size:10px">
-        <thead><tr style="background:var(--blue);color:white">
+      html += `<div style="overflow-x:auto"><table style="width:100%;min-width:700px;border-collapse:collapse;font-size:10px">
+        <thead><tr style="background:#1E3A5F;color:white">
           <th style="padding:5px 6px;text-align:left">Hora</th>
           <th style="padding:5px 6px;text-align:left">Tipo</th>
           <th style="padding:5px 6px;text-align:left">Lugar</th>
@@ -1933,17 +1941,17 @@ async function abrirInforme(i) {
           <td style="padding:4px 6px;color:#2A3350">${tipo} ${e.evento}</td>
           <td style="padding:4px 6px;color:#2A3350">${addr}</td>
           <td style="padding:4px 6px;text-align:right;color:#2A3350">${e.km_tramo>0?e.km_tramo.toFixed(1):''}</td>
-          <td style="padding:4px 6px;font-size:9px;color:#3730A3">${porticoLabel}</td>
+          <td style="padding:4px 6px;font-size:9px;font-weight:700;color:#1E3A5F">${porticoLabel}</td>
           <td style="padding:4px 6px;text-align:right;color:#2A3350">${e.duracion||''}</td>
           <td style="padding:4px 6px;text-align:right;font-weight:700;color:#1C2B4A">${acumH}h ${String(acumM).padStart(2,'0')}m</td>
         </tr>`;
       }
-      html += '</tbody></table>';
+      html += '</tbody></table></div>';
     } else {
-      html += '<div style="color:var(--g400);padding:10px">Sin datos GPS para este servicio</div>';
+      html += '<div style="color:#8C96B0;padding:10px">Sin datos GPS para este servicio</div>';
     }
   } catch(e) {
-    html += `<div style="color:var(--g400);padding:10px">Error cargando GPS: ${e.message}</div>`;
+    html += `<div style="color:#8C96B0;padding:10px">Error cargando GPS: ${e.message}</div>`;
   }
 
   body.innerHTML = html;
