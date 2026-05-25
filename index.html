@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>KAPTURA v5.4</title>
+<title>KAPTURA v5.5</title>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700;800;900&family=Barlow+Condensed:wght@600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -594,7 +594,7 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
 const SUPA_URL = 'https://aqunzrukuruwzwywnurq.supabase.co';
 const SUPA_KEY = 'sb_publishable_70t9UxFlcqYDj7AMybsrHg__IMGNA8C';
 const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
-const KAPTURA_VERSION = '5.4';
+const KAPTURA_VERSION = '5.5';
 const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 const hoy = new Date();
 const hoyStr = hoy.toISOString().split('T')[0];
@@ -1333,6 +1333,14 @@ async function cargarPorticos() {
   DB_porticos = data || [];
 }
 
+let DB_corredores = [];
+async function cargarCorredores() {
+  if(DB_corredores.length > 0) return;
+  const {data} = await supa.from('kaptura_corredores').select('*').eq('activo', true);
+  DB_corredores = data || [];
+  console.log('Corredores cargados:', DB_corredores.length);
+}
+
 async function irACostos() {
   await guardarBorrador();
   const s = DB.servicios[svcActivoIdx];
@@ -1505,50 +1513,58 @@ async function cargarGPS() {
     calcRetorno();
     calcCostos();
 
-    // TAG: detectar pórticos usando trips > 10km (tramos reales)
-    // Deduplicar: cada pórtico máximo 1 vez por dirección por día
+    // TAG/PEAJES: detección por corredor de ruta
     await cargarPorticos();
+    await cargarCorredores();
 
-    const cobrosTotal = new Set();
     const detectadosTag = [];
-
-    // Trips >10km — max 2 detecciones por pórtico por día (ida+vuelta)
-    const contadorPorDia = {};
-    const MAX_POR_DIA = 2;
-    // TAG: trips > 10km; PEAJE regional: trips > 50km to avoid false positives
     const tripsSignif = trips.filter(t => t.km_tramo > 10);
-    for(const trip of tripsSignif) {
-      const al = trip.address.toLowerCase();
-      const dia = trip.fecha;
-      for(const p of DB_porticos) {
-        if(p.valor_3_ejes <= 0) continue;
-        const kwText = (p.palabras_clave||p.texto_gps_forguard||'').toLowerCase();
-        if(!kwText) continue;
-        const palabras = kwText.split(',').map(x=>x.trim()).filter(x=>x.length>4);
-        // Region-aware: verify GPS address is in same region as portico
-        const pRegion = (p.region||'').toLowerCase();
-        const regionMap = {
-          'metropolitana': ['metropolitana','paine','buin','san bernardo','pudahuel'],
-          'valparaíso': ['valparaíso','casablanca','curacaví','quilpué','viña del mar'],
-          "o'higgins": ["o'higgins",'rancagua','san fernando','doñihue','coltauco','peumo','mostazal','malloa','requínoa','chépica','san vicente'],
-          'maule': ['maule','talca','curicó','linares','romeral','san clemente'],
-          'biobío': ['biobío','chillán','cabrero','concepción','santa juana'],
-        };
-        const rKws = regionMap[pRegion]||[];
-        if(rKws.length > 0 && !rKws.some(rk => al.includes(rk))) continue;
-        if(palabras.some(pal => al.includes(pal))) {
-          const key = `${dia}-${p.cobro_oficial}`;
-          const cnt = contadorPorDia[key]||0;
-          if(cnt < MAX_POR_DIA) {
-            contadorPorDia[key] = cnt+1;
-            // For PEAJE tipo: only detect if trip is > 50km (avoids false regional matches)
-            const tipoP = (p.tipo||'peaje').toLowerCase();
-            if(tipoP === 'peaje' && trip.km_tramo < 50) continue;
-            detectadosTag.push({nombre:p.cobro_oficial, valor:p.valor_3_ejes, tipo:tipoP, dia, km:trip.km_tramo});
+    const allAddrs = tripsSignif.map(t => t.address.toLowerCase()).join(' | ');
+
+    // Detectar corredor según keywords GPS
+    let corridorDetected = null;
+    let corridorScore = 0;
+    for(const corredor of DB_corredores) {
+      const kwsIda = (corredor.keywords_ida||'').split(',').map(k=>k.trim().toLowerCase());
+      const score = kwsIda.filter(kw => kw.length > 3 && allAddrs.includes(kw)).length;
+      if(score > corridorScore) { corridorScore = score; corridorDetected = corredor; }
+    }
+
+    if(corridorDetected && corridorScore >= 2) {
+      console.log('Corredor:', corridorDetected.id, corridorDetected.nombre, 'score:'+corridorScore);
+      const portIda    = (corridorDetected.porticos_ida||'').split(',').map(p=>p.trim());
+      const portVuelta = (corridorDetected.porticos_vuelta||'').split(',').map(p=>p.trim());
+      const processed  = new Set();
+      for(const pNombre of portIda) {
+        const found = DB_porticos.find(p => p.cobro_oficial===pNombre && p.valor_3_ejes>0);
+        if(found && !processed.has('I-'+pNombre)) {
+          processed.add('I-'+pNombre);
+          detectadosTag.push({nombre:pNombre, valor:found.valor_3_ejes, tipo:(found.tipo||'tag').toLowerCase(), sentido:'ida'});
+        }
+      }
+      for(const pNombre of portVuelta) {
+        const found = DB_porticos.find(p => p.cobro_oficial===pNombre && p.valor_3_ejes>0);
+        if(found && !processed.has('V-'+pNombre)) {
+          processed.add('V-'+pNombre);
+          detectadosTag.push({nombre:pNombre, valor:found.valor_3_ejes, tipo:(found.tipo||'tag').toLowerCase(), sentido:'vuelta'});
+        }
+      }
+    } else {
+      console.log('Sin corredor detectado score:'+corridorScore+'. Fallback básico.');
+      const contFallback = {};
+      for(const trip of tripsSignif) {
+        const al = trip.address.toLowerCase();
+        for(const p of DB_porticos) {
+          if(p.valor_3_ejes<=0) continue;
+          const kw = (p.palabras_clave||'').toLowerCase();
+          const pals = kw.split(',').map(x=>x.trim()).filter(x=>x.length>4);
+          if(pals.some(pal=>al.includes(pal))) {
+            const key = trip.fecha+'-'+p.cobro_oficial;
+            if(!contFallback[key]) { contFallback[key]=1; detectadosTag.push({nombre:p.cobro_oficial, valor:p.valor_3_ejes, tipo:(p.tipo||'tag').toLowerCase(), sentido:'?'}); }
           }
         }
       }
-    };
+    }
     // Separar por tipo
     const soloTag    = detectadosTag.filter(p => p.tipo.includes('tag') || p.tipo.includes('autopista'));
     const soloPeajes = detectadosTag.filter(p => !p.tipo.includes('tag') && !p.tipo.includes('autopista'));
