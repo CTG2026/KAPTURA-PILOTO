@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>KAPTURA v6.2</title>
+<title>KAPTURA v6.0</title>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700;800;900&family=Barlow+Condensed:wght@600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -590,7 +590,7 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
 
 <!-- ══ MODAL INFORME SERVICIO ══ -->
 <div class="overlay" id="modal-informe" style="display:none">
-  <div class="modal" style="max-width:95vw;width:95vw">
+  <div class="modal" style="max-width:800px">
     <div class="modal-hdr">
       <div>
         <div class="modal-ttl">Informe de Servicio — <span id="inf-id"></span></div>
@@ -601,7 +601,7 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
         <button class="modal-cls" onclick="cerrar('modal-informe')">✕</button>
       </div>
     </div>
-    <div class="modal-body" id="inf-body" style="font-size:12px;color:#2A3350;overflow-x:auto;min-width:0">
+    <div class="modal-body" id="inf-body" style="font-size:12px;color:#2A3350;overflow-x:auto">
       <!-- contenido dinámico -->
     </div>
   </div>
@@ -614,7 +614,7 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
 const SUPA_URL = 'https://aqunzrukuruwzwywnurq.supabase.co';
 const SUPA_KEY = 'sb_publishable_70t9UxFlcqYDj7AMybsrHg__IMGNA8C';
 const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
-const KAPTURA_VERSION = '6.2';
+const KAPTURA_VERSION = '6.0';
 const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 const hoy = new Date();
 const hoyStr = hoy.toISOString().split('T')[0];
@@ -696,30 +696,24 @@ function renderKPIs() {
     `${conf.length} servicios · ${MESES[mes]}`;
   document.getElementById('k-prom').textContent = fmt(pr);
 
-  // Ingreso mes
   const ingresoTotal = conf.reduce((a,s) => a+(s.ingreso_total||s.tarifa_neta||0), 0);
   document.getElementById('k-ingreso').textContent = fmt(ingresoTotal);
   document.getElementById('k-ingreso-sub').textContent = `${conf.length} servicios · ${MESES[mes]}`;
 
-  // Costos mes
   const costosTotal = conf.reduce((a,s) => a+(s.total_costos||0), 0);
-  const costosSub = document.getElementById('k-costos-sub');
   document.getElementById('k-costos').textContent = fmt(costosTotal);
-  if(costosSub) costosSub.textContent = `${MESES[mes]}`;
+  document.getElementById('k-costos-sub').textContent = MESES[mes];
 
-  // Ejecutados hoy y mes
-  const ejecutadosHoy = DB.servicios.filter(s => {
-    const f = (s.created_at||'').startsWith(hoyStr) || (s.fecha||'').startsWith(hoyStr);
-    return f && ['ejecutado','borrador','confirmado','cerrado'].includes(s.estado);
-  }).length;
+  const ejecutadosHoy = DB.servicios.filter(s =>
+    ((s.fecha||'').startsWith(hoyStr)) &&
+    ['ejecutado','borrador','confirmado','cerrado'].includes(s.estado)
+  ).length;
   const ejecutadosMes = DB.servicios.filter(s => {
     const f = new Date(s.created_at||'2026-01-01');
     return f.getMonth()===mes && ['ejecutado','borrador','confirmado','cerrado'].includes(s.estado);
   }).length;
-  const ejHoyEl = document.getElementById('k-ejec-hoy');
-  const ejMesEl = document.getElementById('k-ejec-mes');
-  if(ejHoyEl) ejHoyEl.textContent = ejecutadosHoy;
-  if(ejMesEl) ejMesEl.textContent = `${ejecutadosMes} este mes`;
+  document.getElementById('k-ejec-hoy').textContent = ejecutadosHoy;
+  document.getElementById('k-ejec-mes').textContent = ejecutadosMes + ' este mes';
 }
 
 function renderServicios() {
@@ -775,7 +769,7 @@ function filaHTML(s,i) {
     <td>${s.cliente||'—'}</td>
     <td>${s.origen||'—'}</td>
     <td style="font-weight:700">${(s._puntos||[]).find(p=>p.tipo==='final')?.destino || s.destino || '—'}</td>
-    <td style="text-align:center">${(s._puntos||[]).filter(p=>p.tipo==='intermedio').length || '—'}</td>
+    <td style="text-align:center">${(s._puntos||[]).filter(p=>p.tipo==='intermedio').length || s.puntos_entrega || '—'}</td>
     <td style="font-weight:700;color:#065F46">${s.tarifa_neta ? fmt(s.tarifa_neta) : '—'}</td>
     <td>${s.total_costos ? fmt(s.total_costos) : '—'}</td>
     <td style="font-weight:700;color:${(s.margen_servicio||s.margen||0)>=0?'#065F46':'#B91C1C'}">${s.margen_servicio||s.margen ? fmt(s.margen_servicio||s.margen) : '—'}</td>
@@ -1706,18 +1700,12 @@ async function guardarCostosBorrador() {
   const costos  = comb+peajes+condVal+comision+cf+mant+viat+fact;
   const margen  = ingreso - costos;
 
-  // Save puntos as JSON for informe
-  const puntosJSON = JSON.stringify((s._puntos||[]).map(p=>({
-    tipo:p.tipo, destino:p.destino, valor:p.valor||0, num_guia:p.num_guia||''
-  })));
-
   const {error} = await supa.from('servicios_piloto').update({
     estado:'borrador', km_total:km, costo_peajes:peajes, peajes_tag:peajes,
     tarifa_neta:tarifa, dias_servicio:dias, costo_combustible:comb,
     costo_conductor:condVal, costo_viaticos:viat, costo_fijo_dia:cf,
     costo_mantencion:mant, factoring:fact, total_costos:costos,
-    margen_servicio:margen, margen:margen, ingreso_total:ingreso,
-    notas: (s.notas||'') + '|PUNTOS:' + puntosJSON
+    margen_servicio:margen, margen:margen, ingreso_total:ingreso
   }).eq('id',s.id);
 
   if(error) { toast('Error: '+error.message); return; }
@@ -1827,57 +1815,40 @@ async function abrirInforme(i) {
   document.getElementById('inf-sub').textContent = `${s.patente} · ${s.conductor} · ${s.cliente}`;
 
   const body = document.getElementById('inf-body');
-  body.innerHTML = '<div style="text-align:center;padding:20px;color:#8C96B0">Cargando...</div>';
+  body.innerHTML = '<div style="text-align:center;padding:20px;color:var(--g400)">Cargando...</div>';
   document.getElementById('modal-informe').style.display = 'flex';
 
   // Build informe HTML
-  // Parse puntos from notas field if _puntos not in memory
-  // Always fetch fresh from Supabase to get latest puntos data
   let puntos = s._puntos || [];
-  const {data:svcFresh} = await supa.from('servicios_piloto')
-    .select('notas,tarifa_neta,ingreso_total,puntos_entrega,destino,km_total,dias_servicio')
-    .eq('id', s.id).single();
-
-  // Try to parse from notas field
   if(puntos.length === 0) {
-    const notas = svcFresh?.notas || s.notas || '';
-    if(notas.includes('|PUNTOS:')) {
-      try { puntos = JSON.parse(notas.split('|PUNTOS:')[1]); } catch(e) {}
+    const {data:sv} = await supa.from('servicios_piloto')
+      .select('notas,tarifa_neta,ingreso_total,puntos_entrega,destino,km_total,dias_servicio')
+      .eq('id', s.id).single();
+    if(sv?.notas?.includes('|PUNTOS:')) {
+      try { puntos = JSON.parse(sv.notas.split('|PUNTOS:')[1]); } catch(e) {}
     }
-  }
-
-  // If still empty, build from destino + puntos_entrega + tarifa_neta
-  if(puntos.length === 0 && svcFresh) {
-    const nInts = Math.max(0, (s.puntos_done || svcFresh.puntos_entrega || 1) - 1);
-    const c = DB.config;
-    const valPunto = DB.tarifarios.find(t => (t.cliente||'').toLowerCase().includes((s.cliente||'').toLowerCase().split(' ')[0]))?.valor_punto || 40000;
-    for(let pi=0; pi<nInts; pi++) {
-      puntos.push({tipo:'intermedio', destino:'Punto '+(pi+1), valor:valPunto, num_guia:''});
+    if(puntos.length === 0 && sv) {
+      const nInts = Math.max(0, (sv.puntos_entrega||1) - 1);
+      const vp = DB.tarifarios.find(t=>(t.cliente||'').toLowerCase().includes((s.cliente||'').toLowerCase().split(' ')[0]))?.valor_punto || 40000;
+      for(let pi=0; pi<nInts; pi++) puntos.push({tipo:'intermedio', destino:'Punto '+(pi+1), valor:vp, num_guia:''});
+      if(sv.destino||s.destino) puntos.push({tipo:'final', destino:sv.destino||s.destino||'—', valor:sv.tarifa_neta||s.tarifa_neta||0, num_guia:''});
+      if(sv.km_total) s.km_total = sv.km_total;
+      if(sv.dias_servicio) s.dias_servicio = sv.dias_servicio;
     }
-    if(svcFresh.destino || s.destino) {
-      puntos.push({tipo:'final', destino:svcFresh.destino||s.destino||'—', valor:svcFresh.tarifa_neta||s.tarifa_neta||0, num_guia:''});
-    }
-  }
-
-  // Update s with fresh data
-  if(svcFresh) {
-    s.km_total = svcFresh.km_total || s.km_total;
-    s.dias_servicio = svcFresh.dias_servicio || s.dias_servicio;
-    s.ingreso_total = svcFresh.ingreso_total || s.ingreso_total;
   }
   const final  = puntos.find(p => p.tipo==='final');
   const ints   = puntos.filter(p => p.tipo==='intermedio');
-  const tarifa   = final?.valor || s.tarifa_neta || 0;
+  const tarifa = final?.valor || s.tarifa_neta || 0;
   const valorPts = ints.reduce((a,p) => a+(p.valor||0), 0);
-  const ingreso  = s.ingreso_total || (tarifa + valorPts);
+  const ingreso  = tarifa + valorPts;
 
   let html = `
-  <div style="border:2px solid #1C2B4A;border-radius:8px;overflow:hidden;margin-bottom:16px">
+  <div style="border:2px solid var(--navy);border-radius:8px;overflow:hidden;margin-bottom:16px">
     <div style="background:#1C2B4A;color:white;padding:10px 14px;display:flex;justify-content:space-between;align-items:center">
       <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900">KAPTURA — INFORME DE SERVICIO</div>
       <div style="font-size:11px;opacity:0.7">${new Date().toLocaleDateString('es-CL')}</div>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;border-bottom:1px solid #DDE2EC">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;border-bottom:1px solid var(--g200)">
       ${infoRow('Servicio', s.servicio_id||'—')}
       ${infoRow('Estado', s.estado?.toUpperCase()||'—')}
       ${infoRow('Patente', s.patente||'—')}
@@ -1885,7 +1856,7 @@ async function abrirInforme(i) {
       ${infoRow('Cliente', s.cliente||'—')}
       ${infoRow('Origen', s.origen||'—')}
       ${infoRow('Fecha Inicio', s.fecha||'—')}
-      ${infoRow('Fecha Término', s._fecha_termino || (s.hora_termino ? s.hora_termino.split('T')[0] : '—'))}
+      ${infoRow('Fecha Término', s._fecha_termino||'—')}
       ${infoRow('Días en ruta', s.dias_servicio||'—')}
       ${infoRow('Km GPS', s.km_total ? s.km_total+' km' : '—')}
     </div>
@@ -1896,7 +1867,7 @@ async function abrirInforme(i) {
     📍 Puntos de Entrega
   </div>
   <table style="width:100%;border-collapse:collapse;margin-bottom:16px;font-size:11px">
-    <thead><tr style="background:#EEF1F6">
+    <thead><tr style="background:var(--g100)">
       <th style="padding:6px 8px;text-align:left;font-weight:800">Punto</th>
       <th style="padding:6px 8px;text-align:left;font-weight:800">Tipo</th>
       <th style="padding:6px 8px;text-align:left;font-weight:800">Destino</th>
@@ -1904,22 +1875,16 @@ async function abrirInforme(i) {
       <th style="padding:6px 8px;text-align:right;font-weight:800">Valor</th>
     </tr></thead>
     <tbody>
-      ${puntos.length > 0
-      ? puntos.map((p,i) => `<tr style="border-bottom:1px solid #EEF1F6">
-          <td style="padding:5px 8px;color:#2A3350">${i+1}</td>
-          <td style="padding:5px 8px;color:#2A3350">${p.tipo==='final'?'🏁 Final':'🔁 Intermedio'}</td>
-          <td style="padding:5px 8px;font-weight:700;color:#1C2B4A">${p.destino||'—'}</td>
-          <td style="padding:5px 8px;color:#2A3350">${p.num_guia||'—'}</td>
-          <td style="padding:5px 8px;text-align:right;font-weight:700;color:#065F46">${fmt(p.valor||0)}</td>
-        </tr>`).join('')
-      : `<tr><td colspan="5" style="padding:8px;color:#4E5A78;text-align:center">
-          ${nInts} puntos intermedios + destino ${s.destino||'—'}<br>
-          <small>Detalle disponible al ver servicio en proceso</small>
-        </td></tr>`
-    }
-      <tr style="background:#F5F7FA;font-weight:800">
-        <td colspan="4" style="padding:6px 8px;text-align:right;color:#1C2B4A;font-weight:800">TOTAL INGRESOS</td>
-        <td style="padding:6px 8px;text-align:right;color:#065F46;font-weight:800">${fmt(ingreso)}</td>
+      ${puntos.map((p,i) => `<tr style="border-bottom:1px solid var(--g100)">
+        <td style="padding:5px 8px">${i+1}</td>
+        <td style="padding:5px 8px">${p.tipo==='final'?'🏁 Final':'🔁 Intermedio'}</td>
+        <td style="padding:5px 8px;font-weight:700">${p.destino||'—'}</td>
+        <td style="padding:5px 8px">${p.num_guia||'—'}</td>
+        <td style="padding:5px 8px;text-align:right;font-weight:700">${fmt(p.valor||0)}</td>
+      </tr>`).join('')}
+      <tr style="background:var(--g50);font-weight:800">
+        <td colspan="4" style="padding:6px 8px;text-align:right">TOTAL INGRESOS</td>
+        <td style="padding:6px 8px;text-align:right;color:var(--navy)">${fmt(ingreso)}</td>
       </tr>
     </tbody>
   </table>
@@ -1938,7 +1903,7 @@ async function abrirInforme(i) {
       ${costoRow('Mantención', s.mantencion_prorrateada)}
       ${costoRow('Viático', s.costo_viaticos)}
       ${costoRow('Factoring', s.factoring)}
-      <tr style="background:#1C2B4A;color:white;font-weight:800">
+      <tr style="background:var(--navy);color:white;font-weight:800">
         <td style="padding:8px 12px">MARGEN SERVICIO</td>
         <td style="padding:8px 12px;text-align:right;font-size:14px">${fmt(s.margen_servicio||s.margen||0)}</td>
       </tr>
@@ -1965,76 +1930,9 @@ async function abrirInforme(i) {
       .order('datetime_evento', {ascending:true});
 
     if(eventos && eventos.length > 0) {
-      // Build map with Leaflet
-      try {
-        if(!document.getElementById('leaflet-css')) {
-          const lcss = document.createElement('link');
-          lcss.id = 'leaflet-css';
-          lcss.rel = 'stylesheet';
-          lcss.href = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css';
-          document.head.appendChild(lcss);
-        }
-        if(!window.L) {
-          await new Promise(res => {
-            const sc = document.createElement('script');
-            sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js';
-            sc.onload = res;
-            document.head.appendChild(sc);
-          });
-        }
-        const mapDiv = document.getElementById('inf-map');
-        if(mapDiv && window.L) {
-          mapDiv.innerHTML = '';
-          const map = L.map(mapDiv).setView([-34.2, -71.0], 8);
-          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap'
-          }).addTo(map);
-
-          const conocidos = {
-            'coltauco':[-34.282,-71.088],'casablanca':[-33.315,-71.407],
-            'san vicente':[-34.439,-71.086],'san fernando':[-34.585,-70.985],
-            'chepica':[-34.729,-71.036],'chépica':[-34.729,-71.036],
-            'donihue':[-34.397,-70.970],'doñihue':[-34.397,-70.970],
-            'rancagua':[-34.170,-70.740],'santiago':[-33.450,-70.667],
-            'pudahuel':[-33.457,-70.761],'paine':[-33.823,-70.740],
-            'mostazal':[-33.992,-70.697],'requinoa':[-34.283,-70.817],
-            'malloa':[-34.421,-70.939],'san francisco':[-34.585,-70.985],
-          };
-
-          const allPuntos = [{tipo:'origen', nombre:s.origen||'Origen'}, ...puntos.map(p=>({tipo:p.tipo, nombre:p.destino||'—', valor:p.valor||0}))];
-          const markers = [];
-
-          allPuntos.forEach((p, idx) => {
-            const key = (p.nombre||'').toLowerCase().trim().split(',')[0];
-            const coord = conocidos[key];
-            if(coord) {
-              const color = p.tipo==='origen' ? '#1C2B4A' : p.tipo==='final' ? '#E8192C' : '#F59E0B';
-              const label = idx === 0 ? 'B' : String(idx);
-              const divHtml = '<div style="background:' + color + ';color:white;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;border:2px solid white;box-shadow:0 2px 4px rgba(0,0,0,0.4)">' + label + '</div>';
-              const icon = L.divIcon({html: divHtml, iconSize:[26,26], iconAnchor:[13,13]});
-              const marker = L.marker(coord, {icon}).addTo(map);
-              marker.bindPopup('<strong>' + p.nombre + '</strong>');
-              markers.push(coord);
-            }
-          });
-
-          if(markers.length > 1) {
-            L.polyline(markers, {color:'#1E3A5F', weight:2, dashArray:'5,5'}).addTo(map);
-            const bounds = L.latLngBounds(markers);
-            map.fitBounds(bounds, {padding:[30,30]});
-          }
-        }
-      } catch(mapErr) {
-        console.warn('Map error:', mapErr);
-        const mapDiv = document.getElementById('inf-map');
-        if(mapDiv) mapDiv.innerHTML = '<div style="padding:20px;text-align:center;color:#8C96B0">Mapa no disponible</div>';
-      }
-        const mapDiv = document.getElementById('inf-map');
-        if(mapDiv) mapDiv.innerHTML = '<div style="padding:20px;text-align:center;color:#8C96B0">Mapa no disponible</div>';
-      }
       let acumMin = 0;
-      html += `<div style="overflow-x:auto"><table style="width:100%;min-width:700px;border-collapse:collapse;font-size:10px">
-        <thead><tr style="background:#1E3A5F;color:white">
+      html += `<table style="width:100%;border-collapse:collapse;font-size:10px">
+        <thead><tr style="background:var(--blue);color:white">
           <th style="padding:5px 6px;text-align:left">Hora</th>
           <th style="padding:5px 6px;text-align:left">Tipo</th>
           <th style="padding:5px 6px;text-align:left">Lugar</th>
@@ -2067,17 +1965,17 @@ async function abrirInforme(i) {
           <td style="padding:4px 6px;color:#2A3350">${tipo} ${e.evento}</td>
           <td style="padding:4px 6px;color:#2A3350">${addr}</td>
           <td style="padding:4px 6px;text-align:right;color:#2A3350">${e.km_tramo>0?e.km_tramo.toFixed(1):''}</td>
-          <td style="padding:4px 6px;font-size:9px;font-weight:700;color:#1E3A5F">${porticoLabel}</td>
+          <td style="padding:4px 6px;font-size:9px;color:#3730A3">${porticoLabel}</td>
           <td style="padding:4px 6px;text-align:right;color:#2A3350">${e.duracion||''}</td>
           <td style="padding:4px 6px;text-align:right;font-weight:700;color:#1C2B4A">${acumH}h ${String(acumM).padStart(2,'0')}m</td>
         </tr>`;
       }
-      html += '</tbody></table></div>';
+      html += '</tbody></table>';
     } else {
-      html += '<div style="color:#8C96B0;padding:10px">Sin datos GPS para este servicio</div>';
+      html += '<div style="color:var(--g400);padding:10px">Sin datos GPS para este servicio</div>';
     }
   } catch(e) {
-    html += `<div style="color:#8C96B0;padding:10px">Error cargando GPS: ${e.message}</div>`;
+    html += `<div style="color:var(--g400);padding:10px">Error cargando GPS: ${e.message}</div>`;
   }
 
   body.innerHTML = html;
