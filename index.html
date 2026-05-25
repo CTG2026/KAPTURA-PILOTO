@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>KAPTURA v6.1</title>
+<title>KAPTURA v6.2</title>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700;800;900&family=Barlow+Condensed:wght@600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -168,7 +168,7 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
     <!-- FILTRO Y ACCIONES -->
     <div class="filtro">
       <input type="date" id="filtro-fecha" onchange="renderServicios()">
-      <button class="btn btn-outline btn-sm" onclick="resetFecha()">Hoy</button>
+      <button class="btn btn-outline btn-sm" onclick="resetFecha()">Todos</button>
     </div>
     <div class="sec-hdr">
       <div class="sec-ttl">Servicios</div>
@@ -181,7 +181,7 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
     <!-- TABLA DESKTOP -->
     <div class="desk-tbl">
       <div style="overflow-x:auto"><table>
-        <thead><tr><th>ID</th><th>Fecha</th><th>Patente</th><th>Conductor</th><th>Cliente</th><th>Origen</th><th>Destino</th><th>Puntos</th><th>Tarifa</th><th>Costos</th><th>Margen</th><th>Estado</th><th>Acciones</th></tr></thead>
+        <thead><tr><th>ID</th><th>Fecha</th><th>Patente</th><th>Conductor</th><th>Cliente</th><th>Origen</th><th>Destino</th><th>Guía</th><th>Tarifa $</th><th>Puntos $</th><th>Total Ingreso</th><th>Costos</th><th>Margen</th><th>Estado</th><th>Acciones</th></tr></thead>
         <tbody id="tabla-svc"></tbody>
       </table></div>
     </div>
@@ -614,7 +614,7 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
 const SUPA_URL = 'https://aqunzrukuruwzwywnurq.supabase.co';
 const SUPA_KEY = 'sb_publishable_70t9UxFlcqYDj7AMybsrHg__IMGNA8C';
 const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
-const KAPTURA_VERSION = '6.1';
+const KAPTURA_VERSION = '6.2';
 const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 const hoy = new Date();
 const hoyStr = hoy.toISOString().split('T')[0];
@@ -631,7 +631,7 @@ async function init() {
     if(ck) localStorage.setItem('kaptura_claude_key', ck);
   }
 
-  document.getElementById('filtro-fecha').value = hoyStr;
+  document.getElementById('filtro-fecha').value = ''; // No default - show all
   document.getElementById('hdr-info').innerHTML =
     `${hoy.getDate()} ${MESES[hoy.getMonth()]} ${hoy.getFullYear()}`;
 
@@ -717,10 +717,11 @@ function renderKPIs() {
 }
 
 function renderServicios() {
-  const fecha = document.getElementById('filtro-fecha').value || hoyStr;
-  const svcs = DB.servicios.filter(s =>
-    (s.fecha||'').startsWith(fecha) || (s.created_at||'').startsWith(fecha)
-  );
+  const fecha = document.getElementById('filtro-fecha').value;
+  // If no date filter, show all services; if filtered, show that date
+  const svcs = fecha
+    ? DB.servicios.filter(s => (s.fecha||'').startsWith(fecha) || (s.created_at||'').startsWith(fecha))
+    : DB.servicios;
   const empty = document.getElementById('empty-svc');
 
   if(!svcs.length) {
@@ -1046,7 +1047,7 @@ function setTab(nombre, btn) {
 }
 
 function resetFecha() {
-  document.getElementById('filtro-fecha').value = hoyStr;
+  document.getElementById('filtro-fecha').value = ''; // No default - show all
   renderServicios();
 }
 
@@ -1856,7 +1857,7 @@ async function abrirInforme(i) {
       ${infoRow('Cliente', s.cliente||'—')}
       ${infoRow('Origen', s.origen||'—')}
       ${infoRow('Fecha Inicio', s.fecha||'—')}
-      ${infoRow('Fecha Término', s._fecha_termino||'—')}
+      ${infoRow('Fecha Término', s._fecha_termino || (s.hora_termino ? s.hora_termino.substring(0,10) : '—'))}
       ${infoRow('Días en ruta', s.dias_servicio||'—')}
       ${infoRow('Km GPS', s.km_total ? s.km_total+' km' : '—')}
     </div>
