@@ -1398,6 +1398,20 @@ function calcCostos() {
   const tag     = parseFloat(document.getElementById('cos-tag')?.value)||0;
   const peajes  = tag + (parseFloat(document.getElementById('cos-peajes').value)||0);
   const condVal  = dias * parseInt(c.sueldo_conductor||c.costo_conductor_dia||33000);
+  const cf       = dias * parseInt(c.costo_fijo||c.costo_fijo_dia||44000);
+  const mant     = dias * parseInt(c.mantencion||c.costo_mantencion||25000);
+  const viat     = dias * parseInt(c.viatico||c.costo_viatico||12000);
+  const plazo    = parseFloat(document.getElementById('cos-plazo').value??'0');
+
+  // Ingreso desde puntos — definir tarifa ANTES de usarla
+  const s = DB.servicios[svcActivoIdx];
+  const final = (s?._puntos||[]).find(p => p.tipo==='final');
+  const ints  = (s?._puntos||[]).filter(p => p.tipo==='intermedio');
+  const tarifa = final?.valor || s?.tarifa_neta || 0;
+  const valorPts = ints.reduce((a,p) => a+(p.valor||0), 0);
+  const ingreso  = tarifa + valorPts;
+  const factoring = plazo > 0 ? Math.round(tarifa * plazo / 100) : 0;
+
   // Auto-calcular comisión cuando GPS cargado (km > 0) y tarifa existe
   const comisionEl = document.getElementById('cos-comision');
   const kmVal = parseFloat(document.getElementById('cos-km')?.value)||0;
@@ -1406,25 +1420,12 @@ function calcCostos() {
     comisionEl.value = Math.round(tarifa * pctC);
   }
   const comision = parseFloat(comisionEl?.value)||0;
-  const cf       = dias * parseInt(c.costo_fijo||c.costo_fijo_dia||44000);
-  const mant     = dias * parseInt(c.mantencion||c.costo_mantencion||25000);
-  const viat     = dias * parseInt(c.viatico||c.costo_viatico||12000);
-  const plazo    = parseFloat(document.getElementById('cos-plazo').value??'0');
 
-  // Actualizar autos
+  // Actualizar campos auto
   document.getElementById('cos-conductor').value = fmt(condVal);
   document.getElementById('cos-cf').value        = fmt(cf);
   document.getElementById('cos-mant').value      = fmt(mant);
   document.getElementById('cos-viatico').value   = fmt(viat);
-
-  // Ingreso desde puntos
-  const s = DB.servicios[svcActivoIdx];
-  const final = (s?._puntos||[]).find(p => p.tipo==='final');
-  const ints  = (s?._puntos||[]).filter(p => p.tipo==='intermedio');
-  const tarifa = final?.valor || s?.tarifa_neta || 0;
-  const valorPts = ints.reduce((a,p) => a+(p.valor||0), 0);
-  const ingreso  = tarifa + valorPts;
-  const factoring = plazo > 0 ? Math.round(tarifa * plazo / 100) : 0;
 
   document.getElementById('cos-factoring').value = fmt(factoring);
   document.getElementById('cos-ingreso').textContent = fmt(ingreso);
