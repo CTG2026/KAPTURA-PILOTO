@@ -1446,7 +1446,8 @@ async function irACostos() {
   document.getElementById('cos-ingreso').textContent = fmt(tarifa + valorPuntos);
 
   // Comisión: se calcula al integrar GPS, no al abrir
-  document.getElementById('cos-comision').value = 0;
+  const cosComEl = document.getElementById('cos-comision');
+  if(cosComEl) cosComEl.value = 0;
 
   calcCostos();
   cerrar('modal-registrar');
@@ -1468,7 +1469,13 @@ function calcCostos() {
   const tag     = parseFloat(document.getElementById('cos-tag')?.value)||0;
   const peajes  = tag + (parseFloat(document.getElementById('cos-peajes').value)||0);
   const condVal  = dias * parseInt(c.sueldo_conductor||c.costo_conductor_dia||33000);
-  let comision = parseFloat(document.getElementById('cos-comision').value)||0;
+  // Auto-set comision when GPS loaded and tarifa exists
+  const comisionEl = document.getElementById('cos-comision');
+  const kmLoaded = parseFloat(document.getElementById('cos-km')?.value)||0;
+  if(kmLoaded > 0 && tarifa > 0 && (!comisionEl.value || parseFloat(comisionEl.value)===0)) {
+    comisionEl.value = Math.round(tarifa * (parseFloat(c.comision_conductor||8)/100));
+  }
+  let comision = parseFloat(comisionEl?.value)||0;
   const cf       = dias * parseInt(c.costo_fijo||c.costo_fijo_dia||44000);
   const mant     = dias * parseInt(c.mantencion||c.costo_mantencion||25000);
   const viat     = dias * parseInt(c.viatico||c.costo_viatico||12000);
@@ -1489,13 +1496,7 @@ function calcCostos() {
   const ingreso  = tarifa + valorPts;
   const factoring = plazo > 0 ? Math.round(tarifa * plazo / 100) : 0;
 
-  // Auto-calcular comisión al integrar GPS (km>0 y tarifa>0 y comision=0)
-  const comisionEl = document.getElementById('cos-comision');
-  if(km > 0 && tarifa > 0 && (!comisionEl.value || parseFloat(comisionEl.value) === 0)) {
-    const pctC = parseFloat(c.comision_conductor||8) / 100;
-    comisionEl.value = Math.round(tarifa * pctC);
-  }
-  comision = parseFloat(comisionEl.value)||0;
+  comision = parseFloat(document.getElementById('cos-comision')?.value)||0;
 
   document.getElementById('cos-factoring').value = fmt(factoring);
   document.getElementById('cos-ingreso').textContent = fmt(ingreso);
@@ -1719,7 +1720,13 @@ async function guardarCostosBorrador() {
   const prec = parseFloat(c.precio_litro||1300);
   const comb = km ? Math.round((km/rend)*prec) : 0;
   const condVal = dias*parseInt(c.sueldo_conductor||33000);
-  let comision = parseFloat(document.getElementById('cos-comision').value)||0;
+  // Auto-set comision when GPS loaded and tarifa exists
+  const comisionEl = document.getElementById('cos-comision');
+  const kmLoaded = parseFloat(document.getElementById('cos-km')?.value)||0;
+  if(kmLoaded > 0 && tarifa > 0 && (!comisionEl.value || parseFloat(comisionEl.value)===0)) {
+    comisionEl.value = Math.round(tarifa * (parseFloat(c.comision_conductor||8)/100));
+  }
+  let comision = parseFloat(comisionEl?.value)||0;
   const cf   = dias*parseInt(c.costo_fijo||44000);
   const mant = dias*parseInt(c.mantencion||25000);
   const viat = dias*parseInt(c.viatico||12000);
@@ -1789,9 +1796,9 @@ async function guardarEjecucion() {
   const retorno   = document.getElementById('ejec-retorno').value;
 
   const {error} = await supa.from('servicios_piloto').update({
-    estado: 'ejecutado', // pasa a coordinador para cierre
+    estado: 'ejecutado',
     hora_termino: fechaTerm ? fechaTerm + 'T23:59:00' : null,
-    notas: `Retorno: ${retorno}`
+    notas: 'Retorno: ' + retorno + '|PUNTOS:' + JSON.stringify((s._puntos||[]).map(p=>({tipo:p.tipo,destino:p.destino,valor:p.valor||0,num_guia:p.num_guia||''})))
   }).eq('id', s.id);
 
   if(error) { toast('Error: ' + error.message); return; }
