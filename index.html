@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>KAPTURA v6.3</title>
+<title>KAPTURA v6.4</title>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700;800;900&family=Barlow+Condensed:wght@600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -616,7 +616,7 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
 const SUPA_URL = 'https://aqunzrukuruwzwywnurq.supabase.co';
 const SUPA_KEY = 'sb_publishable_70t9UxFlcqYDj7AMybsrHg__IMGNA8C';
 const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
-const KAPTURA_VERSION = '6.3';
+const KAPTURA_VERSION = '6.4';
 const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 const hoy = new Date();
 const hoyStr = hoy.toISOString().split('T')[0];
@@ -764,7 +764,10 @@ function filaHTML(s,i) {
   const destino   = pFinal?.destino || s.destino || '—';
   const guia      = [...pInts,(pFinal||{})].find(p=>p.num_guia)?.num_guia || s.num_guia || '—';
   const tarifa    = s.tarifa_neta ? fmt(s.tarifa_neta) : '—';
-  const totalIng  = s.ingreso_total ? fmt(s.ingreso_total) : tarifa;
+  // Total ingreso = saved ingreso_total OR tarifa + puntos
+  const ptsVal    = pInts.reduce((a,p)=>a+(p.valor||0),0);
+  const totalIngVal = s.ingreso_total || ((s.tarifa_neta||0) + ptsVal) || 0;
+  const totalIng  = totalIngVal ? fmt(totalIngVal) : '—';
   const costos    = s.total_costos ? fmt(s.total_costos) : '—';
   const margen    = (s.margen_servicio||s.margen) ? fmt(s.margen_servicio||s.margen) : '—';
   const mColor    = (s.margen_servicio||s.margen||0)>=0 ? '#065F46' : '#B91C1C';
@@ -1419,6 +1422,22 @@ async function irACostos() {
   document.getElementById('cos-mant').value     = fmt(dias * parseInt(c.mantencion||c.costo_mantencion||25000));
   document.getElementById('cos-viatico').value  = fmt(dias * parseInt(c.viatico||c.costo_viatico||12000));
 
+  // Load puntos from Supabase if not in memory
+  if(!s._puntos || s._puntos.length === 0) {
+    const {data:sv} = await supa.from('servicios_piloto')
+      .select('notas,tarifa_neta,ingreso_total,puntos_entrega,destino')
+      .eq('id', s.id).single();
+    if(sv?.notas?.includes('|PUNTOS:')) {
+      try { s._puntos = JSON.parse(sv.notas.split('|PUNTOS:')[1]); } catch(e) {}
+    }
+    if((!s._puntos||s._puntos.length===0) && sv) {
+      const nInts = Math.max(0,(sv.puntos_entrega||1)-1);
+      const vp = DB.tarifarios.find(t=>(t.cliente||'').toLowerCase().includes((s.cliente||'').toLowerCase().split(' ')[0]))?.valor_punto||40000;
+      s._puntos = [];
+      for(let pi=0;pi<nInts;pi++) s._puntos.push({tipo:'intermedio',destino:'Punto '+(pi+1),valor:vp,num_guia:''});
+      if(sv.destino||s.destino) s._puntos.push({tipo:'final',destino:sv.destino||s.destino||'—',valor:sv.tarifa_neta||s.tarifa_neta||0,num_guia:''});
+    }
+  }
   // Tarifa desde puntos
   const final = (s._puntos||[]).find(p => p.tipo==='final');
   const intermedios = (s._puntos||[]).filter(p => p.tipo==='intermedio');
