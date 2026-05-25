@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>KAPTURA v5.7</title>
+<title>KAPTURA v5.8</title>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700;800;900&family=Barlow+Condensed:wght@600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -587,6 +587,26 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
   </div>
 </div>
 
+
+<!-- ══ MODAL INFORME SERVICIO ══ -->
+<div class="overlay" id="modal-informe" style="display:none">
+  <div class="modal" style="max-width:800px">
+    <div class="modal-hdr">
+      <div>
+        <div class="modal-ttl">Informe de Servicio — <span id="inf-id"></span></div>
+        <div class="modal-sub" id="inf-sub"></div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn btn-navy btn-sm" onclick="imprimirInforme()">🖨 Imprimir</button>
+        <button class="modal-cls" onclick="cerrar('modal-informe')">✕</button>
+      </div>
+    </div>
+    <div class="modal-body" id="inf-body" style="font-size:12px">
+      <!-- contenido dinámico -->
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -594,7 +614,7 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
 const SUPA_URL = 'https://aqunzrukuruwzwywnurq.supabase.co';
 const SUPA_KEY = 'sb_publishable_70t9UxFlcqYDj7AMybsrHg__IMGNA8C';
 const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
-const KAPTURA_VERSION = '5.7';
+const KAPTURA_VERSION = '5.8';
 const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 const hoy = new Date();
 const hoyStr = hoy.toISOString().split('T')[0];
@@ -1744,9 +1764,9 @@ async function cerrarServicio() {
   const s = DB.servicios[svcActivoIdx];
   if(!s?.id) return;
   if(!confirm(`¿Cerrar definitivamente el servicio ${s.servicio_id}? Esta acción es inamovible.`)) return;
-  const {error} = await supa.from('servicios_piloto').update({estado:'confirmado'}).eq('id',s.id);
+  const {error} = await supa.from('servicios_piloto').update({estado:'cerrado'}).eq('id',s.id);
   if(error) { toast('Error: '+error.message); return; }
-  DB.servicios[svcActivoIdx].estado = 'confirmado';
+  DB.servicios[svcActivoIdx].estado = 'cerrado';
   cerrar('modal-costos');
   renderServicios(); renderKPIs();
   toast(`🔒 ${s.servicio_id} CERRADO`);
@@ -1762,6 +1782,183 @@ function abrirCierre(i) {
 function abrirInforme(i) {
   const s = DB.servicios[i];
   toast(`📄 Informe ${s.servicio_id} — disponible en próxima versión`);
+}
+
+
+// ══ INFORME DE SERVICIO ══
+async function abrirInforme(i) {
+  const s = DB.servicios[i];
+  if(!s) return;
+
+  document.getElementById('inf-id').textContent  = s.servicio_id||'—';
+  document.getElementById('inf-sub').textContent = `${s.patente} · ${s.conductor} · ${s.cliente}`;
+
+  const body = document.getElementById('inf-body');
+  body.innerHTML = '<div style="text-align:center;padding:20px;color:var(--g400)">Cargando...</div>';
+  document.getElementById('modal-informe').style.display = 'flex';
+
+  // Build informe HTML
+  const puntos = s._puntos || [];
+  const final  = puntos.find(p => p.tipo==='final');
+  const ints   = puntos.filter(p => p.tipo==='intermedio');
+  const tarifa = final?.valor || s.tarifa_neta || 0;
+  const valorPts = ints.reduce((a,p) => a+(p.valor||0), 0);
+  const ingreso  = tarifa + valorPts;
+
+  let html = `
+  <div style="border:2px solid var(--navy);border-radius:8px;overflow:hidden;margin-bottom:16px">
+    <div style="background:var(--navy);color:white;padding:10px 14px;display:flex;justify-content:space-between;align-items:center">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900">KAPTURA — INFORME DE SERVICIO</div>
+      <div style="font-size:11px;opacity:0.7">${new Date().toLocaleDateString('es-CL')}</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;border-bottom:1px solid var(--g200)">
+      ${infoRow('Servicio', s.servicio_id||'—')}
+      ${infoRow('Estado', s.estado?.toUpperCase()||'—')}
+      ${infoRow('Patente', s.patente||'—')}
+      ${infoRow('Conductor', s.conductor||'—')}
+      ${infoRow('Cliente', s.cliente||'—')}
+      ${infoRow('Origen', s.origen||'—')}
+      ${infoRow('Fecha Inicio', s.fecha||'—')}
+      ${infoRow('Fecha Término', s._fecha_termino||'—')}
+      ${infoRow('Días en ruta', s.dias_servicio||'—')}
+      ${infoRow('Km GPS', s.km_total ? s.km_total+' km' : '—')}
+    </div>
+  </div>
+
+  <!-- PUNTOS DE ENTREGA -->
+  <div style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:var(--navy);padding:6px 0 5px;border-bottom:2px solid var(--blue);margin-bottom:8px">
+    📍 Puntos de Entrega
+  </div>
+  <table style="width:100%;border-collapse:collapse;margin-bottom:16px;font-size:11px">
+    <thead><tr style="background:var(--g100)">
+      <th style="padding:6px 8px;text-align:left;font-weight:800">Punto</th>
+      <th style="padding:6px 8px;text-align:left;font-weight:800">Tipo</th>
+      <th style="padding:6px 8px;text-align:left;font-weight:800">Destino</th>
+      <th style="padding:6px 8px;text-align:left;font-weight:800">N° Guía</th>
+      <th style="padding:6px 8px;text-align:right;font-weight:800">Valor</th>
+    </tr></thead>
+    <tbody>
+      ${puntos.map((p,i) => `<tr style="border-bottom:1px solid var(--g100)">
+        <td style="padding:5px 8px">${i+1}</td>
+        <td style="padding:5px 8px">${p.tipo==='final'?'🏁 Final':'🔁 Intermedio'}</td>
+        <td style="padding:5px 8px;font-weight:700">${p.destino||'—'}</td>
+        <td style="padding:5px 8px">${p.num_guia||'—'}</td>
+        <td style="padding:5px 8px;text-align:right;font-weight:700">${fmt(p.valor||0)}</td>
+      </tr>`).join('')}
+      <tr style="background:var(--g50);font-weight:800">
+        <td colspan="4" style="padding:6px 8px;text-align:right">TOTAL INGRESOS</td>
+        <td style="padding:6px 8px;text-align:right;color:var(--navy)">${fmt(ingreso)}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- COSTOS -->
+  <div style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:var(--navy);padding:6px 0 5px;border-bottom:2px solid var(--blue);margin-bottom:8px">
+    ⚙ Costos del Servicio
+  </div>
+  <table style="width:100%;border-collapse:collapse;margin-bottom:16px;font-size:11px">
+    <tbody>
+      ${costoRow('Combustible', s.costo_combustible)}
+      ${costoRow('TAG Autopista', s.peajes_tag)}
+      ${costoRow('Costo Conductor', s.costo_conductor)}
+      ${costoRow('Comisión Conductor', s.costo_conductor ? Math.round((s.tarifa_neta||0)*0.08) : null)}
+      ${costoRow('Costo Fijo', s.costo_fijo_dia)}
+      ${costoRow('Mantención', s.mantencion_prorrateada)}
+      ${costoRow('Viático', s.costo_viaticos)}
+      ${costoRow('Factoring', s.factoring)}
+      <tr style="background:var(--navy);color:white;font-weight:800">
+        <td style="padding:8px 12px">MARGEN SERVICIO</td>
+        <td style="padding:8px 12px;text-align:right;font-size:14px">${fmt(s.margen_servicio||s.margen||0)}</td>
+      </tr>
+    </tbody>
+  </table>`;
+
+  // TIMELINE GPS
+  html += `
+  <div style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:var(--navy);padding:6px 0 5px;border-bottom:2px solid var(--blue);margin-bottom:8px">
+    🗺 Timeline de Ruta (GPS)
+  </div>`;
+
+  try {
+    const {data:eventos} = await supa.from('kaptura_gps_eventos')
+      .select('*')
+      .eq('patente', s.patente)
+      .gte('fecha', s.fecha)
+      .lte('fecha', s._fecha_termino || s.fecha)
+      .order('datetime_evento', {ascending:true});
+
+    if(eventos && eventos.length > 0) {
+      let acumMin = 0;
+      html += `<table style="width:100%;border-collapse:collapse;font-size:10px">
+        <thead><tr style="background:var(--blue);color:white">
+          <th style="padding:5px 6px;text-align:left">Hora</th>
+          <th style="padding:5px 6px;text-align:left">Tipo</th>
+          <th style="padding:5px 6px;text-align:left">Lugar</th>
+          <th style="padding:5px 6px;text-align:right">Km</th>
+          <th style="padding:5px 6px;text-align:right">Duración</th>
+          <th style="padding:5px 6px;text-align:right">Acum.</th>
+        </tr></thead><tbody>`;
+
+      for(const e of eventos) {
+        const hora = (e.datetime_evento||'').split('T')[1]?.substring(0,5)||'—';
+        const tipo = e.evento==='trip' ? '🚗' : '⏸';
+        const addr = (e.address||'').split(',')[0];
+        const durMin = parseDuracion(e.duracion||'');
+        acumMin += durMin;
+        const acumH = Math.floor(acumMin/60);
+        const acumM = acumMin%60;
+        html += `<tr style="border-bottom:1px solid var(--g100);${e.evento==='trip'?'':'background:var(--g50)'}">
+          <td style="padding:4px 6px;font-weight:700">${hora}</td>
+          <td style="padding:4px 6px">${tipo} ${e.evento}</td>
+          <td style="padding:4px 6px">${addr}</td>
+          <td style="padding:4px 6px;text-align:right">${e.km_tramo>0?e.km_tramo.toFixed(1):''}</td>
+          <td style="padding:4px 6px;text-align:right">${e.duracion||''}</td>
+          <td style="padding:4px 6px;text-align:right;font-weight:700">${acumH}h ${String(acumM).padStart(2,'0')}m</td>
+        </tr>`;
+      }
+      html += '</tbody></table>';
+    } else {
+      html += '<div style="color:var(--g400);padding:10px">Sin datos GPS para este servicio</div>';
+    }
+  } catch(e) {
+    html += `<div style="color:var(--g400);padding:10px">Error cargando GPS: ${e.message}</div>`;
+  }
+
+  body.innerHTML = html;
+}
+
+function infoRow(label, val) {
+  return `<div style="padding:7px 12px;border-right:1px solid var(--g200);border-bottom:1px solid var(--g200)">
+    <div style="font-size:9px;font-weight:800;color:var(--g400);letter-spacing:0.1em;text-transform:uppercase">${label}</div>
+    <div style="font-weight:700;color:var(--navy);margin-top:2px">${val}</div>
+  </div>`;
+}
+
+function costoRow(label, val) {
+  if(!val && val!==0) return '';
+  return `<tr style="border-bottom:1px solid var(--g100)">
+    <td style="padding:5px 12px">${label}</td>
+    <td style="padding:5px 12px;text-align:right;font-weight:700">${fmt(val)}</td>
+  </tr>`;
+}
+
+function parseDuracion(s) {
+  let total = 0;
+  const d = s.match(/(\d+)\s*d/); if(d) total += parseInt(d[1])*1440;
+  const h = s.match(/(\d+)\s*h/); if(h) total += parseInt(h[1])*60;
+  const m = s.match(/(\d+)\s*min/); if(m) total += parseInt(m[1]);
+  return total;
+}
+
+function imprimirInforme() {
+  const body = document.getElementById('inf-body').innerHTML;
+  const win = window.open('','_blank');
+  win.document.write(`<html><head><title>Informe Kaptura</title>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>body{font-family:'Barlow',sans-serif;font-size:11px;padding:20px}table{width:100%;border-collapse:collapse}@media print{button{display:none}}</style>
+  </head><body>${body}</body></html>`);
+  win.document.close();
+  setTimeout(() => win.print(), 500);
 }
 
 init();
