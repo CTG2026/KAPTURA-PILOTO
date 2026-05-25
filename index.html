@@ -1398,12 +1398,19 @@ function calcCostos() {
   const tag     = parseFloat(document.getElementById('cos-tag')?.value)||0;
   const peajes  = tag + (parseFloat(document.getElementById('cos-peajes').value)||0);
   const condVal  = dias * parseInt(c.sueldo_conductor||c.costo_conductor_dia||33000);
+  let comision = parseFloat(document.getElementById('cos-comision').value)||0;
   const cf       = dias * parseInt(c.costo_fijo||c.costo_fijo_dia||44000);
   const mant     = dias * parseInt(c.mantencion||c.costo_mantencion||25000);
   const viat     = dias * parseInt(c.viatico||c.costo_viatico||12000);
   const plazo    = parseFloat(document.getElementById('cos-plazo').value??'0');
 
-  // Ingreso desde puntos — definir tarifa ANTES de usarla
+  // Actualizar autos
+  document.getElementById('cos-conductor').value = fmt(condVal);
+  document.getElementById('cos-cf').value        = fmt(cf);
+  document.getElementById('cos-mant').value      = fmt(mant);
+  document.getElementById('cos-viatico').value   = fmt(viat);
+
+  // Ingreso desde puntos
   const s = DB.servicios[svcActivoIdx];
   const final = (s?._puntos||[]).find(p => p.tipo==='final');
   const ints  = (s?._puntos||[]).filter(p => p.tipo==='intermedio');
@@ -1412,20 +1419,13 @@ function calcCostos() {
   const ingreso  = tarifa + valorPts;
   const factoring = plazo > 0 ? Math.round(tarifa * plazo / 100) : 0;
 
-  // Auto-calcular comisión cuando GPS cargado (km > 0) y tarifa existe
+  // Auto-calcular comisión al integrar GPS (km>0 y tarifa>0 y comision=0)
   const comisionEl = document.getElementById('cos-comision');
-  const kmVal = parseFloat(document.getElementById('cos-km')?.value)||0;
-  if(kmVal > 0 && tarifa > 0 && (!comisionEl.value || parseFloat(comisionEl.value) === 0)) {
+  if(km > 0 && tarifa > 0 && (!comisionEl.value || parseFloat(comisionEl.value) === 0)) {
     const pctC = parseFloat(c.comision_conductor||8) / 100;
     comisionEl.value = Math.round(tarifa * pctC);
   }
-  const comision = parseFloat(comisionEl?.value)||0;
-
-  // Actualizar campos auto
-  document.getElementById('cos-conductor').value = fmt(condVal);
-  document.getElementById('cos-cf').value        = fmt(cf);
-  document.getElementById('cos-mant').value      = fmt(mant);
-  document.getElementById('cos-viatico').value   = fmt(viat);
+  comision = parseFloat(comisionEl.value)||0;
 
   document.getElementById('cos-factoring').value = fmt(factoring);
   document.getElementById('cos-ingreso').textContent = fmt(ingreso);
@@ -1649,7 +1649,7 @@ async function guardarCostosBorrador() {
   const prec = parseFloat(c.precio_litro||1300);
   const comb = km ? Math.round((km/rend)*prec) : 0;
   const condVal = dias*parseInt(c.sueldo_conductor||33000);
-  const comision = parseFloat(document.getElementById('cos-comision').value)||0;
+  let comision = parseFloat(document.getElementById('cos-comision').value)||0;
   const cf   = dias*parseInt(c.costo_fijo||44000);
   const mant = dias*parseInt(c.mantencion||25000);
   const viat = dias*parseInt(c.viatico||12000);
