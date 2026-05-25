@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>KAPTURA v6.0</title>
+<title>KAPTURA v6.2</title>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700;800;900&family=Barlow+Condensed:wght@600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -614,7 +614,7 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
 const SUPA_URL = 'https://aqunzrukuruwzwywnurq.supabase.co';
 const SUPA_KEY = 'sb_publishable_70t9UxFlcqYDj7AMybsrHg__IMGNA8C';
 const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
-const KAPTURA_VERSION = '6.0';
+const KAPTURA_VERSION = '6.2';
 const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 const hoy = new Date();
 const hoyStr = hoy.toISOString().split('T')[0];
@@ -1684,12 +1684,18 @@ async function guardarCostosBorrador() {
   const costos  = comb+peajes+condVal+comision+cf+mant+viat+fact;
   const margen  = ingreso - costos;
 
+  // Save puntos as JSON for informe
+  const puntosJSON = JSON.stringify((s._puntos||[]).map(p=>({
+    tipo:p.tipo, destino:p.destino, valor:p.valor||0, num_guia:p.num_guia||''
+  })));
+
   const {error} = await supa.from('servicios_piloto').update({
     estado:'borrador', km_total:km, costo_peajes:peajes, peajes_tag:peajes,
     tarifa_neta:tarifa, dias_servicio:dias, costo_combustible:comb,
     costo_conductor:condVal, costo_viaticos:viat, costo_fijo_dia:cf,
     costo_mantencion:mant, factoring:fact, total_costos:costos,
-    margen_servicio:margen, margen:margen, ingreso_total:ingreso
+    margen_servicio:margen, margen:margen, ingreso_total:ingreso,
+    notas: (s.notas||'') + '|PUNTOS:' + puntosJSON
   }).eq('id',s.id);
 
   if(error) { toast('Error: '+error.message); return; }
@@ -1803,12 +1809,32 @@ async function abrirInforme(i) {
   document.getElementById('modal-informe').style.display = 'flex';
 
   // Build informe HTML
-  const puntos = s._puntos || [];
+  // Parse puntos from notas field if _puntos not in memory
+  let puntos = s._puntos || [];
+  if(puntos.length === 0 && s.notas && s.notas.includes('|PUNTOS:')) {
+    try {
+      const puntosStr = s.notas.split('|PUNTOS:')[1];
+      puntos = JSON.parse(puntosStr);
+    } catch(e) {}
+  }
+  // If still empty, fetch from Supabase
+  if(puntos.length === 0) {
+    const {data:svcFresh} = await supa.from('servicios_piloto')
+      .select('notas,tarifa_neta,ingreso_total,puntos_entrega,destino')
+      .eq('id', s.id).single();
+    if(svcFresh?.notas?.includes('|PUNTOS:')) {
+      try { puntos = JSON.parse(svcFresh.notas.split('|PUNTOS:')[1]); } catch(e) {}
+    }
+    if(puntos.length === 0 && svcFresh) {
+      // Build minimal puntos from available data
+      const nIntsCalc = Math.max(0, (svcFresh.puntos_entrega||1) - 1);
+      for(let pi=0; pi<nIntsCalc; pi++) puntos.push({tipo:'intermedio', destino:'Punto '+(pi+1), valor:0, num_guia:''});
+      if(svcFresh.destino) puntos.push({tipo:'final', destino:svcFresh.destino, valor:svcFresh.tarifa_neta||0, num_guia:''});
+    }
+  }
   const final  = puntos.find(p => p.tipo==='final');
   const ints   = puntos.filter(p => p.tipo==='intermedio');
-  // Fallback desde Supabase si _puntos no está en memoria
   const tarifa   = final?.valor || s.tarifa_neta || 0;
-  const nInts    = ints.length || Math.max(0, (s.puntos_entrega||1) - 1);
   const valorPts = ints.reduce((a,p) => a+(p.valor||0), 0);
   const ingreso  = s.ingreso_total || (tarifa + valorPts);
 
@@ -1906,6 +1932,73 @@ async function abrirInforme(i) {
       .order('datetime_evento', {ascending:true});
 
     if(eventos && eventos.length > 0) {
+      // Build map with Leaflet
+      try {
+        if(!document.getElementById('leaflet-css')) {
+          const lcss = document.createElement('link');
+          lcss.id = 'leaflet-css';
+          lcss.rel = 'stylesheet';
+          lcss.href = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css';
+          document.head.appendChild(lcss);
+        }
+        if(!window.L) {
+          await new Promise(res => {
+            const sc = document.createElement('script');
+            sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js';
+            sc.onload = res;
+            document.head.appendChild(sc);
+          });
+        }
+        const mapDiv = document.getElementById('inf-map');
+        if(mapDiv && window.L) {
+          mapDiv.innerHTML = '';
+          const map = L.map(mapDiv).setView([-34.2, -71.0], 8);
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap'
+          }).addTo(map);
+
+          const conocidos = {
+            'coltauco':[-34.282,-71.088],'casablanca':[-33.315,-71.407],
+            'san vicente':[-34.439,-71.086],'san fernando':[-34.585,-70.985],
+            'chepica':[-34.729,-71.036],'chépica':[-34.729,-71.036],
+            'donihue':[-34.397,-70.970],'doñihue':[-34.397,-70.970],
+            'rancagua':[-34.170,-70.740],'santiago':[-33.450,-70.667],
+            'pudahuel':[-33.457,-70.761],'paine':[-33.823,-70.740],
+            'mostazal':[-33.992,-70.697],'requinoa':[-34.283,-70.817],
+            'malloa':[-34.421,-70.939],'san francisco':[-34.585,-70.985],
+          };
+
+          const allPuntos = [{tipo:'origen', nombre:s.origen||'Origen'}, ...puntos.map(p=>({tipo:p.tipo, nombre:p.destino||'—', valor:p.valor||0}))];
+          const markers = [];
+
+          allPuntos.forEach((p, idx) => {
+            const key = (p.nombre||'').toLowerCase().trim().split(',')[0];
+            const coord = conocidos[key];
+            if(coord) {
+              const color = p.tipo==='origen' ? '#1C2B4A' : p.tipo==='final' ? '#E8192C' : '#F59E0B';
+              const label = idx === 0 ? 'B' : String(idx);
+              const divHtml = '<div style="background:' + color + ';color:white;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;border:2px solid white;box-shadow:0 2px 4px rgba(0,0,0,0.4)">' + label + '</div>';
+              const icon = L.divIcon({html: divHtml, iconSize:[26,26], iconAnchor:[13,13]});
+              const marker = L.marker(coord, {icon}).addTo(map);
+              marker.bindPopup('<strong>' + p.nombre + '</strong>');
+              markers.push(coord);
+            }
+          });
+
+          if(markers.length > 1) {
+            L.polyline(markers, {color:'#1E3A5F', weight:2, dashArray:'5,5'}).addTo(map);
+            const bounds = L.latLngBounds(markers);
+            map.fitBounds(bounds, {padding:[30,30]});
+          }
+        }
+      } catch(mapErr) {
+        console.warn('Map error:', mapErr);
+        const mapDiv = document.getElementById('inf-map');
+        if(mapDiv) mapDiv.innerHTML = '<div style="padding:20px;text-align:center;color:#8C96B0">Mapa no disponible</div>';
+      }
+        const mapDiv = document.getElementById('inf-map');
+        if(mapDiv) mapDiv.innerHTML = '<div style="padding:20px;text-align:center;color:#8C96B0">Mapa no disponible</div>';
+      }
       let acumMin = 0;
       html += `<div style="overflow-x:auto"><table style="width:100%;min-width:700px;border-collapse:collapse;font-size:10px">
         <thead><tr style="background:#1E3A5F;color:white">
