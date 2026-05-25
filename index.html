@@ -633,7 +633,7 @@ async function init() {
     if(ck) localStorage.setItem('kaptura_claude_key', ck);
   }
 
-  document.getElementById('filtro-fecha').value = ''; // show all by default
+  document.getElementById('filtro-fecha').value = '';
   document.getElementById('hdr-info').innerHTML =
     `${hoy.getDate()} ${MESES[hoy.getMonth()]} ${hoy.getFullYear()}`;
 
@@ -762,7 +762,7 @@ function filaHTML(s,i) {
   const cantPtos  = pInts.length || '—';
   const totalPtos = pInts.length ? fmt(pInts.reduce((a,p)=>a+(p.valor||0),0)) : '—';
   const destino   = pFinal?.destino || s.destino || '—';
-  const guia      = pInts.concat(pFinal||[]).find(p=>p.num_guia)?.num_guia || s.num_guia || '—';
+  const guia      = [...pInts,(pFinal||{})].find(p=>p.num_guia)?.num_guia || s.num_guia || '—';
   const tarifa    = s.tarifa_neta ? fmt(s.tarifa_neta) : '—';
   const totalIng  = s.ingreso_total ? fmt(s.ingreso_total) : tarifa;
   const costos    = s.total_costos ? fmt(s.total_costos) : '—';
@@ -1056,7 +1056,7 @@ function setTab(nombre, btn) {
 }
 
 function resetFecha() {
-  document.getElementById('filtro-fecha').value = ''; // show all by default
+  document.getElementById('filtro-fecha').value = '';
   renderServicios();
 }
 
