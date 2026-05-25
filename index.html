@@ -34,7 +34,7 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
 
 /* KPIs */
 .kpis{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
-@media(min-width:768px){.kpis{grid-template-columns:repeat(5,1fr)}}
+@media(min-width:768px){.kpis{grid-template-columns:repeat(7,1fr)}}
 .kpi{background:var(--white);border-radius:8px;padding:12px 14px;box-shadow:var(--sh);border:1px solid var(--g200);position:relative;overflow:hidden}
 .kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--navy)}
 .kpi.orange::before{background:var(--orange)}.kpi.green::before{background:var(--green)}.kpi.red::before{background:var(--red)}
@@ -695,9 +695,31 @@ function renderKPIs() {
   document.getElementById('k-margen-sub').textContent =
     `${conf.length} servicios · ${MESES[mes]}`;
   document.getElementById('k-prom').textContent = fmt(pr);
+
+  // Ingreso mes
   const ingresoTotal = conf.reduce((a,s) => a+(s.ingreso_total||s.tarifa_neta||0), 0);
   document.getElementById('k-ingreso').textContent = fmt(ingresoTotal);
   document.getElementById('k-ingreso-sub').textContent = `${conf.length} servicios · ${MESES[mes]}`;
+
+  // Costos mes
+  const costosTotal = conf.reduce((a,s) => a+(s.total_costos||0), 0);
+  const costosSub = document.getElementById('k-costos-sub');
+  document.getElementById('k-costos').textContent = fmt(costosTotal);
+  if(costosSub) costosSub.textContent = `${MESES[mes]}`;
+
+  // Ejecutados hoy y mes
+  const ejecutadosHoy = DB.servicios.filter(s => {
+    const f = (s.created_at||'').startsWith(hoyStr) || (s.fecha||'').startsWith(hoyStr);
+    return f && ['ejecutado','borrador','confirmado','cerrado'].includes(s.estado);
+  }).length;
+  const ejecutadosMes = DB.servicios.filter(s => {
+    const f = new Date(s.created_at||'2026-01-01');
+    return f.getMonth()===mes && ['ejecutado','borrador','confirmado','cerrado'].includes(s.estado);
+  }).length;
+  const ejHoyEl = document.getElementById('k-ejec-hoy');
+  const ejMesEl = document.getElementById('k-ejec-mes');
+  if(ejHoyEl) ejHoyEl.textContent = ejecutadosHoy;
+  if(ejMesEl) ejMesEl.textContent = `${ejecutadosMes} este mes`;
 }
 
 function renderServicios() {
@@ -1810,27 +1832,38 @@ async function abrirInforme(i) {
 
   // Build informe HTML
   // Parse puntos from notas field if _puntos not in memory
+  // Always fetch fresh from Supabase to get latest puntos data
   let puntos = s._puntos || [];
-  if(puntos.length === 0 && s.notas && s.notas.includes('|PUNTOS:')) {
-    try {
-      const puntosStr = s.notas.split('|PUNTOS:')[1];
-      puntos = JSON.parse(puntosStr);
-    } catch(e) {}
-  }
-  // If still empty, fetch from Supabase
+  const {data:svcFresh} = await supa.from('servicios_piloto')
+    .select('notas,tarifa_neta,ingreso_total,puntos_entrega,destino,km_total,dias_servicio')
+    .eq('id', s.id).single();
+
+  // Try to parse from notas field
   if(puntos.length === 0) {
-    const {data:svcFresh} = await supa.from('servicios_piloto')
-      .select('notas,tarifa_neta,ingreso_total,puntos_entrega,destino')
-      .eq('id', s.id).single();
-    if(svcFresh?.notas?.includes('|PUNTOS:')) {
-      try { puntos = JSON.parse(svcFresh.notas.split('|PUNTOS:')[1]); } catch(e) {}
+    const notas = svcFresh?.notas || s.notas || '';
+    if(notas.includes('|PUNTOS:')) {
+      try { puntos = JSON.parse(notas.split('|PUNTOS:')[1]); } catch(e) {}
     }
-    if(puntos.length === 0 && svcFresh) {
-      // Build minimal puntos from available data
-      const nIntsCalc = Math.max(0, (svcFresh.puntos_entrega||1) - 1);
-      for(let pi=0; pi<nIntsCalc; pi++) puntos.push({tipo:'intermedio', destino:'Punto '+(pi+1), valor:0, num_guia:''});
-      if(svcFresh.destino) puntos.push({tipo:'final', destino:svcFresh.destino, valor:svcFresh.tarifa_neta||0, num_guia:''});
+  }
+
+  // If still empty, build from destino + puntos_entrega + tarifa_neta
+  if(puntos.length === 0 && svcFresh) {
+    const nInts = Math.max(0, (s.puntos_done || svcFresh.puntos_entrega || 1) - 1);
+    const c = DB.config;
+    const valPunto = DB.tarifarios.find(t => (t.cliente||'').toLowerCase().includes((s.cliente||'').toLowerCase().split(' ')[0]))?.valor_punto || 40000;
+    for(let pi=0; pi<nInts; pi++) {
+      puntos.push({tipo:'intermedio', destino:'Punto '+(pi+1), valor:valPunto, num_guia:''});
     }
+    if(svcFresh.destino || s.destino) {
+      puntos.push({tipo:'final', destino:svcFresh.destino||s.destino||'—', valor:svcFresh.tarifa_neta||s.tarifa_neta||0, num_guia:''});
+    }
+  }
+
+  // Update s with fresh data
+  if(svcFresh) {
+    s.km_total = svcFresh.km_total || s.km_total;
+    s.dias_servicio = svcFresh.dias_servicio || s.dias_servicio;
+    s.ingreso_total = svcFresh.ingreso_total || s.ingreso_total;
   }
   const final  = puntos.find(p => p.tipo==='final');
   const ints   = puntos.filter(p => p.tipo==='intermedio');
