@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>KAPTURA v6.2</title>
+<title>KAPTURA v6.3</title>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700;800;900&family=Barlow+Condensed:wght@600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -159,10 +159,12 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
     <!-- KPIs -->
     <div class="kpis">
       <div class="kpi"><div class="kpi-lbl">Servicios Hoy</div><div class="kpi-val" id="k-hoy">—</div><div class="kpi-sub" id="k-hoy-sub">—</div></div>
+      <div class="kpi orange"><div class="kpi-lbl">Ejecutados Hoy</div><div class="kpi-val orange" id="k-ejec-hoy">—</div><div class="kpi-sub" id="k-ejec-mes">— este mes</div></div>
       <div class="kpi orange"><div class="kpi-lbl">Por Confirmar</div><div class="kpi-val orange" id="k-pend">—</div><div class="kpi-sub">borradores</div></div>
+      <div class="kpi green"><div class="kpi-lbl">Ingreso Mes</div><div class="kpi-val green" id="k-ingreso">—</div><div class="kpi-sub" id="k-ingreso-sub">—</div></div>
+      <div class="kpi red"><div class="kpi-lbl">Costos Mes</div><div class="kpi-val red" id="k-costos">—</div><div class="kpi-sub" id="k-costos-sub">—</div></div>
       <div class="kpi green"><div class="kpi-lbl">Margen Mes</div><div class="kpi-val green" id="k-margen">—</div><div class="kpi-sub" id="k-margen-sub">—</div></div>
-      <div class="kpi"><div class="kpi-lbl">Ingreso Mes</div><div class="kpi-val" id="k-ingreso">—</div><div class="kpi-sub" id="k-ingreso-sub">—</div></div>
-      <div class="kpi red"><div class="kpi-lbl">Margen Prom.</div><div class="kpi-val" id="k-prom">—</div><div class="kpi-sub">por servicio</div></div>
+      <div class="kpi"><div class="kpi-lbl">Margen Prom.</div><div class="kpi-val" id="k-prom">—</div><div class="kpi-sub">por servicio</div></div>
     </div>
 
     <!-- FILTRO Y ACCIONES -->
@@ -614,7 +616,7 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
 const SUPA_URL = 'https://aqunzrukuruwzwywnurq.supabase.co';
 const SUPA_KEY = 'sb_publishable_70t9UxFlcqYDj7AMybsrHg__IMGNA8C';
 const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
-const KAPTURA_VERSION = '6.2';
+const KAPTURA_VERSION = '6.3';
 const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 const hoy = new Date();
 const hoyStr = hoy.toISOString().split('T')[0];
