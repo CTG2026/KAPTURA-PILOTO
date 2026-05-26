@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>KAPTURA v7.8</title>
+<title>KAPTURA v7.9</title>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700;800;900&family=Barlow+Condensed:wght@600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -424,7 +424,7 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
 const SUPA_URL = 'https://aqunzrukuruwzwywnurq.supabase.co';
 const SUPA_KEY = 'sb_publishable_70t9UxFlcqYDj7AMybsrHg__IMGNA8C';
 const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
-const KAPTURA_VERSION = '7.8';
+const KAPTURA_VERSION = '7.9';
 const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 const hoy = new Date();
 const hoyStr = hoy.toISOString().split('T')[0];
@@ -453,7 +453,14 @@ async function init() {
     DB.conductores = c.data  || [];
     DB.clientes    = cl.data || [];
     DB.tarifarios  = t.data  || [];
-    DB.servicios   = s.data  || [];
+    DB.servicios = (s.data || []).map(svc => {
+      if(!svc._puntos || svc._puntos.length === 0) {
+        const notas = svc.notas || '';
+        const marker = notas.includes('|_PUNTOS:') ? '|_PUNTOS:' : notas.includes('_PUNTOS:') ? '_PUNTOS:' : null;
+        if(marker) { try { svc._puntos = JSON.parse(notas.split(marker)[1]); } catch(e) {} }
+      }
+      return svc;
+    });
     (cfg.data||[]).forEach(r => { DB.config[r.clave||r.nombre] = r.valor||r.value; });
 
     let ck = localStorage.getItem('kaptura_claude_key') || '';
@@ -589,7 +596,7 @@ function filaHTML(s,i) {
     <td>${s.cliente||'—'}</td>
     <td>${s.origen||'—'}</td>
     <td style="font-weight:700">${destino}</td>
-    <td style="font-size:10px;color:#4E5A78">${guia}</td>
+    <td style="font-size:12px;font-weight:700;color:#1C2B4A">${guia}</td>
     <td style="font-weight:700;color:#065F46">${tarifa}</td>
     <td style="text-align:center">${cantPtos}</td>
     <td style="color:#2A3350">${totalPtos}</td>
