@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>KAPTURA v8.0</title>
+<title>KAPTURA v8.1</title>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700;800;900&family=Barlow+Condensed:wght@600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -427,6 +427,18 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
   </div>
 </div>
 
+<!-- MODAL VER GUÍAS -->
+<div class="overlay" id="modal-guias" style="display:none">
+  <div class="modal" style="max-width:600px">
+    <div class="modal-hdr">
+      <div><div class="modal-ttl">Guías — <span id="guias-svc-id"></span></div><div class="modal-sub" id="guias-svc-sub"></div></div>
+      <button class="modal-cls" onclick="cerrar('modal-guias')">✕</button>
+    </div>
+    <div class="modal-body" id="guias-body">
+    </div>
+  </div>
+</div>
+
 <!-- MODAL INFORME -->
 <div class="overlay" id="modal-informe" style="display:none">
   <div class="modal" style="max-width:95vw;width:95vw">
@@ -450,7 +462,7 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
 const SUPA_URL = 'https://aqunzrukuruwzwywnurq.supabase.co';
 const SUPA_KEY = 'sb_publishable_70t9UxFlcqYDj7AMybsrHg__IMGNA8C';
 const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
-const KAPTURA_VERSION = '8.0';
+const KAPTURA_VERSION = '8.1';
 const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 const hoy = new Date();
 const hoyStr = hoy.toISOString().split('T')[0];
@@ -594,7 +606,7 @@ function cardHTML(s,i) {
       ${['en_proceso','registrando'].includes(s.estado) ? `<button class="btn btn-purple btn-sm" onclick="verServicio(${i})">📋 Registrar</button>` : ''}
       ${['borrador','ejecutado'].includes(s.estado) ? `<button class="btn btn-purple btn-sm" onclick="verServicio(${i})">📋 Registrar</button><button class="btn btn-green btn-sm" onclick="abrirCierre(${i})">🔒 Cierre</button>` : ''}
       ${['confirmado','cerrado'].includes(s.estado) ? `<button class="btn btn-outline btn-sm" onclick="abrirInforme(${i})">📄 Informe</button>` : ''}
-      ${(()=>{ const guiasConFoto=(s._puntos||[]).flatMap(p=>(p.guias||[]).filter(g=>g.img_url)); return guiasConFoto.length>0?`<button class="btn btn-outline btn-sm" onclick="verGuias(${i})">🖼 Guías</button>`:''; })()}
+      ${(s._puntos||[]).some(p=>(p.guias||[]).length>0||p.num_guia) ? `<button class="btn btn-outline btn-sm" onclick="verGuias(${i})">🖼 Guías</button>` : ''}
       <button class="btn btn-red btn-sm" onclick="eliminarSvc(${i})">✕</button>
     </div></div>
   </div>`;
@@ -638,7 +650,7 @@ function filaHTML(s,i) {
       ${['en_proceso','registrando'].includes(s.estado) ? `<button class="btn btn-purple btn-sm" onclick="verServicio(${i})">📋 Registrar</button>` : ''}
       ${['borrador','ejecutado'].includes(s.estado) ? `<button class="btn btn-purple btn-sm" onclick="verServicio(${i})">📋 Registrar</button><button class="btn btn-green btn-sm" onclick="abrirCierre(${i})">🔒 Cierre</button>` : ''}
       ${['confirmado','cerrado'].includes(s.estado) ? `<button class="btn btn-outline btn-sm" onclick="abrirInforme(${i})">📄 Informe</button>` : ''}
-      ${(()=>{ const guiasConFoto=(s._puntos||[]).flatMap(p=>(p.guias||[]).filter(g=>g.img_url)); return guiasConFoto.length>0?`<button class="btn btn-outline btn-sm" onclick="verGuias(${i})">🖼 Guías</button>`:''; })()}
+      ${(s._puntos||[]).some(p=>(p.guias||[]).length>0||p.num_guia) ? `<button class="btn btn-outline btn-sm" onclick="verGuias(${i})">🖼 Guías</button>` : ''}
       <button class="btn btn-red btn-sm" onclick="eliminarSvc(${i})">✕</button>
     </div></td>
   </tr>`;
@@ -1685,13 +1697,50 @@ function toast(msg, dur=2800) {
   setTimeout(() => t.classList.remove('show'), dur);
 }
 
-// Ver guías de un servicio
+// Ver guías de un servicio en modal
 function verGuias(i) {
   const s = DB.servicios[i];
-  const guiasConFoto = (s._puntos||[]).flatMap(p=>(p.guias||[]).filter(g=>g.img_url));
-  if(guiasConFoto.length === 0) { toast('Sin fotos disponibles'); return; }
-  // Open each photo in new tab
-  guiasConFoto.forEach(g => window.open(g.img_url, '_blank'));
+  const puntos = s._puntos || [];
+  document.getElementById('guias-svc-id').textContent  = s.servicio_id||'—';
+  document.getElementById('guias-svc-sub').textContent = `${s.patente} · ${s.conductor} · ${s.cliente}`;
+
+  let html = '';
+  let totalGuias = 0;
+
+  puntos.forEach((p, pi) => {
+    const guias = p.guias || (p.num_guia ? [{num_guia:p.num_guia, fecha_guia:p.fecha_guia||'', img_url:p.img_url||null}] : []);
+    if(guias.length === 0) return;
+    html += `<div style="margin-bottom:14px">
+      <div style="font-size:10px;font-weight:800;color:#4E5A78;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px">
+        ${p.tipo==='final'?'🏁 Destino Final':'🔁 Punto Intermedio'} — ${p.destino||'—'}
+      </div>`;
+    guias.forEach((g, gi) => {
+      totalGuias++;
+      html += `<div style="display:flex;align-items:center;gap:10px;padding:10px;background:#F5F7FA;border-radius:8px;margin-bottom:6px;border:1px solid #DDE2EC">
+        ${g.img_url
+          ? `<img src="${g.img_url}" style="width:64px;height:64px;object-fit:cover;border-radius:6px;cursor:pointer;border:2px solid #DDE2EC"
+               onclick="window.open('${g.img_url}','_blank')">`
+          : `<div style="width:64px;height:64px;background:#EEF1F6;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:24px">📄</div>`
+        }
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:800;color:#1C2B4A">N° ${g.num_guia||'—'}</div>
+          <div style="font-size:11px;color:#4E5A78;margin-top:2px">Fecha: ${g.fecha_guia||'—'}</div>
+          ${g.img_url
+            ? `<button class="btn btn-outline btn-sm" style="margin-top:6px" onclick="window.open('${g.img_url}','_blank')">👁 Ver foto</button>`
+            : `<div style="font-size:10px;color:#8C96B0;margin-top:4px">Sin foto disponible</div>`
+          }
+        </div>
+      </div>`;
+    });
+    html += '</div>';
+  });
+
+  if(totalGuias === 0) {
+    html = '<div style="text-align:center;padding:30px;color:#8C96B0"><div style="font-size:32px">📄</div><div style="font-weight:700;margin-top:8px">Sin guías registradas</div></div>';
+  }
+
+  document.getElementById('guias-body').innerHTML = html;
+  document.getElementById('modal-guias').style.display = 'flex';
 }
 
 document.querySelectorAll('.overlay').forEach(el => {
