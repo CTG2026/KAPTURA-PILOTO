@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>KAPTURA v7.2</title>
+<title>KAPTURA v7.3</title>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700;800;900&family=Barlow+Condensed:wght@600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -424,7 +424,7 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
 const SUPA_URL = 'https://aqunzrukuruwzwywnurq.supabase.co';
 const SUPA_KEY = 'sb_publishable_70t9UxFlcqYDj7AMybsrHg__IMGNA8C';
 const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
-const KAPTURA_VERSION = '7.2';
+const KAPTURA_VERSION = '7.3';
 const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 const hoy = new Date();
 const hoyStr = hoy.toISOString().split('T')[0];
@@ -1374,15 +1374,15 @@ async function abrirInforme(i) {
   <table class="inf-table"><tbody>`;
 
   const costoItems = [
-    ['Combustible', s.costo_combustible],
-    ['TAG Autopista', s.peajes_tag],
-    ['Peajes Ruta', s.costo_peajes > s.peajes_tag ? s.costo_peajes - s.peajes_tag : null],
-    ['Costo Conductor', s.costo_conductor],
-    ['Comisión Conductor', s.tarifa_neta ? Math.round((s.tarifa_neta||0)*((parseFloat(DB.config.comision_conductor||8))/100)) : null],
-    ['Costo Fijo', s.costo_fijo_dia],
-    ['Mantención', s.mantencion_prorrateada || (s.dias_servicio ? s.dias_servicio * parseInt(DB.config.mantencion||25000) : null)],
-    ['Viático', s.costo_viaticos],
-    ['Factoring', s.factoring > 0 ? s.factoring : null],
+    ['Combustible',        s.costo_combustible || null],
+    ['TAG Autopista',      s.peajes_tag || null],
+    ['Peajes Ruta',        (s.costo_peajes && s.peajes_tag && s.costo_peajes > s.peajes_tag) ? s.costo_peajes - s.peajes_tag : null],
+    ['Costo Conductor',    s.costo_conductor || null],
+    ['Comisión Conductor', s.costo_comision || (s.tarifa_neta ? Math.round((s.tarifa_neta||0)*((parseFloat(DB.config.comision_conductor||8))/100)) : null)],
+    ['Costo Fijo',         s.costo_fijo_dia || null],
+    ['Mantención',         s.mantencion_prorrateada || s.costo_mantencion || (s.dias_servicio ? s.dias_servicio * parseInt(DB.config.mantencion||25000) : null)],
+    ['Viático',            s.costo_viaticos || null],
+    ['Factoring',          s.factoring > 0 ? s.factoring : null],
   ];
   costoItems.forEach(([label, val]) => {
     if(!val && val !== 0) return;
