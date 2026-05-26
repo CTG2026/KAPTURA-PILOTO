@@ -1151,7 +1151,10 @@ async function cargarGPS() {
       if(gc) return gc.keywords.split(',').map(k=>k.trim().toLowerCase()).filter(k=>k.length>2);
       return [nombre.toLowerCase().split(',')[0].trim()];
     };
-    const matchAddr = (addr, kws) => kws.some(kw => kw && (addr||'').toLowerCase().includes(kw));
+    const normText = (t) => (t||'').toLowerCase()
+      .replace(/[áàä]/g,'a').replace(/[éèë]/g,'e').replace(/[íìï]/g,'i')
+      .replace(/[óòö]/g,'o').replace(/[úùü]/g,'u').replace(/ñ/g,'n');
+    const matchAddr = (addr, kws) => kws.some(kw => kw && normText(addr).includes(normText(kw)));
 
     const origenKws  = getKws(s?.origen||'');
     const puntosArr2 = (s?._puntos||[]).length > 0 ? s._puntos : puntosData;
