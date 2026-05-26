@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>KAPTURA v7.7</title>
+<title>KAPTURA v7.8</title>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700;800;900&family=Barlow+Condensed:wght@600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -424,7 +424,7 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
 const SUPA_URL = 'https://aqunzrukuruwzwywnurq.supabase.co';
 const SUPA_KEY = 'sb_publishable_70t9UxFlcqYDj7AMybsrHg__IMGNA8C';
 const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
-const KAPTURA_VERSION = '7.7';
+const KAPTURA_VERSION = '7.8';
 const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 const hoy = new Date();
 const hoyStr = hoy.toISOString().split('T')[0];
@@ -779,27 +779,42 @@ function puntosHTML(p, pi) {
       <input class="inp ${p.valor?'ok':'pend'}" style="${p.valor?'border-color:var(--green);background:#ECFDF5':'border-color:var(--orange)'}"
         type="number" value="${p.valor||''}" placeholder="0" onchange="setValorManual(${pi},this.value)">
     </div>` : ''}
-    ${p.capturada && p.img_url ? `<div style="margin-bottom:8px;border-radius:8px;overflow:hidden;border:2px solid var(--green)">
-      <img src="${p.img_url}" style="width:100%;max-height:200px;object-fit:cover" onclick="window.open('${p.img_url}','_blank')">
-      <div style="background:#ECFDF5;padding:6px 10px;font-size:10px;font-weight:800;color:#065F46">✓ Guía N° ${p.num_guia} · ${p.fecha_guia||'—'} · Toca para ver</div>
-    </div>` : `<div style="border:2px dashed ${p.capturada?'var(--green)':'var(--g200)'};border-radius:8px;padding:14px;text-align:center;cursor:pointer;background:${p.capturada?'#ECFDF5':p.procesando?'#FFFBEB':'#fff'}"
-      onclick="document.getElementById('foto-p${pi}').click()">
-      <div style="font-size:22px">${p.procesando?'⏳':p.capturada?'✓':'📷'}</div>
-      <div style="font-size:11px;font-weight:800;color:var(--navy);margin-top:4px">
-        ${p.procesando?'Procesando guía...':p.capturada?'Guía N° '+p.num_guia:'Fotografiar / Subir Guía'}
+    <!-- Guías registradas -->
+    <div id="guias-punto-${pi}">
+      ${(p.guias||[]).map((g,gi) => `
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;background:#ECFDF5;border-radius:8px;padding:6px 10px;border:1px solid #6EE7B7">
+          ${g.img_url ? `<img src="${g.img_url}" style="width:48px;height:48px;object-fit:cover;border-radius:6px;cursor:pointer" onclick="window.open('${g.img_url}','_blank')">` : '<div style="width:48px;height:48px;background:#D1FAE5;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:18px">📄</div>'}
+          <div style="flex:1">
+            <div style="font-size:11px;font-weight:800;color:#065F46">Guía N° ${g.num_guia}</div>
+            <div style="font-size:10px;color:#4E5A78">${g.fecha_guia||'—'}</div>
+          </div>
+          <button class="btn btn-red btn-sm" onclick="eliminarGuia(${pi},${gi})">✕</button>
+        </div>`).join('')}
+    </div>
+    <!-- Agregar guía -->
+    <div style="border:2px dashed var(--g200);border-radius:8px;padding:10px;text-align:center;cursor:pointer;background:${p.procesando?'#FFFBEB':'#fff'}"
+      onclick="document.getElementById('foto-p${pi}-new').click()">
+      <div style="font-size:18px">${p.procesando?'⏳':'📷'}</div>
+      <div style="font-size:10px;font-weight:800;color:var(--navy);margin-top:2px">
+        ${p.procesando?'Procesando...':'+ Agregar Guía'}
       </div>
-      <div style="font-size:10px;color:var(--g400);margin-top:2px">
-        ${p.capturada?'Fecha: '+(p.fecha_guia||'—'):'Toca para capturar'}
-      </div>
-    </div>`}
-    <input type="file" id="foto-p${pi}" accept="image/*" capture="environment"
+    </div>
+    <input type="file" id="foto-p${pi}-new" accept="image/*" capture="environment"
       style="display:none" onchange="procesarGuia(this,${pi})">
+
   </div>`;
 }
 
 function agregarPunto() {
   const hayFinal = puntosData.some(p => p.tipo === 'final');
-  puntosData.push({tipo:hayFinal?'intermedio':'final', destino:'', valor:null, num_guia:'', capturada:false, procesando:false});
+  puntosData.push({tipo:hayFinal?'intermedio':'final', destino:'', valor:null, num_guia:'', guias:[], capturada:false, procesando:false});
+  renderPuntos();
+}
+
+function eliminarGuia(pi, gi) {
+  if(!puntosData[pi].guias) return;
+  puntosData[pi].guias.splice(gi, 1);
+  if(puntosData[pi].guias.length === 0) puntosData[pi].capturada = false;
   renderPuntos();
 }
 function eliminarPunto(pi) { puntosData.splice(pi,1); renderPuntos(); }
@@ -871,7 +886,10 @@ async function procesarGuia(input, pi) {
           imgUrl = urlData?.publicUrl || null;
         }
       } catch(e) { console.warn('Storage:', e.message); }
-      puntosData[pi] = {...puntosData[pi], capturada:true, procesando:false, num_guia:json.num_guia, fecha_guia:json.fecha_emision||'', img_url:imgUrl};
+      if(!puntosData[pi].guias) puntosData[pi].guias = [];
+      puntosData[pi].guias.push({num_guia:json.num_guia, fecha_guia:json.fecha_emision||'', img_url:imgUrl});
+      puntosData[pi] = {...puntosData[pi], capturada:true, procesando:false,
+        num_guia:puntosData[pi].guias.map(g=>g.num_guia).join(',')};
       toast(`✓ Guía ${json.num_guia} leída`);
     } else { puntosData[pi].procesando = false; toast('⚠ No se pudo leer — ingresa manual'); }
   } catch(e) { puntosData[pi].procesando = false; toast('Error: '+e.message); }
@@ -887,7 +905,7 @@ async function guardarBorrador() {
   const tarifa = final?.valor || 0;
   const nguia  = puntosData[0]?.num_guia || '';
   const destino = final?.destino || '';
-  const puntosJSON = JSON.stringify(puntosData.map(p=>({tipo:p.tipo,destino:p.destino,valor:p.valor||0,num_guia:p.num_guia||''})));
+  const puntosJSON = JSON.stringify(puntosData.map(p=>({tipo:p.tipo,destino:p.destino,valor:p.valor||0,num_guia:p.num_guia||'',guias:p.guias||[]})));
   const {error} = await supa.from('servicios_piloto').update({
     estado:'borrador', destino, num_guia:nguia, tarifa_neta:tarifa,
     puntos_entrega:puntosData.length, notas:`_PUNTOS:${puntosJSON}`
@@ -922,7 +940,7 @@ async function guardarEjecucion() {
   const fechaTerm = document.getElementById('ejec-fecha-termino').value;
   const retorno   = document.getElementById('ejec-retorno').value;
   const puntos = puntosData.length > 0 ? puntosData : (s._puntos||[]);
-  const puntosJSON = JSON.stringify(puntos.map(p=>({tipo:p.tipo,destino:p.destino,valor:p.valor||0,num_guia:p.num_guia||''})));
+  const puntosJSON = JSON.stringify(puntos.map(p=>({tipo:p.tipo,destino:p.destino,valor:p.valor||0,num_guia:p.num_guia||'',guias:p.guias||[]})));
   const {error} = await supa.from('servicios_piloto').update({
     estado:'ejecutado',
     hora_termino: fechaTerm ? fechaTerm+'T23:59:00' : null,
@@ -1316,7 +1334,7 @@ async function guardarCostosBorrador() {
   const ingreso = tarifa + valorPts;
   const costos  = comb+peajes+condVal+comision+cf+mant+viat+fact;
   const margen  = ingreso - costos;
-  const puntosJSON = JSON.stringify(puntos.map(p=>({tipo:p.tipo,destino:p.destino,valor:p.valor||0,num_guia:p.num_guia||''})));
+  const puntosJSON = JSON.stringify(puntos.map(p=>({tipo:p.tipo,destino:p.destino,valor:p.valor||0,num_guia:p.num_guia||'',guias:p.guias||[]})));
 
   const kmVacioIda = parseFloat(document.getElementById('cos-km-vacio-ida')?.value)||0;
   const kmCargado  = parseFloat(document.getElementById('cos-km-cargado')?.value)||0;
