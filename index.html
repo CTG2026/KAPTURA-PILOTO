@@ -189,6 +189,7 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
         <div class="fld"><label class="lbl">Sueldo Conductor/día ($)</label><input class="inp" id="cfg-cond" type="number" placeholder="33000"></div>
         <div class="fld"><label class="lbl">Viático/día ($)</label><input class="inp" id="cfg-viatico" type="number" placeholder="12000"></div>
         <div class="fld"><label class="lbl">Comisión Conductor (%)</label><input class="inp" id="cfg-comision" type="number" placeholder="8" step="0.5"></div>
+        <div class="fld"><label class="lbl">Valor Flete Falso ($)</label><input class="inp" id="cfg-flete-falso" type="number" placeholder="30000"></div>
       </div>
       <div class="fld">
         <label class="lbl">API Key Claude (lectura guías)</label>
@@ -214,6 +215,13 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
       </div>
       <div class="fld"><label class="lbl">Cliente</label><select class="inp" id="asig-cliente" onchange="checkOtroCliente()"></select></div>
       <div class="fld" id="wrap-cliente-custom" style="display:none"><label class="lbl">Nombre del cliente nuevo</label><input class="inp" id="asig-cliente-custom" placeholder="Nombre del cliente"></div>
+      <div class="fld">
+        <label class="lbl">Tipo de Servicio</label>
+        <select class="inp" id="asig-tipo-servicio">
+          <option value="normal">Normal</option>
+          <option value="devolucion">Devolución (tarifa inversa)</option>
+        </select>
+      </div>
       <div class="fld2">
         <div class="fld"><label class="lbl">Origen</label><select class="inp" id="asig-origen" onchange="checkOtroOrigen()">
           <option value="Casablanca">Casablanca</option><option value="Coltauco">Coltauco</option>
@@ -284,6 +292,19 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
       <div id="puntos-container"></div>
       <button class="btn btn-outline btn-full btn-sm" onclick="agregarPunto()" style="margin-bottom:14px">+ Agregar Punto de Entrega</button>
     </div>
+      <div class="section-ttl">📝 Observaciones del Conductor</div>
+      <div class="fld">
+        <label class="lbl">Tipo de Entrega</label>
+        <select class="inp" id="reg-tipo-entrega" onchange="onTipoEntrega()">
+          <option value="normal">Normal</option>
+          <option value="flete_falso">Flete Falso</option>
+          <option value="devolucion">Devolución</option>
+        </select>
+      </div>
+      <div class="fld" id="wrap-obs-conductor">
+        <label class="lbl">Observación (opcional)</label>
+        <textarea class="inp" id="reg-observacion" rows="2" placeholder="Ej: Cliente no encontrado, puerta cerrada..."></textarea>
+      </div>
     <div class="modal-ftr">
       <button class="btn btn-outline" onclick="cerrar('modal-registrar')">Cancelar</button>
       <button class="btn btn-orange" onclick="guardarBorrador()">Borrador</button>
@@ -393,6 +414,11 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
         </div>
       </div>
     </div>
+      <div class="section-ttl">📝 Observaciones del Coordinador</div>
+      <div class="fld">
+        <label class="lbl">Observación interna</label>
+        <textarea class="inp" id="cos-observacion" rows="2" placeholder="Observaciones de liquidación, notas internas..."></textarea>
+      </div>
     <div class="modal-ftr">
       <button class="btn btn-outline" onclick="cerrar('modal-costos')">Cancelar</button>
       <button class="btn btn-orange" onclick="guardarCostosBorrador()">Borrador</button>
@@ -652,7 +678,8 @@ function poblarConfig() {
   document.getElementById('cfg-mant').value    = c.mantencion||c.costo_mantencion||25000;
   document.getElementById('cfg-cond').value    = c.sueldo_conductor||c.costo_conductor_dia||33000;
   document.getElementById('cfg-viatico').value = c.viatico||c.costo_viatico||12000;
-  document.getElementById('cfg-comision').value= c.comision_conductor||8;
+  document.getElementById('cfg-comision').value    = c.comision_conductor||8;
+  document.getElementById('cfg-flete-falso').value = c.flete_falso||c.valor_flete_falso||30000;
 }
 
 
@@ -751,8 +778,24 @@ function abrirRegistrar(i) {
   document.getElementById('reg-origen-info').textContent  = s.origen||'—';
   document.getElementById('reg-conductor-info').textContent = s.conductor||'—';
   document.getElementById('reg-fecha-termino').value      = s._fecha_termino || s.fecha || hoyStr;
+  const tipoEl = document.getElementById('reg-tipo-entrega');
+  if(tipoEl) tipoEl.value = s.tipo_entrega || 'normal';
+  const obsEl = document.getElementById('reg-observacion');
+  if(obsEl) obsEl.value = s.observaciones_conductor || '';
   renderPuntos();
   document.getElementById('modal-registrar').style.display = 'flex';
+}
+
+function onTipoEntrega() {
+  const tipo = document.getElementById('reg-tipo-entrega').value;
+  const s = DB.servicios[svcActivoIdx];
+  if(tipo === 'flete_falso') {
+    const valFF = parseInt(DB.config.flete_falso || DB.config.valor_flete_falso || 30000);
+    // Set flete falso value on final point
+    const finalPto = puntosData.find(p=>p.tipo==='final');
+    if(finalPto) { finalPto.valor = valFF; renderPuntos(); }
+    toast(`⚠ Flete Falso — valor: ${fmt(valFF)}`);
+  }
 }
 
 function onFechaTermino() {
@@ -918,9 +961,15 @@ async function guardarBorrador() {
   const nguia  = puntosData[0]?.num_guia || '';
   const destino = final?.destino || '';
   const puntosJSON = JSON.stringify(puntosData.map(p=>({tipo:p.tipo,destino:p.destino,valor:p.valor||0,num_guia:p.num_guia||'',guias:p.guias||[]})));
+  const tipoEntrega = document.getElementById('reg-tipo-entrega')?.value || 'normal';
+  const obsConduc   = document.getElementById('reg-observacion')?.value || '';
+
   const {error} = await supa.from('servicios_piloto').update({
     estado:'borrador', destino, num_guia:nguia, tarifa_neta:tarifa,
-    puntos_entrega:puntosData.length, notas:`_PUNTOS:${puntosJSON}`
+    puntos_entrega:puntosData.length,
+    tipo_entrega: tipoEntrega,
+    observaciones_conductor: obsConduc,
+    notas:`_PUNTOS:${puntosJSON}`
   }).eq('id',s.id);
   if(error) { toast('Error: '+error.message); return; }
   DB.servicios[svcActivoIdx] = {...s, estado:'borrador', destino, num_guia:nguia, tarifa_neta:tarifa, _puntos:puntosData, _fecha_termino:fechaTerm};
@@ -1359,7 +1408,8 @@ async function guardarCostosBorrador() {
     costo_mantencion:mant, factoring:fact, total_costos:costos,
     margen_servicio:margen, margen:margen, ingreso_total:ingreso,
     km_base_carga:kmVacioIda, km_carga_destino:kmCargado, km_retorno:kmRetorno,
-    notas: `Retorno: base|_PUNTOS:${puntosJSON}`
+    notas: `Retorno: base|_PUNTOS:${puntosJSON}`,
+    observaciones_coordinador: document.getElementById('cos-observacion')?.value || ''
   }).eq('id',s.id);
   if(error) { toast('Error: '+error.message); return; }
   DB.servicios[svcActivoIdx] = {...s, estado:'borrador', km_total:km, tarifa_neta:tarifa,
@@ -1598,6 +1648,7 @@ async function guardarConfig() {
     {clave:'sueldo_conductor',val:document.getElementById('cfg-cond').value},
     {clave:'viatico',         val:document.getElementById('cfg-viatico').value},
     {clave:'comision_conductor',val:document.getElementById('cfg-comision').value},
+    {clave:'flete_falso',        val:document.getElementById('cfg-flete-falso').value},
   ];
   for(const c of campos) {
     DB.config[c.clave] = parseFloat(c.val)||0;
