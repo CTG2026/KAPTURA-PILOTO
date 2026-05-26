@@ -1181,7 +1181,11 @@ async function cargarGPS() {
     const geofencesAfter = afterCarga.filter(e => e.evento==='geofence_in' || e.evento==='geofence_out');
     const geoDescarga    = geofencesAfter.find(e => matchEvento(e, destinoKws));
     const stopDescarga   = stopsAfter.find(e => matchEvento(e, destinoKws));
-    let pivotDescarga    = geoDescarga?.datetime_evento || stopDescarga?.datetime_evento || stopsAfter[0]?.datetime_evento || null;
+    // pivotDescarga: prefer stop matching destino keywords, else largest stop after carga
+    const stopDescargaLarga = stopsAfter.length > 0
+      ? stopsAfter.reduce((max, s) => durMin(s.duracion) > durMin(max.duracion) ? s : max, stopsAfter[0])
+      : null;
+    let pivotDescarga = geoDescarga?.datetime_evento || stopDescarga?.datetime_evento || stopDescargaLarga?.datetime_evento || null;
 
     console.log('Geocercas — origen:', origenKws[0], '| destino:', destinoKws[0]);
     console.log('pivotCarga:', pivotCarga, '| pivotDescarga:', pivotDescarga);
