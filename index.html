@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>KAPTURA v7.3</title>
+<title>KAPTURA v7.4</title>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700;800;900&family=Barlow+Condensed:wght@600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -424,7 +424,7 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
 const SUPA_URL = 'https://aqunzrukuruwzwywnurq.supabase.co';
 const SUPA_KEY = 'sb_publishable_70t9UxFlcqYDj7AMybsrHg__IMGNA8C';
 const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
-const KAPTURA_VERSION = '7.3';
+const KAPTURA_VERSION = '7.4';
 const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 const hoy = new Date();
 const hoyStr = hoy.toISOString().split('T')[0];
@@ -1128,25 +1128,59 @@ async function cargarGPS() {
     document.getElementById('lbl-km').style.color = '#065F46';
     document.getElementById('cos-dias').value = diasActivos;
 
-    // Km por tramo usando origen/destino
-    const origen  = (s?.origen||'').toLowerCase();
-    const puntosArr = s?._puntos || puntosData || [];
-    const finalPunto = puntosArr.find(p=>p.tipo==='final');
-    const destino = (finalPunto?.destino||'').toLowerCase();
+    // Km por tramo: geocercas + tiempo de detención
+    // Señal 1: geofence_in/out cerca de origen → fin vacío ida
+    // Señal 2: parada >30min después del geofence de origen → confirmación carga
+    // Señal 3: geofence_in/out cerca de destino → fin cargado
+    // Señal 4: parada >30min después del geofence de destino → confirmación descarga
+    const durMin = (dur) => {
+      if(!dur) return 0;
+      let m=0;
+      const dh=(dur+'').match(/(\d+)\s*h/); if(dh) m+=parseInt(dh[1])*60;
+      const dm=(dur+'').match(/(\d+)\s*min/); if(dm) m+=parseInt(dm[1]);
+      return m;
+    };
+    const origenKw  = (s?.origen||'').toLowerCase().split(',')[0].trim();
+    const puntosArr2 = s?._puntos || puntosData || [];
+    const finalPto   = puntosArr2.find(p=>p.tipo==='final');
+    const destinoKw  = (finalPto?.destino||'').toLowerCase().split(',')[0].trim();
+
+    // Find geofence events near origen and destino
+    const geofences = eventos.filter(e => e.evento==='geofence_in' || e.evento==='geofence_out');
+    const geoCarga    = geofences.find(g => origenKw && (g.address||'').toLowerCase().includes(origenKw));
+    const geoDescarga = geofences.find(g => destinoKw && (g.address||'').toLowerCase().includes(destinoKw));
+
+    // Find stops >30min sorted chronologically
+    const stopsLargas = eventos
+      .filter(e => e.evento==='stop' && durMin(e.duracion) >= 30)
+      .sort((a,b) => a.datetime_evento > b.datetime_evento ? 1 : -1);
+
+    // Determine pivot times for phase changes
+    // Phase change vacio→cargado: after geoCarga OR after first long stop
+    // Phase change cargado→retorno: after geoDescarga OR after second long stop
+    let pivotCarga    = geoCarga    ? geoCarga.datetime_evento    : (stopsLargas[0]?.datetime_evento || null);
+    let pivotDescarga = geoDescarga ? geoDescarga.datetime_evento : (stopsLargas[1]?.datetime_evento || null);
+
+    // If no geofence, reinforce with nearest long stop after first pivot
+    if(!geoCarga && stopsLargas.length > 0) {
+      pivotCarga = stopsLargas[0].datetime_evento;
+    }
+    if(!geoDescarga && stopsLargas.length > 1) {
+      pivotDescarga = stopsLargas.filter(s => s.datetime_evento > pivotCarga)[0]?.datetime_evento || null;
+    }
+
     let kmVacioIda=0, kmCargado=0, kmRetorno=0;
-    let cargando=false, terminado=false;
     for(const t of trips) {
-      const al = t.address.toLowerCase();
-      if(!cargando && !terminado) {
-        if(origen && al.includes(origen.split(',')[0].trim())) { cargando=true; kmVacioIda+=t.km_tramo; }
-        else kmVacioIda+=t.km_tramo;
-      } else if(cargando && !terminado) {
-        if(destino && al.includes(destino.split(',')[0].trim())) { terminado=true; kmCargado+=t.km_tramo; }
-        else kmCargado+=t.km_tramo;
+      const dt = t.datetime_evento;
+      if(pivotCarga && dt < pivotCarga) {
+        kmVacioIda += t.km_tramo;
+      } else if(pivotDescarga && dt < pivotDescarga) {
+        kmCargado += t.km_tramo;
       } else {
-        kmRetorno+=t.km_tramo;
+        kmRetorno += t.km_tramo;
       }
     }
+    console.log('Km tramos — Vacío ida:', Math.round(kmVacioIda), '| Cargado:', Math.round(kmCargado), '| Retorno:', Math.round(kmRetorno));
     if(kmVacioIda>0) document.getElementById('cos-km-vacio-ida').value = Math.round(kmVacioIda);
     if(kmCargado>0)  document.getElementById('cos-km-cargado').value   = Math.round(kmCargado);
     if(kmRetorno>0)  document.getElementById('cos-km-retorno').value   = Math.round(kmRetorno);
