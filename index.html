@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>KAPTURA v7.5</title>
+<title>KAPTURA v7.6</title>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700;800;900&family=Barlow+Condensed:wght@600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -424,7 +424,7 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
 const SUPA_URL = 'https://aqunzrukuruwzwywnurq.supabase.co';
 const SUPA_KEY = 'sb_publishable_70t9UxFlcqYDj7AMybsrHg__IMGNA8C';
 const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
-const KAPTURA_VERSION = '7.5';
+const KAPTURA_VERSION = '7.6';
 const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 const hoy = new Date();
 const hoyStr = hoy.toISOString().split('T')[0];
@@ -1128,12 +1128,8 @@ async function cargarGPS() {
     document.getElementById('lbl-km').style.color = '#065F46';
     document.getElementById('cos-dias').value = diasActivos;
 
-    // Km por tramo: lógica origen→destino
-    // Vacío ida  = antes de llegar al origen (punto de carga)
-    // Cargado    = desde origen hasta destino final (todos los puntos)
-    // Retorno    = después del destino final
-    // Fallback   = si no detecta cargado, todo suma como vacío
-
+    // Km cargados = trips desde origen hasta destino final
+    // Km vacíos = km total - km cargados
     const durMin = (dur) => {
       if(!dur) return 0;
       let m=0;
@@ -1155,106 +1151,39 @@ async function cargarGPS() {
       if(gc) return gc.keywords.split(',').map(k=>k.trim().toLowerCase()).filter(k=>k.length>2);
       return [nombre.toLowerCase().split(',')[0].trim()];
     };
-
     const matchAddr = (addr, kws) => kws.some(kw => kw && (addr||'').toLowerCase().includes(kw));
 
-    // Get origen and all destinos (intermedios + final)
-    const origenKws   = getKws(s?.origen||'');
-    const puntosArr2  = (s?._puntos||[]).length > 0 ? s._puntos : puntosData;
-    const finalPto    = puntosArr2.find(p=>p.tipo==='final');
-    const intPtos     = puntosArr2.filter(p=>p.tipo==='intermedio');
-    const destinoFinalKws = getKws(finalPto?.destino||s?.destino||'');
-    const allDestinosKws  = [
-      ...intPtos.flatMap(p=>getKws(p.destino||'')),
-      ...destinoFinalKws
-    ];
+    const origenKws  = getKws(s?.origen||'');
+    const puntosArr2 = (s?._puntos||[]).length > 0 ? s._puntos : puntosData;
+    const finalPto   = puntosArr2.find(p=>p.tipo==='final');
+    const destinoKws = getKws(finalPto?.destino||s?.destino||'');
 
-    // Find pivot times using GPS events
-    const allEvts = eventos.sort((a,b) => a.datetime_evento > b.datetime_evento ? 1:-1);
+    // Find first event matching ORIGEN = start of cargado
+    const allEvtsSorted = eventos.sort((a,b) => a.datetime_evento > b.datetime_evento ? 1:-1);
+    const evtOrigen  = allEvtsSorted.find(e => matchAddr(e.address, origenKws) && (e.evento==='stop'||e.evento==='geofence_in'));
+    // Find last event matching DESTINO = end of cargado
+    const evtDestino = [...allEvtsSorted].reverse().find(e => matchAddr(e.address, destinoKws) && (e.evento==='stop'||e.evento==='trip'));
 
-    // Pivot origen: first stop >=30min OR geofence matching origen keywords
-    const stopsLargas = allEvts.filter(e => e.evento==='stop' && durMin(e.duracion)>=30);
-    const geofences   = allEvts.filter(e => e.evento==='geofence_in'||e.evento==='geofence_out');
+    console.log('Origen kws:', origenKws[0], '→ evento:', evtOrigen?.datetime_evento||'null');
+    console.log('Destino kws:', destinoKws[0], '→ evento:', evtDestino?.datetime_evento||'null');
 
-    // Find stop/geofence near ORIGEN (end of vacío ida)
-    const evtOrigen = 
-      stopsLargas.find(e => matchAddr(e.address, origenKws)) ||
-      geofences.find(e => matchAddr(e.address, origenKws)) ||
-      stopsLargas[0] || null; // fallback: first long stop
-
-    // Find stop/geofence near DESTINO FINAL (end of cargado)
-    // Must be AFTER evtOrigen
-    const afterOrigen = evtOrigen
-      ? allEvts.filter(e => e.datetime_evento > evtOrigen.datetime_evento)
-      : allEvts;
-    const stopsAfterOrigen = afterOrigen.filter(e => e.evento==='stop' && durMin(e.duracion)>=30);
-    const geoAfterOrigen   = afterOrigen.filter(e => e.evento==='geofence_in'||e.evento==='geofence_out');
-
-    // Search ALL events after origen matching destino keywords (not just >=30min stops)
-    const allAfterOrigen = evtOrigen
-      ? allEvts.filter(e => e.datetime_evento > evtOrigen.datetime_evento)
-      : allEvts;
-    const evtDestino =
-      allAfterOrigen.find(e => e.evento==='stop' && matchAddr(e.address, destinoFinalKws)) ||
-      allAfterOrigen.find(e => e.evento==='geofence_in' && matchAddr(e.address, destinoFinalKws)) ||
-      allAfterOrigen.find(e => matchAddr(e.address, destinoFinalKws)) ||
-      allAfterOrigen.find(e => e.evento==='stop' && matchAddr(e.address, allDestinosKws)) ||
-      null;
-
-    const pivotOrigen  = evtOrigen?.datetime_evento  || null;
-    const pivotDestino = evtDestino?.datetime_evento || null;
-
-    console.log('Geocercas — origen:', origenKws[0]||'?', '| destino:', destinoFinalKws[0]||'?');
-    console.log('pivotOrigen:', pivotOrigen, '| pivotDestino:', pivotDestino);
-
-    // Calculate km per phase
-    let kmVacioIda=0, kmCargado=0, kmRetorno=0;
-
-    if(pivotOrigen && pivotDestino) {
-      // Best case: both pivots detected
+    // Calculate km cargados = trips between origen and destino events
+    let kmCargado = 0;
+    if(evtOrigen && evtDestino && evtOrigen.datetime_evento < evtDestino.datetime_evento) {
       for(const t of trips) {
-        const dt = t.datetime_evento;
-        if(dt <= pivotOrigen)       kmVacioIda += t.km_tramo;
-        else if(dt <= pivotDestino) kmCargado  += t.km_tramo;
-        else                        kmRetorno  += t.km_tramo;
+        if(t.datetime_evento >= evtOrigen.datetime_evento && t.datetime_evento <= evtDestino.datetime_evento) {
+          kmCargado += t.km_tramo;
+        }
       }
-    } else if(pivotOrigen) {
-      // Origen detected: use math A = C + B + D
-      // C = vacío ida (already known from pivotOrigen)
-      // D = retorno = last trip >50km of the day
-      // B = cargado = A - C - D
-
-      // First pass: get vacío ida
-      for(const t of trips) {
-        if(t.datetime_evento <= pivotOrigen) kmVacioIda += t.km_tramo;
-      }
-
-      // Find last significant trip (>50km) = retorno
-      const tripsAfterOrigen = trips.filter(t => t.datetime_evento > pivotOrigen);
-      const lastBigTrip = tripsAfterOrigen
-        .filter(t => t.km_tramo > 50)
-        .sort((a,b) => a.datetime_evento > b.datetime_evento ? 1:-1)
-        .pop() || null;
-
-      if(lastBigTrip) {
-        kmRetorno = lastBigTrip.km_tramo;
-        // B = A - C - D
-        kmCargado = Math.max(0, Math.round(kmTotal) - Math.round(kmVacioIda) - Math.round(kmRetorno));
-      } else {
-        // No big return trip: cargado = everything after origen
-        for(const t of tripsAfterOrigen) kmCargado += t.km_tramo;
-      }
-    } else {
-      // No pivots: all vacío
-      kmVacioIda = kmTotal;
     }
 
-    // Final math check: ensure total matches
-    const kmCheck = Math.round(kmVacioIda + kmCargado + kmRetorno);
-    console.log('Km tramos — Vacío ida:', Math.round(kmVacioIda), '| Cargado:', Math.round(kmCargado), '| Retorno:', Math.round(kmRetorno), '| Total:', kmCheck, '/', Math.round(kmTotal));
-    if(kmVacioIda>0) document.getElementById('cos-km-vacio-ida').value = Math.round(kmVacioIda);
-    if(kmCargado>0)  document.getElementById('cos-km-cargado').value   = Math.round(kmCargado);
-    if(kmRetorno>0)  document.getElementById('cos-km-retorno').value   = Math.round(kmRetorno);
+    // Km vacíos = total - cargados
+    const kmVacioIda = Math.max(0, Math.round(kmTotal) - Math.round(kmCargado));
+    const kmRetorno  = 0; // simplified: not shown separately
+    console.log('Km tramos — Vacío:', kmVacioIda, '| Cargado:', Math.round(kmCargado), '| Total:', Math.round(kmTotal));
+    document.getElementById('cos-km-cargado').value   = Math.round(kmCargado);
+    document.getElementById('cos-km-vacio-ida').value = kmVacioIda;
+    document.getElementById('cos-km-retorno').value   = '';
     calcRetorno();
     calcCostos();
 
