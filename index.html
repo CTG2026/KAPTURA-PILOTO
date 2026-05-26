@@ -1161,8 +1161,8 @@ async function cargarGPS() {
     // Find first event matching ORIGEN = start of cargado
     const allEvtsSorted = eventos.sort((a,b) => a.datetime_evento > b.datetime_evento ? 1:-1);
     const evtOrigen  = allEvtsSorted.find(e => matchAddr(e.address, origenKws) && (e.evento==='stop'||e.evento==='geofence_in'));
-    // Find last event matching DESTINO = end of cargado
-    const evtDestino = [...allEvtsSorted].reverse().find(e => matchAddr(e.address, destinoKws) && (e.evento==='stop'||e.evento==='trip'));
+    // Find LAST STOP matching DESTINO = end of cargado (not a trip - trips can be departures)
+    const evtDestino = [...allEvtsSorted].reverse().find(e => matchAddr(e.address, destinoKws) && e.evento==='stop');
 
     console.log('Origen kws:', origenKws[0], '→ evento:', evtOrigen?.datetime_evento||'null');
     console.log('Destino kws:', destinoKws[0], '→ evento:', evtDestino?.datetime_evento||'null');
