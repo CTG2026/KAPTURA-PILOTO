@@ -1140,34 +1140,51 @@ async function cargarGPS() {
       const dm=(dur+'').match(/(\d+)\s*min/); if(dm) m+=parseInt(dm[1]);
       return m;
     };
-    const origenKw  = (s?.origen||'').toLowerCase().split(',')[0].trim();
     const puntosArr2 = s?._puntos || puntosData || [];
     const finalPto   = puntosArr2.find(p=>p.tipo==='final');
-    const destinoKw  = (finalPto?.destino||'').toLowerCase().split(',')[0].trim();
+    const origenNorm  = (s?.origen||'').toLowerCase().split(',')[0].trim();
+    const destinoNorm = (finalPto?.destino||s?.destino||'').toLowerCase().split(',')[0].trim();
 
-    // Find geofence events near origen and destino
-    const geofences = eventos.filter(e => e.evento==='geofence_in' || e.evento==='geofence_out');
-    const geoCarga    = geofences.find(g => origenKw && (g.address||'').toLowerCase().includes(origenKw));
-    const geoDescarga = geofences.find(g => destinoKw && (g.address||'').toLowerCase().includes(destinoKw));
+    // Load geocercas from Supabase
+    let geocercas = [];
+    try {
+      const {data:gc} = await supa.from('kaptura_geocercas').select('destino,keywords').eq('activo',true);
+      geocercas = gc || [];
+    } catch(e) { console.warn('Geocercas:', e.message); }
 
-    // Find stops >30min sorted chronologically
-    const stopsLargas = eventos
-      .filter(e => e.evento==='stop' && durMin(e.duracion) >= 30)
-      .sort((a,b) => a.datetime_evento > b.datetime_evento ? 1 : -1);
+    // Build keyword lists for origen and destino
+    const getKws = (nombre) => {
+      const gc = geocercas.find(g => g.destino.toLowerCase() === nombre.toLowerCase());
+      if(gc) return gc.keywords.split(',').map(k=>k.trim().toLowerCase());
+      return [nombre.toLowerCase()]; // fallback: use name directly
+    };
+    const origenKws  = getKws(s?.origen||'');
+    const destinoKws = getKws(finalPto?.destino||s?.destino||'');
 
-    // Determine pivot times for phase changes
-    // Phase change vacio→cargado: after geoCarga OR after first long stop
-    // Phase change cargado→retorno: after geoDescarga OR after second long stop
-    let pivotCarga    = geoCarga    ? geoCarga.datetime_evento    : (stopsLargas[0]?.datetime_evento || null);
-    let pivotDescarga = geoDescarga ? geoDescarga.datetime_evento : (stopsLargas[1]?.datetime_evento || null);
+    // Find GPS events matching origen and destino keywords
+    const allEvents = eventos.sort((a,b) => a.datetime_evento > b.datetime_evento ? 1 : -1);
+    const matchEvento = (e, kws) => kws.some(kw => kw && (e.address||'').toLowerCase().includes(kw));
 
-    // If no geofence, reinforce with nearest long stop after first pivot
-    if(!geoCarga && stopsLargas.length > 0) {
-      pivotCarga = stopsLargas[0].datetime_evento;
-    }
-    if(!geoDescarga && stopsLargas.length > 1) {
-      pivotDescarga = stopsLargas.filter(s => s.datetime_evento > pivotCarga)[0]?.datetime_evento || null;
-    }
+    // Find pivot points: stop/geofence near origen (end of vacio ida)
+    // and stop/geofence near destino (end of cargado)
+    const stopsLargas = allEvents.filter(e => e.evento==='stop' && durMin(e.duracion) >= 30);
+    const geofences   = allEvents.filter(e => e.evento==='geofence_in' || e.evento==='geofence_out');
+
+    // Pivot carga: geofence OR stop matching origen keywords
+    const geoCarga   = geofences.find(e => matchEvento(e, origenKws));
+    const stopCarga  = stopsLargas.find(e => matchEvento(e, origenKws));
+    let pivotCarga   = geoCarga?.datetime_evento || stopCarga?.datetime_evento || stopsLargas[0]?.datetime_evento || null;
+
+    // Pivot descarga: geofence OR stop matching destino keywords (after pivotCarga)
+    const afterCarga     = pivotCarga ? allEvents.filter(e => e.datetime_evento > pivotCarga) : allEvents;
+    const stopsAfter     = afterCarga.filter(e => e.evento==='stop' && durMin(e.duracion) >= 30);
+    const geofencesAfter = afterCarga.filter(e => e.evento==='geofence_in' || e.evento==='geofence_out');
+    const geoDescarga    = geofencesAfter.find(e => matchEvento(e, destinoKws));
+    const stopDescarga   = stopsAfter.find(e => matchEvento(e, destinoKws));
+    let pivotDescarga    = geoDescarga?.datetime_evento || stopDescarga?.datetime_evento || stopsAfter[0]?.datetime_evento || null;
+
+    console.log('Geocercas — origen:', origenKws[0], '| destino:', destinoKws[0]);
+    console.log('pivotCarga:', pivotCarga, '| pivotDescarga:', pivotDescarga);
 
     let kmVacioIda=0, kmCargado=0, kmRetorno=0;
     for(const t of trips) {
