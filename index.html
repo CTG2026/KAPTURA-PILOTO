@@ -1190,11 +1190,16 @@ async function cargarGPS() {
     const stopsAfterOrigen = afterOrigen.filter(e => e.evento==='stop' && durMin(e.duracion)>=30);
     const geoAfterOrigen   = afterOrigen.filter(e => e.evento==='geofence_in'||e.evento==='geofence_out');
 
+    // Search ALL events after origen matching destino keywords (not just >=30min stops)
+    const allAfterOrigen = evtOrigen
+      ? allEvts.filter(e => e.datetime_evento > evtOrigen.datetime_evento)
+      : allEvts;
     const evtDestino =
-      stopsAfterOrigen.find(e => matchAddr(e.address, destinoFinalKws)) ||
-      geoAfterOrigen.find(e => matchAddr(e.address, destinoFinalKws)) ||
-      stopsAfterOrigen.find(e => matchAddr(e.address, allDestinosKws)) ||
-      null; // no fallback — if not found, cargado stays 0
+      allAfterOrigen.find(e => e.evento==='stop' && matchAddr(e.address, destinoFinalKws)) ||
+      allAfterOrigen.find(e => e.evento==='geofence_in' && matchAddr(e.address, destinoFinalKws)) ||
+      allAfterOrigen.find(e => matchAddr(e.address, destinoFinalKws)) ||
+      allAfterOrigen.find(e => e.evento==='stop' && matchAddr(e.address, allDestinosKws)) ||
+      null;
 
     const pivotOrigen  = evtOrigen?.datetime_evento  || null;
     const pivotDestino = evtDestino?.datetime_evento || null;
@@ -1204,21 +1209,44 @@ async function cargarGPS() {
 
     // Calculate km per phase
     let kmVacioIda=0, kmCargado=0, kmRetorno=0;
-    for(const t of trips) {
-      const dt = t.datetime_evento;
-      if(pivotOrigen && dt <= pivotOrigen) {
-        kmVacioIda += t.km_tramo;
-      } else if(pivotDestino && dt <= pivotDestino) {
-        kmCargado += t.km_tramo;
-      } else if(pivotOrigen) {
-        kmRetorno += t.km_tramo;
-      } else {
-        // Fallback: no pivots detected, all is vacío
-        kmVacioIda += t.km_tramo;
+
+    if(pivotOrigen && pivotDestino) {
+      // Best case: both pivots detected
+      for(const t of trips) {
+        const dt = t.datetime_evento;
+        if(dt <= pivotOrigen)       kmVacioIda += t.km_tramo;
+        else if(dt <= pivotDestino) kmCargado  += t.km_tramo;
+        else                        kmRetorno  += t.km_tramo;
       }
+    } else if(pivotOrigen) {
+      // Only origen detected: calculate vacío ida, then use last leg as retorno
+      // Retorno = trips after last long stop (>=60min)
+      const stopsLargasTotal = allEvts.filter(e => e.evento==='stop' && durMin(e.duracion)>=60)
+                                       .sort((a,b) => a.datetime_evento > b.datetime_evento ? 1:-1);
+      const ultimaParadaLarga = stopsLargasTotal.length > 0
+        ? stopsLargasTotal[stopsLargasTotal.length-1]
+        : null;
+      const pivotRetorno = ultimaParadaLarga ? ultimaParadaLarga.datetime_evento : null;
+
+      for(const t of trips) {
+        const dt = t.datetime_evento;
+        if(dt <= pivotOrigen)                        kmVacioIda += t.km_tramo;
+        else if(pivotRetorno && dt >= pivotRetorno)  kmRetorno  += t.km_tramo;
+        else                                         kmCargado  += t.km_tramo;
+      }
+      // Math verification: B = A - (C + D)
+      const kmTotalRound = Math.round(kmTotal);
+      const kmVacioIdaR  = Math.round(kmVacioIda);
+      const kmRetornoR   = Math.round(kmRetorno);
+      if(kmVacioIdaR + kmRetornoR < kmTotalRound) {
+        kmCargado = kmTotalRound - kmVacioIdaR - kmRetornoR;
+      }
+    } else {
+      // No pivots: all vacío
+      kmVacioIda = kmTotal;
     }
 
-    // Verification
+    // Final math check: ensure total matches
     const kmCheck = Math.round(kmVacioIda + kmCargado + kmRetorno);
     console.log('Km tramos — Vacío ida:', Math.round(kmVacioIda), '| Cargado:', Math.round(kmCargado), '| Retorno:', Math.round(kmRetorno), '| Total:', kmCheck, '/', Math.round(kmTotal));
     if(kmVacioIda>0) document.getElementById('cos-km-vacio-ida').value = Math.round(kmVacioIda);
