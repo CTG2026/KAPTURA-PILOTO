@@ -1219,27 +1219,30 @@ async function cargarGPS() {
         else                        kmRetorno  += t.km_tramo;
       }
     } else if(pivotOrigen) {
-      // Only origen detected: calculate vacío ida, then use last leg as retorno
-      // Retorno = trips after last long stop (>=60min)
-      const stopsLargasTotal = allEvts.filter(e => e.evento==='stop' && durMin(e.duracion)>=60)
-                                       .sort((a,b) => a.datetime_evento > b.datetime_evento ? 1:-1);
-      const ultimaParadaLarga = stopsLargasTotal.length > 0
-        ? stopsLargasTotal[stopsLargasTotal.length-1]
-        : null;
-      const pivotRetorno = ultimaParadaLarga ? ultimaParadaLarga.datetime_evento : null;
+      // Origen detected: use math A = C + B + D
+      // C = vacío ida (already known from pivotOrigen)
+      // D = retorno = last trip >50km of the day
+      // B = cargado = A - C - D
 
+      // First pass: get vacío ida
       for(const t of trips) {
-        const dt = t.datetime_evento;
-        if(dt <= pivotOrigen)                        kmVacioIda += t.km_tramo;
-        else if(pivotRetorno && dt >= pivotRetorno)  kmRetorno  += t.km_tramo;
-        else                                         kmCargado  += t.km_tramo;
+        if(t.datetime_evento <= pivotOrigen) kmVacioIda += t.km_tramo;
       }
-      // Math verification: B = A - (C + D)
-      const kmTotalRound = Math.round(kmTotal);
-      const kmVacioIdaR  = Math.round(kmVacioIda);
-      const kmRetornoR   = Math.round(kmRetorno);
-      if(kmVacioIdaR + kmRetornoR < kmTotalRound) {
-        kmCargado = kmTotalRound - kmVacioIdaR - kmRetornoR;
+
+      // Find last significant trip (>50km) = retorno
+      const tripsAfterOrigen = trips.filter(t => t.datetime_evento > pivotOrigen);
+      const lastBigTrip = tripsAfterOrigen
+        .filter(t => t.km_tramo > 50)
+        .sort((a,b) => a.datetime_evento > b.datetime_evento ? 1:-1)
+        .pop() || null;
+
+      if(lastBigTrip) {
+        kmRetorno = lastBigTrip.km_tramo;
+        // B = A - C - D
+        kmCargado = Math.max(0, Math.round(kmTotal) - Math.round(kmVacioIda) - Math.round(kmRetorno));
+      } else {
+        // No big return trip: cargado = everything after origen
+        for(const t of tripsAfterOrigen) kmCargado += t.km_tramo;
       }
     } else {
       // No pivots: all vacío
