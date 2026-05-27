@@ -1223,7 +1223,43 @@ async function cargarGPS() {
 
     if(!eventos||!eventos.length) { toast('Sin GPS para ese rango'); return; }
 
-    const trips = eventos.filter(e => e.evento==='trip' && (e.km_tramo||0) > 0);
+    // Detect retorno type from notas
+    const notasStr = s?.notas || '';
+    const retornoTipo = notasStr.includes('Retorno: base') ? 'base' : 
+                        notasStr.includes('Retorno: pernocta') ? 'pernocta' : 'base';
+
+    // If retorno=base, find when truck arrived at base (Coltauco)
+    // and cut GPS at that point - ignore trips after arrival
+    let cutoffDatetime = null;
+    if(retornoTipo === 'base') {
+      const baseKws = ['coltauco','quillaiquén','quillaiquen','base'];
+      // Find first stop in Coltauco AFTER the last delivery point
+      const lastDelivery = eventos.filter(e => {
+        const al = (e.address||'').toLowerCase();
+        return e.evento==='stop' && !baseKws.some(k=>al.includes(k));
+      }).sort((a,b)=>a.datetime_evento>b.datetime_evento?1:-1).pop();
+      
+      const eventsAfterDelivery = lastDelivery
+        ? eventos.filter(e=>e.datetime_evento>lastDelivery.datetime_evento)
+        : eventos;
+
+      const arrivalBase = eventsAfterDelivery.find(e => {
+        const al = (e.address||'').toLowerCase();
+        return (e.evento==='stop'||e.evento==='geofence_in') && baseKws.some(k=>al.includes(k));
+      });
+      
+      if(arrivalBase) {
+        cutoffDatetime = arrivalBase.datetime_evento;
+        console.log('Llegada a base detectada:', cutoffDatetime, '-', arrivalBase.address);
+      }
+    }
+
+    // Filter trips - cut at base arrival if detected
+    const trips = eventos.filter(e => {
+      if(e.evento !== 'trip' || (e.km_tramo||0) <= 0) return false;
+      if(cutoffDatetime && e.datetime_evento > cutoffDatetime) return false;
+      return true;
+    });
     const kmTotal = trips.reduce((a,e)=>a+(e.km_tramo||0),0);
     const diasActivos = new Set(trips.map(e=>e.fecha)).size;
 
