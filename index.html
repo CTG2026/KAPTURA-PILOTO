@@ -1304,7 +1304,12 @@ async function cargarGPS() {
 
     // Find first event matching ORIGEN = start of cargado
     const allEvtsSorted = eventos.sort((a,b) => a.datetime_evento > b.datetime_evento ? 1:-1);
-    const evtOrigen  = allEvtsSorted.find(e => matchAddr(e.address, origenKws) && (e.evento==='stop'||e.evento==='geofence_in'));
+    // Usar primer trip largo (>25 km) desde origen para ignorar movimientos locales pre-servicio
+    const firstLongTrip = trips.find(t => t.km_tramo > 25 && matchAddr(t.address, origenKws));
+    const evtOrigen = firstLongTrip
+      ? allEvtsSorted.filter(e => e.datetime_evento <= firstLongTrip.datetime_evento && matchAddr(e.address, origenKws) && (e.evento==='stop'||e.evento==='geofence_in')).pop()
+      : allEvtsSorted.find(e => matchAddr(e.address, origenKws) && (e.evento==='stop'||e.evento==='geofence_in'));
+    console.log('firstLongTrip:', firstLongTrip?.datetime_evento||'none', firstLongTrip?.km_tramo||0, 'km');
     // Find LAST STOP matching DESTINO = end of cargado (not a trip - trips can be departures)
     const evtDestino = [...allEvtsSorted].reverse().find(e => matchAddr(e.address, destinoKws) && e.evento==='stop');
 
