@@ -1212,7 +1212,10 @@ function calcCostos() {
   const c    = DB.config;
   const dias = parseFloat(document.getElementById('cos-dias').value)||1;
   const km   = parseFloat(document.getElementById('cos-km').value)||0;
-  const rend = parseFloat(c.rendimiento||c.rendimiento_km_lt||2.5);
+  // Usar rendimiento específico del equipo si existe, sino el global
+  const svcPatente = svcActivo ? (DB.servicios[svcActivoIdx]?.patente||'') : '';
+  const flotaEquipo = DB.flota.find(f => f.patente === svcPatente);
+  const rend = parseFloat(flotaEquipo?.rendimiento_km_lt || c.rendimiento||c.rendimiento_km_lt||2.5);
   const prec = parseFloat(c.precio_litro||c.precio_combustible||1300);
   const lts  = km ? Math.round(km/rend*10)/10 : 0;
   const comb = Math.round(lts * prec);
@@ -1514,7 +1517,10 @@ async function guardarCostosBorrador() {
   const tarifa = final?.valor || s.tarifa_neta || 0;
   const valorPts = ints.reduce((a,p)=>a+(p.valor||0),0);
   const c = DB.config;
-  const rend = parseFloat(c.rendimiento||2.5);
+  // Usar rendimiento específico del equipo si existe, sino el global
+  const _pat2 = svcActivo ? (DB.servicios[svcActivoIdx]?.patente||'') : '';
+  const _flota2 = DB.flota.find(f => f.patente === _pat2);
+  const rend = parseFloat(_flota2?.rendimiento_km_lt || c.rendimiento||2.5);
   const prec = parseFloat(c.precio_litro||1300);
   const comb = km ? Math.round((km/rend)*prec) : 0;
   const condVal = dias*parseInt(c.sueldo_conductor||33000);
