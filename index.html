@@ -1254,23 +1254,7 @@ async function cargarGPS() {
       }
     }
 
-    // Filter trips - cut at base arrival if detected
-    const trips = eventos.filter(e => {
-      if(e.evento !== 'trip' || (e.km_tramo||0) <= 0) return false;
-      if(cutoffDatetime && e.datetime_evento > cutoffDatetime) return false;
-      return true;
-    });
-    const kmTotal = trips.reduce((a,e)=>a+(e.km_tramo||0),0);
-    const diasActivos = new Set(trips.map(e=>e.fecha)).size;
-
-    document.getElementById('cos-km').value = Math.round(kmTotal);
-    document.getElementById('lbl-km').textContent = 'GPS ✓';
-    document.getElementById('lbl-km').style.background = '#D1FAE5';
-    document.getElementById('lbl-km').style.color = '#065F46';
-    document.getElementById('cos-dias').value = diasActivos;
-
-    // Km cargados = trips desde origen hasta destino final
-    // Km vacíos = km total - km cargados
+    // Helpers (necesarios antes de detectar origen)
     const durMin = (dur) => {
       if(!dur) return 0;
       let m=0;
@@ -1302,15 +1286,33 @@ async function cargarGPS() {
     const finalPto   = puntosArr2.find(p=>p.tipo==='final');
     const destinoKws = getKws(finalPto?.destino||s?.destino||'');
 
-    // Find first event matching ORIGEN = start of cargado
+    // Detectar evento origen ANTES de filtrar trips
     const allEvtsSorted = eventos.sort((a,b) => a.datetime_evento > b.datetime_evento ? 1:-1);
-    // Usar primer trip largo (>25 km) desde origen para ignorar movimientos locales pre-servicio
-    const firstLongTrip = trips.find(t => t.km_tramo > 25 && matchAddr(t.address, origenKws));
+    // Pre-filtrar trips solo con corte base (sin corte de origen aún)
+    const tripsRaw = eventos.filter(e => {
+      if(e.evento !== 'trip' || (e.km_tramo||0) <= 0) return false;
+      if(cutoffDatetime && e.datetime_evento > cutoffDatetime) return false;
+      return true;
+    });
+    // Primer trip largo (>25 km) desde origen → ignora movimientos locales pre-servicio
+    const firstLongTrip = tripsRaw.find(t => t.km_tramo > 25 && matchAddr(t.address, origenKws));
     const evtOrigen = firstLongTrip
       ? allEvtsSorted.filter(e => e.datetime_evento <= firstLongTrip.datetime_evento && matchAddr(e.address, origenKws) && (e.evento==='stop'||e.evento==='geofence_in')).pop()
       : allEvtsSorted.find(e => matchAddr(e.address, origenKws) && (e.evento==='stop'||e.evento==='geofence_in'));
     console.log('firstLongTrip:', firstLongTrip?.datetime_evento||'none', firstLongTrip?.km_tramo||0, 'km');
-    // Find LAST STOP matching DESTINO = end of cargado (not a trip - trips can be departures)
+
+    // Filtrar trips definitivos: desde evtOrigen + corte base
+    const trips = tripsRaw.filter(t => !evtOrigen || t.datetime_evento >= evtOrigen.datetime_evento);
+    const kmTotal = trips.reduce((a,e)=>a+(e.km_tramo||0),0);
+    const diasActivos = new Set(trips.map(e=>e.fecha)).size;
+
+    document.getElementById('cos-km').value = Math.round(kmTotal);
+    document.getElementById('lbl-km').textContent = 'GPS ✓';
+    document.getElementById('lbl-km').style.background = '#D1FAE5';
+    document.getElementById('lbl-km').style.color = '#065F46';
+    document.getElementById('cos-dias').value = diasActivos;
+
+    // Find LAST STOP matching DESTINO = end of cargado
     const evtDestino = [...allEvtsSorted].reverse().find(e => matchAddr(e.address, destinoKws) && e.evento==='stop');
 
     console.log('Origen kws:', origenKws[0], '→ evento:', evtOrigen?.datetime_evento||'null');
