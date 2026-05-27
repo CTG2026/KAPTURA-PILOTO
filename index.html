@@ -1296,13 +1296,11 @@ async function cargarGPS() {
     });
     // Primer trip largo (>25 km) desde origen → ignora movimientos locales pre-servicio
     const firstLongTrip = tripsRaw.find(t => t.km_tramo > 25 && matchAddr(t.address, origenKws));
-    const evtOrigen = firstLongTrip
-      ? allEvtsSorted.filter(e => e.datetime_evento <= firstLongTrip.datetime_evento && matchAddr(e.address, origenKws) && (e.evento==='stop'||e.evento==='geofence_in')).pop()
-      : allEvtsSorted.find(e => matchAddr(e.address, origenKws) && (e.evento==='stop'||e.evento==='geofence_in'));
     console.log('firstLongTrip:', firstLongTrip?.datetime_evento||'none', firstLongTrip?.km_tramo||0, 'km');
 
-    // Filtrar trips definitivos: desde evtOrigen + corte base
-    const trips = tripsRaw.filter(t => !evtOrigen || t.datetime_evento >= evtOrigen.datetime_evento);
+    // Filtrar trips definitivos: desde firstLongTrip para excluir trips intermedios pre-viaje
+    const inicioViaje = firstLongTrip ? firstLongTrip.datetime_evento : null;
+    const trips = tripsRaw.filter(t => !inicioViaje || t.datetime_evento >= inicioViaje);
     const kmTotal = trips.reduce((a,e)=>a+(e.km_tramo||0),0);
     const diasActivos = new Set(trips.map(e=>e.fecha)).size;
 
@@ -1312,15 +1310,26 @@ async function cargarGPS() {
     document.getElementById('lbl-km').style.color = '#065F46';
     document.getElementById('cos-dias').value = diasActivos;
 
+    // evtOrigen: último stop en origen antes del firstLongTrip (para logs y fallback)
+    const evtOrigen = firstLongTrip
+      ? allEvtsSorted.filter(e => e.datetime_evento <= firstLongTrip.datetime_evento && matchAddr(e.address, origenKws) && (e.evento==='stop'||e.evento==='geofence_in')).pop()
+      : allEvtsSorted.find(e => matchAddr(e.address, origenKws) && (e.evento==='stop'||e.evento==='geofence_in'));
+
     // Find LAST STOP matching DESTINO = end of cargado
     const evtDestino = [...allEvtsSorted].reverse().find(e => matchAddr(e.address, destinoKws) && e.evento==='stop');
 
-    console.log('Origen kws:', origenKws[0], '→ evento:', evtOrigen?.datetime_evento||'null');
+    console.log('Origen kws:', origenKws[0], '→ inicio viaje:', inicioViaje||evtOrigen?.datetime_evento||'null');
     console.log('Destino kws:', destinoKws[0], '→ evento:', evtDestino?.datetime_evento||'null');
 
-    // Calculate km cargados = trips between origen and destino events
+    // Calculate km cargados = trips desde inicioViaje hasta evtDestino
     let kmCargado = 0;
-    if(evtOrigen && evtDestino && evtOrigen.datetime_evento < evtDestino.datetime_evento) {
+    if(inicioViaje && evtDestino) {
+      for(const t of trips) {
+        if(t.datetime_evento >= inicioViaje && t.datetime_evento <= evtDestino.datetime_evento) {
+          kmCargado += t.km_tramo;
+        }
+      }
+    } else if(evtOrigen && evtDestino && evtOrigen.datetime_evento < evtDestino.datetime_evento) {
       for(const t of trips) {
         if(t.datetime_evento >= evtOrigen.datetime_evento && t.datetime_evento <= evtDestino.datetime_evento) {
           kmCargado += t.km_tramo;
