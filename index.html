@@ -1681,14 +1681,18 @@ async function abrirInforme(i) {
   });
   html += `</tbody></table></div>
 
-  <div class="inf-margen">
+  <div style="background:#1C2B4A;color:#fff;padding:12px 16px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;border-radius:0 0 8px 8px;margin-top:4px">
     <div>
-      <div style="font-size:9px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.45);margin-bottom:4px">Margen Servicio</div>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;color:${(s.margen_servicio||s.margen||0)>=0?'#34D399':'#F87171'}">${fmt(s.margen_servicio||s.margen||0)}</div>
+      <div style="font-size:9px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.45);margin-bottom:4px">Total Ingresos</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;color:#34D399">${fmt(s.ingreso_total||s.tarifa_neta||0)}</div>
     </div>
     <div>
       <div style="font-size:9px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.45);margin-bottom:4px">Total Costos</div>
       <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;color:#F87171">${fmt(s.total_costos||0)}</div>
+    </div>
+    <div>
+      <div style="font-size:9px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.45);margin-bottom:4px">Margen Servicio</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;color:${(s.margen_servicio||s.margen||0)>=0?'#34D399':'#F87171'}">${fmt(s.margen_servicio||s.margen||0)}</div>
     </div>
   </div>`;
 
@@ -1705,7 +1709,27 @@ async function abrirInforme(i) {
       if(DB_porticos.length === 0) await cargarPorticos();
 
       // Sección pórticos — lista directa del corredor calculado
-      if((s._porticos||[]).length > 0) {
+      // Lista pórticos: desde _porticos en memoria o reconstruir desde corredor en BD
+      const porticosInforme = (s._porticos||[]).length > 0 ? s._porticos : (() => {
+        // Reconstruir desde corredor guardado en notas
+        const notas = s.notas||'';
+        if(notas.includes('|_PORTICOS:')) {
+          try { return JSON.parse(notas.split('|_PORTICOS:')[1].split('|_CORREDOR:')[0]); } catch(e) {}
+        }
+        // Reconstruir desde corredor detectado
+        const corrNombre = (notas.split('|_CORREDOR:')[1]||'').trim();
+        const corr = DB_corredores.find(c=>c.nombre===corrNombre||c.id===corrNombre);
+        if(corr && s.peajes_tag > 0) {
+          const ida = (corr.porticos_ida||'').split(',').map(n=>n.trim()).filter(Boolean);
+          const vta = (corr.porticos_vuelta||'').split(',').map(n=>n.trim()).filter(Boolean);
+          return [...ida,...vta].map(nombre=>{
+            const dbP = DB_porticos.find(p=>p.cobro_oficial===nombre&&p.valor_3_ejes>0);
+            return dbP ? {nombre, valor:dbP.valor_3_ejes, tipo:(dbP.tipo||'tag').toLowerCase()} : null;
+          }).filter(Boolean);
+        }
+        return [];
+      })();
+      if(porticosInforme.length > 0) {
         html += `<div style="margin-bottom:16px">
           <div style="font-weight:700;font-size:11px;letter-spacing:0.08em;color:#8C96B0;margin-bottom:8px">🏷 PEAJES / TAG DETECTADOS</div>
           <table style="width:100%;border-collapse:collapse;font-size:12px">
@@ -1715,7 +1739,7 @@ async function abrirInforme(i) {
               <th style="text-align:right;padding:6px 8px;color:#8C96B0">Valor</th>
             </tr></thead><tbody>`;
         let totalPort = 0;
-        for(const p of s._porticos) {
+        for(const p of porticosInforme) {
           totalPort += p.valor||0;
           html += `<tr style="border-bottom:1px solid #F0F2F7">
             <td style="padding:6px 8px;font-weight:600">${p.nombre}</td>
