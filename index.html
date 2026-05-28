@@ -563,7 +563,13 @@ async function init() {
       if(!svc._puntos || svc._puntos.length === 0) {
         const notas = svc.notas || '';
         const marker = notas.includes('|_PUNTOS:') ? '|_PUNTOS:' : notas.includes('_PUNTOS:') ? '_PUNTOS:' : null;
-        if(marker) { try { svc._puntos = JSON.parse(notas.split(marker)[1]); } catch(e) {} }
+        if(marker) { try { svc._puntos = JSON.parse(notas.split(marker)[1].split('|_PORTICOS:')[0]); } catch(e) {} }
+        if(notas.includes('|_PORTICOS:')) {
+          try { svc._porticos = JSON.parse(notas.split('|_PORTICOS:')[1].split('|_CORREDOR:')[0]); } catch(e) {}
+        }
+        if(notas.includes('|_CORREDOR:')) {
+          try { svc._corredor = notas.split('|_CORREDOR:')[1]; } catch(e) {}
+        }
       }
       return svc;
     });
@@ -1546,7 +1552,7 @@ async function guardarCostosBorrador() {
     costo_mantencion:mant, factoring:fact, total_costos:costos,
     margen_servicio:margen, margen:margen,
     km_base_carga:kmVacioIda, km_carga_destino:kmCargado, km_retorno:kmRetorno,
-    notas: `Retorno: base|_PUNTOS:${puntosJSON}`
+    notas: `Retorno: base|_PUNTOS:${puntosJSON}|_PORTICOS:${JSON.stringify(detectadosTag)}|_CORREDOR:${corridorDetected?.nombre||''}`
   }).eq('id',s.id);
   if(error) { toast('Error: '+error.message); return; }
   DB.servicios[svcActivoIdx] = {...s, estado:'borrador', km_total:km, tarifa_neta:tarifa,
@@ -1554,7 +1560,8 @@ async function guardarCostosBorrador() {
     peajes_tag:tag, costo_peajes:peajes, dias_servicio:dias,
     km_base_carga:kmVacioIda, km_carga_destino:kmCargado, km_retorno:kmRetorno,
     margen_servicio:margen, margen,
-    _fecha_termino:fechaTerm, _puntos:puntos};
+    _fecha_termino:fechaTerm, _puntos:puntos,
+    _porticos:detectadosTag, _corredor:corridorDetected?.nombre||''};
   cerrar('modal-costos'); renderServicios(); renderKPIs();
   toast(`✓ Costos guardados — ${s.servicio_id}`);
 }
@@ -1610,9 +1617,8 @@ async function abrirInforme(i) {
       <div class="inf-cell"><div class="inf-lbl">Fecha Término</div><div class="inf-val">${fechaTerm}</div></div>
       <div class="inf-cell"><div class="inf-lbl">Días en ruta</div><div class="inf-val">${s.dias_servicio||'—'}</div></div>
       <div class="inf-cell"><div class="inf-lbl">KM GPS</div><div class="inf-val">${s.km_total ? s.km_total+' km' : '—'}</div></div>
-      <div class="inf-cell"><div class="inf-lbl">Km Vacío Ida</div><div class="inf-val">${s.km_base_carga ? s.km_base_carga+' km' : '—'}</div></div>
+      <div class="inf-cell"><div class="inf-lbl">Km Vacíos</div><div class="inf-val">${s.km_base_carga ? s.km_base_carga+' km' : '—'}</div></div>
       <div class="inf-cell"><div class="inf-lbl">Km Cargado</div><div class="inf-val">${s.km_carga_destino ? s.km_carga_destino+' km' : '—'}</div></div>
-      <div class="inf-cell"><div class="inf-lbl">Km Retorno Vacío</div><div class="inf-val">${s.km_retorno ? s.km_retorno+' km' : '—'}</div></div>
     </div>
   </div>
 
@@ -1707,18 +1713,17 @@ async function abrirInforme(i) {
         const dmm = ds.match(/(\d+)\s*min/); if(dmm) durMin+=parseInt(dmm[1]);
         acumMin += durMin;
         const acumH = Math.floor(acumMin/60), acumM = acumMin%60;
-        // Detect portico for this trip
+        // Mostrar pórticos del corredor detectado en orden cronológico
         let porticoLabel = '';
-        if(e.evento==='trip' && e.km_tramo > 10) {
+        if(e.evento==='trip' && (s._porticos||[]).length > 0) {
           const al = (e.address||'').toLowerCase();
-          const found = DB_porticos.filter(p => {
-            const kw = (p.palabras_clave||'').toLowerCase().split(',').map(x=>x.trim()).filter(x=>x.length>4);
-            return kw.some(k=>al.includes(k)) && p.valor_3_ejes > 0;
+          // Asignar pórticos cuyas keywords matchean con esta address
+          const matched = (s._porticos||[]).filter(p => {
+            const dbP = DB_porticos.find(dp => dp.cobro_oficial === p.nombre);
+            const kw = (dbP?.palabras_clave||'').toLowerCase().split(',').map(x=>x.trim()).filter(x=>x.length>2);
+            return kw.some(k=>al.includes(k));
           });
-          // Deduplicate by cobro_oficial
-          const seen = new Set();
-          const unique = found.filter(p => { if(seen.has(p.cobro_oficial)) return false; seen.add(p.cobro_oficial); return true; });
-          if(unique.length > 0) porticoLabel = unique.map(p=>`<span style="color:#1E3A5F;font-weight:700">${p.cobro_oficial} ${fmt(p.valor_3_ejes)}</span>`).join('<br>');
+          if(matched.length > 0) porticoLabel = matched.map(p=>`<span style="color:#1E3A5F;font-weight:700">${p.nombre} $${p.valor.toLocaleString('es-CL')}</span>`).join('<br>');
         }
         html += `<tr style="${e.evento!=='trip'?'background:#F5F7FA':''}">
           <td style="font-weight:700;color:#1C2B4A">${hora}</td>
