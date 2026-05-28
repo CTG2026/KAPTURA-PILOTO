@@ -1768,7 +1768,27 @@ async function abrirInforme(i) {
         const dmm = ds.match(/(\d+)\s*min/); if(dmm) durMin+=parseInt(dmm[1]);
         acumMin += durMin;
         const acumH = Math.floor(acumMin/60), acumM = acumMin%60;
-        const porticoLabel = '';
+        // Detectar pórtico por palabras_clave — máximo una vez por pórtico por dirección
+        let porticoLabel = '';
+        if(e.evento === 'trip' && e.km_tramo > 0) {
+          const al = (e.address||'').toLowerCase();
+          const matchedPorts = [];
+          for(const p of DB_porticos) {
+            const kw = (p.palabras_clave||'').toLowerCase().split(',').map(x=>x.trim()).filter(x=>x.length>3);
+            if(kw.some(k=>al.includes(k)) && p.valor_3_ejes > 0) {
+              matchedPorts.push(p);
+            }
+          }
+          // Deduplicar por cobro_oficial
+          const seen = new Set();
+          const unique = matchedPorts.filter(p=>{
+            if(seen.has(p.cobro_oficial)) return false;
+            seen.add(p.cobro_oficial); return true;
+          });
+          if(unique.length > 0) {
+            porticoLabel = unique.map(p=>`<span style="font-weight:700;color:#1E3A5F">${p.cobro_oficial} $${(p.valor_3_ejes||0).toLocaleString('es-CL')}</span>`).join('<br>');
+          }
+        }
         html += `<tr style="${e.evento!=='trip'?'background:#F5F7FA':''}">
           <td style="font-weight:700;color:#1C2B4A">${hora}</td>
           <td style="color:#2A3350">${tipo}</td>
