@@ -1756,6 +1756,11 @@ async function abrirInforme(i) {
       html += `<div style="overflow-x:auto"><table class="inf-table">
         <thead><tr><th>Hora</th><th>Tipo</th><th>Lugar</th><th style="text-align:right">Km</th><th>TAG/Peaje</th><th style="text-align:right">Duración</th><th style="text-align:right">Acum.</th></tr></thead><tbody>`;
 
+      // Cola de pórticos para consumo secuencial en timeline
+      const porticosCola = [...porticosInforme];
+      // Determinar umbral de km para considerar un trip como cruce de pórtico
+      const KM_PORTICO = 3; // trips > 3km pueden tener pórtico
+
       for(const e of eventos) {
         const hora = (e.datetime_evento||'').split('T')[1]?.substring(0,5)||'—';
         const tipo = e.evento==='trip' ? '🚗 trip' : '⏸ '+e.evento;
@@ -1768,26 +1773,11 @@ async function abrirInforme(i) {
         const dmm = ds.match(/(\d+)\s*min/); if(dmm) durMin+=parseInt(dmm[1]);
         acumMin += durMin;
         const acumH = Math.floor(acumMin/60), acumM = acumMin%60;
-        // Detectar pórtico por palabras_clave — máximo una vez por pórtico por dirección
+        // Consumir pórticos secuencialmente — un pórtico por trip con km > umbral
         let porticoLabel = '';
-        if(e.evento === 'trip' && e.km_tramo > 0) {
-          const al = (e.address||'').toLowerCase();
-          const matchedPorts = [];
-          for(const p of DB_porticos) {
-            const kw = (p.palabras_clave||'').toLowerCase().split(',').map(x=>x.trim()).filter(x=>x.length>3);
-            if(kw.some(k=>al.includes(k)) && p.valor_3_ejes > 0) {
-              matchedPorts.push(p);
-            }
-          }
-          // Deduplicar por cobro_oficial
-          const seen = new Set();
-          const unique = matchedPorts.filter(p=>{
-            if(seen.has(p.cobro_oficial)) return false;
-            seen.add(p.cobro_oficial); return true;
-          });
-          if(unique.length > 0) {
-            porticoLabel = unique.map(p=>`<span style="font-weight:700;color:#1E3A5F">${p.cobro_oficial} $${(p.valor_3_ejes||0).toLocaleString('es-CL')}</span>`).join('<br>');
-          }
+        if(e.evento === 'trip' && e.km_tramo > KM_PORTICO && porticosCola.length > 0) {
+          const p = porticosCola.shift();
+          porticoLabel = `<span style="font-weight:700;color:#1E3A5F">${p.nombre} $${(p.valor||0).toLocaleString('es-CL')}</span>`;
         }
         html += `<tr style="${e.evento!=='trip'?'background:#F5F7FA':''}">
           <td style="font-weight:700;color:#1C2B4A">${hora}</td>
