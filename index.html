@@ -1550,6 +1550,9 @@ async function guardarCostosBorrador() {
   }).eq('id',s.id);
   if(error) { toast('Error: '+error.message); return; }
   DB.servicios[svcActivoIdx] = {...s, estado:'borrador', km_total:km, tarifa_neta:tarifa,
+    ingreso_total:ingreso, total_costos:costos, costo_combustible:comb,
+    peajes_tag:tag, costo_peajes:peajes, dias_servicio:dias,
+    km_base_carga:kmVacioIda, km_carga_destino:kmCargado, km_retorno:kmRetorno,
     margen_servicio:margen, margen,
     _fecha_termino:fechaTerm, _puntos:puntos};
   cerrar('modal-costos'); renderServicios(); renderKPIs();
