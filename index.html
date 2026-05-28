@@ -1619,6 +1619,7 @@ async function abrirInforme(i) {
       <div class="inf-cell"><div class="inf-lbl">Conductor</div><div class="inf-val">${s.conductor||'—'}</div></div>
       <div class="inf-cell"><div class="inf-lbl">Cliente</div><div class="inf-val">${s.cliente||'—'}</div></div>
       <div class="inf-cell"><div class="inf-lbl">Origen</div><div class="inf-val">${s.origen||'—'}</div></div>
+      <div class="inf-cell"><div class="inf-lbl">Destino</div><div class="inf-val">${(s._puntos||[]).find(p=>p.tipo==='final')?.destino||s.destino||'—'}</div></div>
       <div class="inf-cell"><div class="inf-lbl">Fecha Inicio</div><div class="inf-val">${s.fecha||'—'}</div></div>
       <div class="inf-cell"><div class="inf-lbl">Fecha Término</div><div class="inf-val">${fechaTerm}</div></div>
       <div class="inf-cell"><div class="inf-lbl">Días en ruta</div><div class="inf-val">${s.dias_servicio||'—'}</div></div>
@@ -1666,8 +1667,7 @@ async function abrirInforme(i) {
 
   const costoItems = [
     ['Combustible',        s.costo_combustible || null],
-    ['TAG Autopista',      s.peajes_tag || null],
-    ['Peajes Ruta',        (s.costo_peajes && s.peajes_tag && s.costo_peajes > s.peajes_tag) ? s.costo_peajes - s.peajes_tag : null],
+    ['TAG/Peajes',        (s.peajes_tag||0) + (s.costo_peajes||0) || null],
     ['Costo Conductor',    s.costo_conductor || null],
     ['Comisión Conductor', s.costo_comision || (s.tarifa_neta ? Math.round((s.tarifa_neta||0)*((parseFloat(DB.config.comision_conductor||8))/100)) : null)],
     ['Costo Fijo',         s.costo_fijo_dia || null],
@@ -1695,6 +1695,23 @@ async function abrirInforme(i) {
       <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;color:${(s.margen_servicio||s.margen||0)>=0?'#34D399':'#F87171'}">${fmt(s.margen_servicio||s.margen||0)}</div>
     </div>
   </div>`;
+
+  // KPI $ por km
+  const kmKpi = s.km_total||0;
+  if(kmKpi > 0) {
+    const kpiCosto  = Math.round((s.total_costos||0) / kmKpi);
+    const kpiTarifa = Math.round((s.ingreso_total||s.tarifa_neta||0) / kmKpi);
+    html += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:12px 0">
+      <div style="background:#F5F7FA;border-radius:8px;padding:12px 16px;text-align:center">
+        <div style="font-size:9px;font-weight:800;letter-spacing:0.1em;color:#8C96B0;text-transform:uppercase;margin-bottom:4px">$/km Costo</div>
+        <div style="font-size:22px;font-weight:900;color:#EF4444;font-family:'Barlow Condensed',sans-serif">${fmt(kpiCosto)}</div>
+      </div>
+      <div style="background:#F5F7FA;border-radius:8px;padding:12px 16px;text-align:center">
+        <div style="font-size:9px;font-weight:800;letter-spacing:0.1em;color:#8C96B0;text-transform:uppercase;margin-bottom:4px">$/km Tarifa</div>
+        <div style="font-size:22px;font-weight:900;color:#10B981;font-family:'Barlow Condensed',sans-serif">${fmt(kpiTarifa)}</div>
+      </div>
+    </div>`;
+  }
 
   // Timeline GPS
   html += `<div class="inf-section" style="margin-top:16px">🗺 Timeline de Ruta (GPS)</div>`;
