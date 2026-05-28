@@ -182,7 +182,21 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
     <div class="sec-ttl" style="margin-bottom:12px">Configuración</div>
     <div style="background:#fff;border-radius:10px;padding:16px;box-shadow:var(--sh);border:1px solid var(--g200)">
       <div class="fld2">
-        <div class="fld"><label class="lbl">Precio Litro ($)</label><input class="inp" id="cfg-lt" type="number" placeholder="1300"></div>
+        <div class="fld">
+          <label class="lbl">Precio Litro ($) <span style="font-size:9px;color:var(--g400)">(modo manual)</span></label>
+          <input class="inp" id="cfg-lt" type="number" placeholder="1300">
+        </div>
+        <div class="fld" style="grid-column:1/-1">
+          <label class="lbl">Modo Precio Combustible</label>
+          <div style="display:flex;gap:12px;margin-top:6px">
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px">
+              <input type="radio" name="modo-comb" id="cfg-comb-manual" value="manual"> Manual (precio fijo)
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px">
+              <input type="radio" name="modo-comb" id="cfg-comb-auto" value="automatico"> Automático (precio Copec día del servicio − 20% IVA)
+            </label>
+          </div>
+        </div>
         <div class="fld">
           <label class="lbl">Rendimiento km/lt <span style="font-size:9px;color:var(--g400)">(global por defecto)</span></label>
           <div style="display:flex;gap:8px;align-items:center">
@@ -778,6 +792,9 @@ function poblarSelects() {
 function poblarConfig() {
   const c = DB.config;
   document.getElementById('cfg-lt').value      = c.precio_litro||c.precio_combustible||1300;
+  const modoComb = c.modo_combustible||'manual';
+  const radioComb = document.getElementById('cfg-comb-'+(modoComb==='automatico'?'auto':'manual'));
+  if(radioComb) radioComb.checked = true;
   document.getElementById('cfg-rend').value    = c.rendimiento||c.rendimiento_km_lt||2.5;
   document.getElementById('cfg-cf').value      = c.costo_fijo||c.costo_fijo_dia||44000;
   if(document.getElementById('cfg-cf-mensual')) document.getElementById('cfg-cf-mensual').value = c.costo_fijo_mensual||3600000;
@@ -1242,15 +1259,32 @@ function abrirCierre(i) {
   irACostos();
 }
 
-function calcCostos() {
+async function calcCostos() {
   const c    = DB.config;
   const dias = parseFloat(document.getElementById('cos-dias').value)||1;
   const km   = parseFloat(document.getElementById('cos-km').value)||0;
   // Usar rendimiento específico del equipo si existe, sino el global
   const flotaEquipo = DB.flota.find(f => f.patente === svcPatenteActiva);
   const rend = parseFloat(flotaEquipo?.rendimiento_km_lt || c.rendimiento||c.rendimiento_km_lt||2.5);
-  const prec = parseFloat(c.precio_litro||c.precio_combustible||1300);
-  const lts  = km ? Math.round(km/rend*10)/10 : 0;
+  // Precio combustible: manual o automático (Copec día servicio - 20% IVA)
+  let prec = parseFloat(c.precio_litro||c.precio_combustible||1300);
+  const lts = km ? Math.round(km/rend*10)/10 : 0;
+  if((c.modo_combustible||'manual') === 'automatico' && svcPatenteActiva) {
+    const fechaIniSvc = DB.servicios[svcActivoIdx]?.fecha||'';
+    if(fechaIniSvc) {
+      const {data:copecRows} = await supa.from('kaptura_combustible')
+        .select('fecha,litros,monto')
+        .eq('patente', svcPatenteActiva)
+        .lte('fecha', fechaIniSvc)
+        .order('fecha', {ascending:false})
+        .limit(1);
+      if(copecRows && copecRows.length > 0 && copecRows[0].litros > 0) {
+        const precBruto = copecRows[0].monto / copecRows[0].litros;
+        prec = Math.round(precBruto * 0.80); // descuento 20% impuesto
+        console.log('Precio Copec día:', copecRows[0].fecha, 'bruto:', precBruto, 'neto:', prec);
+      }
+    }
+  }
   const comb = Math.round(lts * prec);
   document.getElementById('cos-litros').value = lts ? `${lts} lt` : '';
   document.getElementById('cos-comb').value   = lts ? fmt(comb) : '';
@@ -1906,6 +1940,7 @@ function toggleModoCF() {
 async function guardarConfig() {
   const campos = [
     {clave:'precio_litro',    val:document.getElementById('cfg-lt').value},
+    {clave:'modo_combustible', val:document.querySelector('input[name="modo-comb"]:checked')?.value||'manual'},
     {clave:'rendimiento',     val:document.getElementById('cfg-rend').value},
     {clave:'costo_fijo',      val:document.getElementById('cfg-cf').value},
     {clave:'modo_costo_fijo',  val:document.querySelector('input[name="modo-cf"]:checked')?.value||'manual'},
