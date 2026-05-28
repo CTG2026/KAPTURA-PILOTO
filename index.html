@@ -528,7 +528,7 @@ async function guardarRendFlota() {
 
 // ══ CONFIG ══
 const SUPA_URL = 'https://aqunzrukuruwzwywnurq.supabase.co';
-const SUPA_KEY = 'sb_publishable_70t9UxFlcqYDj7AMybsrHg__IMGNA8C';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFxdW56cnVrdXJ1d3p3eXdudXJxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwOTUzNTYsImV4cCI6MjA5MzY3MTM1Nn0.0yN3RrtukcNA3muq1CEgCwiD1vdXNEwJHsy3-mMUMQU';
 const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 const KAPTURA_VERSION = '8.1';
 const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
@@ -1546,8 +1546,7 @@ async function guardarCostosBorrador() {
     costo_mantencion:mant, factoring:fact, total_costos:costos,
     margen_servicio:margen, margen:margen,
     km_base_carga:kmVacioIda, km_carga_destino:kmCargado, km_retorno:kmRetorno,
-    notas: `Retorno: base|_PUNTOS:${puntosJSON}`,
-    observaciones_coordinador: document.getElementById('cos-observacion')?.value || ''
+    notas: `Retorno: base|_PUNTOS:${puntosJSON}`
   }).eq('id',s.id);
   if(error) { toast('Error: '+error.message); return; }
   DB.servicios[svcActivoIdx] = {...s, estado:'borrador', km_total:km, tarifa_neta:tarifa,
