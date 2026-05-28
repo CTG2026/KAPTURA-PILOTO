@@ -848,6 +848,8 @@ async function confirmarInicio() {
 // ══ PASO 2 — REGISTRAR ══
 let svcActivoIdx = -1;
 let svcPatenteActiva = ''; // patente del servicio en modal costos
+let _lastDetectadosTag = []; // pórticos detectados en última integración GPS
+let _lastCorredorNombre = ''; // corredor detectado en última integración GPS
 let puntosData = [];
 let CLAUDE_KEY = '';
 
@@ -1468,6 +1470,8 @@ async function cargarGPS() {
     }
 
     // Separate TAG vs Peajes
+    _lastDetectadosTag = detectadosTag;
+    _lastCorredorNombre = corridorDetected?.nombre||'';
     const soloTag    = detectadosTag.filter(p=>p.tipo.includes('tag'));
     const soloPeajes = detectadosTag.filter(p=>!p.tipo.includes('tag'));
     const totalTag    = soloTag.reduce((a,p)=>a+p.valor,0);
@@ -1552,7 +1556,7 @@ async function guardarCostosBorrador() {
     costo_mantencion:mant, factoring:fact, total_costos:costos,
     margen_servicio:margen, margen:margen,
     km_base_carga:kmVacioIda, km_carga_destino:kmCargado, km_retorno:kmRetorno,
-    notas: `Retorno: base|_PUNTOS:${puntosJSON}|_PORTICOS:${JSON.stringify(detectadosTag)}|_CORREDOR:${corridorDetected?.nombre||''}`
+    notas: `Retorno: base|_PUNTOS:${puntosJSON}`
   }).eq('id',s.id);
   if(error) { toast('Error: '+error.message); return; }
   DB.servicios[svcActivoIdx] = {...s, estado:'borrador', km_total:km, tarifa_neta:tarifa,
@@ -1561,7 +1565,7 @@ async function guardarCostosBorrador() {
     km_base_carga:kmVacioIda, km_carga_destino:kmCargado, km_retorno:kmRetorno,
     margen_servicio:margen, margen,
     _fecha_termino:fechaTerm, _puntos:puntos,
-    _porticos:detectadosTag, _corredor:corridorDetected?.nombre||''};
+    _porticos:_lastDetectadosTag, _corredor:_lastCorredorNombre};
   cerrar('modal-costos'); renderServicios(); renderKPIs();
   toast(`✓ Costos guardados — ${s.servicio_id}`);
 }
