@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>KAPTURA v7.6</title>
+<title>KAPTURA v8.1</title>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700;800;900&family=Barlow+Condensed:wght@600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -183,12 +183,19 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
     <div style="background:#fff;border-radius:10px;padding:16px;box-shadow:var(--sh);border:1px solid var(--g200)">
       <div class="fld2">
         <div class="fld"><label class="lbl">Precio Litro ($)</label><input class="inp" id="cfg-lt" type="number" placeholder="1300"></div>
-        <div class="fld"><label class="lbl">Rendimiento km/lt</label><input class="inp" id="cfg-rend" type="number" step="0.1" placeholder="2.5"></div>
+        <div class="fld">
+          <label class="lbl">Rendimiento km/lt <span style="font-size:9px;color:var(--g400)">(global por defecto)</span></label>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input class="inp" id="cfg-rend" type="number" step="0.1" placeholder="2.5" style="flex:1">
+            <button type="button" class="btn btn-navy" style="white-space:nowrap;padding:8px 12px;font-size:11px" onclick="abrirRendFlota()">⚙ Por Equipo</button>
+          </div>
+        </div>
         <div class="fld"><label class="lbl">Costo Fijo/día ($)</label><input class="inp" id="cfg-cf" type="number" placeholder="44000"></div>
         <div class="fld"><label class="lbl">Mantención/día ($)</label><input class="inp" id="cfg-mant" type="number" placeholder="25000"></div>
         <div class="fld"><label class="lbl">Sueldo Conductor/día ($)</label><input class="inp" id="cfg-cond" type="number" placeholder="33000"></div>
         <div class="fld"><label class="lbl">Viático/día ($)</label><input class="inp" id="cfg-viatico" type="number" placeholder="12000"></div>
         <div class="fld"><label class="lbl">Comisión Conductor (%)</label><input class="inp" id="cfg-comision" type="number" placeholder="8" step="0.5"></div>
+        <div class="fld"><label class="lbl">Valor Flete Falso ($)</label><input class="inp" id="cfg-flete-falso" type="number" placeholder="30000"></div>
       </div>
       <div class="fld">
         <label class="lbl">API Key Claude (lectura guías)</label>
@@ -199,6 +206,23 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
   </div>
 </main>
 
+
+
+<!-- MODAL RENDIMIENTO POR EQUIPO -->
+<div class="overlay" id="modal-rend-flota" style="display:none">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-hdr">
+      <div><div class="modal-ttl">Rendimiento por Equipo</div><div class="modal-sub">km/lt · Se guarda en kaptura_flota</div></div>
+      <button class="modal-cls" onclick="cerrar('modal-rend-flota')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="rend-flota-list" style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px"></div>
+      <div style="text-align:right">
+        <button class="btn btn-navy" onclick="guardarRendFlota()">💾 Guardar Rendimientos</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- MODAL ASIGNAR -->
 <div class="overlay" id="modal-asignar" style="display:none">
@@ -214,6 +238,13 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
       </div>
       <div class="fld"><label class="lbl">Cliente</label><select class="inp" id="asig-cliente" onchange="checkOtroCliente()"></select></div>
       <div class="fld" id="wrap-cliente-custom" style="display:none"><label class="lbl">Nombre del cliente nuevo</label><input class="inp" id="asig-cliente-custom" placeholder="Nombre del cliente"></div>
+      <div class="fld">
+        <label class="lbl">Tipo de Servicio</label>
+        <select class="inp" id="asig-tipo-servicio">
+          <option value="normal">Normal</option>
+          <option value="devolucion">Devolución (tarifa inversa)</option>
+        </select>
+      </div>
       <div class="fld2">
         <div class="fld"><label class="lbl">Origen</label><select class="inp" id="asig-origen" onchange="checkOtroOrigen()">
           <option value="Casablanca">Casablanca</option><option value="Coltauco">Coltauco</option>
@@ -284,6 +315,19 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
       <div id="puntos-container"></div>
       <button class="btn btn-outline btn-full btn-sm" onclick="agregarPunto()" style="margin-bottom:14px">+ Agregar Punto de Entrega</button>
     </div>
+      <div class="section-ttl">📝 Observaciones del Conductor</div>
+      <div class="fld">
+        <label class="lbl">Tipo de Entrega</label>
+        <select class="inp" id="reg-tipo-entrega" onchange="onTipoEntrega()">
+          <option value="normal">Normal</option>
+          <option value="flete_falso">Flete Falso</option>
+          <option value="devolucion">Devolución</option>
+        </select>
+      </div>
+      <div class="fld" id="wrap-obs-conductor">
+        <label class="lbl">Observación (opcional)</label>
+        <textarea class="inp" id="reg-observacion" rows="2" placeholder="Ej: Cliente no encontrado, puerta cerrada..."></textarea>
+      </div>
     <div class="modal-ftr">
       <button class="btn btn-outline" onclick="cerrar('modal-registrar')">Cancelar</button>
       <button class="btn btn-orange" onclick="guardarBorrador()">Borrador</button>
@@ -333,7 +377,7 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
         <div style="font-size:9px;font-weight:800;color:#92400E;letter-spacing:0.1em;margin-bottom:6px">RANGO GPS — FECHA INICIO → FECHA TÉRMINO</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
           <div><label class="lbl">Fecha Inicio (asignación)</label><input class="inp" id="cos-fecha-inicio" type="date" readonly style="background:var(--g50)"></div>
-          <div><label class="lbl">Fecha Término servicio</label><input class="inp" id="cos-fecha-termino" type="date" onchange="cargarGPS()"></div>
+          <div><label class="lbl">Fecha Término servicio</label><input class="inp" id="cos-fecha-termino" type="date"></div>
         </div>
         <button class="btn btn-orange btn-sm btn-full" style="margin-top:8px" onclick="cargarGPS()">↺ Integrar Datos</button>
       </div>
@@ -353,10 +397,10 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
       <div class="section-ttl">📊 B — Operacional</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
         <div class="fld"><label class="lbl">Días en ruta <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-dias" type="number" step="0.5" min="0.5" placeholder="1" oninput="calcCostos()" style="background:var(--g50)"></div>
-        <div class="fld"><label class="lbl">Km vacío ida</label><input class="inp" id="cos-km-vacio-ida" type="number" placeholder="0" oninput="calcRetorno()"></div>
-        <div class="fld"><label class="lbl">Km cargado</label><input class="inp" id="cos-km-cargado" type="number" placeholder="0" oninput="calcRetorno()"></div>
-        <div class="fld"><label class="lbl">Km retorno vacío</label><input class="inp" id="cos-km-retorno" type="number" placeholder="0" oninput="calcRetorno()"></div>
-        <div class="fld"><label class="lbl">% Retorno vacío <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-pct-retorno" readonly style="background:var(--g50)"></div>
+        <div class="fld"><label class="lbl">Km Vacíos <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-km-vacio-ida" type="number" placeholder="0" oninput="calcCostos()"></div>
+        <div class="fld"><label class="lbl">Km Cargados <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-km-cargado" type="number" placeholder="0" oninput="calcCostos()"></div>
+        <input type="hidden" id="cos-km-retorno" value="0">
+        <input type="hidden" id="cos-pct-retorno" value="">
       </div>
       <!-- D COSTOS FIJOS -->
       <div class="section-ttl">🏢 D — Costos Fijos</div>
@@ -393,10 +437,27 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
         </div>
       </div>
     </div>
+      <div class="section-ttl">📝 Observaciones del Coordinador</div>
+      <div class="fld">
+        <label class="lbl">Observación interna</label>
+        <textarea class="inp" id="cos-observacion" rows="2" placeholder="Observaciones de liquidación, notas internas..."></textarea>
+      </div>
     <div class="modal-ftr">
       <button class="btn btn-outline" onclick="cerrar('modal-costos')">Cancelar</button>
       <button class="btn btn-orange" onclick="guardarCostosBorrador()">Borrador</button>
       <button class="btn btn-navy" onclick="cerrarServicio()">🔒 Cerrar Servicio</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL VER GUÍAS -->
+<div class="overlay" id="modal-guias" style="display:none">
+  <div class="modal" style="max-width:600px">
+    <div class="modal-hdr">
+      <div><div class="modal-ttl">Guías — <span id="guias-svc-id"></span></div><div class="modal-sub" id="guias-svc-sub"></div></div>
+      <button class="modal-cls" onclick="cerrar('modal-guias')">✕</button>
+    </div>
+    <div class="modal-body" id="guias-body">
     </div>
   </div>
 </div>
@@ -420,11 +481,56 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
 <div class="toast" id="toast"></div>
 
 <script>
+
+// ══ RENDIMIENTO POR EQUIPO ══
+async function abrirRendFlota() {
+  const flota = DB.flota.filter(f => f.activo !== false);
+  const lista = document.getElementById('rend-flota-list');
+  lista.innerHTML = flota.map(f => `
+    <div style="display:flex;align-items:center;gap:10px;padding:8px;background:var(--g50);border-radius:8px;border:1px solid var(--g200)">
+      <div style="flex:1">
+        <div style="font-weight:700;font-size:13px">${f.patente}</div>
+        <div style="font-size:11px;color:var(--g400)">${f.tipo||'—'}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px">
+        <input type="number" step="0.1" min="0.5" max="10"
+          id="rend-${f.patente}"
+          value="${f.rendimiento_km_lt||2.5}"
+          style="width:80px;padding:6px 8px;border:1px solid var(--g300);border-radius:6px;font-size:14px;font-weight:700;text-align:center">
+        <span style="font-size:11px;color:var(--g400)">km/lt</span>
+      </div>
+    </div>
+  `).join('');
+  document.getElementById('modal-rend-flota').style.display = 'flex';
+}
+
+async function guardarRendFlota() {
+  const flota = DB.flota.filter(f => f.activo !== false);
+  let errores = 0;
+  for(const f of flota) {
+    const inp = document.getElementById('rend-'+f.patente);
+    if(!inp) continue;
+    const val = parseFloat(inp.value);
+    if(isNaN(val) || val <= 0) continue;
+    const {error} = await supa.from('kaptura_flota')
+      .update({rendimiento_km_lt: val})
+      .eq('patente', f.patente);
+    if(error) { errores++; console.error('Error guardando', f.patente, error.message); }
+    else { f.rendimiento_km_lt = val; }
+  }
+  if(errores === 0) {
+    toast('✓ Rendimientos guardados');
+    cerrar('modal-rend-flota');
+  } else {
+    toast('⚠ ' + errores + ' error(es) al guardar');
+  }
+}
+
 // ══ CONFIG ══
 const SUPA_URL = 'https://aqunzrukuruwzwywnurq.supabase.co';
 const SUPA_KEY = 'sb_publishable_70t9UxFlcqYDj7AMybsrHg__IMGNA8C';
 const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
-const KAPTURA_VERSION = '7.6';
+const KAPTURA_VERSION = '8.1';
 const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 const hoy = new Date();
 const hoyStr = hoy.toISOString().split('T')[0];
@@ -453,7 +559,14 @@ async function init() {
     DB.conductores = c.data  || [];
     DB.clientes    = cl.data || [];
     DB.tarifarios  = t.data  || [];
-    DB.servicios   = s.data  || [];
+    DB.servicios = (s.data || []).map(svc => {
+      if(!svc._puntos || svc._puntos.length === 0) {
+        const notas = svc.notas || '';
+        const marker = notas.includes('|_PUNTOS:') ? '|_PUNTOS:' : notas.includes('_PUNTOS:') ? '_PUNTOS:' : null;
+        if(marker) { try { svc._puntos = JSON.parse(notas.split(marker)[1]); } catch(e) {} }
+      }
+      return svc;
+    });
     (cfg.data||[]).forEach(r => { DB.config[r.clave||r.nombre] = r.valor||r.value; });
 
     let ck = localStorage.getItem('kaptura_claude_key') || '';
@@ -561,6 +674,7 @@ function cardHTML(s,i) {
       ${['en_proceso','registrando'].includes(s.estado) ? `<button class="btn btn-purple btn-sm" onclick="verServicio(${i})">📋 Registrar</button>` : ''}
       ${['borrador','ejecutado'].includes(s.estado) ? `<button class="btn btn-purple btn-sm" onclick="verServicio(${i})">📋 Registrar</button><button class="btn btn-green btn-sm" onclick="abrirCierre(${i})">🔒 Cierre</button>` : ''}
       ${['confirmado','cerrado'].includes(s.estado) ? `<button class="btn btn-outline btn-sm" onclick="abrirInforme(${i})">📄 Informe</button>` : ''}
+      ${(s._puntos||[]).some(p=>(p.guias||[]).length>0||p.num_guia) ? `<button class="btn btn-outline btn-sm" onclick="verGuias(${i})">🖼 Guías</button>` : ''}
       <button class="btn btn-red btn-sm" onclick="eliminarSvc(${i})">✕</button>
     </div></div>
   </div>`;
@@ -572,7 +686,9 @@ function filaHTML(s,i) {
   const cantPtos  = pInts.length > 0 ? pInts.length : '—';
   const totalPtos = pInts.length > 0 ? fmt(pInts.reduce((a,p)=>a+(p.valor||0),0)) : '—';
   const destino   = pFinal?.destino || s.destino || '—';
-  const guia      = [...pInts,(pFinal||{})].find(p=>p&&p.num_guia)?.num_guia || s.num_guia || '—';
+  // Join all guia numbers with dash separator
+  const allGuias = (s._puntos||[]).flatMap(p=>(p.guias||[]).map(g=>g.num_guia)).filter(Boolean);
+  const guia = allGuias.length > 0 ? allGuias.join(' — ') : (s.num_guia ? s.num_guia.replace(/,/g,' — ') : '—');
   const tarifa    = s.tarifa_neta ? fmt(s.tarifa_neta) : '—';
   const ptsVal    = pInts.reduce((a,p)=>a+(p.valor||0),0);
   const totalIngVal = s.ingreso_total || ((s.tarifa_neta||0) + ptsVal) || 0;
@@ -589,7 +705,7 @@ function filaHTML(s,i) {
     <td>${s.cliente||'—'}</td>
     <td>${s.origen||'—'}</td>
     <td style="font-weight:700">${destino}</td>
-    <td style="font-size:10px;color:#4E5A78">${guia}</td>
+    <td style="font-size:12px;font-weight:700;color:#1C2B4A">${guia}</td>
     <td style="font-weight:700;color:#065F46">${tarifa}</td>
     <td style="text-align:center">${cantPtos}</td>
     <td style="color:#2A3350">${totalPtos}</td>
@@ -602,6 +718,7 @@ function filaHTML(s,i) {
       ${['en_proceso','registrando'].includes(s.estado) ? `<button class="btn btn-purple btn-sm" onclick="verServicio(${i})">📋 Registrar</button>` : ''}
       ${['borrador','ejecutado'].includes(s.estado) ? `<button class="btn btn-purple btn-sm" onclick="verServicio(${i})">📋 Registrar</button><button class="btn btn-green btn-sm" onclick="abrirCierre(${i})">🔒 Cierre</button>` : ''}
       ${['confirmado','cerrado'].includes(s.estado) ? `<button class="btn btn-outline btn-sm" onclick="abrirInforme(${i})">📄 Informe</button>` : ''}
+      ${(s._puntos||[]).some(p=>(p.guias||[]).length>0||p.num_guia) ? `<button class="btn btn-outline btn-sm" onclick="verGuias(${i})">🖼 Guías</button>` : ''}
       <button class="btn btn-red btn-sm" onclick="eliminarSvc(${i})">✕</button>
     </div></td>
   </tr>`;
@@ -641,7 +758,8 @@ function poblarConfig() {
   document.getElementById('cfg-mant').value    = c.mantencion||c.costo_mantencion||25000;
   document.getElementById('cfg-cond').value    = c.sueldo_conductor||c.costo_conductor_dia||33000;
   document.getElementById('cfg-viatico').value = c.viatico||c.costo_viatico||12000;
-  document.getElementById('cfg-comision').value= c.comision_conductor||8;
+  document.getElementById('cfg-comision').value    = c.comision_conductor||8;
+  document.getElementById('cfg-flete-falso').value = c.flete_falso||c.valor_flete_falso||30000;
 }
 
 
@@ -723,6 +841,7 @@ async function confirmarInicio() {
 
 // ══ PASO 2 — REGISTRAR ══
 let svcActivoIdx = -1;
+let svcPatenteActiva = ''; // patente del servicio en modal costos
 let puntosData = [];
 let CLAUDE_KEY = '';
 
@@ -740,8 +859,24 @@ function abrirRegistrar(i) {
   document.getElementById('reg-origen-info').textContent  = s.origen||'—';
   document.getElementById('reg-conductor-info').textContent = s.conductor||'—';
   document.getElementById('reg-fecha-termino').value      = s._fecha_termino || s.fecha || hoyStr;
+  const tipoEl = document.getElementById('reg-tipo-entrega');
+  if(tipoEl) tipoEl.value = s.tipo_entrega || 'normal';
+  const obsEl = document.getElementById('reg-observacion');
+  if(obsEl) obsEl.value = s.observaciones_conductor || '';
   renderPuntos();
   document.getElementById('modal-registrar').style.display = 'flex';
+}
+
+function onTipoEntrega() {
+  const tipo = document.getElementById('reg-tipo-entrega').value;
+  const s = DB.servicios[svcActivoIdx];
+  if(tipo === 'flete_falso') {
+    const valFF = parseInt(DB.config.flete_falso || DB.config.valor_flete_falso || 30000);
+    // Set flete falso value on final point
+    const finalPto = puntosData.find(p=>p.tipo==='final');
+    if(finalPto) { finalPto.valor = valFF; renderPuntos(); }
+    toast(`⚠ Flete Falso — valor: ${fmt(valFF)}`);
+  }
 }
 
 function onFechaTermino() {
@@ -779,24 +914,43 @@ function puntosHTML(p, pi) {
       <input class="inp ${p.valor?'ok':'pend'}" style="${p.valor?'border-color:var(--green);background:#ECFDF5':'border-color:var(--orange)'}"
         type="number" value="${p.valor||''}" placeholder="0" onchange="setValorManual(${pi},this.value)">
     </div>` : ''}
-    <div style="border:2px dashed ${p.capturada?'var(--green)':'var(--g200)'};border-radius:8px;padding:14px;text-align:center;cursor:pointer;background:${p.capturada?'#ECFDF5':p.procesando?'#FFFBEB':'#fff'}"
-      onclick="document.getElementById('foto-p${pi}').click()">
-      <div style="font-size:22px">${p.procesando?'⏳':p.capturada?'✓':'📷'}</div>
-      <div style="font-size:11px;font-weight:800;color:var(--navy);margin-top:4px">
-        ${p.procesando?'Procesando guía...':p.capturada?`Guía N° ${p.num_guia}`:'Fotografiar / Subir Guía'}
-      </div>
-      <div style="font-size:10px;color:var(--g400);margin-top:2px">
-        ${p.capturada?`Fecha: ${p.fecha_guia||'—'}`:'Toca para capturar'}
+    <!-- Guías registradas -->
+    <div id="guias-punto-${pi}">
+      ${(p.guias||[]).map((g,gi) => `
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;background:#ECFDF5;border-radius:8px;padding:6px 10px;border:1px solid #6EE7B7">
+          ${g.img_url ? `<img src="${g.img_url}" style="width:48px;height:48px;object-fit:cover;border-radius:6px;cursor:pointer" onclick="window.open('${g.img_url}','_blank')">` : '<div style="width:48px;height:48px;background:#D1FAE5;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:18px">📄</div>'}
+          <div style="flex:1">
+            <div style="font-size:11px;font-weight:800;color:#065F46">Guía N° ${g.num_guia}</div>
+            <div style="font-size:10px;color:#4E5A78">${g.fecha_guia||'—'}</div>
+          </div>
+          ${g.img_url ? `<button class="btn btn-outline btn-sm" onclick="window.open('${g.img_url}','_blank')">👁 Ver</button>` : ''}
+          <button class="btn btn-red btn-sm" onclick="eliminarGuia(${pi},${gi})">✕</button>
+        </div>`).join('')}
+    </div>
+    <!-- Agregar guía -->
+    <div style="border:2px dashed var(--g200);border-radius:8px;padding:10px;text-align:center;cursor:pointer;background:${p.procesando?'#FFFBEB':'#fff'}"
+      onclick="document.getElementById('foto-p${pi}-new').click()">
+      <div style="font-size:18px">${p.procesando?'⏳':'📷'}</div>
+      <div style="font-size:10px;font-weight:800;color:var(--navy);margin-top:2px">
+        ${p.procesando?'Procesando...':'+ Agregar Guía'}
       </div>
     </div>
-    <input type="file" id="foto-p${pi}" accept="image/*" capture="environment"
+    <input type="file" id="foto-p${pi}-new" accept="image/*" capture="environment"
       style="display:none" onchange="procesarGuia(this,${pi})">
+
   </div>`;
 }
 
 function agregarPunto() {
   const hayFinal = puntosData.some(p => p.tipo === 'final');
-  puntosData.push({tipo:hayFinal?'intermedio':'final', destino:'', valor:null, num_guia:'', capturada:false, procesando:false});
+  puntosData.push({tipo:hayFinal?'intermedio':'final', destino:'', valor:null, num_guia:'', guias:[], capturada:false, procesando:false});
+  renderPuntos();
+}
+
+function eliminarGuia(pi, gi) {
+  if(!puntosData[pi].guias) return;
+  puntosData[pi].guias.splice(gi, 1);
+  if(puntosData[pi].guias.length === 0) puntosData[pi].capturada = false;
   renderPuntos();
 }
 function eliminarPunto(pi) { puntosData.splice(pi,1); renderPuntos(); }
@@ -857,7 +1011,21 @@ async function procesarGuia(input, pi) {
       try { json = JSON.parse(txt.replace(/```json|```/g,'').trim()); } catch(e){}
     }
     if(json?.num_guia) {
-      puntosData[pi] = {...puntosData[pi], capturada:true, procesando:false, num_guia:json.num_guia, fecha_guia:json.fecha_emision||''};
+      // Save image to Supabase Storage
+      let imgUrl = null;
+      try {
+        const svc = DB.servicios[svcActivoIdx];
+        const fileName = `guias/${svc.servicio_id}_punto${pi}_${json.num_guia}.jpg`;
+        const {data:upData} = await supa.storage.from('kaptura-guias').upload(fileName, file, {upsert:true, contentType:file.type});
+        if(upData) {
+          const {data:urlData} = supa.storage.from('kaptura-guias').getPublicUrl(fileName);
+          imgUrl = urlData?.publicUrl || null;
+        }
+      } catch(e) { console.warn('Storage upload failed:', e.message); toast('⚠ Foto no guardada en servidor: '+e.message); }
+      if(!puntosData[pi].guias) puntosData[pi].guias = [];
+      puntosData[pi].guias.push({num_guia:json.num_guia, fecha_guia:json.fecha_emision||'', img_url:imgUrl});
+      puntosData[pi] = {...puntosData[pi], capturada:true, procesando:false,
+        num_guia:puntosData[pi].guias.map(g=>g.num_guia).join(',')};
       toast(`✓ Guía ${json.num_guia} leída`);
     } else { puntosData[pi].procesando = false; toast('⚠ No se pudo leer — ingresa manual'); }
   } catch(e) { puntosData[pi].procesando = false; toast('Error: '+e.message); }
@@ -873,10 +1041,16 @@ async function guardarBorrador() {
   const tarifa = final?.valor || 0;
   const nguia  = puntosData[0]?.num_guia || '';
   const destino = final?.destino || '';
-  const puntosJSON = JSON.stringify(puntosData.map(p=>({tipo:p.tipo,destino:p.destino,valor:p.valor||0,num_guia:p.num_guia||''})));
+  const puntosJSON = JSON.stringify(puntosData.map(p=>({tipo:p.tipo,destino:p.destino,valor:p.valor||0,num_guia:p.num_guia||'',guias:p.guias||[]})));
+  const tipoEntrega = document.getElementById('reg-tipo-entrega')?.value || 'normal';
+  const obsConduc   = document.getElementById('reg-observacion')?.value || '';
+
   const {error} = await supa.from('servicios_piloto').update({
     estado:'borrador', destino, num_guia:nguia, tarifa_neta:tarifa,
-    puntos_entrega:puntosData.length, notas:`_PUNTOS:${puntosJSON}`
+    puntos_entrega:puntosData.length,
+    tipo_entrega: tipoEntrega,
+    observaciones_conductor: obsConduc,
+    notas:`_PUNTOS:${puntosJSON}`
   }).eq('id',s.id);
   if(error) { toast('Error: '+error.message); return; }
   DB.servicios[svcActivoIdx] = {...s, estado:'borrador', destino, num_guia:nguia, tarifa_neta:tarifa, _puntos:puntosData, _fecha_termino:fechaTerm};
@@ -908,7 +1082,7 @@ async function guardarEjecucion() {
   const fechaTerm = document.getElementById('ejec-fecha-termino').value;
   const retorno   = document.getElementById('ejec-retorno').value;
   const puntos = puntosData.length > 0 ? puntosData : (s._puntos||[]);
-  const puntosJSON = JSON.stringify(puntos.map(p=>({tipo:p.tipo,destino:p.destino,valor:p.valor||0,num_guia:p.num_guia||''})));
+  const puntosJSON = JSON.stringify(puntos.map(p=>({tipo:p.tipo,destino:p.destino,valor:p.valor||0,num_guia:p.num_guia||'',guias:p.guias||[]})));
   const {error} = await supa.from('servicios_piloto').update({
     estado:'ejecutado',
     hora_termino: fechaTerm ? fechaTerm+'T23:59:00' : null,
@@ -983,6 +1157,7 @@ async function irACostos() {
 
   document.getElementById('cos-id').textContent  = s.servicio_id||'—';
   document.getElementById('cos-sub').textContent = `${s.patente} · ${s.conductor} · ${s.cliente}`;
+  svcPatenteActiva = s.patente || '';
   document.getElementById('cos-fecha-inicio').value   = s.fecha || hoyStr;
   document.getElementById('cos-fecha-termino').value  = s._fecha_termino || (s.hora_termino ? s.hora_termino.substring(0,10) : s.fecha) || hoyStr;
 
@@ -1039,7 +1214,9 @@ function calcCostos() {
   const c    = DB.config;
   const dias = parseFloat(document.getElementById('cos-dias').value)||1;
   const km   = parseFloat(document.getElementById('cos-km').value)||0;
-  const rend = parseFloat(c.rendimiento||c.rendimiento_km_lt||2.5);
+  // Usar rendimiento específico del equipo si existe, sino el global
+  const flotaEquipo = DB.flota.find(f => f.patente === svcPatenteActiva);
+  const rend = parseFloat(flotaEquipo?.rendimiento_km_lt || c.rendimiento||c.rendimiento_km_lt||2.5);
   const prec = parseFloat(c.precio_litro||c.precio_combustible||1300);
   const lts  = km ? Math.round(km/rend*10)/10 : 0;
   const comb = Math.round(lts * prec);
@@ -1118,18 +1295,38 @@ async function cargarGPS() {
 
     if(!eventos||!eventos.length) { toast('Sin GPS para ese rango'); return; }
 
-    const trips = eventos.filter(e => e.evento==='trip' && (e.km_tramo||0) > 0);
-    const kmTotal = trips.reduce((a,e)=>a+(e.km_tramo||0),0);
-    const diasActivos = new Set(trips.map(e=>e.fecha)).size;
+    // Detect retorno type from notas
+    const notasStr = s?.notas || '';
+    const retornoTipo = notasStr.includes('Retorno: base') ? 'base' : 
+                        notasStr.includes('Retorno: pernocta') ? 'pernocta' : 'base';
 
-    document.getElementById('cos-km').value = Math.round(kmTotal);
-    document.getElementById('lbl-km').textContent = 'GPS ✓';
-    document.getElementById('lbl-km').style.background = '#D1FAE5';
-    document.getElementById('lbl-km').style.color = '#065F46';
-    document.getElementById('cos-dias').value = diasActivos;
+    // If retorno=base, find when truck arrived at base (Coltauco)
+    // and cut GPS at that point - ignore trips after arrival
+    let cutoffDatetime = null;
+    if(retornoTipo === 'base') {
+      const baseKws = ['coltauco','quillaiquén','quillaiquen','base'];
+      // Find first stop in Coltauco AFTER the last delivery point
+      const lastDelivery = eventos.filter(e => {
+        const al = (e.address||'').toLowerCase();
+        return e.evento==='stop' && !baseKws.some(k=>al.includes(k));
+      }).sort((a,b)=>a.datetime_evento>b.datetime_evento?1:-1).pop();
+      
+      const eventsAfterDelivery = lastDelivery
+        ? eventos.filter(e=>e.datetime_evento>lastDelivery.datetime_evento)
+        : eventos;
 
-    // Km cargados = trips desde origen hasta destino final
-    // Km vacíos = km total - km cargados
+      const arrivalBase = eventsAfterDelivery.find(e => {
+        const al = (e.address||'').toLowerCase();
+        return (e.evento==='stop'||e.evento==='geofence_in') && baseKws.some(k=>al.includes(k));
+      });
+      
+      if(arrivalBase) {
+        cutoffDatetime = arrivalBase.datetime_evento;
+        console.log('Llegada a base detectada:', cutoffDatetime, '-', arrivalBase.address);
+      }
+    }
+
+    // Helpers (necesarios antes de detectar origen)
     const durMin = (dur) => {
       if(!dur) return 0;
       let m=0;
@@ -1161,18 +1358,50 @@ async function cargarGPS() {
     const finalPto   = puntosArr2.find(p=>p.tipo==='final');
     const destinoKws = getKws(finalPto?.destino||s?.destino||'');
 
-    // Find first event matching ORIGEN = start of cargado
+    // Detectar evento origen ANTES de filtrar trips
     const allEvtsSorted = eventos.sort((a,b) => a.datetime_evento > b.datetime_evento ? 1:-1);
-    const evtOrigen  = allEvtsSorted.find(e => matchAddr(e.address, origenKws) && (e.evento==='stop'||e.evento==='geofence_in'));
-    // Find LAST STOP matching DESTINO = end of cargado (not a trip - trips can be departures)
-    const evtDestino = [...allEvtsSorted].reverse().find(e => matchAddr(e.address, destinoKws) && e.evento==='stop');
+    // Pre-filtrar trips solo con corte base (sin corte de origen aún)
+    const tripsRaw = eventos.filter(e => {
+      if(e.evento !== 'trip' || (e.km_tramo||0) <= 0) return false;
+      if(cutoffDatetime && e.datetime_evento > cutoffDatetime) return false;
+      return true;
+    });
+    // Primer trip largo (>25 km) desde origen → ignora movimientos locales pre-servicio
+    const firstLongTrip = tripsRaw.find(t => t.km_tramo > 25 && matchAddr(t.address, origenKws));
+    console.log('firstLongTrip:', firstLongTrip?.datetime_evento||'none', firstLongTrip?.km_tramo||0, 'km');
 
-    console.log('Origen kws:', origenKws[0], '→ evento:', evtOrigen?.datetime_evento||'null');
+    // Filtrar trips definitivos: desde firstLongTrip para excluir trips intermedios pre-viaje
+    const inicioViaje = firstLongTrip ? firstLongTrip.datetime_evento : null;
+    const trips = tripsRaw.filter(t => !inicioViaje || t.datetime_evento >= inicioViaje);
+    const kmTotal = trips.reduce((a,e)=>a+(e.km_tramo||0),0);
+    const diasActivos = new Set(trips.map(e=>e.fecha)).size;
+
+    document.getElementById('cos-km').value = Math.round(kmTotal);
+    document.getElementById('lbl-km').textContent = 'GPS ✓';
+    document.getElementById('lbl-km').style.background = '#D1FAE5';
+    document.getElementById('lbl-km').style.color = '#065F46';
+    document.getElementById('cos-dias').value = diasActivos;
+
+    // evtOrigen: último stop en origen antes del firstLongTrip (para logs y fallback)
+    const evtOrigen = firstLongTrip
+      ? allEvtsSorted.filter(e => e.datetime_evento <= firstLongTrip.datetime_evento && matchAddr(e.address, origenKws) && (e.evento==='stop'||e.evento==='geofence_in')).pop()
+      : allEvtsSorted.find(e => matchAddr(e.address, origenKws) && (e.evento==='stop'||e.evento==='geofence_in'));
+
+    // Find FIRST STOP matching DESTINO after inicioViaje = end of cargado (primera llegada, no la de vuelta)
+    const evtDestino = allEvtsSorted.find(e => e.datetime_evento > (inicioViaje||'') && matchAddr(e.address, destinoKws) && e.evento==='stop');
+
+    console.log('Origen kws:', origenKws[0], '→ inicio viaje:', inicioViaje||evtOrigen?.datetime_evento||'null');
     console.log('Destino kws:', destinoKws[0], '→ evento:', evtDestino?.datetime_evento||'null');
 
-    // Calculate km cargados = trips between origen and destino events
+    // Calculate km cargados = trips desde inicioViaje hasta evtDestino
     let kmCargado = 0;
-    if(evtOrigen && evtDestino && evtOrigen.datetime_evento < evtDestino.datetime_evento) {
+    if(inicioViaje && evtDestino) {
+      for(const t of trips) {
+        if(t.datetime_evento >= inicioViaje && t.datetime_evento <= evtDestino.datetime_evento) {
+          kmCargado += t.km_tramo;
+        }
+      }
+    } else if(evtOrigen && evtDestino && evtOrigen.datetime_evento < evtDestino.datetime_evento) {
       for(const t of trips) {
         if(t.datetime_evento >= evtOrigen.datetime_evento && t.datetime_evento <= evtDestino.datetime_evento) {
           kmCargado += t.km_tramo;
@@ -1207,14 +1436,14 @@ async function cargarGPS() {
       console.log('Corredor:', corridorDetected.id, corridorDetected.nombre);
       const portIda    = (corridorDetected.porticos_ida||'').split(',').map(p=>p.trim());
       const portVuelta = (corridorDetected.porticos_vuelta||'').split(',').map(p=>p.trim());
-      const processed  = new Set();
+      // No deduplication - same portico can appear multiple times (e.g. ANGOSTURA x2)
       for(const pNombre of portIda) {
         const found = DB_porticos.find(p=>p.cobro_oficial===pNombre&&p.valor_3_ejes>0);
-        if(found && !processed.has('I-'+pNombre)) { processed.add('I-'+pNombre); detectadosTag.push({nombre:pNombre,valor:found.valor_3_ejes,tipo:(found.tipo||'tag').toLowerCase()}); }
+        if(found) detectadosTag.push({nombre:pNombre,valor:found.valor_3_ejes,tipo:(found.tipo||'tag').toLowerCase()});
       }
       for(const pNombre of portVuelta) {
         const found = DB_porticos.find(p=>p.cobro_oficial===pNombre&&p.valor_3_ejes>0);
-        if(found && !processed.has('V-'+pNombre)) { processed.add('V-'+pNombre); detectadosTag.push({nombre:pNombre,valor:found.valor_3_ejes,tipo:(found.tipo||'tag').toLowerCase()}); }
+        if(found) detectadosTag.push({nombre:pNombre,valor:found.valor_3_ejes,tipo:(found.tipo||'tag').toLowerCase()});
       }
     } else {
       console.log('Sin corredor (score:'+corridorScore+'). Fallback básico.');
@@ -1289,7 +1518,9 @@ async function guardarCostosBorrador() {
   const tarifa = final?.valor || s.tarifa_neta || 0;
   const valorPts = ints.reduce((a,p)=>a+(p.valor||0),0);
   const c = DB.config;
-  const rend = parseFloat(c.rendimiento||2.5);
+  // Usar rendimiento específico del equipo si existe, sino el global
+  const _flota2 = DB.flota.find(f => f.patente === svcPatenteActiva);
+  const rend = parseFloat(_flota2?.rendimiento_km_lt || c.rendimiento||2.5);
   const prec = parseFloat(c.precio_litro||1300);
   const comb = km ? Math.round((km/rend)*prec) : 0;
   const condVal = dias*parseInt(c.sueldo_conductor||33000);
@@ -1302,7 +1533,7 @@ async function guardarCostosBorrador() {
   const ingreso = tarifa + valorPts;
   const costos  = comb+peajes+condVal+comision+cf+mant+viat+fact;
   const margen  = ingreso - costos;
-  const puntosJSON = JSON.stringify(puntos.map(p=>({tipo:p.tipo,destino:p.destino,valor:p.valor||0,num_guia:p.num_guia||''})));
+  const puntosJSON = JSON.stringify(puntos.map(p=>({tipo:p.tipo,destino:p.destino,valor:p.valor||0,num_guia:p.num_guia||'',guias:p.guias||[]})));
 
   const kmVacioIda = parseFloat(document.getElementById('cos-km-vacio-ida')?.value)||0;
   const kmCargado  = parseFloat(document.getElementById('cos-km-cargado')?.value)||0;
@@ -1310,16 +1541,16 @@ async function guardarCostosBorrador() {
 
   const {error} = await supa.from('servicios_piloto').update({
     estado:'borrador', km_total:km, costo_peajes:peajes, peajes_tag:tag,
-    tarifa_neta:tarifa, dias_servicio:dias, costo_combustible:comb,
+    tarifa_neta:tarifa||null, ingreso_total:ingreso||null, dias_servicio:dias, costo_combustible:comb,
     costo_conductor:condVal, costo_viaticos:viat, costo_fijo_dia:cf,
     costo_mantencion:mant, factoring:fact, total_costos:costos,
-    margen_servicio:margen, margen:margen, ingreso_total:ingreso,
+    margen_servicio:margen, margen:margen,
     km_base_carga:kmVacioIda, km_carga_destino:kmCargado, km_retorno:kmRetorno,
     notas: `Retorno: base|_PUNTOS:${puntosJSON}`
   }).eq('id',s.id);
   if(error) { toast('Error: '+error.message); return; }
   DB.servicios[svcActivoIdx] = {...s, estado:'borrador', km_total:km, tarifa_neta:tarifa,
-    margen_servicio:margen, margen, total_costos:costos, ingreso_total:ingreso,
+    margen_servicio:margen, margen,
     _fecha_termino:fechaTerm, _puntos:puntos};
   cerrar('modal-costos'); renderServicios(); renderKPIs();
   toast(`✓ Costos guardados — ${s.servicio_id}`);
@@ -1390,11 +1621,19 @@ async function abrirInforme(i) {
 
   if(puntos.length > 0) {
     puntos.forEach((p,idx) => {
+      const guias = p.guias || (p.num_guia ? [{num_guia:p.num_guia, fecha_guia:p.fecha_guia||'', img_url:null}] : []);
       html += `<tr>
         <td style="color:#2A3350">${idx+1}</td>
         <td style="color:#2A3350">${p.tipo==='final'?'🏁 Final':'🔁 Intermedio'}</td>
         <td style="font-weight:700;color:#1C2B4A">${p.destino||'—'}</td>
-        <td style="color:#2A3350">${p.num_guia||'—'}</td>
+        <td style="color:#2A3350">
+          ${guias.length > 0 ? guias.map(g => `
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
+              <span style="font-weight:700">N° ${g.num_guia}</span>
+              <span style="color:#8C96B0;font-size:9px">${g.fecha_guia||''}</span>
+              ${g.img_url ? `<a href="${g.img_url}" target="_blank" style="font-size:9px;font-weight:800;color:#1E3A5F;text-decoration:none;background:#EEF2FF;padding:1px 6px;border-radius:3px">👁 Ver</a>` : ''}
+            </div>`).join('') : '—'}
+        </td>
         <td style="text-align:right;font-weight:700;color:#065F46">${fmt(p.valor||0)}</td>
       </tr>`;
     });
@@ -1546,6 +1785,7 @@ async function guardarConfig() {
     {clave:'sueldo_conductor',val:document.getElementById('cfg-cond').value},
     {clave:'viatico',         val:document.getElementById('cfg-viatico').value},
     {clave:'comision_conductor',val:document.getElementById('cfg-comision').value},
+    {clave:'flete_falso',        val:document.getElementById('cfg-flete-falso').value},
   ];
   for(const c of campos) {
     DB.config[c.clave] = parseFloat(c.val)||0;
@@ -1580,6 +1820,52 @@ function toast(msg, dur=2800) {
   const t = document.getElementById('toast');
   t.textContent = msg; t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), dur);
+}
+
+// Ver guías de un servicio en modal
+function verGuias(i) {
+  const s = DB.servicios[i];
+  const puntos = s._puntos || [];
+  document.getElementById('guias-svc-id').textContent  = s.servicio_id||'—';
+  document.getElementById('guias-svc-sub').textContent = `${s.patente} · ${s.conductor} · ${s.cliente}`;
+
+  let html = '';
+  let totalGuias = 0;
+
+  puntos.forEach((p, pi) => {
+    const guias = p.guias || (p.num_guia ? [{num_guia:p.num_guia, fecha_guia:p.fecha_guia||'', img_url:p.img_url||null}] : []);
+    if(guias.length === 0) return;
+    html += `<div style="margin-bottom:14px">
+      <div style="font-size:10px;font-weight:800;color:#4E5A78;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px">
+        ${p.tipo==='final'?'🏁 Destino Final':'🔁 Punto Intermedio'} — ${p.destino||'—'}
+      </div>`;
+    guias.forEach((g, gi) => {
+      totalGuias++;
+      html += `<div style="display:flex;align-items:center;gap:10px;padding:10px;background:#F5F7FA;border-radius:8px;margin-bottom:6px;border:1px solid #DDE2EC">
+        ${g.img_url
+          ? `<img src="${g.img_url}" style="width:64px;height:64px;object-fit:cover;border-radius:6px;cursor:pointer;border:2px solid #DDE2EC"
+               onclick="window.open('${g.img_url}','_blank')">`
+          : `<div style="width:64px;height:64px;background:#EEF1F6;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:24px">📄</div>`
+        }
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:800;color:#1C2B4A">N° ${g.num_guia||'—'}</div>
+          <div style="font-size:11px;color:#4E5A78;margin-top:2px">Fecha: ${g.fecha_guia||'—'}</div>
+          ${g.img_url
+            ? `<button class="btn btn-outline btn-sm" style="margin-top:6px" onclick="window.open('${g.img_url}','_blank')">👁 Ver foto</button>`
+            : `<div style="font-size:10px;color:#8C96B0;margin-top:4px">Sin foto disponible</div>`
+          }
+        </div>
+      </div>`;
+    });
+    html += '</div>';
+  });
+
+  if(totalGuias === 0) {
+    html = '<div style="text-align:center;padding:30px;color:#8C96B0"><div style="font-size:32px">📄</div><div style="font-weight:700;margin-top:8px">Sin guías registradas</div></div>';
+  }
+
+  document.getElementById('guias-body').innerHTML = html;
+  document.getElementById('modal-guias').style.display = 'flex';
 }
 
 document.querySelectorAll('.overlay').forEach(el => {
