@@ -1562,6 +1562,8 @@ async function guardarCostosBorrador() {
   DB.servicios[svcActivoIdx] = {...s, estado:'borrador', km_total:km, tarifa_neta:tarifa,
     ingreso_total:ingreso, total_costos:costos, costo_combustible:comb,
     peajes_tag:tag, costo_peajes:peajes, dias_servicio:dias,
+    costo_conductor:condVal, costo_viaticos:viat, costo_fijo_dia:cf,
+    costo_mantencion:mant, factoring:fact,
     km_base_carga:kmVacioIda, km_carga_destino:kmCargado, km_retorno:kmRetorno,
     margen_servicio:margen, margen,
     _fecha_termino:fechaTerm, _puntos:puntos,
