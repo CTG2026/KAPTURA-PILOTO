@@ -190,7 +190,26 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
             <button type="button" class="btn btn-navy" style="white-space:nowrap;padding:8px 12px;font-size:11px" onclick="abrirRendFlota()">⚙ Por Equipo</button>
           </div>
         </div>
-        <div class="fld"><label class="lbl">Costo Fijo/día ($)</label><input class="inp" id="cfg-cf" type="number" placeholder="44000"></div>
+        <div class="fld" style="grid-column:1/-1">
+          <label class="lbl">Modo Costo Fijo</label>
+          <div style="display:flex;gap:12px;margin-top:6px">
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px">
+              <input type="radio" name="modo-cf" id="cfg-cf-manual" value="manual" onchange="toggleModoCF()"> Manual (valor diario fijo)
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px">
+              <input type="radio" name="modo-cf" id="cfg-cf-auto" value="automatico" onchange="toggleModoCF()"> Automático (costo mensual ÷ equipos activos)
+            </label>
+          </div>
+        </div>
+        <div id="cfg-cf-manual-fields">
+          <div class="fld"><label class="lbl">Costo Fijo/día ($)</label><input class="inp" id="cfg-cf" type="number" placeholder="44000"></div>
+        </div>
+        <div id="cfg-cf-auto-fields" style="display:none;grid-column:1/-1;display:none">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div class="fld"><label class="lbl">Costo Fijo Mensual ($)</label><input class="inp" id="cfg-cf-mensual" type="number" placeholder="3600000"></div>
+            <div class="fld"><label class="lbl">Días Operativos/Mes</label><input class="inp" id="cfg-cf-dias-mes" type="number" placeholder="20"></div>
+          </div>
+        </div>
         <div class="fld"><label class="lbl">Mantención/día ($)</label><input class="inp" id="cfg-mant" type="number" placeholder="25000"></div>
         <div class="fld"><label class="lbl">Sueldo Conductor/día ($)</label><input class="inp" id="cfg-cond" type="number" placeholder="33000"></div>
         <div class="fld"><label class="lbl">Viático/día ($)</label><input class="inp" id="cfg-viatico" type="number" placeholder="12000"></div>
@@ -761,6 +780,11 @@ function poblarConfig() {
   document.getElementById('cfg-lt').value      = c.precio_litro||c.precio_combustible||1300;
   document.getElementById('cfg-rend').value    = c.rendimiento||c.rendimiento_km_lt||2.5;
   document.getElementById('cfg-cf').value      = c.costo_fijo||c.costo_fijo_dia||44000;
+  if(document.getElementById('cfg-cf-mensual')) document.getElementById('cfg-cf-mensual').value = c.costo_fijo_mensual||3600000;
+  if(document.getElementById('cfg-cf-dias-mes')) document.getElementById('cfg-cf-dias-mes').value = c.dias_operativos_mes||20;
+  const modoGuardado = c.modo_costo_fijo||'manual';
+  const radioEl = document.getElementById('cfg-cf-'+(modoGuardado==='automatico'?'auto':'manual'));
+  if(radioEl) { radioEl.checked = true; toggleModoCF(); }
   document.getElementById('cfg-mant').value    = c.mantencion||c.costo_mantencion||25000;
   document.getElementById('cfg-cond').value    = c.sueldo_conductor||c.costo_conductor_dia||33000;
   document.getElementById('cfg-viatico').value = c.viatico||c.costo_viatico||12000;
@@ -1234,7 +1258,22 @@ function calcCostos() {
   const tag     = parseFloat(document.getElementById('cos-tag')?.value)||0;
   const peajes  = tag + (parseFloat(document.getElementById('cos-peajes').value)||0);
   const condVal = dias * parseInt(c.sueldo_conductor||c.costo_conductor_dia||33000);
-  const cf      = dias * parseInt(c.costo_fijo||c.costo_fijo_dia||44000);
+  // Costo fijo: manual o automático
+  let cfDia = parseInt(c.costo_fijo||c.costo_fijo_dia||44000);
+  if((c.modo_costo_fijo||'manual') === 'automatico') {
+    const mensual = parseFloat(c.costo_fijo_mensual||3600000);
+    const diasMes = parseInt(c.dias_operativos_mes||20);
+    // Contar equipos activos en las fechas del servicio
+    const svcActual = DB.servicios[svcActivoIdx];
+    const fechaIni = svcActual?.fecha||'';
+    const fechaTerm2 = document.getElementById('cos-fecha-termino')?.value||fechaIni;
+    const equiposActivos = DB.servicios.filter(sv =>
+      (sv.estado==='en_proceso'||sv.estado==='ejecutado'||sv.estado==='cerrado') &&
+      sv.fecha >= fechaIni && sv.fecha <= fechaTerm2 && sv.id !== svcActual?.id
+    ).length + 1;
+    cfDia = Math.round(mensual / diasMes / equiposActivos);
+  }
+  const cf      = dias * cfDia;
   const mant    = dias * parseInt(c.mantencion||c.costo_mantencion||25000);
   const viat    = dias * parseInt(c.viatico||c.costo_viatico||12000);
   const plazoStr = document.getElementById('cos-plazo')?.value || '0';
@@ -1858,11 +1897,20 @@ async function eliminarSvc(i) {
 }
 
 // ══ CONFIG ══
+function toggleModoCF() {
+  const modo = document.querySelector('input[name="modo-cf"]:checked')?.value || 'manual';
+  document.getElementById('cfg-cf-manual-fields').style.display = modo === 'manual' ? '' : 'none';
+  document.getElementById('cfg-cf-auto-fields').style.display   = modo === 'automatico' ? '' : 'none';
+}
+
 async function guardarConfig() {
   const campos = [
     {clave:'precio_litro',    val:document.getElementById('cfg-lt').value},
     {clave:'rendimiento',     val:document.getElementById('cfg-rend').value},
     {clave:'costo_fijo',      val:document.getElementById('cfg-cf').value},
+    {clave:'modo_costo_fijo',  val:document.querySelector('input[name="modo-cf"]:checked')?.value||'manual'},
+    {clave:'costo_fijo_mensual', val:document.getElementById('cfg-cf-mensual')?.value||''},
+    {clave:'dias_operativos_mes', val:document.getElementById('cfg-cf-dias-mes')?.value||'20'},
     {clave:'mantencion',      val:document.getElementById('cfg-mant').value},
     {clave:'sueldo_conductor',val:document.getElementById('cfg-cond').value},
     {clave:'viatico',         val:document.getElementById('cfg-viatico').value},
