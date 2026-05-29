@@ -1663,6 +1663,9 @@ async function cerrarServicio() {
 async function abrirInforme(i) {
   const s = DB.servicios[i];
   if(!s) return;
+  // Asegurar que corredores y pórticos estén cargados para el informe
+  await cargarCorredores();
+  await cargarPorticos();
   document.getElementById('inf-id').textContent  = s.servicio_id||'—';
   document.getElementById('inf-sub').textContent = `${s.patente} · ${s.conductor} · ${s.cliente}`;
   const body = document.getElementById('inf-body');
