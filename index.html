@@ -644,16 +644,22 @@ async function procesarGPS(input) {
       return;
     }
 
+    // Deduplicar por patente+datetime_evento antes del upsert
+    const seen = new Map();
+    for(const r of records) seen.set(r.patente+'|'+r.datetime_evento, r);
+    const unique = Array.from(seen.values());
+    console.log('GPS registros únicos:', unique.length, 'de', records.length);
+
     // Upsert en lotes de 50
     let insertados = 0, errores = 0;
     const lote = 50;
-    for(let i = 0; i < records.length; i += lote) {
-      const batch = records.slice(i, i+lote);
+    for(let i = 0; i < unique.length; i += lote) {
+      const batch = unique.slice(i, i+lote);
       const {error} = await supa.from('kaptura_gps_eventos')
         .upsert(batch, {onConflict:'patente,datetime_evento', ignoreDuplicates:false});
       if(error) { errores += batch.length; console.error('GPS upsert error:', error.message); }
       else { insertados += batch.length; }
-      status.textContent = `⏳ ${insertados}/${records.length} registros...`;
+      status.textContent = `⏳ ${insertados}/${unique.length} registros...`;
     }
 
     status.textContent = `✅ ${insertados} registros GPS cargados${errores>0?' · ⚠ '+errores+' errores':''}`;
