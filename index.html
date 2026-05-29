@@ -1296,17 +1296,24 @@ async function calcCostos() {
   // Costo fijo: manual o automático
   let cfDia = parseInt(c.costo_fijo||c.costo_fijo_dia||44000);
   if((c.modo_costo_fijo||'manual') === 'automatico') {
-    const mensual = parseFloat(c.costo_fijo_mensual||3600000);
-    const diasMes = parseInt(c.dias_operativos_mes||20);
-    // Contar equipos activos en las fechas del servicio
     const svcActual = DB.servicios[svcActivoIdx];
     const fechaIni = svcActual?.fecha||'';
-    const fechaTerm2 = document.getElementById('cos-fecha-termino')?.value||fechaIni;
-    const equiposActivos = DB.servicios.filter(sv =>
-      (sv.estado==='en_proceso'||sv.estado==='ejecutado'||sv.estado==='cerrado') &&
-      sv.fecha >= fechaIni && sv.fecha <= fechaTerm2 && sv.id !== svcActual?.id
-    ).length + 1;
-    cfDia = Math.round(mensual / diasMes / equiposActivos);
+    // Verificar si fecha inicio es sábado (6) o domingo (0) → costo fijo = 0
+    const diaSemana = fechaIni ? new Date(fechaIni+'T12:00:00').getDay() : 1;
+    if(diaSemana === 0 || diaSemana === 6) {
+      cfDia = 0; // Fin de semana: costo fijo ya distribuido en semana hábil
+    } else {
+      const mensual = parseFloat(c.costo_fijo_mensual||3600000);
+      const diasMes = parseInt(c.dias_operativos_mes||20);
+      // Contar equipos que trabajaron ese día (fecha inicio = fechaIni)
+      const equiposHoy = DB.servicios.filter(sv =>
+        (sv.estado==='en_proceso'||sv.estado==='ejecutado'||sv.estado==='cerrado') &&
+        sv.fecha === fechaIni
+      ).length;
+      const equiposActivos = Math.max(equiposHoy, 1);
+      cfDia = Math.round(mensual / diasMes / equiposActivos);
+      console.log('CF auto:', fechaIni, 'equipos activos:', equiposActivos, 'cfDia:', cfDia);
+    }
   }
   const cf      = dias * cfDia;
   const mant    = dias * parseInt(c.mantencion||c.costo_mantencion||25000);
