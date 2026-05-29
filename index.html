@@ -758,9 +758,35 @@ function renderDetalleTab() {
   const d = _costosDashData;
 
   if(_detalleTabActivo === 'combustible') {
-    thead.innerHTML = '<th style="padding:8px;text-align:left">Fecha</th><th style="padding:8px;text-align:left">Equipo</th><th style="padding:8px;text-align:left">Dirección</th><th style="padding:8px;text-align:right">Litros</th><th style="padding:8px;text-align:right">Monto Bruto</th><th style="padding:8px;text-align:right">Monto Neto (−20%)</th>';
     const rows = (d.copecRows||[]).filter(r=>!filtPat||r.patente===filtPat);
-    tbody.innerHTML = rows.length===0 ? '<tr><td colspan="6" style="padding:16px;text-align:center;color:var(--g400)">Sin cargas en este período</td></tr>'
+    // Resumen por equipo
+    const porEq = {};
+    rows.forEach(r=>{ if(!porEq[r.patente]) porEq[r.patente]={litros:0,bruto:0}; porEq[r.patente].litros+=r.litros||0; porEq[r.patente].bruto+=r.monto||0; });
+    const resumenHTML = Object.entries(porEq).length === 0 ? '' : `
+      <table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:16px">
+        <thead><tr style="background:#E8EDF5">
+          <th style="padding:7px;text-align:left">Equipo</th>
+          <th style="padding:7px;text-align:right">Litros</th>
+          <th style="padding:7px;text-align:right">Bruto</th>
+          <th style="padding:7px;text-align:right;color:#059669">Neto (−20%)</th>
+        </tr></thead><tbody>
+        ${Object.entries(porEq).map(([pat,v])=>`<tr style="border-bottom:1px solid var(--g100)">
+          <td style="padding:7px;font-weight:700">${pat}</td>
+          <td style="padding:7px;text-align:right">${Math.round(v.litros*10)/10} lt</td>
+          <td style="padding:7px;text-align:right">${fmt(v.bruto)}</td>
+          <td style="padding:7px;text-align:right;font-weight:700;color:#059669">${fmt(Math.round(v.bruto*0.8))}</td>
+        </tr>`).join('')}
+        <tr style="background:#E8EDF5;font-weight:700">
+          <td style="padding:7px">TOTAL</td>
+          <td style="padding:7px;text-align:right">${Math.round(Object.values(porEq).reduce((a,v)=>a+v.litros,0)*10)/10} lt</td>
+          <td style="padding:7px;text-align:right">${fmt(Object.values(porEq).reduce((a,v)=>a+v.bruto,0))}</td>
+          <td style="padding:7px;text-align:right;color:#059669">${fmt(Math.round(Object.values(porEq).reduce((a,v)=>a+v.bruto,0)*0.8))}</td>
+        </tr></tbody>
+      </table>
+      <div style="font-size:11px;font-weight:800;letter-spacing:0.08em;color:var(--g400);margin-bottom:6px">DETALLE DE CARGAS</div>`;
+    thead.innerHTML = '<th style="padding:8px;text-align:left">Fecha</th><th style="padding:8px;text-align:left">Equipo</th><th style="padding:8px;text-align:left">Dirección</th><th style="padding:8px;text-align:right">Litros</th><th style="padding:8px;text-align:right">Monto Bruto</th><th style="padding:8px;text-align:right">Neto (−20%)</th>';
+    tbody.innerHTML = (resumenHTML ? `<tr><td colspan="6" style="padding:0">${resumenHTML}</td></tr>` : '') +
+      (rows.length===0 ? '<tr><td colspan="6" style="padding:16px;text-align:center;color:var(--g400)">Sin cargas en este período</td></tr>'
       : rows.map(r=>`<tr style="border-bottom:1px solid var(--g100)">
           <td style="padding:7px">${r.fecha}</td>
           <td style="padding:7px;font-weight:700">${r.patente}</td>
@@ -768,11 +794,21 @@ function renderDetalleTab() {
           <td style="padding:7px;text-align:right">${r.litros} lt</td>
           <td style="padding:7px;text-align:right">${fmt(r.monto)}</td>
           <td style="padding:7px;text-align:right;font-weight:700">${fmt(Math.round(r.monto*0.8))}</td>
-        </tr>`).join('');
+        </tr>`).join(''));
   } else if(_detalleTabActivo === 'mantencion') {
-    thead.innerHTML = '<th style="padding:8px;text-align:left">Fecha</th><th style="padding:8px;text-align:left">Equipo</th><th style="padding:8px;text-align:left">Categoría</th><th style="padding:8px;text-align:left">Descripción</th><th style="padding:8px;text-align:right">Monto Neto</th><th style="padding:8px;text-align:center">Foto</th><th style="padding:8px"></th>';
     const rows = DB_gastos.filter(g=>g.categoria!=='inversion'&&g.categoria!=='distribucion'&&(!filtPat||g.patente===filtPat));
-    tbody.innerHTML = rows.length===0 ? '<tr><td colspan="7" style="padding:16px;text-align:center;color:var(--g400)">Sin gastos en este período</td></tr>'
+    const porEqM = {};
+    rows.forEach(g=>{ if(!porEqM[g.patente]) porEqM[g.patente]=0; porEqM[g.patente]+=g.monto_neto||0; });
+    const resumenMant = Object.entries(porEqM).length===0 ? '' : `
+      <table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:16px">
+        <thead><tr style="background:#E8EDF5"><th style="padding:7px;text-align:left">Equipo</th><th style="padding:7px;text-align:right">Total Neto</th></tr></thead><tbody>
+        ${Object.entries(porEqM).map(([pat,v])=>`<tr style="border-bottom:1px solid var(--g100)"><td style="padding:7px;font-weight:700">${pat||'—'}</td><td style="padding:7px;text-align:right;font-weight:700;color:#EF4444">${fmt(v)}</td></tr>`).join('')}
+        <tr style="background:#E8EDF5;font-weight:700"><td style="padding:7px">TOTAL</td><td style="padding:7px;text-align:right">${fmt(Object.values(porEqM).reduce((a,v)=>a+v,0))}</td></tr>
+        </tbody></table>
+      <div style="font-size:11px;font-weight:800;letter-spacing:0.08em;color:var(--g400);margin-bottom:6px">DETALLE</div>`;
+    thead.innerHTML = '<th style="padding:8px;text-align:left">Fecha</th><th style="padding:8px;text-align:left">Equipo</th><th style="padding:8px;text-align:left">Categoría</th><th style="padding:8px;text-align:left">Descripción</th><th style="padding:8px;text-align:right">Monto Neto</th><th style="padding:8px;text-align:center">Foto</th><th style="padding:8px"></th>';
+    tbody.innerHTML = (resumenMant ? `<tr><td colspan="7" style="padding:0">${resumenMant}</td></tr>` : '') +
+      (rows.length===0 ? '<tr><td colspan="7" style="padding:16px;text-align:center;color:var(--g400)">Sin gastos en este período</td></tr>'
       : rows.map(g=>`<tr style="border-bottom:1px solid var(--g100)">
           <td style="padding:7px">${g.fecha}</td>
           <td style="padding:7px;font-weight:700">${g.patente||'—'}</td>
@@ -781,7 +817,7 @@ function renderDetalleTab() {
           <td style="padding:7px;text-align:right;font-weight:700">${fmt(g.monto_neto)}</td>
           <td style="padding:7px;text-align:center">${g.foto_url?`<a href="${g.foto_url}" target="_blank">📎</a>`:'—'}</td>
           <td style="padding:7px;text-align:center"><button class="btn btn-outline" style="font-size:10px;padding:2px 8px" onclick="eliminarGasto('${g.id}')">✕</button></td>
-        </tr>`).join('');
+        </tr>`).join(''));
   } else if(_detalleTabActivo === 'inversion') {
     thead.innerHTML = '<th style="padding:8px;text-align:left">Fecha</th><th style="padding:8px;text-align:left">Equipo</th><th style="padding:8px;text-align:left">Descripción</th><th style="padding:8px;text-align:right">Monto Neto</th><th style="padding:8px;text-align:center">Foto</th><th style="padding:8px"></th>';
     const rows = DB_gastos.filter(g=>g.categoria==='inversion'&&(!filtPat||g.patente===filtPat));
