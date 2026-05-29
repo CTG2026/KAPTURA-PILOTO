@@ -784,17 +784,18 @@ function renderDetalleTab() {
         </tr></tbody>
       </table>
       <div style="font-size:11px;font-weight:800;letter-spacing:0.08em;color:var(--g400);margin-bottom:6px">DETALLE DE CARGAS</div>`;
-    thead.innerHTML = '<th style="padding:8px;text-align:left">Fecha</th><th style="padding:8px;text-align:left">Equipo</th><th style="padding:8px;text-align:left">Dirección</th><th style="padding:8px;text-align:right">Litros</th><th style="padding:8px;text-align:right">Monto Bruto</th><th style="padding:8px;text-align:right">Neto (−20%)</th>';
-    tbody.innerHTML = (resumenHTML ? `<tr><td colspan="6" style="padding:0">${resumenHTML}</td></tr>` : '') +
-      (rows.length===0 ? '<tr><td colspan="6" style="padding:16px;text-align:center;color:var(--g400)">Sin cargas en este período</td></tr>'
-      : rows.map(r=>`<tr style="border-bottom:1px solid var(--g100)">
+    thead.innerHTML = '';
+    const detalleComb = rows.length===0 ? '' : rows.map(r=>`<tr style="border-bottom:1px solid var(--g100)">
           <td style="padding:7px">${r.fecha}</td>
           <td style="padding:7px;font-weight:700">${r.patente}</td>
-          <td style="padding:7px;color:var(--g500);font-size:11px">${r.direccion||'—'}</td>
-          <td style="padding:7px;text-align:right">${r.litros} lt</td>
+          <td style="padding:7px;text-align:right">${Math.round((r.litros||0)*10)/10} lt</td>
           <td style="padding:7px;text-align:right">${fmt(r.monto)}</td>
           <td style="padding:7px;text-align:right;font-weight:700">${fmt(Math.round(r.monto*0.8))}</td>
-        </tr>`).join(''));
+        </tr>`).join('');
+    const toggleComb = rows.length>0 ? `<tr><td colspan="5" style="padding:6px 0">
+      <button class="btn btn-outline" style="font-size:11px;width:100%" onclick="this.closest('table').querySelector('#det-comb').style.display=this.closest('table').querySelector('#det-comb').style.display==='none'?'':'none';this.textContent=this.textContent.includes('▼')?'▲ Ocultar detalle':'▼ Ver detalle de cargas'">▼ Ver detalle de cargas</button>
+      </td></tr><tbody id="det-comb" style="display:none"><tr><td colspan="5" style="padding:0"><table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:#F5F7FA"><th style="padding:6px;text-align:left">Fecha</th><th style="padding:6px;text-align:left">Equipo</th><th style="padding:6px;text-align:right">Litros</th><th style="padding:6px;text-align:right">Bruto</th><th style="padding:6px;text-align:right">Neto</th></tr></thead><tbody>${detalleComb}</tbody></table></td></tr></tbody>` : '';
+    tbody.innerHTML = (resumenHTML ? `<tr><td colspan="5" style="padding:0">${resumenHTML}</td></tr>` : '') + toggleComb;
   } else if(_detalleTabActivo === 'mantencion') {
     const rows = DB_gastos.filter(g=>g.categoria!=='inversion'&&g.categoria!=='distribucion'&&(!filtPat||g.patente===filtPat));
     const porEqM = {};
@@ -807,17 +808,20 @@ function renderDetalleTab() {
         </tbody></table>
       <div style="font-size:11px;font-weight:800;letter-spacing:0.08em;color:var(--g400);margin-bottom:6px">DETALLE</div>`;
     thead.innerHTML = '<th style="padding:8px;text-align:left">Fecha</th><th style="padding:8px;text-align:left">Equipo</th><th style="padding:8px;text-align:left">Categoría</th><th style="padding:8px;text-align:left">Descripción</th><th style="padding:8px;text-align:right">Monto Neto</th><th style="padding:8px;text-align:center">Foto</th><th style="padding:8px"></th>';
-    tbody.innerHTML = (resumenMant ? `<tr><td colspan="7" style="padding:0">${resumenMant}</td></tr>` : '') +
-      (rows.length===0 ? '<tr><td colspan="7" style="padding:16px;text-align:center;color:var(--g400)">Sin gastos en este período</td></tr>'
+    const detalleMant = rows.length===0 ? '<tr><td colspan="7" style="padding:12px;text-align:center;color:var(--g400)">Sin gastos en este período</td></tr>'
       : rows.map(g=>`<tr style="border-bottom:1px solid var(--g100)">
           <td style="padding:7px">${g.fecha}</td>
           <td style="padding:7px;font-weight:700">${g.patente||'—'}</td>
-          <td style="padding:7px;text-transform:capitalize">${g.categoria}</td>
-          <td style="padding:7px;color:var(--g500)">${g.descripcion||'—'}</td>
+          <td style="padding:7px;text-transform:capitalize;font-size:11px">${g.categoria}</td>
+          <td style="padding:7px;color:var(--g500);font-size:11px">${g.descripcion||'—'}</td>
           <td style="padding:7px;text-align:right;font-weight:700">${fmt(g.monto_neto)}</td>
           <td style="padding:7px;text-align:center">${g.foto_url?`<a href="${g.foto_url}" target="_blank">📎</a>`:'—'}</td>
           <td style="padding:7px;text-align:center"><button class="btn btn-outline" style="font-size:10px;padding:2px 8px" onclick="eliminarGasto('${g.id}')">✕</button></td>
-        </tr>`).join(''));
+        </tr>`).join('');
+    const toggleMant = `<tr><td colspan="7" style="padding:6px 0">
+      <button class="btn btn-outline" style="font-size:11px;width:100%" onclick="this.closest('table').querySelector('#det-mant').style.display=this.closest('table').querySelector('#det-mant').style.display==='none'?'':'none';this.textContent=this.textContent.includes('▼')?'▲ Ocultar detalle':'▼ Ver detalle de gastos'">▼ Ver detalle de gastos</button>
+      </td></tr><tbody id="det-mant" style="display:none"><tr><td colspan="7" style="padding:0"><table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:#F5F7FA"><th style="padding:6px;text-align:left">Fecha</th><th style="padding:6px;text-align:left">Equipo</th><th style="padding:6px">Cat.</th><th style="padding:6px">Descripción</th><th style="padding:6px;text-align:right">Monto</th><th style="padding:6px;text-align:center">Foto</th><th style="padding:6px"></th></tr></thead><tbody>${detalleMant}</tbody></table></td></tr></tbody>`;
+    tbody.innerHTML = (resumenMant ? `<tr><td colspan="7" style="padding:0">${resumenMant}</td></tr>` : '') + toggleMant;
   } else if(_detalleTabActivo === 'inversion') {
     thead.innerHTML = '<th style="padding:8px;text-align:left">Fecha</th><th style="padding:8px;text-align:left">Equipo</th><th style="padding:8px;text-align:left">Descripción</th><th style="padding:8px;text-align:right">Monto Neto</th><th style="padding:8px;text-align:center">Foto</th><th style="padding:8px"></th>';
     const rows = DB_gastos.filter(g=>g.categoria==='inversion'&&(!filtPat||g.patente===filtPat));
