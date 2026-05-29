@@ -715,7 +715,7 @@ async function procesarCopec(input) {
       const litros     = parseFloat((cols[iLitros]||'0').replace(',','.'));
       const monto      = parseFloat((cols[iMonto]||'0').replace(',','.'));
       if(!patente || !fecha || litros <= 0) continue;
-      records.push({patente, fecha, hora, conductor, direccion, litros, monto});
+      records.push({patente, fecha, hora, direccion, litros, monto});
     }
 
     if(records.length === 0) {
