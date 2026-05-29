@@ -1199,6 +1199,17 @@ async function eliminarGasto(id) {
   toast('Gasto eliminado');
 }
 
+// ══ FECHA INICIO KAPTURA ══
+async function actualizarFechaKaptura(patente, fecha) {
+  const {error} = await supa.from('kaptura_flota')
+    .update({fecha_inicio_kaptura: fecha||null})
+    .eq('patente', patente);
+  if(error) { toast('Error: '+error.message); return; }
+  const f = DB.flota.find(f=>f.patente===patente);
+  if(f) f.fecha_inicio_kaptura = fecha;
+  toast(`✓ Fecha inicio Kaptura actualizada — ${patente}`);
+}
+
 // ══ CARGA DE DATOS ══
 
 async function procesarGPS(input) {
@@ -1626,7 +1637,17 @@ function filaHTML(s,i) {
 
 function renderFlota() {
   document.getElementById('lista-flota').innerHTML =
-    DB.flota.map(f => `<div class="svc-card"><div class="svc-top"><div><div class="svc-pat">${f.patente}</div><div class="svc-line">${f.tipo||'Camión'}</div></div><span class="pill p-confirmado">Activo</span></div></div>`).join('') || '<div class="empty">Sin datos</div>';
+    DB.flota.map(f => `<div class="svc-card">
+      <div class="svc-top">
+        <div><div class="svc-pat">${f.patente}</div><div class="svc-line">${f.tipo||'Camión'}</div></div>
+        <span class="pill p-confirmado">Activo</span>
+      </div>
+      <div style="margin-top:8px;display:flex;align-items:center;gap:8px;font-size:11px">
+        <label style="color:var(--g400);font-weight:700;white-space:nowrap">Inicio Kaptura:</label>
+        <input type="date" value="${f.fecha_inicio_kaptura||''}" style="border:1px solid var(--g200);border-radius:4px;padding:3px 6px;font-size:11px"
+          onchange="actualizarFechaKaptura('${f.patente}',this.value)">
+      </div>
+    </div>`).join('') || '<div class="empty">Sin datos</div>';
 }
 
 function renderClientes() {
@@ -2318,12 +2339,22 @@ async function cargarGPS() {
       if(cutoffDatetime && e.datetime_evento > cutoffDatetime) return false;
       return true;
     });
-    // Primer trip largo (>25 km) desde origen → ignora movimientos locales pre-servicio
-    const firstLongTrip = tripsRaw.find(t => t.km_tramo > 25 && matchAddr(t.address, origenKws));
-    console.log('firstLongTrip:', firstLongTrip?.datetime_evento||'none', firstLongTrip?.km_tramo||0, 'km');
+    // Verificar si es primer servicio del equipo (fecha_inicio_kaptura)
+    const flotaEq = DB.flota.find(f => f.patente === svcPatenteActiva);
+    const fechaInicioKaptura = flotaEq?.fecha_inicio_kaptura||'';
+    const fechaServicio = DB.servicios[svcActivoIdx]?.fecha||'';
+    const esPrimerServicio = fechaInicioKaptura && fechaServicio && fechaServicio <= fechaInicioKaptura;
 
-    // Filtrar trips definitivos: desde firstLongTrip para excluir trips intermedios pre-viaje
-    const inicioViaje = firstLongTrip ? firstLongTrip.datetime_evento : null;
+    // Si es primer servicio → usar todos los trips (sin filtro firstLongTrip)
+    // Si no → filtrar por firstLongTrip para ignorar movimientos locales pre-viaje
+    let firstLongTrip = null;
+    let inicioViaje = null;
+    if(!esPrimerServicio) {
+      firstLongTrip = tripsRaw.find(t => t.km_tramo > 25 && matchAddr(t.address, origenKws));
+      inicioViaje = firstLongTrip ? firstLongTrip.datetime_evento : null;
+    }
+    console.log('firstLongTrip:', firstLongTrip?.datetime_evento||'none', firstLongTrip?.km_tramo||0, 'km', esPrimerServicio?'[PRIMER SERVICIO - todos los trips]':'');
+
     const trips = tripsRaw.filter(t => !inicioViaje || t.datetime_evento >= inicioViaje);
     const kmTotal = trips.reduce((a,e)=>a+(e.km_tramo||0),0);
     const diasActivos = new Set(trips.map(e=>e.fecha)).size;
