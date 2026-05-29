@@ -197,6 +197,7 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
         <option value="neumaticos">Neumáticos</option>
         <option value="reparacion">Reparación</option>
         <option value="distribucion">Distribución</option>
+        <option value="inversion">Inversión</option>
         <option value="otro">Otro</option>
       </select>
       <input type="month" class="inp" id="gasto-filtro-mes" style="width:auto" onchange="cargarGastos()">
@@ -244,6 +245,7 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
             <option value="neumaticos">Neumáticos</option>
             <option value="reparacion">Reparación</option>
             <option value="distribucion">Distribución (prorrateo flota)</option>
+            <option value="inversion">Inversión / Puesta en marcha</option>
             <option value="otro">Otro</option>
           </select>
         </div>
@@ -331,6 +333,10 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
       <div class="fld">
         <label class="lbl">Equipos prorrateo distribución</label>
         <input class="inp" id="cfg-prorrateo" type="number" placeholder="6" min="1" max="10">
+      </div>
+      <div class="fld">
+        <label class="lbl">Equipos en Inversión/Puesta en marcha <span style="font-size:9px;color:var(--g400)">(separados por coma)</span></label>
+        <input class="inp" id="cfg-equipos-inversion" type="text" placeholder="CXFR24, XA1104">
       </div>
 
       <!-- CARGA DE DATOS -->
@@ -733,28 +739,41 @@ function renderGastosResumen() {
   const resumen = document.getElementById('gastos-resumen');
   if(!resumen) return;
   const porPatente = {};
-  const hoy = new Date();
-  const mes = hoy.getMonth() + 1;
-  const anio = hoy.getFullYear();
+  const porInversion = {};
   for(const g of DB_gastos) {
-    const [y,m] = g.fecha.split('-');
-    if(parseInt(y)===anio && parseInt(m)===mes) {
+    if(!g.patente) continue;
+    if(g.categoria === 'inversion') {
+      porInversion[g.patente] = (porInversion[g.patente]||0) + g.monto_neto;
+    } else {
       porPatente[g.patente] = (porPatente[g.patente]||0) + g.monto_neto;
     }
   }
-  resumen.innerHTML = Object.entries(porPatente).map(([pat,total]) => `
+  const cards = Object.entries(porPatente).map(([pat,total]) => `
     <div style="background:#F5F7FA;border-radius:8px;padding:12px;border-left:3px solid #1E3A5F">
       <div style="font-weight:900;font-size:14px">${pat}</div>
-      <div style="font-size:11px;color:var(--g400);margin-bottom:4px">Gastos mes actual</div>
+      <div style="font-size:11px;color:var(--g400);margin-bottom:4px">Gastos operacionales</div>
       <div style="font-size:18px;font-weight:900;color:#EF4444">${fmt(total)}</div>
-    </div>`).join('') || '<div style="color:var(--g400);font-size:13px">Sin gastos este mes</div>';
+    </div>`).join('');
+  const invCards = Object.entries(porInversion).map(([pat,total]) => `
+    <div style="background:#FFF7ED;border-radius:8px;padding:12px;border-left:3px solid #F59E0B">
+      <div style="font-weight:900;font-size:14px">${pat}</div>
+      <div style="font-size:11px;color:#92400E;margin-bottom:4px">🔧 Inversión / Puesta en marcha</div>
+      <div style="font-size:18px;font-weight:900;color:#D97706">${fmt(total)}</div>
+    </div>`).join('');
+  resumen.innerHTML = (cards + invCards) || '<div style="color:var(--g400);font-size:13px">Sin gastos en este período</div>';
 }
 
 function abrirNuevoGasto() {
   // Poblar select de patentes
   const sel = document.getElementById('gasto-patente');
   sel.innerHTML = '<option value="">Seleccione equipo...</option>' +
+    '<option value="DISTRIBUCION">📋 Distribución (toda la flota)</option>' +
     DB.flota.filter(f=>f.activo!==false).map(f=>`<option value="${f.patente}">${f.patente} — ${f.tipo||''}</option>`).join('');
+  sel.onchange = function() {
+    const cat = document.getElementById('gasto-categoria');
+    if(this.value === 'DISTRIBUCION' && cat) cat.value = 'distribucion';
+    else if(this.value !== 'DISTRIBUCION' && cat && cat.value === 'distribucion') cat.value = 'mantencion';
+  };
   // Poblar filtro
   const filtSel = document.getElementById('gasto-filtro-patente');
   if(filtSel && filtSel.options.length <= 1) {
@@ -771,12 +790,16 @@ function abrirNuevoGasto() {
 }
 
 async function guardarGasto() {
-  const patente = document.getElementById('gasto-patente').value;
+  const patenteRaw = document.getElementById('gasto-patente')?.value || '';
+  const patente = patenteRaw === 'DISTRIBUCION' ? '' : patenteRaw;
+  if(patenteRaw === 'DISTRIBUCION') {
+    document.getElementById('gasto-categoria').value = 'distribucion';
+  }
   const fecha   = document.getElementById('gasto-fecha').value;
   const cat     = document.getElementById('gasto-categoria').value;
   const desc    = document.getElementById('gasto-descripcion').value.trim();
   const monto   = parseInt(document.getElementById('gasto-monto').value)||0;
-  if(!patente || !fecha || monto <= 0) { toast('⚠ Complete equipo, fecha y monto'); return; }
+  if((!patente && cat !== 'distribucion') || !fecha || monto <= 0) { toast('⚠ Complete equipo, fecha y monto'); return; }
 
   let foto_url = null;
   const fotoInput = document.getElementById('gasto-foto');
@@ -1189,7 +1212,9 @@ async function calcMargenReal(mes, conf, ingresoTotal) {
   // Gastos módulo del mes
   const {data:gastos} = await supa.from('kaptura_gastos')
     .select('monto_neto').gte('fecha',desde).lte('fecha',hasta);
-  const gastosReal = (gastos||[]).reduce((a,r)=>a+(r.monto_neto||0),0);
+  // Excluir gastos de inversión del margen real operacional
+  const gastosReal = (gastos||[]).filter(r=>r.categoria!=='inversion').reduce((a,r)=>a+(r.monto_neto||0),0);
+  const gastosInversion = (gastos||[]).filter(r=>r.categoria==='inversion').reduce((a,r)=>a+(r.monto_neto||0),0);
 
   // Resto de costos desde servicios cerrados (TAG, fijos, sueldos, viáticos, comisiones)
   const tagTotal      = conf.reduce((a,s)=>a+(s.costo_peajes||0),0);
@@ -1215,7 +1240,8 @@ async function calcMargenReal(mes, conf, ingresoTotal) {
     if(elKpi) elKpi.className = 'kpi ' + (margenReal >= 0 ? 'green' : 'red');
   }
   const sub = document.getElementById('k-margen-real-sub');
-  if(sub) sub.textContent = `Copec $${Math.round(combustibleReal/1000)}k · Mant $${Math.round(gastosReal/1000)}k`;
+  if(sub) sub.textContent = `Copec $${Math.round(combustibleReal/1000)}k · Mant $${Math.round(gastosReal/1000)}k${gastosInversion>0?' · Inv $'+Math.round(gastosInversion/1000)+'k':''}`;
+
 }
 
 function renderServicios() {
@@ -1345,6 +1371,7 @@ function poblarConfig() {
   const c = DB.config;
   document.getElementById('cfg-lt').value      = c.precio_litro||c.precio_combustible||1300;
   if(document.getElementById('cfg-prorrateo')) document.getElementById('cfg-prorrateo').value = c.prorrateo_equipos||6;
+  if(document.getElementById('cfg-equipos-inversion')) document.getElementById('cfg-equipos-inversion').value = c.equipos_inversion||'CXFR24, XA1104';
   const modoComb = c.modo_combustible||'manual';
   const radioCombId = 'cfg-comb-'+(modoComb==='automatico'?'auto':'manual');
   const radioComb = document.getElementById(radioCombId);
@@ -2490,6 +2517,7 @@ async function guardarConfig() {
     {clave:'precio_litro',    val:document.getElementById('cfg-lt').value},
     {clave:'modo_combustible', val:document.querySelector('input[name="modo-comb"]:checked')?.value||'manual'},
     {clave:'prorrateo_equipos', val:document.getElementById('cfg-prorrateo')?.value||'6'},
+    {clave:'equipos_inversion', val:document.getElementById('cfg-equipos-inversion')?.value||''},
     {clave:'rendimiento',     val:document.getElementById('cfg-rend').value},
     {clave:'costo_fijo',      val:document.getElementById('cfg-cf').value},
     {clave:'modo_costo_fijo',  val:document.querySelector('input[name="modo-cf"]:checked')?.value||'manual'},
