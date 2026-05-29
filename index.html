@@ -152,7 +152,7 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
     <div class="desk-tbl">
       <div style="overflow-x:auto"><table>
         <thead><tr>
-          <th>ID</th><th>Fecha</th><th>Patente</th><th>Conductor</th><th>Cliente</th>
+          <th>ID</th><th>Fecha Asignación Servicio</th><th>Fecha Término Servicio</th><th>Patente</th><th>Conductor</th><th>Cliente</th>
           <th>Origen</th><th>Destino</th><th>Guía</th><th>Tarifa $</th>
           <th>Cant Ptos</th><th>Total Ptos $</th><th>Total Ingreso</th>
           <th>Costos</th><th>Margen</th><th>Estado</th><th>Acciones</th>
@@ -1613,6 +1613,7 @@ function filaHTML(s,i) {
   return `<tr>
     <td style="font-family:'Barlow Condensed',sans-serif;font-weight:800;color:var(--navy)">${s.servicio_id||'—'}</td>
     <td>${s.fecha||'—'}</td>
+    <td>${s._fecha_termino || (s.hora_termino ? s.hora_termino.substring(0,10) : '—')}</td>
     <td style="font-family:'Barlow Condensed',sans-serif;font-weight:700">${s.patente||'—'}</td>
     <td>${s.conductor||'—'}</td>
     <td>${s.cliente||'—'}</td>
@@ -2191,11 +2192,15 @@ async function calcCostos() {
     } else {
       const mensual = parseFloat(c.costo_fijo_mensual||3600000);
       const diasMes = parseInt(c.dias_operativos_mes||20);
-      // Contar equipos que trabajaron ese día (fecha inicio = fechaIni)
-      const equiposHoy = DB.servicios.filter(sv =>
-        (sv.estado==='en_proceso'||sv.estado==='ejecutado'||sv.estado==='cerrado') &&
-        sv.fecha === fechaIni
-      ).length;
+      // Contar equipos activos en el rango de fechas del servicio
+      const fechaTermSvc = document.getElementById('cos-fecha-termino')?.value || fechaIni;
+      const equiposHoy = DB.servicios.filter(sv => {
+        if(!(sv.estado==='asignado'||sv.estado==='en_proceso'||sv.estado==='ejecutado'||sv.estado==='cerrado'||sv.estado==='borrador')) return false;
+        // El servicio se superpone si inició antes del fin y terminó después del inicio
+        const svFechaInicio = sv.fecha || '';
+        const svFechaTermino = sv._fecha_termino || sv.fecha_termino || sv.fecha || '';
+        return svFechaInicio <= fechaTermSvc && svFechaTermino >= fechaIni;
+      }).length;
       const equiposActivos = Math.max(equiposHoy, 1);
       cfDia = Math.round(mensual / diasMes / equiposActivos);
       console.log('CF auto:', fechaIni, 'equipos activos:', equiposActivos, 'cfDia:', cfDia);
@@ -2281,7 +2286,38 @@ async function cargarGPS() {
     const notasStr = s?.notas || '';
     if(hayGPS) {
     const retornoTipo = notasStr.includes('Retorno: base') ? 'base' : 
-                        notasStr.includes('Retorno: pernocta') ? 'pernocta' : 'base';
+                        notasStr.includes('Retorno: pernocta') ? 'pernocta' :
+                        notasStr.includes('Retorno: nueva_asignacion') ? 'nueva_asignacion' : 'base';
+
+    // Si el servicio anterior terminó en nueva_asignacion, buscar desde dónde terminó ese servicio
+    // para usar como punto de inicio del GPS de este servicio
+    if(!esPrimerServicio && retornoTipo !== 'nueva_asignacion') {
+      // Buscar servicio anterior del mismo equipo
+      const svcsEquipo = DB.servicios
+        .filter(sv => sv.patente === patente && sv.estado === 'cerrado' && sv.fecha < fechaInicio)
+        .sort((a,b) => a.fecha > b.fecha ? -1 : 1);
+      const svcAnterior = svcsEquipo[0];
+      if(svcAnterior) {
+        const notasAnt = svcAnterior.notas || '';
+        if(notasAnt.includes('Retorno: nueva_asignacion') || notasAnt.includes('Retorno: pernocta')) {
+          // El anterior terminó en nueva asignación — el origen real de este servicio
+          // es el destino del anterior, no la base
+          // Buscar primer evento desde el destino del servicio anterior
+          const destinoAnt = svcAnterior.destino || '';
+          if(destinoAnt) {
+            const destKws = destinoAnt.toLowerCase().split(/[\s,]+/).filter(w=>w.length>3);
+            const primerEvtDestAnt = eventos.find(e => {
+              const al = (e.address||'').toLowerCase();
+              return destKws.some(k=>al.includes(k));
+            });
+            if(primerEvtDestAnt) {
+              inicioViaje = primerEvtDestAnt.datetime_evento;
+              console.log('Inicio desde destino anterior:', destinoAnt, '->', inicioViaje);
+            }
+          }
+        }
+      }
+    }
 
     // If retorno=base, find when truck arrived at base (Coltauco)
     // and cut GPS at that point - ignore trips after arrival
