@@ -2224,7 +2224,7 @@ async function calcCostos() {
 
   // Auto-set comision when GPS loaded and tarifa>0
   const comisionEl = document.getElementById('cos-comision');
-  if(km > 0 && tarifa > 0 && (!comisionEl.value || parseFloat(comisionEl.value)===0)) {
+  if(km > 0 && tarifa > 0 && comisionEl.value === null || comisionEl.value === undefined) {
     comisionEl.value = Math.round(tarifa * (parseFloat(c.comision_conductor||8)/100));
   }
   const comision = parseFloat(comisionEl?.value)||0;
