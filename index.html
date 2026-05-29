@@ -785,17 +785,67 @@ function renderDetalleTab() {
       </table>
       <div style="font-size:11px;font-weight:800;letter-spacing:0.08em;color:var(--g400);margin-bottom:6px">DETALLE DE CARGAS</div>`;
     thead.innerHTML = '';
-    const detalleComb = rows.length===0 ? '' : rows.map(r=>`<tr style="border-bottom:1px solid var(--g100)">
-          <td style="padding:7px">${r.fecha}</td>
-          <td style="padding:7px;font-weight:700">${r.patente}</td>
-          <td style="padding:7px;text-align:right">${Math.round((r.litros||0)*10)/10} lt</td>
-          <td style="padding:7px;text-align:right">${fmt(r.monto)}</td>
-          <td style="padding:7px;text-align:right;font-weight:700">${fmt(Math.round(r.monto*0.8))}</td>
-        </tr>`).join('');
-    const toggleComb = rows.length>0 ? `<tr><td colspan="5" style="padding:6px 0">
-      <button class="btn btn-outline" style="font-size:11px;width:100%" onclick="this.closest('table').querySelector('#det-comb').style.display=this.closest('table').querySelector('#det-comb').style.display==='none'?'':'none';this.textContent=this.textContent.includes('▼')?'▲ Ocultar detalle':'▼ Ver detalle de cargas'">▼ Ver detalle de cargas</button>
-      </td></tr><tbody id="det-comb" style="display:none"><tr><td colspan="5" style="padding:0"><table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:#F5F7FA"><th style="padding:6px;text-align:left">Fecha</th><th style="padding:6px;text-align:left">Equipo</th><th style="padding:6px;text-align:right">Litros</th><th style="padding:6px;text-align:right">Bruto</th><th style="padding:6px;text-align:right">Neto</th></tr></thead><tbody>${detalleComb}</tbody></table></td></tr></tbody>` : '';
-    tbody.innerHTML = (resumenHTML ? `<tr><td colspan="5" style="padding:0">${resumenHTML}</td></tr>` : '') + toggleComb;
+    // Orden equipos
+    const ordenEq = ['XR8555','WR9192','GKFD84','DVDS36','GCFF12','BPLB35','XA1104','CXFR24','JYJV21','KSRC78','BWGH46'];
+    const porEqSorted = Object.entries(porEq).sort((a,b)=>{
+      const ia = ordenEq.indexOf(a[0]); const ib = ordenEq.indexOf(b[0]);
+      return (ia<0?99:ia)-(ib<0?99:ib);
+    });
+    const resumenHTMLOrdenado = porEqSorted.length===0 ? '' : `
+      <table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:12px">
+        <thead><tr style="background:#E8EDF5">
+          <th style="padding:7px;text-align:left">Equipo</th>
+          <th style="padding:7px;text-align:right">Litros</th>
+          <th style="padding:7px;text-align:right">Bruto</th>
+          <th style="padding:7px;text-align:right;color:#059669">Neto (−20%)</th>
+        </tr></thead><tbody>
+        ${porEqSorted.map(([pat,v])=>`<tr style="border-bottom:1px solid var(--g100)">
+          <td style="padding:7px;font-weight:700">${pat}</td>
+          <td style="padding:7px;text-align:right">${Math.round(v.litros*10)/10} lt</td>
+          <td style="padding:7px;text-align:right">${fmt(v.bruto)}</td>
+          <td style="padding:7px;text-align:right;font-weight:700;color:#059669">${fmt(Math.round(v.bruto*0.8))}</td>
+        </tr>`).join('')}
+        <tr style="background:#E8EDF5;font-weight:700">
+          <td style="padding:7px">TOTAL</td>
+          <td style="padding:7px;text-align:right">${Math.round(porEqSorted.reduce((a,[,v])=>a+v.litros,0)*10)/10} lt</td>
+          <td style="padding:7px;text-align:right">${fmt(porEqSorted.reduce((a,[,v])=>a+v.bruto,0))}</td>
+          <td style="padding:7px;text-align:right;color:#059669">${fmt(Math.round(porEqSorted.reduce((a,[,v])=>a+v.bruto,0)*0.8))}</td>
+        </tr></tbody>
+      </table>`;
+    thead.innerHTML = '';
+    tbody.innerHTML = resumenHTMLOrdenado;
+    // Detalle en div separado fuera de la tabla
+    const detalleDivId = 'det-comb-'+Date.now();
+    if(rows.length > 0) {
+      tbody.innerHTML += `<tr><td colspan="4" style="padding:4px 0">
+        <button class="btn btn-outline" style="font-size:11px;width:100%;margin-top:4px" 
+          onclick="const d=document.getElementById('${detalleDivId}');d.style.display=d.style.display==='none'?'block':'none';this.textContent=d.style.display==='none'?'▼ Ver detalle de cargas':'▲ Ocultar detalle'">
+          ▼ Ver detalle de cargas
+        </button>
+      </td></tr>`;
+      const detalleHTML = `<div id="${detalleDivId}" style="display:none;margin-top:4px;overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          <thead><tr style="background:#F5F7FA">
+            <th style="padding:6px;text-align:left">Fecha</th>
+            <th style="padding:6px;text-align:left">Equipo</th>
+            <th style="padding:6px;text-align:right">Litros</th>
+            <th style="padding:6px;text-align:right">Bruto</th>
+            <th style="padding:6px;text-align:right">Neto</th>
+          </tr></thead><tbody>
+          ${rows.map(r=>`<tr style="border-bottom:1px solid var(--g100)">
+            <td style="padding:6px">${r.fecha}</td>
+            <td style="padding:6px;font-weight:700">${r.patente}</td>
+            <td style="padding:6px;text-align:right">${Math.round((r.litros||0)*10)/10} lt</td>
+            <td style="padding:6px;text-align:right">${fmt(r.monto)}</td>
+            <td style="padding:6px;text-align:right;font-weight:700">${fmt(Math.round(r.monto*0.8))}</td>
+          </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`;
+      // Insertar div después de la tabla
+      const tabla = tbody.closest('table');
+      tabla.insertAdjacentHTML('afterend', detalleHTML);
+    }
   } else if(_detalleTabActivo === 'mantencion') {
     const rows = DB_gastos.filter(g=>g.categoria!=='inversion'&&g.categoria!=='distribucion'&&(!filtPat||g.patente===filtPat));
     const porEqM = {};
@@ -808,20 +858,62 @@ function renderDetalleTab() {
         </tbody></table>
       <div style="font-size:11px;font-weight:800;letter-spacing:0.08em;color:var(--g400);margin-bottom:6px">DETALLE</div>`;
     thead.innerHTML = '<th style="padding:8px;text-align:left">Fecha</th><th style="padding:8px;text-align:left">Equipo</th><th style="padding:8px;text-align:left">Categoría</th><th style="padding:8px;text-align:left">Descripción</th><th style="padding:8px;text-align:right">Monto Neto</th><th style="padding:8px;text-align:center">Foto</th><th style="padding:8px"></th>';
-    const detalleMant = rows.length===0 ? '<tr><td colspan="7" style="padding:12px;text-align:center;color:var(--g400)">Sin gastos en este período</td></tr>'
-      : rows.map(g=>`<tr style="border-bottom:1px solid var(--g100)">
-          <td style="padding:7px">${g.fecha}</td>
-          <td style="padding:7px;font-weight:700">${g.patente||'—'}</td>
-          <td style="padding:7px;text-transform:capitalize;font-size:11px">${g.categoria}</td>
-          <td style="padding:7px;color:var(--g500);font-size:11px">${g.descripcion||'—'}</td>
-          <td style="padding:7px;text-align:right;font-weight:700">${fmt(g.monto_neto)}</td>
-          <td style="padding:7px;text-align:center">${g.foto_url?`<a href="${g.foto_url}" target="_blank">📎</a>`:'—'}</td>
-          <td style="padding:7px;text-align:center"><button class="btn btn-outline" style="font-size:10px;padding:2px 8px" onclick="eliminarGasto('${g.id}')">✕</button></td>
-        </tr>`).join('');
-    const toggleMant = `<tr><td colspan="7" style="padding:6px 0">
-      <button class="btn btn-outline" style="font-size:11px;width:100%" onclick="this.closest('table').querySelector('#det-mant').style.display=this.closest('table').querySelector('#det-mant').style.display==='none'?'':'none';this.textContent=this.textContent.includes('▼')?'▲ Ocultar detalle':'▼ Ver detalle de gastos'">▼ Ver detalle de gastos</button>
-      </td></tr><tbody id="det-mant" style="display:none"><tr><td colspan="7" style="padding:0"><table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:#F5F7FA"><th style="padding:6px;text-align:left">Fecha</th><th style="padding:6px;text-align:left">Equipo</th><th style="padding:6px">Cat.</th><th style="padding:6px">Descripción</th><th style="padding:6px;text-align:right">Monto</th><th style="padding:6px;text-align:center">Foto</th><th style="padding:6px"></th></tr></thead><tbody>${detalleMant}</tbody></table></td></tr></tbody>`;
-    tbody.innerHTML = (resumenMant ? `<tr><td colspan="7" style="padding:0">${resumenMant}</td></tr>` : '') + toggleMant;
+    // Orden equipos mantención
+    const ordenEqM = ['XR8555','WR9192','GKFD84','DVDS36','GCFF12','BPLB35','XA1104','CXFR24','JYJV21','KSRC78','BWGH46'];
+    const porEqMSorted = Object.entries(porEqM).sort((a,b)=>{
+      const ia=ordenEqM.indexOf(a[0]); const ib=ordenEqM.indexOf(b[0]);
+      return (ia<0?99:ia)-(ib<0?99:ib);
+    });
+    const resumenMantOrdenado = porEqMSorted.length===0 ? '' : `
+      <table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:12px">
+        <thead><tr style="background:#E8EDF5">
+          <th style="padding:7px;text-align:left">Equipo</th>
+          <th style="padding:7px;text-align:right">Total Neto</th>
+        </tr></thead><tbody>
+        ${porEqMSorted.map(([pat,v])=>`<tr style="border-bottom:1px solid var(--g100)">
+          <td style="padding:7px;font-weight:700">${pat||'—'}</td>
+          <td style="padding:7px;text-align:right;font-weight:700;color:#EF4444">${fmt(v)}</td>
+        </tr>`).join('')}
+        <tr style="background:#E8EDF5;font-weight:700">
+          <td style="padding:7px">TOTAL</td>
+          <td style="padding:7px;text-align:right">${fmt(porEqMSorted.reduce((a,[,v])=>a+v,0))}</td>
+        </tr></tbody>
+      </table>`;
+    thead.innerHTML = '';
+    tbody.innerHTML = resumenMantOrdenado;
+    if(rows.length > 0) {
+      const detIdM = 'det-mant-'+Date.now();
+      tbody.innerHTML += `<tr><td colspan="2" style="padding:4px 0">
+        <button class="btn btn-outline" style="font-size:11px;width:100%;margin-top:4px"
+          onclick="const d=document.getElementById('${detIdM}');d.style.display=d.style.display==='none'?'block':'none';this.textContent=d.style.display==='none'?'▼ Ver detalle de gastos':'▲ Ocultar detalle'">
+          ▼ Ver detalle de gastos
+        </button>
+      </td></tr>`;
+      const detHTMLM = `<div id="${detIdM}" style="display:none;margin-top:4px;overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          <thead><tr style="background:#F5F7FA">
+            <th style="padding:6px;text-align:left">Fecha</th>
+            <th style="padding:6px;text-align:left">Equipo</th>
+            <th style="padding:6px">Cat.</th>
+            <th style="padding:6px">Descripción</th>
+            <th style="padding:6px;text-align:right">Monto</th>
+            <th style="padding:6px;text-align:center">Foto</th>
+            <th style="padding:6px"></th>
+          </tr></thead><tbody>
+          ${rows.map(g=>`<tr style="border-bottom:1px solid var(--g100)">
+            <td style="padding:6px">${g.fecha}</td>
+            <td style="padding:6px;font-weight:700">${g.patente||'—'}</td>
+            <td style="padding:6px;font-size:10px;text-transform:capitalize">${g.categoria}</td>
+            <td style="padding:6px;color:var(--g500);font-size:11px">${g.descripcion||'—'}</td>
+            <td style="padding:6px;text-align:right;font-weight:700">${fmt(g.monto_neto)}</td>
+            <td style="padding:6px;text-align:center">${g.foto_url?`<a href="${g.foto_url}" target="_blank">📎</a>`:'—'}</td>
+            <td style="padding:6px;text-align:center"><button class="btn btn-outline" style="font-size:10px;padding:2px 6px" onclick="eliminarGasto('${g.id}')">✕</button></td>
+          </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`;
+      tbody.closest('table').insertAdjacentHTML('afterend', detHTMLM);
+    }
   } else if(_detalleTabActivo === 'inversion') {
     thead.innerHTML = '<th style="padding:8px;text-align:left">Fecha</th><th style="padding:8px;text-align:left">Equipo</th><th style="padding:8px;text-align:left">Descripción</th><th style="padding:8px;text-align:right">Monto Neto</th><th style="padding:8px;text-align:center">Foto</th><th style="padding:8px"></th>';
     const rows = DB_gastos.filter(g=>g.categoria==='inversion'&&(!filtPat||g.patente===filtPat));
