@@ -635,7 +635,7 @@ async function procesarGPS(input) {
       const speed_max = colSpeedMax >= 0 && row[colSpeedMax] ? parseFloat(row[colSpeedMax]) : null;
       const speed_avg = colSpeedAvg >= 0 && row[colSpeedAvg] ? parseFloat(row[colSpeedAvg]) : null;
       if(!patente || !fecha || !evento) continue;
-      records.push({patente, fecha, hora, datetime_evento, evento, duracion, address, km_tramo, speed_max, speed_avg});
+      records.push({patente, fecha, datetime_evento, evento, duracion, address, km_tramo, speed_max, speed_avg});
     }
 
     if(records.length === 0) {
