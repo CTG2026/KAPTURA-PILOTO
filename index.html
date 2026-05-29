@@ -544,9 +544,9 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
       <div class="section-ttl">⚙ A — Costos Directos</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
         <div class="fld"><label class="lbl">Km GPS <span id="lbl-km" style="font-size:8px;font-weight:800;background:#FEF3C7;color:#92400E;padding:1px 5px;border-radius:3px">PENDIENTE</span></label><input class="inp" id="cos-km" type="number" placeholder="0" oninput="calcCostos()"></div>
-        <div class="fld"><label class="lbl">Litros teórico <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-litros" readonly style="background:var(--g50)"></div>
+        <div class="fld"><label class="lbl">Litros teórico <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-litros" style="background:var(--g50)"></div>
         <div class="fld"><label class="lbl">Litros real Copec <span style="font-size:8px;font-weight:800;background:#D1FAE5;color:#065F46;padding:1px 5px;border-radius:3px" id="lbl-litros-real">—</span></label><input class="inp" id="cos-litros-real" readonly style="background:var(--g50);color:#065F46"></div>
-        <div class="fld"><label class="lbl">Combustible <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-comb" readonly style="background:var(--g50)"></div>
+        <div class="fld"><label class="lbl">Combustible <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-comb" oninput="calcCostos()" style=""></div>
         <div class="fld"><label class="lbl">TAG Autopista <span id="lbl-tag" style="font-size:8px;font-weight:800;background:#FEF3C7;color:#92400E;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-tag" type="number" placeholder="0" oninput="calcCostos()"></div>
         <div class="fld"><label class="lbl">Peajes Ruta <span id="lbl-peajes" style="font-size:8px;font-weight:800;background:#FEF3C7;color:#92400E;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-peajes" type="number" placeholder="0" oninput="calcCostos()"></div>
       </div>
@@ -562,11 +562,11 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
       <!-- D COSTOS FIJOS -->
       <div class="section-ttl">🏢 D — Costos Fijos</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
-        <div class="fld"><label class="lbl">Costo conductor <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-conductor" readonly style="background:var(--g50)"></div>
+        <div class="fld"><label class="lbl">Costo conductor <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-conductor" oninput="calcCostos()" style=""></div>
         <div class="fld"><label class="lbl">Comisión conductor <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-comision" type="number" placeholder="0" oninput="calcCostos()"></div>
-        <div class="fld"><label class="lbl">Costo fijo/día <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-cf" readonly style="background:var(--g50)"></div>
-        <div class="fld"><label class="lbl">Mantención <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-mant" readonly style="background:var(--g50)"></div>
-        <div class="fld"><label class="lbl">Viático <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-viatico" readonly style="background:var(--g50)"></div>
+        <div class="fld"><label class="lbl">Costo fijo/día <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-cf" oninput="calcCostos()" style=""></div>
+        <div class="fld"><label class="lbl">Mantención <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-mant" oninput="calcCostos()" style=""></div>
+        <div class="fld"><label class="lbl">Viático <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-viatico" oninput="calcCostos()" style=""></div>
       </div>
       <!-- E FINANCIERO -->
       <div class="section-ttl">💳 E — Financiero</div>
@@ -579,7 +579,7 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
             <option value="3">60 días — 3%</option>
           </select>
         </div>
-        <div class="fld"><label class="lbl">Factoring <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-factoring" readonly style="background:var(--g50)"></div>
+        <div class="fld"><label class="lbl">Factoring <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-factoring" style=""></div>
       </div>
       <!-- MARGEN -->
       <div style="background:#152038;border-radius:10px;padding:14px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
