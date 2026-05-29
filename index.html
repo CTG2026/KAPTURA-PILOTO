@@ -793,8 +793,9 @@ function poblarConfig() {
   const c = DB.config;
   document.getElementById('cfg-lt').value      = c.precio_litro||c.precio_combustible||1300;
   const modoComb = c.modo_combustible||'manual';
-  const radioComb = document.getElementById('cfg-comb-'+(modoComb==='automatico'?'auto':'manual'));
-  if(radioComb) radioComb.checked = true;
+  const radioCombId = 'cfg-comb-'+(modoComb==='automatico'?'auto':'manual');
+  const radioComb = document.getElementById(radioCombId);
+  if(radioComb) { radioComb.checked = true; radioComb.dispatchEvent(new Event('change')); }
   document.getElementById('cfg-rend').value    = c.rendimiento||c.rendimiento_km_lt||2.5;
   document.getElementById('cfg-cf').value      = c.costo_fijo||c.costo_fijo_dia||44000;
   if(document.getElementById('cfg-cf-mensual')) document.getElementById('cfg-cf-mensual').value = c.costo_fijo_mensual||3600000;
@@ -1743,7 +1744,7 @@ async function abrirInforme(i) {
 
   const costoItems = [
     ['Combustible',        s.costo_combustible || null],
-    ['TAG/Peajes',        (s.peajes_tag||0) + (s.costo_peajes||0) || null],
+    ['TAG/Peajes',        s.costo_peajes || s.peajes_tag || null],
     ['Costo Conductor',    s.costo_conductor || null],
     ['Comisión Conductor', s.costo_comision || (s.tarifa_neta ? Math.round((s.tarifa_neta||0)*((parseFloat(DB.config.comision_conductor||8))/100)) : null)],
     ['Costo Fijo',         s.costo_fijo_dia || null],
@@ -1771,23 +1772,6 @@ async function abrirInforme(i) {
       <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;color:${(s.margen_servicio||s.margen||0)>=0?'#34D399':'#F87171'}">${fmt(s.margen_servicio||s.margen||0)}</div>
     </div>
   </div>`;
-
-  // KPI $ por km
-  const kmKpi = s.km_total||0;
-  if(kmKpi > 0) {
-    const kpiCosto  = Math.round((s.total_costos||0) / kmKpi);
-    const kpiTarifa = Math.round((s.ingreso_total||s.tarifa_neta||0) / kmKpi);
-    html += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:12px 0">
-      <div style="background:#F5F7FA;border-radius:8px;padding:12px 16px;text-align:center">
-        <div style="font-size:9px;font-weight:800;letter-spacing:0.1em;color:#8C96B0;text-transform:uppercase;margin-bottom:4px">$/km Costo</div>
-        <div style="font-size:22px;font-weight:900;color:#EF4444;font-family:'Barlow Condensed',sans-serif">${fmt(kpiCosto)}</div>
-      </div>
-      <div style="background:#F5F7FA;border-radius:8px;padding:12px 16px;text-align:center">
-        <div style="font-size:9px;font-weight:800;letter-spacing:0.1em;color:#8C96B0;text-transform:uppercase;margin-bottom:4px">$/km Tarifa</div>
-        <div style="font-size:22px;font-weight:900;color:#10B981;font-family:'Barlow Condensed',sans-serif">${fmt(kpiTarifa)}</div>
-      </div>
-    </div>`;
-  }
 
   // Timeline GPS
   html += `<div class="inf-section" style="margin-top:16px">🗺 Timeline de Ruta (GPS)</div>`;
