@@ -656,7 +656,7 @@ async function procesarGPS(input) {
     for(let i = 0; i < unique.length; i += lote) {
       const batch = unique.slice(i, i+lote);
       const {error} = await supa.from('kaptura_gps_eventos')
-        .upsert(batch, {onConflict:'patente,datetime_evento', ignoreDuplicates:true});
+        .upsert(batch, {onConflict:'patente,datetime_evento', ignoreDuplicates:false});
       if(error) { errores += batch.length; console.error('GPS upsert error:', error.message); }
       else { insertados += batch.length; }
       status.textContent = `⏳ ${insertados}/${unique.length} registros...`;
