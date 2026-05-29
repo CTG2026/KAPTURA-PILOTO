@@ -1605,8 +1605,9 @@ async function guardarCostosBorrador() {
   // Usar rendimiento específico del equipo si existe, sino el global
   const _flota2 = DB.flota.find(f => f.patente === svcPatenteActiva);
   const rend = parseFloat(_flota2?.rendimiento_km_lt || c.rendimiento||2.5);
-  const prec = parseFloat(c.precio_litro||1300);
-  const comb = km ? Math.round((km/rend)*prec) : 0;
+  // Leer combustible desde el campo del formulario (ya calculado por calcCostos con precio Copec si aplica)
+  const combField = document.getElementById('cos-comb')?.value?.replace(/[.$]/g,'').replace(/\./g,'').replace(/,/g,'.') || '';
+  const comb = combField ? Math.round(parseFloat(combField)) : (km ? Math.round((km/rend)*(parseFloat(c.precio_litro||1300))) : 0);
   const condVal = dias*parseInt(c.sueldo_conductor||33000);
   const comision = parseFloat(document.getElementById('cos-comision').value)||0;
   const cf   = dias*parseInt(c.costo_fijo||44000);
