@@ -2268,10 +2268,18 @@ async function cargarGPS() {
       .gte('fecha',fechaInicio).lte('fecha',fechaTerm)
       .order('datetime_evento',{ascending:true});
 
-    if(!eventos||!eventos.length) { toast('Sin GPS para ese rango'); return; }
+    const hayGPS = eventos && eventos.length > 0;
+    if(!hayGPS) {
+      toast('⚠ Sin GPS para ese rango — integrando Copec y costos');
+      // Sin GPS: solo integrar Copec y costos fijos, dejar km en blanco
+      document.getElementById('lbl-km').textContent = 'Sin GPS';
+      document.getElementById('lbl-km').style.background = '#FEF3C7';
+      document.getElementById('lbl-km').style.color = '#92400E';
+    }
 
     // Detect retorno type from notas
     const notasStr = s?.notas || '';
+    if(hayGPS) {
     const retornoTipo = notasStr.includes('Retorno: base') ? 'base' : 
                         notasStr.includes('Retorno: pernocta') ? 'pernocta' : 'base';
 
@@ -2471,6 +2479,8 @@ async function cargarGPS() {
     console.log('TAG:', soloTag.map(p=>p.nombre).join('+'), '=$'+totalTag);
     console.log('Peajes:', soloPeajes.map(p=>p.nombre).join('+'), '=$'+totalPeajes);
     calcCostos();
+    toast(`✓ GPS: ${Math.round(kmTotal)} km · ${diasActivos} días · TAG: ${fmt(totalTag)} · Peajes: ${fmt(totalPeajes)}`);
+    } // fin bloque hayGPS
 
     // Copec litros reales
     try {
@@ -2487,7 +2497,7 @@ async function cargarGPS() {
       }
     } catch(e) { console.warn('Copec:', e.message); }
 
-    toast(`✓ GPS: ${Math.round(kmTotal)} km · ${diasActivos} días · TAG: ${fmt(totalTag)} · Peajes: ${fmt(totalPeajes)}`);
+    if(!hayGPS) toast('✓ Copec integrado — GPS no disponible para este período');
   } catch(e) { toast('Error GPS: '+e.message); console.error(e); }
 }
 
