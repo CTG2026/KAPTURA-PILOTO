@@ -123,6 +123,7 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
   <button class="ntab active" onclick="setTab('servicios',this)">Servicios</button>
   <button class="ntab" onclick="setTab('flota',this)">Flota</button>
   <button class="ntab" onclick="setTab('clientes',this)">Clientes</button>
+  <button class="ntab" onclick="setTab('gastos',this)">Gastos</button>
   <button class="ntab" onclick="setTab('config',this)">Config</button>
 </nav>
 
@@ -175,6 +176,89 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
   <div id="tab-clientes" style="display:none">
     <div class="sec-ttl" style="margin-bottom:12px">Clientes</div>
     <div id="lista-clientes"></div>
+  </div>
+
+  <!-- TAB GASTOS -->
+  <div id="tab-gastos" style="display:none">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;letter-spacing:0.05em">GASTOS</div>
+      <button class="btn btn-navy" onclick="abrirNuevoGasto()">+ Registrar Gasto</button>
+    </div>
+
+    <!-- Filtros -->
+    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+      <select class="inp" id="gasto-filtro-patente" style="width:auto" onchange="renderGastos()">
+        <option value="">Todos los equipos</option>
+      </select>
+      <select class="inp" id="gasto-filtro-cat" style="width:auto" onchange="renderGastos()">
+        <option value="">Todas las categorías</option>
+        <option value="mantencion">Mantención</option>
+        <option value="neumaticos">Neumáticos</option>
+        <option value="reparacion">Reparación</option>
+        <option value="otro">Otro</option>
+      </select>
+    </div>
+
+    <!-- Resumen por equipo -->
+    <div id="gastos-resumen" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-bottom:20px"></div>
+
+    <!-- Tabla de gastos -->
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:13px">
+        <thead><tr style="background:#1C2B4A;color:#fff">
+          <th style="padding:8px;text-align:left">Fecha</th>
+          <th style="padding:8px;text-align:left">Equipo</th>
+          <th style="padding:8px;text-align:left">Categoría</th>
+          <th style="padding:8px;text-align:left">Descripción</th>
+          <th style="padding:8px;text-align:right">Monto Neto</th>
+          <th style="padding:8px;text-align:center">Foto</th>
+          <th style="padding:8px"></th>
+        </tr></thead>
+        <tbody id="gastos-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- MODAL NUEVO GASTO -->
+  <div class="overlay" id="modal-gasto" style="display:none">
+    <div class="modal" style="max-width:440px">
+      <div class="modal-hdr">
+        <div><div class="modal-ttl">Registrar Gasto</div><div class="modal-sub">Mantención y otros costos reales</div></div>
+        <button class="modal-cls" onclick="cerrar('modal-gasto')">✕</button>
+      </div>
+      <div class="modal-body" style="display:flex;flex-direction:column;gap:12px">
+        <div class="fld"><label class="lbl">Equipo</label>
+          <select class="inp" id="gasto-patente">
+            <option value="">Seleccione equipo...</option>
+          </select>
+        </div>
+        <div class="fld"><label class="lbl">Fecha</label>
+          <input class="inp" type="date" id="gasto-fecha">
+        </div>
+        <div class="fld"><label class="lbl">Categoría</label>
+          <select class="inp" id="gasto-categoria">
+            <option value="mantencion">Mantención</option>
+            <option value="neumaticos">Neumáticos</option>
+            <option value="reparacion">Reparación</option>
+            <option value="otro">Otro</option>
+          </select>
+        </div>
+        <div class="fld"><label class="lbl">Descripción</label>
+          <input class="inp" type="text" id="gasto-descripcion" placeholder="Cambio aceite, filtros, etc.">
+        </div>
+        <div class="fld"><label class="lbl">Monto Neto ($)</label>
+          <input class="inp" type="number" id="gasto-monto" placeholder="0">
+        </div>
+        <div class="fld"><label class="lbl">Foto / Factura (opcional)</label>
+          <input type="file" id="gasto-foto" accept="image/*,application/pdf" style="font-size:12px">
+          <div id="gasto-foto-status" style="font-size:11px;color:var(--g400);margin-top:4px"></div>
+        </div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">
+          <button class="btn btn-outline" onclick="cerrar('modal-gasto')">Cancelar</button>
+          <button class="btn btn-navy" onclick="guardarGasto()">💾 Guardar Gasto</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- TAB CONFIG -->
@@ -580,6 +664,119 @@ async function guardarRendFlota() {
   }
 }
 
+// ══ GASTOS ══
+let DB_gastos = [];
+
+async function cargarGastos() {
+  const {data} = await supa.from('kaptura_gastos').select('*').order('fecha', {ascending:false});
+  DB_gastos = data || [];
+  renderGastos();
+  renderGastosResumen();
+}
+
+function renderGastos() {
+  const filtPat = document.getElementById('gasto-filtro-patente')?.value||'';
+  const filtCat = document.getElementById('gasto-filtro-cat')?.value||'';
+  const lista = DB_gastos.filter(g =>
+    (!filtPat || g.patente === filtPat) &&
+    (!filtCat || g.categoria === filtCat)
+  );
+  const tbody = document.getElementById('gastos-tbody');
+  if(!tbody) return;
+  tbody.innerHTML = lista.length === 0
+    ? '<tr><td colspan="7" style="padding:24px;text-align:center;color:var(--g400)">Sin gastos registrados</td></tr>'
+    : lista.map(g => `<tr style="border-bottom:1px solid var(--g100)">
+        <td style="padding:8px">${g.fecha}</td>
+        <td style="padding:8px;font-weight:700">${g.patente}</td>
+        <td style="padding:8px;text-transform:capitalize">${g.categoria}</td>
+        <td style="padding:8px;color:var(--g500)">${g.descripcion||'—'}</td>
+        <td style="padding:8px;text-align:right;font-weight:700">${fmt(g.monto_neto)}</td>
+        <td style="padding:8px;text-align:center">${g.foto_url ? `<a href="${g.foto_url}" target="_blank" style="color:#1E3A5F">📎</a>` : '—'}</td>
+        <td style="padding:8px;text-align:center"><button class="btn btn-outline" style="font-size:10px;padding:2px 8px" onclick="eliminarGasto('${g.id}')">✕</button></td>
+      </tr>`).join('');
+}
+
+function renderGastosResumen() {
+  const resumen = document.getElementById('gastos-resumen');
+  if(!resumen) return;
+  const porPatente = {};
+  const hoy = new Date();
+  const mes = hoy.getMonth() + 1;
+  const anio = hoy.getFullYear();
+  for(const g of DB_gastos) {
+    const [y,m] = g.fecha.split('-');
+    if(parseInt(y)===anio && parseInt(m)===mes) {
+      porPatente[g.patente] = (porPatente[g.patente]||0) + g.monto_neto;
+    }
+  }
+  resumen.innerHTML = Object.entries(porPatente).map(([pat,total]) => `
+    <div style="background:#F5F7FA;border-radius:8px;padding:12px;border-left:3px solid #1E3A5F">
+      <div style="font-weight:900;font-size:14px">${pat}</div>
+      <div style="font-size:11px;color:var(--g400);margin-bottom:4px">Gastos mes actual</div>
+      <div style="font-size:18px;font-weight:900;color:#EF4444">${fmt(total)}</div>
+    </div>`).join('') || '<div style="color:var(--g400);font-size:13px">Sin gastos este mes</div>';
+}
+
+function abrirNuevoGasto() {
+  // Poblar select de patentes
+  const sel = document.getElementById('gasto-patente');
+  sel.innerHTML = '<option value="">Seleccione equipo...</option>' +
+    DB.flota.filter(f=>f.activo!==false).map(f=>`<option value="${f.patente}">${f.patente} — ${f.tipo||''}</option>`).join('');
+  // Poblar filtro
+  const filtSel = document.getElementById('gasto-filtro-patente');
+  if(filtSel && filtSel.options.length <= 1) {
+    DB.flota.filter(f=>f.activo!==false).forEach(f=>{
+      filtSel.innerHTML += `<option value="${f.patente}">${f.patente}</option>`;
+    });
+  }
+  // Fecha hoy por defecto
+  document.getElementById('gasto-fecha').value = new Date().toISOString().split('T')[0];
+  document.getElementById('gasto-descripcion').value = '';
+  document.getElementById('gasto-monto').value = '';
+  document.getElementById('gasto-foto-status').textContent = '';
+  document.getElementById('modal-gasto').style.display = 'flex';
+}
+
+async function guardarGasto() {
+  const patente = document.getElementById('gasto-patente').value;
+  const fecha   = document.getElementById('gasto-fecha').value;
+  const cat     = document.getElementById('gasto-categoria').value;
+  const desc    = document.getElementById('gasto-descripcion').value.trim();
+  const monto   = parseInt(document.getElementById('gasto-monto').value)||0;
+  if(!patente || !fecha || monto <= 0) { toast('⚠ Complete equipo, fecha y monto'); return; }
+
+  let foto_url = null;
+  const fotoInput = document.getElementById('gasto-foto');
+  if(fotoInput.files[0]) {
+    const file = fotoInput.files[0];
+    const ext  = file.name.split('.').pop();
+    const fileName = `gastos/${patente}_${fecha}_${Date.now()}.${ext}`;
+    const {data:up} = await supa.storage.from('kaptura-guias').upload(fileName, file, {upsert:true, contentType:file.type});
+    if(up) {
+      const {data:url} = supa.storage.from('kaptura-guias').getPublicUrl(fileName);
+      foto_url = url.publicUrl;
+    }
+  }
+
+  const {error} = await supa.from('kaptura_gastos').insert({patente, fecha, categoria:cat, descripcion:desc, monto_neto:monto, foto_url});
+  if(error) { toast('Error: '+error.message); return; }
+  DB_gastos.unshift({patente, fecha, categoria:cat, descripcion:desc, monto_neto:monto, foto_url});
+  cerrar('modal-gasto');
+  renderGastos();
+  renderGastosResumen();
+  toast(`✓ Gasto registrado — ${patente} ${fmt(monto)}`);
+}
+
+async function eliminarGasto(id) {
+  if(!confirm('¿Eliminar este gasto?')) return;
+  const {error} = await supa.from('kaptura_gastos').delete().eq('id',id);
+  if(error) { toast('Error: '+error.message); return; }
+  DB_gastos = DB_gastos.filter(g=>g.id!==id);
+  renderGastos();
+  renderGastosResumen();
+  toast('Gasto eliminado');
+}
+
 // ══ CARGA DE DATOS ══
 
 async function procesarGPS(input) {
@@ -656,7 +853,7 @@ async function procesarGPS(input) {
     for(let i = 0; i < unique.length; i += lote) {
       const batch = unique.slice(i, i+lote);
       const {error} = await supa.from('kaptura_gps_eventos')
-        .upsert(batch, {onConflict:'patente,datetime_evento', ignoreDuplicates:false});
+        .upsert(batch, {onConflict:'patente,datetime_evento', ignoreDuplicates:true});
       if(error) { errores += batch.length; console.error('GPS upsert error:', error.message); }
       else { insertados += batch.length; }
       status.textContent = `⏳ ${insertados}/${unique.length} registros...`;
@@ -2154,11 +2351,12 @@ async function guardarConfig() {
 
 // ══ UTILS ══
 function setTab(nombre, btn) {
-  ['servicios','flota','clientes','config'].forEach(t => {
+  ['servicios','flota','clientes','gastos','config'].forEach(t => {
     document.getElementById(`tab-${t}`).style.display = t===nombre ? 'block' : 'none';
   });
   document.querySelectorAll('.ntab').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
+  if(nombre==='gastos') cargarGastos();
 }
 function resetFecha() {
   document.getElementById('filtro-fecha').value = '';
