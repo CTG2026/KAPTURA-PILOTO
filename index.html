@@ -240,6 +240,7 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
             <option value="mantencion">Mantención</option>
             <option value="neumaticos">Neumáticos</option>
             <option value="reparacion">Reparación</option>
+            <option value="distribucion">Distribución (prorrateo flota)</option>
             <option value="otro">Otro</option>
           </select>
         </div>
@@ -249,9 +250,14 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
         <div class="fld"><label class="lbl">Monto Neto ($)</label>
           <input class="inp" type="number" id="gasto-monto" placeholder="0">
         </div>
-        <div class="fld"><label class="lbl">Foto / Factura (opcional)</label>
-          <input type="file" id="gasto-foto" accept="image/*,application/pdf" style="font-size:12px">
+        <div class="fld"><label class="lbl">Foto / Factura</label>
+          <div style="display:flex;gap:8px">
+            <button type="button" class="btn btn-outline" style="flex:1;font-size:11px" onclick="document.getElementById('gasto-foto').click()">📷 Sacar Foto / Adjuntar</button>
+            <button type="button" class="btn btn-outline" style="font-size:11px" id="gasto-leer-btn" onclick="leerFacturaIA()" style="display:none">🤖 Leer con IA</button>
+          </div>
+          <input type="file" id="gasto-foto" accept="image/*,application/pdf" capture="environment" style="display:none" onchange="onGastoFotoChange(this)">
           <div id="gasto-foto-status" style="font-size:11px;color:var(--g400);margin-top:4px"></div>
+          <img id="gasto-foto-preview" style="display:none;max-width:100%;border-radius:6px;margin-top:6px;max-height:150px;object-fit:cover">
         </div>
         <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">
           <button class="btn btn-outline" onclick="cerrar('modal-gasto')">Cancelar</button>
@@ -318,6 +324,12 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
         <label class="lbl">API Key Claude (lectura guías)</label>
         <input class="inp" id="cfg-claude" type="password" placeholder="sk-ant-api03-...">
       </div>
+      <!-- PRORRATEO -->
+      <div class="fld">
+        <label class="lbl">Equipos prorrateo distribución</label>
+        <input class="inp" id="cfg-prorrateo" type="number" placeholder="6" min="1" max="10">
+      </div>
+
       <!-- CARGA DE DATOS -->
       <div style="border-top:1px solid var(--g200);margin-top:16px;padding-top:16px">
         <div style="font-size:11px;font-weight:800;letter-spacing:0.08em;color:var(--g400);margin-bottom:10px">CARGA DE DATOS</div>
@@ -758,13 +770,84 @@ async function guardarGasto() {
     }
   }
 
-  const {error} = await supa.from('kaptura_gastos').insert({patente, fecha, categoria:cat, descripcion:desc, monto_neto:monto, foto_url});
+  // Si es distribución, prorratear entre equipos
+  const nProrrateo = parseInt(DB.config['prorrateo_equipos']||6);
+  const registros = [];
+  if(cat === 'distribucion') {
+    const flotaActiva = DB.flota.filter(f=>f.activo!==false);
+    const montoXEquipo = Math.round(monto / nProrrateo);
+    for(const f of flotaActiva.slice(0, nProrrateo)) {
+      registros.push({patente:f.patente, fecha, categoria:'distribucion', descripcion:desc, monto_neto:montoXEquipo, foto_url});
+    }
+  } else {
+    registros.push({patente, fecha, categoria:cat, descripcion:desc, monto_neto:monto, foto_url});
+  }
+  const {error} = await supa.from('kaptura_gastos').insert(registros);
   if(error) { toast('Error: '+error.message); return; }
-  DB_gastos.unshift({patente, fecha, categoria:cat, descripcion:desc, monto_neto:monto, foto_url});
+  DB_gastos.unshift(...registros);
+  _gastoFotoFile = null; _gastoFotoB64 = null;
   cerrar('modal-gasto');
   renderGastos();
   renderGastosResumen();
   toast(`✓ Gasto registrado — ${patente} ${fmt(monto)}`);
+}
+
+let _gastoFotoFile = null;
+let _gastoFotoB64  = null;
+
+function onGastoFotoChange(input) {
+  const file = input.files[0];
+  if(!file) return;
+  _gastoFotoFile = file;
+  const status = document.getElementById('gasto-foto-status');
+  const preview = document.getElementById('gasto-foto-preview');
+  const leerBtn = document.getElementById('gasto-leer-btn');
+  status.textContent = file.name;
+  // Preview
+  const reader = new FileReader();
+  reader.onload = e => {
+    _gastoFotoB64 = e.target.result.split(',')[1];
+    if(file.type.startsWith('image/')) {
+      preview.src = e.target.result;
+      preview.style.display = 'block';
+    }
+    leerBtn.style.display = 'inline-flex';
+  };
+  reader.readAsDataURL(file);
+}
+
+async function leerFacturaIA() {
+  if(!_gastoFotoB64) { toast('⚠ Primero adjunte una foto'); return; }
+  const btn = document.getElementById('gasto-leer-btn');
+  btn.textContent = '⏳ Leyendo...';
+  btn.disabled = true;
+  try {
+    const ck = localStorage.getItem('kaptura_claude_key')||DB.config['claude_api_key']||'';
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':ck,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body: JSON.stringify({
+        model:'claude-opus-4-5',
+        max_tokens:500,
+        messages:[{role:'user',content:[
+          {type:'image',source:{type:'base64',media_type:_gastoFotoFile.type,data:_gastoFotoB64}},
+          {type:'text',text:'Lee esta factura o boleta y extrae: fecha (formato YYYY-MM-DD), proveedor/nombre empresa, descripcion del servicio o producto, monto_neto (sin IVA, solo número entero en pesos chilenos). Responde SOLO en JSON: {"fecha":"","proveedor":"","descripcion":"","monto_neto":0}'}
+        ]}]
+      })
+    });
+    const data = await resp.json();
+    const txt = data.content?.[0]?.text||'{}';
+    const parsed = JSON.parse(txt.replace(/```json|```/g,'').trim());
+    if(parsed.fecha) document.getElementById('gasto-fecha').value = parsed.fecha;
+    if(parsed.descripcion) document.getElementById('gasto-descripcion').value = (parsed.proveedor ? parsed.proveedor+' — ' : '') + parsed.descripcion;
+    if(parsed.monto_neto) document.getElementById('gasto-monto').value = parsed.monto_neto;
+    toast('✓ Factura leída con IA');
+  } catch(e) {
+    toast('Error IA: '+e.message);
+    console.error(e);
+  }
+  btn.textContent = '🤖 Leer con IA';
+  btn.disabled = false;
 }
 
 async function eliminarGasto(id) {
@@ -1182,6 +1265,7 @@ function poblarSelects() {
 function poblarConfig() {
   const c = DB.config;
   document.getElementById('cfg-lt').value      = c.precio_litro||c.precio_combustible||1300;
+  if(document.getElementById('cfg-prorrateo')) document.getElementById('cfg-prorrateo').value = c.prorrateo_equipos||6;
   const modoComb = c.modo_combustible||'manual';
   const radioCombId = 'cfg-comb-'+(modoComb==='automatico'?'auto':'manual');
   const radioComb = document.getElementById(radioCombId);
@@ -2326,6 +2410,7 @@ async function guardarConfig() {
   const campos = [
     {clave:'precio_litro',    val:document.getElementById('cfg-lt').value},
     {clave:'modo_combustible', val:document.querySelector('input[name="modo-comb"]:checked')?.value||'manual'},
+    {clave:'prorrateo_equipos', val:document.getElementById('cfg-prorrateo')?.value||'6'},
     {clave:'rendimiento',     val:document.getElementById('cfg-rend').value},
     {clave:'costo_fijo',      val:document.getElementById('cfg-cf').value},
     {clave:'modo_costo_fijo',  val:document.querySelector('input[name="modo-cf"]:checked')?.value||'manual'},
