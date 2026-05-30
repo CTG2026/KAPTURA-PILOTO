@@ -2479,16 +2479,25 @@ async function cargarGPS() {
     const detectadosTag = [];
     if(corridorDetected && corridorScore >= 2) {
       console.log('Corredor:', corridorDetected.id, corridorDetected.nombre);
-      const portIda    = (corridorDetected.porticos_ida||'').split(',').map(p=>p.trim());
-      const portVuelta = (corridorDetected.porticos_vuelta||'').split(',').map(p=>p.trim());
-      // No deduplication - same portico can appear multiple times (e.g. ANGOSTURA x2)
-      for(const pNombre of portIda) {
-        const found = DB_porticos.find(p=>p.cobro_oficial===pNombre&&p.valor_3_ejes>0);
-        if(found) detectadosTag.push({nombre:pNombre,valor:found.valor_3_ejes,tipo:(found.tipo||'tag').toLowerCase()});
-      }
-      for(const pNombre of portVuelta) {
-        const found = DB_porticos.find(p=>p.cobro_oficial===pNombre&&p.valor_3_ejes>0);
-        if(found) detectadosTag.push({nombre:pNombre,valor:found.valor_3_ejes,tipo:(found.tipo||'tag').toLowerCase()});
+      // Si el corredor tiene total_tag y total_peajes precalculados, usarlos directamente
+      if(corridorDetected.total_tag > 0 || corridorDetected.total_peajes > 0) {
+        if(corridorDetected.total_tag > 0)
+          detectadosTag.push({nombre:'TAG '+corridorDetected.id, valor:corridorDetected.total_tag, tipo:'tag'});
+        if(corridorDetected.total_peajes > 0)
+          detectadosTag.push({nombre:'PEAJES '+corridorDetected.id, valor:corridorDetected.total_peajes, tipo:'peaje'});
+        console.log('Usando totales precalculados — TAG:', corridorDetected.total_tag, 'Peajes:', corridorDetected.total_peajes);
+      } else {
+        // Fallback: buscar pórticos en DB_porticos
+        const portIda    = (corridorDetected.porticos_ida||'').split(',').map(p=>p.trim());
+        const portVuelta = (corridorDetected.porticos_vuelta||'').split(',').map(p=>p.trim());
+        for(const pNombre of portIda) {
+          const found = DB_porticos.find(p=>p.cobro_oficial===pNombre&&p.valor_3_ejes>0);
+          if(found) detectadosTag.push({nombre:pNombre,valor:found.valor_3_ejes,tipo:(found.tipo||'tag').toLowerCase()});
+        }
+        for(const pNombre of portVuelta) {
+          const found = DB_porticos.find(p=>p.cobro_oficial===pNombre&&p.valor_3_ejes>0);
+          if(found) detectadosTag.push({nombre:pNombre,valor:found.valor_3_ejes,tipo:(found.tipo||'tag').toLowerCase()});
+        }
       }
     } else {
       console.log('Sin corredor (score:'+corridorScore+'). Fallback básico.');
