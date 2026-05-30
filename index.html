@@ -2576,11 +2576,11 @@ async function guardarCostosBorrador() {
   // Leer combustible desde el campo del formulario (ya calculado por calcCostos con precio Copec si aplica)
   const combField = document.getElementById('cos-comb')?.value?.replace(/[.$]/g,'').replace(/\./g,'').replace(/,/g,'.') || '';
   const comb = combField ? Math.round(parseFloat(combField)) : (km ? Math.round((km/rend)*(parseFloat(c.precio_litro||1300))) : 0);
-  const condVal = dias*parseInt(c.sueldo_conductor||33000);
+  const condVal = parseFloat(document.getElementById('cos-conductor')?.value?.replace(/[.$]/g,'').replace(/\./g,''))||dias*parseInt(c.sueldo_conductor||33000);
   const comision = parseFloat(document.getElementById('cos-comision').value)||0;
-  const cf   = dias*parseInt(c.costo_fijo||44000);
-  const mant = dias*parseInt(c.mantencion||25000);
-  const viat = dias*parseInt(c.viatico||12000);
+  const cf   = parseFloat(document.getElementById('cos-cf')?.value?.replace(/[.$]/g,'').replace(/\./g,''))||dias*parseInt(c.costo_fijo||44000);
+  const mant = parseFloat(document.getElementById('cos-mant')?.value?.replace(/[.$]/g,'').replace(/\./g,''))||dias*parseInt(c.mantencion||25000);
+  const viat = parseFloat(document.getElementById('cos-viatico')?.value?.replace(/[.$]/g,'').replace(/\./g,''))||dias*parseInt(c.viatico||12000);
   const plazo = parseFloat(document.getElementById('cos-plazo').value??'0');
   const fact  = plazo > 0 ? Math.round(tarifa*plazo/100) : 0;
   const ingreso = tarifa + valorPts;
