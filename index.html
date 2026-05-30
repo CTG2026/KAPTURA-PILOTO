@@ -2284,13 +2284,16 @@ async function cargarGPS() {
 
     // Detect retorno type from notas
     const notasStr = s?.notas || '';
+    // Verificar si es primer servicio ANTES de entrar al bloque GPS
+    const flotaEq2 = DB.flota.find(f => f.patente === svcPatenteActiva);
+    const fechaInicioKaptura2 = flotaEq2?.fecha_inicio_kaptura||'';
+    const fechaServicio2 = DB.servicios[svcActivoIdx]?.fecha||'';
+    const esPrimerServicio = fechaInicioKaptura2 && fechaServicio2 && fechaServicio2 <= fechaInicioKaptura2;
     if(hayGPS) {
     const retornoTipo = notasStr.includes('Retorno: base') ? 'base' : 
                         notasStr.includes('Retorno: pernocta') ? 'pernocta' :
                         notasStr.includes('Retorno: nueva_asignacion') ? 'nueva_asignacion' : 'base';
 
-    // Si el servicio anterior terminó en nueva_asignacion, buscar desde dónde terminó ese servicio
-    // para usar como punto de inicio del GPS de este servicio
     if(!esPrimerServicio && retornoTipo !== 'nueva_asignacion') {
       // Buscar servicio anterior del mismo equipo
       const svcsEquipo = DB.servicios
@@ -2389,7 +2392,7 @@ async function cargarGPS() {
     const flotaEq = DB.flota.find(f => f.patente === svcPatenteActiva);
     const fechaInicioKaptura = flotaEq?.fecha_inicio_kaptura||'';
     const fechaServicio = DB.servicios[svcActivoIdx]?.fecha||'';
-    const esPrimerServicio = fechaInicioKaptura && fechaServicio && fechaServicio <= fechaInicioKaptura;
+    // esPrimerServicio ya declarado arriba
 
     // Si es primer servicio → usar todos los trips (sin filtro firstLongTrip)
     // Si no → filtrar por firstLongTrip para ignorar movimientos locales pre-viaje
