@@ -2453,7 +2453,8 @@ async function cargarGPS() {
 
     // Detección TAG por corredor
     // GPS completo para detección de corredores
-    const allAddrsTotal = trips.filter(t=>t.km_tramo>10).map(t=>t.address.toLowerCase()).join(' | ');
+    // Incluir TODOS los eventos GPS para detección de corredores (no solo trips>10km)
+    const allAddrsTotal = eventos.map(t=>t.address.toLowerCase()).join(' | ');
 
     // Detectar MÚLTIPLES corredores — todos los que apliquen según el GPS
     const corredoresDetectados = [];
