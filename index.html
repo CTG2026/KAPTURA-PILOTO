@@ -2452,55 +2452,46 @@ async function cargarGPS() {
     calcCostos();
 
     // Detección TAG por corredor
-    // Usar solo trips del tramo cargado (origen→destino) para evitar falsos matches del retorno
-    const tripsParaCorredor = (inicioViaje && evtDestino)
-      ? trips.filter(t => t.km_tramo > 10 && t.datetime_evento >= inicioViaje && t.datetime_evento <= evtDestino.datetime_evento)
-      : trips.filter(t => t.km_tramo > 10);
-    const allAddrs = tripsParaCorredor.map(t=>t.address.toLowerCase()).join(' | ');
-    let corridorDetected = null, corridorScore = 0;
-    // Usar allAddrs extendido (todo el GPS) para NEVER, solo tramo cargado para score
+    // GPS completo para detección de corredores
     const allAddrsTotal = trips.filter(t=>t.km_tramo>10).map(t=>t.address.toLowerCase()).join(' | ');
+
+    // Detectar MÚLTIPLES corredores — todos los que apliquen según el GPS
+    const corredoresDetectados = [];
+    const detectadosTag = [];
+
     for(const corr of DB_corredores) {
       const kwsIda = (corr.keywords_ida||'').split(',').map(k=>k.trim().toLowerCase());
       const nota = corr.nota||'';
-      // NEVER — usar GPS completo
+      // NEVER — bloquear si el GPS contiene estas keywords
       const neverMatch = nota.match(/NEVER:([^|]*)/);
       const neverKws = neverMatch ? neverMatch[1].split(',').map(k=>k.trim().toLowerCase()).filter(k=>k.length>2) : [];
       if(neverKws.some(nk=>nk&&allAddrsTotal.includes(nk))) continue;
-      // MUST — todas las keywords MUST deben estar en el GPS completo
+      // MUST — todas deben estar en el GPS
       const mustMatch = nota.match(/MUST:([^|]*)/);
       const mustKws = mustMatch ? mustMatch[1].split(',').map(k=>k.trim().toLowerCase()).filter(k=>k.length>2) : [];
       if(mustKws.length>0 && !mustKws.every(mk=>allAddrsTotal.includes(mk))) continue;
-      // Score — usar solo tramo cargado
-      const score = kwsIda.filter(kw=>kw.length>3&&allAddrs.includes(kw)).length;
-      if(score > corridorScore) { corridorScore=score; corridorDetected=corr; }
+      // Score mínimo 2 keywords
+      const score = kwsIda.filter(kw=>kw.length>3&&allAddrsTotal.includes(kw)).length;
+      if(score >= 2) {
+        corredoresDetectados.push({corr, score});
+        console.log('Corredor detectado:', corr.id, corr.nombre, '— score:', score);
+        if(corr.total_tag > 0)
+          detectadosTag.push({nombre:'TAG '+corr.id, valor:corr.total_tag, tipo:'tag'});
+        if(corr.total_peajes > 0)
+          detectadosTag.push({nombre:'PEAJES '+corr.id, valor:corr.total_peajes, tipo:'peaje'});
+      }
     }
 
-    const detectadosTag = [];
-    if(corridorDetected && corridorScore >= 2) {
-      console.log('Corredor:', corridorDetected.id, corridorDetected.nombre);
-      // Si el corredor tiene total_tag y total_peajes precalculados, usarlos directamente
-      if(corridorDetected.total_tag > 0 || corridorDetected.total_peajes > 0) {
-        if(corridorDetected.total_tag > 0)
-          detectadosTag.push({nombre:'TAG '+corridorDetected.id, valor:corridorDetected.total_tag, tipo:'tag'});
-        if(corridorDetected.total_peajes > 0)
-          detectadosTag.push({nombre:'PEAJES '+corridorDetected.id, valor:corridorDetected.total_peajes, tipo:'peaje'});
-        console.log('Usando totales precalculados — TAG:', corridorDetected.total_tag, 'Peajes:', corridorDetected.total_peajes);
-      } else {
-        // Fallback: buscar pórticos en DB_porticos
-        const portIda    = (corridorDetected.porticos_ida||'').split(',').map(p=>p.trim());
-        const portVuelta = (corridorDetected.porticos_vuelta||'').split(',').map(p=>p.trim());
-        for(const pNombre of portIda) {
-          const found = DB_porticos.find(p=>p.cobro_oficial===pNombre&&p.valor_3_ejes>0);
-          if(found) detectadosTag.push({nombre:pNombre,valor:found.valor_3_ejes,tipo:(found.tipo||'tag').toLowerCase()});
-        }
-        for(const pNombre of portVuelta) {
-          const found = DB_porticos.find(p=>p.cobro_oficial===pNombre&&p.valor_3_ejes>0);
-          if(found) detectadosTag.push({nombre:pNombre,valor:found.valor_3_ejes,tipo:(found.tipo||'tag').toLowerCase()});
-        }
-      }
-    } else {
-      console.log('Sin corredor (score:'+corridorScore+'). Fallback básico.');
+    // Para compatibilidad con código posterior que usa corridorDetected
+    const corridorDetected = corredoresDetectados.length > 0
+      ? corredoresDetectados.sort((a,b)=>b.score-a.score)[0].corr
+      : null;
+    const corridorScore = corredoresDetectados.length > 0
+      ? corredoresDetectados[0].score : 0;
+
+    if(corredoresDetectados.length === 0) {
+      // Fallback básico sin corredor
+      console.log('Sin corredores detectados. Fallback básico.');
       const contFallback = {};
       for(const trip of trips.filter(t=>t.km_tramo>10)) {
         const al = trip.address.toLowerCase();
@@ -2514,6 +2505,8 @@ async function cargarGPS() {
         }
       }
     }
+
+    // bloque legacy eliminado — reemplazado por lógica multi-corredor
 
     // Separate TAG vs Peajes
     _lastDetectadosTag = detectadosTag;
