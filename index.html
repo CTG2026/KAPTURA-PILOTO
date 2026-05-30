@@ -2452,7 +2452,11 @@ async function cargarGPS() {
     calcCostos();
 
     // Detección TAG por corredor
-    const allAddrs = trips.filter(t=>t.km_tramo>10).map(t=>t.address.toLowerCase()).join(' | ');
+    // Usar solo trips del tramo cargado (origen→destino) para evitar falsos matches del retorno
+    const tripsParaCorredor = (inicioViaje && evtDestino)
+      ? trips.filter(t => t.km_tramo > 10 && t.datetime_evento >= inicioViaje && t.datetime_evento <= evtDestino.datetime_evento)
+      : trips.filter(t => t.km_tramo > 10);
+    const allAddrs = tripsParaCorredor.map(t=>t.address.toLowerCase()).join(' | ');
     let corridorDetected = null, corridorScore = 0;
     for(const corr of DB_corredores) {
       const kwsIda = (corr.keywords_ida||'').split(',').map(k=>k.trim().toLowerCase());
