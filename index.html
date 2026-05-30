@@ -2229,7 +2229,7 @@ async function calcCostos() {
 
   // Auto-set comision when GPS loaded and tarifa>0
   const comisionEl = document.getElementById('cos-comision');
-  if(km > 0 && tarifa > 0 && comisionEl.value === null || comisionEl.value === undefined) {
+  if(km > 0 && tarifa > 0 && (comisionEl.value === '' || comisionEl.value === '0' || !comisionEl.value)) {
     comisionEl.value = Math.round(tarifa * (parseFloat(c.comision_conductor||8)/100));
   }
   const comision = parseFloat(comisionEl?.value)||0;
@@ -2458,11 +2458,20 @@ async function cargarGPS() {
       : trips.filter(t => t.km_tramo > 10);
     const allAddrs = tripsParaCorredor.map(t=>t.address.toLowerCase()).join(' | ');
     let corridorDetected = null, corridorScore = 0;
+    // Usar allAddrs extendido (todo el GPS) para NEVER, solo tramo cargado para score
+    const allAddrsTotal = trips.filter(t=>t.km_tramo>10).map(t=>t.address.toLowerCase()).join(' | ');
     for(const corr of DB_corredores) {
       const kwsIda = (corr.keywords_ida||'').split(',').map(k=>k.trim().toLowerCase());
-      const neverMatch = (corr.nota||'').match(/NEVER:([^|]*)/);
+      const nota = corr.nota||'';
+      // NEVER — usar GPS completo
+      const neverMatch = nota.match(/NEVER:([^|]*)/);
       const neverKws = neverMatch ? neverMatch[1].split(',').map(k=>k.trim().toLowerCase()).filter(k=>k.length>2) : [];
-      if(neverKws.some(nk=>nk&&allAddrs.includes(nk))) continue;
+      if(neverKws.some(nk=>nk&&allAddrsTotal.includes(nk))) continue;
+      // MUST — todas las keywords MUST deben estar en el GPS completo
+      const mustMatch = nota.match(/MUST:([^|]*)/);
+      const mustKws = mustMatch ? mustMatch[1].split(',').map(k=>k.trim().toLowerCase()).filter(k=>k.length>2) : [];
+      if(mustKws.length>0 && !mustKws.every(mk=>allAddrsTotal.includes(mk))) continue;
+      // Score — usar solo tramo cargado
       const score = kwsIda.filter(kw=>kw.length>3&&allAddrs.includes(kw)).length;
       if(score > corridorScore) { corridorScore=score; corridorDetected=corr; }
     }
