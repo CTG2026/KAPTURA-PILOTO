@@ -2399,8 +2399,18 @@ async function cargarGPS() {
     let firstLongTrip = null;
     let inicioViaje = null;
     if(!esPrimerServicio) {
-      firstLongTrip = tripsRaw.find(t => t.km_tramo > 25 && matchAddr(t.address, origenKws));
-      inicioViaje = firstLongTrip ? firstLongTrip.datetime_evento : null;
+      // Buscar primer trip largo desde la BASE (Coltauco) primero
+      const baseKws = ['coltauco','quillaiquén','quillayquén','ruta h-30'];
+      const firstTripBase = tripsRaw.find(t => t.km_tramo > 10 && baseKws.some(k=>t.address.toLowerCase().includes(k)));
+      if(firstTripBase) {
+        // El equipo salió desde la base — usar todos los trips desde ese momento
+        firstLongTrip = firstTripBase;
+        inicioViaje = firstTripBase.datetime_evento;
+      } else {
+        // No salió desde la base — buscar primer trip desde el origen del servicio
+        firstLongTrip = tripsRaw.find(t => t.km_tramo > 25 && matchAddr(t.address, origenKws));
+        inicioViaje = firstLongTrip ? firstLongTrip.datetime_evento : null;
+      }
     }
     console.log('firstLongTrip:', firstLongTrip?.datetime_evento||'none', firstLongTrip?.km_tramo||0, 'km', esPrimerServicio?'[PRIMER SERVICIO - todos los trips]':'');
 
@@ -2599,7 +2609,7 @@ async function guardarCostosBorrador() {
     costo_mantencion:mant, factoring:fact, total_costos:costos,
     margen_servicio:margen, margen:margen,
     km_base_carga:kmVacioIda, km_carga_destino:kmCargado, km_retorno:kmRetorno,
-    notas: `Retorno: base|_PUNTOS:${puntosJSON}`
+    notas: `Retorno: ${s.notas?.match(/Retorno: (\w+)/)?.[1]||'base'}|_PUNTOS:${puntosJSON}`
   }).eq('id',s.id);
   if(error) { toast('Error: '+error.message); return; }
   DB.servicios[svcActivoIdx] = {...s, estado:'borrador', km_total:km, tarifa_neta:tarifa,
