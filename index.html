@@ -562,11 +562,11 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
       <!-- D COSTOS FIJOS -->
       <div class="section-ttl">🏢 D — Costos Fijos</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
-        <div class="fld"><label class="lbl">Costo conductor <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-conductor" oninput="calcCostos()" style=""></div>
+        <div class="fld"><label class="lbl">Costo conductor <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-conductor" oninput="this.dataset.manual='1';calcCostos()" style=""></div>
         <div class="fld"><label class="lbl">Comisión conductor <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-comision" type="number" placeholder="0" oninput="calcCostos()"></div>
-        <div class="fld"><label class="lbl">Costo fijo/día <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-cf" oninput="calcCostos()" style=""></div>
-        <div class="fld"><label class="lbl">Mantención <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-mant" oninput="calcCostos()" style=""></div>
-        <div class="fld"><label class="lbl">Viático <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-viatico" oninput="calcCostos()" style=""></div>
+        <div class="fld"><label class="lbl">Costo fijo/día <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-cf" oninput="this.dataset.manual='1';calcCostos()" style=""></div>
+        <div class="fld"><label class="lbl">Mantención <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-mant" oninput="this.dataset.manual='1';calcCostos()" style=""></div>
+        <div class="fld"><label class="lbl">Viático <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-viatico" oninput="this.dataset.manual='1';calcCostos()" style=""></div>
       </div>
       <!-- E FINANCIERO -->
       <div class="section-ttl">💳 E — Financiero</div>
@@ -2226,10 +2226,10 @@ async function calcCostos() {
   const ingreso  = tarifa + valorPts;
   const factoring = plazo > 0 ? Math.round(tarifa * plazo / 100) : 0;
 
-  document.getElementById('cos-conductor').value = fmt(condVal);
-  document.getElementById('cos-cf').value        = fmt(cf);
-  document.getElementById('cos-mant').value      = fmt(mant);
-  document.getElementById('cos-viatico').value   = fmt(viat);
+  if(!document.getElementById('cos-conductor').dataset.manual) document.getElementById('cos-conductor').value = fmt(condVal);
+  if(!document.getElementById('cos-cf').dataset.manual) document.getElementById('cos-cf').value = fmt(cf);
+  if(!document.getElementById('cos-mant').dataset.manual) document.getElementById('cos-mant').value = fmt(mant);
+  if(!document.getElementById('cos-viatico').dataset.manual) document.getElementById('cos-viatico').value = fmt(viat);
 
   // Auto-set comision when GPS loaded and tarifa>0
   const comisionEl = document.getElementById('cos-comision');
@@ -2541,6 +2541,11 @@ async function cargarGPS() {
     } catch(e) { console.warn('Copec:', e.message); }
 
     if(!hayGPS) toast('✓ Copec integrado — GPS no disponible para este período');
+    // Resetear flags manuales al reintegrar
+    ['cos-conductor','cos-cf','cos-mant','cos-viatico','cos-comision'].forEach(id=>{
+      const el = document.getElementById(id);
+      if(el) delete el.dataset.manual;
+    });
   } catch(e) { toast('Error GPS: '+e.message); console.error(e); }
 }
 
