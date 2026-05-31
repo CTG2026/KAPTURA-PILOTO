@@ -2428,10 +2428,9 @@ async function cargarGPS() {
     document.getElementById('lbl-km').style.color = '#065F46';
     document.getElementById('cos-dias').value = diasActivos;
 
-    // evtOrigen: último stop en origen antes del firstLongTrip (para logs y fallback)
-    const evtOrigen = firstLongTrip
-      ? allEvtsSorted.filter(e => e.datetime_evento <= firstLongTrip.datetime_evento && matchAddr(e.address, origenKws) && (e.evento==='stop'||e.evento==='geofence_in')).pop()
-      : allEvtsSorted.find(e => matchAddr(e.address, origenKws) && (e.evento==='stop'||e.evento==='geofence_in'));
+    // inicioViaje = primer evento en ORIGEN del servicio (donde carga) = inicio tramo cargado
+    const evtOrigen = allEvtsSorted.find(e => matchAddr(e.address, origenKws) && (e.evento==='stop'||e.evento==='geofence_in'));
+    if(evtOrigen) inicioViaje = evtOrigen.datetime_evento;
 
     // Find FIRST STOP matching DESTINO after inicioViaje = end of cargado (primera llegada, no la de vuelta)
     const evtDestino = allEvtsSorted.find(e => e.datetime_evento > (inicioViaje||'') && matchAddr(e.address, destinoKws) && e.evento==='stop');
