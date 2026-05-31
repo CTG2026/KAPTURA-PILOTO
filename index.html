@@ -1395,6 +1395,7 @@ const hoyStr = hoy.toISOString().split('T')[0];
 let DB = { flota:[], conductores:[], clientes:[], tarifarios:[], config:{}, servicios:[] };
 let DB_porticos = [];
 let DB_corredores = [];
+let DB_tarifario = [];
 
 // ══ INIT ══
 async function init() {
@@ -2039,9 +2040,12 @@ async function cargarPorticos() {
   DB_porticos = data || [];
 }
 async function cargarCorredores() {
-  if(DB_corredores.length > 0) return;
-  const {data} = await supa.from('kaptura_corredores').select('*').eq('activo',true);
-  DB_corredores = data || [];
+  const [{data:dataCor},{data:dataDest}] = await Promise.all([
+    supa.from('kaptura_corredores').select('*').eq('activo',true),
+    supa.from('kaptura_tarifario_corredores').select('*')
+  ]);
+  DB_corredores = dataCor || [];
+  DB_tarifario = dataDest || [];
 }
 
 function parsePuntos(s) {
@@ -2462,62 +2466,33 @@ async function cargarGPS() {
     calcCostos();
 
     // Detección TAG por corredor
-    // GPS completo para detección de corredores
-    // Incluir TODOS los eventos GPS para detección de corredores (no solo trips>10km)
-    const allAddrsTotal = eventos.map(t=>t.address.toLowerCase()).join(' | ');
-
-    // Detectar MÚLTIPLES corredores — todos los que apliquen según el GPS
-    const corredoresDetectados = [];
+    // Detectar corredores por DESTINO del servicio
     const detectadosTag = [];
+    const corredoresDetectados = [];
+    const puntoFinal = (s._puntos||puntosData||[]).find(p=>p.tipo==='final');
+    const destinoSvc = (puntoFinal?.destino||s.destino||'').toUpperCase().trim();
+    const destinoConfig = DB_tarifario.find(d=>d.destino===destinoSvc);
 
-    for(const corr of DB_corredores) {
-      const kwsIda = (corr.keywords_ida||'').split(',').map(k=>k.trim().toLowerCase());
-      const nota = corr.nota||'';
-      // NEVER — bloquear si el GPS contiene estas keywords
-      const neverMatch = nota.match(/NEVER:([^|]*)/);
-      const neverKws = neverMatch ? neverMatch[1].split(',').map(k=>k.trim().toLowerCase()).filter(k=>k.length>2) : [];
-      if(neverKws.some(nk=>nk&&allAddrsTotal.includes(nk))) continue;
-      // MUST — todas deben estar en el GPS
-      const mustMatch = nota.match(/MUST:([^|]*)/);
-      const mustKws = mustMatch ? mustMatch[1].split(',').map(k=>k.trim().toLowerCase()).filter(k=>k.length>2) : [];
-      if(mustKws.length>0 && !mustKws.every(mk=>allAddrsTotal.includes(mk))) continue;
-      // Score mínimo 2 keywords
-      const score = kwsIda.filter(kw=>kw.length>3&&allAddrsTotal.includes(kw)).length;
-      if(score >= 2) {
-        corredoresDetectados.push({corr, score});
-        console.log('Corredor detectado:', corr.id, corr.nombre, '— score:', score);
+    if(destinoConfig) {
+      const idsCorredores = destinoConfig.corredores.split(',').map(c=>c.trim());
+      for(const cid of idsCorredores) {
+        const corr = DB_corredores.find(c=>c.id===cid);
+        if(!corr) { console.log('Corredor no encontrado:', cid); continue; }
+        corredoresDetectados.push({corr, score:10});
+        console.log('Corredor por destino:', corr.id, corr.nombre);
         if(corr.total_tag > 0)
           detectadosTag.push({nombre:'TAG '+corr.id, valor:corr.total_tag, tipo:'tag'});
         if(corr.total_peajes > 0)
           detectadosTag.push({nombre:'PEAJES '+corr.id, valor:corr.total_peajes, tipo:'peaje'});
       }
+      console.log('Destino:', destinoSvc, '→ corredores:', idsCorredores.join('+'));
+    } else {
+      console.log('Destino no encontrado en tabla:', destinoSvc, '— sin corredores');
     }
 
-    // Para compatibilidad con código posterior que usa corridorDetected
-    const corridorDetected = corredoresDetectados.length > 0
-      ? corredoresDetectados.sort((a,b)=>b.score-a.score)[0].corr
-      : null;
-    const corridorScore = corredoresDetectados.length > 0
-      ? corredoresDetectados[0].score : 0;
-
-    if(corredoresDetectados.length === 0) {
-      // Fallback básico sin corredor
-      console.log('Sin corredores detectados. Fallback básico.');
-      const contFallback = {};
-      for(const trip of trips.filter(t=>t.km_tramo>10)) {
-        const al = trip.address.toLowerCase();
-        for(const p of DB_porticos) {
-          if(p.valor_3_ejes<=0) continue;
-          const kw = (p.palabras_clave||'').toLowerCase().split(',').map(x=>x.trim()).filter(x=>x.length>4);
-          if(kw.some(pal=>al.includes(pal))) {
-            const key = trip.fecha+'-'+p.cobro_oficial;
-            if(!contFallback[key]) { contFallback[key]=1; detectadosTag.push({nombre:p.cobro_oficial,valor:p.valor_3_ejes,tipo:(p.tipo||'tag').toLowerCase()}); }
-          }
-        }
-      }
-    }
-
-    // bloque legacy eliminado — reemplazado por lógica multi-corredor
+    // Para compatibilidad con código posterior
+    const corridorDetected = corredoresDetectados.length > 0 ? corredoresDetectados[0].corr : null;
+    const corridorScore = corredoresDetectados.length > 0 ? 10 : 0;
 
     // Separate TAG vs Peajes
     _lastDetectadosTag = detectadosTag;
