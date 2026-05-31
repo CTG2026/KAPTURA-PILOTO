@@ -2382,7 +2382,11 @@ async function cargarGPS() {
     const origenKws  = getKws(s?.origen||'');
     const puntosArr2 = (s?._puntos||[]).length > 0 ? s._puntos : puntosData;
     const finalPto   = puntosArr2.find(p=>p.tipo==='final');
-    const destinoKws = getKws(finalPto?.destino||s?.destino||'');
+    // Usar gps_keywords del tarifario si existe, sino usar destino declarado
+    const destinoDeclarado = finalPto?.destino||s?.destino||'';
+    const tarifarioEntry = DB_tarifario.find(t=>t.destino===destinoDeclarado.toUpperCase().trim());
+    const destinoGpsStr = tarifarioEntry?.gps_keywords || destinoDeclarado;
+    const destinoKws = getKws(destinoGpsStr);
 
     // Detectar evento origen ANTES de filtrar trips
     const allEvtsSorted = eventos.sort((a,b) => a.datetime_evento > b.datetime_evento ? 1:-1);
