@@ -2226,10 +2226,18 @@ async function calcCostos() {
   const ingreso  = tarifa + valorPts;
   const factoring = plazo > 0 ? Math.round(tarifa * plazo / 100) : 0;
 
+  // Mostrar valores AUTO o respetar manual
   if(!document.getElementById('cos-conductor').dataset.manual) document.getElementById('cos-conductor').value = fmt(condVal);
   if(!document.getElementById('cos-cf').dataset.manual) document.getElementById('cos-cf').value = fmt(cf);
   if(!document.getElementById('cos-mant').dataset.manual) document.getElementById('cos-mant').value = fmt(mant);
   if(!document.getElementById('cos-viatico').dataset.manual) document.getElementById('cos-viatico').value = fmt(viat);
+
+  // Leer valores finales desde campos (respeta edición manual)
+  const parseFmt = id => { const v = document.getElementById(id)?.value||''; return parseFloat(v.replace(/[$\.]/g,'').replace(/,/g,'.'))||0; };
+  const condValFinal = parseFmt('cos-conductor');
+  const cfFinal      = parseFmt('cos-cf');
+  const mantFinal    = parseFmt('cos-mant');
+  const viatFinal    = parseFmt('cos-viatico');
 
   // Auto-set comision when GPS loaded and tarifa>0
   const comisionEl = document.getElementById('cos-comision');
@@ -2241,7 +2249,7 @@ async function calcCostos() {
   document.getElementById('cos-factoring').value = fmt(factoring);
   document.getElementById('cos-ingreso').textContent = fmt(ingreso);
 
-  const costos = comb + peajes + condVal + comision + cf + mant + viat + factoring;
+  const costos = comb + peajes + condValFinal + comision + cfFinal + mantFinal + viatFinal + factoring;
   const margen = ingreso - costos;
   const pct    = tarifa ? Math.round(margen/tarifa*100) : 0;
   const mEl = document.getElementById('cos-margen');
