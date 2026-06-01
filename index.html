@@ -3048,14 +3048,17 @@ function renderResultados() {
     return f.getMonth()===mes && f.getFullYear()===anio && s.estado==='cerrado';
   });
 
+  const DIAS_OPERATIVOS = 20;
   const ingresoTotal  = svcs.reduce((a,s)=>a+(s.ingreso_total||s.tarifa_neta||0), 0);
   const costoTotal    = svcs.reduce((a,s)=>a+(s.total_costos||0), 0);
   const margenTotal   = svcs.reduce((a,s)=>a+(s.margen_servicio||s.margen||0), 0);
   const ticketProm    = svcs.length ? Math.round(ingresoTotal/svcs.length) : 0;
   const margenProm    = svcs.length ? Math.round(margenTotal/svcs.length) : 0;
-  const diasMes       = new Date(anio, mes+1, 0).getDate();
-  const svcsPorDia    = svcs.length ? Math.round(svcs.length/diasMes*10)/10 : 0;
-  const margenProy    = Math.round(margenProm * svcsPorDia * diasMes);
+  // Días operativos transcurridos en el mes actual
+  const hoyDia        = mes === hoy.getMonth() ? Math.min(hoy.getDate(), DIAS_OPERATIVOS) : DIAS_OPERATIVOS;
+  const svcsPorDia    = svcs.length ? Math.round(svcs.length/hoyDia*10)/10 : 0;
+  const margenDiaFlota = hoyDia ? Math.round(margenTotal/hoyDia) : 0;
+  const margenProy    = Math.round(margenDiaFlota * DIAS_OPERATIVOS);
 
   const kpis = [
     {label:'Ingreso Total', val:fmt(ingresoTotal), sub:`${svcs.length} servicios cerrados`, color:'green'},
@@ -3063,8 +3066,9 @@ function renderResultados() {
     {label:'Margen Total', val:fmt(margenTotal), sub: margenTotal>=0?'positivo':'negativo', color:margenTotal>=0?'green':'red'},
     {label:'Ticket Promedio', val:fmt(ticketProm), sub:'ingreso por servicio', color:''},
     {label:'Margen Promedio', val:fmt(margenProm), sub:'margen por servicio', color:margenProm>=0?'green':'red'},
-    {label:'Servicios/Día', val:svcsPorDia, sub:`en ${diasMes} días del mes`, color:''},
-    {label:'Margen Proyectado', val:fmt(margenProy), sub:'al cierre del mes', color:margenProy>=0?'green':'red'},
+    {label:'Servicios/Día', val:svcsPorDia, sub:`${hoyDia} días operativos transcurridos`, color:''},
+    {label:'Margen/Día Flota', val:fmt(margenDiaFlota), sub:`margen diario promedio`, color:margenDiaFlota>=0?'green':'red'},
+    {label:'Margen Proyectado', val:fmt(margenProy), sub:`${svcsPorDia} svc/día × ${DIAS_OPERATIVOS} días`, color:margenProy>=0?'green':'red'},
   ];
 
   const colors = {green:'var(--green)', red:'var(--red)', '':'var(--navy)'};
