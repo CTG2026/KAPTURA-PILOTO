@@ -1968,7 +1968,7 @@ async function procesarGuia(input, pi) {
         method:'POST', headers:{'Content-Type':'application/json','x-api-key':CLAUDE_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
         body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:400,messages:[{role:'user',content:[
           {type:'image',source:{type:'base64',media_type:file.type,data:b64}},
-          {type:'text',text:`Lee esta guía de despacho chilena. Extrae en JSON: num_guia (solo dígitos), fecha_emision (DD/MM/AAAA), cliente (compara con: ${DB.clientes.map(c=>c.nombre).join(', ')}). Solo JSON sin explicación.`}
+          {type:'text',text:`Lee esta guía de despacho chilena. Extrae en JSON: num_guia (solo dígitos sin espacios), fecha_emision (formato DD/MM/AAAA — el día es el número más pequeño, el mes es el número del medio entre 01 y 12, el año es 4 dígitos como 2026), cliente (compara con: ${DB.clientes.map(c=>c.nombre).join(', ')}). IMPORTANTE: en Chile las fechas se escriben DIA/MES/AÑO, nunca confundas día con mes. Solo JSON sin explicación: {"num_guia":"","fecha_emision":"","cliente":""}`}
         ]}]})
       });
       const data = await resp.json();
