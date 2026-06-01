@@ -3071,10 +3071,10 @@ function renderResultados() {
   const margenTotal   = svcs.reduce((a,s)=>a+(s.margen_servicio||s.margen||0), 0);
   const ticketProm    = svcs.length ? Math.round(ingresoTotal/svcs.length) : 0;
   const margenProm    = svcs.length ? Math.round(margenTotal/svcs.length) : 0;
-  // Días operativos transcurridos en el mes actual
-  const hoyDia        = mes === hoy.getMonth() ? Math.min(hoy.getDate(), DIAS_OPERATIVOS) : DIAS_OPERATIVOS;
-  const svcsPorDia    = svcs.length ? Math.round(svcs.length/hoyDia*10)/10 : 0;
-  const margenDiaFlota = hoyDia ? Math.round(margenTotal/hoyDia) : 0;
+  // Días únicos con actividad
+  const diasConActividad = new Set(svcs.map(s=>s.fecha)).size || 1;
+  const svcsPorDia    = svcs.length ? Math.round(svcs.length/diasConActividad*10)/10 : 0;
+  const margenDiaFlota = diasConActividad ? Math.round(margenTotal/diasConActividad) : 0;
   const margenProy    = Math.round(margenDiaFlota * DIAS_OPERATIVOS);
 
   const kpis = [
@@ -3083,7 +3083,7 @@ function renderResultados() {
     {label:'Margen Total', val:fmt(margenTotal), sub: margenTotal>=0?'positivo':'negativo', color:margenTotal>=0?'green':'red'},
     {label:'Ticket Promedio', val:fmt(ticketProm), sub:'ingreso por servicio', color:''},
     {label:'Margen Promedio', val:fmt(margenProm), sub:'margen por servicio', color:margenProm>=0?'green':'red'},
-    {label:'Servicios/Día', val:svcsPorDia, sub:`${hoyDia} días operativos transcurridos`, color:''},
+    {label:'Servicios/Día', val:svcsPorDia, sub:`${diasConActividad} días con actividad`, color:''},
     {label:'Margen/Día Flota', val:fmt(margenDiaFlota), sub:`margen diario promedio`, color:margenDiaFlota>=0?'green':'red'},
     {label:'Margen Proyectado', val:fmt(margenProy), sub:`${svcsPorDia} svc/día × ${DIAS_OPERATIVOS} días`, color:margenProy>=0?'green':'red'},
   ];
