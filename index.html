@@ -2661,17 +2661,20 @@ async function guardarCostosBorrador() {
   const fechaTerm = document.getElementById('cos-fecha-termino').value;
   // Leer puntos frescos desde Supabase si no están en memoria
   let puntos = s._puntos || puntosData || [];
+  console.log('guardar - puntos en memoria:', puntos.length, JSON.stringify(puntos));
   if(puntos.length === 0) {
     const {data:svFresh} = await supa.from('servicios_piloto').select('notas,tarifa_neta,ingreso_total').eq('id',s.id).single();
+    console.log('guardar - notas desde Supabase:', svFresh?.notas?.substring(0,100));
     if(svFresh?.notas) {
       const marker = svFresh.notas.includes('|_PUNTOS:') ? '|_PUNTOS:' : svFresh.notas.includes('_PUNTOS:') ? '_PUNTOS:' : null;
-      if(marker) { try { puntos = JSON.parse(svFresh.notas.split(marker)[1]); } catch(e) {} }
+      if(marker) { try { puntos = JSON.parse(svFresh.notas.split(marker)[1]); console.log('guardar - puntos cargados:', puntos.length); } catch(e) { console.log('guardar - error parse:', e.message); } }
     }
   }
   const final  = puntos.find(p=>p.tipo==='final');
   const ints   = puntos.filter(p=>p.tipo==='intermedio');
   const tarifa = final?.valor || s.tarifa_neta || 0;
   const valorPts = ints.reduce((a,p)=>a+(p.valor||0),0);
+  console.log('guardar - tarifa:', tarifa, 'valorPts:', valorPts, 'final:', JSON.stringify(final));
   const c = DB.config;
   // Usar rendimiento específico del equipo si existe, sino el global
   const _flota2 = DB.flota.find(f => f.patente === svcPatenteActiva);
