@@ -2622,12 +2622,12 @@ async function cargarGPS() {
           supa.from('kaptura_gps_eventos').select('km_tramo').eq('patente',patente).gte('fecha',fechaInicioKap).eq('evento','trip')
         ]);
         const totalLtAcum = (todasCargas||[]).reduce((a,r)=>a+(r.litros||0),0);
-        let totalKmAcum = (todoGps||[]).reduce((a,r)=>a+(r.km_tramo||0),0);
-        // Si KM GPS es muy bajo (sin GPS), usar suma de km_total de servicios cerrados
-        if(totalKmAcum < 50) {
-          const kmSvcs = DB.servicios.filter(sv=>sv.patente===patente && sv.estado==='cerrado' && sv.km_total > 0 && (sv.fecha||'') >= fechaInicioKap);
-          totalKmAcum = kmSvcs.reduce((a,sv)=>a+(sv.km_total||0),0);
-        }
+        const kmGpsAcum = (todoGps||[]).reduce((a,r)=>a+(r.km_tramo||0),0);
+        // Calcular KM desde servicios cerrados
+        const kmSvcs = DB.servicios.filter(sv=>sv.patente===patente && sv.estado==='cerrado' && sv.km_total > 0 && (sv.fecha||'') >= fechaInicioKap);
+        const kmSvcsAcum = kmSvcs.reduce((a,sv)=>a+(sv.km_total||0),0);
+        // Usar la fuente con más KM — más confiable
+        const totalKmAcum = Math.max(kmGpsAcum, kmSvcsAcum);
         const rendReal = totalLtAcum > 0 ? Math.round(totalKmAcum/totalLtAcum*10)/10 : 0;
         const rendDiv = document.getElementById('cos-rendimiento-cargas');
         if(rendDiv && totalLtAcum > 0) {
