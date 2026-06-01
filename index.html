@@ -2848,12 +2848,14 @@ async function abrirInforme(i) {
         const hora = (e.datetime_evento||'').split('T')[1]?.substring(0,5)||'—';
         const tipo = e.evento==='trip' ? '🚗 trip' : '⏸ '+e.evento;
         const addr = (e.address||'').split(',')[0];
-        // Parse duration
+        // Parse duration — ignorar duración absurda en último stop (llegada a base)
         let durMin = 0;
         const ds = e.duracion||'';
         const dm = ds.match(/(\d+)\s*d/); if(dm) durMin+=parseInt(dm[1])*1440;
         const dh = ds.match(/(\d+)\s*h/); if(dh) durMin+=parseInt(dh[1])*60;
         const dmm = ds.match(/(\d+)\s*min/); if(dmm) durMin+=parseInt(dmm[1]);
+        // Si la duración es > 12 horas en un stop, es probablemente el último stop — ignorar
+        if(e.evento !== 'trip' && durMin > 720) durMin = 0;
         acumMin += durMin;
         const acumH = Math.floor(acumMin/60), acumM = acumMin%60;
         // Consumir pórticos secuencialmente — un pórtico por trip con km > umbral
