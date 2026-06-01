@@ -582,7 +582,7 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
       <!-- A COSTOS DIRECTOS -->
       <div class="section-ttl">⚙ A — Costos Directos</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
-        <div class="fld"><label class="lbl">Km GPS <span id="lbl-km" style="font-size:8px;font-weight:800;background:#FEF3C7;color:#92400E;padding:1px 5px;border-radius:3px">PENDIENTE</span></label><input class="inp" id="cos-km" type="number" placeholder="0" oninput="calcCostos()"></div>
+        <div class="fld"><label class="lbl">Km GPS <span id="lbl-km" style="font-size:8px;font-weight:800;background:#FEF3C7;color:#92400E;padding:1px 5px;border-radius:3px">PENDIENTE</span></label><input class="inp" id="cos-km" type="number" placeholder="0" oninput="calcCostos();recalcRendimientoCargas()"></div>
         <div class="fld"><label class="lbl">Litros teórico <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-litros" style="background:var(--g50)"></div>
         <div class="fld"><label class="lbl">Estación de servicio <span style="font-size:8px;font-weight:800;background:#D1FAE5;color:#065F46;padding:1px 5px;border-radius:3px" id="lbl-litros-real">—</span></label>
           <input class="inp" id="cos-litros-real" readonly style="background:var(--g50);color:#065F46">
@@ -3092,6 +3092,36 @@ function renderResultados() {
       <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;color:${colors[k.color]};line-height:1">${k.val}</div>
       <div style="font-size:10px;color:var(--g400);margin-top:4px;font-weight:600">${k.sub}</div>
     </div>`).join('');
+}
+
+// ══ RENDIMIENTO CARGAS MANUAL ══
+function recalcRendimientoCargas() {
+  const kmManual = parseFloat(document.getElementById('cos-km')?.value)||0;
+  if(kmManual <= 0) return;
+  const s = DB.servicios[svcActivoIdx];
+  if(!s) return;
+  const patente = s.patente;
+  const flotaRend = DB.flota.find(f=>f.patente===patente);
+  const fechaInicioKap = flotaRend?.fecha_inicio_kaptura||s.fecha||'';
+  // KM acumulado desde servicios cerrados
+  const kmSvcs = DB.servicios.filter(sv=>sv.patente===patente && sv.estado==='cerrado' && sv.km_total > 0 && (sv.fecha||'') >= fechaInicioKap);
+  const kmSvcsAcum = kmSvcs.reduce((a,sv)=>a+(sv.km_total||0),0);
+  // Agregar KM manual del servicio actual
+  const totalKm = kmSvcsAcum + kmManual;
+  // Litros — leer desde el campo de estación de servicio o desde DB
+  const litrosField = document.getElementById('cos-litros-real')?.value||'';
+  const litrosMatch = litrosField.match(/([\d.]+)\s*lt/);
+  if(!litrosMatch) return;
+  const totalLt = parseFloat(litrosMatch[1])||0;
+  if(totalLt <= 0) return;
+  const rendReal = Math.round(totalKm/totalLt*10)/10;
+  const rendDiv = document.getElementById('cos-rendimiento-cargas');
+  if(rendDiv) {
+    rendDiv.style.display = 'block';
+    document.getElementById('cos-rend-valor').textContent = rendReal;
+    document.getElementById('cos-rend-km').textContent = Math.round(totalKm);
+    document.getElementById('cos-rend-lt').textContent = Math.round(totalLt*10)/10;
+  }
 }
 
 // ══ UTILS ══
