@@ -561,7 +561,13 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
         <div class="fld"><label class="lbl">Km GPS <span id="lbl-km" style="font-size:8px;font-weight:800;background:#FEF3C7;color:#92400E;padding:1px 5px;border-radius:3px">PENDIENTE</span></label><input class="inp" id="cos-km" type="number" placeholder="0" oninput="calcCostos()"></div>
         <div class="fld"><label class="lbl">Litros teórico <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-litros" style="background:var(--g50)"></div>
-        <div class="fld"><label class="lbl">Litros real Copec <span style="font-size:8px;font-weight:800;background:#D1FAE5;color:#065F46;padding:1px 5px;border-radius:3px" id="lbl-litros-real">—</span></label><input class="inp" id="cos-litros-real" readonly style="background:var(--g50);color:#065F46"></div>
+        <div class="fld"><label class="lbl">Estación de servicio <span style="font-size:8px;font-weight:800;background:#D1FAE5;color:#065F46;padding:1px 5px;border-radius:3px" id="lbl-litros-real">—</span></label>
+          <input class="inp" id="cos-litros-real" readonly style="background:var(--g50);color:#065F46">
+          <div id="cos-rendimiento-cargas" style="font-size:10px;font-weight:700;color:#1E3A5F;margin-top:4px;display:none">
+            📊 Rendimiento según cargas: <span id="cos-rend-valor">—</span> km/lt
+            <span style="font-size:9px;color:var(--g400);margin-left:4px">(<span id="cos-rend-km">—</span> km / <span id="cos-rend-lt">—</span> lt desde inicio Kaptura)</span>
+          </div>
+        </div>
         <div class="fld"><label class="lbl">Combustible <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-comb" oninput="calcCostos()" style=""></div>
         <div class="fld"><label class="lbl">TAG Autopista <span id="lbl-tag" style="font-size:8px;font-weight:800;background:#FEF3C7;color:#92400E;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-tag" type="number" placeholder="0" oninput="calcCostos()"></div>
         <div class="fld"><label class="lbl">Peajes Ruta <span id="lbl-peajes" style="font-size:8px;font-weight:800;background:#FEF3C7;color:#92400E;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-peajes" type="number" placeholder="0" oninput="calcCostos()"></div>
@@ -2574,13 +2580,30 @@ async function cargarGPS() {
         const totalMonto = cargas.reduce((a,c)=>a+(c.monto||0),0);
         document.getElementById('cos-litros-real').value = `${Math.round(totalLt*10)/10} lt — $${totalMonto.toLocaleString('es-CL')}`;
         document.getElementById('lbl-litros-real').textContent = `${cargas.length} carga${cargas.length>1?'s':''}`;
+        // Calcular rendimiento según cargas desde fecha_inicio_kaptura
+        const flotaRend = DB.flota.find(f=>f.patente===patente);
+        const fechaInicioKap = flotaRend?.fecha_inicio_kaptura||fechaInicio;
+        const [{data:todasCargas},{data:todoGps}] = await Promise.all([
+          supa.from('kaptura_combustible').select('litros').eq('patente',patente).gte('fecha',fechaInicioKap),
+          supa.from('kaptura_gps_eventos').select('km_tramo').eq('patente',patente).gte('fecha',fechaInicioKap).eq('evento','trip')
+        ]);
+        const totalLtAcum = (todasCargas||[]).reduce((a,r)=>a+(r.litros||0),0);
+        const totalKmAcum = (todoGps||[]).reduce((a,r)=>a+(r.km_tramo||0),0);
+        const rendReal = totalLtAcum > 0 ? Math.round(totalKmAcum/totalLtAcum*10)/10 : 0;
+        const rendDiv = document.getElementById('cos-rendimiento-cargas');
+        if(rendDiv && totalLtAcum > 0) {
+          rendDiv.style.display = 'block';
+          document.getElementById('cos-rend-valor').textContent = rendReal;
+          document.getElementById('cos-rend-km').textContent = Math.round(totalKmAcum);
+          document.getElementById('cos-rend-lt').textContent = Math.round(totalLtAcum*10)/10;
+        }
       } else {
-        document.getElementById('cos-litros-real').value = 'Sin cargas Copec en el rango';
+        document.getElementById('cos-litros-real').value = 'Sin cargas en el rango';
         document.getElementById('lbl-litros-real').textContent = 'SIN DATOS';
       }
     } catch(e) { console.warn('Copec:', e.message); }
 
-    if(!hayGPS) toast('✓ Copec integrado — GPS no disponible para este período');
+    if(!hayGPS) toast('✓ Estación de servicio integrada — GPS no disponible para este período');
     // Resetear flags manuales al reintegrar
     ['cos-conductor','cos-cf','cos-mant','cos-viatico','cos-comision'].forEach(id=>{
       const el = document.getElementById(id);
