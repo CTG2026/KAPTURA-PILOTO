@@ -2506,6 +2506,17 @@ async function cargarGPS() {
     const kmVacioIda = Math.max(0, Math.round(kmTotal) - Math.round(kmCargado));
     const kmRetorno  = 0; // simplified: not shown separately
     console.log('Km tramos — Vacío:', kmVacioIda, '| Cargado:', Math.round(kmCargado), '| Total:', Math.round(kmTotal));
+
+    // Detectar 4 horas clave del servicio
+    const baseKwsH = ['coltauco','quillaiquén','quillaiquen','quillayquén'];
+    const firstEvt = allEvtsSorted[0];
+    const horasSvc = {
+      salida_base: allEvtsSorted.find(e=>e.evento==='trip' && baseKwsH.some(k=>e.address.toLowerCase().includes(k)))?.datetime_evento||null,
+      llegada_origen: evtOrigen?.datetime_evento||null,
+      salida_destino: evtDestino ? allEvtsSorted.find(e=>e.datetime_evento > evtDestino.datetime_evento && e.evento==='trip')?.datetime_evento||null : null,
+      llegada_base: cutoffDatetime||null
+    };
+    DB.servicios[svcActivoIdx]._horasSvc = horasSvc;
     document.getElementById('cos-km-cargado').value   = Math.round(kmCargado);
     document.getElementById('cos-km-vacio-ida').value = kmVacioIda;
     document.getElementById('cos-km-retorno').value   = '';
@@ -2667,7 +2678,8 @@ async function guardarCostosBorrador() {
     km_base_carga:kmVacioIda, km_carga_destino:kmCargado, km_retorno:kmRetorno,
     margen_servicio:margen, margen,
     _fecha_termino:fechaTerm, _puntos:puntos,
-    _porticos:_lastDetectadosTag, _corredor:_lastCorredorNombre};
+    _porticos:_lastDetectadosTag, _corredor:_lastCorredorNombre,
+    _horasSvc:DB.servicios[svcActivoIdx]._horasSvc||null};
   cerrar('modal-costos'); renderServicios(); renderKPIs();
   toast(`✓ Costos guardados — ${s.servicio_id}`);
 }
@@ -2726,6 +2738,10 @@ async function abrirInforme(i) {
       <div class="inf-cell"><div class="inf-lbl">Fecha Inicio</div><div class="inf-val">${s.fecha||'—'}</div></div>
       <div class="inf-cell"><div class="inf-lbl">Fecha Término</div><div class="inf-val">${fechaTerm}</div></div>
       <div class="inf-cell"><div class="inf-lbl">Días en ruta</div><div class="inf-val">${s.dias_servicio||'—'}</div></div>
+      <div class="inf-cell"><div class="inf-lbl">Salida de Base</div><div class="inf-val">${s._horasSvc?.salida_base ? s._horasSvc.salida_base.split('T')[1]?.substring(0,5) : '—'}</div></div>
+      <div class="inf-cell"><div class="inf-lbl">Llegada Origen</div><div class="inf-val">${s._horasSvc?.llegada_origen ? s._horasSvc.llegada_origen.split('T')[1]?.substring(0,5) : '—'}</div></div>
+      <div class="inf-cell"><div class="inf-lbl">Salida Destino</div><div class="inf-val">${s._horasSvc?.salida_destino ? s._horasSvc.salida_destino.split('T')[1]?.substring(0,5) : '—'}</div></div>
+      <div class="inf-cell"><div class="inf-lbl">Llegada a Base</div><div class="inf-val">${s._horasSvc?.llegada_base ? s._horasSvc.llegada_base.split('T')[1]?.substring(0,5) : '—'}</div></div>
       <div class="inf-cell"><div class="inf-lbl">KM GPS</div><div class="inf-val">${s.km_total ? s.km_total+' km' : '—'}</div></div>
       <div class="inf-cell"><div class="inf-lbl">Km Vacíos</div><div class="inf-val">${s.km_base_carga ? s.km_base_carga+' km' : '—'}</div></div>
       <div class="inf-cell"><div class="inf-lbl">Km Cargado</div><div class="inf-val">${s.km_carga_destino ? s.km_carga_destino+' km' : '—'}</div></div>
