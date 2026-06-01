@@ -2654,7 +2654,15 @@ async function guardarCostosBorrador() {
   const peajes = tag + (parseFloat(document.getElementById('cos-peajes').value)||0);
   const dias   = parseFloat(document.getElementById('cos-dias').value)||1;
   const fechaTerm = document.getElementById('cos-fecha-termino').value;
-  const puntos = s._puntos || puntosData || [];
+  // Leer puntos frescos desde Supabase si no están en memoria
+  let puntos = s._puntos || puntosData || [];
+  if(puntos.length === 0) {
+    const {data:svFresh} = await supa.from('servicios_piloto').select('notas,tarifa_neta,ingreso_total').eq('id',s.id).single();
+    if(svFresh?.notas) {
+      const marker = svFresh.notas.includes('|_PUNTOS:') ? '|_PUNTOS:' : svFresh.notas.includes('_PUNTOS:') ? '_PUNTOS:' : null;
+      if(marker) { try { puntos = JSON.parse(svFresh.notas.split(marker)[1]); } catch(e) {} }
+    }
+  }
   const final  = puntos.find(p=>p.tipo==='final');
   const ints   = puntos.filter(p=>p.tipo==='intermedio');
   const tarifa = final?.valor || s.tarifa_neta || 0;
