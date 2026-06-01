@@ -130,6 +130,22 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
 <main class="main">
   <!-- TAB SERVICIOS -->
   <div id="tab-servicios">
+    <div style="display:flex;align-items:center;justify-content:flex-end;padding:8px 12px 0">
+      <select id="dash-mes" class="inp" style="width:auto;font-size:11px;padding:4px 8px" onchange="renderKPIs()">
+        <option value="0">Enero</option>
+        <option value="1">Febrero</option>
+        <option value="2">Marzo</option>
+        <option value="3">Abril</option>
+        <option value="4" selected>Mayo</option>
+        <option value="5">Junio</option>
+        <option value="6">Julio</option>
+        <option value="7">Agosto</option>
+        <option value="8">Septiembre</option>
+        <option value="9">Octubre</option>
+        <option value="10">Noviembre</option>
+        <option value="11">Diciembre</option>
+      </select>
+    </div>
     <div class="kpis">
       <div class="kpi"><div class="kpi-lbl">Servicios Hoy</div><div class="kpi-val" id="k-hoy">—</div><div class="kpi-sub" id="k-hoy-sub">—</div></div>
       <div class="kpi orange"><div class="kpi-lbl">Ejecutados Hoy</div><div class="kpi-val orange" id="k-ejec-hoy">—</div><div class="kpi-sub" id="k-ejec-mes">— este mes</div></div>
@@ -1463,7 +1479,7 @@ function renderTodo() {
 }
 
 function renderKPIs() {
-  const mes = hoy.getMonth();
+  const mes = parseInt(document.getElementById('dash-mes')?.value ?? hoy.getMonth());
   const svcsHoy = DB.servicios.filter(s => (s.fecha||'').startsWith(hoyStr));
   const borradores = DB.servicios.filter(s => s.estado === 'borrador');
   const conf = DB.servicios.filter(s => {
