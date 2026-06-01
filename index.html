@@ -3095,7 +3095,7 @@ function renderResultados() {
 }
 
 // ══ RENDIMIENTO CARGAS MANUAL ══
-function recalcRendimientoCargas() {
+async function recalcRendimientoCargas() {
   const kmManual = parseFloat(document.getElementById('cos-km')?.value)||0;
   if(kmManual <= 0) return;
   const s = DB.servicios[svcActivoIdx];
@@ -3108,11 +3108,9 @@ function recalcRendimientoCargas() {
   const kmSvcsAcum = kmSvcs.reduce((a,sv)=>a+(sv.km_total||0),0);
   // Agregar KM manual del servicio actual
   const totalKm = kmSvcsAcum + kmManual;
-  // Litros — leer desde el campo de estación de servicio o desde DB
-  const litrosField = document.getElementById('cos-litros-real')?.value||'';
-  const litrosMatch = litrosField.match(/([\d.]+)\s*lt/);
-  if(!litrosMatch) return;
-  const totalLt = parseFloat(litrosMatch[1])||0;
+  // Litros acumulados desde fecha_inicio_kaptura
+  const {data:ltsAcum} = await supa.from('kaptura_combustible').select('litros').eq('patente',patente).gte('fecha',fechaInicioKap);
+  const totalLt = (ltsAcum||[]).reduce((a,r)=>a+(r.litros||0),0);
   if(totalLt <= 0) return;
   const rendReal = Math.round(totalKm/totalLt*10)/10;
   const rendDiv = document.getElementById('cos-rendimiento-cargas');
