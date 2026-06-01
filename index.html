@@ -563,7 +563,7 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
       <div class="section-ttl">🏢 D — Costos Fijos</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
         <div class="fld"><label class="lbl">Costo conductor <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-conductor" oninput="this.dataset.manual='1';calcCostos()" style=""></div>
-        <div class="fld"><label class="lbl">Comisión conductor <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-comision" type="number" placeholder="0" oninput="calcCostos()"></div>
+        <div class="fld"><label class="lbl">Comisión conductor <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-comision" type="number" placeholder="0" oninput="this.dataset.manual='1';calcCostos()"></div>
         <div class="fld"><label class="lbl">Costo fijo/día <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-cf" oninput="this.dataset.manual='1';calcCostos()" style=""></div>
         <div class="fld"><label class="lbl">Mantención <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-mant" oninput="this.dataset.manual='1';calcCostos()" style=""></div>
         <div class="fld"><label class="lbl">Viático <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-viatico" oninput="this.dataset.manual='1';calcCostos()" style=""></div>
@@ -2241,10 +2241,10 @@ async function calcCostos() {
 
   // Auto-set comision when GPS loaded and tarifa>0
   const comisionEl = document.getElementById('cos-comision');
-  if(km > 0 && tarifa > 0 && (comisionEl.value === '' || comisionEl.value === '0' || !comisionEl.value)) {
+  if(km > 0 && tarifa > 0 && !comisionEl.dataset.manual && (comisionEl.value === '' || comisionEl.value === '0' || !comisionEl.value)) {
     comisionEl.value = Math.round(tarifa * (parseFloat(c.comision_conductor||8)/100));
   }
-  const comision = parseFloat(comisionEl?.value)||0;
+  const comision = parseFmt('cos-comision');
 
   document.getElementById('cos-factoring').value = fmt(factoring);
   document.getElementById('cos-ingreso').textContent = fmt(ingreso);
