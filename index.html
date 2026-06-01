@@ -577,9 +577,15 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
             <option value="1">15 días — 1%</option>
             <option value="1.5">30 días — 1,5%</option>
             <option value="3">60 días — 3%</option>
+            <option value="manual">Manual</option>
           </select>
         </div>
-        <div class="fld"><label class="lbl">Factoring <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-factoring" style=""></div>
+        <div class="fld"><label class="lbl">Factoring <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label>
+          <div style="display:flex;gap:4px;align-items:center">
+            <input class="inp" id="cos-factoring" style="flex:1">
+            <input class="inp" id="cos-plazo-manual" type="number" step="0.1" min="0" max="10" placeholder="%" style="width:60px;display:none" oninput="calcCostos()">
+          </div>
+        </div>
       </div>
       <!-- MARGEN -->
       <div style="background:#152038;border-radius:10px;padding:14px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
@@ -2213,8 +2219,14 @@ async function calcCostos() {
   const cf      = dias * cfDia;
   const mant    = dias * parseInt(c.mantencion||c.costo_mantencion||25000);
   const viat    = dias * parseInt(c.viatico||c.costo_viatico||12000);
-  const plazoStr = document.getElementById('cos-plazo')?.value || '0';
-  const plazo   = parseFloat(plazoStr) || 0;
+  const plazoSel = document.getElementById('cos-plazo')?.value || '0';
+  const manualEl = document.getElementById('cos-plazo-manual');
+  if(plazoSel === 'manual') {
+    if(manualEl) manualEl.style.display = '';
+  } else {
+    if(manualEl) { manualEl.style.display = 'none'; manualEl.value = ''; }
+  }
+  const plazo = plazoSel === 'manual' ? (parseFloat(manualEl?.value)||0) : (parseFloat(plazoSel)||0);
 
   // Declare tarifa FIRST before any use
   const s = DB.servicios[svcActivoIdx];
@@ -2224,7 +2236,7 @@ async function calcCostos() {
   const tarifa = final?.valor || s?.tarifa_neta || 0;
   const valorPts = ints.reduce((a,p)=>a+(p.valor||0),0);
   const ingreso  = tarifa + valorPts;
-  const factoring = plazo > 0 ? Math.round(tarifa * plazo / 100) : 0;
+  const factoring = plazo > 0 ? Math.round(tarifa * 1.19 * plazo / 100) : 0;
 
   // Mostrar valores AUTO o respetar manual
   if(!document.getElementById('cos-conductor').dataset.manual) document.getElementById('cos-conductor').value = fmt(condVal);
@@ -2582,8 +2594,9 @@ async function guardarCostosBorrador() {
   const cf   = parseFloat(document.getElementById('cos-cf')?.value?.replace(/[.$]/g,'').replace(/\./g,''))||dias*parseInt(c.costo_fijo||44000);
   const mant = parseFloat(document.getElementById('cos-mant')?.value?.replace(/[.$]/g,'').replace(/\./g,''))||dias*parseInt(c.mantencion||25000);
   const viat = parseFloat(document.getElementById('cos-viatico')?.value?.replace(/[.$]/g,'').replace(/\./g,''))||dias*parseInt(c.viatico||12000);
-  const plazo = parseFloat(document.getElementById('cos-plazo').value??'0');
-  const fact  = plazo > 0 ? Math.round(tarifa*plazo/100) : 0;
+  const plazoSelG = document.getElementById('cos-plazo')?.value||'0';
+  const plazo = plazoSelG === 'manual' ? (parseFloat(document.getElementById('cos-plazo-manual')?.value)||0) : (parseFloat(plazoSelG)||0);
+  const fact  = plazo > 0 ? Math.round(tarifa*1.19*plazo/100) : 0;
   const ingreso = tarifa + valorPts;
   const costos  = comb+peajes+condVal+comision+cf+mant+viat+fact;
   const margen  = ingreso - costos;
