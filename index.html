@@ -124,6 +124,7 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
   <button class="ntab" onclick="setTab('flota',this)">Flota</button>
   <button class="ntab" onclick="setTab('clientes',this)">Clientes</button>
   <button class="ntab" onclick="setTab('gastos',this)">Costos</button>
+  <button class="ntab" onclick="setTab('resultados',this)">Resultados</button>
   <button class="ntab" onclick="setTab('config',this)">Config</button>
 </nav>
 
@@ -284,6 +285,28 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
         </div>
       </div>
     </div>
+  </div>
+
+  <!-- TAB RESULTADOS -->
+  <div id="tab-resultados" style="display:none">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;letter-spacing:0.05em">RESULTADOS</div>
+      <select id="res-mes" class="inp" style="width:auto;font-size:11px;padding:4px 8px" onchange="renderResultados()">
+        <option value="0">Enero</option>
+        <option value="1">Febrero</option>
+        <option value="2">Marzo</option>
+        <option value="3">Abril</option>
+        <option value="4" selected>Mayo</option>
+        <option value="5">Junio</option>
+        <option value="6">Julio</option>
+        <option value="7">Agosto</option>
+        <option value="8">Septiembre</option>
+        <option value="9">Octubre</option>
+        <option value="10">Noviembre</option>
+        <option value="11">Diciembre</option>
+      </select>
+    </div>
+    <div id="res-kpis" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px"></div>
   </div>
 
   <!-- TAB CONFIG -->
@@ -3016,14 +3039,53 @@ async function guardarConfig() {
   toast('✓ Configuración guardada');
 }
 
+// ══ RESULTADOS ══
+function renderResultados() {
+  const mes = parseInt(document.getElementById('res-mes')?.value ?? hoy.getMonth());
+  const anio = hoy.getFullYear();
+  const svcs = DB.servicios.filter(s => {
+    const f = new Date(s.created_at||'2026-01-01');
+    return f.getMonth()===mes && f.getFullYear()===anio && s.estado==='cerrado';
+  });
+
+  const ingresoTotal  = svcs.reduce((a,s)=>a+(s.ingreso_total||s.tarifa_neta||0), 0);
+  const costoTotal    = svcs.reduce((a,s)=>a+(s.total_costos||0), 0);
+  const margenTotal   = svcs.reduce((a,s)=>a+(s.margen_servicio||s.margen||0), 0);
+  const ticketProm    = svcs.length ? Math.round(ingresoTotal/svcs.length) : 0;
+  const margenProm    = svcs.length ? Math.round(margenTotal/svcs.length) : 0;
+  const diasMes       = new Date(anio, mes+1, 0).getDate();
+  const svcsPorDia    = svcs.length ? Math.round(svcs.length/diasMes*10)/10 : 0;
+  const margenProy    = Math.round(margenProm * svcsPorDia * diasMes);
+
+  const kpis = [
+    {label:'Ingreso Total', val:fmt(ingresoTotal), sub:`${svcs.length} servicios cerrados`, color:'green'},
+    {label:'Costo Total', val:fmt(costoTotal), sub:'costos directos + fijos', color:'red'},
+    {label:'Margen Total', val:fmt(margenTotal), sub: margenTotal>=0?'positivo':'negativo', color:margenTotal>=0?'green':'red'},
+    {label:'Ticket Promedio', val:fmt(ticketProm), sub:'ingreso por servicio', color:''},
+    {label:'Margen Promedio', val:fmt(margenProm), sub:'margen por servicio', color:margenProm>=0?'green':'red'},
+    {label:'Servicios/Día', val:svcsPorDia, sub:`en ${diasMes} días del mes`, color:''},
+    {label:'Margen Proyectado', val:fmt(margenProy), sub:'al cierre del mes', color:margenProy>=0?'green':'red'},
+  ];
+
+  const colors = {green:'var(--green)', red:'var(--red)', '':'var(--navy)'};
+  document.getElementById('res-kpis').innerHTML = kpis.map(k=>`
+    <div style="background:#fff;border-radius:10px;padding:16px;box-shadow:var(--sh);border:1px solid var(--g200);position:relative;overflow:hidden">
+      <div style="position:absolute;top:0;left:0;right:0;height:3px;background:${colors[k.color]}"></div>
+      <div style="font-size:9px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:var(--g400);margin-bottom:6px">${k.label}</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;color:${colors[k.color]};line-height:1">${k.val}</div>
+      <div style="font-size:10px;color:var(--g400);margin-top:4px;font-weight:600">${k.sub}</div>
+    </div>`).join('');
+}
+
 // ══ UTILS ══
 function setTab(nombre, btn) {
-  ['servicios','flota','clientes','gastos','config'].forEach(t => {
+  ['servicios','flota','clientes','gastos','resultados','config'].forEach(t => {
     document.getElementById(`tab-${t}`).style.display = t===nombre ? 'block' : 'none';
   });
   document.querySelectorAll('.ntab').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   if(nombre==='gastos') cargarGastos();
+  if(nombre==='resultados') renderResultados();
 }
 function resetFecha() {
   document.getElementById('filtro-fecha').value = '';
