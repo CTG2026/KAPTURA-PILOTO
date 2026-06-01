@@ -2219,6 +2219,7 @@ async function calcCostos() {
         .select('fecha,litros,monto')
         .eq('patente', svcPatenteActiva)
         .lte('fecha', fechaIniSvc)
+        .gte('monto', 15000)
         .order('fecha', {ascending:false})
         .limit(1);
       if(copecRows && copecRows.length > 0 && copecRows[0].litros > 0) {
