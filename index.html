@@ -132,7 +132,7 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
   <!-- TAB SERVICIOS -->
   <div id="tab-servicios">
     <div style="display:flex;align-items:center;justify-content:flex-end;padding:8px 12px 0">
-      <select id="dash-mes" class="inp" style="width:auto;font-size:11px;padding:4px 8px" onchange="renderKPIs()">
+      <select id="dash-mes" class="inp" style="width:auto;font-size:11px;padding:4px 8px" onchange="renderKPIs();renderServicios()">
         <option value="0">Enero</option>
         <option value="1">Febrero</option>
         <option value="2">Marzo</option>
@@ -1594,9 +1594,12 @@ async function calcMargenReal(mes, conf, ingresoTotal) {
 
 function renderServicios() {
   const fecha = document.getElementById('filtro-fecha').value;
+  const mes = parseInt(document.getElementById('dash-mes')?.value ?? hoy.getMonth());
+  const anioStr = String(hoy.getFullYear());
+  const mesStr = String(mes+1).padStart(2,'0');
   const svcs = fecha
-    ? DB.servicios.filter(s => (s.fecha||'').startsWith(fecha) || (s.created_at||'').startsWith(fecha))
-    : DB.servicios;
+    ? DB.servicios.filter(s => (s.fecha||'').startsWith(fecha))
+    : DB.servicios.filter(s => (s.fecha||'').startsWith(`${anioStr}-${mesStr}`));
   const empty = document.getElementById('empty-svc');
   if(!svcs.length) {
     document.getElementById('cards-mobile').innerHTML = '';
@@ -1605,8 +1608,8 @@ function renderServicios() {
     return;
   }
   empty.style.display = 'none';
-  document.getElementById('cards-mobile').innerHTML = svcs.map((s,i) => cardHTML(s,i)).join('');
-  document.getElementById('tabla-svc').innerHTML    = svcs.map((s,i) => filaHTML(s,i)).join('');
+  document.getElementById('cards-mobile').innerHTML = svcs.map(s => cardHTML(s, DB.servicios.indexOf(s))).join('');
+  document.getElementById('tabla-svc').innerHTML    = svcs.map(s => filaHTML(s, DB.servicios.indexOf(s))).join('');
 }
 
 function pillHTML(e) {
