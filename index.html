@@ -2661,8 +2661,9 @@ async function guardarCostosBorrador() {
   const s = DB.servicios[svcActivoIdx];
   if(!s?.id) { toast('Error: sin ID'); return; }
   const km     = parseFloat(document.getElementById('cos-km').value)||0;
-  const tag    = parseFloat(document.getElementById('cos-tag')?.value)||0;
-  const peajes = tag + (parseFloat(document.getElementById('cos-peajes').value)||0);
+  const parseNum = v => parseFloat((v||'').toString().replace(/[$\.]/g,'').replace(/,/g,'.'))||0;
+  const tag    = parseNum(document.getElementById('cos-tag')?.value);
+  const peajes = tag + parseNum(document.getElementById('cos-peajes')?.value);
   const dias   = parseFloat(document.getElementById('cos-dias').value)||1;
   const fechaTerm = document.getElementById('cos-fecha-termino').value;
   // Leer puntos frescos desde Supabase si no están en memoria
