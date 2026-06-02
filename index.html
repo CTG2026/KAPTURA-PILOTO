@@ -1911,14 +1911,36 @@ function puntosHTML(p, pi) {
     <!-- Guías registradas -->
     <div id="guias-punto-${pi}">
       ${(p.guias||[]).map((g,gi) => `
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;background:#ECFDF5;border-radius:8px;padding:6px 10px;border:1px solid #6EE7B7">
-          ${g.img_url ? `<img src="${g.img_url}" style="width:48px;height:48px;object-fit:cover;border-radius:6px;cursor:pointer" onclick="window.open('${g.img_url}','_blank')">` : '<div style="width:48px;height:48px;background:#D1FAE5;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:18px">📄</div>'}
-          <div style="flex:1">
-            <div style="font-size:11px;font-weight:800;color:#065F46">Guía N° ${g.num_guia}</div>
-            <div style="font-size:10px;color:#4E5A78">${g.fecha_guia||'—'}</div>
+        <div id="guia-card-${pi}-${gi}" style="margin-bottom:6px">
+          <!-- Vista normal -->
+          <div id="guia-view-${pi}-${gi}" style="display:flex;align-items:center;gap:8px;background:#ECFDF5;border-radius:8px;padding:6px 10px;border:1px solid #6EE7B7">
+            ${g.img_url ? `<img src="${g.img_url}" style="width:48px;height:48px;object-fit:cover;border-radius:6px;cursor:pointer" onclick="window.open('${g.img_url}','_blank')">` : '<div style="width:48px;height:48px;background:#D1FAE5;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:18px">📄</div>'}
+            <div style="flex:1">
+              <div style="font-size:11px;font-weight:800;color:#065F46">Guía N° ${g.num_guia}</div>
+              <div style="font-size:10px;color:#4E5A78">${g.fecha_guia||'—'}</div>
+            </div>
+            ${g.img_url ? `<button class="btn btn-outline btn-sm" onclick="window.open('${g.img_url}','_blank')">👁 Ver</button>` : ''}
+            <button class="btn btn-sm" style="background:#EEF2FF;color:#3730A3;padding:4px 8px" onclick="editarGuia(${pi},${gi})">✏</button>
+            <button class="btn btn-red btn-sm" onclick="eliminarGuia(${pi},${gi})">✕</button>
           </div>
-          ${g.img_url ? `<button class="btn btn-outline btn-sm" onclick="window.open('${g.img_url}','_blank')">👁 Ver</button>` : ''}
-          <button class="btn btn-red btn-sm" onclick="eliminarGuia(${pi},${gi})">✕</button>
+          <!-- Modo edición (oculto por defecto) -->
+          <div id="guia-edit-${pi}-${gi}" style="display:none;background:#FFFBEB;border-radius:8px;padding:10px;border:1.5px solid var(--orange)">
+            <div style="font-size:9px;font-weight:800;letter-spacing:0.1em;color:#92400E;margin-bottom:8px">✏ EDITAR GUÍA</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+              <div>
+                <label class="lbl">N° Guía</label>
+                <input class="inp" id="edit-nguia-${pi}-${gi}" value="${g.num_guia||''}" placeholder="Número de guía">
+              </div>
+              <div>
+                <label class="lbl">Fecha Guía</label>
+                <input class="inp" id="edit-fguia-${pi}-${gi}" value="${g.fecha_guia||''}" placeholder="DD/MM/AAAA">
+              </div>
+            </div>
+            <div style="display:flex;gap:6px;justify-content:flex-end">
+              <button class="btn btn-outline btn-sm" onclick="cancelarEdicionGuia(${pi},${gi})">Cancelar</button>
+              <button class="btn btn-navy btn-sm" onclick="guardarEdicionGuia(${pi},${gi})">✓ Guardar</button>
+            </div>
+          </div>
         </div>`).join('')}
     </div>
     <!-- Agregar guía -->
@@ -1946,6 +1968,25 @@ function eliminarGuia(pi, gi) {
   puntosData[pi].guias.splice(gi, 1);
   if(puntosData[pi].guias.length === 0) puntosData[pi].capturada = false;
   renderPuntos();
+}
+function editarGuia(pi, gi) {
+  document.getElementById('guia-view-'+pi+'-'+gi).style.display = 'none';
+  document.getElementById('guia-edit-'+pi+'-'+gi).style.display = 'block';
+}
+function cancelarEdicionGuia(pi, gi) {
+  document.getElementById('guia-view-'+pi+'-'+gi).style.display = 'flex';
+  document.getElementById('guia-edit-'+pi+'-'+gi).style.display = 'none';
+}
+function guardarEdicionGuia(pi, gi) {
+  const nuevaNum   = document.getElementById('edit-nguia-'+pi+'-'+gi).value.trim();
+  const nuevaFecha = document.getElementById('edit-fguia-'+pi+'-'+gi).value.trim();
+  if(!nuevaNum) { toast('⚠ Ingresa el número de guía'); return; }
+  puntosData[pi].guias[gi].num_guia   = nuevaNum;
+  puntosData[pi].guias[gi].fecha_guia = nuevaFecha;
+  // Actualizar num_guia consolidado del punto
+  puntosData[pi].num_guia = puntosData[pi].guias.map(g=>g.num_guia).join(',');
+  renderPuntos();
+  toast('✓ Guía ' + nuevaNum + ' corregida');
 }
 function eliminarPunto(pi) { puntosData.splice(pi,1); renderPuntos(); }
 function setTipo(pi, tipo) {
