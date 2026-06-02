@@ -1476,7 +1476,10 @@ async function init() {
           try { svc._porticos = JSON.parse(notas.split('|_PORTICOS:')[1].split('|_CORREDOR:')[0]); } catch(e) {}
         }
         if(notas.includes('|_CORREDOR:')) {
-          try { svc._corredor = notas.split('|_CORREDOR:')[1]; } catch(e) {}
+          try { svc._corredor = notas.split('|_CORREDOR:')[1].split('|_HORAS:')[0].trim(); } catch(e) {}
+        }
+        if(notas.includes('|_HORAS:')) {
+          try { svc._horasSvc = JSON.parse(notas.split('|_HORAS:')[1]); } catch(e) {}
         }
       }
       return svc;
@@ -2747,6 +2750,16 @@ async function guardarCostosBorrador() {
   const kmCargado  = parseFloat(document.getElementById('cos-km-cargado')?.value)||0;
   const kmRetorno  = parseFloat(document.getElementById('cos-km-retorno')?.value)||0;
 
+  // Fix 1 y 3: Persistir _horasSvc, _porticos y _corredor en notas
+  const horasSvcActual = DB.servicios[svcActivoIdx]._horasSvc || null;
+  const porticosActual = _lastDetectadosTag.length > 0 ? _lastDetectadosTag : (DB.servicios[svcActivoIdx]._porticos||[]);
+  const corredorActual = _lastCorredorNombre || DB.servicios[svcActivoIdx]._corredor || '';
+  const retornoTag = (s.notas?.match(/Retorno: (\w+)/) || [])[1] || 'base';
+  let notasFinales = 'Retorno: ' + retornoTag + '|_PUNTOS:' + puntosJSON;
+  if(porticosActual.length > 0) notasFinales += '|_PORTICOS:' + JSON.stringify(porticosActual);
+  if(corredorActual) notasFinales += '|_CORREDOR:' + corredorActual;
+  if(horasSvcActual) notasFinales += '|_HORAS:' + JSON.stringify(horasSvcActual);
+
   const {error} = await supa.from('servicios_piloto').update({
     estado:'borrador', km_total:km, costo_peajes:peajes, peajes_tag:tag,
     tarifa_neta:tarifa||null, ingreso_total:ingreso||null, dias_servicio:dias, costo_combustible:comb,
@@ -2754,7 +2767,7 @@ async function guardarCostosBorrador() {
     costo_mantencion:mant, factoring:fact, total_costos:costos,
     margen_servicio:margen, margen:margen,
     km_base_carga:kmVacioIda, km_carga_destino:kmCargado, km_retorno:kmRetorno,
-    notas: `Retorno: ${s.notas?.match(/Retorno: (\w+)/)?.[1]||'base'}|_PUNTOS:${puntosJSON}`
+    notas: notasFinales
   }).eq('id',s.id);
   if(error) { toast('Error: '+error.message); return; }
   DB.servicios[svcActivoIdx] = {...s, estado:'borrador', km_total:km, tarifa_neta:tarifa,
@@ -2765,8 +2778,8 @@ async function guardarCostosBorrador() {
     km_base_carga:kmVacioIda, km_carga_destino:kmCargado, km_retorno:kmRetorno,
     margen_servicio:margen, margen,
     _fecha_termino:fechaTerm, _puntos:puntos,
-    _porticos:_lastDetectadosTag, _corredor:_lastCorredorNombre,
-    _horasSvc:DB.servicios[svcActivoIdx]._horasSvc||null};
+    _porticos:porticosActual, _corredor:corredorActual,
+    _horasSvc:horasSvcActual};
   cerrar('modal-costos'); renderServicios(); renderKPIs();
   toast(`✓ Costos guardados — ${s.servicio_id}`);
 }
@@ -2812,13 +2825,16 @@ async function abrirInforme(i) {
   const flotaInf = DB.flota.find(f=>f.patente===s.patente);
   const rendTeorico = flotaInf?.rendimiento_km_lt || DB.config.rendimiento || 2.5;
   const fechaInicioKapInf = flotaInf?.fecha_inicio_kaptura || s.fecha;
-  Promise.all([
-    supa.from('kaptura_combustible').select('litros').eq('patente',s.patente).gte('fecha',fechaInicioKapInf),
-    supa.from('kaptura_gps_eventos').select('km_tramo').eq('patente',s.patente).gte('fecha',fechaInicioKapInf).eq('evento','trip')
-  ]).then(([{data:lts},{data:kms}])=>{
+  // Fix 2: rendimiento usa km_total de servicios cerrados + litros filtrados >= $15.000
+  supa.from('kaptura_combustible').select('litros,monto')
+    .eq('patente',s.patente).gte('fecha',fechaInicioKapInf).gte('monto',15000)
+  .then(({data:lts}) => {
     const totalLtInf = (lts||[]).reduce((a,r)=>a+(r.litros||0),0);
-    const totalKmInf = (kms||[]).reduce((a,r)=>a+(r.km_tramo||0),0);
-    const rendReal = totalLtInf > 0 ? Math.round(totalKmInf/totalLtInf*10)/10 : null;
+    // KM desde servicios cerrados del equipo (más confiable que GPS acumulado)
+    const kmSvcsInf = DB.servicios.filter(sv =>
+      sv.patente===s.patente && sv.estado==='cerrado' && sv.km_total > 0 && (sv.fecha||'') >= fechaInicioKapInf
+    ).reduce((a,sv)=>a+(sv.km_total||0),0);
+    const rendReal = (totalLtInf > 0 && kmSvcsInf > 0) ? Math.round(kmSvcsInf/totalLtInf*10)/10 : null;
     const elTeo = document.getElementById('inf-rend-teorico');
     const elReal = document.getElementById('inf-rend-cargas');
     if(elTeo) elTeo.textContent = rendTeorico + ' km/lt';
