@@ -1512,8 +1512,8 @@ function renderKPIs() {
   const svcsHoy = DB.servicios.filter(s => (s.fecha||'').startsWith(hoyStr));
   const borradores = DB.servicios.filter(s => s.estado === 'borrador');
   const conf = DB.servicios.filter(s => {
-    const f = new Date(s.created_at||'2026-01-01');
-    return f.getMonth()===mes && ['confirmado','cerrado'].includes(s.estado);
+    const f = new Date((s.fecha||s.created_at||'2026-01-01')+'T12:00:00');
+    return f.getMonth()===mes && f.getFullYear()===hoy.getFullYear() && ['confirmado','cerrado'].includes(s.estado);
   });
   const mt = conf.reduce((a,s) => a+(s.margen_servicio||s.margen||0), 0);
   const pr = conf.length ? Math.round(mt/conf.length) : 0;
