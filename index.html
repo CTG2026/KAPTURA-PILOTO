@@ -582,7 +582,7 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
       <!-- A COSTOS DIRECTOS -->
       <div class="section-ttl">⚙ A — Costos Directos</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
-        <div class="fld"><label class="lbl">Km GPS <span id="lbl-km" style="font-size:8px;font-weight:800;background:#FEF3C7;color:#92400E;padding:1px 5px;border-radius:3px">PENDIENTE</span></label><input class="inp" id="cos-km" type="number" placeholder="0" oninput="calcCostos();recalcRendimientoCargas()"></div>
+        <div class="fld"><label class="lbl">Km GPS <span id="lbl-km" style="font-size:8px;font-weight:800;background:#FEF3C7;color:#92400E;padding:1px 5px;border-radius:3px">PENDIENTE</span></label><input class="inp" id="cos-km" type="number" placeholder="0" oninput="calcCostos()"></div>
         <div class="fld"><label class="lbl">Litros teórico <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-litros" style="background:var(--g50)"></div>
         <div class="fld"><label class="lbl">Estación de servicio <span style="font-size:8px;font-weight:800;background:#D1FAE5;color:#065F46;padding:1px 5px;border-radius:3px" id="lbl-litros-real">—</span></label>
           <input class="inp" id="cos-litros-real" readonly style="background:var(--g50);color:#065F46">
@@ -1548,18 +1548,16 @@ async function calcMargenReal(mes, conf, ingresoTotal) {
   const anio = hoy.getFullYear();
   const mesStr = String(mes+1).padStart(2,'0');
   const desde  = `${anio}-${mesStr}-01`;
-  // Usar fecha del último servicio cerrado del mes como límite
-  const ultimoSvc = conf.length ? conf.reduce((a,s)=>a.fecha>s.fecha?a:s) : null;
-  const hasta  = ultimoSvc?.fecha || `${anio}-${mesStr}-31`;
+  const hasta  = `${anio}-${mesStr}-31`;
 
-  // Combustible real Copec del mes — solo hasta último servicio cerrado
+  // Combustible real Copec del mes
   const {data:copec} = await supa.from('kaptura_combustible')
-    .select('monto').gte('fecha',desde).lte('fecha',hasta).gte('monto',15000);
+    .select('monto').gte('fecha',desde).lte('fecha',hasta);
   const combustibleReal = Math.round((copec||[]).reduce((a,r)=>a+(r.monto||0),0) * 0.80); // neto -20% impuesto
 
   // Gastos módulo del mes
   const {data:gastos} = await supa.from('kaptura_gastos')
-    .select('monto_neto,categoria').gte('fecha',desde).lte('fecha',hasta);
+    .select('monto_neto').gte('fecha',desde).lte('fecha',hasta);
   // Excluir gastos de inversión del margen real operacional
   const gastosReal = (gastos||[]).filter(r=>r.categoria!=='inversion').reduce((a,r)=>a+(r.monto_neto||0),0);
   const gastosInversion = (gastos||[]).filter(r=>r.categoria==='inversion').reduce((a,r)=>a+(r.monto_neto||0),0);
@@ -2221,7 +2219,6 @@ async function calcCostos() {
         .select('fecha,litros,monto')
         .eq('patente', svcPatenteActiva)
         .lte('fecha', fechaIniSvc)
-        .gte('monto', 15000)
         .order('fecha', {ascending:false})
         .limit(1);
       if(copecRows && copecRows.length > 0 && copecRows[0].litros > 0) {
@@ -2625,12 +2622,7 @@ async function cargarGPS() {
           supa.from('kaptura_gps_eventos').select('km_tramo').eq('patente',patente).gte('fecha',fechaInicioKap).eq('evento','trip')
         ]);
         const totalLtAcum = (todasCargas||[]).reduce((a,r)=>a+(r.litros||0),0);
-        const kmGpsAcum = (todoGps||[]).reduce((a,r)=>a+(r.km_tramo||0),0);
-        // Calcular KM desde servicios cerrados
-        const kmSvcs = DB.servicios.filter(sv=>sv.patente===patente && sv.estado==='cerrado' && sv.km_total > 0 && (sv.fecha||'') >= fechaInicioKap);
-        const kmSvcsAcum = kmSvcs.reduce((a,sv)=>a+(sv.km_total||0),0);
-        // Usar la fuente con más KM — más confiable
-        const totalKmAcum = Math.max(kmGpsAcum, kmSvcsAcum);
+        const totalKmAcum = (todoGps||[]).reduce((a,r)=>a+(r.km_tramo||0),0);
         const rendReal = totalLtAcum > 0 ? Math.round(totalKmAcum/totalLtAcum*10)/10 : 0;
         const rendDiv = document.getElementById('cos-rendimiento-cargas');
         if(rendDiv && totalLtAcum > 0) {
@@ -2662,22 +2654,11 @@ async function guardarCostosBorrador() {
   const peajes = tag + (parseFloat(document.getElementById('cos-peajes').value)||0);
   const dias   = parseFloat(document.getElementById('cos-dias').value)||1;
   const fechaTerm = document.getElementById('cos-fecha-termino').value;
-  // Leer puntos frescos desde Supabase si no están en memoria
-  let puntos = s._puntos || puntosData || [];
-  console.log('guardar - puntos en memoria:', puntos.length, JSON.stringify(puntos));
-  if(puntos.length === 0) {
-    const {data:svFresh} = await supa.from('servicios_piloto').select('notas,tarifa_neta,ingreso_total').eq('id',s.id).single();
-    console.log('guardar - notas desde Supabase:', svFresh?.notas?.substring(0,100));
-    if(svFresh?.notas) {
-      const marker = svFresh.notas.includes('|_PUNTOS:') ? '|_PUNTOS:' : svFresh.notas.includes('_PUNTOS:') ? '_PUNTOS:' : null;
-      if(marker) { try { puntos = JSON.parse(svFresh.notas.split(marker)[1]); console.log('guardar - puntos cargados:', puntos.length); } catch(e) { console.log('guardar - error parse:', e.message); } }
-    }
-  }
+  const puntos = s._puntos || puntosData || [];
   const final  = puntos.find(p=>p.tipo==='final');
   const ints   = puntos.filter(p=>p.tipo==='intermedio');
   const tarifa = final?.valor || s.tarifa_neta || 0;
   const valorPts = ints.reduce((a,p)=>a+(p.valor||0),0);
-  console.log('guardar - tarifa:', tarifa, 'valorPts:', valorPts, 'final:', JSON.stringify(final));
   const c = DB.config;
   // Usar rendimiento específico del equipo si existe, sino el global
   const _flota2 = DB.flota.find(f => f.patente === svcPatenteActiva);
@@ -3073,10 +3054,10 @@ function renderResultados() {
   const margenTotal   = svcs.reduce((a,s)=>a+(s.margen_servicio||s.margen||0), 0);
   const ticketProm    = svcs.length ? Math.round(ingresoTotal/svcs.length) : 0;
   const margenProm    = svcs.length ? Math.round(margenTotal/svcs.length) : 0;
-  // Días únicos con actividad
-  const diasConActividad = new Set(svcs.map(s=>s.fecha)).size || 1;
-  const svcsPorDia    = svcs.length ? Math.round(svcs.length/diasConActividad*10)/10 : 0;
-  const margenDiaFlota = diasConActividad ? Math.round(margenTotal/diasConActividad) : 0;
+  // Días operativos transcurridos en el mes actual
+  const hoyDia        = mes === hoy.getMonth() ? Math.min(hoy.getDate(), DIAS_OPERATIVOS) : DIAS_OPERATIVOS;
+  const svcsPorDia    = svcs.length ? Math.round(svcs.length/hoyDia*10)/10 : 0;
+  const margenDiaFlota = hoyDia ? Math.round(margenTotal/hoyDia) : 0;
   const margenProy    = Math.round(margenDiaFlota * DIAS_OPERATIVOS);
 
   const kpis = [
@@ -3085,7 +3066,7 @@ function renderResultados() {
     {label:'Margen Total', val:fmt(margenTotal), sub: margenTotal>=0?'positivo':'negativo', color:margenTotal>=0?'green':'red'},
     {label:'Ticket Promedio', val:fmt(ticketProm), sub:'ingreso por servicio', color:''},
     {label:'Margen Promedio', val:fmt(margenProm), sub:'margen por servicio', color:margenProm>=0?'green':'red'},
-    {label:'Servicios/Día', val:svcsPorDia, sub:`${diasConActividad} días con actividad`, color:''},
+    {label:'Servicios/Día', val:svcsPorDia, sub:`${hoyDia} días operativos transcurridos`, color:''},
     {label:'Margen/Día Flota', val:fmt(margenDiaFlota), sub:`margen diario promedio`, color:margenDiaFlota>=0?'green':'red'},
     {label:'Margen Proyectado', val:fmt(margenProy), sub:`${svcsPorDia} svc/día × ${DIAS_OPERATIVOS} días`, color:margenProy>=0?'green':'red'},
   ];
@@ -3098,34 +3079,6 @@ function renderResultados() {
       <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;color:${colors[k.color]};line-height:1">${k.val}</div>
       <div style="font-size:10px;color:var(--g400);margin-top:4px;font-weight:600">${k.sub}</div>
     </div>`).join('');
-}
-
-// ══ RENDIMIENTO CARGAS MANUAL ══
-async function recalcRendimientoCargas() {
-  const kmManual = parseFloat(document.getElementById('cos-km')?.value)||0;
-  if(kmManual <= 0) return;
-  const s = DB.servicios[svcActivoIdx];
-  if(!s) return;
-  const patente = s.patente;
-  const flotaRend = DB.flota.find(f=>f.patente===patente);
-  const fechaInicioKap = flotaRend?.fecha_inicio_kaptura||s.fecha||'';
-  // KM acumulado desde servicios cerrados
-  const kmSvcs = DB.servicios.filter(sv=>sv.patente===patente && sv.estado==='cerrado' && sv.km_total > 0 && (sv.fecha||'') >= fechaInicioKap);
-  const kmSvcsAcum = kmSvcs.reduce((a,sv)=>a+(sv.km_total||0),0);
-  // Agregar KM manual del servicio actual
-  const totalKm = kmSvcsAcum + kmManual;
-  // Litros acumulados desde fecha_inicio_kaptura
-  const {data:ltsAcum} = await supa.from('kaptura_combustible').select('litros').eq('patente',patente).gte('fecha',fechaInicioKap);
-  const totalLt = (ltsAcum||[]).reduce((a,r)=>a+(r.litros||0),0);
-  if(totalLt <= 0) return;
-  const rendReal = Math.round(totalKm/totalLt*10)/10;
-  const rendDiv = document.getElementById('cos-rendimiento-cargas');
-  if(rendDiv) {
-    rendDiv.style.display = 'block';
-    document.getElementById('cos-rend-valor').textContent = rendReal;
-    document.getElementById('cos-rend-km').textContent = Math.round(totalKm);
-    document.getElementById('cos-rend-lt').textContent = Math.round(totalLt*10)/10;
-  }
 }
 
 // ══ UTILS ══
