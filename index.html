@@ -132,7 +132,7 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
   <!-- TAB SERVICIOS -->
   <div id="tab-servicios">
     <div style="display:flex;align-items:center;justify-content:flex-end;padding:8px 12px 0">
-      <select id="dash-mes" class="inp" style="width:auto;font-size:11px;padding:4px 8px" onchange="renderKPIs()">
+      <select id="dash-mes" class="inp" style="width:auto;font-size:11px;padding:4px 8px" onchange="renderKPIs();renderServicios()">
         <option value="0">Enero</option>
         <option value="1">Febrero</option>
         <option value="2">Marzo</option>
@@ -1523,8 +1523,8 @@ function renderKPIs() {
     (s.fecha||'').startsWith(hoyStr) && ['ejecutado','borrador','confirmado','cerrado'].includes(s.estado)
   ).length;
   const ejMes = DB.servicios.filter(s => {
-    const f = new Date(s.created_at||'2026-01-01');
-    return f.getMonth()===mes && ['ejecutado','borrador','confirmado','cerrado'].includes(s.estado);
+    const f = new Date((s.fecha||s.created_at||'2026-01-01')+'T12:00:00');
+    return f.getMonth()===mes && f.getFullYear()===hoy.getFullYear() && ['ejecutado','borrador','confirmado','cerrado'].includes(s.estado);
   }).length;
 
   document.getElementById('k-hoy').textContent = svcsHoy.length;
@@ -1594,9 +1594,15 @@ async function calcMargenReal(mes, conf, ingresoTotal) {
 
 function renderServicios() {
   const fecha = document.getElementById('filtro-fecha').value;
+  const mes = parseInt(document.getElementById('dash-mes')?.value ?? hoy.getMonth());
+  const anioStr = String(hoy.getFullYear());
+  const mesStr = String(mes+1).padStart(2,'0');
   const svcs = fecha
-    ? DB.servicios.filter(s => (s.fecha||'').startsWith(fecha) || (s.created_at||'').startsWith(fecha))
-    : DB.servicios;
+    ? DB.servicios.filter(s => (s.fecha||'').startsWith(fecha))
+    : DB.servicios.filter(s => {
+        const f = s.fecha||'';
+        return f.startsWith(`${anioStr}-${mesStr}`);
+      });
   const empty = document.getElementById('empty-svc');
   if(!svcs.length) {
     document.getElementById('cards-mobile').innerHTML = '';
