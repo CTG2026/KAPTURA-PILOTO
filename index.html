@@ -1799,7 +1799,12 @@ async function guardarAsignacion() {
   const nuevo = { servicio_id:svId, patente, conductor, cliente, origen, fecha, estado:'asignado', margen_servicio:0, puntos_entrega:0 };
   const {data:inserted, error} = await supa.from('servicios_piloto').insert(nuevo).select();
   if(error) { toast('Error: '+error.message); return; }
-  DB.servicios.unshift(inserted?.[0] || {...nuevo, created_at:new Date().toISOString()});
+  let svcInsertado = inserted?.[0];
+  if(!svcInsertado?.id) {
+    const {data:fresh} = await supa.from('servicios_piloto').select('*').eq('servicio_id',svId).single();
+    svcInsertado = fresh || {...nuevo, created_at:new Date().toISOString()};
+  }
+  DB.servicios.unshift(svcInsertado);
   cerrar('modal-asignar');
   renderServicios(); renderKPIs();
   toast(`✓ ${svId} asignado — ${patente} · ${conductor}`);
