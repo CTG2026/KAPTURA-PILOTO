@@ -2604,61 +2604,46 @@ async function cargarGPS() {
     calcRetorno();
 
     // Detección TAG por corredor
-    // Regla: si no hay trips con km > 0, no asignar corredor ni TAG/Peajes
+    // Regla DEFINITIVA: si no hay trips con km > 0, no detectar corredor ni asignar TAG/Peajes
     const hayKmGPS = allEvtsSorted.filter(e => e.evento === 'trip' && (e.km_tramo||0) > 0).length > 0;
-    // Resetear campos TAG/Peajes ANTES de calcCostos si no hay km GPS
-    if(!hayKmGPS) {
-      const elTagPre = document.getElementById('cos-tag');
-      const elPeajesPre = document.getElementById('cos-peajes');
-      if(elTagPre) elTagPre.value = 0;
-      if(elPeajesPre) elPeajesPre.value = 0;
-    }
-    calcCostos();
+
     const detectadosTag = [];
     const corredoresDetectados = [];
-    if(!hayKmGPS) {
+
+    if(hayKmGPS) {
+      // Solo detectar corredor si hay km GPS reales
+      const puntoFinal = (s._puntos||puntosData||[]).find(p=>p.tipo==='final');
+      const destinoSvc = (puntoFinal?.destino||s.destino||'').toUpperCase().trim();
+      const origenSvc = (s?.origen||'').toUpperCase().trim();
+      const destinoConfig = DB_tarifario.find(d=>d.destino===destinoSvc && (d.origen===origenSvc||!d.origen||d.origen==='COLTAUCO'))
+        || DB_tarifario.find(d=>d.destino===destinoSvc);
+
+      if(destinoConfig) {
+        const idsCorredores = destinoConfig.corredores.split(',').map(c=>c.trim());
+        for(const cid of idsCorredores) {
+          const corr = DB_corredores.find(c=>c.id===cid);
+          if(!corr) { console.log('Corredor no encontrado:', cid); continue; }
+          corredoresDetectados.push({corr, score:10});
+          if(corr.total_tag > 0) detectadosTag.push({nombre:'TAG '+corr.id, valor:corr.total_tag, tipo:'tag'});
+          if(corr.total_peajes > 0) detectadosTag.push({nombre:'PEAJES '+corr.id, valor:corr.total_peajes, tipo:'peaje'});
+        }
+        console.log('Destino:', destinoSvc, '→ corredores:', idsCorredores.join('+'));
+      } else {
+        console.log('Destino no encontrado en tabla:', destinoSvc, '— sin corredores');
+      }
+      _lastDetectadosTag = detectadosTag;
+      _lastCorredorNombre = corredoresDetectados.length > 0 ? corredoresDetectados[0].corr?.nombre||'' : '';
+    } else {
+      // Sin km GPS: forzar TAG/Peajes a 0
       _lastDetectadosTag = [];
       _lastCorredorNombre = '';
       console.log('Sin km GPS — no se asigna corredor ni TAG/Peajes');
     }
-    if(hayKmGPS) {
-    const puntoFinal = (s._puntos||puntosData||[]).find(p=>p.tipo==='final');
-    const destinoSvc = (puntoFinal?.destino||s.destino||'').toUpperCase().trim();
-    const origenSvc = (s?.origen||'').toUpperCase().trim();
-    const destinoConfig = DB_tarifario.find(d=>d.destino===destinoSvc && (d.origen===origenSvc||!d.origen||d.origen==='COLTAUCO'))
-      || DB_tarifario.find(d=>d.destino===destinoSvc);
-
-    if(destinoConfig) {
-      const idsCorredores = destinoConfig.corredores.split(',').map(c=>c.trim());
-      for(const cid of idsCorredores) {
-        const corr = DB_corredores.find(c=>c.id===cid);
-        if(!corr) { console.log('Corredor no encontrado:', cid); continue; }
-        corredoresDetectados.push({corr, score:10});
-        console.log('Corredor por destino:', corr.id, corr.nombre);
-        if(corr.total_tag > 0)
-          detectadosTag.push({nombre:'TAG '+corr.id, valor:corr.total_tag, tipo:'tag'});
-        if(corr.total_peajes > 0)
-          detectadosTag.push({nombre:'PEAJES '+corr.id, valor:corr.total_peajes, tipo:'peaje'});
-      }
-      console.log('Destino:', destinoSvc, '→ corredores:', idsCorredores.join('+'));
-    } else {
-      console.log('Destino no encontrado en tabla:', destinoSvc, '— sin corredores');
-    } // fin if destinoConfig
-    } // fin if hayKmGPS
 
     // Para compatibilidad con código posterior
     const corridorDetected = corredoresDetectados.length > 0 ? corredoresDetectados[0].corr : null;
     const corridorScore = corredoresDetectados.length > 0 ? 10 : 0;
 
-    // Separate TAG vs Peajes
-    // Regla: si no hay km GPS, forzar TAG/Peajes = 0
-    if(!hayKmGPS) {
-      _lastDetectadosTag = [];
-      _lastCorredorNombre = '';
-    } else {
-      _lastDetectadosTag = detectadosTag;
-      _lastCorredorNombre = corridorDetected?.nombre||'';
-    }
     const soloTag    = detectadosTag.filter(p=>p.tipo.includes('tag'));
     const soloPeajes = detectadosTag.filter(p=>!p.tipo.includes('tag'));
     const totalTag    = soloTag.reduce((a,p)=>a+p.valor,0);
@@ -2667,21 +2652,19 @@ async function cargarGPS() {
     const elTag = document.getElementById('cos-tag');
     if(elTag) {
       elTag.value = hayKmGPS ? totalTag : 0;
-      document.getElementById('lbl-tag').textContent = totalTag>0 ? 'AUTO ✓' : 'AUTO';
-      document.getElementById('lbl-tag').style.background = totalTag>0 ? '#D1FAE5' : '#FEF3C7';
-      document.getElementById('lbl-tag').style.color = totalTag>0 ? '#065F46' : '#92400E';
+      document.getElementById('lbl-tag').textContent = (hayKmGPS && totalTag>0) ? 'AUTO ✓' : 'AUTO';
+      document.getElementById('lbl-tag').style.background = (hayKmGPS && totalTag>0) ? '#D1FAE5' : '#FEF3C7';
+      document.getElementById('lbl-tag').style.color = (hayKmGPS && totalTag>0) ? '#065F46' : '#92400E';
     }
     const elPeajes = document.getElementById('cos-peajes');
     if(elPeajes) {
       elPeajes.value = hayKmGPS ? totalPeajes : 0;
-      document.getElementById('lbl-peajes').textContent = totalPeajes>0 ? 'AUTO ✓' : 'AUTO';
-      document.getElementById('lbl-peajes').style.background = totalPeajes>0 ? '#D1FAE5' : '#FEF3C7';
-      document.getElementById('lbl-peajes').style.color = totalPeajes>0 ? '#065F46' : '#92400E';
+      document.getElementById('lbl-peajes').textContent = (hayKmGPS && totalPeajes>0) ? 'AUTO ✓' : 'AUTO';
+      document.getElementById('lbl-peajes').style.background = (hayKmGPS && totalPeajes>0) ? '#D1FAE5' : '#FEF3C7';
+      document.getElementById('lbl-peajes').style.color = (hayKmGPS && totalPeajes>0) ? '#065F46' : '#92400E';
     }
-    console.log('TAG:', soloTag.map(p=>p.nombre).join('+'), '=$'+totalTag);
-    console.log('Peajes:', soloPeajes.map(p=>p.nombre).join('+'), '=$'+totalPeajes);
     calcCostos();
-    toast(`✓ GPS: ${Math.round(kmTotal)} km · ${diasActivos} días · TAG: ${fmt(totalTag)} · Peajes: ${fmt(totalPeajes)}`);
+    toast(`✓ GPS: ${Math.round(kmTotal)} km · ${diasActivos} días · TAG: ${fmt(hayKmGPS ? totalTag : 0)} · Peajes: ${fmt(hayKmGPS ? totalPeajes : 0)}`);
     } // fin bloque hayGPS
 
     // Copec litros reales
@@ -2736,8 +2719,8 @@ async function guardarCostosBorrador() {
   const km     = parseFloat(document.getElementById('cos-km').value)||0;
   const parseNum = v => parseFloat((v||'').toString().replace(/[$\.]/g,'').replace(/,/g,'.'))||0;
   // Regla: si km = 0, no guardar TAG ni Peajes
-  const tag    = km > 0 ? parseNum(document.getElementById('cos-tag')?.value) : 0;
-  const peajes = km > 0 ? tag + parseNum(document.getElementById('cos-peajes')?.value) : 0;
+  let tag    = km > 0 ? parseNum(document.getElementById('cos-tag')?.value) : 0;
+  let peajes = km > 0 ? tag + parseNum(document.getElementById('cos-peajes')?.value) : 0;
   const dias   = parseFloat(document.getElementById('cos-dias').value)||1;
   const fechaTerm = document.getElementById('cos-fecha-termino').value;
   // Leer puntos frescos desde Supabase si no están en memoria
