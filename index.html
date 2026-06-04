@@ -2087,6 +2087,9 @@ async function guardarBorrador() {
   const tarifa = final?.valor || 0;
   const nguia  = puntosData[0]?.num_guia || '';
   const destino = final?.destino || '';
+  // Validación: punto final con destino y valor obligatorios
+  if(!final || !destino) { toast('⚠ Debes ingresar el destino del punto final'); return; }
+  if(tarifa <= 0) { toast('⚠ Debes ingresar el valor/tarifa del punto final'); return; }
   const puntosJSON = JSON.stringify(puntosData.map(p=>({tipo:p.tipo,destino:p.destino,valor:p.valor||0,num_guia:p.num_guia||'',guias:p.guias||[]})));
   const tipoEntrega = document.getElementById('reg-tipo-entrega')?.value || 'normal';
   const obsConduc   = document.getElementById('reg-observacion')?.value || '';
@@ -2127,6 +2130,8 @@ async function guardarEjecucion() {
   if(!s?.id) { toast('Error: sin ID'); return; }
   const fechaTerm = document.getElementById('ejec-fecha-termino').value;
   const retorno   = document.getElementById('ejec-retorno').value;
+  // Validación: fecha término obligatoria
+  if(!fechaTerm) { toast('⚠ Debes ingresar la fecha término del servicio'); return; }
   const puntos = puntosData.length > 0 ? puntosData : (s._puntos||[]);
   const puntosJSON = JSON.stringify(puntos.map(p=>({tipo:p.tipo,destino:p.destino,valor:p.valor||0,num_guia:p.num_guia||'',guias:p.guias||[]})));
   const {error} = await supa.from('servicios_piloto').update({
@@ -2733,6 +2738,11 @@ async function cargarGPS() {
 async function guardarCostosBorrador() {
   const s = DB.servicios[svcActivoIdx];
   if(!s?.id) { toast('Error: sin ID'); return; }
+  // Validación: tarifa y días obligatorios
+  const _tarifa = parseFmt('cos-ingreso') || s.tarifa_neta || s.ingreso_total || 0;
+  const _dias   = parseFloat(document.getElementById('cos-dias')?.value)||0;
+  if(_tarifa <= 0) { toast('⚠ Debes ingresar la tarifa del servicio'); return; }
+  if(_dias <= 0)   { toast('⚠ Debes ingresar los días en ruta'); return; }
   const km     = parseFloat(document.getElementById('cos-km').value)||0;
   const parseNum = v => parseFloat((v||'').toString().replace(/[$\.]/g,'').replace(/,/g,'.'))||0;
   const tag    = parseNum(document.getElementById('cos-tag')?.value);
