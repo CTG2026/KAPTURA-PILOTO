@@ -137,7 +137,7 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
         <option value="1">Febrero</option>
         <option value="2">Marzo</option>
         <option value="3">Abril</option>
-        <option value="4" selected>Mayo</option>
+        <option value="4">Mayo</option>
         <option value="5">Junio</option>
         <option value="6">Julio</option>
         <option value="7">Agosto</option>
@@ -1453,6 +1453,9 @@ async function init() {
   document.getElementById('filtro-fecha').value = '';
   document.getElementById('hdr-info').innerHTML =
     `${hoy.getDate()} ${MESES[hoy.getMonth()]} ${hoy.getFullYear()} · v${KAPTURA_VERSION}`;
+  // Seleccionar mes en curso automáticamente
+  const dashMes = document.getElementById('dash-mes');
+  if(dashMes) dashMes.value = String(hoy.getMonth());
 
   try {
     const [f,c,cl,t,cfg,s] = await Promise.all([
@@ -2602,9 +2605,16 @@ async function cargarGPS() {
     calcCostos();
 
     // Detección TAG por corredor
-    // Detectar corredores por DESTINO del servicio
+    // Regla: si no hay trips con km > 0, no asignar corredor ni TAG/Peajes
+    const hayKmGPS = allEvtsSorted.filter(e => e.evento === 'trip' && (e.km_tramo||0) > 0).length > 0;
     const detectadosTag = [];
     const corredoresDetectados = [];
+    if(!hayKmGPS) {
+      _lastDetectadosTag = [];
+      _lastCorredorNombre = '';
+      console.log('Sin km GPS — no se asigna corredor ni TAG/Peajes');
+    }
+    if(hayKmGPS) {
     const puntoFinal = (s._puntos||puntosData||[]).find(p=>p.tipo==='final');
     const destinoSvc = (puntoFinal?.destino||s.destino||'').toUpperCase().trim();
     const origenSvc = (s?.origen||'').toUpperCase().trim();
@@ -2626,7 +2636,8 @@ async function cargarGPS() {
       console.log('Destino:', destinoSvc, '→ corredores:', idsCorredores.join('+'));
     } else {
       console.log('Destino no encontrado en tabla:', destinoSvc, '— sin corredores');
-    }
+    } // fin if destinoConfig
+    } // fin if hayKmGPS
 
     // Para compatibilidad con código posterior
     const corridorDetected = corredoresDetectados.length > 0 ? corredoresDetectados[0].corr : null;
