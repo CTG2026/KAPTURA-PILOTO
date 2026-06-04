@@ -2602,11 +2602,18 @@ async function cargarGPS() {
     document.getElementById('cos-km-vacio-ida').value = kmVacioIda;
     document.getElementById('cos-km-retorno').value   = '';
     calcRetorno();
-    calcCostos();
 
     // Detección TAG por corredor
     // Regla: si no hay trips con km > 0, no asignar corredor ni TAG/Peajes
     const hayKmGPS = allEvtsSorted.filter(e => e.evento === 'trip' && (e.km_tramo||0) > 0).length > 0;
+    // Resetear campos TAG/Peajes ANTES de calcCostos si no hay km GPS
+    if(!hayKmGPS) {
+      const elTagPre = document.getElementById('cos-tag');
+      const elPeajesPre = document.getElementById('cos-peajes');
+      if(elTagPre) elTagPre.value = 0;
+      if(elPeajesPre) elPeajesPre.value = 0;
+    }
+    calcCostos();
     const detectadosTag = [];
     const corredoresDetectados = [];
     if(!hayKmGPS) {
@@ -2644,8 +2651,14 @@ async function cargarGPS() {
     const corridorScore = corredoresDetectados.length > 0 ? 10 : 0;
 
     // Separate TAG vs Peajes
-    _lastDetectadosTag = detectadosTag;
-    _lastCorredorNombre = corridorDetected?.nombre||'';
+    // Regla: si no hay km GPS, forzar TAG/Peajes = 0
+    if(!hayKmGPS) {
+      _lastDetectadosTag = [];
+      _lastCorredorNombre = '';
+    } else {
+      _lastDetectadosTag = detectadosTag;
+      _lastCorredorNombre = corridorDetected?.nombre||'';
+    }
     const soloTag    = detectadosTag.filter(p=>p.tipo.includes('tag'));
     const soloPeajes = detectadosTag.filter(p=>!p.tipo.includes('tag'));
     const totalTag    = soloTag.reduce((a,p)=>a+p.valor,0);
@@ -2653,14 +2666,14 @@ async function cargarGPS() {
 
     const elTag = document.getElementById('cos-tag');
     if(elTag) {
-      elTag.value = totalTag;
+      elTag.value = hayKmGPS ? totalTag : 0;
       document.getElementById('lbl-tag').textContent = totalTag>0 ? 'AUTO ✓' : 'AUTO';
       document.getElementById('lbl-tag').style.background = totalTag>0 ? '#D1FAE5' : '#FEF3C7';
       document.getElementById('lbl-tag').style.color = totalTag>0 ? '#065F46' : '#92400E';
     }
     const elPeajes = document.getElementById('cos-peajes');
     if(elPeajes) {
-      elPeajes.value = totalPeajes;
+      elPeajes.value = hayKmGPS ? totalPeajes : 0;
       document.getElementById('lbl-peajes').textContent = totalPeajes>0 ? 'AUTO ✓' : 'AUTO';
       document.getElementById('lbl-peajes').style.background = totalPeajes>0 ? '#D1FAE5' : '#FEF3C7';
       document.getElementById('lbl-peajes').style.color = totalPeajes>0 ? '#065F46' : '#92400E';
