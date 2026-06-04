@@ -2336,7 +2336,7 @@ async function calcCostos() {
   const puntos = s?._puntos || puntosData || [];
   const final  = puntos.find(p=>p.tipo==='final');
   const ints   = puntos.filter(p=>p.tipo==='intermedio');
-  const tarifa = final?.valor || s?.tarifa_neta || 0;
+  const tarifa = final?.valor || s?.tarifa_neta || s?.ingreso_total || 0;
   const valorPts = ints.reduce((a,p)=>a+(p.valor||0),0);
   const ingreso  = tarifa + valorPts;
   const factoring = plazo > 0 ? Math.round(tarifa * 1.19 * plazo / 100) : 0;
@@ -2356,7 +2356,7 @@ async function calcCostos() {
 
   // Auto-set comision when GPS loaded and tarifa>0
   const comisionEl = document.getElementById('cos-comision');
-  if(km > 0 && tarifa > 0 && !comisionEl.dataset.manual && (comisionEl.value === '' || comisionEl.value === '0' || !comisionEl.value)) {
+  if(tarifa > 0 && !comisionEl.dataset.manual && (comisionEl.value === '' || comisionEl.value === '0' || !comisionEl.value)) {
     comisionEl.value = Math.round(tarifa * (parseFloat(c.comision_conductor||8)/100));
   }
   const comision = parseFmt('cos-comision');
@@ -2778,6 +2778,13 @@ async function guardarCostosBorrador() {
   const kmVacioIda = parseFloat(document.getElementById('cos-km-vacio-ida')?.value)||0;
   const kmCargado  = parseFloat(document.getElementById('cos-km-cargado')?.value)||0;
   const kmRetorno  = parseFloat(document.getElementById('cos-km-retorno')?.value)||0;
+
+  // Regla: si km_total = 0, no guardar TAG/Peajes ni corredor
+  if(km === 0) {
+    peajes = 0; tag = 0;
+    _lastDetectadosTag = [];
+    _lastCorredorNombre = '';
+  }
 
   // Fix 1 y 3: Persistir _horasSvc, _porticos y _corredor en notas
   const horasSvcActual = DB.servicios[svcActivoIdx]._horasSvc || null;
