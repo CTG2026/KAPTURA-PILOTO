@@ -125,6 +125,7 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
   <button class="ntab" onclick="setTab('clientes',this)">Clientes</button>
   <button class="ntab" onclick="setTab('gastos',this)">Costos</button>
   <button class="ntab" onclick="setTab('resultados',this)">Resultados</button>
+  <button class="ntab" onclick="setTab('informes',this)">Informes</button>
   <button class="ntab" onclick="setTab('config',this)">Config</button>
 </nav>
 
@@ -308,6 +309,43 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
       </select>
     </div>
     <div id="res-kpis" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px"></div>
+  </div>
+
+  <!-- TAB INFORMES -->
+  <div id="tab-informes" style="display:none">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;letter-spacing:0.05em">INFORMES</div>
+    </div>
+    <!-- Lista de informes -->
+    <div id="inf-lista-container" style="display:block">
+      <div style="font-size:11px;font-weight:700;color:var(--navy);letter-spacing:0.08em;margin-bottom:12px">SELECCIONA UN INFORME</div>
+      <div id="inf-lista" style="display:flex;flex-direction:column;gap:8px"></div>
+    </div>
+    <!-- Detalle Estado de Resultados -->
+    <div id="inf-detalle-container" style="display:none">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+        <button class="btn btn-outline btn-sm" onclick="volverListaInformes()">← Volver</button>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;letter-spacing:0.05em" id="inf-detalle-titulo">—</div>
+        <button class="btn btn-outline btn-sm" onclick="window.print()">🖨 Imprimir</button>
+      </div>
+      <div style="background:#fff;border-radius:12px;overflow:hidden;border:1.5px solid #E5E7EB;max-width:700px">
+        <!-- Header -->
+        <div style="background:var(--navy);color:#fff;padding:16px 20px">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;letter-spacing:0.05em">ESTADO DE RESULTADOS</div>
+          <div style="font-size:11px;opacity:0.7;margin-top:2px" id="inf-er-subtitulo">—</div>
+        </div>
+        <!-- Tabla -->
+        <table style="width:100%;border-collapse:collapse">
+          <thead>
+            <tr style="background:#F0FDF4">
+              <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:800;color:var(--navy);letter-spacing:0.08em;border-bottom:1.5px solid #E5E7EB">CONCEPTO</th>
+              <th style="padding:10px 16px;text-align:right;font-size:11px;font-weight:800;color:var(--navy);letter-spacing:0.08em;border-bottom:1.5px solid #E5E7EB">MONTO</th>
+            </tr>
+          </thead>
+          <tbody id="inf-er-body"></tbody>
+        </table>
+      </div>
+    </div>
   </div>
 
   <!-- TAB CONFIG -->
@@ -3148,6 +3186,108 @@ async function guardarConfig() {
   toast('✓ Configuración guardada');
 }
 
+// ══ INFORMES ══
+const MESES_LARGO = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+function renderInformes() {
+  // Detectar meses con servicios cerrados
+  const mesesConDatos = {};
+  DB.servicios.filter(s => s.estado === 'cerrado').forEach(s => {
+    const fecha = s.fecha || s.created_at || '';
+    if(!fecha) return;
+    const key = fecha.substring(0,7); // YYYY-MM
+    mesesConDatos[key] = (mesesConDatos[key] || 0) + 1;
+  });
+  const lista = document.getElementById('inf-lista');
+  const keys = Object.keys(mesesConDatos).sort().reverse();
+  if(keys.length === 0) {
+    lista.innerHTML = '<div style="color:#6B7280;font-size:13px">No hay servicios cerrados aún.</div>';
+    return;
+  }
+  lista.innerHTML = keys.map(k => {
+    const [y, m] = k.split('-');
+    const nombreMes = MESES_LARGO[parseInt(m)-1] + ' ' + y;
+    const cant = mesesConDatos[k];
+    return `<div onclick="abrirInformeResultados('${k}')" style="display:flex;align-items:center;justify-content:space-between;background:#fff;border:1.5px solid #E5E7EB;border-radius:10px;padding:14px 18px;cursor:pointer;transition:border-color 0.15s" onmouseover="this.style.borderColor='var(--navy)'" onmouseout="this.style.borderColor='#E5E7EB'">
+      <div>
+        <div style="font-size:13px;font-weight:800;color:var(--navy)">📊 Informe Resultados ${nombreMes}</div>
+        <div style="font-size:11px;color:#6B7280;margin-top:2px">${cant} servicio${cant>1?'s':''} cerrado${cant>1?'s':''}</div>
+      </div>
+      <div style="font-size:18px;color:#9CA3AF">›</div>
+    </div>`;
+  }).join('');
+}
+
+function volverListaInformes() {
+  document.getElementById('inf-lista-container').style.display = 'block';
+  document.getElementById('inf-detalle-container').style.display = 'none';
+}
+
+function abrirInformeResultados(mesKey) {
+  const [y, m] = mesKey.split('-');
+  const nombreMes = MESES_LARGO[parseInt(m)-1] + ' ' + y;
+  document.getElementById('inf-detalle-titulo').textContent = 'Informe Resultados ' + nombreMes;
+  document.getElementById('inf-er-subtitulo').textContent = nombreMes + ' · KAPTURA';
+  document.getElementById('inf-lista-container').style.display = 'none';
+  document.getElementById('inf-detalle-container').style.display = 'block';
+
+  const svcs = DB.servicios.filter(s => s.estado==='cerrado' && (s.fecha||'').startsWith(mesKey));
+
+  // Líneas del Estado de Resultados
+  const ingresos       = svcs.reduce((a,s)=>a+(s.ingreso_total||s.tarifa_neta||0),0);
+  const combustible    = svcs.reduce((a,s)=>a+(s.costo_combustible||0),0);
+  const tagPeajes      = svcs.reduce((a,s)=>a+(s.costo_peajes||0),0);
+  const conductores    = svcs.reduce((a,s)=>a+(s.costo_conductor||0),0);
+  const mantencion     = svcs.reduce((a,s)=>a+(s.costo_mantencion||0),0);
+  const viaticos       = svcs.reduce((a,s)=>a+(s.costo_viaticos||0),0);
+  const costoFijo      = svcs.reduce((a,s)=>a+(s.costo_fijo_dia||0),0);
+  const costosProduccion = combustible + tagPeajes + conductores + mantencion + viaticos + costoFijo;
+  const margenBruto    = ingresos - costosProduccion;
+  const gastoAdmin     = DB_gastos.filter(g => (g.fecha||'').startsWith(mesKey) && (g.categoria||'').toLowerCase().includes('admin')).reduce((a,g)=>a+(g.monto||0),0);
+  const comisiones     = svcs.reduce((a,s)=>a+(s.comision_conductor||0),0);
+  const factoring      = svcs.reduce((a,s)=>a+(s.factoring||0),0);
+  const gastosVentas   = comisiones + factoring;
+  const ebitda         = margenBruto - gastoAdmin - gastosVentas;
+
+  const filas = [
+    {label:'Ingreso por ventas',          val:ingresos,         bold:false, color:''},
+    {label:'Costos de producción',         val:-costosProduccion, bold:false, color:'#DC2626'},
+    {label:'  · Combustible',             val:-combustible,     bold:false, color:'#DC2626', sub:true},
+    {label:'  · TAG / Peajes',            val:-tagPeajes,       bold:false, color:'#DC2626', sub:true},
+    {label:'  · Conductores',             val:-conductores,     bold:false, color:'#DC2626', sub:true},
+    {label:'  · Mantención',              val:-mantencion,      bold:false, color:'#DC2626', sub:true},
+    {label:'  · Viáticos',                val:-viaticos,        bold:false, color:'#DC2626', sub:true},
+    {label:'  · Costo Fijo',              val:-costoFijo,       bold:false, color:'#DC2626', sub:true},
+    {label:'Margen Bruto',                val:margenBruto,      bold:true,  color: margenBruto>=0?'#059669':'#DC2626', sep:true},
+    {label:'Gastos de administración',    val:-gastoAdmin,      bold:false, color:'#DC2626'},
+    {label:'Gastos de ventas',            val:-gastosVentas,    bold:false, color:'#DC2626'},
+    {label:'  · Comisiones conductores',  val:-comisiones,      bold:false, color:'#DC2626', sub:true},
+    {label:'  · Factoring',               val:-factoring,       bold:false, color:'#DC2626', sub:true},
+    {label:'EBITDA',                      val:ebitda,           bold:true,  color: ebitda>=0?'#059669':'#DC2626', sep:true},
+    {label:'Depreciación y amortización', val:null,             bold:false, color:'', disabled:true},
+    {label:'Resultado operacional',       val:null,             bold:true,  color:'', disabled:true, sep:true},
+    {label:'Actividad no operacional',    val:null,             bold:false, color:'', disabled:true},
+    {label:'Beneficio antes de impuestos',val:null,             bold:true,  color:'', disabled:true, sep:true},
+    {label:'Impuesto a la renta',         val:null,             bold:false, color:'', disabled:true},
+    {label:'Beneficio neto',              val:null,             bold:true,  color:'', disabled:true, sep:true},
+  ];
+
+  const body = document.getElementById('inf-er-body');
+  body.innerHTML = filas.map(f => {
+    const bg    = f.sep ? 'background:#F9FAFB;border-top:1.5px solid #E5E7EB' : '';
+    const fw    = f.bold ? 'font-weight:800' : 'font-weight:400';
+    const fs    = f.sub ? 'font-size:11px;color:#6B7280' : 'font-size:13px';
+    const dis   = f.disabled ? 'opacity:0.35' : '';
+    const valTxt = f.disabled ? '—' : (f.val !== null ? fmt(Math.abs(f.val)) : '—');
+    const valColor = f.disabled ? '#9CA3AF' : (f.val < 0 ? '#DC2626' : (f.val > 0 ? f.color||'var(--navy)' : '#6B7280'));
+    const signo = (!f.disabled && f.val !== null && f.val < 0) ? '-' : '';
+    return `<tr style="${bg}${dis?';'+dis:''}">
+      <td style="padding:10px 16px;${fs};${fw};color:var(--navy);border-bottom:1px solid #F3F4F6">${f.label}</td>
+      <td style="padding:10px 16px;text-align:right;${fs};${fw};color:${valColor};border-bottom:1px solid #F3F4F6">${f.disabled?'—':signo+valTxt}</td>
+    </tr>`;
+  }).join('');
+}
+
 // ══ RESULTADOS ══
 function renderResultados() {
   const mes = parseInt(document.getElementById('res-mes')?.value ?? hoy.getMonth());
@@ -3227,6 +3367,7 @@ function setTab(nombre, btn) {
   btn.classList.add('active');
   if(nombre==='gastos') cargarGastos();
   if(nombre==='resultados') renderResultados();
+  if(nombre==='informes') renderInformes();
 }
 function resetFecha() {
   document.getElementById('filtro-fecha').value = '';
