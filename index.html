@@ -2127,11 +2127,6 @@ async function guardarEjecucion() {
   if(!s?.id) { toast('Error: sin ID'); return; }
   const fechaTerm = document.getElementById('ejec-fecha-termino').value;
   const retorno   = document.getElementById('ejec-retorno').value;
-  // Validación: fecha término, destino y tarifa obligatorios
-  if(!fechaTerm) { toast('⚠ Debes ingresar la fecha término del servicio'); return; }
-  const _puntosFinal = (puntosData.length > 0 ? puntosData : (s._puntos||[])).find(p=>p.tipo==='final');
-  if(!_puntosFinal?.destino) { toast('⚠ Debes ingresar el destino del punto final antes de confirmar'); return; }
-  if(!(_puntosFinal?.valor > 0)) { toast('⚠ Debes ingresar la tarifa del punto final antes de confirmar'); return; }
   const puntos = puntosData.length > 0 ? puntosData : (s._puntos||[]);
   const puntosJSON = JSON.stringify(puntos.map(p=>({tipo:p.tipo,destino:p.destino,valor:p.valor||0,num_guia:p.num_guia||'',guias:p.guias||[]})));
   const {error} = await supa.from('servicios_piloto').update({
@@ -2738,16 +2733,11 @@ async function cargarGPS() {
 async function guardarCostosBorrador() {
   const s = DB.servicios[svcActivoIdx];
   if(!s?.id) { toast('Error: sin ID'); return; }
-  // Validación: tarifa y días obligatorios
-  const _parseNum = v => parseFloat((v||'').toString().replace(/[$\.]/g,'').replace(/,/g,'.'))||0;
-  const _tarifa = _parseNum(document.getElementById('cos-ingreso')?.textContent) || s.tarifa_neta || s.ingreso_total || 0;
-  const _dias   = parseFloat(document.getElementById('cos-dias')?.value)||0;
-  if(_tarifa <= 0) { toast('⚠ Debes ingresar la tarifa del servicio'); return; }
-  if(_dias <= 0)   { toast('⚠ Debes ingresar los días en ruta'); return; }
   const km     = parseFloat(document.getElementById('cos-km').value)||0;
   const parseNum = v => parseFloat((v||'').toString().replace(/[$\.]/g,'').replace(/,/g,'.'))||0;
-  const tag    = parseNum(document.getElementById('cos-tag')?.value);
-  const peajes = tag + parseNum(document.getElementById('cos-peajes')?.value);
+  // Regla: si km = 0, no guardar TAG ni Peajes
+  const tag    = km > 0 ? parseNum(document.getElementById('cos-tag')?.value) : 0;
+  const peajes = km > 0 ? tag + parseNum(document.getElementById('cos-peajes')?.value) : 0;
   const dias   = parseFloat(document.getElementById('cos-dias').value)||1;
   const fechaTerm = document.getElementById('cos-fecha-termino').value;
   // Leer puntos frescos desde Supabase si no están en memoria
