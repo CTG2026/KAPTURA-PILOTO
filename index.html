@@ -2295,31 +2295,34 @@ async function calcCostos() {
   const condVal = dias * parseInt(c.sueldo_conductor||c.costo_conductor_dia||33000);
   // Costo fijo: manual o automático
   let cfDia = parseInt(c.costo_fijo||c.costo_fijo_dia||44000);
+  let cf = dias * cfDia; // default manual
   if((c.modo_costo_fijo||'manual') === 'automatico') {
     const svcActual = DB.servicios[svcActivoIdx];
-    const fechaIni = svcActual?.fecha||'';
-    // Verificar si fecha inicio es sábado (6) o domingo (0) → costo fijo = 0
-    const diaSemana = fechaIni ? new Date(fechaIni+'T12:00:00').getDay() : 1;
-    if(diaSemana === 0 || diaSemana === 6) {
-      cfDia = 0; // Fin de semana: costo fijo ya distribuido en semana hábil
-    } else {
-      const mensual = parseFloat(c.costo_fijo_mensual||3600000);
-      const diasMes = parseInt(c.dias_operativos_mes||20);
-      // Contar equipos activos en el rango de fechas del servicio
-      const fechaTermSvc = document.getElementById('cos-fecha-termino')?.value || fechaIni;
-      const equiposHoy = DB.servicios.filter(sv => {
-        if(!(sv.estado==='asignado'||sv.estado==='en_proceso'||sv.estado==='ejecutado'||sv.estado==='cerrado'||sv.estado==='borrador')) return false;
-        // El servicio se superpone si inició antes del fin y terminó después del inicio
-        const svFechaInicio = sv.fecha || '';
-        const svFechaTermino = sv._fecha_termino || sv.fecha_termino || sv.fecha || '';
-        return svFechaInicio <= fechaTermSvc && svFechaTermino >= fechaIni;
+    const fechaIni  = svcActual?.fecha||'';
+    const fechaTermSvc = document.getElementById('cos-fecha-termino')?.value || fechaIni;
+    const mensual = parseFloat(c.costo_fijo_mensual||3600000);
+    const diasMes = parseInt(c.dias_operativos_mes||20);
+    const estadosValidos = ['asignado','en_proceso','ejecutado','cerrado','borrador'];
+    // Calcular CF día por día
+    cf = 0;
+    const fechaStart = new Date(fechaIni+'T12:00:00');
+    const fechaEnd   = new Date(fechaTermSvc+'T12:00:00');
+    for(let d = new Date(fechaStart); d <= fechaEnd; d.setDate(d.getDate()+1)) {
+      const diaSemana = d.getDay();
+      if(diaSemana === 0 || diaSemana === 6) continue; // fin de semana: $0
+      const fechaStr = d.toISOString().substring(0,10);
+      const equiposDia = DB.servicios.filter(sv => {
+        if(!estadosValidos.includes(sv.estado)) return false;
+        const svIni  = sv.fecha || '';
+        const svTerm = sv._fecha_termino || sv.fecha_termino || sv.fecha || '';
+        return svIni <= fechaStr && svTerm >= fechaStr;
       }).length;
-      const equiposActivos = Math.max(equiposHoy, 1);
-      cfDia = Math.round(mensual / diasMes / equiposActivos);
-      console.log('CF auto:', fechaIni, 'equipos activos:', equiposActivos, 'cfDia:', cfDia);
+      const equiposActivos = Math.max(equiposDia, 1);
+      const cfEseDia = Math.round(mensual / diasMes / equiposActivos);
+      console.log('CF auto día', fechaStr, '- equipos:', equiposActivos, '- cfDia:', cfEseDia);
+      cf += cfEseDia;
     }
   }
-  const cf      = dias * cfDia;
   const mant    = dias * parseInt(c.mantencion||c.costo_mantencion||25000);
   const viat    = dias * parseInt(c.viatico||c.costo_viatico||12000);
   const plazoSel = document.getElementById('cos-plazo')?.value || '0';
