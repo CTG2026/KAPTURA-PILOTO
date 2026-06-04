@@ -150,6 +150,7 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
     <div class="kpis">
       <div class="kpi"><div class="kpi-lbl">Servicios Hoy</div><div class="kpi-val" id="k-hoy">—</div><div class="kpi-sub" id="k-hoy-sub">—</div></div>
       <div class="kpi orange"><div class="kpi-lbl">Ejecutados Hoy</div><div class="kpi-val orange" id="k-ejec-hoy">—</div><div class="kpi-sub" id="k-ejec-mes">— este mes</div></div>
+      <div class="kpi"><div class="kpi-lbl">Servicios Mes</div><div class="kpi-val" id="k-svcs-mes">—</div><div class="kpi-sub" id="k-svcs-mes-sub">acumulados</div></div>
       <div class="kpi orange"><div class="kpi-lbl">Por Confirmar</div><div class="kpi-val orange" id="k-pend">—</div><div class="kpi-sub">borradores</div></div>
       <div class="kpi green"><div class="kpi-lbl">Ingreso Mes</div><div class="kpi-val green" id="k-ingreso">—</div><div class="kpi-sub" id="k-ingreso-sub">—</div></div>
       <div class="kpi red"><div class="kpi-lbl">Costos Mes</div><div class="kpi-val red" id="k-costos">—</div><div class="kpi-sub" id="k-costos-sub">—</div></div>
@@ -1440,7 +1441,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 const KAPTURA_VERSION = '8.1';
 const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 const hoy = new Date();
-const hoyStr = hoy.toISOString().split('T')[0];
+const hoyStr = new Date().toLocaleDateString('en-CA', {timeZone:'America/Santiago'});
 
 // ══ ESTADO GLOBAL ══
 let DB = { flota:[], conductores:[], clientes:[], tarifarios:[], config:{}, servicios:[] };
@@ -1538,6 +1539,9 @@ function renderKPIs() {
   document.getElementById('k-ejec-hoy').textContent = ejHoy;
   document.getElementById('k-ejec-mes').textContent = ejMes + ' este mes';
   document.getElementById('k-pend').textContent = borradores.length;
+  const svcsMes = DB.servicios.filter(s => (s.fecha||'').startsWith(`${hoy.getFullYear()}-${String(mes+1).padStart(2,'0')}`));
+  document.getElementById('k-svcs-mes').textContent = svcsMes.length;
+  document.getElementById('k-svcs-mes-sub').textContent = `acumulados ${MESES[mes]}`;
   document.getElementById('k-ingreso').textContent = fmt(ingresoTotal);
   document.getElementById('k-ingreso-sub').textContent = `${conf.length} servicios · ${MESES[mes]}`;
   document.getElementById('k-costos').textContent = fmt(costosTotal);
@@ -1603,9 +1607,11 @@ function renderServicios() {
   const mes = parseInt(document.getElementById('dash-mes')?.value ?? hoy.getMonth());
   const anioStr = String(hoy.getFullYear());
   const mesStr = String(mes+1).padStart(2,'0');
-  const svcs = fecha
+  const svcs = (fecha
     ? DB.servicios.filter(s => (s.fecha||'').startsWith(fecha))
-    : DB.servicios.filter(s => (s.fecha||'').startsWith(`${anioStr}-${mesStr}`));
+    : DB.servicios.filter(s => (s.fecha||'').startsWith(`${anioStr}-${mesStr}`))
+  ).sort((a,b) => (b.fecha||'') > (a.fecha||'') ? 1 : (b.fecha||'') < (a.fecha||'') ? -1 :
+    (b.created_at||'') > (a.created_at||'') ? 1 : -1);
   const empty = document.getElementById('empty-svc');
   if(!svcs.length) {
     document.getElementById('cards-mobile').innerHTML = '';
