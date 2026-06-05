@@ -124,6 +124,7 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
   <button class="ntab" onclick="setTab('flota',this)">Flota</button>
   <button class="ntab" onclick="setTab('clientes',this)">Clientes</button>
   <button class="ntab" onclick="setTab('gastos',this)">Costos</button>
+  <button class="ntab" onclick="setTab('liquidaciones',this)">Liquidaciones</button>
   <button class="ntab" onclick="setTab('resultados',this)">Resultados</button>
   <button class="ntab" onclick="setTab('informes',this)">Informes</button>
   <button class="ntab" onclick="setTab('config',this)">Config</button>
@@ -286,6 +287,18 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
           <button class="btn btn-navy" onclick="guardarGasto()">💾 Guardar Gasto</button>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- TAB LIQUIDACIONES -->
+  <div id="tab-liquidaciones" style="display:none">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;letter-spacing:0.05em">LIQUIDACIONES</div>
+    </div>
+    <div style="background:#F9FAFB;border-radius:12px;padding:40px;text-align:center;color:#9CA3AF">
+      <div style="font-size:32px;margin-bottom:12px">🚧</div>
+      <div style="font-size:14px;font-weight:700">Módulo en construcción</div>
+      <div style="font-size:12px;margin-top:4px">Próximamente disponible</div>
     </div>
   </div>
 
@@ -3192,8 +3205,8 @@ const MESES_LARGO = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','A
 function renderInformes() {
   // Detectar meses con servicios cerrados
   const mesesConDatos = {};
-  DB.servicios.filter(s => s.estado === 'cerrado').forEach(s => {
-    const fecha = s.fecha || s.created_at || '';
+  DB.servicios.filter(s => ['cerrado','borrador'].includes(s.estado)).forEach(s => {
+    const fecha = s.fecha || '';
     if(!fecha) return;
     const key = fecha.substring(0,7); // YYYY-MM
     mesesConDatos[key] = (mesesConDatos[key] || 0) + 1;
