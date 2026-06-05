@@ -2481,6 +2481,7 @@ async function cargarGPS() {
                         notasStr.includes('Retorno: pernocta') ? 'pernocta' :
                         notasStr.includes('Retorno: nueva_asignacion') ? 'nueva_asignacion' : 'base';
 
+    let inicioViaje = null;
     if(!esPrimerServicio && retornoTipo !== 'nueva_asignacion') {
       // Buscar servicio anterior del mismo equipo
       const svcsEquipo = DB.servicios
@@ -2590,7 +2591,6 @@ async function cargarGPS() {
     // Si es primer servicio → usar todos los trips (sin filtro firstLongTrip)
     // Si no → filtrar por firstLongTrip para ignorar movimientos locales pre-viaje
     let firstLongTrip = null;
-    let inicioViaje = null;
     if(!esPrimerServicio) {
       // Buscar primer trip largo desde la BASE (Coltauco) primero
       const baseKws = ['coltauco','quillaiquén','quillayquén','ruta h-30'];
