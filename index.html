@@ -2144,7 +2144,8 @@ async function procesarGuia(input, pi) {
       let imgUrl = null;
       try {
         const svc = DB.servicios[svcActivoIdx];
-        const fileName = `guias/${svc.servicio_id}_punto${pi}_${json.num_guia}.jpg`;
+        const ext = file.type.includes('png') ? 'png' : 'jpg';
+        const fileName = `guias/${svc.servicio_id}_punto${pi}_${json.num_guia}_${Date.now()}.${ext}`;
         const {data:upData} = await supa.storage.from('kaptura-guias').upload(fileName, file, {upsert:true, contentType:file.type});
         if(upData) {
           const {data:urlData} = supa.storage.from('kaptura-guias').getPublicUrl(fileName);
