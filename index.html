@@ -473,6 +473,32 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
 </div>
 
 <!-- MODAL ASIGNAR -->
+<!-- MODAL EDITAR SERVICIO CERRADO -->
+<div class="overlay" id="modal-editar-cerrado" style="display:none">
+  <div class="modal" style="max-width:340px">
+    <div class="modal-hdr">
+      <div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:900;letter-spacing:0.05em">EDITAR SERVICIO</div>
+        <div style="font-size:11px;color:#6B7280;margin-top:2px" id="editar-cerrado-sub">—</div>
+      </div>
+      <button class="modal-cls" onclick="cerrar('modal-editar-cerrado')">✕</button>
+    </div>
+    <div style="padding:16px;display:flex;flex-direction:column;gap:10px">
+      <div style="font-size:11px;color:#6B7280;margin-bottom:4px">Selecciona la fase que deseas editar:</div>
+      <button class="btn btn-navy" onclick="editarFaseCerrado('asignar')" style="width:100%;justify-content:flex-start;gap:10px">
+        📋 <span>Asignación</span>
+      </button>
+      <button class="btn btn-purple" onclick="editarFaseCerrado('registrar')" style="width:100%;justify-content:flex-start;gap:10px">
+        📝 <span>Registro / Guías</span>
+      </button>
+      <button class="btn btn-green" onclick="editarFaseCerrado('cierre')" style="width:100%;justify-content:flex-start;gap:10px">
+        🔒 <span>Costos / Cierre</span>
+      </button>
+      <button class="btn btn-outline" onclick="cerrar('modal-editar-cerrado')" style="width:100%;margin-top:4px">Cancelar</button>
+    </div>
+  </div>
+</div>
+
 <div class="overlay" id="modal-asignar" style="display:none">
   <div class="modal">
     <div class="modal-hdr">
@@ -1693,7 +1719,7 @@ function cardHTML(s,i) {
   return `<div class="svc-card">
     <div class="svc-top">
       <div>
-        <div class="svc-id">${s.servicio_id||'—'}</div>
+        <div class="svc-id" ${s.estado==='cerrado'?`onclick="editarServicioCerrado(${i})" title="Editar servicio" style="cursor:pointer;text-decoration:underline dotted"`:''}>${s.servicio_id||'—'}</div>
         <div class="svc-pat">${s.patente||'—'}</div>
         <div class="svc-line">${s.conductor||'—'}</div>
         <div class="svc-line" style="color:var(--g400)">${s.cliente||'—'} · ${s.origen||'—'}</div>
@@ -1731,7 +1757,7 @@ function filaHTML(s,i) {
   const margen    = margenVal ? fmt(margenVal) : '—';
   const mColor    = margenVal >= 0 ? '#065F46' : '#B91C1C';
   return `<tr>
-    <td style="font-family:'Barlow Condensed',sans-serif;font-weight:800;color:var(--navy)">${s.servicio_id||'—'}</td>
+    <td style="font-family:'Barlow Condensed',sans-serif;font-weight:800;color:var(--navy);${s.estado==='cerrado'?'cursor:pointer;text-decoration:underline dotted':''}" ${s.estado==='cerrado'?`onclick="editarServicioCerrado(${i})" title="Editar servicio"`:''}>${s.servicio_id||'—'}</td>
     <td>${s.fecha||'—'}</td>
     <td>${s._fecha_termino || (s.hora_termino ? s.hora_termino.substring(0,10) : '—')}</td>
     <td style="font-family:'Barlow Condensed',sans-serif;font-weight:700">${s.patente||'—'}</td>
@@ -3197,6 +3223,43 @@ async function guardarConfig() {
     await supa.from('kaptura_config').upsert({clave:'claude_api_key',valor:ck},{onConflict:'clave'});
   }
   toast('✓ Configuración guardada');
+}
+
+// ══ EDITAR SERVICIO CERRADO ══
+let svcEditarCerradoIdx = -1;
+
+function editarServicioCerrado(i) {
+  const s = DB.servicios[i];
+  if(!s) return;
+  svcEditarCerradoIdx = i;
+  document.getElementById('editar-cerrado-sub').textContent = `${s.servicio_id} · ${s.patente} · ${s.conductor}`;
+  document.getElementById('modal-editar-cerrado').style.display = 'flex';
+}
+
+function editarFaseCerrado(fase) {
+  cerrar('modal-editar-cerrado');
+  const i = svcEditarCerradoIdx;
+  const s = DB.servicios[i];
+  if(!s) return;
+  // Cambiar estado en memoria para que los modales permitan guardar
+  const estadoOriginal = s.estado;
+  DB.servicios[i] = {...s, _estadoOriginal: estadoOriginal, estado: 'ejecutado'};
+  if(fase === 'asignar') {
+    svcActivoIdx = i;
+    // Poblar modal asignar con datos actuales
+    const sv = DB.servicios[i];
+    document.getElementById('asig-patente').value   = sv.patente||'';
+    document.getElementById('asig-conductor').value = sv.conductor||'';
+    document.getElementById('asig-cliente').value   = sv.cliente||'';
+    document.getElementById('asig-origen').value    = sv.origen||'';
+    document.getElementById('asig-fecha').value     = sv.fecha||hoyStr;
+    document.getElementById('asig-destino').value   = sv.destino||'';
+    document.getElementById('modal-asignar').style.display = 'flex';
+  } else if(fase === 'registrar') {
+    verServicio(i);
+  } else if(fase === 'cierre') {
+    abrirCierre(i);
+  }
 }
 
 // ══ INFORMES ══
