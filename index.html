@@ -2692,7 +2692,10 @@ async function cargarGPS() {
     document.getElementById('cos-dias').value = diasActivos;
 
     // evtOrigen = primer stop en ORIGEN después del inicio del viaje = donde empieza km cargado
-    const evtOrigen = allEvtsSorted.find(e => 
+    // Si el origen ES la base (Coltauco), no buscar evtOrigen — el tramo cargado empieza desde inicioViaje
+    const baseKwsOrigen = ['coltauco','quillaiquén','quillaiquen','quillayquén'];
+    const origenEsBase = origenKws.some(k => baseKwsOrigen.includes(k.toLowerCase()));
+    const evtOrigen = origenEsBase ? null : allEvtsSorted.find(e => 
       e.datetime_evento > (inicioViaje||'') && 
       matchAddr(e.address, origenKws) && 
       (e.evento==='stop'||e.evento==='geofence_in')
