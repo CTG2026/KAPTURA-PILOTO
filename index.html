@@ -2377,7 +2377,9 @@ function abrirCierre(i) {
   irACostos();
 }
 
+let _integrando = false;
 async function calcCostos() {
+  if(_integrando) return;
   const c    = DB.config;
   const dias = parseFloat(document.getElementById('cos-dias').value)||1;
   const km   = parseFloat(document.getElementById('cos-km').value)||0;
@@ -2736,6 +2738,7 @@ async function cargarGPS() {
     document.getElementById('cos-km-cargado').value   = Math.round(kmCargado);
     document.getElementById('cos-km-vacio-ida').value = kmVacioIda;
     document.getElementById('cos-km-retorno').value   = '';
+    _integrando = true;
     calcRetorno();
 
     // Detección TAG por corredor
@@ -2823,6 +2826,7 @@ async function cargarGPS() {
       document.getElementById('lbl-peajes').style.background = (hayKmGPS && totalPeajes>0) ? '#D1FAE5' : '#FEF3C7';
       document.getElementById('lbl-peajes').style.color = (hayKmGPS && totalPeajes>0) ? '#065F46' : '#92400E';
     }
+    _integrando = false;
     calcCostos();
     toast(`✓ GPS: ${Math.round(kmTotal)} km · ${diasActivos} días · TAG: ${fmt(hayKmGPS ? totalTag : 0)} · Peajes: ${fmt(hayKmGPS ? totalPeajes : 0)}`);
     } // fin bloque hayGPS
