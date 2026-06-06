@@ -2763,6 +2763,27 @@ async function cargarGPS() {
       } else {
         console.log('Destino no encontrado en tabla:', destinoSvc, '— sin corredores');
       }
+
+      // Corredor tramo vacío: origen → destino (cuando hay km vacíos)
+      if(kmVacioIda > 0 && origenSvc && origenSvc !== destinoSvc) {
+        const origenConfig = DB_tarifario.find(d => d.origen === origenSvc && d.destino === destinoSvc)
+          || DB_tarifario.find(d => d.destino === origenSvc && d.origen === 'COLTAUCO')
+          || DB_tarifario.find(d => d.destino === origenSvc);
+        if(origenConfig) {
+          const idsCorredoresVacio = origenConfig.corredores.split(',').map(c=>c.trim());
+          for(const cid of idsCorredoresVacio) {
+            // No duplicar corredores ya detectados
+            if(corredoresDetectados.find(cd=>cd.corr.id===cid)) continue;
+            const corr = DB_corredores.find(c=>c.id===cid);
+            if(!corr) continue;
+            corredoresDetectados.push({corr, score:5});
+            if(corr.total_tag > 0) detectadosTag.push({nombre:'TAG '+corr.id+' (vacío)', valor:corr.total_tag, tipo:'tag'});
+            if(corr.total_peajes > 0) detectadosTag.push({nombre:'PEAJES '+corr.id+' (vacío)', valor:corr.total_peajes, tipo:'peaje'});
+          }
+          console.log('Corredor vacío:', origenSvc, '→', destinoSvc, '→ corredores:', idsCorredoresVacio.join('+'));
+        }
+      }
+
       _lastDetectadosTag = detectadosTag;
       _lastCorredorNombre = corredoresDetectados.length > 0 ? corredoresDetectados[0].corr?.nombre||'' : '';
     } else {
