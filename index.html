@@ -2691,17 +2691,12 @@ async function cargarGPS() {
     console.log('Origen kws:', origenKws[0], '→ inicio viaje:', inicioViaje||evtOrigen?.datetime_evento||'null');
     console.log('Destino kws:', destinoKws[0], '→ evento:', evtDestino?.datetime_evento||'null');
 
-    // Calculate km cargados = trips desde inicioViaje hasta evtDestino
+    // Calculate km cargados = trips desde evtOrigen (o inicioViaje si no hay origen) hasta evtDestino
     let kmCargado = 0;
-    if(inicioViaje && evtDestino) {
+    const inicioTramoCargado = evtOrigen?.datetime_evento || inicioViaje;
+    if(inicioTramoCargado && evtDestino) {
       for(const t of trips) {
-        if(t.datetime_evento >= inicioViaje && t.datetime_evento <= evtDestino.datetime_evento) {
-          kmCargado += t.km_tramo;
-        }
-      }
-    } else if(evtOrigen && evtDestino && evtOrigen.datetime_evento < evtDestino.datetime_evento) {
-      for(const t of trips) {
-        if(t.datetime_evento >= evtOrigen.datetime_evento && t.datetime_evento <= evtDestino.datetime_evento) {
+        if(t.datetime_evento >= inicioTramoCargado && t.datetime_evento <= evtDestino.datetime_evento) {
           kmCargado += t.km_tramo;
         }
       }
