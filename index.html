@@ -530,6 +530,13 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
       </div>
       <div class="fld" id="wrap-origen-custom" style="display:none"><label class="lbl">Especifica el origen</label><input class="inp" id="asig-origen-custom" placeholder="Ciudad de origen"></div>
       <div class="fld">
+        <label class="lbl">Tipo de Operación</label>
+        <select class="inp" id="asig-tipo-operacion">
+          <option value="con_carro">🚛 Con carro (rendimiento según flota)</option>
+          <option value="sin_carro">🚚 Sin carro (3.5 km/lt)</option>
+        </select>
+      </div>
+      <div class="fld">
         <label class="lbl">Punto de Inicio del Equipo</label>
         <select class="inp" id="asig-punto-inicio">
           <option value="base">🏠 Sale desde Base (Coltauco)</option>
@@ -1906,9 +1913,10 @@ async function guardarAsignacion() {
     await supa.from('kaptura_clientes').insert({nombre:clienteNew, condicion_pago:'30 días'});
     DB.clientes.push({nombre:clienteNew});
   }
-  const puntoInicio = document.getElementById('asig-punto-inicio').value;
+  const puntoInicio   = document.getElementById('asig-punto-inicio').value;
+  const tipoOperacion = document.getElementById('asig-tipo-operacion').value;
   const svId = await siguienteId();
-  const nuevo = { servicio_id:svId, patente, conductor, cliente, origen, fecha, estado:'asignado', margen_servicio:0, puntos_entrega:0, punto_inicio:puntoInicio };
+  const nuevo = { servicio_id:svId, patente, conductor, cliente, origen, fecha, estado:'asignado', margen_servicio:0, puntos_entrega:0, punto_inicio:puntoInicio, tipo_operacion:tipoOperacion };
   const {data:inserted, error} = await supa.from('servicios_piloto').insert(nuevo).select();
   if(error) { toast('Error: '+error.message); return; }
   let svcInsertado = inserted?.[0];
@@ -2374,8 +2382,11 @@ async function calcCostos() {
   const dias = parseFloat(document.getElementById('cos-dias').value)||1;
   const km   = parseFloat(document.getElementById('cos-km').value)||0;
   // Usar rendimiento específico del equipo si existe, sino el global
+  // Si tipo_operacion = sin_carro, usar 3.5 km/lt fijo
   const flotaEquipo = DB.flota.find(f => f.patente === svcPatenteActiva);
-  const rend = parseFloat(flotaEquipo?.rendimiento_km_lt || c.rendimiento||c.rendimiento_km_lt||2.5);
+  const svcActivo = DB.servicios[svcActivoIdx];
+  const rend = (svcActivo?.tipo_operacion === 'sin_carro') ? 3.5
+    : parseFloat(flotaEquipo?.rendimiento_km_lt || c.rendimiento||c.rendimiento_km_lt||2.5);
   // Precio combustible: manual o automático (Copec día servicio - 20% IVA)
   let prec = parseFloat(c.precio_litro||c.precio_combustible||1300);
   const lts = km ? Math.round(km/rend*10)/10 : 0;
