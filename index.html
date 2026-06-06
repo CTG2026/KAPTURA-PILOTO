@@ -2764,9 +2764,13 @@ async function cargarGPS() {
         console.log('Destino no encontrado en tabla:', destinoSvc, '— sin corredores');
       }
 
-      // Corredor tramo vacío: origen → destino (cuando hay km vacíos)
+      // Corredor tramo vacío: desde punto de inicio hacia origen del servicio
       if(kmVacioIda > 0 && origenSvc && origenSvc !== destinoSvc) {
-        const origenConfig = DB_tarifario.find(d => d.origen === origenSvc && d.destino === destinoSvc)
+        // Determinar desde dónde viene el equipo
+        const puntoInicioVacio = (puntoInicioSvc === 'destino_anterior' && s._corredor_anterior)
+          ? (DB.servicios.filter(sv => sv.patente===patente && sv.estado==='cerrado' && sv.fecha<fechaInicio).sort((a,b)=>b.fecha>a.fecha?1:-1)[0]?.destino||'COLTAUCO').toUpperCase()
+          : 'COLTAUCO';
+        const origenConfig = DB_tarifario.find(d => d.origen === puntoInicioVacio && d.destino === origenSvc)
           || DB_tarifario.find(d => d.destino === origenSvc && d.origen === 'COLTAUCO')
           || DB_tarifario.find(d => d.destino === origenSvc);
         if(origenConfig) {
