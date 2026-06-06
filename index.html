@@ -2525,6 +2525,7 @@ async function cargarGPS() {
     // Detect retorno type from notas
     const notasStr = s?.notas || '';
     // Verificar si es primer servicio ANTES de entrar al bloque GPS
+    const puntoInicioSvc = s.punto_inicio || null;
     const flotaEq2 = DB.flota.find(f => f.patente === svcPatenteActiva);
     const fechaInicioKaptura2 = flotaEq2?.fecha_inicio_kaptura||'';
     const fechaServicio2 = DB.servicios[svcActivoIdx]?.fecha||'';
