@@ -2511,7 +2511,11 @@ function calcRetorno() {
   }
 }
 
+let _cargandoGPS = false;
 async function cargarGPS() {
+  if(_cargandoGPS) return;
+  _cargandoGPS = true;
+  try {
   const s = DB.servicios[svcActivoIdx];
   const patente     = s?.patente;
   const fechaInicio = document.getElementById('cos-fecha-inicio').value;
@@ -2771,7 +2775,8 @@ async function cargarGPS() {
       }
 
       // Corredor tramo vacío: desde punto de inicio hacia origen del servicio
-      if(kmVacioIda > 0 && origenSvc && origenSvc !== destinoSvc) {
+      // No aplicar si el origen ES la base (equipo sale cargado desde Coltauco)
+      if(kmVacioIda > 0 && origenSvc && origenSvc !== destinoSvc && !origenEsBase) {
         // Determinar desde dónde viene el equipo
         const puntoInicioVacio = (puntoInicioSvc === 'destino_anterior' && s._corredor_anterior)
           ? (DB.servicios.filter(sv => sv.patente===patente && sv.estado==='cerrado' && sv.fecha<fechaInicio).sort((a,b)=>b.fecha>a.fecha?1:-1)[0]?.destino||'COLTAUCO').toUpperCase()
@@ -2875,6 +2880,7 @@ async function cargarGPS() {
       if(el) delete el.dataset.manual;
     });
   } catch(e) { toast('Error GPS: '+e.message); console.error(e); }
+  } finally { _cargandoGPS = false; }
 }
 
 async function guardarCostosBorrador() {
