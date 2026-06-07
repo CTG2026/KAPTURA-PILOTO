@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>KAPTURA — Conductor</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;700;900&family=Barlow:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root {
+    --navy: #1E3A5F;
+    --green: #059669;
+    --orange: #D97706;
+    --red: #DC2626;
+    --yellow: #F59E0B;
+    --bg: #0F1923;
+    --card: #1A2836;
+    --border: #2A3F55;
+    --text: #E8EDF2;
+    --muted: #7A9BB5;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body { 
+    font-family: 'Barlow', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    max-width: 480px;
+    margin: 0 auto;
+    padding-bottom: 40px;
+  }
+  /* HEADER */
+  .hdr {
+    background: var(--navy);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 3px solid var(--green);
+  }
+  .hdr-logo { font-family: 'Barlow Condensed', sans-serif; font-size: 22px; font-weight: 900; letter-spacing: 0.1em; color: #fff; }
+  .hdr-mode { font-size: 11px; font-weight: 700; color: var(--green); letter-spacing: 0.15em; text-transform: uppercase; }
+  .hdr-time { font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 700; color: var(--yellow); }
+
+  /* PANTALLA LOGIN */
+  .screen { display: none; padding: 20px; }
+  .screen.active { display: block; }
+
+  .section-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px; font-weight: 700;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    margin-top: 24px;
+  }
+  .inp {
+    width: 100%;
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    font-size: 18px;
+    color: var(--text);
+    font-family: 'Barlow', sans-serif;
+    margin-bottom: 12px;
+    -webkit-appearance: none;
+  }
+  .inp:focus { outline: none; border-color: var(--green); }
+  select.inp { appearance: none; -webkit-appearance: none; }
+
+  /* BOTONES */
+  .btn-main {
+    width: 100%;
+    padding: 22px;
+    border-radius: 14px;
+    border: none;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 26px;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    transition: transform 0.1s, opacity 0.1s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+  }
+  .btn-main:active { transform: scale(0.97); opacity: 0.9; }
+  .btn-green { background: var(--green); color: #fff; }
+  .btn-orange { background: var(--orange); color: #fff; }
+  .btn-red { background: var(--red); color: #fff; }
+  .btn-navy { background: var(--navy); color: #fff; border: 2px solid var(--border); }
+  .btn-yellow { background: var(--yellow); color: #1A1A1A; }
+
+  .btn-sm {
+    padding: 14px 20px;
+    border-radius: 10px;
+    border: none;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+  }
+
+  /* CARDS INFO */
+  .info-card {
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  .info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .info-row:last-child { border-bottom: none; }
+  .info-lbl { font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; }
+  .info-val { font-family: 'Barlow Condensed', sans-serif; font-size: 18px; font-weight: 700; color: var(--text); }
+
+  /* ESTADO BADGE */
+  .estado-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    border-radius: 50px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 16px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+  .estado-vacio { background: rgba(217,119,6,0.2); color: var(--orange); border: 1.5px solid var(--orange); }
+  .estado-cargado { background: rgba(5,150,105,0.2); color: var(--green); border: 1.5px solid var(--green); }
+  .estado-entrega { background: rgba(37,99,235,0.2); color: #60A5FA; border: 1.5px solid #60A5FA; }
+
+  /* PULSO */
+  .pulse {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: currentColor;
+    animation: pulse 1.5s infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.8)} }
+
+  /* CRONÓMETRO */
+  .crono {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 48px;
+    font-weight: 900;
+    color: var(--yellow);
+    text-align: center;
+    letter-spacing: 0.05em;
+    margin: 16px 0;
+  }
+
+  /* HORA INPUT */
+  .hora-wrap {
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+  }
+  .hora-lbl { font-size: 11px; color: var(--muted); font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 6px; }
+  .hora-inp {
+    background: transparent;
+    border: none;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--yellow);
+    width: 100%;
+  }
+  .hora-inp:focus { outline: none; }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1E3A5F;
+    color: #fff;
+    padding: 14px 24px;
+    border-radius: 50px;
+    font-size: 15px;
+    font-weight: 600;
+    z-index: 999;
+    opacity: 0;
+    transition: opacity 0.3s;
+    white-space: nowrap;
+    border: 1.5px solid var(--green);
+  }
+  .toast.show { opacity: 1; }
+
+  /* DIVIDER */
+  .divider { height: 1px; background: var(--border); margin: 20px 0; }
+
+  /* RESUMEN FINAL */
+  .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+  .kpi-card {
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    text-align: center;
+  }
+  .kpi-val { font-family: 'Barlow Condensed', sans-serif; font-size: 24px; font-weight: 900; color: var(--green); }
+  .kpi-lbl { font-size: 10px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-top: 4px; }
+
+  .margen-positivo { color: var(--green); }
+  .margen-negativo { color: var(--red); }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="hdr">
+  <div>
+    <div class="hdr-logo">KAPTURA</div>
+    <div class="hdr-mode">Modo Conductor</div>
+  </div>
+  <div class="hdr-time" id="hdr-clock">--:--</div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- ═══ PANTALLA 0: LOGIN ═══ -->
+<div class="screen active" id="screen-login">
+  <div class="section-title" style="margin-top:32px">Selecciona tu equipo</div>
+  <select class="inp" id="sel-patente">
+    <option value="">— Patente —</option>
+  </select>
+
+  <div class="section-title">Conductor</div>
+  <select class="inp" id="sel-conductor">
+    <option value="">— Conductor —</option>
+  </select>
+
+  <div class="section-title">Cliente (opcional)</div>
+  <select class="inp" id="sel-cliente">
+    <option value="">— Seleccionar cliente —</option>
+  </select>
+
+  <div style="margin-top:32px">
+    <button class="btn-main btn-green" onclick="iniciarServicio()">
+      🚛 INICIAR SERVICIO
+    </button>
+  </div>
+</div>
+
+<!-- ═══ PANTALLA 1: EN RUTA VACÍO ═══ -->
+<div class="screen" id="screen-vacio">
+  <div style="margin-top:16px">
+    <div class="estado-badge estado-vacio"><div class="pulse"></div> EN RUTA VACÍO</div>
+  </div>
+
+  <div class="info-card">
+    <div class="info-row"><span class="info-lbl">Equipo</span><span class="info-val" id="v-patente">—</span></div>
+    <div class="info-row"><span class="info-lbl">Conductor</span><span class="info-val" id="v-conductor">—</span></div>
+    <div class="info-row"><span class="info-lbl">Salida Base</span><span class="info-val" id="v-hora-inicio">—</span></div>
+  </div>
+
+  <div class="crono" id="crono-vacio">00:00:00</div>
+
+  <div class="section-title">Cliente</div>
+  <select class="inp" id="v-cliente">
+    <option value="">— Seleccionar —</option>
+  </select>
+
+  <div class="section-title">Hora llegada origen</div>
+  <div class="hora-wrap">
+    <div class="hora-lbl">Ingresa hora (HH:MM)</div>
+    <input class="hora-inp" type="time" id="v-hora-origen" placeholder="--:--">
+  </div>
+
+  <button class="btn-main btn-orange" onclick="llegadaOrigen()">
+    📍 LLEGUÉ AL ORIGEN
+  </button>
+</div>
+
+<!-- ═══ PANTALLA 2: EN ORIGEN (CARGANDO) ═══ -->
+<div class="screen" id="screen-origen">
+  <div style="margin-top:16px">
+    <div class="estado-badge estado-entrega"><div class="pulse"></div> EN ORIGEN — CARGANDO</div>
+  </div>
+
+  <div class="info-card">
+    <div class="info-row"><span class="info-lbl">Llegada origen</span><span class="info-val" id="o-hora-origen">—</span></div>
+    <div class="info-row"><span class="info-lbl">Cliente</span><span class="info-val" id="o-cliente">—</span></div>
+  </div>
+
+  <div class="section-title">Destino del servicio</div>
+  <select class="inp" id="o-destino">
+    <option value="">— Seleccionar destino —</option>
+    <option>CASABLANCA</option>
+    <option>COLTAUCO</option>
+    <option>CURACAVI</option>
+    <option>LAMPA</option>
+    <option>MALLOA</option>
+    <option>MELIPILLA</option>
+    <option>PALMILLA</option>
+    <option>RENGO</option>
+    <option>ROSARIO</option>
+    <option>SAN FERNANDO</option>
+    <option>SANTIAGO</option>
+    <option>TENO</option>
+    <option>VALPARAISO</option>
+    <option>otro</option>
+  </select>
+  <input class="inp" id="o-destino-custom" placeholder="Especifica destino" style="display:none">
+
+  <div class="section-title">N° Guía de Despacho</div>
+  <input class="inp" type="text" id="o-nguia" placeholder="Ej: 0000023469">
+
+  <div class="section-title">Tarifa del servicio</div>
+  <input class="inp" type="number" id="o-tarifa" placeholder="$0">
+
+  <div class="section-title">Hora salida origen</div>
+  <div class="hora-wrap">
+    <div class="hora-lbl">Ingresa hora (HH:MM)</div>
+    <input class="hora-inp" type="time" id="o-hora-salida">
+  </div>
+
+  <button class="btn-main btn-green" onclick="salidaOrigen()">
+    🚛 SALIR CON CARGA
+  </button>
+</div>
+
+<!-- ═══ PANTALLA 3: EN RUTA CARGADO ═══ -->
+<div class="screen" id="screen-cargado">
+  <div style="margin-top:16px">
+    <div class="estado-badge estado-cargado"><div class="pulse"></div> EN RUTA CARGADO</div>
+  </div>
+
+  <div class="info-card">
+    <div class="info-row"><span class="info-lbl">Cliente</span><span class="info-val" id="c-cliente">—</span></div>
+    <div class="info-row"><span class="info-lbl">Destino</span><span class="info-val" id="c-destino">—</span></div>
+    <div class="info-row"><span class="info-lbl">Salida origen</span><span class="info-val" id="c-hora-salida">—</span></div>
+    <div class="info-row"><span class="info-lbl">Guía</span><span class="info-val" id="c-nguia">—</span></div>
+  </div>
+
+  <div class="crono" id="crono-cargado">00:00:00</div>
+
+  <div class="section-title">Hora llegada destino</div>
+  <div class="hora-wrap">
+    <div class="hora-lbl">Ingresa hora (HH:MM)</div>
+    <input class="hora-inp" type="time" id="c-hora-destino">
+  </div>
+
+  <button class="btn-main btn-green" onclick="llegadaDestino()">
+    🏁 LLEGUÉ AL DESTINO
+  </button>
+</div>
+
+<!-- ═══ PANTALLA 4: EN DESTINO (ENTREGANDO) ═══ -->
+<div class="screen" id="screen-destino">
+  <div style="margin-top:16px">
+    <div class="estado-badge estado-entrega"><div class="pulse"></div> EN DESTINO</div>
+  </div>
+
+  <div class="info-card">
+    <div class="info-row"><span class="info-lbl">Llegada destino</span><span class="info-val" id="d-hora-destino">—</span></div>
+    <div class="info-row"><span class="info-lbl">Destino</span><span class="info-val" id="d-destino">—</span></div>
+  </div>
+
+  <div class="section-title">¿Después del servicio?</div>
+  <select class="inp" id="d-retorno">
+    <option value="base">🏠 Regreso a base (Coltauco)</option>
+    <option value="nueva_asignacion">📍 Nueva asignación</option>
+  </select>
+
+  <div class="section-title">Hora término</div>
+  <div class="hora-wrap">
+    <div class="hora-lbl">Ingresa hora (HH:MM)</div>
+    <input class="hora-inp" type="time" id="d-hora-termino">
+  </div>
+
+  <button class="btn-main btn-green" onclick="terminarServicio()">
+    ✅ TERMINAR SERVICIO
+  </button>
+</div>
+
+<!-- ═══ PANTALLA 5: RESUMEN ═══ -->
+<div class="screen" id="screen-resumen">
+  <div style="margin-top:16px;text-align:center">
+    <div style="font-size:48px;margin-bottom:8px">✅</div>
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;color:var(--green)">SERVICIO COMPLETADO</div>
+    <div style="font-size:14px;color:var(--muted);margin-top:4px" id="r-svc-id">—</div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="section-title">Horas del servicio</div>
+  <div class="info-card">
+    <div class="info-row"><span class="info-lbl">Salida Base</span><span class="info-val" id="r-h-inicio">—</span></div>
+    <div class="info-row"><span class="info-lbl">Llegada Origen</span><span class="info-val" id="r-h-origen">—</span></div>
+    <div class="info-row"><span class="info-lbl">Salida Origen</span><span class="info-val" id="r-h-salida">—</span></div>
+    <div class="info-row"><span class="info-lbl">Llegada Destino</span><span class="info-val" id="r-h-destino">—</span></div>
+    <div class="info-row"><span class="info-lbl">Término</span><span class="info-val" id="r-h-termino">—</span></div>
+  </div>
+
+  <div class="section-title">KPIs del servicio</div>
+  <div class="kpi-grid">
+    <div class="kpi-card"><div class="kpi-val" id="r-ingreso">—</div><div class="kpi-lbl">Ingreso</div></div>
+    <div class="kpi-card"><div class="kpi-val" id="r-costos">—</div><div class="kpi-lbl">Costos</div></div>
+    <div class="kpi-card"><div class="kpi-val" id="r-margen">—</div><div class="kpi-lbl">Margen</div></div>
+    <div class="kpi-card"><div class="kpi-val" id="r-dias">—</div><div class="kpi-lbl">Días</div></div>
+  </div>
+
+  <div class="section-title">Detalle costos</div>
+  <div class="info-card">
+    <div class="info-row"><span class="info-lbl">Combustible</span><span class="info-val" id="r-comb">—</span></div>
+    <div class="info-row"><span class="info-lbl">TAG/Peajes</span><span class="info-val" id="r-peajes">—</span></div>
+    <div class="info-row"><span class="info-lbl">Conductor</span><span class="info-val" id="r-conductor">—</span></div>
+    <div class="info-row"><span class="info-lbl">Costo Fijo</span><span class="info-val" id="r-cf">—</span></div>
+    <div class="info-row"><span class="info-lbl">Mantención</span><span class="info-val" id="r-mant">—</span></div>
+    <div class="info-row"><span class="info-lbl">Viático</span><span class="info-val" id="r-viatico">—</span></div>
+    <div class="info-row"><span class="info-lbl">Comisión</span><span class="info-val" id="r-comision">—</span></div>
+  </div>
+
+  <button class="btn-main btn-navy" onclick="nuevoServicio()" style="margin-top:24px">
+    🔄 NUEVO SERVICIO
+  </button>
+</div>
+
+<script>
+const SUPA_URL = 'https://aqunzrukuruwzwywnurq.supabase.co';
+const SUPA_KEY = 'sb_publishable_70t9UxFlcqYDj7AMybsrHg__IMGNA8C';
+const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
+
+// Estado del servicio en curso
+let svc = {
+  patente: '', conductor: '', cliente: '', destino: '',
+  tarifa: 0, nguia: '', rendimiento: 2.5, retorno: 'base',
+  fecha: '', svId: null, dbId: null,
+  horaInicio: null, horaOrigen: null, horaSalida: null,
+  horaDestino: null, horaTermino: null
+};
+
+let DB = { flota:[], conductores:[], clientes:[], config:{}, corredores:[], tarifario:[] };
+let cronoInterval = null;
+let cronoStart = null;
+
+// ── RELOJ ──
+function tickClock() {
+  const now = new Date();
+  document.getElementById('hdr-clock').textContent =
+    String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+}
+setInterval(tickClock, 1000); tickClock();
+
+// ── TOAST ──
+function toast(msg, dur=3000) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'), dur);
+}
+
+// ── FMT ──
+function fmt(n) { return '$' + Math.round(n||0).toLocaleString('es-CL'); }
+
+// ── PANTALLAS ──
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+// ── CRONÓMETRO ──
+function startCrono(elId) {
+  cronoStart = Date.now();
+  if(cronoInterval) clearInterval(cronoInterval);
+  cronoInterval = setInterval(()=>{
+    const diff = Date.now() - cronoStart;
+    const h = Math.floor(diff/3600000);
+    const m = Math.floor((diff%3600000)/60000);
+    const s = Math.floor((diff%60000)/1000);
+    const el = document.getElementById(elId);
+    if(el) el.textContent = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  }, 1000);
+}
+
+// ── INIT ──
+async function init() {
+  try {
+    const [f,c,cl,cfg,cor,tar] = await Promise.all([
+      supa.from('kaptura_flota').select('patente,rendimiento_km_lt').order('patente'),
+      supa.from('kaptura_conductores').select('nombre').eq('activo',true).order('nombre'),
+      supa.from('kaptura_clientes').select('nombre').order('nombre'),
+      supa.from('kaptura_config').select('clave,valor'),
+      supa.from('kaptura_corredores').select('*').eq('activo',true),
+      supa.from('kaptura_tarifario_corredores').select('*')
+    ]);
+    DB.flota = f.data||[];
+    DB.conductores = c.data||[];
+    DB.clientes = cl.data||[];
+    DB.corredores = cor.data||[];
+    DB.tarifario = tar.data||[];
+    (cfg.data||[]).forEach(r=>DB.config[r.clave]=r.valor);
+
+    // Poblar selects login
+    const selPat = document.getElementById('sel-patente');
+    DB.flota.forEach(f=>{ const o=document.createElement('option'); o.value=f.patente; o.textContent=f.patente; selPat.appendChild(o); });
+
+    const selCond = document.getElementById('sel-conductor');
+    DB.conductores.forEach(c=>{ const o=document.createElement('option'); o.value=c.nombre; o.textContent=c.nombre; selCond.appendChild(o); });
+
+    // Poblar clientes en todos los selects
+    ['sel-cliente','v-cliente'].forEach(id=>{
+      const sel = document.getElementById(id);
+      DB.clientes.forEach(c=>{ const o=document.createElement('option'); o.value=c.nombre; o.textContent=c.nombre; sel.appendChild(o); });
+    });
+
+    // Destino custom
+    document.getElementById('o-destino').addEventListener('change', function(){
+      document.getElementById('o-destino-custom').style.display = this.value==='otro' ? 'block' : 'none';
+    });
+
+  } catch(e) { toast('Error cargando datos: '+e.message); }
+}
+
+// ── SIGUIENTE ID ──
+async function siguienteId() {
+  const {data} = await supa.from('servicios_piloto').select('servicio_id')
+    .not('servicio_id','is',null).order('created_at',{ascending:false}).limit(200);
+  let max = 0;
+  (data||[]).forEach(r=>{ const m=(r.servicio_id||'').match(/S-(\d+)/); if(m) max=Math.max(max,parseInt(m[1])); });
+  return `S-${String(max+1).padStart(2,'0')}`;
+}
+
+// ── PASO 1: INICIAR ──
+async function iniciarServicio() {
+  const patente = document.getElementById('sel-patente').value;
+  const conductor = document.getElementById('sel-conductor').value;
+  if(!patente||!conductor) { toast('⚠ Selecciona equipo y conductor'); return; }
+
+  const flota = DB.flota.find(f=>f.patente===patente);
+  svc.patente = patente;
+  svc.conductor = conductor;
+  svc.cliente = document.getElementById('sel-cliente').value || '';
+  svc.rendimiento = parseFloat(flota?.rendimiento_km_lt||2.5);
+  svc.fecha = new Date().toLocaleDateString('en-CA',{timeZone:'America/Santiago'});
+  svc.horaInicio = new Date().toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'});
+
+  // Crear en Supabase
+  svc.svId = await siguienteId();
+  const {data:ins, error} = await supa.from('servicios_piloto').insert({
+    servicio_id: svc.svId,
+    patente: svc.patente,
+    conductor: svc.conductor,
+    cliente: svc.cliente||null,
+    origen: 'EN RUTA',
+    fecha: svc.fecha,
+    estado: 'ejecutado',
+    modo: 'conductor',
+    margen_servicio: 0,
+    puntos_entrega: 0
+  }).select();
+  if(error) { toast('Error: '+error.message); return; }
+  svc.dbId = ins?.[0]?.id;
+
+  // Mostrar pantalla vacío
+  document.getElementById('v-patente').textContent = patente;
+  document.getElementById('v-conductor').textContent = conductor;
+  document.getElementById('v-hora-inicio').textContent = svc.horaInicio;
+  if(svc.cliente) document.getElementById('v-cliente').value = svc.cliente;
+
+  showScreen('screen-vacio');
+  startCrono('crono-vacio');
+  toast(`✓ ${svc.svId} iniciado — ${svc.horaInicio}`);
+}
+
+// ── PASO 2: LLEGADA ORIGEN ──
+async function llegadaOrigen() {
+  const horaOrigen = document.getElementById('v-hora-origen').value;
+  const cliente = document.getElementById('v-cliente').value;
+  if(!horaOrigen) { toast('⚠ Ingresa la hora de llegada al origen'); return; }
+  if(!cliente) { toast('⚠ Selecciona el cliente'); return; }
+
+  svc.horaOrigen = horaOrigen;
+  svc.cliente = cliente;
+
+  document.getElementById('o-hora-origen').textContent = horaOrigen;
+  document.getElementById('o-cliente').textContent = cliente;
+  if(svc.cliente) document.getElementById('v-cliente').value = svc.cliente;
+
+  // Actualizar Supabase
+  await supa.from('servicios_piloto').update({ cliente: svc.cliente, estado:'ejecutado' }).eq('id', svc.dbId);
+
+  clearInterval(cronoInterval);
+  showScreen('screen-origen');
+  toast('✓ Llegada origen registrada');
+}
+
+// ── PASO 3: SALIDA ORIGEN ──
+async function salidaOrigen() {
+  const destino = document.getElementById('o-destino').value === 'otro'
+    ? document.getElementById('o-destino-custom').value.trim().toUpperCase()
+    : document.getElementById('o-destino').value;
+  const nguia = document.getElementById('o-nguia').value.trim();
+  const tarifa = parseFloat(document.getElementById('o-tarifa').value)||0;
+  const horaSalida = document.getElementById('o-hora-salida').value;
+
+  if(!destino) { toast('⚠ Selecciona el destino'); return; }
+  if(!nguia) { toast('⚠ Ingresa el N° de guía'); return; }
+  if(!tarifa) { toast('⚠ Ingresa la tarifa'); return; }
+  if(!horaSalida) { toast('⚠ Ingresa la hora de salida'); return; }
+
+  svc.destino = destino;
+  svc.nguia = nguia;
+  svc.tarifa = tarifa;
+  svc.horaSalida = horaSalida;
+
+  document.getElementById('c-cliente').textContent = svc.cliente;
+  document.getElementById('c-destino').textContent = destino;
+  document.getElementById('c-hora-salida').textContent = horaSalida;
+  document.getElementById('c-nguia').textContent = nguia;
+
+  // Actualizar Supabase
+  const puntosJSON = JSON.stringify([{tipo:'final',destino:destino,valor:tarifa,num_guia:nguia,guias:[]}]);
+  await supa.from('servicios_piloto').update({
+    destino: destino,
+    tarifa_neta: tarifa,
+    ingreso_total: tarifa,
+    notas: `Retorno: base|_PUNTOS:${puntosJSON}`
+  }).eq('id', svc.dbId);
+
+  showScreen('screen-cargado');
+  startCrono('crono-cargado');
+  toast('✓ En ruta cargado hacia ' + destino);
+}
+
+// ── PASO 4: LLEGADA DESTINO ──
+async function llegadaDestino() {
+  const horaDestino = document.getElementById('c-hora-destino').value;
+  if(!horaDestino) { toast('⚠ Ingresa la hora de llegada'); return; }
+  svc.horaDestino = horaDestino;
+
+  document.getElementById('d-hora-destino').textContent = horaDestino;
+  document.getElementById('d-destino').textContent = svc.destino;
+
+  clearInterval(cronoInterval);
+  showScreen('screen-destino');
+  toast('✓ Llegada a destino registrada');
+}
+
+// ── PASO 5: TERMINAR ──
+async function terminarServicio() {
+  const horaTermino = document.getElementById('d-hora-termino').value;
+  const retorno = document.getElementById('d-retorno').value;
+  if(!horaTermino) { toast('⚠ Ingresa la hora de término'); return; }
+
+  svc.horaTermino = horaTermino;
+  svc.retorno = retorno;
+
+  // Calcular costos
+  const costos = calcularCostos();
+
+  // Horas para notas
+  const horasSvc = {
+    salida_base: svc.fecha+'T'+svc.horaInicio+':00',
+    llegada_origen: svc.fecha+'T'+svc.horaOrigen+':00',
+    salida_destino: svc.fecha+'T'+svc.horaSalida+':00',
+    llegada_base: retorno==='base' ? svc.fecha+'T'+svc.horaTermino+':00' : null
+  };
+
+  const puntosJSON = JSON.stringify([{tipo:'final',destino:svc.destino,valor:svc.tarifa,num_guia:svc.nguia,guias:[]}]);
+  const notas = `Retorno: ${retorno}|_PUNTOS:${puntosJSON}|_HORAS:${JSON.stringify(horasSvc)}`;
+
+  // Guardar en Supabase
+  await supa.from('servicios_piloto').update({
+    estado: 'cerrado',
+    destino: svc.destino,
+    tarifa_neta: svc.tarifa,
+    ingreso_total: svc.tarifa,
+    dias_servicio: costos.dias,
+    costo_combustible: costos.comb,
+    costo_peajes: costos.peajes,
+    peajes_tag: costos.tag,
+    costo_conductor: costos.conductor,
+    costo_viaticos: costos.viatico,
+    costo_fijo_dia: costos.cf,
+    costo_mantencion: costos.mant,
+    total_costos: costos.total,
+    margen_servicio: costos.margen,
+    notas: notas
+  }).eq('id', svc.dbId);
+
+  // Mostrar resumen
+  mostrarResumen(costos);
+  showScreen('screen-resumen');
+  toast('✓ Servicio cerrado correctamente');
+}
+
+// ── CALCULAR COSTOS ──
+function calcularCostos() {
+  const cfg = DB.config;
+
+  // Días (simplificado: 1 día base para piloto)
+  const dias = 1;
+
+  // Combustible — sin km GPS usamos estimación por horas o tarifa referencial
+  // En piloto no tenemos km GPS real — dejamos combustible en 0 para ser completado por coordinador
+  const comb = 0;
+
+  // TAG/Peajes por tarifario
+  const origenSvc = 'COLTAUCO'; // base siempre es Coltauco en modo conductor
+  const destinoSvc = svc.destino.toUpperCase();
+  const tarifEntry = DB.tarifario.find(t=>t.destino===destinoSvc && (t.origen===origenSvc||t.origen==='COLTAUCO'))
+    || DB.tarifario.find(t=>t.destino===destinoSvc);
+  let tag = 0, peajes = 0;
+  if(tarifEntry) {
+    const ids = tarifEntry.corredores.split(',').map(c=>c.trim());
+    ids.forEach(cid=>{
+      const corr = DB.corredores.find(c=>c.id===cid);
+      if(corr) { tag+=corr.total_tag||0; peajes+=corr.total_peajes||0; }
+    });
+  }
+
+  // CF automático
+  const mensual = parseFloat(cfg.costo_fijo_mensual||3600000);
+  const diasMes = parseInt(cfg.dias_operativos_mes||20);
+  const cf = Math.round(mensual/diasMes/3); // estimación 3 equipos
+
+  // Otros costos fijos
+  const conductor = parseInt(cfg.sueldo_conductor||33000) * dias;
+  const mant = parseInt(cfg.mantencion||25000) * dias;
+  const viatico = parseInt(cfg.viatico||12000) * dias;
+  const comision = Math.round(svc.tarifa * 0.08);
+
+  const total = comb + tag + peajes + conductor + mant + viatico + cf + comision;
+  const margen = svc.tarifa - total;
+
+  return { dias, comb, tag, peajes, conductor, mant, viatico, cf, comision, total, margen };
+}
+
+// ── MOSTRAR RESUMEN ──
+function mostrarResumen(c) {
+  document.getElementById('r-svc-id').textContent = svc.svId;
+  document.getElementById('r-h-inicio').textContent = svc.horaInicio||'—';
+  document.getElementById('r-h-origen').textContent = svc.horaOrigen||'—';
+  document.getElementById('r-h-salida').textContent = svc.horaSalida||'—';
+  document.getElementById('r-h-destino').textContent = svc.horaDestino||'—';
+  document.getElementById('r-h-termino').textContent = svc.horaTermino||'—';
+  document.getElementById('r-ingreso').textContent = fmt(svc.tarifa);
+  document.getElementById('r-costos').textContent = fmt(c.total);
+  const margenEl = document.getElementById('r-margen');
+  margenEl.textContent = fmt(c.margen);
+  margenEl.className = 'kpi-val ' + (c.margen>=0?'margen-positivo':'margen-negativo');
+  document.getElementById('r-dias').textContent = c.dias + ' día' + (c.dias>1?'s':'');
+  document.getElementById('r-comb').textContent = c.comb>0 ? fmt(c.comb) : 'Pendiente GPS';
+  document.getElementById('r-peajes').textContent = fmt(c.tag+c.peajes);
+  document.getElementById('r-conductor').textContent = fmt(c.conductor);
+  document.getElementById('r-cf').textContent = fmt(c.cf);
+  document.getElementById('r-mant').textContent = fmt(c.mant);
+  document.getElementById('r-viatico').textContent = fmt(c.viatico);
+  document.getElementById('r-comision').textContent = fmt(c.comision);
+}
+
+// ── NUEVO SERVICIO ──
+function nuevoServicio() {
+  svc = { patente:'',conductor:'',cliente:'',destino:'',tarifa:0,nguia:'',rendimiento:2.5,retorno:'base',fecha:'',svId:null,dbId:null,horaInicio:null,horaOrigen:null,horaSalida:null,horaDestino:null,horaTermino:null };
+  clearInterval(cronoInterval);
+  // Reset selects
+  document.getElementById('sel-patente').value='';
+  document.getElementById('sel-conductor').value='';
+  document.getElementById('sel-cliente').value='';
+  showScreen('screen-login');
+}
+
+init();
+</script>
+</body>
+</html>
