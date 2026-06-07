@@ -516,14 +516,10 @@
     <option value="nueva_asignacion">📍 Nueva asignación</option>
   </select>
 
-  <div class="section-title">Archivo GPS Forguard (.xlsx)</div>
-  <div style="background:var(--card);border:2px dashed var(--border);border-radius:12px;padding:24px;text-align:center;margin-bottom:12px">
-    <div style="font-size:32px;margin-bottom:8px">📡</div>
-    <div style="font-size:14px;color:var(--muted);margin-bottom:12px">Selecciona el archivo Excel de Forguard</div>
-    <input type="file" id="gps-file" accept=".xlsx,.xls,.csv" style="display:none" onchange="procesarGPSConductor(this)">
-    <button class="btn-sm btn-navy" onclick="document.getElementById('gps-file').click()">📂 Seleccionar archivo</button>
-    <div id="gps-file-status" style="font-size:13px;color:var(--muted);margin-top:10px">Sin archivo</div>
-  </div>
+  <button class="btn-main btn-navy" onclick="integrarGPSConductor()" style="margin-top:8px">
+    📡 INTEGRAR GPS
+  </button>
+  <div id="gps-file-status" style="font-size:13px;color:var(--muted);margin-top:10px;text-align:center"></div>
 
   <div id="gps-resultado" style="display:none">
     <div class="divider"></div>
@@ -957,59 +953,29 @@ init();
 // ── MODO GPS ──
 let gpsData = { eventos:[], kmTotal:0, dias:1, horasSvc:{}, tag:0, peajes:0, comb:0, svId:null, dbId:null };
 
-async function procesarGPSConductor(input) {
-  const file = input.files[0];
-  if(!file) return;
+async function integrarGPSConductor() {
+  const patente = document.getElementById('gps-patente').value;
+  const fechaIni = document.getElementById('gps-fecha-ini').value;
+  const fechaFin = document.getElementById('gps-fecha-fin').value;
+  const retorno = document.getElementById('gps-retorno').value;
+
+  if(!patente||!fechaIni) { toast('⚠ Selecciona patente y fecha'); return; }
+
   const status = document.getElementById('gps-file-status');
-  status.textContent = '⏳ Procesando...';
+  status.textContent = '⏳ Leyendo GPS...';
   status.style.color = 'var(--yellow)';
 
   try {
-    const buffer = await file.arrayBuffer();
-    const XLSX = await import('https://cdn.jsdelivr.net/npm/xlsx@0.18.5/+esm');
-    const wb = XLSX.read(buffer, {type:'array', cellDates:true});
-    const ws = wb.Sheets[wb.SheetNames[0]];
-    const rows = XLSX.utils.sheet_to_json(ws, {header:1, raw:false});
+    // Leer eventos desde Supabase
+    const {data:eventosDB, error} = await supa.from('kaptura_gps_eventos')
+      .select('*').eq('patente', patente)
+      .gte('fecha', fechaIni).lte('fecha', fechaFin||fechaIni)
+      .order('datetime_evento', {ascending:true});
 
-    const header = rows[0]?.map(h=>(h||'').toString().trim());
-    const colTime = header?.indexOf('Time (America/Santiago)');
-    const colUnit = header?.indexOf('Unit');
-    const colEvent = header?.indexOf('Event');
-    const colAddr = header?.indexOf('Address');
-    const colMileage = header?.indexOf('Mileage, km');
+    if(error) { status.textContent = '❌ Error: '+error.message; return; }
 
-    if(colTime < 0 || colUnit < 0 || colEvent < 0) {
-      status.textContent = '❌ Formato incorrecto';
-      return;
-    }
-
-    const patente = document.getElementById('gps-patente').value;
-    const fechaIni = document.getElementById('gps-fecha-ini').value;
-    const fechaFin = document.getElementById('gps-fecha-fin').value;
-    const retorno = document.getElementById('gps-retorno').value;
-
-    // Parsear eventos del archivo filtrados por patente y fechas
-    const eventos = [];
-    for(let i=1; i<rows.length; i++) {
-      const row = rows[i];
-      if(!row[colTime]||!row[colUnit]||!row[colEvent]) continue;
-      const timeStr = (row[colTime]||'').toString().trim();
-      const [datePart, timePart] = timeStr.split(' ');
-      if(!datePart||!timePart) continue;
-      const [d,m,y] = datePart.split('/');
-      const fecha = `${y}-${m}-${d}`;
-      if(fechaIni && fecha < fechaIni) continue;
-      if(fechaFin && fecha > fechaFin) continue;
-      const pat = (row[colUnit]||'').toString().trim().toUpperCase();
-      if(patente && pat !== patente) continue;
-      const datetime_evento = `${y}-${m}-${d}T${timePart}`;
-      const evento = (row[colEvent]||'').toString().trim().toLowerCase();
-      const address = (row[colAddr]||'').toString().trim();
-      const km_tramo = colMileage >= 0 && row[colMileage] ? parseFloat(row[colMileage]) : null;
-      eventos.push({fecha, datetime_evento, evento, address, km_tramo});
-    }
-
-    if(eventos.length === 0) { status.textContent = '⚠ Sin eventos en el rango'; return; }
+    const eventos = eventosDB || [];
+    if(eventos.length === 0) { status.textContent = '⚠ Sin GPS para ese rango'; return; }
 
     // Calcular KM total
     const trips = eventos.filter(e => e.evento==='trip' && (e.km_tramo||0)>0);
