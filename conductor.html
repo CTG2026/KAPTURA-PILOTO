@@ -954,10 +954,15 @@ init();
 let gpsData = { eventos:[], kmTotal:0, dias:1, horasSvc:{}, tag:0, peajes:0, comb:0, svId:null, dbId:null };
 
 async function integrarGPSConductor() {
-  const patente = document.getElementById('gps-patente').value;
-  const fechaIni = document.getElementById('gps-fecha-ini').value;
-  const fechaFin = document.getElementById('gps-fecha-fin').value;
-  const retorno = document.getElementById('gps-retorno').value;
+  const patente   = document.getElementById('gps-patente').value;
+  const fechaIni  = document.getElementById('gps-fecha-ini').value;
+  const fechaFin  = document.getElementById('gps-fecha-fin').value || fechaIni;
+  const retorno   = document.getElementById('gps-retorno').value;
+  const destinoSvcInput = document.getElementById('gps-destino').value.toUpperCase().trim();
+  const origenSvcInput  = 'COLTAUCO';
+  const tipoOp    = document.getElementById('gps-tipo').value;
+  const tarifa    = parseFloat(document.getElementById('gps-tarifa').value)||0;
+  const puntoInicioSvc = 'base';
 
   if(!patente||!fechaIni) { toast('⚠ Selecciona patente y fecha'); return; }
 
@@ -969,7 +974,7 @@ async function integrarGPSConductor() {
     // Leer eventos desde Supabase
     const {data:eventosDB, error} = await supa.from('kaptura_gps_eventos')
       .select('*').eq('patente', patente)
-      .gte('fecha', fechaIni).lte('fecha', fechaFin||fechaIni)
+      .gte('fecha', fechaIni).lte('fecha', fechaFin)
       .order('datetime_evento', {ascending:true});
 
     if(error) { status.textContent = '❌ Error: '+error.message; return; }
@@ -977,75 +982,203 @@ async function integrarGPSConductor() {
     const eventos = eventosDB || [];
     if(eventos.length === 0) { status.textContent = '⚠ Sin GPS para ese rango'; return; }
 
-    // Calcular KM total
-    const trips = eventos.filter(e => e.evento==='trip' && (e.km_tramo||0)>0);
+    // Geocercas
+    let geocercas = [];
+    try {
+      const {data:gc} = await supa.from('kaptura_geocercas').select('destino,keywords').eq('activo',true);
+      geocercas = gc || [];
+    } catch(e) {}
+
+    const getKws = (nombre) => {
+      if(!nombre) return [];
+      const gc = geocercas.find(g => g.destino.toLowerCase() === nombre.toLowerCase().trim());
+      if(gc) return gc.keywords.split(',').map(k=>k.trim().toLowerCase()).filter(k=>k.length>2);
+      return [nombre.toLowerCase().split(',')[0].trim()];
+    };
+    const normText = (t) => (t||'').toLowerCase()
+      .replace(/[áàä]/g,'a').replace(/[éèë]/g,'e').replace(/[íìï]/g,'i')
+      .replace(/[óòö]/g,'o').replace(/[úùü]/g,'u').replace(/ñ/g,'n');
+    const matchAddr = (addr, kws) => kws.some(kw => kw && normText(addr).includes(normText(kw)));
+
+    // Retorno tipo
+    const retornoTipo = retorno;
+
+    // cutoffDatetime si retorna a base
+    let cutoffDatetime = null;
+    if(retornoTipo === 'base') {
+      const baseKws = ['coltauco','quillaiquén','quillaiquen','base'];
+      const lastDelivery = eventos.filter(e => {
+        const al = (e.address||'').toLowerCase();
+        return e.evento==='stop' && !baseKws.some(k=>al.includes(k));
+      }).sort((a,b)=>a.datetime_evento>b.datetime_evento?1:-1).pop();
+      const eventsAfterDelivery = lastDelivery ? eventos.filter(e=>e.datetime_evento>lastDelivery.datetime_evento) : eventos;
+      const arrivalBase = eventsAfterDelivery.find(e => {
+        const al = (e.address||'').toLowerCase();
+        return (e.evento==='stop'||e.evento==='geofence_in') && baseKws.some(k=>al.includes(k));
+      });
+      if(arrivalBase) cutoffDatetime = arrivalBase.datetime_evento;
+    }
+
+    const allEvtsSorted = [...eventos].sort((a,b) => a.datetime_evento > b.datetime_evento ? 1:-1);
+    const tripsRaw = eventos.filter(e => {
+      if(e.evento !== 'trip' || (e.km_tramo||0) <= 0) return false;
+      if(cutoffDatetime && e.datetime_evento > cutoffDatetime) return false;
+      return true;
+    });
+
+    const origenKws  = getKws(origenSvcInput);
+    const destinoKws = getKws(destinoSvcInput);
+    const baseKwsOrigen = ['coltauco','quillaiquén','quillaiquen','quillayquén'];
+    const origenEsBase = origenKws.some(k => baseKwsOrigen.includes(k.toLowerCase()));
+
+    // firstLongTrip
+    let inicioViaje = null;
+    let firstLongTrip = null;
+    const baseKwsF = ['coltauco','quillaiquén','quillayquén','ruta h-30'];
+    const firstTripBase = tripsRaw.find(t => t.km_tramo > 10 && baseKwsF.some(k=>t.address.toLowerCase().includes(k)));
+    if(firstTripBase) {
+      firstLongTrip = firstTripBase;
+      inicioViaje = firstTripBase.datetime_evento;
+    } else {
+      firstLongTrip = tripsRaw.find(t => t.km_tramo > 25 && matchAddr(t.address, origenKws));
+      inicioViaje = firstLongTrip ? firstLongTrip.datetime_evento : null;
+    }
+
+    const trips = tripsRaw.filter(t => !inicioViaje || t.datetime_evento >= inicioViaje);
     const kmTotal = trips.reduce((a,e)=>a+(e.km_tramo||0),0);
 
-    // Calcular días
-    const fechasSet = new Set(trips.map(e=>e.fecha));
-    trips.forEach(t=>{
-      const stopSig = eventos.find(e=>e.evento==='stop' && e.datetime_evento > t.datetime_evento);
-      if(stopSig && stopSig.fecha > t.fecha) fechasSet.add(stopSig.fecha);
+    // Días con detección cruce medianoche
+    const fechasActivas = new Set(trips.map(e => e.fecha));
+    trips.forEach(t => {
+      const stopSig = allEvtsSorted.find(e => e.evento === 'stop' && e.datetime_evento > t.datetime_evento);
+      if(stopSig && stopSig.fecha > t.fecha) fechasActivas.add(stopSig.fecha);
     });
-    const dias = fechasSet.size || 1;
+    const diasActivos = fechasActivas.size || 1;
 
-    // Detectar horas clave
-    const baseKws = ['coltauco','quillaiquén','quillaiquen','quillayquén'];
-    const matchBase = addr => baseKws.some(k=>addr.toLowerCase().includes(k));
-    const destinoSvc = (document.getElementById('gps-destino').value||'').toLowerCase();
-    const matchDest = addr => addr.toLowerCase().includes(destinoSvc.split(' ')[0]);
+    // evtOrigen y evtDestino
+    const evtOrigen = origenEsBase ? null : allEvtsSorted.find(e =>
+      e.datetime_evento > (inicioViaje||'') && matchAddr(e.address, origenKws) && (e.evento==='stop'||e.evento==='geofence_in')
+    );
+    const evtDestino = allEvtsSorted.find(e => e.datetime_evento > (inicioViaje||'') && matchAddr(e.address, destinoKws) && e.evento==='stop');
 
-    const evtSalidaBase = eventos.find(e=>e.evento==='trip' && matchBase(e.address));
-    const evtLlegadaDest = eventos.find(e=>e.evento==='stop' && matchDest(e.address));
-    const evtSalidaDest = evtLlegadaDest ? eventos.find(e=>e.evento==='trip' && e.datetime_evento > evtLlegadaDest.datetime_evento) : null;
-    const evtLlegadaBase = retorno==='base' ? [...eventos].reverse().find(e=>e.evento==='stop' && matchBase(e.address)) : null;
+    // km cargado
+    let kmCargado = 0;
+    const inicioTramoCargado = evtOrigen?.datetime_evento || inicioViaje;
+    if(inicioTramoCargado && evtDestino) {
+      for(const t of trips) {
+        if(t.datetime_evento >= inicioTramoCargado && t.datetime_evento <= evtDestino.datetime_evento) kmCargado += t.km_tramo;
+      }
+    }
+    const kmVacioIda = Math.max(0, Math.round(kmTotal) - Math.round(kmCargado));
 
-    const fmt2 = dt => dt ? dt.substring(11,16) : '—';
-
-    gpsData.eventos = eventos;
-    gpsData.kmTotal = Math.round(kmTotal);
-    gpsData.dias = dias;
-    gpsData.horasSvc = {
-      salida_base: evtSalidaBase?.datetime_evento||null,
-      llegada_origen: evtLlegadaDest?.datetime_evento||null,
-      salida_destino: evtSalidaDest?.datetime_evento||null,
-      llegada_base: evtLlegadaBase?.datetime_evento||null
+    // Horas clave
+    const baseKwsH = ['coltauco','quillaiquén','quillaiquen','quillayquén'];
+    const horasSvc = {
+      salida_base: allEvtsSorted.find(e=>e.evento==='trip' && baseKwsH.some(k=>e.address.toLowerCase().includes(k)))?.datetime_evento||null,
+      llegada_origen: evtOrigen?.datetime_evento||null,
+      salida_destino: evtDestino ? allEvtsSorted.find(e=>e.datetime_evento > evtDestino.datetime_evento && e.evento==='trip')?.datetime_evento||null : null,
+      llegada_base: cutoffDatetime||null
     };
 
-    // TAG/Peajes
-    const destinoUp = document.getElementById('gps-destino').value.toUpperCase();
-    const tarifEntry = DB.tarifario.find(t=>t.destino===destinoUp)||null;
-    let tag=0, peajes=0;
-    if(tarifEntry) {
-      tarifEntry.corredores.split(',').map(c=>c.trim()).forEach(cid=>{
-        const corr = DB.corredores.find(c=>c.id===cid);
-        if(corr) { tag+=corr.total_tag||0; peajes+=corr.total_peajes||0; }
-      });
+    // TAG/Peajes — misma lógica que coordinador
+    const hayKmGPS = tripsRaw.length > 0;
+    const detectadosTag = [];
+    const corredoresDetectados = [];
+
+    if(hayKmGPS) {
+      const destinoConfig = DB.tarifario.find(d=>d.destino===destinoSvcInput && (d.origen===origenSvcInput||!d.origen||d.origen==='COLTAUCO'))
+        || DB.tarifario.find(d=>d.destino===destinoSvcInput);
+      if(destinoConfig) {
+        destinoConfig.corredores.split(',').map(c=>c.trim()).forEach(cid=>{
+          const corr = DB.corredores.find(c=>c.id===cid);
+          if(!corr) return;
+          corredoresDetectados.push({corr, score:10});
+          if(corr.total_tag > 0) detectadosTag.push({nombre:'TAG '+corr.id, valor:corr.total_tag, tipo:'tag'});
+          if(corr.total_peajes > 0) detectadosTag.push({nombre:'PEAJES '+corr.id, valor:corr.total_peajes, tipo:'peaje'});
+        });
+      }
+      // Corredor tramo vacío
+      if(kmVacioIda > 0 && !origenEsBase) {
+        const origenConfig = DB.tarifario.find(d=>d.origen==='COLTAUCO' && d.destino===origenSvcInput)
+          || DB.tarifario.find(d=>d.destino===origenSvcInput);
+        if(origenConfig) {
+          origenConfig.corredores.split(',').map(c=>c.trim()).forEach(cid=>{
+            if(corredoresDetectados.find(cd=>cd.corr.id===cid)) return;
+            const corr = DB.corredores.find(c=>c.id===cid);
+            if(!corr) return;
+            corredoresDetectados.push({corr, score:5});
+            if(corr.total_tag > 0) detectadosTag.push({nombre:'TAG '+corr.id+' (vacío)', valor:corr.total_tag, tipo:'tag'});
+            if(corr.total_peajes > 0) detectadosTag.push({nombre:'PEAJES '+corr.id+' (vacío)', valor:corr.total_peajes, tipo:'peaje'});
+          });
+        }
+      }
     }
-    gpsData.tag = tag; gpsData.peajes = peajes;
+
+    const totalTag    = detectadosTag.filter(p=>p.tipo.includes('tag')).reduce((a,p)=>a+p.valor,0);
+    const totalPeajes = detectadosTag.filter(p=>!p.tipo.includes('tag')).reduce((a,p)=>a+p.valor,0);
 
     // Combustible
-    const tipoOp = document.getElementById('gps-tipo').value;
     const flotaEq = DB.flota.find(f=>f.patente===patente);
     const rend = tipoOp==='sin_carro' ? 3.5 : parseFloat(flotaEq?.rendimiento_km_lt||2.5);
-    const {data:copec} = await supa.from('kaptura_combustible')
-      .select('monto').eq('patente',patente)
-      .gte('fecha',fechaIni).lte('fecha',fechaFin||fechaIni)
-      .gte('monto',15000).order('fecha',{ascending:false}).limit(1);
-    const precioCopec = copec?.[0]?.monto ? Math.round(copec[0].monto * 0.8) : parseInt(DB.config.precio_litro||1300);
-    const litros = kmTotal / rend;
-    gpsData.comb = Math.round(litros * precioCopec);
+    const {data:copecData} = await supa.from('kaptura_combustible')
+      .select('monto,fecha').eq('patente',patente)
+      .gte('fecha',fechaIni).lte('fecha',fechaFin).gte('monto',15000)
+      .order('fecha',{ascending:false}).limit(5);
+    const precioBase = parseInt(DB.config.precio_litro||1300);
+    const precioCopec = copecData?.[0]?.monto ? Math.round(copecData[0].monto * 0.8) : precioBase;
+    const comb = Math.round((kmTotal/rend) * precioCopec);
+
+    // CF día por día
+    const cfg = DB.config;
+    const mensual = parseFloat(cfg.costo_fijo_mensual||3600000);
+    const diasMes = parseInt(cfg.dias_operativos_mes||20);
+    const estadosValidos = ['asignado','en_proceso','ejecutado','cerrado','borrador'];
+    let cfTotal = 0;
+    const fStart = new Date(fechaIni+'T12:00:00');
+    const fEnd   = new Date(fechaFin+'T12:00:00');
+    for(let d = new Date(fStart); d <= fEnd; d.setDate(d.getDate()+1)) {
+      if(d.getDay()===0||d.getDay()===6) continue;
+      const fechaStr = d.toISOString().substring(0,10);
+      const {data:svcsEseDia} = await supa.from('servicios_piloto')
+        .select('servicio_id,fecha,dias_servicio').in('estado',estadosValidos)
+        .lte('fecha',fechaStr);
+      const equiposDia = (svcsEseDia||[]).filter(sv=>{
+        const svIni = sv.fecha||'';
+        const svFin = sv.dias_servicio > 1
+          ? new Date(new Date(svIni+'T12:00:00').getTime()+(sv.dias_servicio-1)*86400000).toISOString().substring(0,10)
+          : svIni;
+        return svIni <= fechaStr && svFin >= fechaStr;
+      }).length;
+      cfTotal += Math.round(mensual/diasMes/Math.max(equiposDia,1));
+    }
+
+    // Costos finales
+    const conductor_costo = parseInt(cfg.sueldo_conductor||33000) * diasActivos;
+    const mant = parseInt(cfg.mantencion||25000) * diasActivos;
+    const viatico = parseInt(cfg.viatico||12000) * diasActivos;
+    const comision = Math.round(tarifa * 0.08);
+    const total = comb + totalTag + totalPeajes + conductor_costo + mant + viatico + cfTotal + comision;
+    const margen = tarifa - total;
+
+    // Guardar en gpsData para guardarServicioGPS
+    gpsData = {
+      kmTotal: Math.round(kmTotal), kmCargado: Math.round(kmCargado), kmVacioIda,
+      dias: diasActivos, horasSvc, tag: totalTag, peajes: totalPeajes,
+      comb, cf: cfTotal, conductor: conductor_costo, mant, viatico, comision,
+      total, margen, detectadosTag
+    };
 
     // Mostrar resultado
-    document.getElementById('gr-h-inicio').textContent = fmt2(evtSalidaBase?.datetime_evento);
-    document.getElementById('gr-h-origen').textContent = fmt2(evtLlegadaDest?.datetime_evento);
-    document.getElementById('gr-h-salida').textContent = fmt2(evtSalidaDest?.datetime_evento);
-    document.getElementById('gr-h-base').textContent = fmt2(evtLlegadaBase?.datetime_evento);
-    document.getElementById('gr-km').textContent = gpsData.kmTotal + ' km';
-    document.getElementById('gr-dias').textContent = dias + ' día' + (dias>1?'s':'');
+    const fmt2 = dt => dt ? dt.substring(11,16) : '—';
+    document.getElementById('gr-h-inicio').textContent = fmt2(horasSvc.salida_base);
+    document.getElementById('gr-h-origen').textContent = fmt2(horasSvc.llegada_origen);
+    document.getElementById('gr-h-salida').textContent = fmt2(horasSvc.salida_destino);
+    document.getElementById('gr-h-base').textContent   = fmt2(horasSvc.llegada_base);
+    document.getElementById('gr-km').textContent  = Math.round(kmTotal) + ' km';
+    document.getElementById('gr-dias').textContent = diasActivos + ' día' + (diasActivos>1?'s':'');
     document.getElementById('gps-resultado').style.display = 'block';
 
-    status.textContent = '✓ ' + eventos.length + ' eventos procesados';
+    status.textContent = '✓ GPS integrado — ' + Math.round(kmTotal) + ' km · ' + diasActivos + ' días · TAG: ' + fmt(totalTag) + ' · Peajes: ' + fmt(totalPeajes);
     status.style.color = 'var(--green)';
 
   } catch(e) { status.textContent = '❌ Error: '+e.message; console.error(e); }
@@ -1062,18 +1195,7 @@ async function guardarServicioGPS() {
   const tipoOp    = document.getElementById('gps-tipo').value;
 
   if(!patente||!conductor||!destino||!tarifa||!fechaIni) { toast('⚠ Completa todos los campos'); return; }
-
-  const cfg = DB.config;
-  const dias = gpsData.dias;
-  const mensual = parseFloat(cfg.costo_fijo_mensual||3600000);
-  const diasMes = parseInt(cfg.dias_operativos_mes||20);
-  const cf = Math.round(mensual/diasMes/3);
-  const conductor_costo = parseInt(cfg.sueldo_conductor||33000) * dias;
-  const mant = parseInt(cfg.mantencion||25000) * dias;
-  const viatico = parseInt(cfg.viatico||12000) * dias;
-  const comision = Math.round(tarifa * 0.08);
-  const total = gpsData.comb + gpsData.tag + gpsData.peajes + conductor_costo + mant + viatico + cf + comision;
-  const margen = tarifa - total;
+  if(!gpsData.kmTotal) { toast('⚠ Integra el GPS primero'); return; }
 
   const svId = await siguienteId();
   const puntosJSON = JSON.stringify([{tipo:'final',destino,valor:tarifa,num_guia:'',guias:[]}]);
@@ -1084,18 +1206,21 @@ async function guardarServicioGPS() {
     origen: 'COLTAUCO', destino, fecha: fechaIni,
     estado: 'cerrado', modo: 'conductor', tipo_operacion: tipoOp,
     tarifa_neta: tarifa, ingreso_total: tarifa,
-    km_total: gpsData.kmTotal, dias_servicio: dias,
+    km_total: gpsData.kmTotal,
+    km_base_carga: gpsData.kmVacioIda,
+    km_carga_destino: gpsData.kmCargado,
+    dias_servicio: gpsData.dias,
     costo_combustible: gpsData.comb,
     costo_peajes: gpsData.tag + gpsData.peajes,
     peajes_tag: gpsData.tag,
-    costo_conductor: conductor_costo,
-    costo_viaticos: viatico,
-    costo_fijo_dia: cf,
-    costo_mantencion: mant,
+    costo_conductor: gpsData.conductor,
+    costo_viaticos: gpsData.viatico,
+    costo_fijo_dia: gpsData.cf,
+    costo_mantencion: gpsData.mant,
     factoring: 0,
-    total_costos: total,
-    margen_servicio: margen,
-    margen: margen,
+    total_costos: gpsData.total,
+    margen_servicio: gpsData.margen,
+    margen: gpsData.margen,
     notas
   }).select();
 
@@ -1104,18 +1229,18 @@ async function guardarServicioGPS() {
   // Mostrar resumen
   document.getElementById('rg-svc-id').textContent = svId;
   document.getElementById('rg-ingreso').textContent = fmt(tarifa);
-  document.getElementById('rg-costos').textContent = fmt(total);
+  document.getElementById('rg-costos').textContent = fmt(gpsData.total);
   const mEl = document.getElementById('rg-margen');
-  mEl.textContent = fmt(margen);
-  mEl.className = 'kpi-val ' + (margen>=0?'margen-positivo':'margen-negativo');
+  mEl.textContent = fmt(Math.abs(gpsData.margen));
+  mEl.className = 'kpi-val ' + (gpsData.margen>=0?'margen-positivo':'margen-negativo');
   document.getElementById('rg-km').textContent = gpsData.kmTotal + ' km';
   document.getElementById('rg-comb').textContent = fmt(gpsData.comb);
   document.getElementById('rg-peajes').textContent = fmt(gpsData.tag + gpsData.peajes);
-  document.getElementById('rg-conductor').textContent = fmt(conductor_costo);
-  document.getElementById('rg-cf').textContent = fmt(cf);
-  document.getElementById('rg-mant').textContent = fmt(mant);
-  document.getElementById('rg-viatico').textContent = fmt(viatico);
-  document.getElementById('rg-comision').textContent = fmt(comision);
+  document.getElementById('rg-conductor').textContent = fmt(gpsData.conductor);
+  document.getElementById('rg-cf').textContent = fmt(gpsData.cf);
+  document.getElementById('rg-mant').textContent = fmt(gpsData.mant);
+  document.getElementById('rg-viatico').textContent = fmt(gpsData.viatico);
+  document.getElementById('rg-comision').textContent = fmt(gpsData.comision);
 
   showScreen('screen-resumen-gps');
   toast('✓ ' + svId + ' guardado correctamente');
