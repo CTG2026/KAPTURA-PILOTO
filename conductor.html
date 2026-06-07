@@ -382,6 +382,9 @@
     <option value="nueva_asignacion">📍 Nueva asignación</option>
   </select>
 
+  <div class="section-title">Fecha término</div>
+  <input class="inp" type="date" id="d-fecha-termino">
+
   <div class="section-title">Hora término</div>
   <div class="hora-wrap">
     <div class="hora-lbl">Ingresa hora (HH:MM)</div>
@@ -654,6 +657,9 @@ async function llegadaDestino() {
   document.getElementById('d-destino').textContent = svc.destino;
 
   clearInterval(cronoInterval);
+  // Pre-cargar fecha término con fecha actual
+  const hoyStr = new Date().toLocaleDateString('en-CA',{timeZone:'America/Santiago'});
+  document.getElementById('d-fecha-termino').value = hoyStr;
   showScreen('screen-destino');
   toast('✓ Llegada a destino registrada');
 }
@@ -661,10 +667,12 @@ async function llegadaDestino() {
 // ── PASO 5: TERMINAR ──
 async function terminarServicio() {
   const horaTermino = document.getElementById('d-hora-termino').value;
+  const fechaTermino = document.getElementById('d-fecha-termino').value || svc.fecha;
   const retorno = document.getElementById('d-retorno').value;
   if(!horaTermino) { toast('⚠ Ingresa la hora de término'); return; }
 
   svc.horaTermino = horaTermino;
+  svc.fechaTermino = fechaTermino;
   svc.retorno = retorno;
 
   // Calcular costos
@@ -710,8 +718,10 @@ async function terminarServicio() {
 function calcularCostos() {
   const cfg = DB.config;
 
-  // Días (simplificado: 1 día base para piloto)
-  const dias = 1;
+  // Días: diferencia entre fecha inicio y fecha término
+  const fechaIniDate = new Date((svc.fecha||new Date().toISOString().substring(0,10))+'T12:00:00');
+  const fechaTermDate = new Date((svc.fechaTermino||svc.fecha||new Date().toISOString().substring(0,10))+'T12:00:00');
+  const dias = Math.max(1, Math.round((fechaTermDate - fechaIniDate) / 86400000) + 1);
 
   // Combustible — sin km GPS usamos estimación por horas o tarifa referencial
   // En piloto no tenemos km GPS real — dejamos combustible en 0 para ser completado por coordinador
