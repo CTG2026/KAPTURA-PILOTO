@@ -1564,19 +1564,23 @@ async function init() {
     DB.clientes    = cl.data || [];
     DB.tarifarios  = t.data  || [];
     DB.servicios = (s.data || []).map(svc => {
-      if(!svc._puntos || svc._puntos.length === 0) {
-        const notas = svc.notas || '';
-        const marker = notas.includes('|_PUNTOS:') ? '|_PUNTOS:' : notas.includes('_PUNTOS:') ? '_PUNTOS:' : null;
-        if(marker) { try { svc._puntos = JSON.parse(notas.split(marker)[1].split('|_PORTICOS:')[0]); } catch(e) {} }
-        if(notas.includes('|_PORTICOS:')) {
-          try { svc._porticos = JSON.parse(notas.split('|_PORTICOS:')[1].split('|_CORREDOR:')[0]); } catch(e) {}
-        }
-        if(notas.includes('|_CORREDOR:')) {
-          try { svc._corredor = notas.split('|_CORREDOR:')[1].split('|_HORAS:')[0].trim(); } catch(e) {}
-        }
-        if(notas.includes('|_HORAS:')) {
-          try { svc._horasSvc = JSON.parse(notas.split('|_HORAS:')[1]); } catch(e) {}
-        }
+      const notas = svc.notas || '';
+      const marker = notas.includes('|_PUNTOS:') ? '|_PUNTOS:' : notas.includes('_PUNTOS:') ? '_PUNTOS:' : null;
+      if(marker) {
+        try {
+          const parsed = JSON.parse(notas.split(marker)[1].split('|_PORTICOS:')[0]);
+          if(parsed && parsed.length > 0) svc._puntos = parsed;
+        } catch(e) {}
+      }
+      if(!svc._puntos) svc._puntos = [];
+      if(notas.includes('|_PORTICOS:')) {
+        try { svc._porticos = JSON.parse(notas.split('|_PORTICOS:')[1].split('|_CORREDOR:')[0]); } catch(e) {}
+      }
+      if(notas.includes('|_CORREDOR:')) {
+        try { svc._corredor = notas.split('|_CORREDOR:')[1].split('|_HORAS:')[0].trim(); } catch(e) {}
+      }
+      if(notas.includes('|_HORAS:')) {
+        try { svc._horasSvc = JSON.parse(notas.split('|_HORAS:')[1]); } catch(e) {}
       }
       return svc;
     });
