@@ -238,7 +238,7 @@
 <div class="toast" id="toast"></div>
 
 <!-- ═══ PANTALLA 0: LOGIN ═══ -->
-<div class="screen active" id="screen-login">
+<div class="screen" id="screen-login">
   <div class="section-title" style="margin-top:32px">Selecciona tu equipo</div>
   <select class="inp" id="sel-patente">
     <option value="">— Patente —</option>
@@ -458,6 +458,122 @@
   </button>
 </div>
 
+<!-- ═══ SELECTOR MODO ═══ -->
+<div class="screen active" id="screen-modo">
+  <div style="margin-top:32px;text-align:center;margin-bottom:24px">
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;color:var(--text)">¿CÓMO QUIERES REGISTRAR?</div>
+    <div style="font-size:14px;color:var(--muted);margin-top:6px">Selecciona el modo de ingreso</div>
+  </div>
+  <button class="btn-main btn-green" onclick="showScreen('screen-login')" style="font-size:20px">
+    📱 MODO PASO A PASO
+    <div style="font-size:12px;font-weight:400;margin-top:4px">Presiona botones en cada etapa</div>
+  </button>
+  <button class="btn-main btn-navy" onclick="showScreen('screen-gps')" style="font-size:20px;margin-top:8px">
+    📡 MODO GPS
+    <div style="font-size:12px;font-weight:400;margin-top:4px">Sube el archivo GPS y el sistema calcula todo</div>
+  </button>
+</div>
+
+<!-- ═══ PANTALLA GPS ═══ -->
+<div class="screen" id="screen-gps">
+  <div class="section-title" style="margin-top:24px">Equipo (Patente)</div>
+  <select class="inp" id="gps-patente"><option value="">— Patente —</option></select>
+
+  <div class="section-title">Conductor</div>
+  <select class="inp" id="gps-conductor"><option value="">— Conductor —</option></select>
+
+  <div class="section-title">Cliente</div>
+  <select class="inp" id="gps-cliente"><option value="">— Cliente —</option></select>
+
+  <div class="section-title">Destino</div>
+  <select class="inp" id="gps-destino">
+    <option value="">— Destino —</option>
+    <option>CASABLANCA</option><option>COLTAUCO</option><option>CURACAVI</option>
+    <option>LAMPA</option><option>MALLOA</option><option>MELIPILLA</option>
+    <option>PALMILLA</option><option>RENGO</option><option>ROSARIO</option>
+    <option>SAN FERNANDO</option><option>SANTIAGO</option><option>TENO</option>
+    <option>VALPARAISO</option>
+  </select>
+
+  <div class="section-title">Tarifa del servicio</div>
+  <input class="inp" type="number" id="gps-tarifa" placeholder="$0">
+
+  <div class="section-title">Fecha inicio</div>
+  <input class="inp" type="date" id="gps-fecha-ini">
+
+  <div class="section-title">Fecha término</div>
+  <input class="inp" type="date" id="gps-fecha-fin">
+
+  <div class="section-title">Tipo de operación</div>
+  <select class="inp" id="gps-tipo">
+    <option value="con_carro">🚛 Con carro</option>
+    <option value="sin_carro">🚚 Sin carro (3.5 km/lt)</option>
+  </select>
+
+  <div class="section-title">Retorno</div>
+  <select class="inp" id="gps-retorno">
+    <option value="base">🏠 Regresa a base</option>
+    <option value="nueva_asignacion">📍 Nueva asignación</option>
+  </select>
+
+  <div class="section-title">Archivo GPS Forguard (.xlsx)</div>
+  <div style="background:var(--card);border:2px dashed var(--border);border-radius:12px;padding:24px;text-align:center;margin-bottom:12px">
+    <div style="font-size:32px;margin-bottom:8px">📡</div>
+    <div style="font-size:14px;color:var(--muted);margin-bottom:12px">Selecciona el archivo Excel de Forguard</div>
+    <input type="file" id="gps-file" accept=".xlsx,.xls,.csv" style="display:none" onchange="procesarGPSConductor(this)">
+    <button class="btn-sm btn-navy" onclick="document.getElementById('gps-file').click()">📂 Seleccionar archivo</button>
+    <div id="gps-file-status" style="font-size:13px;color:var(--muted);margin-top:10px">Sin archivo</div>
+  </div>
+
+  <div id="gps-resultado" style="display:none">
+    <div class="divider"></div>
+    <div class="section-title">Resultado GPS</div>
+    <div class="info-card" id="gps-horas-card">
+      <div class="info-row"><span class="info-lbl">Salida Base</span><span class="info-val" id="gr-h-inicio">—</span></div>
+      <div class="info-row"><span class="info-lbl">Llegada Origen</span><span class="info-val" id="gr-h-origen">—</span></div>
+      <div class="info-row"><span class="info-lbl">Salida Destino</span><span class="info-val" id="gr-h-salida">—</span></div>
+      <div class="info-row"><span class="info-lbl">Llegada Base</span><span class="info-val" id="gr-h-base">—</span></div>
+    </div>
+    <div class="kpi-grid">
+      <div class="kpi-card"><div class="kpi-val" id="gr-km">—</div><div class="kpi-lbl">KM Total</div></div>
+      <div class="kpi-card"><div class="kpi-val" id="gr-dias">—</div><div class="kpi-lbl">Días</div></div>
+    </div>
+    <button class="btn-main btn-green" onclick="guardarServicioGPS()">💾 GUARDAR SERVICIO</button>
+  </div>
+
+  <div style="margin-top:12px">
+    <button class="btn-main btn-navy" onclick="showScreen('screen-modo')" style="font-size:16px">← Volver</button>
+  </div>
+</div>
+
+<!-- ═══ PANTALLA RESUMEN GPS ═══ -->
+<div class="screen" id="screen-resumen-gps">
+  <div style="margin-top:16px;text-align:center">
+    <div style="font-size:48px;margin-bottom:8px">✅</div>
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;color:var(--green)">SERVICIO GUARDADO</div>
+    <div style="font-size:14px;color:var(--muted);margin-top:4px" id="rg-svc-id">—</div>
+  </div>
+  <div class="divider"></div>
+  <div class="section-title">KPIs</div>
+  <div class="kpi-grid">
+    <div class="kpi-card"><div class="kpi-val" id="rg-ingreso">—</div><div class="kpi-lbl">Ingreso</div></div>
+    <div class="kpi-card"><div class="kpi-val" id="rg-costos">—</div><div class="kpi-lbl">Costos</div></div>
+    <div class="kpi-card"><div class="kpi-val" id="rg-margen">—</div><div class="kpi-lbl">Margen</div></div>
+    <div class="kpi-card"><div class="kpi-val" id="rg-km">—</div><div class="kpi-lbl">KM GPS</div></div>
+  </div>
+  <div class="section-title">Detalle costos</div>
+  <div class="info-card">
+    <div class="info-row"><span class="info-lbl">Combustible</span><span class="info-val" id="rg-comb">—</span></div>
+    <div class="info-row"><span class="info-lbl">TAG/Peajes</span><span class="info-val" id="rg-peajes">—</span></div>
+    <div class="info-row"><span class="info-lbl">Conductor</span><span class="info-val" id="rg-conductor">—</span></div>
+    <div class="info-row"><span class="info-lbl">Costo Fijo</span><span class="info-val" id="rg-cf">—</span></div>
+    <div class="info-row"><span class="info-lbl">Mantención</span><span class="info-val" id="rg-mant">—</span></div>
+    <div class="info-row"><span class="info-lbl">Viático</span><span class="info-val" id="rg-viatico">—</span></div>
+    <div class="info-row"><span class="info-lbl">Comisión</span><span class="info-val" id="rg-comision">—</span></div>
+  </div>
+  <button class="btn-main btn-navy" onclick="showScreen('screen-modo')" style="margin-top:24px">🔄 NUEVO SERVICIO</button>
+</div>
+
 <script>
 const SUPA_URL = 'https://aqunzrukuruwzwywnurq.supabase.co';
 const SUPA_KEY = 'sb_publishable_70t9UxFlcqYDj7AMybsrHg__IMGNA8C';
@@ -554,6 +670,18 @@ async function init() {
     document.getElementById('sel-origen').addEventListener('change', function(){
       document.getElementById('sel-origen-custom').style.display = this.value==='otro' ? 'block' : 'none';
     });
+
+    // Poblar selects modo GPS
+    const gpsSelPat = document.getElementById('gps-patente');
+    DB.flota.forEach(f=>{ const o=document.createElement('option'); o.value=f.patente; o.textContent=f.patente; gpsSelPat.appendChild(o); });
+    const gpsSelCond = document.getElementById('gps-conductor');
+    DB.conductores.forEach(c=>{ const o=document.createElement('option'); o.value=c.nombre; o.textContent=c.nombre; gpsSelCond.appendChild(o); });
+    const gpsSelCli = document.getElementById('gps-cliente');
+    DB.clientes.forEach(c=>{ const o=document.createElement('option'); o.value=c.nombre; o.textContent=c.nombre; gpsSelCli.appendChild(o); });
+    // Pre-cargar fechas GPS
+    const hoyGPS = new Date().toLocaleDateString('en-CA',{timeZone:'America/Santiago'});
+    document.getElementById('gps-fecha-ini').value = hoyGPS;
+    document.getElementById('gps-fecha-fin').value = hoyGPS;
 
     // Destino custom
     document.getElementById('o-destino').addEventListener('change', function(){
@@ -825,6 +953,208 @@ function nuevoServicio() {
 }
 
 init();
+
+// ── MODO GPS ──
+let gpsData = { eventos:[], kmTotal:0, dias:1, horasSvc:{}, tag:0, peajes:0, comb:0, svId:null, dbId:null };
+
+async function procesarGPSConductor(input) {
+  const file = input.files[0];
+  if(!file) return;
+  const status = document.getElementById('gps-file-status');
+  status.textContent = '⏳ Procesando...';
+  status.style.color = 'var(--yellow)';
+
+  try {
+    const buffer = await file.arrayBuffer();
+    const XLSX = await import('https://cdn.jsdelivr.net/npm/xlsx@0.18.5/+esm');
+    const wb = XLSX.read(buffer, {type:'array', cellDates:true});
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(ws, {header:1, raw:false});
+
+    const header = rows[0]?.map(h=>(h||'').toString().trim());
+    const colTime = header?.indexOf('Time (America/Santiago)');
+    const colUnit = header?.indexOf('Unit');
+    const colEvent = header?.indexOf('Event');
+    const colAddr = header?.indexOf('Address');
+    const colMileage = header?.indexOf('Mileage, km');
+
+    if(colTime < 0 || colUnit < 0 || colEvent < 0) {
+      status.textContent = '❌ Formato incorrecto';
+      return;
+    }
+
+    const patente = document.getElementById('gps-patente').value;
+    const fechaIni = document.getElementById('gps-fecha-ini').value;
+    const fechaFin = document.getElementById('gps-fecha-fin').value;
+    const retorno = document.getElementById('gps-retorno').value;
+
+    // Parsear eventos del archivo filtrados por patente y fechas
+    const eventos = [];
+    for(let i=1; i<rows.length; i++) {
+      const row = rows[i];
+      if(!row[colTime]||!row[colUnit]||!row[colEvent]) continue;
+      const timeStr = (row[colTime]||'').toString().trim();
+      const [datePart, timePart] = timeStr.split(' ');
+      if(!datePart||!timePart) continue;
+      const [d,m,y] = datePart.split('/');
+      const fecha = `${y}-${m}-${d}`;
+      if(fechaIni && fecha < fechaIni) continue;
+      if(fechaFin && fecha > fechaFin) continue;
+      const pat = (row[colUnit]||'').toString().trim().toUpperCase();
+      if(patente && pat !== patente) continue;
+      const datetime_evento = `${y}-${m}-${d}T${timePart}`;
+      const evento = (row[colEvent]||'').toString().trim().toLowerCase();
+      const address = (row[colAddr]||'').toString().trim();
+      const km_tramo = colMileage >= 0 && row[colMileage] ? parseFloat(row[colMileage]) : null;
+      eventos.push({fecha, datetime_evento, evento, address, km_tramo});
+    }
+
+    if(eventos.length === 0) { status.textContent = '⚠ Sin eventos en el rango'; return; }
+
+    // Calcular KM total
+    const trips = eventos.filter(e => e.evento==='trip' && (e.km_tramo||0)>0);
+    const kmTotal = trips.reduce((a,e)=>a+(e.km_tramo||0),0);
+
+    // Calcular días
+    const fechasSet = new Set(trips.map(e=>e.fecha));
+    trips.forEach(t=>{
+      const stopSig = eventos.find(e=>e.evento==='stop' && e.datetime_evento > t.datetime_evento);
+      if(stopSig && stopSig.fecha > t.fecha) fechasSet.add(stopSig.fecha);
+    });
+    const dias = fechasSet.size || 1;
+
+    // Detectar horas clave
+    const baseKws = ['coltauco','quillaiquén','quillaiquen','quillayquén'];
+    const matchBase = addr => baseKws.some(k=>addr.toLowerCase().includes(k));
+    const destinoSvc = (document.getElementById('gps-destino').value||'').toLowerCase();
+    const matchDest = addr => addr.toLowerCase().includes(destinoSvc.split(' ')[0]);
+
+    const evtSalidaBase = eventos.find(e=>e.evento==='trip' && matchBase(e.address));
+    const evtLlegadaDest = eventos.find(e=>e.evento==='stop' && matchDest(e.address));
+    const evtSalidaDest = evtLlegadaDest ? eventos.find(e=>e.evento==='trip' && e.datetime_evento > evtLlegadaDest.datetime_evento) : null;
+    const evtLlegadaBase = retorno==='base' ? [...eventos].reverse().find(e=>e.evento==='stop' && matchBase(e.address)) : null;
+
+    const fmt2 = dt => dt ? dt.substring(11,16) : '—';
+
+    gpsData.eventos = eventos;
+    gpsData.kmTotal = Math.round(kmTotal);
+    gpsData.dias = dias;
+    gpsData.horasSvc = {
+      salida_base: evtSalidaBase?.datetime_evento||null,
+      llegada_origen: evtLlegadaDest?.datetime_evento||null,
+      salida_destino: evtSalidaDest?.datetime_evento||null,
+      llegada_base: evtLlegadaBase?.datetime_evento||null
+    };
+
+    // TAG/Peajes
+    const destinoUp = document.getElementById('gps-destino').value.toUpperCase();
+    const tarifEntry = DB.tarifario.find(t=>t.destino===destinoUp)||null;
+    let tag=0, peajes=0;
+    if(tarifEntry) {
+      tarifEntry.corredores.split(',').map(c=>c.trim()).forEach(cid=>{
+        const corr = DB.corredores.find(c=>c.id===cid);
+        if(corr) { tag+=corr.total_tag||0; peajes+=corr.total_peajes||0; }
+      });
+    }
+    gpsData.tag = tag; gpsData.peajes = peajes;
+
+    // Combustible
+    const tipoOp = document.getElementById('gps-tipo').value;
+    const flotaEq = DB.flota.find(f=>f.patente===patente);
+    const rend = tipoOp==='sin_carro' ? 3.5 : parseFloat(flotaEq?.rendimiento_km_lt||2.5);
+    const {data:copec} = await supa.from('kaptura_combustible')
+      .select('monto').eq('patente',patente)
+      .gte('fecha',fechaIni).lte('fecha',fechaFin||fechaIni)
+      .gte('monto',15000).order('fecha',{ascending:false}).limit(1);
+    const precioCopec = copec?.[0]?.monto ? Math.round(copec[0].monto * 0.8) : parseInt(DB.config.precio_litro||1300);
+    const litros = kmTotal / rend;
+    gpsData.comb = Math.round(litros * precioCopec);
+
+    // Mostrar resultado
+    document.getElementById('gr-h-inicio').textContent = fmt2(evtSalidaBase?.datetime_evento);
+    document.getElementById('gr-h-origen').textContent = fmt2(evtLlegadaDest?.datetime_evento);
+    document.getElementById('gr-h-salida').textContent = fmt2(evtSalidaDest?.datetime_evento);
+    document.getElementById('gr-h-base').textContent = fmt2(evtLlegadaBase?.datetime_evento);
+    document.getElementById('gr-km').textContent = gpsData.kmTotal + ' km';
+    document.getElementById('gr-dias').textContent = dias + ' día' + (dias>1?'s':'');
+    document.getElementById('gps-resultado').style.display = 'block';
+
+    status.textContent = '✓ ' + eventos.length + ' eventos procesados';
+    status.style.color = 'var(--green)';
+
+  } catch(e) { status.textContent = '❌ Error: '+e.message; console.error(e); }
+}
+
+async function guardarServicioGPS() {
+  const patente   = document.getElementById('gps-patente').value;
+  const conductor = document.getElementById('gps-conductor').value;
+  const cliente   = document.getElementById('gps-cliente').value;
+  const destino   = document.getElementById('gps-destino').value;
+  const tarifa    = parseFloat(document.getElementById('gps-tarifa').value)||0;
+  const fechaIni  = document.getElementById('gps-fecha-ini').value;
+  const retorno   = document.getElementById('gps-retorno').value;
+  const tipoOp    = document.getElementById('gps-tipo').value;
+
+  if(!patente||!conductor||!destino||!tarifa||!fechaIni) { toast('⚠ Completa todos los campos'); return; }
+
+  const cfg = DB.config;
+  const dias = gpsData.dias;
+  const mensual = parseFloat(cfg.costo_fijo_mensual||3600000);
+  const diasMes = parseInt(cfg.dias_operativos_mes||20);
+  const cf = Math.round(mensual/diasMes/3);
+  const conductor_costo = parseInt(cfg.sueldo_conductor||33000) * dias;
+  const mant = parseInt(cfg.mantencion||25000) * dias;
+  const viatico = parseInt(cfg.viatico||12000) * dias;
+  const comision = Math.round(tarifa * 0.08);
+  const total = gpsData.comb + gpsData.tag + gpsData.peajes + conductor_costo + mant + viatico + cf + comision;
+  const margen = tarifa - total;
+
+  const svId = await siguienteId();
+  const puntosJSON = JSON.stringify([{tipo:'final',destino,valor:tarifa,num_guia:'',guias:[]}]);
+  const notas = `Retorno: ${retorno}|_PUNTOS:${puntosJSON}|_HORAS:${JSON.stringify(gpsData.horasSvc)}`;
+
+  const {data:ins, error} = await supa.from('servicios_piloto').insert({
+    servicio_id: svId, patente, conductor, cliente: cliente||null,
+    origen: 'COLTAUCO', destino, fecha: fechaIni,
+    estado: 'cerrado', modo: 'conductor', tipo_operacion: tipoOp,
+    tarifa_neta: tarifa, ingreso_total: tarifa,
+    km_total: gpsData.kmTotal, dias_servicio: dias,
+    costo_combustible: gpsData.comb,
+    costo_peajes: gpsData.tag + gpsData.peajes,
+    peajes_tag: gpsData.tag,
+    costo_conductor: conductor_costo,
+    costo_viaticos: viatico,
+    costo_fijo_dia: cf,
+    costo_mantencion: mant,
+    factoring: 0,
+    total_costos: total,
+    margen_servicio: margen,
+    margen: margen,
+    notas
+  }).select();
+
+  if(error) { toast('Error: '+error.message); return; }
+
+  // Mostrar resumen
+  document.getElementById('rg-svc-id').textContent = svId;
+  document.getElementById('rg-ingreso').textContent = fmt(tarifa);
+  document.getElementById('rg-costos').textContent = fmt(total);
+  const mEl = document.getElementById('rg-margen');
+  mEl.textContent = fmt(margen);
+  mEl.className = 'kpi-val ' + (margen>=0?'margen-positivo':'margen-negativo');
+  document.getElementById('rg-km').textContent = gpsData.kmTotal + ' km';
+  document.getElementById('rg-comb').textContent = fmt(gpsData.comb);
+  document.getElementById('rg-peajes').textContent = fmt(gpsData.tag + gpsData.peajes);
+  document.getElementById('rg-conductor').textContent = fmt(conductor_costo);
+  document.getElementById('rg-cf').textContent = fmt(cf);
+  document.getElementById('rg-mant').textContent = fmt(mant);
+  document.getElementById('rg-viatico').textContent = fmt(viatico);
+  document.getElementById('rg-comision').textContent = fmt(comision);
+
+  showScreen('screen-resumen-gps');
+  toast('✓ ' + svId + ' guardado correctamente');
+}
+
 </script>
 </body>
 </html>
