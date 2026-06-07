@@ -254,6 +254,25 @@
     <option value="">— Seleccionar cliente —</option>
   </select>
 
+  <div class="section-title">Fecha del servicio</div>
+  <input class="inp" type="date" id="sel-fecha">
+
+  <div class="section-title">Hora salida base</div>
+  <div class="hora-wrap">
+    <div class="hora-lbl">Ingresa hora (HH:MM)</div>
+    <input class="hora-inp" type="time" id="sel-hora-inicio">
+  </div>
+
+  <div class="section-title">Origen del servicio</div>
+  <select class="inp" id="sel-origen">
+    <option value="COLTAUCO">🏠 Coltauco (Base)</option>
+    <option value="CASABLANCA">Casablanca</option>
+    <option value="LAMPA">Lampa</option>
+    <option value="SANTIAGO">Santiago</option>
+    <option value="otro">Otro...</option>
+  </select>
+  <input class="inp" id="sel-origen-custom" placeholder="Especifica origen" style="display:none">
+
   <div style="margin-top:32px">
     <button class="btn-main btn-green" onclick="iniciarServicio()">
       🚛 INICIAR SERVICIO
@@ -528,6 +547,14 @@ async function init() {
       DB.clientes.forEach(c=>{ const o=document.createElement('option'); o.value=c.nombre; o.textContent=c.nombre; sel.appendChild(o); });
     });
 
+    // Pre-cargar fecha de hoy en login
+    document.getElementById('sel-fecha').value = new Date().toLocaleDateString('en-CA',{timeZone:'America/Santiago'});
+
+    // Origen custom
+    document.getElementById('sel-origen').addEventListener('change', function(){
+      document.getElementById('sel-origen-custom').style.display = this.value==='otro' ? 'block' : 'none';
+    });
+
     // Destino custom
     document.getElementById('o-destino').addEventListener('change', function(){
       document.getElementById('o-destino-custom').style.display = this.value==='otro' ? 'block' : 'none';
@@ -556,8 +583,10 @@ async function iniciarServicio() {
   svc.conductor = conductor;
   svc.cliente = document.getElementById('sel-cliente').value || '';
   svc.rendimiento = parseFloat(flota?.rendimiento_km_lt||2.5);
-  svc.fecha = new Date().toLocaleDateString('en-CA',{timeZone:'America/Santiago'});
-  svc.horaInicio = new Date().toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'});
+  svc.fecha = document.getElementById('sel-fecha').value || new Date().toLocaleDateString('en-CA',{timeZone:'America/Santiago'});
+  svc.horaInicio = document.getElementById('sel-hora-inicio').value || new Date().toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'});
+  const origenSel = document.getElementById('sel-origen').value;
+  svc.origen = origenSel === 'otro' ? document.getElementById('sel-origen-custom').value.trim().toUpperCase() : origenSel;
 
   // Crear en Supabase
   svc.svId = await siguienteId();
@@ -566,7 +595,7 @@ async function iniciarServicio() {
     patente: svc.patente,
     conductor: svc.conductor,
     cliente: svc.cliente||null,
-    origen: 'EN RUTA',
+    origen: svc.origen || 'COLTAUCO',
     fecha: svc.fecha,
     estado: 'ejecutado',
     modo: 'conductor',
@@ -789,6 +818,9 @@ function nuevoServicio() {
   document.getElementById('sel-patente').value='';
   document.getElementById('sel-conductor').value='';
   document.getElementById('sel-cliente').value='';
+  document.getElementById('sel-origen').value='COLTAUCO';
+  document.getElementById('sel-fecha').value = new Date().toLocaleDateString('en-CA',{timeZone:'America/Santiago'});
+  document.getElementById('sel-hora-inicio').value='';
   showScreen('screen-login');
 }
 
