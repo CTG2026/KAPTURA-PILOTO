@@ -109,6 +109,47 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
 </style>
 </head>
 <body>
+
+<!-- ═══ LOGIN PIN ═══ -->
+<div id="login-screen" style="display:none;position:fixed;inset:0;background:linear-gradient(160deg,#051525,#0B2545,#163A6B);z-index:9999;overflow-y:auto">
+  <div style="max-width:400px;margin:0 auto;padding:40px 20px">
+    <div style="text-align:center;margin-bottom:32px">
+      <div style="color:rgba(255,255,255,0.7);font-size:11px;letter-spacing:3px;font-weight:700">KAPTURA</div>
+      <div style="color:white;font-size:26px;font-weight:800;margin-top:4px">Sistema de Gestión</div>
+    </div>
+    <div id="login-step-pin">
+      <div id="login-quien" style="color:white;font-size:16px;font-weight:700;text-align:center;margin-bottom:6px"></div>
+      <div style="color:rgba(255,255,255,0.6);font-size:11px;letter-spacing:2px;margin-bottom:20px;text-align:center">INGRESA TU PIN</div>
+      <div id="pin-dots" style="display:flex;justify-content:center;gap:16px;margin-bottom:24px">
+        <div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:280px;margin:0 auto">
+        <button onclick="pinPress(1)" class="pin-btn">1</button>
+        <button onclick="pinPress(2)" class="pin-btn">2</button>
+        <button onclick="pinPress(3)" class="pin-btn">3</button>
+        <button onclick="pinPress(4)" class="pin-btn">4</button>
+        <button onclick="pinPress(5)" class="pin-btn">5</button>
+        <button onclick="pinPress(6)" class="pin-btn">6</button>
+        <button onclick="pinPress(7)" class="pin-btn">7</button>
+        <button onclick="pinPress(8)" class="pin-btn">8</button>
+        <button onclick="pinPress(9)" class="pin-btn">9</button>
+        <button onclick="pinBorrar()" class="pin-btn pin-btn-del">←</button>
+        <button onclick="pinPress(0)" class="pin-btn">0</button>
+        <div></div>
+      </div>
+      <div id="pin-error" style="color:#EF9A9A;font-size:12px;text-align:center;margin-top:16px;min-height:18px"></div>
+    </div>
+  </div>
+</div>
+
+<style>
+.pin-dot { width:16px;height:16px;border-radius:50%;border:2px solid rgba(255,255,255,0.5);background:transparent;transition:background 0.15s; }
+.pin-dot.filled { background:white;border-color:white; }
+.pin-btn { background:rgba(255,255,255,0.12);color:white;border:1px solid rgba(255,255,255,0.2);border-radius:12px;padding:18px;font-size:22px;font-weight:600;cursor:pointer;transition:all 0.15s; }
+.pin-btn:active { background:rgba(255,255,255,0.25); }
+.pin-btn-del { background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.7);font-size:18px; }
+</style>
+
 <div class="loading" id="loading">
   <div class="spin"></div>
   <div style="font-size:12px;font-weight:700;color:var(--g600);letter-spacing:0.1em">CARGANDO KAPTURA...</div>
@@ -119,7 +160,7 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
   <div class="hdr-info" id="hdr-info"></div>
 </header>
 
-<nav class="nav">
+<nav class="nav" id="nav" style="display:none">
   <button class="ntab active" onclick="setTab('servicios',this)">Servicios</button>
   <button class="ntab" onclick="setTab('flota',this)">Flota</button>
   <button class="ntab" onclick="setTab('clientes',this)">Clientes</button>
@@ -130,7 +171,7 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
   <button class="ntab" onclick="setTab('config',this)">Config</button>
 </nav>
 
-<main class="main">
+<main class="main" id="main" style="display:none">
   <!-- TAB SERVICIOS -->
   <div id="tab-servicios">
     <div style="display:flex;align-items:center;justify-content:flex-end;padding:8px 12px 0">
@@ -1582,6 +1623,12 @@ async function init() {
       if(notas.includes('|_HORAS:')) {
         try { svc._horasSvc = JSON.parse(notas.split('|_HORAS:')[1]); } catch(e) {}
       }
+      // Derivar fecha_termino si no existe en BD
+      if(!svc.fecha_termino && svc._horasSvc) {
+        const llegada = svc._horasSvc.llegada_base || svc._horasSvc.salida_destino || null;
+        if(llegada) svc.fecha_termino = llegada.substring(0,10);
+      }
+      if(!svc.fecha_termino) svc.fecha_termino = svc.fecha;
       return svc;
     });
     (cfg.data||[]).forEach(r => { DB.config[r.clave||r.nombre] = r.valor||r.value; });
@@ -2956,6 +3003,7 @@ async function guardarCostosBorrador() {
 
   const {error} = await supa.from('servicios_piloto').update({
     estado:'borrador', km_total:km, costo_peajes:peajes, peajes_tag:tag,
+    fecha_termino: fechaTerm||null,
     tarifa_neta:tarifa||null, ingreso_total:ingreso||null, dias_servicio:dias, costo_combustible:comb,
     costo_conductor:condVal, costo_viaticos:viat, costo_fijo_dia:cf,
     costo_mantencion:mant, factoring:fact, total_costos:costos,
@@ -2966,6 +3014,7 @@ async function guardarCostosBorrador() {
   if(error) { toast('Error: '+error.message); return; }
   DB.servicios[svcActivoIdx] = {...s, estado:'borrador', km_total:km, tarifa_neta:tarifa,
     ingreso_total:ingreso, total_costos:costos, costo_combustible:comb,
+    fecha_termino: fechaTerm||null,
     peajes_tag:tag, costo_peajes:peajes, dias_servicio:dias,
     costo_conductor:condVal, costo_viaticos:viat, costo_fijo_dia:cf,
     costo_mantencion:mant, factoring:fact,
@@ -3598,7 +3647,101 @@ document.querySelectorAll('.overlay').forEach(el => {
   el.addEventListener('click', e => { if(e.target===el) el.style.display='none'; });
 });
 
-init();
+// ═══ LOGIN PIN ═══
+let _sessionUsuario = null;
+let _pinIngresado = '';
+
+async function iniciarLogin() {
+  const saved = localStorage.getItem('kaptura_session');
+  if(saved) {
+    try {
+      const sess = JSON.parse(saved);
+      if(sess?.pin) {
+        // Verificar PIN en Supabase
+        const {data:usr} = await supa.from('kaptura_usuarios').select('*').eq('pin',sess.pin).eq('activo',true).single();
+        if(usr) {
+          _sessionUsuario = usr;
+          aplicarAccesoKaptura();
+          return;
+        }
+      }
+    } catch(e) {}
+  }
+  // Mostrar pantalla PIN
+  document.getElementById('login-screen').style.display = 'block';
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('main').style.display = 'none';
+}
+
+function pinPress(val) {
+  if(_pinIngresado.length < 4) _pinIngresado += String(val);
+  actualizarDotsPIN();
+  if(_pinIngresado.length === 4) setTimeout(validarPinKaptura, 150);
+}
+
+function pinBorrar() {
+  _pinIngresado = _pinIngresado.slice(0,-1);
+  actualizarDotsPIN();
+  document.getElementById('pin-error').textContent = '';
+}
+
+function actualizarDotsPIN() {
+  document.querySelectorAll('.pin-dot').forEach((d,i) => {
+    d.classList.toggle('filled', i < _pinIngresado.length);
+  });
+}
+
+async function validarPinKaptura() {
+  const {data:usr, error} = await supa.from('kaptura_usuarios')
+    .select('*').eq('pin',_pinIngresado).eq('activo',true).single();
+  if(usr) {
+    _sessionUsuario = usr;
+    localStorage.setItem('kaptura_session', JSON.stringify({pin: _pinIngresado}));
+    // Conductor → redirigir a conductor.html
+    if(usr.rol === 'conductor') {
+      window.location.href = 'conductor.html?empresa='+usr.empresa+'&conductor='+encodeURIComponent(usr.conductor_nombre||'');
+      return;
+    }
+    document.getElementById('login-screen').style.display = 'none';
+    aplicarAccesoKaptura();
+  } else {
+    document.getElementById('pin-error').textContent = 'PIN incorrecto. Intenta de nuevo.';
+    _pinIngresado = '';
+    actualizarDotsPIN();
+  }
+}
+
+function aplicarAccesoKaptura() {
+  if(!_sessionUsuario) { iniciarLogin(); return; }
+  // Ocultar login, mostrar app
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('loading').style.display = 'flex';
+  document.getElementById('main').style.display = '';
+  document.getElementById('nav').style.display = '';
+  // Agregar botón cerrar sesión en header
+  const hdrInfo = document.getElementById('hdr-info');
+  if(hdrInfo) {
+    hdrInfo.style.cursor = 'pointer';
+    hdrInfo.title = 'Cerrar sesión';
+    hdrInfo.onclick = cerrarSesionKaptura;
+  }
+  // Cargar datos filtrados por empresa
+  DB._empresa = _sessionUsuario.empresa;
+  init();
+}
+
+function cerrarSesionKaptura() {
+  if(!confirm('¿Cerrar sesión?')) return;
+  localStorage.removeItem('kaptura_session');
+  _sessionUsuario = null;
+  _pinIngresado = '';
+  actualizarDotsPIN();
+  document.getElementById('pin-error').textContent = '';
+  document.getElementById('login-screen').style.display = 'block';
+  document.getElementById('main').style.display = 'none';
+}
+
+iniciarLogin();
 </script>
 </body>
 </html>
