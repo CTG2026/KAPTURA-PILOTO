@@ -157,7 +157,10 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
 
 <header class="hdr">
   <div class="logo">KAPTURA</div>
-  <div class="hdr-info" id="hdr-info"></div>
+  <div style="display:flex;align-items:center;gap:12px">
+    <div class="hdr-info" id="hdr-info"></div>
+    <button id="btn-cerrar-sesion" onclick="cerrarSesionKaptura()" style="display:none;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:white;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;font-weight:700">⏏ Salir</button>
+  </div>
 </header>
 
 <nav class="nav" id="nav" style="display:none">
@@ -1585,20 +1588,22 @@ let DB_tarifario = [];
 // ══ INIT ══
 async function init() {
   document.getElementById('filtro-fecha').value = '';
+  const empLabel = (DB._empresa||'global_solutions') === 'transportes_madrid' ? 'MADRID' : 'GLOBAL';
   document.getElementById('hdr-info').innerHTML =
-    `${hoy.getDate()} ${MESES[hoy.getMonth()]} ${hoy.getFullYear()} · v${KAPTURA_VERSION}`;
+    `${hoy.getDate()} ${MESES[hoy.getMonth()]} ${hoy.getFullYear()} · v${KAPTURA_VERSION} · ${empLabel}`;
   // Seleccionar mes en curso automáticamente
   const dashMes = document.getElementById('dash-mes');
   if(dashMes) dashMes.value = String(hoy.getMonth());
 
   try {
+    const emp = DB._empresa || 'global_solutions';
     const [f,c,cl,t,cfg,s] = await Promise.all([
-      supa.from('kaptura_flota').select('*').order('patente'),
-      supa.from('kaptura_conductores').select('*').eq('activo',true).order('nombre'),
-      supa.from('kaptura_clientes').select('*').order('nombre'),
+      supa.from('kaptura_flota').select('*').eq('empresa',emp).order('patente'),
+      supa.from('kaptura_conductores').select('*').eq('activo',true).eq('empresa',emp).order('nombre'),
+      supa.from('kaptura_clientes').select('*').eq('empresa',emp).order('nombre'),
       supa.from('kaptura_tarifarios').select('*'),
       supa.from('kaptura_config').select('*'),
-      supa.from('servicios_piloto').select('*').order('created_at',{ascending:false}).limit(500)
+      supa.from('servicios_piloto').select('*').eq('empresa',emp).order('created_at',{ascending:false}).limit(500)
     ]);
     DB.flota       = f.data  || [];
     DB.conductores = c.data  || [];
@@ -1967,7 +1972,7 @@ async function guardarAsignacion() {
   const puntoInicio   = document.getElementById('asig-punto-inicio').value;
   const tipoOperacion = document.getElementById('asig-tipo-operacion').value;
   const svId = await siguienteId();
-  const nuevo = { servicio_id:svId, patente, conductor, cliente, origen, fecha, estado:'asignado', margen_servicio:0, puntos_entrega:0, punto_inicio:puntoInicio, tipo_operacion:tipoOperacion };
+  const nuevo = { servicio_id:svId, patente, conductor, cliente, origen, fecha, estado:'asignado', margen_servicio:0, puntos_entrega:0, punto_inicio:puntoInicio, tipo_operacion:tipoOperacion, empresa: DB._empresa||'global_solutions' };
   const {data:inserted, error} = await supa.from('servicios_piloto').insert(nuevo).select();
   if(error) { toast('Error: '+error.message); return; }
   let svcInsertado = inserted?.[0];
@@ -3718,6 +3723,7 @@ function aplicarAccesoKaptura() {
   document.getElementById('loading').style.display = 'flex';
   document.getElementById('main').style.display = '';
   document.getElementById('nav').style.display = '';
+  document.getElementById('btn-cerrar-sesion').style.display = 'block';
   // Agregar botón cerrar sesión en header
   const hdrInfo = document.getElementById('hdr-info');
   if(hdrInfo) {
