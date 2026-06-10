@@ -460,46 +460,46 @@
 
 <!-- ═══ SELECTOR MODO ═══ -->
 <div class="screen active" id="screen-modo">
-  <div style="margin-top:24px;text-align:center;margin-bottom:20px">
-    <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--muted);letter-spacing:0.15em" id="modo-empresa-label">KAPTURA</div>
-    <div style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:900;color:var(--text)">SELECCIONA TU MÓDULO</div>
+  <div style="margin-top:32px;text-align:center;margin-bottom:28px">
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;color:var(--muted);letter-spacing:0.2em;margin-bottom:6px" id="modo-empresa-label">KAPTURA</div>
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:900;color:var(--text)">SELECCIONA TU MÓDULO</div>
   </div>
 
   <!-- KAPTURA GO -->
-  <div onclick="abrirModulo('go')" style="background:var(--card);border:2px solid var(--green);border-radius:14px;padding:18px;margin-bottom:12px;cursor:pointer">
+  <div onclick="abrirModulo('go')" style="background:linear-gradient(135deg,#1A2F1A,#1E3A1E);border:1px solid #2D5A2D;border-radius:14px;padding:20px;margin-bottom:12px;cursor:pointer">
     <div style="display:flex;align-items:center;justify-content:space-between">
       <div>
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:var(--green)">📡 KAPTURA GO</div>
-        <div style="font-size:12px;color:var(--muted);margin-top:4px">Inicia · GPS registra todo · Ver margen</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:#6EE7A0;letter-spacing:0.05em">KAPTURA GO</div>
+        <div style="font-size:12px;color:#4B8B6B;margin-top:4px">Margen de servicio</div>
       </div>
-      <div style="background:var(--green);color:#fff;font-size:10px;font-weight:800;padding:4px 10px;border-radius:20px">BÁSICO</div>
+      <div style="background:#1A3D2A;color:#6EE7A0;font-size:10px;font-weight:800;padding:4px 12px;border-radius:20px;border:1px solid #2D5A2D">BÁSICO</div>
     </div>
   </div>
 
   <!-- KAPTURA PRO -->
-  <div onclick="abrirModulo('pro')" style="background:var(--card);border:2px solid var(--orange);border-radius:14px;padding:18px;margin-bottom:12px;cursor:pointer">
+  <div onclick="abrirModulo('pro')" style="background:linear-gradient(135deg,#2A2010,#3A2A10);border:1px solid #5A4020;border-radius:14px;padding:20px;margin-bottom:12px;cursor:pointer">
     <div style="display:flex;align-items:center;justify-content:space-between">
       <div>
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:var(--orange)">📱 KAPTURA PRO</div>
-        <div style="font-size:12px;color:var(--muted);margin-top:4px">Guías · Etapas · KPIs · $/km · Ranking clientes</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:#FCD38A;letter-spacing:0.05em">KAPTURA PRO</div>
+        <div style="font-size:12px;color:#8B7040;margin-top:4px">Margen y KPIs proceso</div>
       </div>
-      <div style="background:var(--orange);color:#fff;font-size:10px;font-weight:800;padding:4px 10px;border-radius:20px">PRO</div>
+      <div style="background:#3A2A10;color:#FCD38A;font-size:10px;font-weight:800;padding:4px 12px;border-radius:20px;border:1px solid #5A4020">PRO</div>
     </div>
   </div>
 
   <!-- KAPTURA FLOTA -->
-  <div onclick="abrirModulo('flota')" style="background:var(--card);border:2px solid var(--navy);border-radius:14px;padding:18px;margin-bottom:12px;cursor:pointer;opacity:0.7">
+  <div onclick="abrirModulo('flota')" id="mod-flota-card" style="background:linear-gradient(135deg,#1A2030,#1E2A40);border:1px solid #2A3A55;border-radius:14px;padding:20px;margin-bottom:12px;cursor:pointer">
     <div style="display:flex;align-items:center;justify-content:space-between">
       <div>
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:var(--text)">🖥 KAPTURA FLOTA</div>
-        <div style="font-size:12px;color:var(--muted);margin-top:4px">Asignación · Flota · Coordinador · Gestión completa</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:#90A8C8;letter-spacing:0.05em">KAPTURA FLOTA</div>
+        <div style="font-size:12px;color:#4A6080;margin-top:4px">Gestión de negocio</div>
       </div>
-      <div style="background:#374151;color:#9CA3AF;font-size:10px;font-weight:800;padding:4px 10px;border-radius:20px">PREMIUM</div>
+      <div id="mod-flota-badge-c" style="background:#1A2A40;color:#90A8C8;font-size:10px;font-weight:800;padding:4px 12px;border-radius:20px;border:1px solid #2A3A55">PREMIUM</div>
     </div>
   </div>
 
-  <button class="btn-main btn-navy" onclick="cerrarSesionConductor()" style="font-size:14px;margin-top:16px;padding:14px">
-    ⏏ Cerrar sesión
+  <button class="btn-main btn-navy" onclick="cerrarSesionConductor()" style="font-size:14px;margin-top:16px;padding:14px;background:transparent;border:1px solid var(--border)">
+    Cerrar sesión
   </button>
 </div>
 
@@ -525,46 +525,34 @@
 
   <div class="section-title">Retorno</div>
   <select class="inp" id="gps-retorno">
-    <option value="base">🏠 Regresa a base</option>
-    <option value="nueva_asignacion">📍 Nueva asignación</option>
+    <option value="base">Regresa a base</option>
+    <option value="nueva_asignacion">Nueva asignación</option>
   </select>
 
-  <button class="btn-main btn-green" onclick="integrarGPSConductor()" style="margin-top:8px">
-    📡 INTEGRAR DATOS DEL SERVICIO
+  <div class="section-title">Tarifa del servicio</div>
+  <input class="inp" type="number" id="gps-tarifa" placeholder="$0">
+
+  <div class="section-title">Cliente (opcional)</div>
+  <select class="inp" id="gps-cliente-pre"><option value="">— Seleccionar —</option></select>
+
+  <button class="btn-main btn-green" onclick="integrarGPSConductor()" style="margin-top:16px;background:linear-gradient(135deg,#1A4A2A,#2D6B3A);border:none">
+    INTEGRAR DATOS DEL SERVICIO
   </button>
   <div id="gps-file-status" style="font-size:13px;color:var(--muted);margin-top:10px;text-align:center"></div>
 
   <div id="gps-resultado" style="display:none">
     <div class="divider"></div>
-    <div class="section-title">Resultado GPS</div>
-    <div class="info-card" id="gps-horas-card">
-      <div class="info-row"><span class="info-lbl">Salida Base</span><span class="info-val" id="gr-h-inicio">—</span></div>
-      <div class="info-row"><span class="info-lbl">Llegada Origen</span><span class="info-val" id="gr-h-origen">—</span></div>
-      <div class="info-row"><span class="info-lbl">Salida Destino</span><span class="info-val" id="gr-h-salida">—</span></div>
-      <div class="info-row"><span class="info-lbl">Llegada Base</span><span class="info-val" id="gr-h-base">—</span></div>
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;color:var(--text);letter-spacing:0.08em;margin-bottom:12px">DATOS INTEGRADOS</div>
+    <div class="info-card">
+      <div class="info-row"><span class="info-lbl">Hora Inicio</span><span class="info-val" id="gr-h-inicio">—</span></div>
+      <div class="info-row"><span class="info-lbl">Hora Fin</span><span class="info-val" id="gr-h-base">—</span></div>
+      <div class="info-row"><span class="info-lbl">KM Recorridos</span><span class="info-val" id="gr-km">—</span></div>
+      <div class="info-row"><span class="info-lbl">Días</span><span class="info-val" id="gr-dias">—</span></div>
     </div>
-    <div class="kpi-grid">
-      <div class="kpi-card"><div class="kpi-val" id="gr-km">—</div><div class="kpi-lbl">KM Total</div></div>
-      <div class="kpi-card"><div class="kpi-val" id="gr-dias">—</div><div class="kpi-lbl">Días</div></div>
-    </div>
-    <div class="divider"></div>
-    <div class="section-title">Cliente</div>
-    <select class="inp" id="gps-cliente"><option value="">— Cliente —</option></select>
-
-    <div class="section-title">Destino detectado por GPS</div>
-    <select class="inp" id="gps-destino">
-      <option value="">— Confirma o corrige el destino —</option>
-      <option>CASABLANCA</option><option>COLTAUCO</option><option>CURACAVI</option>
-      <option>LAMPA</option><option>MALLOA</option><option>MELIPILLA</option>
-      <option>PALMILLA</option><option>RENGO</option><option>ROSARIO</option>
-      <option>SAN FERNANDO</option><option>SANTIAGO</option><option>TENO</option>
-      <option>VALPARAISO</option>
-    </select>
-
-    <div class="section-title">Tarifa del servicio</div>
-    <input class="inp" type="number" id="gps-tarifa" placeholder="$0">
-
-    <button class="btn-main btn-green" onclick="verServicioGPS()">👁 VER SERVICIO</button>
+    <div id="gr-h-origen" style="display:none">—</div>
+    <div id="gr-h-salida" style="display:none">—</div>
+    <div id="gps-destino" style="display:none"></div>
+    <button class="btn-main btn-green" onclick="verServicioGPS()" style="margin-top:16px;background:linear-gradient(135deg,#1A4A2A,#2D6B3A);border:none">VER SERVICIO</button>
   </div>
 
   <div style="margin-top:12px">
@@ -574,22 +562,43 @@
 
 <!-- ═══ PANTALLA RESUMEN GPS ═══ -->
 <div class="screen" id="screen-resumen-gps">
-  <div style="margin-top:16px;text-align:center">
-    <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;color:var(--text)" id="rg-titulo">RESUMEN DEL SERVICIO</div>
-    <div style="font-size:14px;color:var(--muted);margin-top:4px" id="rg-svc-id">—</div>
+  <div style="margin-top:20px;margin-bottom:16px">
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--muted);letter-spacing:0.15em" id="rg-titulo">INFORME DEL SERVICIO</div>
+    <div style="font-size:12px;color:var(--muted);margin-top:2px" id="rg-svc-id">—</div>
   </div>
-  <div class="divider"></div>
-  <div class="section-title">KPIs</div>
-  <div class="kpi-grid">
-    <div class="kpi-card"><div class="kpi-val" id="rg-ingreso">—</div><div class="kpi-lbl">Ingreso</div></div>
-    <div class="kpi-card"><div class="kpi-val" id="rg-costos">—</div><div class="kpi-lbl">Costos</div></div>
-    <div class="kpi-card"><div class="kpi-val" id="rg-margen">—</div><div class="kpi-lbl">Margen</div></div>
-    <div class="kpi-card"><div class="kpi-val" id="rg-km">—</div><div class="kpi-lbl">KM GPS</div></div>
+
+  <!-- Resumen principal -->
+  <div style="background:linear-gradient(135deg,#0F1F0F,#1A2F1A);border:1px solid #2D5A2D;border-radius:12px;padding:16px;margin-bottom:12px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <div style="font-size:12px;color:#4B8B6B;font-weight:700;letter-spacing:0.08em">TARIFA</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:#6EE7A0" id="rg-ingreso">—</div>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <div style="font-size:12px;color:#8B5050;font-weight:700;letter-spacing:0.08em">COSTOS</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:#F87171" id="rg-costos">—</div>
+    </div>
+    <div style="height:1px;background:#2D5A2D;margin:8px 0"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div style="font-size:12px;color:var(--muted);font-weight:700;letter-spacing:0.08em">MARGEN</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:900" id="rg-margen">—</div>
+    </div>
   </div>
-  <div class="section-title">Detalle costos</div>
+
+  <!-- KM -->
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px">
+    <div style="display:flex;justify-content:space-between">
+      <div style="text-align:center;flex:1">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;color:var(--text)" id="rg-km">—</div>
+        <div style="font-size:10px;color:var(--muted);font-weight:700;letter-spacing:0.08em">KM RECORRIDOS</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detalle costos -->
+  <div style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;color:var(--muted);letter-spacing:0.12em;margin-bottom:8px">DETALLE DE COSTOS</div>
   <div class="info-card">
     <div class="info-row"><span class="info-lbl">Combustible</span><span class="info-val" id="rg-comb">—</span></div>
-    <div class="info-row"><span class="info-lbl">TAG/Peajes</span><span class="info-val" id="rg-peajes">—</span></div>
+    <div class="info-row"><span class="info-lbl">TAG / Peajes</span><span class="info-val" id="rg-peajes">—</span></div>
     <div class="info-row"><span class="info-lbl">Conductor</span><span class="info-val" id="rg-conductor">—</span></div>
     <div class="info-row"><span class="info-lbl">Costo Fijo</span><span class="info-val" id="rg-cf">—</span></div>
     <div class="info-row"><span class="info-lbl">Mantención</span><span class="info-val" id="rg-mant">—</span></div>
@@ -749,9 +758,9 @@ async function init() {
     const hoyGPS = new Date().toLocaleDateString('en-CA',{timeZone:'America/Santiago'});
     document.getElementById('gps-fecha-ini').value = hoyGPS;
     document.getElementById('gps-fecha-fin').value = hoyGPS;
-    // Poblar cliente (ahora está al final del formulario GPS)
-    const gpsSelCli2 = document.getElementById('gps-cliente');
-    if(gpsSelCli2) DB.clientes.forEach(c=>{ const o=document.createElement('option'); o.value=c.nombre; o.textContent=c.nombre; gpsSelCli2.appendChild(o); });
+    // Poblar cliente pre
+    const gpsSelCliPre = document.getElementById('gps-cliente-pre');
+    if(gpsSelCliPre) DB.clientes.forEach(c=>{ const o=document.createElement('option'); o.value=c.nombre; o.textContent=c.nombre; gpsSelCliPre.appendChild(o); });
 
     // Destino custom
     document.getElementById('o-destino').addEventListener('change', function(){
@@ -1245,10 +1254,10 @@ async function integrarGPSConductor() {
 
     // Mostrar resultado
     const fmt2 = dt => dt ? dt.substring(11,16) : '—';
+    // Guardar destino detectado
+    gpsData._destinoDetectado = destinoSvcInput;
     document.getElementById('gr-h-inicio').textContent = fmt2(horasSvc.salida_base);
-    document.getElementById('gr-h-origen').textContent = fmt2(horasSvc.llegada_origen);
-    document.getElementById('gr-h-salida').textContent = fmt2(horasSvc.salida_destino);
-    document.getElementById('gr-h-base').textContent   = fmt2(horasSvc.llegada_base);
+    document.getElementById('gr-h-base').textContent   = fmt2(horasSvc.llegada_base || horasSvc.salida_destino);
     document.getElementById('gr-km').textContent  = Math.round(kmTotal) + ' km';
     document.getElementById('gr-dias').textContent = diasActivos + ' día' + (diasActivos>1?'s':'');
     document.getElementById('gps-resultado').style.display = 'block';
@@ -1260,10 +1269,9 @@ async function integrarGPSConductor() {
 }
 
 function verServicioGPS() {
-  const destino = document.getElementById('gps-destino').value;
-  const tarifa  = parseFloat(document.getElementById('gps-tarifa').value)||0;
-  if(!destino) { toast('⚠ Confirma el destino'); return; }
-  if(!tarifa)  { toast('⚠ Ingresa la tarifa'); return; }
+  const tarifa = parseFloat(document.getElementById('gps-tarifa').value)||0;
+  if(!tarifa) { toast('⚠ Ingresa la tarifa del servicio'); return; }
+  const destino = gpsData._destinoDetectado || '';
 
   // Calcular costos con los datos actuales de gpsData
   const cfg = DB.config;
@@ -1314,7 +1322,7 @@ async function confirmarGuardarGPS() {
 async function guardarServicioGPS() {
   const patente   = document.getElementById('gps-patente').value;
   const conductor = document.getElementById('gps-conductor').value;
-  const cliente   = document.getElementById('gps-cliente').value;
+  const cliente   = document.getElementById('gps-cliente-pre')?.value || '';
   const destino   = document.getElementById('gps-destino').value;
   const tarifa    = parseFloat(document.getElementById('gps-tarifa').value)||0;
   const fechaIni  = document.getElementById('gps-fecha-ini').value;
