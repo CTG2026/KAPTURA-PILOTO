@@ -34,7 +34,9 @@
     max-width: 480px;
     margin: 0 auto;
     padding-bottom: 40px;
+    overflow-x: hidden;
   }
+  .btn-main { font-size: clamp(16px, 5vw, 26px) !important; }
   /* HEADER */
   .hdr {
     background: rgba(0,0,0,0.25);
@@ -674,8 +676,8 @@
       <span style="font-size:12px;font-weight:700;color:#5A5A5A;letter-spacing:0.08em">INGRESOS MES ›</span>
       <span style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:#2E3F52" id="demo-mes-ingresos">—</span>
     </div>
-    <div style="display:flex;justify-content:space-between;margin-bottom:10px">
-      <span style="font-size:12px;font-weight:700;color:#5A5A5A;letter-spacing:0.08em">COSTOS MES</span>
+    <div onclick="showScreen('screen-demo-costos')" style="display:flex;justify-content:space-between;margin-bottom:10px;cursor:pointer">
+      <span style="font-size:12px;font-weight:700;color:#5A5A5A;letter-spacing:0.08em">COSTOS MES ›</span>
       <span style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:#8B2020" id="demo-mes-costos">—</span>
     </div>
     <div style="height:1px;background:rgba(46,63,82,0.2);margin:8px 0"></div>
@@ -705,6 +707,19 @@
 
   <button onclick="showScreen('screen-modo')" style="width:100%;padding:14px;border-radius:14px;border:1px solid var(--border);background:transparent;font-family:'Barlow Condensed',sans-serif;font-size:16px;color:var(--muted);cursor:pointer">
     ← Volver al menú
+  </button>
+</div>
+
+<!-- ═══ PANTALLA COSTOS MES DEMO ═══ -->
+<div class="screen" id="screen-demo-costos" style="padding:20px">
+  <div style="margin-top:16px;margin-bottom:16px">
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:#888;letter-spacing:0.2em">KAPTURA GO</div>
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;color:#fff;margin-top:2px">COSTOS DEL MES</div>
+    <div style="font-size:12px;color:var(--muted);margin-top:2px">Carlos Torres · GCFF12</div>
+  </div>
+  <div style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:12px;overflow:hidden;margin-bottom:20px" id="demo-costos-lista"></div>
+  <button onclick="showScreen('screen-go-informes-mes')" style="width:100%;padding:14px;border-radius:14px;border:1px solid var(--border);background:transparent;font-family:'Barlow Condensed',sans-serif;font-size:16px;color:var(--muted);cursor:pointer">
+    ← Volver
   </button>
 </div>
 
@@ -1746,6 +1761,33 @@ async function cargarInformesMesDemo() {
   document.getElementById('demo-mes-pkm').textContent = '$'+pkmTar+'/km';
 
   // Lista servicios
+  // Poblar lista costos por categoría acumulada
+  const listaCostos = document.getElementById('demo-costos-lista');
+  if(listaCostos) {
+    const totComb   = servicios.reduce((a,s)=>a+(s.costo_combustible||0),0);
+    const totPeajes = servicios.reduce((a,s)=>a+(s.costo_peajes||0),0);
+    const totMant   = servicios.reduce((a,s)=>a+(s.costo_mantencion||0),0);
+    const totCond   = servicios.reduce((a,s)=>a+(s.costo_conductor||0),0);
+    const totViat   = servicios.reduce((a,s)=>a+(s.costo_viaticos||0),0);
+    const totCont   = servicios.length * 15000;
+    const totGastos = servicios.length * 5000;
+    const fmtC = n => '$'+(n||0).toLocaleString('es-CL');
+    const items = [
+      ['Combustible', totComb],
+      ['TAG / Peajes', totPeajes],
+      ['Mantención', totMant],
+      ['Conductor', totCond],
+      ['Viático', totViat],
+      ['Contabilidad', totCont],
+      ['Gastos varios', totGastos],
+    ];
+    listaCostos.innerHTML = items.map((item,idx)=>`
+      <div style="display:flex;justify-content:space-between;padding:12px 16px;${idx<items.length-1?'border-bottom:1px solid rgba(255,255,255,0.08)':''}">
+        <span style="font-size:13px;color:var(--muted)">${item[0]}</span>
+        <span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#F87171">${fmtC(item[1])}</span>
+      </div>`).join('');
+  }
+
   // Poblar lista ingresos
   const listaIngresos = document.getElementById('demo-ingresos-lista');
   if(listaIngresos) {
