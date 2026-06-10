@@ -497,47 +497,63 @@
 <!-- ═══ PANTALLA GO DEMO ═══ -->
 <div class="screen" id="screen-go-demo" style="padding:20px">
   <div style="margin-top:16px;margin-bottom:8px">
-    <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:var(--muted);letter-spacing:0.2em">KAPTURA GO</div>
-    <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;color:var(--text);margin-top:2px" id="go-demo-conductor">Carlos Torres</div>
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:#888;letter-spacing:0.2em">KAPTURA GO</div>
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;color:#fff;margin-top:2px">Carlos Torres</div>
   </div>
 
   <div style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:12px;padding:16px;margin-bottom:20px">
     <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.1)">
-      <span style="font-size:12px;color:var(--muted)">Patente</span>
-      <span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--text)">GCFF12</span>
+      <span style="font-size:12px;color:var(--muted)">Servicio</span>
+      <span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#fff">S-DEMO · 22/06/2026</span>
     </div>
     <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.1)">
-      <span style="font-size:12px;color:var(--muted)">Equipo</span>
-      <span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--text)">Rampla</span>
+      <span style="font-size:12px;color:var(--muted)">Patente</span>
+      <span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#fff">GCFF12 · Rampla</span>
     </div>
     <div style="display:flex;justify-content:space-between;padding:6px 0">
       <span style="font-size:12px;color:var(--muted)">Destino</span>
-      <span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--text)">CURICÓ</span>
+      <span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#fff">CURICÓ</span>
     </div>
   </div>
 
+  <!-- Estado: sin servicio -->
   <div id="go-demo-estado-vacio" style="display:block">
     <div style="text-align:center;margin-bottom:24px">
       <div style="font-size:12px;color:var(--muted);letter-spacing:0.1em">ESTADO</div>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;color:rgba(255,255,255,0.4);margin-top:4px">SIN SERVICIO ACTIVO</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;color:rgba(255,255,255,0.35);margin-top:4px">SIN SERVICIO ACTIVO</div>
     </div>
     <button onclick="goDemoIniciar()" style="width:100%;padding:22px;border-radius:14px;border:none;background:#D8D5CC;font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:900;color:#2E3F52;cursor:pointer;letter-spacing:0.05em">
       INICIAR SERVICIO
     </button>
   </div>
 
+  <!-- Estado: en servicio -->
   <div id="go-demo-estado-activo" style="display:none">
-    <div style="background:rgba(216,213,204,0.1);border:1px solid rgba(216,213,204,0.3);border-radius:12px;padding:16px;margin-bottom:20px;text-align:center">
+    <div style="background:rgba(216,213,204,0.1);border:1px solid rgba(216,213,204,0.3);border-radius:12px;padding:16px;margin-bottom:16px;text-align:center">
       <div style="font-size:11px;color:var(--muted);letter-spacing:0.1em;margin-bottom:4px">EN SERVICIO DESDE</div>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:900;color:#D8D5CC" id="go-demo-hora-inicio-display">08:00</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:900;color:#D8D5CC">08:00</div>
       <div id="go-demo-crono" style="font-family:'Barlow Condensed',sans-serif;font-size:18px;color:var(--muted);margin-top:4px">00:00:00</div>
     </div>
-    <button onclick="goDemoFinalizar()" style="width:100%;padding:22px;border-radius:14px;border:none;background:#537A6E;font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:900;color:#fff;cursor:pointer;letter-spacing:0.05em">
+    <button onclick="goDemoFinalizar()" style="width:100%;padding:22px;border-radius:14px;border:none;background:#537A6E;font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:900;color:#fff;cursor:pointer;letter-spacing:0.05em;margin-bottom:12px">
       FINALIZAR SERVICIO
     </button>
   </div>
 
-  <button onclick="showScreen('screen-modo')" style="width:100%;padding:14px;border-radius:14px;border:1px solid var(--border);background:transparent;font-family:'Barlow Condensed',sans-serif;font-size:16px;color:var(--muted);cursor:pointer;margin-top:12px">
+  <!-- Estado: integrar datos -->
+  <div id="go-demo-estado-integrar" style="display:none">
+    <div style="text-align:center;margin-bottom:16px">
+      <div style="font-size:11px;color:var(--muted);letter-spacing:0.1em">SERVICIO FINALIZADO</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#D8D5CC;margin-top:4px">08:00 → 21:00 · 567 km</div>
+    </div>
+    <button onclick="goDemoIntegrar()" id="btn-integrar-demo" style="width:100%;padding:22px;border-radius:14px;border:none;background:#D4A827;font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:900;color:#2E3A00;cursor:pointer;letter-spacing:0.05em;margin-bottom:12px">
+      INTEGRAR DATOS
+    </button>
+    <div id="go-demo-integrando" style="display:none;text-align:center;padding:16px">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;color:#D4A827;letter-spacing:0.1em">⏳ Integrando datos...</div>
+    </div>
+  </div>
+
+  <button onclick="showScreen('screen-modo')" style="width:100%;padding:14px;border-radius:14px;border:1px solid var(--border);background:transparent;font-family:'Barlow Condensed',sans-serif;font-size:16px;color:var(--muted);cursor:pointer;margin-top:4px">
     ← Volver
   </button>
 </div>
@@ -545,76 +561,130 @@
 <!-- ═══ PANTALLA INFORME GO DEMO ═══ -->
 <div class="screen" id="screen-go-informe" style="padding:20px">
   <div style="margin-top:16px;margin-bottom:16px">
-    <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:var(--muted);letter-spacing:0.2em">KAPTURA GO</div>
-    <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;color:var(--text);margin-top:2px">INFORME DEL SERVICIO</div>
-    <div style="font-size:12px;color:var(--muted);margin-top:2px">Carlos Torres · GCFF12 · Rampla</div>
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:#888;letter-spacing:0.2em">KAPTURA GO</div>
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;color:#fff;margin-top:2px">INFORME DEL SERVICIO</div>
+    <div style="font-size:12px;color:var(--muted);margin-top:2px">S-DEMO · 22/06/2026 · Carlos Torres · GCFF12</div>
   </div>
 
   <div style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:12px;padding:16px;margin-bottom:12px">
     <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.1)">
       <span style="font-size:12px;color:var(--muted)">Hora inicio</span>
-      <span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--text)">08:00</span>
+      <span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#fff">08:00</span>
     </div>
     <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.1)">
       <span style="font-size:12px;color:var(--muted)">Hora fin</span>
-      <span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--text)">21:00</span>
+      <span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#fff">21:00</span>
     </div>
     <div style="display:flex;justify-content:space-between;padding:6px 0">
       <span style="font-size:12px;color:var(--muted)">Km recorridos</span>
-      <span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--text)">567 km</span>
+      <span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#fff">567 km</span>
     </div>
   </div>
 
   <div style="background:#D8D5CC;border-radius:12px;padding:16px;margin-bottom:12px">
-    <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+    <div style="display:flex;justify-content:space-between;margin-bottom:10px">
       <span style="font-size:12px;font-weight:700;color:#5A5A5A;letter-spacing:0.08em">TARIFA</span>
-      <span style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:#2E3F52">$720.000</span>
+      <span style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:900;color:#2E3F52">$720.000</span>
     </div>
-    <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+    <div style="display:flex;justify-content:space-between;margin-bottom:10px">
       <span style="font-size:12px;font-weight:700;color:#5A5A5A;letter-spacing:0.08em">COSTOS</span>
-      <span style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:#8B2020">$455.759</span>
+      <span style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:900;color:#8B2020">$455.759</span>
     </div>
     <div style="height:1px;background:rgba(46,63,82,0.2);margin:8px 0"></div>
     <div style="display:flex;justify-content:space-between">
       <span style="font-size:12px;font-weight:700;color:#5A5A5A;letter-spacing:0.08em">MARGEN</span>
-      <span style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:900;color:#2E6B2E">$264.241</span>
+      <span style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;color:#1A5C1A">$264.241</span>
     </div>
   </div>
 
   <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:var(--muted);letter-spacing:0.15em;margin-bottom:8px">DETALLE DE COSTOS</div>
-  <div style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:12px;overflow:hidden;margin-bottom:20px">
+  <div style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:12px;overflow:hidden;margin-bottom:12px">
     <div style="display:flex;justify-content:space-between;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,0.08)">
       <span style="font-size:13px;color:var(--muted)">Combustible</span>
-      <span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--text)">$283.500</span>
+      <span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#fff">$283.500</span>
     </div>
     <div style="display:flex;justify-content:space-between;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,0.08)">
       <span style="font-size:13px;color:var(--muted)">TAG / Peajes</span>
-      <span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--text)">$52.659</span>
+      <span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#fff">$52.659</span>
     </div>
     <div style="display:flex;justify-content:space-between;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,0.08)">
-      <span style="font-size:13px;color:var(--muted)">Contador</span>
-      <span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--text)">$15.000</span>
+      <span style="font-size:13px;color:var(--muted)">Contabilidad</span>
+      <span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#fff">$15.000</span>
     </div>
     <div style="display:flex;justify-content:space-between;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,0.08)">
-      <span style="font-size:13px;color:var(--muted)">Mantención</span>
-      <span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--text)">$30.000</span>
+      <span style="font-size:13px;color:var(--muted)">Mantención programada</span>
+      <span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#fff">$10.000</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,0.08)">
+      <span style="font-size:13px;color:var(--muted)">Mantención reactiva</span>
+      <span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#fff">$25.000</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,0.08)">
+      <span style="font-size:13px;color:var(--muted)">Mantención preventiva</span>
+      <span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--muted)">$0</span>
     </div>
     <div style="display:flex;justify-content:space-between;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,0.08)">
       <span style="font-size:13px;color:var(--muted)">Gastos varios</span>
-      <span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--text)">$5.000</span>
-    </div>
-    <div style="display:flex;justify-content:space-between;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,0.08)">
-      <span style="font-size:13px;color:var(--muted)">Viático</span>
-      <span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--text)">$12.000</span>
+      <span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#fff">$5.000</span>
     </div>
     <div style="display:flex;justify-content:space-between;padding:10px 16px">
-      <span style="font-size:13px;color:var(--muted)">Comisión (8%)</span>
-      <span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--text)">$57.600</span>
+      <span style="font-size:13px;color:var(--muted)">Viático</span>
+      <span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#fff">$12.000</span>
     </div>
   </div>
 
+  <button onclick="goDemoGuardar()" style="width:100%;padding:18px;border-radius:14px;border:none;background:#537A6E;font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:#fff;cursor:pointer;letter-spacing:0.05em;margin-bottom:10px">
+    GUARDAR SERVICIO
+  </button>
+  <button onclick="showScreen('screen-go-informes-mes')" style="width:100%;padding:18px;border-radius:14px;border:none;background:#D4A827;font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:#2E3A00;cursor:pointer;letter-spacing:0.05em;margin-bottom:10px">
+    INFORMES
+  </button>
   <button onclick="showScreen('screen-modo')" style="width:100%;padding:14px;border-radius:14px;border:1px solid var(--border);background:transparent;font-family:'Barlow Condensed',sans-serif;font-size:16px;color:var(--muted);cursor:pointer">
     ← Volver al menú
+  </button>
+</div>
+
+<!-- ═══ PANTALLA INFORMES MES DEMO ═══ -->
+<div class="screen" id="screen-go-informes-mes" style="padding:20px">
+  <div style="margin-top:16px;margin-bottom:16px">
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:#888;letter-spacing:0.2em">KAPTURA GO</div>
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;color:#fff;margin-top:2px">RESULTADOS JUNIO 2026</div>
+    <div style="font-size:12px;color:var(--muted);margin-top:2px">Carlos Torres · GCFF12</div>
+  </div>
+
+  <div style="background:#D8D5CC;border-radius:12px;padding:16px;margin-bottom:12px">
+    <div style="display:flex;justify-content:space-between;margin-bottom:10px">
+      <span style="font-size:12px;font-weight:700;color:#5A5A5A;letter-spacing:0.08em">INGRESOS MES</span>
+      <span style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:#2E3F52">$720.000</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:10px">
+      <span style="font-size:12px;font-weight:700;color:#5A5A5A;letter-spacing:0.08em">COSTOS MES</span>
+      <span style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:#8B2020">$455.759</span>
+    </div>
+    <div style="height:1px;background:rgba(46,63,82,0.2);margin:8px 0"></div>
+    <div style="display:flex;justify-content:space-between">
+      <span style="font-size:12px;font-weight:700;color:#5A5A5A;letter-spacing:0.08em">MARGEN MES</span>
+      <span style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:900;color:#1A5C1A">$264.241</span>
+    </div>
+  </div>
+
+  <div style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:12px;padding:16px;margin-bottom:20px">
+    <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.1)">
+      <span style="font-size:12px;color:var(--muted)">Servicios realizados</span>
+      <span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#fff">1</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.1)">
+      <span style="font-size:12px;color:var(--muted)">Km recorridos</span>
+      <span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#fff">567 km</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;padding:6px 0">
+      <span style="font-size:12px;color:var(--muted)">$/km promedio</span>
+      <span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#fff">$1.270</span>
+    </div>
+  </div>
+
+  <button onclick="showScreen('screen-go-informe')" style="width:100%;padding:14px;border-radius:14px;border:1px solid var(--border);background:transparent;font-family:'Barlow Condensed',sans-serif;font-size:16px;color:var(--muted);cursor:pointer">
+    ← Volver
   </button>
 </div>
 
@@ -801,9 +871,25 @@ function goDemoIniciar() {
 
 function goDemoFinalizar() {
   clearInterval(_goDemoCrono);
-  document.getElementById('go-demo-estado-vacio').style.display = 'block';
   document.getElementById('go-demo-estado-activo').style.display = 'none';
-  showScreen('screen-go-informe');
+  document.getElementById('go-demo-estado-integrar').style.display = 'block';
+}
+
+function goDemoIntegrar() {
+  document.getElementById('btn-integrar-demo').style.display = 'none';
+  document.getElementById('go-demo-integrando').style.display = 'block';
+  setTimeout(()=>{
+    document.getElementById('go-demo-integrando').innerHTML =
+      "<div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;color:#537A6E;letter-spacing:0.1em">✓ INTEGRACIÓN DE DATOS OK</div>";
+    setTimeout(()=>{ showScreen('screen-go-informe'); }, 1200);
+  }, 2000);
+}
+
+function goDemoGuardar() {
+  document.getElementById('go-demo-estado-vacio').style.display = 'block';
+  document.getElementById('go-demo-estado-integrar').style.display = 'none';
+  toast('✓ Servicio S-DEMO guardado');
+  setTimeout(()=>{ showScreen('screen-modo'); }, 1500);
 }
 
 function cerrarSesionConductor() {
