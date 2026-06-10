@@ -13,11 +13,17 @@
     --orange: #D97706;
     --red: #DC2626;
     --yellow: #F59E0B;
-    --bg: #0F1923;
-    --card: #1A2836;
-    --border: #2A3F55;
-    --text: #E8EDF2;
-    --muted: #7A9BB5;
+    --bg: #2E3F52;
+    --card: rgba(255,255,255,0.08);
+    --border: rgba(255,255,255,0.15);
+    --text: #FFFFFF;
+    --muted: rgba(255,255,255,0.6);
+    --go: #D8D5CC;
+    --pro: #D4A827;
+    --flota: #537A6E;
+  }
+  body {
+    background: linear-gradient(135deg, #2E3F52 70%, #C0252A 100%) fixed;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
   body { 
@@ -31,12 +37,12 @@
   }
   /* HEADER */
   .hdr {
-    background: var(--navy);
+    background: rgba(0,0,0,0.25);
     padding: 14px 20px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    border-bottom: 3px solid var(--green);
+    border-bottom: 1px solid rgba(255,255,255,0.15);
   }
   .hdr-logo { font-family: 'Barlow Condensed', sans-serif; font-size: 22px; font-weight: 900; letter-spacing: 0.1em; color: #fff; }
   .hdr-mode { font-size: 11px; font-weight: 700; color: var(--green); letter-spacing: 0.15em; text-transform: uppercase; }
@@ -90,7 +96,7 @@
     gap: 12px;
   }
   .btn-main:active { transform: scale(0.97); opacity: 0.9; }
-  .btn-green { background: var(--green); color: #fff; }
+  .btn-green { background: #537A6E; color: #fff; }
   .btn-orange { background: var(--orange); color: #fff; }
   .btn-red { background: var(--red); color: #fff; }
   .btn-navy { background: var(--navy); color: #fff; border: 2px solid var(--border); }
@@ -466,39 +472,24 @@
   </div>
 
   <!-- KAPTURA GO -->
-  <div onclick="abrirModulo('go')" style="background:linear-gradient(135deg,#1A2F1A,#1E3A1E);border:1px solid #2D5A2D;border-radius:14px;padding:20px;margin-bottom:12px;cursor:pointer">
-    <div style="display:flex;align-items:center;justify-content:space-between">
-      <div>
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:#6EE7A0;letter-spacing:0.05em">KAPTURA GO</div>
-        <div style="font-size:12px;color:#4B8B6B;margin-top:4px">Margen de servicio</div>
-      </div>
-      <div style="background:#1A3D2A;color:#6EE7A0;font-size:10px;font-weight:800;padding:4px 12px;border-radius:20px;border:1px solid #2D5A2D">BÁSICO</div>
-    </div>
+  <div onclick="abrirModulo('go')" style="background:#D8D5CC;border-radius:14px;padding:20px;margin-bottom:12px;cursor:pointer">
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:900;color:#2E3F52;letter-spacing:0.05em">KAPTURA GO</div>
+    <div style="font-family:'Barlow',sans-serif;font-size:13px;color:#5A5A5A;margin-top:4px">Margen de servicio</div>
   </div>
 
   <!-- KAPTURA PRO -->
-  <div onclick="abrirModulo('pro')" style="background:linear-gradient(135deg,#2A2010,#3A2A10);border:1px solid #5A4020;border-radius:14px;padding:20px;margin-bottom:12px;cursor:pointer">
-    <div style="display:flex;align-items:center;justify-content:space-between">
-      <div>
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:#FCD38A;letter-spacing:0.05em">KAPTURA PRO</div>
-        <div style="font-size:12px;color:#8B7040;margin-top:4px">Margen y KPIs proceso</div>
-      </div>
-      <div style="background:#3A2A10;color:#FCD38A;font-size:10px;font-weight:800;padding:4px 12px;border-radius:20px;border:1px solid #5A4020">PRO</div>
-    </div>
+  <div onclick="abrirModulo('pro')" style="background:#D4A827;border-radius:14px;padding:20px;margin-bottom:12px;cursor:pointer">
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:900;color:#2E3A00;letter-spacing:0.05em">KAPTURA PRO</div>
+    <div style="font-family:'Barlow',sans-serif;font-size:13px;color:#5A4A00;margin-top:4px">Margen y KPIs proceso</div>
   </div>
 
   <!-- KAPTURA FLOTA -->
-  <div onclick="abrirModulo('flota')" id="mod-flota-card" style="background:linear-gradient(135deg,#1A2030,#1E2A40);border:1px solid #2A3A55;border-radius:14px;padding:20px;margin-bottom:12px;cursor:pointer">
-    <div style="display:flex;align-items:center;justify-content:space-between">
-      <div>
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:#90A8C8;letter-spacing:0.05em">KAPTURA FLOTA</div>
-        <div style="font-size:12px;color:#4A6080;margin-top:4px">Gestión de negocio</div>
-      </div>
-      <div id="mod-flota-badge-c" style="background:#1A2A40;color:#90A8C8;font-size:10px;font-weight:800;padding:4px 12px;border-radius:20px;border:1px solid #2A3A55">PREMIUM</div>
-    </div>
+  <div onclick="abrirModulo('flota')" id="mod-flota-card" style="background:#537A6E;border-radius:14px;padding:20px;margin-bottom:12px;cursor:pointer">
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:900;color:#fff;letter-spacing:0.05em" id="mod-flota-titulo">KAPTURA FLOTA</div>
+    <div style="font-family:'Barlow',sans-serif;font-size:13px;color:rgba(255,255,255,0.75);margin-top:4px" id="mod-flota-badge-c">Gestión de negocio</div>
   </div>
 
-  <button class="btn-main btn-navy" onclick="cerrarSesionConductor()" style="font-size:14px;margin-top:16px;padding:14px;background:transparent;border:1px solid var(--border)">
+  <button class="btn-main btn-navy" onclick="cerrarSesionConductor()" style="font-size:14px;margin-top:16px;padding:14px;background:transparent;border:1px solid var(--border);color:var(--muted)">
     Cerrar sesión
   </button>
 </div>
