@@ -3701,25 +3701,11 @@ let _sessionUsuario = null;
 let _pinIngresado = '';
 
 async function iniciarLogin() {
-  const saved = localStorage.getItem('kaptura_session');
-  if(saved) {
-    try {
-      const sess = JSON.parse(saved);
-      if(sess?.pin) {
-        // Verificar PIN en Supabase
-        const {data:usr} = await supa.from('kaptura_usuarios').select('*').eq('pin',sess.pin).eq('activo',true).single();
-        if(usr) {
-          _sessionUsuario = usr;
-          aplicarAccesoKaptura();
-          return;
-        }
-      }
-    } catch(e) {}
-  }
-  // Mostrar pantalla PIN
+  // Mostrar PIN inmediatamente — no esperar Supabase
   document.getElementById('login-screen').style.display = 'block';
   document.getElementById('loading').style.display = 'none';
   document.getElementById('main').style.display = 'none';
+  document.getElementById('pantalla-modulos').style.display = 'none';
 }
 
 function pinPress(val) {
