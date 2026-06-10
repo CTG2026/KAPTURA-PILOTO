@@ -177,6 +177,47 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
   <button class="ntab" onclick="setTab('config',this)">Config</button>
 </nav>
 
+<!-- ═══ PANTALLA MÓDULOS ═══ -->
+<div id="pantalla-modulos" style="display:none;max-width:480px;margin:0 auto;padding:24px 16px">
+  <div style="text-align:center;margin-bottom:24px">
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--g400);letter-spacing:0.15em" id="mod-empresa-label">—</div>
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:900;color:var(--navy)">SELECCIONA TU MÓDULO</div>
+  </div>
+
+  <!-- KAPTURA GO -->
+  <div id="mod-go" onclick="entrarModulo('go')" style="background:#fff;border:2px solid #059669;border-radius:14px;padding:18px;margin-bottom:12px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.08)">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:#059669">📡 KAPTURA GO</div>
+        <div style="font-size:12px;color:#6B7280;margin-top:4px">Inicia · GPS registra todo · Ver margen</div>
+      </div>
+      <div style="background:#059669;color:#fff;font-size:10px;font-weight:800;padding:4px 10px;border-radius:20px">BÁSICO</div>
+    </div>
+  </div>
+
+  <!-- KAPTURA PRO -->
+  <div id="mod-pro" onclick="entrarModulo('pro')" style="background:#fff;border:2px solid #D97706;border-radius:14px;padding:18px;margin-bottom:12px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.08)">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:#D97706">📱 KAPTURA PRO</div>
+        <div style="font-size:12px;color:#6B7280;margin-top:4px">Guías · Etapas · KPIs · $/km · Ranking clientes</div>
+      </div>
+      <div style="background:#D97706;color:#fff;font-size:10px;font-weight:800;padding:4px 10px;border-radius:20px">PRO</div>
+    </div>
+  </div>
+
+  <!-- KAPTURA FLOTA -->
+  <div id="mod-flota" onclick="entrarModulo('flota')" style="background:#fff;border:2px solid #1E3A5F;border-radius:14px;padding:18px;margin-bottom:12px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.08)">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:#1E3A5F">🖥 KAPTURA FLOTA</div>
+        <div style="font-size:12px;color:#6B7280;margin-top:4px">Asignación · Flota · Coordinador · Gestión completa</div>
+      </div>
+      <div id="mod-flota-badge" style="background:#1E3A5F;color:#fff;font-size:10px;font-weight:800;padding:4px 10px;border-radius:20px">PREMIUM</div>
+    </div>
+  </div>
+</div>
+
 <main class="main" id="main" style="display:none">
   <!-- TAB SERVICIOS -->
   <div id="tab-servicios">
@@ -3721,24 +3762,53 @@ async function validarPinKaptura() {
 
 function aplicarAccesoKaptura() {
   if(!_sessionUsuario) { iniciarLogin(); return; }
-  // Ocultar login, mostrar app
+  // Ocultar login
   document.getElementById('login-screen').style.display = 'none';
-  document.getElementById('loading').style.display = 'flex';
-  document.getElementById('main').style.display = '';
-  document.getElementById('nav').style.display = '';
   document.getElementById('btn-cerrar-sesion').style.display = 'block';
+  // Nombre empresa en header
   const empNombre = (_sessionUsuario?.empresa||'') === 'transportes_madrid' ? 'TRANSPORTES MADRID' : 'GLOBAL SOLUTIONS';
   document.getElementById('hdr-empresa').textContent = empNombre;
-  // Agregar botón cerrar sesión en header
-  const hdrInfo = document.getElementById('hdr-info');
-  if(hdrInfo) {
-    hdrInfo.style.cursor = 'pointer';
-    hdrInfo.title = 'Cerrar sesión';
-    hdrInfo.onclick = cerrarSesionKaptura;
+  document.getElementById('mod-empresa-label').textContent = empNombre;
+  // Aplicar bloqueo según rol
+  const esConductor = _sessionUsuario.rol === 'conductor';
+  const modFlota = document.getElementById('mod-flota');
+  const modFlotaBadge = document.getElementById('mod-flota-badge');
+  if(esConductor) {
+    modFlota.style.opacity = '0.5';
+    modFlota.style.cursor = 'not-allowed';
+    modFlotaBadge.textContent = '🔒 BLOQUEADO';
+    modFlotaBadge.style.background = '#9CA3AF';
+  } else {
+    modFlota.style.opacity = '1';
+    modFlota.style.cursor = 'pointer';
+    modFlotaBadge.textContent = 'PREMIUM';
+    modFlotaBadge.style.background = '#1E3A5F';
   }
-  // Cargar datos filtrados por empresa
-  DB._empresa = _sessionUsuario.empresa;
-  init();
+  // Mostrar pantalla módulos
+  document.getElementById('pantalla-modulos').style.display = 'block';
+  document.getElementById('loading').style.display = 'none';
+}
+
+function entrarModulo(modulo) {
+  const esConductor = _sessionUsuario?.rol === 'conductor';
+  if(modulo === 'flota' && esConductor) {
+    alert('🔒 Este módulo requiere plan KAPTURA FLOTA');
+    return;
+  }
+  if(modulo === 'go' || modulo === 'pro') {
+    // Redirigir a conductor.html
+    window.location.href = 'conductor.html';
+    return;
+  }
+  if(modulo === 'flota') {
+    // Mostrar panel coordinador
+    document.getElementById('pantalla-modulos').style.display = 'none';
+    document.getElementById('loading').style.display = 'flex';
+    document.getElementById('main').style.display = '';
+    document.getElementById('nav').style.display = '';
+    DB._empresa = _sessionUsuario.empresa;
+    init();
+  }
 }
 
 function cerrarSesionKaptura() {
