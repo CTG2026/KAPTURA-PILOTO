@@ -550,6 +550,19 @@
     </div>
   </div>
 
+  <!-- Estado: guardado -->
+  <div id="go-demo-estado-guardado" style="display:none">
+    <div style="text-align:center;margin-bottom:20px;padding:16px;background:rgba(83,122,110,0.2);border:1px solid #537A6E;border-radius:12px">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;color:#537A6E">✓ SERVICIO GUARDADO</div>
+    </div>
+    <button onclick="showScreen('screen-go-informe')" style="width:100%;padding:18px;border-radius:14px;border:none;background:#D8D5CC;font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:#2E3F52;cursor:pointer;letter-spacing:0.05em;margin-bottom:10px">
+      VER INFORME
+    </button>
+    <button onclick="goDemoNuevo()" style="width:100%;padding:14px;border-radius:14px;border:1px solid var(--border);background:transparent;font-family:'Barlow Condensed',sans-serif;font-size:16px;color:var(--muted);cursor:pointer;margin-bottom:10px">
+      NUEVO SERVICIO
+    </button>
+  </div>
+
   <button onclick="showScreen('screen-modo')" style="width:100%;padding:14px;border-radius:14px;border:1px solid var(--border);background:transparent;font-family:'Barlow Condensed',sans-serif;font-size:16px;color:var(--muted);cursor:pointer;margin-top:4px">
     ← Volver
   </button>
@@ -633,8 +646,8 @@
   <button onclick="goDemoGuardar()" style="width:100%;padding:18px;border-radius:14px;border:none;background:#537A6E;font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:#fff;cursor:pointer;letter-spacing:0.05em;margin-bottom:10px">
     GUARDAR SERVICIO
   </button>
-  <button onclick="showScreen('screen-go-informes-mes')" style="width:100%;padding:18px;border-radius:14px;border:none;background:#D4A827;font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:#2E3A00;cursor:pointer;letter-spacing:0.05em;margin-bottom:10px">
-    INFORMES
+  <button onclick="cargarInformesMesDemo();showScreen('screen-go-informes-mes')" style="width:100%;padding:18px;border-radius:14px;border:none;background:#D4A827;font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:#2E3A00;cursor:pointer;letter-spacing:0.05em;margin-bottom:10px">
+    INFORMES DEL MES
   </button>
   <button onclick="showScreen('screen-modo')" style="width:100%;padding:14px;border-radius:14px;border:1px solid var(--border);background:transparent;font-family:'Barlow Condensed',sans-serif;font-size:16px;color:var(--muted);cursor:pointer">
     ← Volver al menú
@@ -652,33 +665,36 @@
   <div style="background:#D8D5CC;border-radius:12px;padding:16px;margin-bottom:12px">
     <div style="display:flex;justify-content:space-between;margin-bottom:10px">
       <span style="font-size:12px;font-weight:700;color:#5A5A5A;letter-spacing:0.08em">INGRESOS MES</span>
-      <span style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:#2E3F52">$720.000</span>
+      <span style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:#2E3F52" id="demo-mes-ingresos">—</span>
     </div>
     <div style="display:flex;justify-content:space-between;margin-bottom:10px">
       <span style="font-size:12px;font-weight:700;color:#5A5A5A;letter-spacing:0.08em">COSTOS MES</span>
-      <span style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:#8B2020">$455.759</span>
+      <span style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:#8B2020" id="demo-mes-costos">—</span>
     </div>
     <div style="height:1px;background:rgba(46,63,82,0.2);margin:8px 0"></div>
     <div style="display:flex;justify-content:space-between">
       <span style="font-size:12px;font-weight:700;color:#5A5A5A;letter-spacing:0.08em">MARGEN MES</span>
-      <span style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:900;color:#1A5C1A">$264.241</span>
+      <span style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:900;color:#1A5C1A" id="demo-mes-margen">—</span>
     </div>
   </div>
 
-  <div style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:12px;padding:16px;margin-bottom:20px">
+  <div style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:12px;padding:16px;margin-bottom:12px">
     <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.1)">
       <span style="font-size:12px;color:var(--muted)">Servicios realizados</span>
-      <span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#fff">1</span>
+      <span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#fff" id="demo-mes-servicios">—</span>
     </div>
     <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.1)">
       <span style="font-size:12px;color:var(--muted)">Km recorridos</span>
-      <span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#fff">567 km</span>
+      <span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#fff" id="demo-mes-km">—</span>
     </div>
     <div style="display:flex;justify-content:space-between;padding:6px 0">
       <span style="font-size:12px;color:var(--muted)">$/km promedio</span>
-      <span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#fff">$1.270</span>
+      <span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#fff" id="demo-mes-pkm">—</span>
     </div>
   </div>
+
+  <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:var(--muted);letter-spacing:0.15em;margin-bottom:8px">SERVICIOS DEL MES</div>
+  <div style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:12px;overflow:hidden;margin-bottom:20px" id="demo-mes-lista"></div>
 
   <button onclick="showScreen('screen-go-informe')" style="width:100%;padding:14px;border-radius:14px;border:1px solid var(--border);background:transparent;font-family:'Barlow Condensed',sans-serif;font-size:16px;color:var(--muted);cursor:pointer">
     ← Volver
@@ -892,11 +908,29 @@ function goDemoIntegrar() {
   }, 2000);
 }
 
-function goDemoGuardar() {
-  document.getElementById('go-demo-estado-vacio').style.display = 'block';
+async function goDemoGuardar() {
+  // Guardar en Supabase empresa nexus
+  const hoy = new Date().toLocaleDateString('en-CA',{timeZone:'America/Santiago'});
+  const {data:svcs} = await supa.from('servicios_piloto')
+    .select('servicio_id').like('servicio_id','DEMO-%').order('created_at',{ascending:false}).limit(1);
+  const lastNum = svcs?.[0]?.servicio_id ? parseInt(svcs[0].servicio_id.replace('DEMO-',''))||4 : 4;
+  const svId = 'DEMO-' + String(lastNum+1).padStart(2,'0');
+
+  await supa.from('servicios_piloto').insert({
+    servicio_id: svId, patente:'CGFF12', conductor:'Carlos Torres',
+    cliente:'Agrícola del Sur', origen:'COLTAUCO', destino:'CURICO',
+    fecha: hoy, estado:'cerrado', empresa:'nexus', modo:'conductor',
+    tarifa_neta:720000, ingreso_total:720000, km_total:567,
+    costo_combustible:283500, costo_peajes:52659, peajes_tag:7224,
+    costo_conductor:33000, costo_viaticos:12000, costo_fijo_dia:45000,
+    costo_mantencion:35000, total_costos:461159, margen_servicio:258841,
+    dias_servicio:1
+  });
+
+  // Volver a pantalla GO con opción ver informe
   document.getElementById('go-demo-estado-integrar').style.display = 'none';
-  toast('✓ Servicio S-DEMO guardado');
-  setTimeout(()=>{ showScreen('screen-modo'); }, 1500);
+  document.getElementById('go-demo-estado-guardado').style.display = 'block';
+  toast('✓ ' + svId + ' guardado');
 }
 
 function cerrarSesionConductor() {
@@ -1553,6 +1587,45 @@ async function confirmarGuardarGPS() {
   document.getElementById('rg-titulo').textContent = 'SERVICIO GUARDADO';
   document.getElementById('rg-botones-guardar').style.display = 'none';
   document.getElementById('rg-botones-guardado').style.display = 'block';
+}
+
+function goDemoNuevo() {
+  document.getElementById('go-demo-estado-guardado').style.display = 'none';
+  document.getElementById('go-demo-estado-vacio').style.display = 'block';
+}
+
+async function cargarInformesMesDemo() {
+  const {data:svcs} = await supa.from('servicios_piloto')
+    .select('*').eq('empresa','nexus').eq('estado','cerrado')
+    .order('fecha',{ascending:false});
+  const servicios = svcs || [];
+  const ingresos = servicios.reduce((a,s)=>a+(s.ingreso_total||0),0);
+  const costos   = servicios.reduce((a,s)=>a+(s.total_costos||0),0);
+  const margen   = ingresos - costos;
+  const km       = servicios.reduce((a,s)=>a+(s.km_total||0),0);
+  const pkmTar   = km > 0 ? Math.round(ingresos/km) : 0;
+
+  document.getElementById('demo-mes-ingresos').textContent = '$'+ingresos.toLocaleString('es-CL');
+  document.getElementById('demo-mes-costos').textContent = '$'+costos.toLocaleString('es-CL');
+  document.getElementById('demo-mes-margen').textContent = '$'+Math.abs(margen).toLocaleString('es-CL');
+  document.getElementById('demo-mes-margen').style.color = margen>=0?'#1A5C1A':'#8B2020';
+  document.getElementById('demo-mes-servicios').textContent = servicios.length;
+  document.getElementById('demo-mes-km').textContent = km.toLocaleString('es-CL')+' km';
+  document.getElementById('demo-mes-pkm').textContent = '$'+pkmTar+'/km';
+
+  // Lista servicios
+  const lista = document.getElementById('demo-mes-lista');
+  lista.innerHTML = servicios.map(s=>`
+    <div style="display:flex;justify-content:space-between;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,0.08)">
+      <div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:#fff">${s.servicio_id} · ${s.destino||'—'}</div>
+        <div style="font-size:11px;color:var(--muted)">${s.fecha} · ${s.km_total||0} km</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:${(s.margen_servicio||0)>=0?'#537A6E':'#8B2020'}">$${Math.abs(s.margen_servicio||0).toLocaleString('es-CL')}</div>
+        <div style="font-size:11px;color:var(--muted)">margen</div>
+      </div>
+    </div>`).join('');
 }
 
 async function guardarServicioGPS() {
