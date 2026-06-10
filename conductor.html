@@ -510,10 +510,7 @@
       <span style="font-size:12px;color:var(--muted)">Patente</span>
       <span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#fff">GCFF12 · Rampla</span>
     </div>
-    <div style="display:flex;justify-content:space-between;padding:6px 0">
-      <span style="font-size:12px;color:var(--muted)">Destino</span>
-      <span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#fff">CURICÓ</span>
-    </div>
+
   </div>
 
   <!-- Estado: sin servicio -->
@@ -988,18 +985,18 @@ async function init() {
 
     // Poblar selects modo GPS
     const gpsSelPat = document.getElementById('gps-patente');
-    DB.flota.forEach(f=>{ const o=document.createElement('option'); o.value=f.patente; o.textContent=f.patente; gpsSelPat.appendChild(o); });
+    if(gpsSelPat) DB.flota.forEach(f=>{ const o=document.createElement('option'); o.value=f.patente; o.textContent=f.patente; gpsSelPat.appendChild(o); });
     const gpsSelCond = document.getElementById('gps-conductor');
-    DB.conductores.forEach(c=>{ const o=document.createElement('option'); o.value=c.nombre; o.textContent=c.nombre; gpsSelCond.appendChild(o); });
+    if(gpsSelCond) DB.conductores.forEach(c=>{ const o=document.createElement('option'); o.value=c.nombre; o.textContent=c.nombre; gpsSelCond.appendChild(o); });
     const gpsSelCli = document.getElementById('gps-cliente');
-    DB.clientes.forEach(c=>{ const o=document.createElement('option'); o.value=c.nombre; o.textContent=c.nombre; gpsSelCli.appendChild(o); });
+    if(gpsSelCli) DB.clientes.forEach(c=>{ const o=document.createElement('option'); o.value=c.nombre; o.textContent=c.nombre; gpsSelCli.appendChild(o); });
     // Pre-cargar fechas GPS
     const hoyGPS = new Date().toLocaleDateString('en-CA',{timeZone:'America/Santiago'});
     document.getElementById('gps-fecha-ini').value = hoyGPS;
     document.getElementById('gps-fecha-fin').value = hoyGPS;
-    // Poblar cliente pre
+    // Poblar cliente pre (solo si existe el elemento)
     const gpsSelCliPre = document.getElementById('gps-cliente-pre');
-    if(gpsSelCliPre) DB.clientes.forEach(c=>{ const o=document.createElement('option'); o.value=c.nombre; o.textContent=c.nombre; gpsSelCliPre.appendChild(o); });
+    if(gpsSelCliPre && DB.clientes) DB.clientes.forEach(c=>{ const o=document.createElement('option'); o.value=c.nombre; o.textContent=c.nombre; gpsSelCliPre.appendChild(o); });
 
     // Destino custom
     document.getElementById('o-destino').addEventListener('change', function(){
