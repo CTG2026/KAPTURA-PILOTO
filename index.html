@@ -156,10 +156,13 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
 </div>
 
 <header class="hdr">
-  <div class="logo">KAPTURA</div>
+  <div style="display:flex;flex-direction:column">
+    <div class="logo">KAPTURA</div>
+    <div id="hdr-empresa" style="font-size:11px;font-weight:800;color:var(--blue);letter-spacing:0.05em;margin-top:1px"></div>
+  </div>
   <div style="display:flex;align-items:center;gap:12px">
     <div class="hdr-info" id="hdr-info"></div>
-    <button id="btn-cerrar-sesion" onclick="cerrarSesionKaptura()" style="display:none;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:white;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;font-weight:700">⏏ Salir</button>
+    <button id="btn-cerrar-sesion" onclick="cerrarSesionKaptura()" style="display:none;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:white;border-radius:6px;padding:6px 14px;font-size:12px;cursor:pointer;font-weight:700">⏏ Salir</button>
   </div>
 </header>
 
@@ -3724,6 +3727,8 @@ function aplicarAccesoKaptura() {
   document.getElementById('main').style.display = '';
   document.getElementById('nav').style.display = '';
   document.getElementById('btn-cerrar-sesion').style.display = 'block';
+  const empNombre = (_sessionUsuario?.empresa||'') === 'transportes_madrid' ? 'TRANSPORTES MADRID' : 'GLOBAL SOLUTIONS';
+  document.getElementById('hdr-empresa').textContent = empNombre;
   // Agregar botón cerrar sesión en header
   const hdrInfo = document.getElementById('hdr-info');
   if(hdrInfo) {
