@@ -229,7 +229,7 @@
 <div class="hdr">
   <div>
     <div class="hdr-logo">KAPTURA</div>
-    <div class="hdr-mode">Modo Conductor</div>
+    <div class="hdr-mode" id="hdr-empresa-nombre">—</div>
   </div>
   <div class="hdr-time" id="hdr-clock">--:--</div>
 </div>
@@ -460,17 +460,46 @@
 
 <!-- ═══ SELECTOR MODO ═══ -->
 <div class="screen active" id="screen-modo">
-  <div style="margin-top:32px;text-align:center;margin-bottom:24px">
-    <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;color:var(--text)">¿CÓMO QUIERES REGISTRAR?</div>
-    <div style="font-size:14px;color:var(--muted);margin-top:6px">Selecciona el modo de ingreso</div>
+  <div style="margin-top:24px;text-align:center;margin-bottom:20px">
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--muted);letter-spacing:0.15em" id="modo-empresa-label">KAPTURA</div>
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:900;color:var(--text)">SELECCIONA TU MÓDULO</div>
   </div>
-  <button class="btn-main btn-green" onclick="showScreen('screen-login')" style="font-size:20px">
-    📱 MODO PASO A PASO
-    <div style="font-size:12px;font-weight:400;margin-top:4px">Presiona botones en cada etapa</div>
-  </button>
-  <button class="btn-main btn-navy" onclick="showScreen('screen-gps')" style="font-size:20px;margin-top:8px">
-    📡 MODO GPS
-    <div style="font-size:12px;font-weight:400;margin-top:4px">Sube el archivo GPS y el sistema calcula todo</div>
+
+  <!-- KAPTURA GO -->
+  <div onclick="abrirModulo('go')" style="background:var(--card);border:2px solid var(--green);border-radius:14px;padding:18px;margin-bottom:12px;cursor:pointer">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:var(--green)">📡 KAPTURA GO</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px">Inicia · GPS registra todo · Ver margen</div>
+      </div>
+      <div style="background:var(--green);color:#fff;font-size:10px;font-weight:800;padding:4px 10px;border-radius:20px">BÁSICO</div>
+    </div>
+  </div>
+
+  <!-- KAPTURA PRO -->
+  <div onclick="abrirModulo('pro')" style="background:var(--card);border:2px solid var(--orange);border-radius:14px;padding:18px;margin-bottom:12px;cursor:pointer">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:var(--orange)">📱 KAPTURA PRO</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px">Guías · Etapas · KPIs · $/km · Ranking clientes</div>
+      </div>
+      <div style="background:var(--orange);color:#fff;font-size:10px;font-weight:800;padding:4px 10px;border-radius:20px">PRO</div>
+    </div>
+  </div>
+
+  <!-- KAPTURA FLOTA -->
+  <div onclick="abrirModulo('flota')" style="background:var(--card);border:2px solid var(--navy);border-radius:14px;padding:18px;margin-bottom:12px;cursor:pointer;opacity:0.7">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:var(--text)">🖥 KAPTURA FLOTA</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px">Asignación · Flota · Coordinador · Gestión completa</div>
+      </div>
+      <div style="background:#374151;color:#9CA3AF;font-size:10px;font-weight:800;padding:4px 10px;border-radius:20px">PREMIUM</div>
+    </div>
+  </div>
+
+  <button class="btn-main btn-navy" onclick="cerrarSesionConductor()" style="font-size:14px;margin-top:16px;padding:14px">
+    ⏏ Cerrar sesión
   </button>
 </div>
 
@@ -587,6 +616,38 @@ let svc = {
 let DB = { flota:[], conductores:[], clientes:[], config:{}, corredores:[], tarifario:[] };
 let cronoInterval = null;
 let cronoStart = null;
+
+// ── SESIÓN ──
+let _sessionConductor = null;
+
+function cargarSesionConductor() {
+  const saved = localStorage.getItem('kaptura_session');
+  if(saved) {
+    try {
+      const sess = JSON.parse(saved);
+      _sessionConductor = sess;
+      const empLabel = (sess.empresa||'') === 'transportes_madrid' ? 'TRANSPORTES MADRID' : 'GLOBAL SOLUTIONS';
+      document.getElementById('hdr-empresa-nombre').textContent = empLabel;
+      document.getElementById('modo-empresa-label').textContent = empLabel;
+    } catch(e) {}
+  }
+}
+
+function abrirModulo(modo) {
+  if(modo === 'go') {
+    showScreen('screen-gps');
+  } else if(modo === 'pro') {
+    showScreen('screen-login');
+  } else if(modo === 'flota') {
+    // Redirigir al coordinador
+    window.location.href = 'index.html';
+  }
+}
+
+function cerrarSesionConductor() {
+  localStorage.removeItem('kaptura_session');
+  window.location.href = 'index.html';
+}
 
 // ── RELOJ ──
 function tickClock() {
@@ -949,6 +1010,7 @@ function nuevoServicio() {
 }
 
 init();
+cargarSesionConductor();
 
 // ── MODO GPS ──
 let gpsData = { eventos:[], kmTotal:0, dias:1, horasSvc:{}, tag:0, peajes:0, comb:0, svId:null, dbId:null };
