@@ -511,22 +511,6 @@
   <div class="section-title">Conductor</div>
   <select class="inp" id="gps-conductor"><option value="">— Conductor —</option></select>
 
-  <div class="section-title">Cliente</div>
-  <select class="inp" id="gps-cliente"><option value="">— Cliente —</option></select>
-
-  <div class="section-title">Destino</div>
-  <select class="inp" id="gps-destino">
-    <option value="">— Destino —</option>
-    <option>CASABLANCA</option><option>COLTAUCO</option><option>CURACAVI</option>
-    <option>LAMPA</option><option>MALLOA</option><option>MELIPILLA</option>
-    <option>PALMILLA</option><option>RENGO</option><option>ROSARIO</option>
-    <option>SAN FERNANDO</option><option>SANTIAGO</option><option>TENO</option>
-    <option>VALPARAISO</option>
-  </select>
-
-  <div class="section-title">Tarifa del servicio</div>
-  <input class="inp" type="number" id="gps-tarifa" placeholder="$0">
-
   <div class="section-title">Fecha inicio</div>
   <input class="inp" type="date" id="gps-fecha-ini">
 
@@ -545,8 +529,8 @@
     <option value="nueva_asignacion">📍 Nueva asignación</option>
   </select>
 
-  <button class="btn-main btn-navy" onclick="integrarGPSConductor()" style="margin-top:8px">
-    📡 INTEGRAR GPS
+  <button class="btn-main btn-green" onclick="integrarGPSConductor()" style="margin-top:8px">
+    📡 INTEGRAR DATOS DEL SERVICIO
   </button>
   <div id="gps-file-status" style="font-size:13px;color:var(--muted);margin-top:10px;text-align:center"></div>
 
@@ -563,7 +547,24 @@
       <div class="kpi-card"><div class="kpi-val" id="gr-km">—</div><div class="kpi-lbl">KM Total</div></div>
       <div class="kpi-card"><div class="kpi-val" id="gr-dias">—</div><div class="kpi-lbl">Días</div></div>
     </div>
-    <button class="btn-main btn-green" onclick="guardarServicioGPS()">💾 GUARDAR SERVICIO</button>
+    <div class="divider"></div>
+    <div class="section-title">Cliente</div>
+    <select class="inp" id="gps-cliente"><option value="">— Cliente —</option></select>
+
+    <div class="section-title">Destino detectado por GPS</div>
+    <select class="inp" id="gps-destino">
+      <option value="">— Confirma o corrige el destino —</option>
+      <option>CASABLANCA</option><option>COLTAUCO</option><option>CURACAVI</option>
+      <option>LAMPA</option><option>MALLOA</option><option>MELIPILLA</option>
+      <option>PALMILLA</option><option>RENGO</option><option>ROSARIO</option>
+      <option>SAN FERNANDO</option><option>SANTIAGO</option><option>TENO</option>
+      <option>VALPARAISO</option>
+    </select>
+
+    <div class="section-title">Tarifa del servicio</div>
+    <input class="inp" type="number" id="gps-tarifa" placeholder="$0">
+
+    <button class="btn-main btn-green" onclick="verServicioGPS()">👁 VER SERVICIO</button>
   </div>
 
   <div style="margin-top:12px">
@@ -574,8 +575,7 @@
 <!-- ═══ PANTALLA RESUMEN GPS ═══ -->
 <div class="screen" id="screen-resumen-gps">
   <div style="margin-top:16px;text-align:center">
-    <div style="font-size:48px;margin-bottom:8px">✅</div>
-    <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;color:var(--green)">SERVICIO GUARDADO</div>
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;color:var(--text)" id="rg-titulo">RESUMEN DEL SERVICIO</div>
     <div style="font-size:14px;color:var(--muted);margin-top:4px" id="rg-svc-id">—</div>
   </div>
   <div class="divider"></div>
@@ -596,7 +596,17 @@
     <div class="info-row"><span class="info-lbl">Viático</span><span class="info-val" id="rg-viatico">—</span></div>
     <div class="info-row"><span class="info-lbl">Comisión</span><span class="info-val" id="rg-comision">—</span></div>
   </div>
-  <button class="btn-main btn-navy" onclick="showScreen('screen-modo')" style="margin-top:24px">🔄 NUEVO SERVICIO</button>
+  <div id="rg-botones-guardar" style="margin-top:24px">
+    <button class="btn-main btn-green" onclick="confirmarGuardarGPS()">💾 GUARDAR SERVICIO</button>
+    <button class="btn-main btn-navy" onclick="showScreen('screen-gps')" style="margin-top:8px;font-size:16px;padding:14px">← Corregir</button>
+  </div>
+  <div id="rg-botones-guardado" style="display:none;margin-top:24px">
+    <div style="text-align:center;margin-bottom:16px">
+      <div style="font-size:48px">✅</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;color:var(--green)">SERVICIO GUARDADO</div>
+    </div>
+    <button class="btn-main btn-navy" onclick="showScreen('screen-modo')">🔄 NUEVO SERVICIO</button>
+  </div>
 </div>
 
 <script>
@@ -739,6 +749,9 @@ async function init() {
     const hoyGPS = new Date().toLocaleDateString('en-CA',{timeZone:'America/Santiago'});
     document.getElementById('gps-fecha-ini').value = hoyGPS;
     document.getElementById('gps-fecha-fin').value = hoyGPS;
+    // Poblar cliente (ahora está al final del formulario GPS)
+    const gpsSelCli2 = document.getElementById('gps-cliente');
+    if(gpsSelCli2) DB.clientes.forEach(c=>{ const o=document.createElement('option'); o.value=c.nombre; o.textContent=c.nombre; gpsSelCli2.appendChild(o); });
 
     // Destino custom
     document.getElementById('o-destino').addEventListener('change', function(){
@@ -1244,6 +1257,58 @@ async function integrarGPSConductor() {
     status.style.color = 'var(--green)';
 
   } catch(e) { status.textContent = '❌ Error: '+e.message; console.error(e); }
+}
+
+function verServicioGPS() {
+  const destino = document.getElementById('gps-destino').value;
+  const tarifa  = parseFloat(document.getElementById('gps-tarifa').value)||0;
+  if(!destino) { toast('⚠ Confirma el destino'); return; }
+  if(!tarifa)  { toast('⚠ Ingresa la tarifa'); return; }
+
+  // Calcular costos con los datos actuales de gpsData
+  const cfg = DB.config;
+  const conductor_costo = parseInt(cfg.sueldo_conductor||33000) * gpsData.dias;
+  const mant    = parseInt(cfg.mantencion||25000) * gpsData.dias;
+  const viatico = parseInt(cfg.viatico||12000) * gpsData.dias;
+  const comision = Math.round(tarifa * 0.08);
+  const total = gpsData.comb + gpsData.tag + gpsData.peajes + conductor_costo + mant + viatico + gpsData.cf + comision;
+  const margen = tarifa - total;
+
+  // Guardar en gpsData para confirmarGuardarGPS
+  gpsData.conductor = conductor_costo;
+  gpsData.mant = mant;
+  gpsData.viatico = viatico;
+  gpsData.comision = comision;
+  gpsData.total = total;
+  gpsData.margen = margen;
+
+  // Mostrar resumen
+  document.getElementById('rg-titulo').textContent = 'RESUMEN DEL SERVICIO';
+  document.getElementById('rg-svc-id').textContent = document.getElementById('gps-patente').value + ' · ' + document.getElementById('gps-fecha-ini').value;
+  document.getElementById('rg-ingreso').textContent = fmt(tarifa);
+  document.getElementById('rg-costos').textContent = fmt(total);
+  const mEl = document.getElementById('rg-margen');
+  mEl.textContent = (margen < 0 ? '-' : '') + fmt(Math.abs(margen));
+  mEl.className = 'kpi-val ' + (margen>=0?'margen-positivo':'margen-negativo');
+  document.getElementById('rg-km').textContent = gpsData.kmTotal + ' km';
+  document.getElementById('rg-comb').textContent = fmt(gpsData.comb);
+  document.getElementById('rg-peajes').textContent = fmt(gpsData.tag + gpsData.peajes);
+  document.getElementById('rg-conductor').textContent = fmt(conductor_costo);
+  document.getElementById('rg-cf').textContent = fmt(gpsData.cf);
+  document.getElementById('rg-mant').textContent = fmt(mant);
+  document.getElementById('rg-viatico').textContent = fmt(viatico);
+  document.getElementById('rg-comision').textContent = fmt(comision);
+  document.getElementById('rg-botones-guardar').style.display = 'block';
+  document.getElementById('rg-botones-guardado').style.display = 'none';
+
+  showScreen('screen-resumen-gps');
+}
+
+async function confirmarGuardarGPS() {
+  await guardarServicioGPS();
+  document.getElementById('rg-titulo').textContent = 'SERVICIO GUARDADO';
+  document.getElementById('rg-botones-guardar').style.display = 'none';
+  document.getElementById('rg-botones-guardado').style.display = 'block';
 }
 
 async function guardarServicioGPS() {
