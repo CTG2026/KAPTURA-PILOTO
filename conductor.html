@@ -515,9 +515,9 @@
 
   <!-- Estado: sin servicio -->
   <div id="go-demo-estado-vacio" style="display:block">
-    <div style="text-align:center;margin-bottom:24px">
-      <div style="font-size:12px;color:var(--muted);letter-spacing:0.1em">ESTADO</div>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;color:rgba(255,255,255,0.35);margin-top:4px">SIN SERVICIO ACTIVO</div>
+    <div style="margin-bottom:16px">
+      <div style="font-size:12px;color:var(--muted);letter-spacing:0.08em;margin-bottom:6px">TARIFA DEL SERVICIO</div>
+      <input type="number" id="go-demo-tarifa" placeholder="$0" style="width:100%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);border-radius:10px;padding:14px 16px;font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:700;color:#D8D5CC;text-align:right">
     </div>
     <button onclick="goDemoIniciar()" style="width:100%;padding:22px;border-radius:14px;border:none;background:#D8D5CC;font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:900;color:#2E3F52;cursor:pointer;letter-spacing:0.05em;margin-bottom:10px">
       INICIAR SERVICIO
@@ -597,16 +597,20 @@
   <div style="background:#D8D5CC;border-radius:12px;padding:16px;margin-bottom:12px">
     <div style="display:flex;justify-content:space-between;margin-bottom:10px">
       <span style="font-size:12px;font-weight:700;color:#5A5A5A;letter-spacing:0.08em">TARIFA</span>
-      <span style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:900;color:#2E3F52">$720.000</span>
+      <span style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:900;color:#2E3F52" id="inf-tarifa">—</span>
     </div>
     <div style="display:flex;justify-content:space-between;margin-bottom:10px">
       <span style="font-size:12px;font-weight:700;color:#5A5A5A;letter-spacing:0.08em">COSTOS</span>
-      <span style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:900;color:#8B2020">$455.759</span>
+      <span style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:900;color:#8B2020" id="inf-costos">—</span>
     </div>
     <div style="height:1px;background:rgba(46,63,82,0.2);margin:8px 0"></div>
-    <div style="display:flex;justify-content:space-between">
+    <div style="display:flex;justify-content:space-between;margin-bottom:6px">
       <span style="font-size:12px;font-weight:700;color:#5A5A5A;letter-spacing:0.08em">MARGEN</span>
-      <span style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;color:#1A5C1A">$264.241</span>
+      <span style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900" id="inf-margen">—</span>
+    </div>
+    <div style="display:flex;justify-content:space-between">
+      <span style="font-size:11px;color:#8B8B8B;letter-spacing:0.06em">$/KM</span>
+      <span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#5A5A5A" id="inf-pkm">—</span>
     </div>
   </div>
 
@@ -942,8 +946,17 @@ function abrirModulo(modo) {
 
 let _goDemoCrono = null;
 let _goDemoInicio = null;
+let _goDemoTarifa = 720000;
 
 function goDemoIniciar() {
+  const tarifa = parseFloat(document.getElementById('go-demo-tarifa').value)||0;
+  if(!tarifa) { 
+    document.getElementById('go-demo-tarifa').style.borderColor = '#8B2020';
+    document.getElementById('go-demo-tarifa').placeholder = '⚠ Ingresa la tarifa';
+    return; 
+  }
+  document.getElementById('go-demo-tarifa').style.borderColor = 'rgba(255,255,255,0.2)';
+  _goDemoTarifa = tarifa;
   _goDemoInicio = new Date();
   document.getElementById('go-demo-estado-vacio').style.display = 'none';
   document.getElementById('go-demo-estado-activo').style.display = 'block';
@@ -969,6 +982,18 @@ function goDemoIntegrar() {
   setTimeout(()=>{
     document.getElementById('go-demo-integrando').innerHTML =
       '<div style="font-family:Barlow Condensed,sans-serif;font-size:18px;font-weight:700;color:#537A6E;letter-spacing:0.1em">✓ INTEGRACIÓN DE DATOS OK</div>';
+    // Poblar informe con valores reales
+    const tarifa = _goDemoTarifa || 720000;
+    const costos = 283500 + 52659 + 15000 + 35000 + 5000 + 12000;
+    const margen = tarifa - costos;
+    const pkm = Math.round(tarifa / 567);
+    const fmt = n => '$'+(n||0).toLocaleString('es-CL');
+    document.getElementById('inf-tarifa').textContent = fmt(tarifa);
+    document.getElementById('inf-costos').textContent = fmt(costos);
+    const mEl = document.getElementById('inf-margen');
+    mEl.textContent = (margen<0?'-':'') + fmt(Math.abs(margen));
+    mEl.style.color = margen>=0?'#1A5C1A':'#8B2020';
+    document.getElementById('inf-pkm').textContent = fmt(pkm)+'/km';
     setTimeout(()=>{ showScreen('screen-go-informe'); }, 1200);
   }, 2000);
 }
@@ -981,11 +1006,14 @@ async function goDemoGuardar() {
   const lastNum = svcs?.[0]?.servicio_id ? parseInt(svcs[0].servicio_id.replace('DEMO-',''))||4 : 4;
   const svId = 'DEMO-' + String(lastNum+1).padStart(2,'0');
 
+  const tarifaFinal = _goDemoTarifa || 720000;
+  const costosFinal = 283500 + 52659 + 15000 + 35000 + 5000 + 12000;
+  const margenFinal = tarifaFinal - costosFinal;
   await supa.from('servicios_piloto').insert({
     servicio_id: svId, patente:'CGFF12', conductor:'Carlos Torres',
     cliente:'Agrícola del Sur', origen:'COLTAUCO', destino:'CURICO',
     fecha: hoy, estado:'cerrado', empresa:'nexus', modo:'conductor',
-    tarifa_neta:720000, ingreso_total:720000, km_total:567,
+    tarifa_neta:tarifaFinal, ingreso_total:tarifaFinal, km_total:567,
     costo_combustible:283500, costo_peajes:52659, peajes_tag:7224,
     costo_conductor:33000, costo_viaticos:12000, costo_fijo_dia:45000,
     costo_mantencion:35000, total_costos:461159, margen_servicio:258841,
@@ -1688,7 +1716,14 @@ function verDetalleServicioDemo(s) {
 
 function goDemoNuevo() {
   document.getElementById('go-demo-estado-guardado').style.display = 'none';
+  document.getElementById('go-demo-estado-integrar').style.display = 'none';
+  document.getElementById('go-demo-estado-activo').style.display = 'none';
   document.getElementById('go-demo-estado-vacio').style.display = 'block';
+  document.getElementById('go-demo-tarifa').value = '';
+  document.getElementById('btn-integrar-demo').style.display = 'block';
+  document.getElementById('go-demo-integrando').style.display = 'none';
+  document.getElementById('go-demo-crono').textContent = '00:00:00';
+  _goDemoTarifa = 720000;
 }
 
 async function cargarInformesMesDemo() {
