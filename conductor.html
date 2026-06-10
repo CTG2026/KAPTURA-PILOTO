@@ -666,8 +666,8 @@
   </div>
 
   <div style="background:#D8D5CC;border-radius:12px;padding:16px;margin-bottom:12px">
-    <div style="display:flex;justify-content:space-between;margin-bottom:10px">
-      <span style="font-size:12px;font-weight:700;color:#5A5A5A;letter-spacing:0.08em">INGRESOS MES</span>
+    <div onclick="showScreen('screen-demo-ingresos')" style="display:flex;justify-content:space-between;margin-bottom:10px;cursor:pointer">
+      <span style="font-size:12px;font-weight:700;color:#5A5A5A;letter-spacing:0.08em">INGRESOS MES ›</span>
       <span style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:#2E3F52" id="demo-mes-ingresos">—</span>
     </div>
     <div style="display:flex;justify-content:space-between;margin-bottom:10px">
@@ -701,6 +701,21 @@
 
   <button onclick="showScreen('screen-modo')" style="width:100%;padding:14px;border-radius:14px;border:1px solid var(--border);background:transparent;font-family:'Barlow Condensed',sans-serif;font-size:16px;color:var(--muted);cursor:pointer">
     ← Volver al menú
+  </button>
+</div>
+
+<!-- ═══ PANTALLA INGRESOS MES DEMO ═══ -->
+<div class="screen" id="screen-demo-ingresos" style="padding:20px">
+  <div style="margin-top:16px;margin-bottom:16px">
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:#888;letter-spacing:0.2em">KAPTURA GO</div>
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;color:#fff;margin-top:2px">INGRESOS DEL MES</div>
+    <div style="font-size:12px;color:var(--muted);margin-top:2px">Carlos Torres · GCFF12</div>
+  </div>
+
+  <div style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:12px;overflow:hidden;margin-bottom:20px" id="demo-ingresos-lista"></div>
+
+  <button onclick="showScreen('screen-go-informes-mes')" style="width:100%;padding:14px;border-radius:14px;border:1px solid var(--border);background:transparent;font-family:'Barlow Condensed',sans-serif;font-size:16px;color:var(--muted);cursor:pointer">
+    ← Volver
   </button>
 </div>
 
@@ -1696,6 +1711,26 @@ async function cargarInformesMesDemo() {
   document.getElementById('demo-mes-pkm').textContent = '$'+pkmTar+'/km';
 
   // Lista servicios
+  // Poblar lista ingresos
+  const listaIngresos = document.getElementById('demo-ingresos-lista');
+  if(listaIngresos) {
+    listaIngresos.innerHTML = servicios.map((s,idx)=>`
+      <div onclick="verDetalleServicioDemo(${JSON.stringify(s).replace(/"/g,'&quot;')})" style="display:grid;grid-template-columns:1fr auto;gap:4px;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.08);cursor:pointer" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
+        <div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:#fff">${s.servicio_id} · ${s.destino||'—'}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">${s.fecha}</div>
+          <div style="display:flex;gap:12px;margin-top:4px">
+            <span style="font-size:11px;color:#6EE7A0">+$${(s.ingreso_total||s.tarifa_neta||0).toLocaleString('es-CL')}</span>
+            <span style="font-size:11px;color:#F87171">-$${(s.total_costos||0).toLocaleString('es-CL')}</span>
+          </div>
+        </div>
+        <div style="text-align:right;display:flex;flex-direction:column;justify-content:center">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;color:${(s.margen_servicio||0)>=0?'#537A6E':'#8B2020'}">$${Math.abs(s.margen_servicio||0).toLocaleString('es-CL')}</div>
+          <div style="font-size:10px;color:var(--muted)">margen ›</div>
+        </div>
+      </div>`).join('');
+  }
+
   const lista = document.getElementById('demo-mes-lista');
   lista.innerHTML = servicios.map(s=>`
     <div onclick="verDetalleServicioDemo(${JSON.stringify(s).replace(/"/g,'&quot;')})" style="display:flex;justify-content:space-between;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,0.08);cursor:pointer" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
