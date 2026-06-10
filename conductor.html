@@ -830,10 +830,20 @@ function cargarSesionConductor() {
     try {
       const sess = JSON.parse(saved);
       _sessionConductor = sess;
-      const empLabel = (sess.empresa||'') === 'transportes_madrid' ? 'TRANSPORTES MADRID' : 'GLOBAL SOLUTIONS';
+      const empLabel = sess.empresa === 'transportes_madrid' ? 'TRANSPORTES MADRID'
+        : sess.empresa === 'demo' ? 'DEMO'
+        : 'GLOBAL SOLUTIONS';
       document.getElementById('hdr-empresa-nombre').textContent = empLabel;
       document.getElementById('modo-empresa-label').textContent = empLabel;
     } catch(e) {}
+  }
+  // Leer módulo desde URL y abrir directamente
+  const params = new URLSearchParams(window.location.search);
+  const modulo = params.get('modulo');
+  if(modulo) {
+    // Limpiar URL sin recargar
+    window.history.replaceState(null, '', window.location.pathname);
+    abrirModulo(modulo);
   }
 }
 
