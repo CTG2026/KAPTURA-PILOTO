@@ -3741,6 +3741,12 @@ function actualizarDotsPIN() {
 }
 
 async function validarPinKaptura() {
+  // PIN demo → redirige a conductor.html
+  if(_pinIngresado === '0000') {
+    localStorage.setItem('kaptura_session', JSON.stringify({pin:'0000', empresa:'demo', rol:'conductor', nombre:'Carlos Torres'}));
+    window.location.href = 'conductor.html';
+    return;
+  }
   const {data:usr, error} = await supa.from('kaptura_usuarios')
     .select('*').eq('pin',_pinIngresado).eq('activo',true).single();
   if(usr) {
