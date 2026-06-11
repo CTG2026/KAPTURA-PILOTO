@@ -1947,7 +1947,7 @@ async function guardarServicioGPS() {
 
 <script>
 const SUPA_URL_KOP = 'https://aqunzrukuruwzwywnurq.supabase.co';
-const ANON_KEY_KOP = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFxdW56cnVrdXJ1d3p3eXdudXJxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgzOTM4NjAsImV4cCI6MjA2Mzk2OTg2MH0.sb_publishable_70t9UxFlcqYDj7AMybsrHg__IMGNA8C';
+const SUPA_KEY_KOP = 'sb_publishable_70t9UxFlcqYDj7AMybsrHg__IMGNA8C';
 
 let _kopRecognition = null;
 let _kopEscuchando = false;
@@ -2023,7 +2023,7 @@ async function kopilotoProcesar(texto) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFxdW56cnVrdXJ1d3p3eXdudXJxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgzOTM4NjAsImV4cCI6MjA2Mzk2OTg2MH0.sb_publishable_70t9UxFlcqYDj7AMybsrHg__IMGNA8C'
+        'Authorization': 'Bearer ' + SUPA_KEY_KOP
       },
       body: JSON.stringify({ texto })
     });
