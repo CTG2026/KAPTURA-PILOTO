@@ -2019,23 +2019,16 @@ function kopilotoHablar() {
 
 async function kopilotoProcesar(texto) {
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    // Usar Supabase Edge Function con sb_secret key
+    const res = await fetch('https://aqunzrukuruwzwywnurq.supabase.co/functions/v1/KOPILOTO', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': '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',
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
+        'Authorization': 'Bearer sb_secret_Dk2xLGjmWiMsLnpNkLjPWA_mhtFpSbR'
       },
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 300,
-        system: 'Eres KOPILOTO, asistente KAPTURA para conductores de camión en Chile. Analiza el mensaje y responde SOLO con JSON: {"accion":"gasto","tipo":"combustible|estacionamiento|reparacion|neumatico|comida|multa|ayudante|otro","monto":0,"descripcion":"texto breve","respuesta":"respuesta natural máximo 10 palabras"}. Extrae el monto en pesos chilenos.',
-        messages: [{ role: 'user', content: texto }]
-      })
+      body: JSON.stringify({ texto })
     });
-    const data = await res.json();
-    const raw = data.content?.[0]?.text || '{}';
+    const raw = await res.text();
     let parsed;
     try { 
       parsed = JSON.parse(raw.replace(/```json|```/g,'').trim()); 
