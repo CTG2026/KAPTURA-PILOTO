@@ -2048,8 +2048,8 @@ async function kopilotoProcesar(texto) {
     respEl.style.display = 'block';
     document.getElementById('kop-estado').textContent = 'Listo';
 
-    // Si es un gasto, guardar en Supabase y aplicar al servicio
-    if(parsed.accion === 'gasto' && parsed.monto > 0) {
+    // Si hay monto, siempre guardar y aplicar al servicio
+    if(parsed.monto > 0) {
       const sess = JSON.parse(localStorage.getItem('kaptura_session')||'{}');
       const patente = document.getElementById('go-demo-tarifa') ? 'CGFF12' : '';
       await supa.from('kaptura_kopiloto_eventos').insert({
