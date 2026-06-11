@@ -1785,6 +1785,15 @@ async function cargarInformesMesDemo() {
     const totViat   = servicios.reduce((a,s)=>a+(s.costo_viaticos||0),0);
     const totCont   = servicios.length * 15000;
     const totGastos = servicios.length * 5000;
+    // Cargar gastos KOPILOTO desde Supabase
+    const {data:kopEvts} = await supa.from('kaptura_kopiloto_eventos')
+      .select('tipo,monto').eq('empresa','nexus');
+    const kopPorTipo = {};
+    (kopEvts||[]).forEach(e=>{
+      const t = e.tipo||'otro';
+      kopPorTipo[t] = (kopPorTipo[t]||0) + (e.monto||0);
+    });
+    const totKop = Object.values(kopPorTipo).reduce((a,v)=>a+v,0);
     const fmtC = n => '$'+(n||0).toLocaleString('es-CL');
     const items = [
       ['Combustible', totComb],
@@ -1794,6 +1803,7 @@ async function cargarInformesMesDemo() {
       ['Viático', totViat],
       ['Contabilidad', totCont],
       ['Gastos varios', totGastos],
+      ...(totKop > 0 ? [['Gastos KOPILOTO', totKop]] : []),
     ];
     listaCostos.innerHTML = items.map((item,idx)=>`
       <div style="display:flex;justify-content:space-between;padding:12px 16px;${idx<items.length-1?'border-bottom:1px solid rgba(255,255,255,0.08)':''}">
