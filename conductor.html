@@ -1032,7 +1032,8 @@ async function goDemoGuardar() {
   const svId = 'DEMO-' + String(lastNum+1).padStart(2,'0');
 
   const tarifaFinal = _goDemoTarifa || 720000;
-  const costosFinal = 283500 + 52659 + 15000 + 35000 + 5000 + 12000;
+  const costosBase = 283500 + 52659 + 15000 + 35000 + 5000 + 12000;
+  const costosFinal = costosBase + (_kopGastosExtras||0);
   const margenFinal = tarifaFinal - costosFinal;
   await supa.from('servicios_piloto').insert({
     servicio_id: svId, patente:'CGFF12', conductor:'Carlos Torres',
@@ -1041,7 +1042,8 @@ async function goDemoGuardar() {
     tarifa_neta:tarifaFinal, ingreso_total:tarifaFinal, km_total:567,
     costo_combustible:283500, costo_peajes:52659, peajes_tag:7224,
     costo_conductor:33000, costo_viaticos:12000, costo_fijo_dia:45000,
-    costo_mantencion:35000, total_costos:461159, margen_servicio:258841,
+    costo_mantencion:35000 + (_kopGastosExtras||0),
+    total_costos:costosFinal, margen_servicio:margenFinal,
     dias_servicio:1
   });
 
