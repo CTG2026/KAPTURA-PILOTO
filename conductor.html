@@ -2018,70 +2018,71 @@ function kopilotoHablar() {
 }
 
 async function kopilotoProcesar(texto) {
-  try {
-    // Usar Supabase Edge Function con sb_secret key
-    // Leer anthropic key desde DB.config (cargada en init)
-    const anthropicKey = DB.config?.anthropic_key || '';
-    if(!anthropicKey) {
-      document.getElementById('kop-respuesta').textContent = '⚠ KOPILOTO no configurado';
-      document.getElementById('kop-respuesta').style.display = 'block';
-      document.getElementById('kop-estado').textContent = 'Error';
-      return;
-    }
-    const res = await fetch('https://aqunzrukuruwzwywnurq.supabase.co/functions/v1/KOPILOTO', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-anthropic-key': anthropicKey
-      },
-      body: JSON.stringify({ texto })
-    });
-    const raw = await res.text();
-    let parsed;
-    try { 
-      parsed = JSON.parse(raw.replace(/```json|```/g,'').trim()); 
-    } catch(e) { 
-      parsed = {respuesta: 'Entendido, anotado.', accion:'gasto', monto:0}; 
-    }
+  const respEl = document.getElementById('kop-respuesta');
+  document.getElementById('kop-estado').textContent = 'Listo';
 
-    const respEl = document.getElementById('kop-respuesta');
-    respEl.textContent = '✓ ' + (parsed.respuesta || 'Entendido');
-    respEl.style.display = 'block';
-    document.getElementById('kop-estado').textContent = 'Listo';
+  // Extraer monto del texto
+  const nums = texto.match(/[0-9]+[\.\,]?[0-9]*/g) || [];
+  let monto = 0;
+  for(const n of nums) {
+    const val = parseInt(n.replace(/[\.,]/g,''));
+    if(val > monto) monto = val;
+  }
+  // Si dice "mil" multiplicar
+  if(texto.toLowerCase().includes(' mil') && monto < 1000) monto *= 1000;
 
-    // Si hay monto, siempre guardar y aplicar al servicio
-    if(parsed.monto > 0) {
-      const sess = JSON.parse(localStorage.getItem('kaptura_session')||'{}');
-      const patente = document.getElementById('go-demo-tarifa') ? 'CGFF12' : '';
-      await supa.from('kaptura_kopiloto_eventos').insert({
-        patente: patente,
-        empresa: sess.empresa || 'nexus',
-        servicio_id: 'DEMO-ACTIVO',
-        accion: parsed.accion,
-        tipo: parsed.tipo || 'otro',
-        monto: parsed.monto,
-        descripcion: parsed.descripcion || '',
-        texto_original: texto
-      });
-      // Acumular en variable global para sumar al informe
-      _kopGastosExtras = (_kopGastosExtras || 0) + parsed.monto;
-      _kopGastosDetalle = _kopGastosDetalle || [];
-      _kopGastosDetalle.push({tipo: parsed.tipo||'otro', monto: parsed.monto});
-      respEl.textContent += ' — $' + parsed.monto.toLocaleString('es-CL') + ' agregado al servicio';
-    }
+  // Detectar tipo
+  const t = texto.toLowerCase();
+  let tipo = 'otro';
+  if(t.includes('bencin')||t.includes('combustible')||t.includes('gas')) tipo='combustible';
+  else if(t.includes('estacion')||t.includes('parking')) tipo='estacionamiento';
+  else if(t.includes('vulcan')||t.includes('neum')||t.includes('rueda')||t.includes('llanta')) tipo='neumatico';
+  else if(t.includes('repuesto')||t.includes('manten')||t.includes('falla')||t.includes('mecanico')) tipo='reparacion';
+  else if(t.includes('comida')||t.includes('almuerzo')||t.includes('cena')||t.includes('once')) tipo='comida';
+  else if(t.includes('multa')) tipo='multa';
+  else if(t.includes('ayudante')||t.includes('peon')) tipo='ayudante';
 
-    // Respuesta por voz
-    if('speechSynthesis' in window) {
-      const utt = new SpeechSynthesisUtterance(parsed.respuesta || 'Entendido');
-      utt.lang = 'es-CL';
-      utt.rate = 1.1;
-      window.speechSynthesis.speak(utt);
-    }
+  respEl.innerHTML = `
+    <div style="margin-bottom:10px;font-size:13px;color:rgba(255,255,255,0.7);font-style:italic">"${texto}"</div>
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <select id="kop-tipo-sel" style="flex:1;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.3);color:#fff;border-radius:8px;padding:8px;font-size:13px">
+        <option value="combustible" ${tipo==='combustible'?'selected':''}>Combustible</option>
+        <option value="estacionamiento" ${tipo==='estacionamiento'?'selected':''}>Estacionamiento</option>
+        <option value="neumatico" ${tipo==='neumatico'?'selected':''}>Neumático</option>
+        <option value="reparacion" ${tipo==='reparacion'?'selected':''}>Reparación</option>
+        <option value="comida" ${tipo==='comida'?'selected':''}>Comida</option>
+        <option value="multa" ${tipo==='multa'?'selected':''}>Multa</option>
+        <option value="ayudante" ${tipo==='ayudante'?'selected':''}>Ayudante</option>
+        <option value="otro" ${tipo==='otro'?'selected':''}>Otro</option>
+      </select>
+      <input type="number" id="kop-monto-inp" value="${monto||''}" placeholder="Monto $"
+        style="width:110px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.3);color:#fff;border-radius:8px;padding:8px;font-size:13px">
+    </div>
+    <button onclick="kopilotoGuardar()" style="width:100%;padding:12px;border-radius:10px;border:none;background:#537A6E;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;color:#fff;cursor:pointer">
+      GUARDAR GASTO
+    </button>`;
+  respEl.style.display = 'block';
+}
 
-  } catch(e) {
-    document.getElementById('kop-respuesta').textContent = '⚠ Error conectando con KOPILOTO';
-    document.getElementById('kop-respuesta').style.display = 'block';
-    document.getElementById('kop-estado').textContent = 'Error';
+function kopilotoGuardar() {
+  const tipo = document.getElementById('kop-tipo-sel')?.value || 'otro';
+  const monto = parseInt(document.getElementById('kop-monto-inp')?.value)||0;
+  if(!monto) { 
+    document.getElementById('kop-monto-inp').style.borderColor='#8B2020'; 
+    return; 
+  }
+  _kopGastosExtras = (_kopGastosExtras||0) + monto;
+  _kopGastosDetalle = _kopGastosDetalle||[];
+  _kopGastosDetalle.push({tipo, monto});
+
+  const respEl = document.getElementById('kop-respuesta');
+  respEl.innerHTML = '<div style="color:#537A6E;font-size:16px;font-weight:700">✓ $'+monto.toLocaleString('es-CL')+' ('+tipo+') agregado al servicio</div>';
+  document.getElementById('kop-estado').textContent = 'Guardado';
+
+  if('speechSynthesis' in window) {
+    const utt = new SpeechSynthesisUtterance('Gasto registrado');
+    utt.lang = 'es-CL'; utt.rate = 1.1;
+    window.speechSynthesis.speak(utt);
   }
 }
 </script>
