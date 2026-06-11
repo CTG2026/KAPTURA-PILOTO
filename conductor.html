@@ -646,9 +646,13 @@
       <span style="font-size:13px;color:var(--muted)">Gastos varios</span>
       <span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#fff">$5.000</span>
     </div>
-    <div style="display:flex;justify-content:space-between;padding:10px 16px">
+    <div style="display:flex;justify-content:space-between;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,0.08)">
       <span style="font-size:13px;color:var(--muted)">Viático</span>
       <span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#fff">$12.000</span>
+    </div>
+    <div style="display:none;justify-content:space-between;padding:10px 16px" id="inf-gastos-kop-row">
+      <span style="font-size:13px;color:#D4A827">Gastos KOPILOTO</span>
+      <span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#D4A827" id="inf-gastos-kop">$0</span>
     </div>
   </div>
 
@@ -997,18 +1001,24 @@ function goDemoIntegrar() {
   setTimeout(()=>{
     document.getElementById('go-demo-integrando').innerHTML =
       '<div style="font-family:Barlow Condensed,sans-serif;font-size:18px;font-weight:700;color:#537A6E;letter-spacing:0.1em">✓ INTEGRACIÓN DE DATOS OK</div>';
-    // Poblar informe con valores reales
+    // Poblar informe con valores reales + gastos KOPILOTO
     const tarifa = _goDemoTarifa || 720000;
-    const costos = 283500 + 52659 + 15000 + 35000 + 5000 + 12000;
-    const margen = tarifa - costos;
+    const costosBase = 283500 + 52659 + 15000 + 35000 + 5000 + 12000;
+    const costosTotal = costosBase + (_kopGastosExtras || 0);
+    const margen = tarifa - costosTotal;
     const pkm = Math.round(tarifa / 567);
     const fmt = n => '$'+(n||0).toLocaleString('es-CL');
     document.getElementById('inf-tarifa').textContent = fmt(tarifa);
-    document.getElementById('inf-costos').textContent = fmt(costos);
+    document.getElementById('inf-costos').textContent = fmt(costosTotal);
     const mEl = document.getElementById('inf-margen');
     mEl.textContent = (margen<0?'-':'') + fmt(Math.abs(margen));
     mEl.style.color = margen>=0?'#1A5C1A':'#8B2020';
     document.getElementById('inf-pkm').textContent = fmt(pkm)+'/km';
+    // Mostrar gastos KOPILOTO si hay
+    if(_kopGastosExtras > 0) {
+      const kopEl = document.getElementById('inf-gastos-kop');
+      if(kopEl) { kopEl.textContent = fmt(_kopGastosExtras); kopEl.parentElement.style.display='flex'; }
+    }
     setTimeout(()=>{ showScreen('screen-go-informe'); }, 1200);
   }, 2000);
 }
@@ -1739,6 +1749,10 @@ function goDemoNuevo() {
   document.getElementById('go-demo-integrando').style.display = 'none';
   document.getElementById('go-demo-crono').textContent = '00:00:00';
   _goDemoTarifa = 720000;
+  _kopGastosExtras = 0;
+  _kopGastosDetalle = [];
+  const kopRow = document.getElementById('inf-gastos-kop-row');
+  if(kopRow) kopRow.style.display = 'none';
 }
 
 async function cargarInformesMesDemo() {
@@ -1937,6 +1951,8 @@ const ANON_KEY_KOP = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 
 let _kopRecognition = null;
 let _kopEscuchando = false;
+let _kopGastosExtras = 0;
+let _kopGastosDetalle = [];
 
 function kopilotoActivar() {
   document.getElementById('kopiloto-panel').style.display = 'block';
@@ -2003,22 +2019,15 @@ function kopilotoHablar() {
 
 async function kopilotoProcesar(texto) {
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    const res = await fetch('https://aqunzrukuruwzwywnurq.supabase.co/functions/v1/kopiloto', {
       method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 300,
-        system: `Eres KOPILOTO, asistente de KAPTURA para conductores de camión en Chile. 
-Analiza el mensaje del conductor y responde en JSON con este formato exacto:
-{"accion":"gasto|nota|evento|consulta|otro","tipo":"combustible|estacionamiento|reparacion|neumatico|comida|multa|ayudante|otro","monto":0,"descripcion":"texto breve","respuesta":"lo que le dices al conductor en voz natural, máximo 15 palabras"}
-Si es un gasto, extrae el monto en pesos chilenos. Si no hay monto claro, pon 0.
-Responde SOLO con el JSON, sin explicaciones.`,
-        messages: [{role:'user', content: texto}]
-      })
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFxdW56cnVrdXJ1d3p3eXdudXJxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgzOTM4NjAsImV4cCI6MjA2Mzk2OTg2MH0.sb_publishable_70t9UxFlcqYDj7AMybsrHg__IMGNA8C'
+      },
+      body: JSON.stringify({ texto })
     });
-    const data = await res.json();
-    const raw = data.content?.[0]?.text || '{}';
+    const raw = await res.text();
     let parsed;
     try { parsed = JSON.parse(raw.replace(/```json|```/g,'')); } catch(e) { parsed = {respuesta: 'Entendido, anotado.', accion:'otro'}; }
 
@@ -2027,10 +2036,25 @@ Responde SOLO con el JSON, sin explicaciones.`,
     respEl.style.display = 'block';
     document.getElementById('kop-estado').textContent = 'Listo';
 
-    // Si es un gasto, mostrarlo
+    // Si es un gasto, guardar en Supabase y aplicar al servicio
     if(parsed.accion === 'gasto' && parsed.monto > 0) {
-      respEl.textContent += ' — $' + parsed.monto.toLocaleString('es-CL') + ' registrado';
-      // Aquí se puede guardar en Supabase
+      const sess = JSON.parse(localStorage.getItem('kaptura_session')||'{}');
+      const patente = document.getElementById('go-demo-tarifa') ? 'CGFF12' : '';
+      await supa.from('kaptura_kopiloto_eventos').insert({
+        patente: patente,
+        empresa: sess.empresa || 'nexus',
+        servicio_id: 'DEMO-ACTIVO',
+        accion: parsed.accion,
+        tipo: parsed.tipo || 'otro',
+        monto: parsed.monto,
+        descripcion: parsed.descripcion || '',
+        texto_original: texto
+      });
+      // Acumular en variable global para sumar al informe
+      _kopGastosExtras = (_kopGastosExtras || 0) + parsed.monto;
+      _kopGastosDetalle = _kopGastosDetalle || [];
+      _kopGastosDetalle.push({tipo: parsed.tipo||'otro', monto: parsed.monto});
+      respEl.textContent += ' — $' + parsed.monto.toLocaleString('es-CL') + ' agregado al servicio';
     }
 
     // Respuesta por voz
