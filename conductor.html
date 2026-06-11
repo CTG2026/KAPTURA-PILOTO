@@ -2028,8 +2028,16 @@ async function kopilotoProcesar(texto) {
       body: JSON.stringify({ texto })
     });
     const raw = await res.text();
+    console.log('KOPILOTO raw:', raw);
     let parsed;
-    try { parsed = JSON.parse(raw.replace(/```json|```/g,'')); } catch(e) { parsed = {respuesta: 'Entendido, anotado.', accion:'otro'}; }
+    try { 
+      const cleaned = raw.replace(/```json|```/g,'').trim();
+      parsed = JSON.parse(cleaned); 
+    } catch(e) { 
+      console.log('KOPILOTO parse error:', e.message, 'raw:', raw);
+      parsed = {respuesta: 'Entendido, anotado.', accion:'otro'}; 
+    }
+    console.log('KOPILOTO parsed:', JSON.stringify(parsed));
 
     const respEl = document.getElementById('kop-respuesta');
     respEl.textContent = '✓ ' + (parsed.respuesta || 'Entendido');
