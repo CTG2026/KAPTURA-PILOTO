@@ -2091,7 +2091,7 @@ async function kopilotoGuardar() {
   const sess = JSON.parse(localStorage.getItem('kaptura_session')||'{}');
   await supa.from('kaptura_kopiloto_eventos').insert({
     patente: 'CGFF12',
-    empresa: sess.empresa || 'nexus',
+    empresa: (sess.empresa === 'demo' ? 'nexus' : sess.empresa) || 'nexus',
     servicio_id: 'DEMO-ACTIVO',
     accion: 'gasto',
     tipo: tipo,
