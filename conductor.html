@@ -2074,7 +2074,7 @@ async function kopilotoProcesar(texto) {
   respEl.style.display = 'block';
 }
 
-function kopilotoGuardar() {
+async function kopilotoGuardar() {
   const tipo = document.getElementById('kop-tipo-sel')?.value || 'otro';
   const monto = parseInt(document.getElementById('kop-monto-inp')?.value)||0;
   if(!monto) { 
@@ -2085,8 +2085,21 @@ function kopilotoGuardar() {
   _kopGastosDetalle = _kopGastosDetalle||[];
   _kopGastosDetalle.push({tipo, monto});
 
+  // Guardar en Supabase
+  const sess = JSON.parse(localStorage.getItem('kaptura_session')||'{}');
+  await supa.from('kaptura_kopiloto_eventos').insert({
+    patente: 'CGFF12',
+    empresa: sess.empresa || 'nexus',
+    servicio_id: 'DEMO-ACTIVO',
+    accion: 'gasto',
+    tipo: tipo,
+    monto: monto,
+    descripcion: tipo,
+    texto_original: tipo
+  });
+
   const respEl = document.getElementById('kop-respuesta');
-  respEl.innerHTML = '<div style="color:#537A6E;font-size:16px;font-weight:700">✓ $'+monto.toLocaleString('es-CL')+' ('+tipo+') agregado al servicio</div>';
+  respEl.innerHTML = '<div style="color:#537A6E;font-size:16px;font-weight:700">✓ $'+monto.toLocaleString('es-CL')+' ('+tipo+') guardado</div>';
   document.getElementById('kop-estado').textContent = 'Guardado';
 
   if('speechSynthesis' in window) {
