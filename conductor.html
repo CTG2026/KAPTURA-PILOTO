@@ -2020,11 +2020,19 @@ function kopilotoHablar() {
 async function kopilotoProcesar(texto) {
   try {
     // Usar Supabase Edge Function con sb_secret key
+    // Leer anthropic key desde DB.config (cargada en init)
+    const anthropicKey = DB.config?.anthropic_key || '';
+    if(!anthropicKey) {
+      document.getElementById('kop-respuesta').textContent = '⚠ KOPILOTO no configurado';
+      document.getElementById('kop-respuesta').style.display = 'block';
+      document.getElementById('kop-estado').textContent = 'Error';
+      return;
+    }
     const res = await fetch('https://aqunzrukuruwzwywnurq.supabase.co/functions/v1/KOPILOTO', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer sb_secret_Dk2xLGjmWiMsLnpNkLjPWA_mhtFpSbR'
+        'x-anthropic-key': anthropicKey
       },
       body: JSON.stringify({ texto })
     });
