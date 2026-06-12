@@ -33,7 +33,8 @@
     min-height: 100vh;
     max-width: 480px;
     margin: 0 auto;
-    padding-bottom: 40px;
+    padding-bottom: env(safe-area-inset-bottom, 80px);
+    padding-bottom: 80px;
     overflow-x: hidden;
   }
   .btn-main { font-size: clamp(16px, 5vw, 26px) !important; }
