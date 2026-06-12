@@ -2656,7 +2656,8 @@ async function cargarGPS() {
                         notasStr.includes('Retorno: nueva_asignacion') ? 'nueva_asignacion' : 'base';
 
     let inicioViaje = null;
-    if(!esPrimerServicio && retornoTipo !== 'nueva_asignacion') {
+    const esSalidaDesdeDestAnt = puntoInicioSvc === 'destino_anterior';
+    if(!esPrimerServicio && (retornoTipo !== 'nueva_asignacion' || esSalidaDesdeDestAnt)) {
       // Buscar servicio anterior del mismo equipo
       const svcsEquipo = DB.servicios
         .filter(sv => sv.patente === patente && sv.estado === 'cerrado' && sv.fecha < fechaInicio)
@@ -2664,11 +2665,10 @@ async function cargarGPS() {
       const svcAnterior = svcsEquipo[0];
       if(svcAnterior) {
         const notasAnt = svcAnterior.notas || '';
-        if(notasAnt.includes('Retorno: nueva_asignacion') || notasAnt.includes('Retorno: pernocta')) {
-          // El anterior terminó en nueva asignación — el origen real de este servicio
-          // es el destino del anterior, no la base
-          // Buscar primer evento desde el destino del servicio anterior
-          const destinoAnt = svcAnterior.destino || '';
+        const destinoAnt = svcAnterior.destino || '';
+        // Buscar inicio desde destino anterior si punto_inicio = destino_anterior
+        // O si el anterior terminó en nueva_asignacion/pernocta
+        if(esSalidaDesdeDestAnt || notasAnt.includes('Retorno: nueva_asignacion') || notasAnt.includes('Retorno: pernocta')) {
           if(destinoAnt) {
             const destKws = destinoAnt.toLowerCase().split(/[\s,]+/).filter(w=>w.length>3);
             const primerEvtDestAnt = eventos.find(e => {
@@ -2678,6 +2678,10 @@ async function cargarGPS() {
             if(primerEvtDestAnt) {
               inicioViaje = primerEvtDestAnt.datetime_evento;
               console.log('Inicio desde destino anterior:', destinoAnt, '->', inicioViaje);
+            } else {
+              // Si no encuentra evento en destino anterior, tomar primer trip del día
+              inicioViaje = tripsRaw[0]?.datetime_evento || null;
+              console.log('Inicio desde primer trip (destino ant no encontrado):', inicioViaje);
             }
           }
         }
