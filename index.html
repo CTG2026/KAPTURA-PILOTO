@@ -2769,7 +2769,7 @@ async function cargarGPS() {
     // Si es primer servicio → usar todos los trips (sin filtro firstLongTrip)
     // Si no → filtrar por firstLongTrip para ignorar movimientos locales pre-viaje
     let firstLongTrip = null;
-    if(!esPrimerServicio) {
+    if(!esPrimerServicio && !esSalidaDesdeDestAnt) {
       // Buscar primer trip largo desde la BASE (Coltauco) primero
       const baseKws = ['coltauco','quillaiquén','quillayquén','ruta h-30'];
       const firstTripBase = tripsRaw.find(t => t.km_tramo > 10 && baseKws.some(k=>t.address.toLowerCase().includes(k)));
