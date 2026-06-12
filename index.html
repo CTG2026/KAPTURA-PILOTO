@@ -2537,7 +2537,8 @@ async function calcCostos() {
       const empActual = DB._empresa || 'global_solutions';
       const equiposDia = DB.servicios.filter(sv => {
         if(!estadosValidos.includes(sv.estado)) return false;
-        if((sv.empresa||'global_solutions') !== empActual) return false;
+        const svEmp = sv.empresa || 'global_solutions';
+        if(svEmp !== empActual) { console.log('CF excluye', sv.servicio_id, 'empresa:', svEmp, 'vs', empActual); return false; }
         const svIni  = sv.fecha || '';
         const svTerm = sv._fecha_termino || sv.fecha_termino || sv.fecha || '';
         return svIni <= fechaStr && svTerm >= fechaStr;
