@@ -2257,7 +2257,8 @@ async function goGuardarOnboarding() {
   if(btn) { btn.textContent = 'Guardando...'; btn.disabled = true; }
   const draft = window._goDraft;
   draft.onboarding_completo = true;
-  const { error } = await supa.from('kaptura_go_usuarios').update(draft).eq('id', draft.id);
+  const { id: _id, created_at: _ca, ...payload } = draft;
+  const { error } = await supa.from('kaptura_go_usuarios').update(payload).eq('id', draft.id);
   if(error) {
     alert('Error al guardar: ' + error.message);
     if(btn) { btn.textContent = 'FINALIZAR'; btn.disabled = false; }
