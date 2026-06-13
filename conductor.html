@@ -964,6 +964,8 @@ function cargarSesionConductor() {
     // Limpiar URL sin recargar
     window.history.replaceState(null, '', window.location.pathname);
     abrirModulo(modulo);
+  } else {
+    showScreen('screen-modo');
   }
 }
 
