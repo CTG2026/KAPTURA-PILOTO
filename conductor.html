@@ -955,12 +955,29 @@ function abrirModulo(modo) {
     if(sess?.pin === '0000') {
       showScreen('screen-go-demo');
     } else {
-      showScreen('screen-gps');
+      abrirGoProduccion(sess?.pin);
     }
   } else if(modo === 'pro') {
     showScreen('screen-login');
   } else if(modo === 'flota') {
     window.location.href = 'index.html';
+  }
+}
+
+async function abrirGoProduccion(pin) {
+  if(!pin) { showScreen('screen-go-demo'); return; }
+  showScreen('screen-go-cargando');
+  const { data, error } = await supa.from('kaptura_go_usuarios').select('*').eq('pin', pin).single();
+  if(error || !data) {
+    document.getElementById('go-cargando-msg').textContent = 'PIN no válido para KAPTURA GO.';
+    return;
+  }
+  // Guardar perfil GO en memoria
+  window._goUsuario = data;
+  if(!data.onboarding_completo) {
+    goIniciarOnboarding();
+  } else {
+    goMostrarHome();
   }
 }
 
@@ -2117,6 +2134,456 @@ async function kopilotoGuardar() {
     window.speechSynthesis.speak(utt);
   }
 }
+
+// ── GO PRODUCCIÓN ──────────────────────────────────────────────
+
+function goIniciarOnboarding() {
+  window._goStep = 1;
+  window._goDraft = Object.assign({}, window._goUsuario);
+  goMostrarStep(1);
+  showScreen('screen-go-onboarding');
+}
+
+function goMostrarStep(n) {
+  for(let i=1;i<=6;i++) {
+    const el = document.getElementById('go-step-'+i);
+    if(el) el.style.display = (i===n)?'block':'none';
+  }
+  // Barra progreso
+  document.querySelectorAll('.go-dot').forEach((d,i)=>{
+    d.className = 'go-dot' + (i+1 < n ? ' done' : i+1 === n ? ' active' : '');
+  });
+  document.getElementById('go-step-label').textContent = ['','TU NEGOCIO','TU CAMIÓN','TUS INGRESOS','COSTOS FIJOS','COSTOS VARIABLES','REVISIÓN'][n]||'';
+  document.getElementById('go-step-num').textContent = 'Paso '+n+' de 6';
+}
+
+function goSiguiente(n) {
+  // Guardar datos del step actual
+  if(n===1) {
+    window._goDraft.nombre      = document.getElementById('go-nombre').value.trim();
+    window._goDraft.pin         = document.getElementById('go-pin').value.trim();
+    window._goDraft.ciudad_base = document.getElementById('go-ciudad').value.trim();
+    window._goDraft.tributacion = document.getElementById('go-tributacion').value;
+    if(!window._goDraft.nombre||!window._goDraft.pin) { alert('Nombre y PIN son obligatorios'); return; }
+    if(window._goDraft.pin.length !== 4) { alert('El PIN debe tener 4 dígitos'); return; }
+  }
+  if(n===2) {
+    window._goDraft.patente           = document.getElementById('go-patente').value.trim().toUpperCase();
+    window._goDraft.tipo_equipo       = document.getElementById('go-tipo-equipo').value;
+    window._goDraft.rendimiento_km_lt = parseFloat(document.getElementById('go-rendimiento').value)||0;
+    window._goDraft.valor_comercial_camion = parseInt(document.getElementById('go-valor-camion').value.replace(/\D/g,''))||0;
+    if(!window._goDraft.patente||!window._goDraft.rendimiento_km_lt) { alert('Patente y rendimiento son obligatorios'); return; }
+  }
+  if(n===3) {
+    window._goDraft.comision_pct  = parseFloat(document.getElementById('go-comision-pct').value)||0;
+    window._goDraft.comision_fija = parseInt(document.getElementById('go-comision-fija').value.replace(/\D/g,''))||0;
+  }
+  if(n===4) {
+    window._goDraft.costo_fijo_mensual  = parseInt(document.getElementById('go-costo-fijo').value.replace(/\D/g,''))||0;
+    window._goDraft.dias_operativos_mes = parseInt(document.getElementById('go-dias-op').value)||20;
+  }
+  if(n===5) {
+    window._goDraft.viatico             = parseInt(document.getElementById('go-viatico').value.replace(/\D/g,''))||0;
+    window._goDraft.sueldo_conductor    = parseInt(document.getElementById('go-sueldo').value.replace(/\D/g,''))||0;
+    window._goDraft.mantencion_km       = parseInt(document.getElementById('go-mant-km').value)||0;
+    window._goDraft.mantencion_costo    = parseInt(document.getElementById('go-mant-costo').value.replace(/\D/g,''))||0;
+    window._goDraft.neumatico_costo     = parseInt(document.getElementById('go-neum-costo').value.replace(/\D/g,''))||0;
+    window._goDraft.neumatico_vida_km   = parseInt(document.getElementById('go-neum-km').value)||0;
+    window._goDraft.fondo_contingencia  = parseInt(document.getElementById('go-fondo').value.replace(/\D/g,''))||0;
+  }
+  if(n < 6) { goMostrarStep(n+1); window._goStep = n+1; }
+  else { goGuardarOnboarding(); }
+}
+
+function goVolver() {
+  if(window._goStep > 1) { window._goStep--; goMostrarStep(window._goStep); }
+}
+
+async function goGuardarOnboarding() {
+  const btn = document.getElementById('go-btn-finalizar');
+  if(btn) { btn.textContent = 'Guardando...'; btn.disabled = true; }
+  const draft = window._goDraft;
+  draft.onboarding_completo = true;
+  const { error } = await supa.from('kaptura_go_usuarios').update(draft).eq('id', draft.id);
+  if(error) {
+    alert('Error al guardar: ' + error.message);
+    if(btn) { btn.textContent = 'FINALIZAR'; btn.disabled = false; }
+    return;
+  }
+  window._goUsuario = draft;
+  goMostrarHome();
+}
+
+function goMostrarHome() {
+  const u = window._goUsuario;
+  document.getElementById('go-home-nombre').textContent  = u.nombre || '—';
+  document.getElementById('go-home-patente').textContent = (u.patente||'—') + ' · ' + (u.tipo_equipo||'—');
+  // Costo base por día
+  const cf_dia = Math.round((u.costo_fijo_mensual||0) / (u.dias_operativos_mes||20));
+  const costo_dia = cf_dia + (u.viatico||0) + (u.sueldo_conductor||0);
+  document.getElementById('go-home-costo-dia').textContent = '$' + costo_dia.toLocaleString('es-CL');
+  // Costo por km
+  const precio_lt = 1290;
+  const comb_km = u.rendimiento_km_lt > 0 ? Math.round(precio_lt / u.rendimiento_km_lt) : 0;
+  const mant_km  = (u.mantencion_km > 0 && u.mantencion_costo > 0) ? Math.round(u.mantencion_costo / u.mantencion_km) : 0;
+  const neum_km  = (u.neumatico_vida_km > 0 && u.neumatico_costo > 0) ? Math.round(u.neumatico_costo / u.neumatico_vida_km) : 0;
+  document.getElementById('go-home-costo-km').textContent = '$' + (comb_km + mant_km + neum_km).toLocaleString('es-CL');
+  // Poblar clientes
+  const sel = document.getElementById('go-home-cliente');
+  sel.innerHTML = '<option value="">— Seleccionar cliente —</option>';
+  (u.clientes||[]).forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c.nombre;
+    opt.textContent = c.nombre;
+    sel.appendChild(opt);
+  });
+  showScreen('screen-go-home');
+}
+
+function goDetectarTarifa() {
+  const u = window._goUsuario;
+  const cliente = document.getElementById('go-home-cliente').value;
+  const destino = document.getElementById('go-home-destino').value.trim().toUpperCase();
+  if(!cliente || !destino) return;
+  const clienteObj = (u.clientes||[]).find(c => c.nombre === cliente);
+  if(!clienteObj) return;
+  const entrada = (clienteObj.tarifario||[]).find(t => t.destino.toUpperCase() === destino);
+  if(entrada) {
+    document.getElementById('go-home-tarifa').value = entrada.tarifa;
+    document.getElementById('go-home-tarifa-label').textContent = 'TARIFA DETECTADA · ' + destino;
+    document.getElementById('go-home-tarifa-label').style.color = '#537A6E';
+  } else {
+    document.getElementById('go-home-tarifa-label').textContent = 'TARIFA (ingresa manualmente)';
+    document.getElementById('go-home-tarifa-label').style.color = 'rgba(255,255,255,0.5)';
+  }
+}
+
+</script>
+
+<!-- ═══ PANTALLA: GO CARGANDO ═══ -->
+<div class="screen" id="screen-go-cargando" style="padding:40px 20px;text-align:center">
+  <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;color:#D8D5CC;letter-spacing:0.08em;margin-bottom:16px">KAPTURA GO</div>
+  <div id="go-cargando-msg" style="font-size:14px;color:rgba(255,255,255,0.5)">Cargando tu perfil...</div>
+</div>
+
+<!-- ═══ PANTALLA: GO ONBOARDING ═══ -->
+<div class="screen" id="screen-go-onboarding" style="padding:0">
+
+  <!-- Header fijo -->
+  <div style="background:rgba(0,0,0,0.3);padding:12px 16px 10px;border-bottom:1px solid rgba(255,255,255,0.1)">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;letter-spacing:0.12em;color:#fff">KAPTURA</div>
+        <div style="font-size:10px;font-weight:700;color:#D8D5CC;letter-spacing:0.2em">GO — Configuración inicial</div>
+      </div>
+      <div id="go-step-num" style="font-size:11px;color:rgba(255,255,255,0.4)">Paso 1 de 6</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:6px">
+      <div class="go-dot active" style="width:28px;height:4px;border-radius:2px;background:#D8D5CC"></div>
+      <div class="go-dot" style="width:28px;height:4px;border-radius:2px;background:rgba(255,255,255,0.2)"></div>
+      <div class="go-dot" style="width:28px;height:4px;border-radius:2px;background:rgba(255,255,255,0.2)"></div>
+      <div class="go-dot" style="width:28px;height:4px;border-radius:2px;background:rgba(255,255,255,0.2)"></div>
+      <div class="go-dot" style="width:28px;height:4px;border-radius:2px;background:rgba(255,255,255,0.2)"></div>
+      <div class="go-dot" style="width:28px;height:4px;border-radius:2px;background:rgba(255,255,255,0.2)"></div>
+      <div id="go-step-label" style="font-size:10px;color:rgba(255,255,255,0.5);letter-spacing:0.1em;margin-left:4px">TU NEGOCIO</div>
+    </div>
+  </div>
+
+  <div style="padding:16px">
+
+    <!-- STEP 1: TU NEGOCIO -->
+    <div id="go-step-1">
+      <div style="font-size:10px;font-weight:700;letter-spacing:0.2em;color:#D8D5CC;text-transform:uppercase;margin-bottom:4px">Paso 1</div>
+      <div style="font-size:22px;font-weight:900;color:#fff;letter-spacing:0.04em;margin-bottom:4px">Tu negocio</div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.5);line-height:1.4;margin-bottom:16px">Datos básicos para identificarte en el sistema.</div>
+
+      <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:12px 14px;margin-bottom:10px">
+        <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.6);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px">Nombre completo</div>
+        <input id="go-nombre" type="text" placeholder="Ej: Carlos Torres" style="width:100%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:7px;padding:9px 12px;font-size:14px;color:#fff;font-family:inherit">
+      </div>
+
+      <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:12px 14px;margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <span style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.6);letter-spacing:0.1em;text-transform:uppercase">PIN de acceso</span>
+        </div>
+        <input id="go-pin" type="number" maxlength="4" placeholder="4 dígitos" style="width:100%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:7px;padding:9px 12px;font-size:14px;color:#fff;font-family:inherit">
+        <div style="background:rgba(212,168,39,0.08);border:1px solid rgba(212,168,39,0.25);border-radius:8px;padding:10px 12px;margin-top:8px">
+          <div style="font-size:11px;font-weight:700;color:#D4A827;margin-bottom:4px">¿QUÉ ES EL PIN?</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.65);line-height:1.5">Es tu clave de acceso a KAPTURA. Elige 4 números que recuerdes fácil. Puedes cambiarlo en cualquier momento desde Configuración.</div>
+        </div>
+      </div>
+
+      <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:12px 14px;margin-bottom:10px">
+        <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.6);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px">Ciudad base</div>
+        <input id="go-ciudad" type="text" placeholder="Ej: Rancagua" style="width:100%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:7px;padding:9px 12px;font-size:14px;color:#fff;font-family:inherit">
+      </div>
+
+      <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:12px 14px;margin-bottom:16px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <span style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.6);letter-spacing:0.1em;text-transform:uppercase">¿Cómo tributas?</span>
+        </div>
+        <select id="go-tributacion" style="width:100%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:7px;padding:9px 12px;font-size:14px;color:#fff;font-family:inherit">
+          <option value="presunta">Renta presunta</option>
+          <option value="efectiva">Renta efectiva</option>
+          <option value="no_se">No sé / Lo veo con mi contador</option>
+        </select>
+        <div style="background:rgba(212,168,39,0.08);border:1px solid rgba(212,168,39,0.25);border-radius:8px;padding:10px 12px;margin-top:8px">
+          <div style="font-size:11px;font-weight:700;color:#D4A827;margin-bottom:4px">¿QUÉ SIGNIFICA?</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.65);line-height:1.5">La mayoría de los transportistas independientes tributa en <strong style="color:#fff">renta presunta</strong> — pagas impuesto sobre el 10% del avalúo de tu camión, no sobre lo que ganas. Puede ser una gran ventaja.</div>
+          <div style="background:rgba(83,122,110,0.2);border-radius:6px;padding:7px 10px;margin-top:7px;font-size:11px;color:#9fcfc4;line-height:1.5">
+            <strong style="color:#fff">Ejemplo:</strong> Camión avaluado en $15.000.000 → pagas impuesto sobre $1.500.000 → aprox. <strong style="color:#fff">$135.000/año</strong> en vez de miles de pesos sobre tus ganancias reales.
+          </div>
+        </div>
+      </div>
+
+      <button onclick="goSiguiente(1)" style="width:100%;padding:18px;border-radius:12px;border:none;background:#537A6E;font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:#fff;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer">Siguiente →</button>
+    </div>
+
+    <!-- STEP 2: TU CAMIÓN -->
+    <div id="go-step-2" style="display:none">
+      <div style="font-size:10px;font-weight:700;letter-spacing:0.2em;color:#D8D5CC;text-transform:uppercase;margin-bottom:4px">Paso 2</div>
+      <div style="font-size:22px;font-weight:900;color:#fff;letter-spacing:0.04em;margin-bottom:4px">Tu camión</div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.5);line-height:1.4;margin-bottom:16px">Solo 3 datos. KAPTURA hace el resto.</div>
+
+      <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:12px 14px;margin-bottom:10px">
+        <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.6);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px">Patente</div>
+        <input id="go-patente" type="text" placeholder="Ej: CGFF12" style="width:100%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:7px;padding:9px 12px;font-size:14px;color:#fff;font-family:inherit;text-transform:uppercase">
+      </div>
+
+      <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:12px 14px;margin-bottom:10px">
+        <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.6);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px">Tipo de equipo</div>
+        <select id="go-tipo-equipo" style="width:100%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:7px;padding:9px 12px;font-size:14px;color:#fff;font-family:inherit">
+          <option value="rampla">Rampla</option>
+          <option value="camion">Camión</option>
+          <option value="furgon">Furgón</option>
+          <option value="otro">Otro</option>
+        </select>
+      </div>
+
+      <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:12px 14px;margin-bottom:10px">
+        <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.6);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px">Rendimiento km/lt</div>
+        <input id="go-rendimiento" type="number" step="0.1" placeholder="Ej: 2.5" style="width:100%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:7px;padding:9px 12px;font-size:14px;color:#fff;font-family:inherit">
+        <div style="background:rgba(212,168,39,0.08);border:1px solid rgba(212,168,39,0.25);border-radius:8px;padding:10px 12px;margin-top:8px">
+          <div style="font-size:11px;font-weight:700;color:#D4A827;margin-bottom:4px">POR QUÉ IMPORTA</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.65);line-height:1.5">El combustible puede ser el 84% de tus costos variables. Sin este dato KAPTURA no puede calcular lo que gastaste en bencina por viaje.</div>
+          <div style="background:rgba(83,122,110,0.2);border-radius:6px;padding:7px 10px;margin-top:7px;font-size:11px;color:#9fcfc4;line-height:1.5">
+            <strong style="color:#fff">Ejemplo:</strong> 2.5 km/lt · viaje 500 km → 200 litros × $1.290 = <strong style="color:#fff">$258.000 en combustible</strong>. Si no sabes tu rendimiento exacto, empieza con 2.5.
+          </div>
+        </div>
+      </div>
+
+      <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:12px 14px;margin-bottom:16px">
+        <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.6);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px">Valor comercial del camión <span style="background:rgba(255,255,255,0.08);border-radius:4px;padding:1px 6px;font-size:9px;color:rgba(255,255,255,0.4);margin-left:4px">OPCIONAL</span></div>
+        <input id="go-valor-camion" type="text" placeholder="Ej: 45000000" style="width:100%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:7px;padding:9px 12px;font-size:14px;color:#fff;font-family:inherit">
+        <div style="margin-top:6px;display:inline-block;background:rgba(212,168,39,0.12);border:1px solid rgba(212,168,39,0.3);border-radius:4px;padding:2px 8px;font-size:10px;color:#D4A827">Afecta tu PPM e impuesto anual</div>
+      </div>
+
+      <div style="display:flex;gap:8px">
+        <button onclick="goVolver()" style="flex:1;padding:16px;border-radius:12px;border:1px solid rgba(255,255,255,0.15);background:transparent;font-family:'Barlow Condensed',sans-serif;font-size:16px;color:rgba(255,255,255,0.5);cursor:pointer">← Volver</button>
+        <button onclick="goSiguiente(2)" style="flex:2;padding:16px;border-radius:12px;border:none;background:#537A6E;font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;color:#fff;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer">Siguiente →</button>
+      </div>
+    </div>
+
+    <!-- STEP 3: TUS INGRESOS -->
+    <div id="go-step-3" style="display:none">
+      <div style="font-size:10px;font-weight:700;letter-spacing:0.2em;color:#D8D5CC;text-transform:uppercase;margin-bottom:4px">Paso 3</div>
+      <div style="font-size:22px;font-weight:900;color:#fff;letter-spacing:0.04em;margin-bottom:4px">Tus ingresos</div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.5);line-height:1.4;margin-bottom:16px">Clientes y comisiones que descuentan de tu tarifa.</div>
+
+      <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:12px 14px;margin-bottom:10px">
+        <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.6);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px">Comisión intermediario <span style="background:rgba(255,255,255,0.08);border-radius:4px;padding:1px 6px;font-size:9px;color:rgba(255,255,255,0.4);margin-left:4px">% sobre tarifa</span></div>
+        <input id="go-comision-pct" type="number" step="0.5" placeholder="Ej: 5" style="width:100%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:7px;padding:9px 12px;font-size:14px;color:#fff;font-family:inherit">
+        <div style="background:rgba(212,168,39,0.08);border:1px solid rgba(212,168,39,0.25);border-radius:8px;padding:10px 12px;margin-top:8px">
+          <div style="font-size:11px;font-weight:700;color:#D4A827;margin-bottom:4px">¿QUÉ ES ESTO?</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.65);line-height:1.5">Si consigues carga a través de un operador logístico, broker o plataforma, ellos te cobran una comisión. KAPTURA la descuenta de tu ingreso bruto para mostrarte lo que realmente entra a tu bolsillo.</div>
+          <div style="background:rgba(83,122,110,0.2);border-radius:6px;padding:7px 10px;margin-top:7px;font-size:11px;color:#9fcfc4;line-height:1.5">
+            <strong style="color:#fff">Ejemplo:</strong> Tarifa $500.000 · comisión 5% → te descuentan $25.000 → ingresas <strong style="color:#fff">$475.000 reales</strong>.
+          </div>
+        </div>
+      </div>
+
+      <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:12px 14px;margin-bottom:16px">
+        <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.6);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px">O comisión fija por servicio</div>
+        <input id="go-comision-fija" type="text" placeholder="Ej: 15000" style="width:100%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:7px;padding:9px 12px;font-size:14px;color:#fff;font-family:inherit">
+        <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-top:5px">Si aplica comisión % Y comisión fija, KAPTURA descuenta ambas.</div>
+      </div>
+
+      <div style="background:rgba(83,122,110,0.1);border:1px solid rgba(83,122,110,0.3);border-radius:10px;padding:12px 14px;margin-bottom:16px">
+        <div style="font-size:11px;font-weight:700;color:#537A6E;letter-spacing:0.1em;margin-bottom:4px">CLIENTES Y TARIFARIO</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.55);line-height:1.5">Los agregas desde la pantalla de inicio — uno a uno con sus destinos y tarifas. El sistema los guarda y los despliega automáticamente cuando inicias un servicio.</div>
+      </div>
+
+      <div style="display:flex;gap:8px">
+        <button onclick="goVolver()" style="flex:1;padding:16px;border-radius:12px;border:1px solid rgba(255,255,255,0.15);background:transparent;font-family:'Barlow Condensed',sans-serif;font-size:16px;color:rgba(255,255,255,0.5);cursor:pointer">← Volver</button>
+        <button onclick="goSiguiente(3)" style="flex:2;padding:16px;border-radius:12px;border:none;background:#537A6E;font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;color:#fff;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer">Siguiente →</button>
+      </div>
+    </div>
+
+    <!-- STEP 4: COSTOS FIJOS -->
+    <div id="go-step-4" style="display:none">
+      <div style="font-size:10px;font-weight:700;letter-spacing:0.2em;color:#D8D5CC;text-transform:uppercase;margin-bottom:4px">Paso 4</div>
+      <div style="font-size:22px;font-weight:900;color:#fff;letter-spacing:0.04em;margin-bottom:4px">Costos fijos</div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.5);line-height:1.4;margin-bottom:16px">Lo que pagas aunque el camión no salga.</div>
+
+      <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:12px 14px;margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <span style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.6);letter-spacing:0.1em;text-transform:uppercase">Total fijos mensuales</span>
+        </div>
+        <input id="go-costo-fijo" type="text" placeholder="Ej: 1200000" style="width:100%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:7px;padding:9px 12px;font-size:14px;color:#fff;font-family:inherit">
+        <div style="background:rgba(212,168,39,0.08);border:1px solid rgba(212,168,39,0.25);border-radius:8px;padding:10px 12px;margin-top:8px">
+          <div style="font-size:11px;font-weight:700;color:#D4A827;margin-bottom:4px">¿QUÉ INCLUYE ESTE NÚMERO?</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.65);line-height:1.5">Suma todo lo que pagas mensualmente aunque el camión esté parado: crédito o leasing, seguro, permiso de circulación (dividido en 12), GPS, plan de datos, contador, estacionamiento.</div>
+          <div style="background:rgba(83,122,110,0.2);border-radius:6px;padding:7px 10px;margin-top:7px;font-size:11px;color:#9fcfc4;line-height:1.5">
+            <strong style="color:#fff">Ejemplo:</strong> Crédito $450.000 + seguro $80.000 + permiso $25.000 + GPS $15.000 + contador $50.000 = <strong style="color:#fff">$620.000/mes fijos</strong>.
+          </div>
+        </div>
+      </div>
+
+      <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:12px 14px;margin-bottom:16px">
+        <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.6);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px">Días que trabajas al mes</div>
+        <input id="go-dias-op" type="number" placeholder="Ej: 20" value="20" style="width:100%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:7px;padding:9px 12px;font-size:14px;color:#fff;font-family:inherit">
+        <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-top:5px">KAPTURA divide tus costos fijos por este número para calcular el costo por día.</div>
+      </div>
+
+      <div style="display:flex;gap:8px">
+        <button onclick="goVolver()" style="flex:1;padding:16px;border-radius:12px;border:1px solid rgba(255,255,255,0.15);background:transparent;font-family:'Barlow Condensed',sans-serif;font-size:16px;color:rgba(255,255,255,0.5);cursor:pointer">← Volver</button>
+        <button onclick="goSiguiente(4)" style="flex:2;padding:16px;border-radius:12px;border:none;background:#537A6E;font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;color:#fff;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer">Siguiente →</button>
+      </div>
+    </div>
+
+    <!-- STEP 5: COSTOS VARIABLES -->
+    <div id="go-step-5" style="display:none">
+      <div style="font-size:10px;font-weight:700;letter-spacing:0.2em;color:#D8D5CC;text-transform:uppercase;margin-bottom:4px">Paso 5</div>
+      <div style="font-size:22px;font-weight:900;color:#fff;letter-spacing:0.04em;margin-bottom:4px">Costos variables</div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.5);line-height:1.4;margin-bottom:16px">Lo que gastas cuando el camión trabaja.</div>
+
+      <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:12px 14px;margin-bottom:10px">
+        <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.6);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px">Viático por servicio</div>
+        <input id="go-viatico" type="text" placeholder="Ej: 12000" style="width:100%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:7px;padding:9px 12px;font-size:14px;color:#fff;font-family:inherit">
+      </div>
+
+      <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:12px 14px;margin-bottom:10px">
+        <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.6);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px">Sueldo conductor por servicio <span style="background:rgba(255,255,255,0.08);border-radius:4px;padding:1px 6px;font-size:9px;color:rgba(255,255,255,0.4);margin-left:4px">SI APLICA</span></div>
+        <input id="go-sueldo" type="text" placeholder="Ej: 33000" style="width:100%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:7px;padding:9px 12px;font-size:14px;color:#fff;font-family:inherit">
+      </div>
+
+      <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:12px 14px;margin-bottom:10px">
+        <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.6);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px">Mantención preventiva — cada cuántos km</div>
+        <input id="go-mant-km" type="number" placeholder="Ej: 15000" style="width:100%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:7px;padding:9px 12px;font-size:14px;color:#fff;font-family:inherit">
+        <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.6);letter-spacing:0.1em;text-transform:uppercase;margin:10px 0 6px">Costo estimado por mantención</div>
+        <input id="go-mant-costo" type="text" placeholder="Ej: 180000" style="width:100%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:7px;padding:9px 12px;font-size:14px;color:#fff;font-family:inherit">
+        <div style="background:rgba(212,168,39,0.08);border:1px solid rgba(212,168,39,0.25);border-radius:8px;padding:10px 12px;margin-top:8px">
+          <div style="font-size:11px;font-weight:700;color:#D4A827;margin-bottom:4px">¿QUÉ INCLUYE?</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.65);line-height:1.5">Aceite, filtros, frenos, alineación, amortiguadores, luces. KAPTURA calcula cuánto te cuesta por km y lo suma al costo de cada viaje.</div>
+          <div style="background:rgba(83,122,110,0.2);border-radius:6px;padding:7px 10px;margin-top:7px;font-size:11px;color:#9fcfc4;line-height:1.5">
+            <strong style="color:#fff">Ejemplo:</strong> Mantención cada 15.000 km · costo $180.000 → <strong style="color:#fff">$12/km</strong> de mantención en cada viaje.
+          </div>
+        </div>
+      </div>
+
+      <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:12px 14px;margin-bottom:10px">
+        <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.6);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px">Neumáticos — costo juego completo</div>
+        <input id="go-neum-costo" type="text" placeholder="Ej: 2400000" style="width:100%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:7px;padding:9px 12px;font-size:14px;color:#fff;font-family:inherit">
+        <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.6);letter-spacing:0.1em;text-transform:uppercase;margin:10px 0 6px">Vida útil estimada en km</div>
+        <input id="go-neum-km" type="number" placeholder="Ej: 150000" style="width:100%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:7px;padding:9px 12px;font-size:14px;color:#fff;font-family:inherit">
+      </div>
+
+      <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:12px 14px;margin-bottom:16px">
+        <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.6);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px">Fondo de contingencia mensual</div>
+        <input id="go-fondo" type="text" placeholder="Ej: 100000" style="width:100%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:7px;padding:9px 12px;font-size:14px;color:#fff;font-family:inherit">
+        <div style="background:rgba(212,168,39,0.08);border:1px solid rgba(212,168,39,0.25);border-radius:8px;padding:10px 12px;margin-top:8px">
+          <div style="font-size:11px;font-weight:700;color:#D4A827;margin-bottom:4px">MANTENCIÓN MAYOR — LOS GOLPES GRANDES</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.65);line-height:1.5">Motor, caja de cambios, diferencial, embrague, dirección, sistema eléctrico, hidráulico. No sabes cuándo van a llegar, pero van a llegar. Aparta un monto mensual para no quedar al debe.</div>
+          <div style="background:rgba(83,122,110,0.2);border-radius:6px;padding:7px 10px;margin-top:7px;font-size:11px;color:#9fcfc4;line-height:1.5">
+            <strong style="color:#fff">Ejemplo:</strong> Fondo $100.000/mes · 20 días operativos → <strong style="color:#fff">$5.000 por servicio</strong> que KAPTURA reserva automáticamente.
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:8px">
+        <button onclick="goVolver()" style="flex:1;padding:16px;border-radius:12px;border:1px solid rgba(255,255,255,0.15);background:transparent;font-family:'Barlow Condensed',sans-serif;font-size:16px;color:rgba(255,255,255,0.5);cursor:pointer">← Volver</button>
+        <button onclick="goSiguiente(5)" style="flex:2;padding:16px;border-radius:12px;border:none;background:#537A6E;font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;color:#fff;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer">Siguiente →</button>
+      </div>
+    </div>
+
+    <!-- STEP 6: REVISIÓN -->
+    <div id="go-step-6" style="display:none">
+      <div style="font-size:10px;font-weight:700;letter-spacing:0.2em;color:#D8D5CC;text-transform:uppercase;margin-bottom:4px">Paso 6</div>
+      <div style="font-size:22px;font-weight:900;color:#fff;letter-spacing:0.04em;margin-bottom:4px">Listo para partir</div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.5);line-height:1.4;margin-bottom:16px">Revisa tus números antes de empezar.</div>
+
+      <div id="go-resumen" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:14px;margin-bottom:16px">
+        <!-- Se llena dinámicamente -->
+      </div>
+
+      <div style="background:rgba(83,122,110,0.12);border:1px solid rgba(83,122,110,0.3);border-radius:10px;padding:14px;margin-bottom:16px">
+        <div style="font-size:11px;font-weight:700;color:#537A6E;letter-spacing:0.1em;margin-bottom:8px">TU COSTO REAL POR SERVICIO</div>
+        <div id="go-resumen-costo" style="font-size:28px;font-weight:900;color:#D4A827;font-family:'Barlow Condensed',sans-serif">Calculando...</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:4px">Costo base estimado por día. La tarifa mínima para no perder plata.</div>
+      </div>
+
+      <div style="display:flex;gap:8px">
+        <button onclick="goVolver()" style="flex:1;padding:16px;border-radius:12px;border:1px solid rgba(255,255,255,0.15);background:transparent;font-family:'Barlow Condensed',sans-serif;font-size:16px;color:rgba(255,255,255,0.5);cursor:pointer">← Volver</button>
+        <button id="go-btn-finalizar" onclick="goSiguiente(6)" style="flex:2;padding:16px;border-radius:12px;border:none;background:#D4A827;font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;color:#2E3A00;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer">FINALIZAR ✓</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══ PANTALLA: GO HOME ═══ -->
+<div class="screen" id="screen-go-home" style="padding:0">
+
+  <div style="background:rgba(0,0,0,0.3);padding:12px 16px 10px;border-bottom:1px solid rgba(255,255,255,0.1);display:flex;justify-content:space-between;align-items:center">
+    <div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;letter-spacing:0.12em;color:#fff">KAPTURA</div>
+      <div style="font-size:10px;font-weight:700;color:#D8D5CC;letter-spacing:0.2em">GO</div>
+    </div>
+    <button onclick="goAbrirConfig()" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:6px 10px;display:flex;align-items:center;gap:5px;cursor:pointer">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      <span style="font-size:10px;color:rgba(255,255,255,0.6);font-weight:700;letter-spacing:0.1em">CONFIG</span>
+    </button>
+  </div>
+
+  <div style="padding:16px">
+
+    <div style="margin-bottom:14px">
+      <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.4);letter-spacing:0.2em">KAPTURA GO</div>
+      <div id="go-home-nombre" style="font-size:22px;font-weight:900;color:#fff;letter-spacing:0.04em;margin-top:2px">—</div>
+    </div>
+
+    <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:12px 14px;margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.07)">
+        <span style="font-size:11px;color:rgba(255,255,255,0.45)">Equipo</span>
+        <span id="go-home-patente" style="font-size:14px;font-weight:700;color:#fff">—</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.07)">
+        <span style="font-size:11px;color:rgba(255,255,255,0.45)">Costo base/día</span>
+        <span id="go-home-costo-dia" style="font-size:14px;font-weight:700;color:#D4A827">—</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0">
+        <span style="font-size:11px;color:rgba(255,255,255,0.45)">Costo base/km</span>
+        <span id="go-home-costo-km" style="font-size:14px;font-weight:700;color:#D4A827">—</span>
+      </div>
+    </div>
+
+    <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.5);letter-spacing:0.15em;margin-bottom:6px">CLIENTE</div>
+    <select id="go-home-cliente" onchange="goDetectarTarifa()" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:10px 12px;font-size:13px;color:#fff;font-family:inherit;margin-bottom:8px">
+      <option value="">— Seleccionar cliente —</option>
+    </select>
+
+    <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.5);letter-spacing:0.15em;margin-bottom:6px">DESTINO</div>
+    <input id="go-home-destino" type="text" placeholder="Ej: CURICÓ" onblur="goDetectarTarifa()" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:10px 12px;font-size:13px;color:#fff;font-family:inherit;margin-bottom:8px;text-transform:uppercase">
+
+    <div id="go-home-tarifa-label" style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.5);letter-spacing:0.15em;margin-bottom:6px">TARIFA DEL SERVICIO</div>
+    <input id="go-home-tarifa" type="number" placeholder="$0" style="width:100%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);border-radius:10px;padding:14px 16px;font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:700;color:#D8D5CC;text-align:right;margin-bottom:14px">
+
+    <button onclick="goIniciarServicio()" style="width:100%;padding:18px;border-radius:14px;border:none;background:#D8D5CC;font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:#2E3F52;cursor:pointer;letter-spacing:0.05em;margin-bottom:10px">INICIAR SERVICIO</button>
+    <button onclick="cargarInformesMesDemo();showScreen('screen-go-informes-mes')" style="width:100%;padding:16px;border-radius:14px;border:none;background:#D4A827;font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;color:#2E3A00;cursor:pointer;letter-spacing:0.05em">RESULTADOS DEL MES</button>
+
+  </div>
+</div>
+
 </script>
 
 </body>
