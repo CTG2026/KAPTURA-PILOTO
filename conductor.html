@@ -2155,6 +2155,59 @@ function goMostrarStep(n) {
   });
   document.getElementById('go-step-label').textContent = ['','TU NEGOCIO','TU CAMIÓN','TUS INGRESOS','COSTOS FIJOS','COSTOS VARIABLES','REVISIÓN'][n]||'';
   document.getElementById('go-step-num').textContent = 'Paso '+n+' de 6';
+
+  if(n===6) {
+    const d = window._goDraft || {};
+    const fmt = v => '$' + Math.round(v).toLocaleString('es-CL');
+
+    // Costo fijo diario
+    const cf_dia = (d.costo_fijo_mensual||0) / (d.dias_operativos_mes||20);
+
+    // Costo por km
+    const precio_lt = 1290;
+    const comb_km = d.rendimiento_km_lt > 0 ? precio_lt / d.rendimiento_km_lt : 0;
+    const mant_km  = (d.mantencion_km > 0 && d.mantencion_costo > 0) ? d.mantencion_costo / d.mantencion_km : 0;
+    const neum_km  = (d.neumatico_vida_km > 0 && d.neumatico_costo > 0) ? d.neumatico_costo / d.neumatico_vida_km : 0;
+    const costo_km = comb_km + mant_km + neum_km;
+
+    // Costo base por día
+    const costo_dia = cf_dia + (d.viatico||0) + (d.sueldo_conductor||0) + (d.fondo_contingencia||0) / (d.dias_operativos_mes||20);
+
+    // Render resumen
+    const resumen = document.getElementById('go-resumen');
+    resumen.innerHTML = `
+      <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.07)">
+        <span style="font-size:11px;color:rgba(255,255,255,0.45)">Nombre</span>
+        <span style="font-size:13px;font-weight:700;color:#fff">${d.nombre||'—'}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.07)">
+        <span style="font-size:11px;color:rgba(255,255,255,0.45)">Camión</span>
+        <span style="font-size:13px;font-weight:700;color:#fff">${d.patente||'—'} · ${d.tipo_equipo||'—'}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.07)">
+        <span style="font-size:11px;color:rgba(255,255,255,0.45)">Rendimiento</span>
+        <span style="font-size:13px;font-weight:700;color:#fff">${d.rendimiento_km_lt||'—'} km/lt</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.07)">
+        <span style="font-size:11px;color:rgba(255,255,255,0.45)">Costo fijo/día</span>
+        <span style="font-size:13px;font-weight:700;color:#D4A827">${fmt(cf_dia)}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.07)">
+        <span style="font-size:11px;color:rgba(255,255,255,0.45)">Costo combustible/km</span>
+        <span style="font-size:13px;font-weight:700;color:#D4A827">${fmt(comb_km)}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.07)">
+        <span style="font-size:11px;color:rgba(255,255,255,0.45)">Costo mantención/km</span>
+        <span style="font-size:13px;font-weight:700;color:#D4A827">${fmt(mant_km)}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:6px 0">
+        <span style="font-size:11px;color:rgba(255,255,255,0.45)">Costo neumáticos/km</span>
+        <span style="font-size:13px;font-weight:700;color:#D4A827">${fmt(neum_km)}</span>
+      </div>
+    `;
+
+    document.getElementById('go-resumen-costo').textContent = fmt(costo_dia) + '/día · ' + fmt(costo_km) + '/km';
+  }
 }
 
 function goSiguiente(n) {
