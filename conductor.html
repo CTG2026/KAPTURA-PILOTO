@@ -2281,11 +2281,13 @@ async function goGuardarOnboarding() {
   const { error } = await supa.from('kaptura_go_usuarios').update(payload).eq('id', draft.id);
   if(error) {
     alert('Error al guardar: ' + error.message);
-    if(btn) { btn.textContent = 'FINALIZAR'; btn.disabled = false; }
+    if(btn) { btn.textContent = 'GUARDAR ✓'; btn.disabled = false; }
     return;
   }
   window._goUsuario = draft;
-  goMostrarHome();
+  // Mostrar nombre en pantalla confirmación
+  document.getElementById('go-guardado-nombre').textContent = draft.nombre || 'Transportista';
+  showScreen('screen-go-guardado');
 }
 
 function goMostrarHome() {
@@ -2598,11 +2600,19 @@ function goDetectarTarifa() {
 
       <div style="display:flex;gap:8px">
         <button onclick="goVolver()" style="flex:1;padding:16px;border-radius:12px;border:1px solid rgba(255,255,255,0.15);background:transparent;font-family:'Barlow Condensed',sans-serif;font-size:16px;color:rgba(255,255,255,0.5);cursor:pointer">← Volver</button>
-        <button id="go-btn-finalizar" onclick="goSiguiente(6)" style="flex:2;padding:16px;border-radius:12px;border:none;background:#D4A827;font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;color:#2E3A00;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer">FINALIZAR ✓</button>
+        <button id="go-btn-finalizar" onclick="goSiguiente(6)" style="flex:2;padding:16px;border-radius:12px;border:none;background:#D4A827;font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;color:#2E3A00;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer">GUARDAR ✓</button>
       </div>
     </div>
 
   </div>
+</div>
+
+<!-- ═══ PANTALLA: GO GUARDADO ═══ -->
+<div class="screen" id="screen-go-guardado" style="padding:32px 20px;text-align:center">
+  <div style="font-size:56px;margin-bottom:16px">✅</div>
+  <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;color:#fff;letter-spacing:0.04em;margin-bottom:8px">¡Listo, <span id="go-guardado-nombre"></span>!</div>
+  <div style="font-size:14px;color:rgba(255,255,255,0.55);line-height:1.6;margin-bottom:32px">Tu configuración quedó guardada.<br>KAPTURA ya sabe cuánto te cuesta cada viaje.</div>
+  <button onclick="goMostrarHome()" style="width:100%;padding:20px;border-radius:14px;border:none;background:#D8D5CC;font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:#2E3F52;letter-spacing:0.06em;cursor:pointer">INICIAR MI PRIMER SERVICIO →</button>
 </div>
 
 <!-- ═══ PANTALLA: GO HOME ═══ -->
