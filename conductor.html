@@ -2090,7 +2090,7 @@ async function kopilotoGuardar() {
 
   // Guardar en Supabase
   const sess = JSON.parse(localStorage.getItem('kaptura_session')||'{}');
-  await supa.from('kaptura_kopiloto_eventos').insert({
+  const { error: kopError } = await supa.from('kaptura_kopiloto_eventos').insert({
     patente: 'CGFF12',
     empresa: (sess.empresa === 'demo' ? 'nexus' : sess.empresa) || 'nexus',
     servicio_id: 'DEMO-ACTIVO',
@@ -2100,6 +2100,12 @@ async function kopilotoGuardar() {
     descripcion: tipo,
     texto_original: tipo
   });
+  if (kopError) {
+    console.error('KOPILOTO insert error:', kopError);
+    document.getElementById('kop-respuesta').innerHTML =
+      '<div style="color:#8B2020;font-size:14px">⚠ Error al guardar: ' + kopError.message + '</div>';
+    return;
+  }
 
   const respEl = document.getElementById('kop-respuesta');
   respEl.innerHTML = '<div style="color:#537A6E;font-size:16px;font-weight:700">✓ $'+monto.toLocaleString('es-CL')+' ('+tipo+') guardado</div>';
