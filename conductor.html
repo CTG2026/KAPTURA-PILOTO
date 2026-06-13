@@ -945,24 +945,28 @@ let cronoStart = null;
 let _sessionConductor = null;
 
 function cargarSesionConductor() {
-  const saved = localStorage.getItem('kaptura_session');
-  if(saved) {
-    try {
-      const sess = JSON.parse(saved);
-      _sessionConductor = sess;
-      const empLabel = sess.empresa === 'transportes_madrid' ? 'TRANSPORTES MADRID'
-        : sess.empresa === 'demo' ? 'DEMO'
-        : 'GLOBAL SOLUTIONS';
-      document.getElementById('hdr-empresa-nombre').textContent = empLabel;
-      document.getElementById('modo-empresa-label').textContent = empLabel;
-    } catch(e) {}
-  }
   const params = new URLSearchParams(window.location.search);
   const modulo = params.get('modulo');
   if(modulo) {
+    // Viene desde index.html con módulo — leer sesión y abrir
+    const saved = localStorage.getItem('kaptura_session');
+    if(saved) {
+      try {
+        const sess = JSON.parse(saved);
+        _sessionConductor = sess;
+        const empLabel = sess.empresa === 'transportes_madrid' ? 'TRANSPORTES MADRID'
+          : sess.empresa === 'demo' ? 'DEMO'
+          : 'GLOBAL SOLUTIONS';
+        document.getElementById('hdr-empresa-nombre').textContent = empLabel;
+        document.getElementById('modo-empresa-label').textContent = empLabel;
+      } catch(e) {}
+    }
     window.history.replaceState(null, '', window.location.pathname);
     abrirModulo(modulo);
   } else {
+    // Acceso directo — limpiar sesión y pedir PIN
+    localStorage.removeItem('kaptura_session');
+    _sessionConductor = null;
     showScreen('screen-pin-go');
   }
 }
