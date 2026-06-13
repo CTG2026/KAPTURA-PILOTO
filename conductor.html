@@ -1530,7 +1530,7 @@ function nuevoServicio() {
 }
 
 init();
-cargarSesionConductor();
+document.addEventListener("DOMContentLoaded", cargarSesionConductor);
 
 // ── MODO GPS ──
 let gpsData = { eventos:[], kmTotal:0, dias:1, horasSvc:{}, tag:0, peajes:0, comb:0, svId:null, dbId:null };
