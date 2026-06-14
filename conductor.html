@@ -2343,6 +2343,22 @@ function goVolver() {
   if(window._goStep > 1) { window._goStep--; goMostrarStep(window._goStep); }
 }
 
+function goCFSumar() {
+  let total = 0;
+  document.querySelectorAll('#go-cf-items input[data-cf-item]').forEach(inp => {
+    const val = parseInt((inp.value||'0').replace(/\D/g,'')) || 0;
+    const esAnual = inp.getAttribute('data-anual') === 'true';
+    total += esAnual ? Math.round(val / 12) : val;
+  });
+  document.getElementById('go-cf-total-display').textContent = '$' + total.toLocaleString('es-CL');
+  document.getElementById('go-costo-fijo').value = total > 0 ? total : '';
+}
+
+function goCFActualizarDesdeTotal() {
+  const val = parseInt((document.getElementById('go-costo-fijo').value||'0').replace(/\D/g,'')) || 0;
+  document.getElementById('go-cf-total-display').textContent = '$' + val.toLocaleString('es-CL');
+}
+
 function goTipoEquipoChange() {
   const sel = document.getElementById('go-tipo-equipo').value;
   document.getElementById('go-tipo-equipo-otro').style.display = sel === 'otro' ? 'block' : 'none';
@@ -2588,15 +2604,127 @@ function goDetectarTarifa() {
       <div style="font-size:22px;font-weight:900;color:#fff;letter-spacing:0.04em;margin-bottom:4px">Costos fijos</div>
       <div style="font-size:12px;color:rgba(255,255,255,0.5);line-height:1.4;margin-bottom:16px">Lo que pagas aunque el camión no salga.</div>
 
+      <!-- COSTOS FIJOS ASISTIDO -->
       <div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:10px;padding:12px 14px;margin-bottom:10px">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-          <span style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.6);letter-spacing:0.1em;text-transform:uppercase">Total fijos mensuales</span>
+        <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.6);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:10px">¿Cuánto pagas cada mes aunque el camión no salga?</div>
+
+        <button onclick="document.getElementById('go-cf-lista').style.display=document.getElementById('go-cf-lista').style.display==='none'?'block':'none'" style="width:100%;background:rgba(255,107,0,0.12);border:1px solid rgba(255,107,0,0.3);border-radius:8px;padding:10px;font-size:13px;font-weight:700;color:#FF6B00;cursor:pointer;letter-spacing:0.05em;margin-bottom:8px">+ Ingresar mis costos fijos ítem por ítem</button>
+
+        <div id="go-cf-lista" style="display:none;margin-bottom:10px">
+          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:10px;line-height:1.5">Ingresa solo los que aplican a tu negocio. KAPTURA suma el total automáticamente.</div>
+
+          <div id="go-cf-items">
+            <!-- Crédito / leasing -->
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #2A2A2A">
+              <div>
+                <div style="font-size:12px;color:#fff;font-weight:600">Crédito / leasing del camión</div>
+                <div style="font-size:10px;color:rgba(255,255,255,0.4)">Lo que pagas al banco o a quien te financió</div>
+              </div>
+              <input type="text" data-cf-item="credito" onchange="goCFSumar()" placeholder="$0" style="width:90px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:6px;padding:6px 8px;font-size:13px;color:#fff;text-align:right;font-family:inherit">
+            </div>
+            <!-- Seguro SOAP -->
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #2A2A2A">
+              <div>
+                <div style="font-size:12px;color:#fff;font-weight:600">Seguro SOAP</div>
+                <div style="font-size:10px;color:rgba(255,255,255,0.4)">Anual → KAPTURA lo mensualiza</div>
+              </div>
+              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+                <input type="text" data-cf-item="soap" data-anual="true" onchange="goCFSumar()" placeholder="$0" style="width:90px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:6px;padding:6px 8px;font-size:13px;color:#fff;text-align:right;font-family:inherit">
+                <span style="font-size:9px;color:#FF6B00">÷12 automático</span>
+              </div>
+            </div>
+            <!-- Seguro de carga -->
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #2A2A2A">
+              <div>
+                <div style="font-size:12px;color:#fff;font-weight:600">Seguro de carga / póliza</div>
+                <div style="font-size:10px;color:rgba(255,255,255,0.4)">Protege la mercadería que transportas</div>
+              </div>
+              <input type="text" data-cf-item="seguro_carga" onchange="goCFSumar()" placeholder="$0" style="width:90px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:6px;padding:6px 8px;font-size:13px;color:#fff;text-align:right;font-family:inherit">
+            </div>
+            <!-- Permiso circulación -->
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #2A2A2A">
+              <div>
+                <div style="font-size:12px;color:#fff;font-weight:600">Permiso de circulación</div>
+                <div style="font-size:10px;color:rgba(255,255,255,0.4)">Anual → KAPTURA lo mensualiza</div>
+              </div>
+              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+                <input type="text" data-cf-item="permiso" data-anual="true" onchange="goCFSumar()" placeholder="$0" style="width:90px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:6px;padding:6px 8px;font-size:13px;color:#fff;text-align:right;font-family:inherit">
+                <span style="font-size:9px;color:#FF6B00">÷12 automático</span>
+              </div>
+            </div>
+            <!-- Revisión técnica -->
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #2A2A2A">
+              <div>
+                <div style="font-size:12px;color:#fff;font-weight:600">Revisión técnica</div>
+                <div style="font-size:10px;color:rgba(255,255,255,0.4)">Anual → KAPTURA lo mensualiza</div>
+              </div>
+              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+                <input type="text" data-cf-item="revision" data-anual="true" onchange="goCFSumar()" placeholder="$0" style="width:90px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:6px;padding:6px 8px;font-size:13px;color:#fff;text-align:right;font-family:inherit">
+                <span style="font-size:9px;color:#FF6B00">÷12 automático</span>
+              </div>
+            </div>
+            <!-- GPS -->
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #2A2A2A">
+              <div>
+                <div style="font-size:12px;color:#fff;font-weight:600">GPS / rastreo</div>
+                <div style="font-size:10px;color:rgba(255,255,255,0.4)">Mensual</div>
+              </div>
+              <input type="text" data-cf-item="gps" onchange="goCFSumar()" placeholder="$0" style="width:90px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:6px;padding:6px 8px;font-size:13px;color:#fff;text-align:right;font-family:inherit">
+            </div>
+            <!-- Plan datos -->
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #2A2A2A">
+              <div>
+                <div style="font-size:12px;color:#fff;font-weight:600">Plan de datos / comunicaciones</div>
+                <div style="font-size:10px;color:rgba(255,255,255,0.4)">Teléfono + plan de datos</div>
+              </div>
+              <input type="text" data-cf-item="datos" onchange="goCFSumar()" placeholder="$0" style="width:90px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:6px;padding:6px 8px;font-size:13px;color:#fff;text-align:right;font-family:inherit">
+            </div>
+            <!-- Contador -->
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #2A2A2A">
+              <div>
+                <div style="font-size:12px;color:#fff;font-weight:600">Contador / administración</div>
+                <div style="font-size:10px;color:rgba(255,255,255,0.4)">Mensual</div>
+              </div>
+              <input type="text" data-cf-item="contador" onchange="goCFSumar()" placeholder="$0" style="width:90px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:6px;padding:6px 8px;font-size:13px;color:#fff;text-align:right;font-family:inherit">
+            </div>
+            <!-- Estacionamiento -->
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #2A2A2A">
+              <div>
+                <div style="font-size:12px;color:#fff;font-weight:600">Estacionamiento / patio</div>
+                <div style="font-size:10px;color:rgba(255,255,255,0.4)">Mensual</div>
+              </div>
+              <input type="text" data-cf-item="estacionamiento" onchange="goCFSumar()" placeholder="$0" style="width:90px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:6px;padding:6px 8px;font-size:13px;color:#fff;text-align:right;font-family:inherit">
+            </div>
+            <!-- Depreciación -->
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #2A2A2A">
+              <div>
+                <div style="font-size:12px;color:#fff;font-weight:600">Depreciación del camión</div>
+                <div style="font-size:10px;color:rgba(255,255,255,0.4)">Pérdida de valor mensual estimada</div>
+              </div>
+              <input type="text" data-cf-item="depreciacion" onchange="goCFSumar()" placeholder="$0" style="width:90px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:6px;padding:6px 8px;font-size:13px;color:#fff;text-align:right;font-family:inherit">
+            </div>
+            <!-- Otro -->
+            <div style="padding:8px 0">
+              <div style="font-size:12px;color:#fff;font-weight:600;margin-bottom:6px">Otro costo fijo</div>
+              <div style="display:flex;gap:8px">
+                <input type="text" id="go-cf-otro-nombre" placeholder="Nombre del gasto" style="flex:1;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:6px;padding:6px 8px;font-size:12px;color:#fff;font-family:inherit">
+                <input type="text" data-cf-item="otro" onchange="goCFSumar()" placeholder="$0" style="width:90px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:6px;padding:6px 8px;font-size:13px;color:#fff;text-align:right;font-family:inherit">
+              </div>
+            </div>
+          </div>
+
+          <!-- Total calculado -->
+          <div style="background:rgba(255,107,0,0.1);border:1px solid rgba(255,107,0,0.3);border-radius:8px;padding:12px;margin-top:10px;display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:12px;font-weight:700;color:rgba(255,255,255,0.7);letter-spacing:0.08em">TOTAL FIJOS/MES</span>
+            <span id="go-cf-total-display" style="font-size:20px;font-weight:900;color:#FF6B00;font-family:'Barlow Condensed',sans-serif">$0</span>
+          </div>
         </div>
-        <input id="go-costo-fijo" type="text" placeholder="Ej: 1200000" style="width:100%;background:#1A1A1A;border:1px solid #2A2A2A;border-radius:7px;padding:9px 12px;font-size:14px;color:#fff;font-family:inherit">
-        <button onclick="document.getElementById('go-info-5').style.display=document.getElementById('go-info-5').style.display==='none'?'block':'none'" style="background:rgba(255,107,0,0.12);border:1px solid rgba(255,107,0,0.3);border-radius:6px;padding:4px 10px;font-size:10px;font-weight:700;color:#FF6B00;cursor:pointer;margin-top:6px;letter-spacing:0.05em">? Ver detalle</button><div id="go-info-5" style="display:none;background:rgba(255,107,0,0.06);border:1px solid rgba(255,107,0,0.2);border-radius:8px;padding:10px 12px;margin-top:6px"><div style="font-size:11px;font-weight:700;color:#FF6B00;margin-bottom:4px">¿QUÉ INCLUYE ESTE NÚMERO?</div><div style="font-size:11px;color:rgba(255,255,255,0.65);line-height:1.5">Suma todo lo que pagas mensualmente aunque el camión esté parado: crédito o leasing, seguro, permiso de circulación (dividido en 12), GPS, plan de datos, contador, estacionamiento.</div>
-          <div style="background:rgba(83,122,110,0.2);border-radius:6px;padding:7px 10px;margin-top:7px;font-size:11px;color:#FF6B00;line-height:1.5">
-            <strong style="color:#fff">Ejemplo:</strong> Crédito $450.000 + seguro $80.000 + permiso $25.000 + GPS $15.000 + contador $50.000 = <strong style="color:#fff">$620.000/mes fijos</strong>.
-          </div></div>
+
+        <!-- Opción ingreso directo -->
+        <div style="margin-top:8px">
+          <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-bottom:4px">O ingresa el total directamente:</div>
+          <input id="go-costo-fijo" type="text" placeholder="Ej: 620000" onchange="goCFActualizarDesdeTotal()" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:9px 12px;font-size:14px;color:#fff;font-family:inherit">
+        </div>
       </div>
 
       <div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:10px;padding:12px 14px;margin-bottom:16px">
