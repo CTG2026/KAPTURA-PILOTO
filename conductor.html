@@ -2359,6 +2359,46 @@ function goCFActualizarDesdeTotal() {
   document.getElementById('go-cf-total-display').textContent = '$' + val.toLocaleString('es-CL');
 }
 
+function goMantSumar() {
+  let total = 0;
+  document.querySelectorAll('#go-mant-items input[data-mant-item]').forEach(inp => {
+    total += parseInt((inp.value||'0').replace(/[^0-9]/g,'')) || 0;
+  });
+  document.getElementById('go-mant-total-display').textContent = '$' + total.toLocaleString('es-CL');
+  document.getElementById('go-mant-costo').value = total > 0 ? total : '';
+}
+function goMantActualizarDesdeTotal() {
+  const v = parseInt((document.getElementById('go-mant-costo').value||'0').replace(/[^0-9]/g,''))||0;
+  document.getElementById('go-mant-total-display').textContent = '$' + v.toLocaleString('es-CL');
+}
+function goNeumSumar() {
+  const tipos = ['dir','trac','rem','rig'];
+  let costoTotal = 0; let kmPond = 0; let cantTotal = 0;
+  tipos.forEach(t => {
+    const cant = parseInt(document.querySelector('[data-neum="'+t+'_cant"]')?.value||'0')||0;
+    const costo = parseInt((document.querySelector('[data-neum="'+t+'_costo"]')?.value||'0').replace(/[^0-9]/g,''))||0;
+    const km = parseInt(document.querySelector('[data-neum="'+t+'_km"]')?.value||'0')||0;
+    costoTotal += cant * costo;
+    kmPond += cant * km;
+    cantTotal += cant;
+  });
+  document.getElementById('go-neum-total-display').textContent = '$' + costoTotal.toLocaleString('es-CL');
+  const kmProm = cantTotal > 0 ? Math.round(kmPond / cantTotal) : 0;
+  document.getElementById('go-neum-km-display').textContent = kmProm > 0 ? kmProm.toLocaleString('es-CL') + ' km' : '— km';
+  if(costoTotal > 0) document.getElementById('go-neum-costo').value = costoTotal;
+  if(kmProm > 0) document.getElementById('go-neum-km').value = kmProm;
+}
+function goMayorSumar() {
+  let total = 0;
+  document.querySelectorAll('#go-mayor-items input[data-mayor-item]').forEach(inp => {
+    total += parseInt((inp.value||'0').replace(/[^0-9]/g,'')) || 0;
+  });
+  const dias = parseInt(document.getElementById('go-dias-op')?.value||'20')||20;
+  const reservaMes = total > 0 ? Math.round(total / 60) : 0;
+  document.getElementById('go-mayor-total-display').textContent = '$' + reservaMes.toLocaleString('es-CL');
+  if(reservaMes > 0) document.getElementById('go-fondo').value = reservaMes;
+}
+
 function goTipoEquipoChange() {
   const sel = document.getElementById('go-tipo-equipo').value;
   document.getElementById('go-tipo-equipo-otro').style.display = sel === 'otro' ? 'block' : 'none';
@@ -2755,31 +2795,230 @@ function goDetectarTarifa() {
         <input id="go-sueldo" type="text" placeholder="Ej: 33000" style="width:100%;background:#1A1A1A;border:1px solid #2A2A2A;border-radius:7px;padding:9px 12px;font-size:14px;color:#fff;font-family:inherit">
       </div>
 
+      <!-- MANTENCIÓN PREVENTIVA -->
       <div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:10px;padding:12px 14px;margin-bottom:10px">
         <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.6);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px">Mantención preventiva — cada cuántos km</div>
-        <input id="go-mant-km" type="number" placeholder="Ej: 15000" style="width:100%;background:#1A1A1A;border:1px solid #2A2A2A;border-radius:7px;padding:9px 12px;font-size:14px;color:#fff;font-family:inherit">
-        <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.6);letter-spacing:0.1em;text-transform:uppercase;margin:10px 0 6px">Costo estimado por mantención</div>
-        <input id="go-mant-costo" type="text" placeholder="Ej: 180000" style="width:100%;background:#1A1A1A;border:1px solid #2A2A2A;border-radius:7px;padding:9px 12px;font-size:14px;color:#fff;font-family:inherit">
-        <button onclick="document.getElementById('go-info-6').style.display=document.getElementById('go-info-6').style.display==='none'?'block':'none'" style="background:rgba(255,107,0,0.12);border:1px solid rgba(255,107,0,0.3);border-radius:6px;padding:4px 10px;font-size:10px;font-weight:700;color:#FF6B00;cursor:pointer;margin-top:6px;letter-spacing:0.05em">? Ver detalle</button><div id="go-info-6" style="display:none;background:rgba(255,107,0,0.06);border:1px solid rgba(255,107,0,0.2);border-radius:8px;padding:10px 12px;margin-top:6px"><div style="font-size:11px;font-weight:700;color:#FF6B00;margin-bottom:4px">¿QUÉ INCLUYE?</div><div style="font-size:11px;color:rgba(255,255,255,0.65);line-height:1.5">Aceite, filtros, frenos, alineación, amortiguadores, luces. KAPTURA calcula cuánto te cuesta por km y lo suma al costo de cada viaje.</div>
-          <div style="background:rgba(83,122,110,0.2);border-radius:6px;padding:7px 10px;margin-top:7px;font-size:11px;color:#FF6B00;line-height:1.5">
-            <strong style="color:#fff">Ejemplo:</strong> Mantención cada 15.000 km · costo $180.000 → <strong style="color:#fff">$12/km</strong> de mantención en cada viaje.
-          </div></div>
+        <input id="go-mant-km" type="number" placeholder="Ej: 20000" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:9px 12px;font-size:14px;color:#fff;font-family:inherit;margin-bottom:8px">
+        <button onclick="document.getElementById('go-mant-lista').style.display=document.getElementById('go-mant-lista').style.display==='none'?'block':'none'" style="width:100%;background:rgba(255,107,0,0.12);border:1px solid rgba(255,107,0,0.3);border-radius:8px;padding:10px;font-size:13px;font-weight:700;color:#FF6B00;cursor:pointer;letter-spacing:0.05em;margin-bottom:8px">+ Ver ítems de mantención</button>
+        <div id="go-mant-lista" style="display:none;margin-bottom:8px">
+          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:8px">Referencia cada 20.000 km. Ingresa el costo que pagas tú.</div>
+          <div style="display:grid;grid-template-columns:1fr auto auto;gap:6px;align-items:center;margin-bottom:4px">
+            <span style="font-size:9px;color:#FF6B00;font-weight:700">ÍTEM</span>
+            <span style="font-size:9px;color:#FF6B00;font-weight:700;text-align:right">REFERENCIA</span>
+            <span style="font-size:9px;color:#FF6B00;font-weight:700;text-align:right">TU COSTO</span>
+          </div>
+          <div id="go-mant-items">
+            <div style="display:grid;grid-template-columns:1fr auto auto;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid #2A2A2A">
+              <div><div style="font-size:11px;color:#fff">Aceite motor (sintético)</div></div>
+              <span style="font-size:10px;color:rgba(255,255,255,0.35);text-align:right;white-space:nowrap">$120-200k</span>
+              <input type="text" data-mant-item="aceite" onchange="goMantSumar()" placeholder="$0" style="width:75px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit">
+            </div>
+            <div style="display:grid;grid-template-columns:1fr auto auto;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid #2A2A2A">
+              <div><div style="font-size:11px;color:#fff">Filtro de aceite</div></div>
+              <span style="font-size:10px;color:rgba(255,255,255,0.35);text-align:right;white-space:nowrap">$15-30k</span>
+              <input type="text" data-mant-item="filtro_aceite" onchange="goMantSumar()" placeholder="$0" style="width:75px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit">
+            </div>
+            <div style="display:grid;grid-template-columns:1fr auto auto;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid #2A2A2A">
+              <div><div style="font-size:11px;color:#fff">Filtro de aire</div></div>
+              <span style="font-size:10px;color:rgba(255,255,255,0.35);text-align:right;white-space:nowrap">$20-45k</span>
+              <input type="text" data-mant-item="filtro_aire" onchange="goMantSumar()" placeholder="$0" style="width:75px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit">
+            </div>
+            <div style="display:grid;grid-template-columns:1fr auto auto;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid #2A2A2A">
+              <div><div style="font-size:11px;color:#fff">Filtro de combustible/petróleo</div></div>
+              <span style="font-size:10px;color:rgba(255,255,255,0.35);text-align:right;white-space:nowrap">$15-35k</span>
+              <input type="text" data-mant-item="filtro_comb" onchange="goMantSumar()" placeholder="$0" style="width:75px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit">
+            </div>
+            <div style="display:grid;grid-template-columns:1fr auto auto;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid #2A2A2A">
+              <div><div style="font-size:11px;color:#fff">Revisión sistema de frenos</div></div>
+              <span style="font-size:10px;color:rgba(255,255,255,0.35);text-align:right;white-space:nowrap">$30-80k</span>
+              <input type="text" data-mant-item="frenos" onchange="goMantSumar()" placeholder="$0" style="width:75px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit">
+            </div>
+            <div style="display:grid;grid-template-columns:1fr auto auto;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid #2A2A2A">
+              <div><div style="font-size:11px;color:#fff">Pastillas de freno</div></div>
+              <span style="font-size:10px;color:rgba(255,255,255,0.35);text-align:right;white-space:nowrap">$60-150k</span>
+              <input type="text" data-mant-item="pastillas" onchange="goMantSumar()" placeholder="$0" style="width:75px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit">
+            </div>
+            <div style="display:grid;grid-template-columns:1fr auto auto;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid #2A2A2A">
+              <div><div style="font-size:11px;color:#fff">Alineación y balanceo</div></div>
+              <span style="font-size:10px;color:rgba(255,255,255,0.35);text-align:right;white-space:nowrap">$25-50k</span>
+              <input type="text" data-mant-item="alineacion" onchange="goMantSumar()" placeholder="$0" style="width:75px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit">
+            </div>
+            <div style="display:grid;grid-template-columns:1fr auto auto;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid #2A2A2A">
+              <div><div style="font-size:11px;color:#fff">Revisión amortiguadores</div></div>
+              <span style="font-size:10px;color:rgba(255,255,255,0.35);text-align:right;white-space:nowrap">$20-40k</span>
+              <input type="text" data-mant-item="amortiguadores" onchange="goMantSumar()" placeholder="$0" style="width:75px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit">
+            </div>
+            <div style="display:grid;grid-template-columns:1fr auto auto;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid #2A2A2A">
+              <div><div style="font-size:11px;color:#fff">Sistema eléctrico</div></div>
+              <span style="font-size:10px;color:rgba(255,255,255,0.35);text-align:right;white-space:nowrap">$20-50k</span>
+              <input type="text" data-mant-item="electrico" onchange="goMantSumar()" placeholder="$0" style="width:75px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit">
+            </div>
+            <div style="display:grid;grid-template-columns:1fr auto auto;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid #2A2A2A">
+              <div><div style="font-size:11px;color:#fff">Luces e iluminación</div></div>
+              <span style="font-size:10px;color:rgba(255,255,255,0.35);text-align:right;white-space:nowrap">$10-30k</span>
+              <input type="text" data-mant-item="luces" onchange="goMantSumar()" placeholder="$0" style="width:75px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit">
+            </div>
+            <div style="padding:6px 0">
+              <div style="font-size:11px;color:#fff;margin-bottom:4px">Otro ítem</div>
+              <div style="display:grid;grid-template-columns:1fr auto auto;gap:6px;align-items:center">
+                <input type="text" placeholder="Nombre" style="background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:11px;color:#fff;font-family:inherit">
+                <span style="font-size:10px;color:rgba(255,255,255,0.2)">—</span>
+                <input type="text" data-mant-item="otro" onchange="goMantSumar()" placeholder="$0" style="width:75px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit">
+              </div>
+            </div>
+          </div>
+          <div style="background:rgba(255,107,0,0.1);border:1px solid rgba(255,107,0,0.3);border-radius:8px;padding:10px;margin-top:8px;display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.7)">TOTAL MANTENCIÓN</span>
+            <span id="go-mant-total-display" style="font-size:18px;font-weight:900;color:#FF6B00;font-family:'Barlow Condensed',sans-serif">$0</span>
+          </div>
+        </div>
+        <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-bottom:4px">O ingresa el costo total directamente:</div>
+        <input id="go-mant-costo" type="text" placeholder="Ej: 350000" onchange="goMantActualizarDesdeTotal()" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:9px 12px;font-size:14px;color:#fff;font-family:inherit">
       </div>
 
+      <!-- NEUMÁTICOS -->
       <div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:10px;padding:12px 14px;margin-bottom:10px">
-        <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.6);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px">Neumáticos — costo juego completo</div>
-        <input id="go-neum-costo" type="text" placeholder="Ej: 2400000" style="width:100%;background:#1A1A1A;border:1px solid #2A2A2A;border-radius:7px;padding:9px 12px;font-size:14px;color:#fff;font-family:inherit">
-        <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.6);letter-spacing:0.1em;text-transform:uppercase;margin:10px 0 6px">Vida útil estimada en km</div>
-        <input id="go-neum-km" type="number" placeholder="Ej: 150000" style="width:100%;background:#1A1A1A;border:1px solid #2A2A2A;border-radius:7px;padding:9px 12px;font-size:14px;color:#fff;font-family:inherit">
+        <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.6);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px">Neumáticos</div>
+        <button onclick="document.getElementById('go-neum-lista').style.display=document.getElementById('go-neum-lista').style.display==='none'?'block':'none'" style="width:100%;background:rgba(255,107,0,0.12);border:1px solid rgba(255,107,0,0.3);border-radius:8px;padding:10px;font-size:13px;font-weight:700;color:#FF6B00;cursor:pointer;letter-spacing:0.05em;margin-bottom:8px">+ Ver tipos y vida útil</button>
+        <div id="go-neum-lista" style="display:none;margin-bottom:8px">
+          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:8px">Ingresa cantidad, costo unitario y vida útil por tipo. KAPTURA calcula el total.</div>
+          <div style="display:grid;grid-template-columns:1fr 50px 75px 75px;gap:6px;align-items:center;margin-bottom:4px">
+            <span style="font-size:9px;color:#FF6B00;font-weight:700">TIPO</span>
+            <span style="font-size:9px;color:#FF6B00;font-weight:700;text-align:center">CANT.</span>
+            <span style="font-size:9px;color:#FF6B00;font-weight:700;text-align:right">C/UNIT.</span>
+            <span style="font-size:9px;color:#FF6B00;font-weight:700;text-align:right">KM VIDA</span>
+          </div>
+          <div id="go-neum-items">
+            <div style="padding:6px 0;border-bottom:1px solid #2A2A2A">
+              <div style="font-size:11px;color:#fff;margin-bottom:2px">Dirección (delanteros)</div>
+              <div style="font-size:9px;color:rgba(255,255,255,0.35);margin-bottom:4px">150.000–200.000 km estimado</div>
+              <div style="display:grid;grid-template-columns:1fr 50px 75px 75px;gap:6px;align-items:center">
+                <span></span>
+                <input type="number" data-neum="dir_cant" min="0" max="20" placeholder="0" onchange="goNeumSumar()" style="background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 4px;font-size:12px;color:#fff;text-align:center;font-family:inherit">
+                <input type="text" data-neum="dir_costo" onchange="goNeumSumar()" placeholder="$0" style="background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit">
+                <input type="number" data-neum="dir_km" placeholder="150000" onchange="goNeumSumar()" style="background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 4px;font-size:12px;color:#fff;text-align:right;font-family:inherit">
+              </div>
+            </div>
+            <div style="padding:6px 0;border-bottom:1px solid #2A2A2A">
+              <div style="font-size:11px;color:#fff;margin-bottom:2px">Tracción (traseros motrices)</div>
+              <div style="font-size:9px;color:rgba(255,255,255,0.35);margin-bottom:4px">100.000–150.000 km estimado</div>
+              <div style="display:grid;grid-template-columns:1fr 50px 75px 75px;gap:6px;align-items:center">
+                <span></span>
+                <input type="number" data-neum="trac_cant" min="0" max="20" placeholder="0" onchange="goNeumSumar()" style="background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 4px;font-size:12px;color:#fff;text-align:center;font-family:inherit">
+                <input type="text" data-neum="trac_costo" onchange="goNeumSumar()" placeholder="$0" style="background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit">
+                <input type="number" data-neum="trac_km" placeholder="120000" onchange="goNeumSumar()" style="background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 4px;font-size:12px;color:#fff;text-align:right;font-family:inherit">
+              </div>
+            </div>
+            <div style="padding:6px 0;border-bottom:1px solid #2A2A2A">
+              <div style="font-size:11px;color:#fff;margin-bottom:2px">Remolque / rampla</div>
+              <div style="font-size:9px;color:rgba(255,255,255,0.35);margin-bottom:4px">120.000–180.000 km estimado</div>
+              <div style="display:grid;grid-template-columns:1fr 50px 75px 75px;gap:6px;align-items:center">
+                <span></span>
+                <input type="number" data-neum="rem_cant" min="0" max="20" placeholder="0" onchange="goNeumSumar()" style="background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 4px;font-size:12px;color:#fff;text-align:center;font-family:inherit">
+                <input type="text" data-neum="rem_costo" onchange="goNeumSumar()" placeholder="$0" style="background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit">
+                <input type="number" data-neum="rem_km" placeholder="150000" onchange="goNeumSumar()" style="background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 4px;font-size:12px;color:#fff;text-align:right;font-family:inherit">
+              </div>
+            </div>
+            <div style="padding:6px 0">
+              <div style="font-size:11px;color:#fff;margin-bottom:2px">Camión rígido (todos)</div>
+              <div style="font-size:9px;color:rgba(255,255,255,0.35);margin-bottom:4px">80.000–120.000 km estimado</div>
+              <div style="display:grid;grid-template-columns:1fr 50px 75px 75px;gap:6px;align-items:center">
+                <span></span>
+                <input type="number" data-neum="rig_cant" min="0" max="20" placeholder="0" onchange="goNeumSumar()" style="background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 4px;font-size:12px;color:#fff;text-align:center;font-family:inherit">
+                <input type="text" data-neum="rig_costo" onchange="goNeumSumar()" placeholder="$0" style="background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit">
+                <input type="number" data-neum="rig_km" placeholder="100000" onchange="goNeumSumar()" style="background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 4px;font-size:12px;color:#fff;text-align:right;font-family:inherit">
+              </div>
+            </div>
+          </div>
+          <div style="background:rgba(255,107,0,0.1);border:1px solid rgba(255,107,0,0.3);border-radius:8px;padding:10px;margin-top:8px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+              <span style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.7)">COSTO TOTAL NEUMÁTICOS</span>
+              <span id="go-neum-total-display" style="font-size:18px;font-weight:900;color:#FF6B00;font-family:'Barlow Condensed',sans-serif">$0</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.7)">VIDA ÚTIL PONDERADA</span>
+              <span id="go-neum-km-display" style="font-size:14px;font-weight:700;color:#FF6B00">— km</span>
+            </div>
+          </div>
+        </div>
+        <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-bottom:4px">O ingresa costo total y vida útil directamente:</div>
+        <div style="display:flex;gap:8px">
+          <input id="go-neum-costo" type="text" placeholder="Costo total $" style="flex:1;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:9px 12px;font-size:13px;color:#fff;font-family:inherit">
+          <input id="go-neum-km" type="number" placeholder="Km vida útil" style="flex:1;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:9px 12px;font-size:13px;color:#fff;font-family:inherit">
+        </div>
       </div>
 
+      <!-- FONDO CONTINGENCIA / MANTENCIÓN MAYOR -->
       <div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:10px;padding:12px 14px;margin-bottom:16px">
-        <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.6);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px">Fondo de contingencia mensual</div>
-        <input id="go-fondo" type="text" placeholder="Ej: 100000" style="width:100%;background:#1A1A1A;border:1px solid #2A2A2A;border-radius:7px;padding:9px 12px;font-size:14px;color:#fff;font-family:inherit">
-        <button onclick="document.getElementById('go-info-7').style.display=document.getElementById('go-info-7').style.display==='none'?'block':'none'" style="background:rgba(255,107,0,0.12);border:1px solid rgba(255,107,0,0.3);border-radius:6px;padding:4px 10px;font-size:10px;font-weight:700;color:#FF6B00;cursor:pointer;margin-top:6px;letter-spacing:0.05em">? Ver detalle</button><div id="go-info-7" style="display:none;background:rgba(255,107,0,0.06);border:1px solid rgba(255,107,0,0.2);border-radius:8px;padding:10px 12px;margin-top:6px"><div style="font-size:11px;font-weight:700;color:#FF6B00;margin-bottom:4px">MANTENCIÓN MAYOR — LOS GOLPES GRANDES</div><div style="font-size:11px;color:rgba(255,255,255,0.65);line-height:1.5">Motor, caja de cambios, diferencial, embrague, dirección, sistema eléctrico, hidráulico. No sabes cuándo van a llegar, pero van a llegar. Aparta un monto mensual para no quedar al debe.</div>
-          <div style="background:rgba(83,122,110,0.2);border-radius:6px;padding:7px 10px;margin-top:7px;font-size:11px;color:#FF6B00;line-height:1.5">
-            <strong style="color:#fff">Ejemplo:</strong> Fondo $100.000/mes · 20 días operativos → <strong style="color:#fff">$5.000 por servicio</strong> que KAPTURA reserva automáticamente.
-          </div></div>
+        <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.6);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px">Fondo de contingencia — Mantención mayor</div>
+        <button onclick="document.getElementById('go-mayor-lista').style.display=document.getElementById('go-mayor-lista').style.display==='none'?'block':'none'" style="width:100%;background:rgba(255,107,0,0.12);border:1px solid rgba(255,107,0,0.3);border-radius:8px;padding:10px;font-size:13px;font-weight:700;color:#FF6B00;cursor:pointer;letter-spacing:0.05em;margin-bottom:8px">+ Ver mantenciones mayores</button>
+        <div id="go-mayor-lista" style="display:none;margin-bottom:8px">
+          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:8px">Ingresa el costo estimado de cada componente. KAPTURA calcula cuánto apartar por mes.</div>
+          <div style="display:grid;grid-template-columns:1fr auto auto;gap:6px;align-items:center;margin-bottom:4px">
+            <span style="font-size:9px;color:#FF6B00;font-weight:700">COMPONENTE</span>
+            <span style="font-size:9px;color:#FF6B00;font-weight:700;text-align:right">REFERENCIA</span>
+            <span style="font-size:9px;color:#FF6B00;font-weight:700;text-align:right">TU COSTO</span>
+          </div>
+          <div id="go-mayor-items">
+            <div style="display:grid;grid-template-columns:1fr auto auto;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid #2A2A2A">
+              <div><div style="font-size:11px;color:#fff">Motor (reparación mayor)</div><div style="font-size:9px;color:rgba(255,255,255,0.35)">500.000–800.000 km</div></div>
+              <span style="font-size:10px;color:rgba(255,255,255,0.35);white-space:nowrap">$3-8M</span>
+              <input type="text" data-mayor-item="motor" onchange="goMayorSumar()" placeholder="$0" style="width:75px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit">
+            </div>
+            <div style="display:grid;grid-template-columns:1fr auto auto;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid #2A2A2A">
+              <div><div style="font-size:11px;color:#fff">Caja de cambios</div><div style="font-size:9px;color:rgba(255,255,255,0.35)">300.000–500.000 km</div></div>
+              <span style="font-size:10px;color:rgba(255,255,255,0.35);white-space:nowrap">$2.5-5M</span>
+              <input type="text" data-mayor-item="caja" onchange="goMayorSumar()" placeholder="$0" style="width:75px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit">
+            </div>
+            <div style="display:grid;grid-template-columns:1fr auto auto;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid #2A2A2A">
+              <div><div style="font-size:11px;color:#fff">Diferencial</div><div style="font-size:9px;color:rgba(255,255,255,0.35)">300.000–500.000 km</div></div>
+              <span style="font-size:10px;color:rgba(255,255,255,0.35);white-space:nowrap">$1.5-3.5M</span>
+              <input type="text" data-mayor-item="diferencial" onchange="goMayorSumar()" placeholder="$0" style="width:75px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit">
+            </div>
+            <div style="display:grid;grid-template-columns:1fr auto auto;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid #2A2A2A">
+              <div><div style="font-size:11px;color:#fff">Embrague completo</div><div style="font-size:9px;color:rgba(255,255,255,0.35)">150.000–250.000 km</div></div>
+              <span style="font-size:10px;color:rgba(255,255,255,0.35);white-space:nowrap">$600k-1.5M</span>
+              <input type="text" data-mayor-item="embrague" onchange="goMayorSumar()" placeholder="$0" style="width:75px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit">
+            </div>
+            <div style="display:grid;grid-template-columns:1fr auto auto;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid #2A2A2A">
+              <div><div style="font-size:11px;color:#fff">Dirección hidráulica</div><div style="font-size:9px;color:rgba(255,255,255,0.35)">200.000–400.000 km</div></div>
+              <span style="font-size:10px;color:rgba(255,255,255,0.35);white-space:nowrap">$400-900k</span>
+              <input type="text" data-mayor-item="direccion" onchange="goMayorSumar()" placeholder="$0" style="width:75px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit">
+            </div>
+            <div style="display:grid;grid-template-columns:1fr auto auto;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid #2A2A2A">
+              <div><div style="font-size:11px;color:#fff">Sistema eléctrico mayor</div><div style="font-size:9px;color:rgba(255,255,255,0.35)">variable</div></div>
+              <span style="font-size:10px;color:rgba(255,255,255,0.35);white-space:nowrap">$300-800k</span>
+              <input type="text" data-mayor-item="electrico_m" onchange="goMayorSumar()" placeholder="$0" style="width:75px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit">
+            </div>
+            <div style="display:grid;grid-template-columns:1fr auto auto;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid #2A2A2A">
+              <div><div style="font-size:11px;color:#fff">Suspensión completa</div><div style="font-size:9px;color:rgba(255,255,255,0.35)">200.000–350.000 km</div></div>
+              <span style="font-size:10px;color:rgba(255,255,255,0.35);white-space:nowrap">$800k-2M</span>
+              <input type="text" data-mayor-item="suspension" onchange="goMayorSumar()" placeholder="$0" style="width:75px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit">
+            </div>
+            <div style="display:grid;grid-template-columns:1fr auto auto;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid #2A2A2A">
+              <div><div style="font-size:11px;color:#fff">Sistema hidráulico (rampla)</div><div style="font-size:9px;color:rgba(255,255,255,0.35)">variable</div></div>
+              <span style="font-size:10px;color:rgba(255,255,255,0.35);white-space:nowrap">$500k-1.5M</span>
+              <input type="text" data-mayor-item="hidraulico" onchange="goMayorSumar()" placeholder="$0" style="width:75px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit">
+            </div>
+            <div style="padding:6px 0">
+              <div style="font-size:11px;color:#fff;margin-bottom:4px">Otro componente</div>
+              <div style="display:grid;grid-template-columns:1fr auto auto;gap:6px;align-items:center">
+                <input type="text" placeholder="Nombre" style="background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:11px;color:#fff;font-family:inherit">
+                <span style="font-size:10px;color:rgba(255,255,255,0.2)">—</span>
+                <input type="text" data-mayor-item="otro" onchange="goMayorSumar()" placeholder="$0" style="width:75px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit">
+              </div>
+            </div>
+          </div>
+          <div style="background:rgba(255,107,0,0.1);border:1px solid rgba(255,107,0,0.3);border-radius:8px;padding:10px;margin-top:8px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+              <span style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.7)">RESERVA SUGERIDA/MES</span>
+              <span id="go-mayor-total-display" style="font-size:18px;font-weight:900;color:#FF6B00;font-family:'Barlow Condensed',sans-serif">$0</span>
+            </div>
+            <div style="font-size:10px;color:rgba(255,255,255,0.35)">Calculado sobre vida útil estimada y días operativos del mes.</div>
+          </div>
+        </div>
+        <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-bottom:4px">O ingresa el fondo mensual directamente:</div>
+        <input id="go-fondo" type="text" placeholder="Ej: 150000" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:9px 12px;font-size:14px;color:#fff;font-family:inherit">
       </div>
 
       <div style="display:flex;gap:8px">
