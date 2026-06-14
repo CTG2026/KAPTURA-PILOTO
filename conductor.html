@@ -2459,10 +2459,7 @@ function goDetectarTarifa() {
           <span style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.6);letter-spacing:0.1em;text-transform:uppercase">PIN de acceso</span>
         </div>
         <input id="go-pin" type="number" maxlength="4" placeholder="4 dígitos" style="width:100%;background:#1A1A1A;border:1px solid #2A2A2A;border-radius:7px;padding:9px 12px;font-size:14px;color:#fff;font-family:inherit">
-        <div style="background:rgba(212,168,39,0.08);border:1px solid rgba(212,168,39,0.25);border-radius:8px;padding:10px 12px;margin-top:8px">
-          <div style="font-size:11px;font-weight:700;color:#FF6B00;margin-bottom:4px">¿QUÉ ES EL PIN?</div>
-          <div style="font-size:11px;color:rgba(255,255,255,0.65);line-height:1.5">Es tu clave de acceso a KAPTURA. Elige 4 números que recuerdes fácil. Puedes cambiarlo en cualquier momento desde Configuración.</div>
-        </div>
+        <button onclick="document.getElementById('go-info-1').style.display=document.getElementById('go-info-1').style.display==='none'?'block':'none'" style="background:rgba(255,107,0,0.12);border:1px solid rgba(255,107,0,0.3);border-radius:6px;padding:4px 10px;font-size:10px;font-weight:700;color:#FF6B00;cursor:pointer;margin-top:6px;letter-spacing:0.05em">? Ver detalle</button><div id="go-info-1" style="display:none;background:rgba(255,107,0,0.06);border:1px solid rgba(255,107,0,0.2);border-radius:8px;padding:10px 12px;margin-top:6px"><div style="font-size:11px;font-weight:700;color:#FF6B00;margin-bottom:4px">¿QUÉ ES EL PIN?</div><div style="font-size:11px;color:rgba(255,255,255,0.65);line-height:1.5">Es tu clave de acceso a KAPTURA. Elige 4 números que recuerdes fácil. Puedes cambiarlo en cualquier momento desde Configuración.</div></div>
       </div>
 
       <div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:10px;padding:12px 14px;margin-bottom:10px">
@@ -2479,13 +2476,10 @@ function goDetectarTarifa() {
           <option value="efectiva">Renta efectiva</option>
           <option value="no_se">No sé / Lo veo con mi contador</option>
         </select>
-        <div style="background:rgba(212,168,39,0.08);border:1px solid rgba(212,168,39,0.25);border-radius:8px;padding:10px 12px;margin-top:8px">
-          <div style="font-size:11px;font-weight:700;color:#FF6B00;margin-bottom:4px">¿QUÉ SIGNIFICA?</div>
-          <div style="font-size:11px;color:rgba(255,255,255,0.65);line-height:1.5">La mayoría de los transportistas independientes tributa en <strong style="color:#fff">renta presunta</strong> — pagas impuesto sobre el 10% del avalúo de tu camión, no sobre lo que ganas. Puede ser una gran ventaja.</div>
+        <button onclick="document.getElementById('go-info-2').style.display=document.getElementById('go-info-2').style.display==='none'?'block':'none'" style="background:rgba(255,107,0,0.12);border:1px solid rgba(255,107,0,0.3);border-radius:6px;padding:4px 10px;font-size:10px;font-weight:700;color:#FF6B00;cursor:pointer;margin-top:6px;letter-spacing:0.05em">? Ver detalle</button><div id="go-info-2" style="display:none;background:rgba(255,107,0,0.06);border:1px solid rgba(255,107,0,0.2);border-radius:8px;padding:10px 12px;margin-top:6px"><div style="font-size:11px;font-weight:700;color:#FF6B00;margin-bottom:4px">¿QUÉ SIGNIFICA?</div><div style="font-size:11px;color:rgba(255,255,255,0.65);line-height:1.5">La mayoría de los transportistas independientes tributa en <strong style="color:#fff">renta presunta</strong> — pagas impuesto sobre el 10% del avalúo de tu camión, no sobre lo que ganas. Puede ser una gran ventaja.</div>
           <div style="background:rgba(83,122,110,0.2);border-radius:6px;padding:7px 10px;margin-top:7px;font-size:11px;color:#FF6B00;line-height:1.5">
             <strong style="color:#fff">Ejemplo:</strong> Camión avaluado en $15.000.000 → pagas impuesto sobre $1.500.000 → aprox. <strong style="color:#fff">$135.000/año</strong> en vez de miles de pesos sobre tus ganancias reales.
-          </div>
-        </div>
+          </div></div>
       </div>
 
       <button onclick="goSiguiente(1)" style="width:100%;padding:18px;border-radius:12px;border:none;background:#FF6B00;font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:#fff;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer">Siguiente →</button>
@@ -2538,13 +2532,10 @@ function goDetectarTarifa() {
       <div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:10px;padding:12px 14px;margin-bottom:10px">
         <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.6);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px">Rendimiento km/lt</div>
         <input id="go-rendimiento" type="number" step="0.1" placeholder="Ej: 2.5" style="width:100%;background:#1A1A1A;border:1px solid #2A2A2A;border-radius:7px;padding:9px 12px;font-size:14px;color:#fff;font-family:inherit">
-        <div style="background:rgba(212,168,39,0.08);border:1px solid rgba(212,168,39,0.25);border-radius:8px;padding:10px 12px;margin-top:8px">
-          <div style="font-size:11px;font-weight:700;color:#FF6B00;margin-bottom:4px">POR QUÉ IMPORTA</div>
-          <div style="font-size:11px;color:rgba(255,255,255,0.65);line-height:1.5">El combustible puede ser el 84% de tus costos variables. Sin este dato KAPTURA no puede calcular lo que gastaste en bencina por viaje.</div>
+        <button onclick="document.getElementById('go-info-3').style.display=document.getElementById('go-info-3').style.display==='none'?'block':'none'" style="background:rgba(255,107,0,0.12);border:1px solid rgba(255,107,0,0.3);border-radius:6px;padding:4px 10px;font-size:10px;font-weight:700;color:#FF6B00;cursor:pointer;margin-top:6px;letter-spacing:0.05em">? Ver detalle</button><div id="go-info-3" style="display:none;background:rgba(255,107,0,0.06);border:1px solid rgba(255,107,0,0.2);border-radius:8px;padding:10px 12px;margin-top:6px"><div style="font-size:11px;font-weight:700;color:#FF6B00;margin-bottom:4px">POR QUÉ IMPORTA</div><div style="font-size:11px;color:rgba(255,255,255,0.65);line-height:1.5">El combustible puede ser el 84% de tus costos variables. Sin este dato KAPTURA no puede calcular lo que gastaste en bencina por viaje.</div>
           <div style="background:rgba(83,122,110,0.2);border-radius:6px;padding:7px 10px;margin-top:7px;font-size:11px;color:#FF6B00;line-height:1.5">
             <strong style="color:#fff">Ejemplo:</strong> 2.5 km/lt · viaje 500 km → 200 litros × $1.290 = <strong style="color:#fff">$258.000 en combustible</strong>. Si no sabes tu rendimiento exacto, empieza con 2.5.
-          </div>
-        </div>
+          </div></div>
       </div>
 
       <div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:10px;padding:12px 14px;margin-bottom:16px">
@@ -2568,13 +2559,10 @@ function goDetectarTarifa() {
       <div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:10px;padding:12px 14px;margin-bottom:10px">
         <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.6);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px">Comisión intermediario <span style="background:#1A1A1A;border-radius:4px;padding:1px 6px;font-size:9px;color:rgba(255,255,255,0.4);margin-left:4px">% sobre tarifa</span></div>
         <input id="go-comision-pct" type="number" step="0.5" placeholder="Ej: 5" style="width:100%;background:#1A1A1A;border:1px solid #2A2A2A;border-radius:7px;padding:9px 12px;font-size:14px;color:#fff;font-family:inherit">
-        <div style="background:rgba(212,168,39,0.08);border:1px solid rgba(212,168,39,0.25);border-radius:8px;padding:10px 12px;margin-top:8px">
-          <div style="font-size:11px;font-weight:700;color:#FF6B00;margin-bottom:4px">¿QUÉ ES ESTO?</div>
-          <div style="font-size:11px;color:rgba(255,255,255,0.65);line-height:1.5">Si consigues carga a través de un operador logístico, broker o plataforma, ellos te cobran una comisión. KAPTURA la descuenta de tu ingreso bruto para mostrarte lo que realmente entra a tu bolsillo.</div>
+        <button onclick="document.getElementById('go-info-4').style.display=document.getElementById('go-info-4').style.display==='none'?'block':'none'" style="background:rgba(255,107,0,0.12);border:1px solid rgba(255,107,0,0.3);border-radius:6px;padding:4px 10px;font-size:10px;font-weight:700;color:#FF6B00;cursor:pointer;margin-top:6px;letter-spacing:0.05em">? Ver detalle</button><div id="go-info-4" style="display:none;background:rgba(255,107,0,0.06);border:1px solid rgba(255,107,0,0.2);border-radius:8px;padding:10px 12px;margin-top:6px"><div style="font-size:11px;font-weight:700;color:#FF6B00;margin-bottom:4px">¿QUÉ ES ESTO?</div><div style="font-size:11px;color:rgba(255,255,255,0.65);line-height:1.5">Si consigues carga a través de un operador logístico, broker o plataforma, ellos te cobran una comisión. KAPTURA la descuenta de tu ingreso bruto para mostrarte lo que realmente entra a tu bolsillo.</div>
           <div style="background:rgba(83,122,110,0.2);border-radius:6px;padding:7px 10px;margin-top:7px;font-size:11px;color:#FF6B00;line-height:1.5">
             <strong style="color:#fff">Ejemplo:</strong> Tarifa $500.000 · comisión 5% → te descuentan $25.000 → ingresas <strong style="color:#fff">$475.000 reales</strong>.
-          </div>
-        </div>
+          </div></div>
       </div>
 
       <div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:10px;padding:12px 14px;margin-bottom:16px">
@@ -2605,13 +2593,10 @@ function goDetectarTarifa() {
           <span style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.6);letter-spacing:0.1em;text-transform:uppercase">Total fijos mensuales</span>
         </div>
         <input id="go-costo-fijo" type="text" placeholder="Ej: 1200000" style="width:100%;background:#1A1A1A;border:1px solid #2A2A2A;border-radius:7px;padding:9px 12px;font-size:14px;color:#fff;font-family:inherit">
-        <div style="background:rgba(212,168,39,0.08);border:1px solid rgba(212,168,39,0.25);border-radius:8px;padding:10px 12px;margin-top:8px">
-          <div style="font-size:11px;font-weight:700;color:#FF6B00;margin-bottom:4px">¿QUÉ INCLUYE ESTE NÚMERO?</div>
-          <div style="font-size:11px;color:rgba(255,255,255,0.65);line-height:1.5">Suma todo lo que pagas mensualmente aunque el camión esté parado: crédito o leasing, seguro, permiso de circulación (dividido en 12), GPS, plan de datos, contador, estacionamiento.</div>
+        <button onclick="document.getElementById('go-info-5').style.display=document.getElementById('go-info-5').style.display==='none'?'block':'none'" style="background:rgba(255,107,0,0.12);border:1px solid rgba(255,107,0,0.3);border-radius:6px;padding:4px 10px;font-size:10px;font-weight:700;color:#FF6B00;cursor:pointer;margin-top:6px;letter-spacing:0.05em">? Ver detalle</button><div id="go-info-5" style="display:none;background:rgba(255,107,0,0.06);border:1px solid rgba(255,107,0,0.2);border-radius:8px;padding:10px 12px;margin-top:6px"><div style="font-size:11px;font-weight:700;color:#FF6B00;margin-bottom:4px">¿QUÉ INCLUYE ESTE NÚMERO?</div><div style="font-size:11px;color:rgba(255,255,255,0.65);line-height:1.5">Suma todo lo que pagas mensualmente aunque el camión esté parado: crédito o leasing, seguro, permiso de circulación (dividido en 12), GPS, plan de datos, contador, estacionamiento.</div>
           <div style="background:rgba(83,122,110,0.2);border-radius:6px;padding:7px 10px;margin-top:7px;font-size:11px;color:#FF6B00;line-height:1.5">
             <strong style="color:#fff">Ejemplo:</strong> Crédito $450.000 + seguro $80.000 + permiso $25.000 + GPS $15.000 + contador $50.000 = <strong style="color:#fff">$620.000/mes fijos</strong>.
-          </div>
-        </div>
+          </div></div>
       </div>
 
       <div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:10px;padding:12px 14px;margin-bottom:16px">
@@ -2647,13 +2632,10 @@ function goDetectarTarifa() {
         <input id="go-mant-km" type="number" placeholder="Ej: 15000" style="width:100%;background:#1A1A1A;border:1px solid #2A2A2A;border-radius:7px;padding:9px 12px;font-size:14px;color:#fff;font-family:inherit">
         <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.6);letter-spacing:0.1em;text-transform:uppercase;margin:10px 0 6px">Costo estimado por mantención</div>
         <input id="go-mant-costo" type="text" placeholder="Ej: 180000" style="width:100%;background:#1A1A1A;border:1px solid #2A2A2A;border-radius:7px;padding:9px 12px;font-size:14px;color:#fff;font-family:inherit">
-        <div style="background:rgba(212,168,39,0.08);border:1px solid rgba(212,168,39,0.25);border-radius:8px;padding:10px 12px;margin-top:8px">
-          <div style="font-size:11px;font-weight:700;color:#FF6B00;margin-bottom:4px">¿QUÉ INCLUYE?</div>
-          <div style="font-size:11px;color:rgba(255,255,255,0.65);line-height:1.5">Aceite, filtros, frenos, alineación, amortiguadores, luces. KAPTURA calcula cuánto te cuesta por km y lo suma al costo de cada viaje.</div>
+        <button onclick="document.getElementById('go-info-6').style.display=document.getElementById('go-info-6').style.display==='none'?'block':'none'" style="background:rgba(255,107,0,0.12);border:1px solid rgba(255,107,0,0.3);border-radius:6px;padding:4px 10px;font-size:10px;font-weight:700;color:#FF6B00;cursor:pointer;margin-top:6px;letter-spacing:0.05em">? Ver detalle</button><div id="go-info-6" style="display:none;background:rgba(255,107,0,0.06);border:1px solid rgba(255,107,0,0.2);border-radius:8px;padding:10px 12px;margin-top:6px"><div style="font-size:11px;font-weight:700;color:#FF6B00;margin-bottom:4px">¿QUÉ INCLUYE?</div><div style="font-size:11px;color:rgba(255,255,255,0.65);line-height:1.5">Aceite, filtros, frenos, alineación, amortiguadores, luces. KAPTURA calcula cuánto te cuesta por km y lo suma al costo de cada viaje.</div>
           <div style="background:rgba(83,122,110,0.2);border-radius:6px;padding:7px 10px;margin-top:7px;font-size:11px;color:#FF6B00;line-height:1.5">
             <strong style="color:#fff">Ejemplo:</strong> Mantención cada 15.000 km · costo $180.000 → <strong style="color:#fff">$12/km</strong> de mantención en cada viaje.
-          </div>
-        </div>
+          </div></div>
       </div>
 
       <div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:10px;padding:12px 14px;margin-bottom:10px">
@@ -2666,13 +2648,10 @@ function goDetectarTarifa() {
       <div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:10px;padding:12px 14px;margin-bottom:16px">
         <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.6);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px">Fondo de contingencia mensual</div>
         <input id="go-fondo" type="text" placeholder="Ej: 100000" style="width:100%;background:#1A1A1A;border:1px solid #2A2A2A;border-radius:7px;padding:9px 12px;font-size:14px;color:#fff;font-family:inherit">
-        <div style="background:rgba(212,168,39,0.08);border:1px solid rgba(212,168,39,0.25);border-radius:8px;padding:10px 12px;margin-top:8px">
-          <div style="font-size:11px;font-weight:700;color:#FF6B00;margin-bottom:4px">MANTENCIÓN MAYOR — LOS GOLPES GRANDES</div>
-          <div style="font-size:11px;color:rgba(255,255,255,0.65);line-height:1.5">Motor, caja de cambios, diferencial, embrague, dirección, sistema eléctrico, hidráulico. No sabes cuándo van a llegar, pero van a llegar. Aparta un monto mensual para no quedar al debe.</div>
+        <button onclick="document.getElementById('go-info-7').style.display=document.getElementById('go-info-7').style.display==='none'?'block':'none'" style="background:rgba(255,107,0,0.12);border:1px solid rgba(255,107,0,0.3);border-radius:6px;padding:4px 10px;font-size:10px;font-weight:700;color:#FF6B00;cursor:pointer;margin-top:6px;letter-spacing:0.05em">? Ver detalle</button><div id="go-info-7" style="display:none;background:rgba(255,107,0,0.06);border:1px solid rgba(255,107,0,0.2);border-radius:8px;padding:10px 12px;margin-top:6px"><div style="font-size:11px;font-weight:700;color:#FF6B00;margin-bottom:4px">MANTENCIÓN MAYOR — LOS GOLPES GRANDES</div><div style="font-size:11px;color:rgba(255,255,255,0.65);line-height:1.5">Motor, caja de cambios, diferencial, embrague, dirección, sistema eléctrico, hidráulico. No sabes cuándo van a llegar, pero van a llegar. Aparta un monto mensual para no quedar al debe.</div>
           <div style="background:rgba(83,122,110,0.2);border-radius:6px;padding:7px 10px;margin-top:7px;font-size:11px;color:#FF6B00;line-height:1.5">
             <strong style="color:#fff">Ejemplo:</strong> Fondo $100.000/mes · 20 días operativos → <strong style="color:#fff">$5.000 por servicio</strong> que KAPTURA reserva automáticamente.
-          </div>
-        </div>
+          </div></div>
       </div>
 
       <div style="display:flex;gap:8px">
@@ -2709,7 +2688,7 @@ function goDetectarTarifa() {
 <!-- ═══ PANTALLA: GO GUARDADO ═══ -->
 <div class="screen" id="screen-go-guardado" style="padding:32px 20px;text-align:center;background:#0D0D0D">
   <div style="font-size:56px;margin-bottom:16px">✅</div>
-  <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;color:#fff;letter-spacing:0.04em;margin-bottom:8px">¡Listo, <span id="go-guardado-nombre"></span>!</div>
+  <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;color:#FF6B00;letter-spacing:0.04em;margin-bottom:8px">¡Listo, <span id="go-guardado-nombre"></span>!</div>
   <div style="font-size:14px;color:rgba(255,255,255,0.55);line-height:1.6;margin-bottom:32px">Tu configuración quedó guardada.<br>KAPTURA ya sabe cuánto te cuesta cada viaje.</div>
   <button onclick="goMostrarHome()" style="width:100%;padding:20px;border-radius:14px;border:none;background:#FF6B00;font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:#000000;letter-spacing:0.06em;cursor:pointer">INICIAR MI PRIMER SERVICIO →</button>
 </div>
