@@ -2968,7 +2968,7 @@ async function cargarConfigFlota(empresa) {
     (clientes||[]).map(c => '<div style="background:#0D0D0D;border:1px solid #2A2A2A;border-radius:8px;padding:10px;margin-bottom:6px;font-size:13px;color:#fff">' + c.nombre + '</div>')
   );
   document.getElementById('flota-lista-tarifario').innerHTML = fmt(
-    (tarifario||[]).map(t => '<div style="background:#0D0D0D;border:1px solid #2A2A2A;border-radius:8px;padding:10px;margin-bottom:6px;display:flex;justify-content:space-between"><span style="font-size:12px;color:rgba(255,255,255,0.6)">' + t.cliente + ' · ' + t.destino + '</span><span style="font-size:13px;color:#FF6B00;font-weight:700">$' + (t.tarifa_neta||0).toLocaleString('es-CL') + '</span></div>')
+    (tarifario||[]).map(t => '<div style="background:#0D0D0D;border:1px solid #2A2A2A;border-radius:8px;padding:10px;margin-bottom:6px;display:flex;justify-content:space-between"><span style="font-size:12px;color:rgba(255,255,255,0.6)">' + t.cliente + ' · ' + (t.origen||'—') + ' → ' + t.destino + '</span><span style="font-size:13px;color:#FF6B00;font-weight:700">$' + (t.tarifa_neta||0).toLocaleString('es-CL') + '</span></div>')
   );
 }
 
@@ -2990,6 +2990,67 @@ async function flotaAgregarConductor() {
   if(error) { alert('Error: '+error.message); return; }
   document.getElementById('flota-nuevo-conductor').value = '';
   cargarConfigFlota(window._flotaEmpresa);
+}
+
+function flotaSeleccionarModo(modo) {
+  document.getElementById('flota-modo-gestion').value = modo;
+  const btnFlota = document.getElementById('flota-modo-btn-flota');
+  const btnUnidad = document.getElementById('flota-modo-btn-unidad');
+  if(modo === 'flota') {
+    btnFlota.style.background = '#FF6B00'; btnFlota.style.borderColor = '#FF6B00';
+    btnFlota.querySelector('div').style.color = '#000';
+    btnFlota.querySelectorAll('div')[1].style.color = 'rgba(0,0,0,0.6)';
+    btnUnidad.style.background = '#1A1A1A'; btnUnidad.style.borderColor = '#2A2A2A';
+    btnUnidad.querySelector('div').style.color = '#fff';
+    btnUnidad.querySelectorAll('div')[1].style.color = 'rgba(255,255,255,0.4)';
+  } else {
+    btnUnidad.style.background = '#FF6B00'; btnUnidad.style.borderColor = '#FF6B00';
+    btnUnidad.querySelector('div').style.color = '#000';
+    btnUnidad.querySelectorAll('div')[1].style.color = 'rgba(0,0,0,0.6)';
+    btnFlota.style.background = '#1A1A1A'; btnFlota.style.borderColor = '#2A2A2A';
+    btnFlota.querySelector('div').style.color = '#fff';
+    btnFlota.querySelectorAll('div')[1].style.color = 'rgba(255,255,255,0.4)';
+  }
+}
+
+function flotaCFSumar() {
+  let total = 0;
+  document.querySelectorAll('#flota-cf-items input[data-cf-item]').forEach(inp => {
+    const val = parseInt((inp.value||'0').replace(/[^0-9]/g,''))||0;
+    total += inp.getAttribute('data-anual') === 'true' ? Math.round(val/12) : val;
+  });
+  document.getElementById('flota-cf-total').textContent = '$' + total.toLocaleString('es-CL');
+  if(total > 0) document.getElementById('flota-costo-fijo').value = total;
+}
+
+function flotaCFActualizar() {
+  const v = parseInt((document.getElementById('flota-costo-fijo').value||'0').replace(/[^0-9]/g,''))||0;
+  document.getElementById('flota-cf-total').textContent = '$' + v.toLocaleString('es-CL');
+}
+
+function flotaMayorSumar() {
+  let total = 0;
+  document.querySelectorAll('#flota-mayor-lista input[data-mayor-item]').forEach(inp => {
+    total += parseInt((inp.value||'0').replace(/[^0-9]/g,''))||0;
+  });
+  const reserva = Math.round(total / 60);
+  document.getElementById('flota-mayor-total').textContent = '$' + reserva.toLocaleString('es-CL');
+  if(reserva > 0) document.getElementById('flota-fondo').value = reserva;
+}
+
+async function flotaGuardarContingencia() {
+  const fondo = parseInt((document.getElementById('flota-fondo').value||'0').replace(/[^0-9]/g,''))||0;
+  const {error} = await supa.from('kaptura_config').upsert(
+    [{clave:'fondo_contingencia_'+window._flotaEmpresa, valor:String(fondo), empresa:window._flotaEmpresa}],
+    {onConflict:'clave'}
+  );
+  if(error) { alert('Error: '+error.message); return; }
+  alert('Contingencia guardada.');
+}
+
+async function flotaConfigurarCompleto() {
+  await flotaGuardarCostos();
+  alert('Configuración completa guardada. Próximamente: Panel operativo FLOTA.');
 }
 
 async function flotaGuardarEmpresa() {
@@ -3022,12 +3083,14 @@ async function flotaGuardarCostos() {
 
 async function flotaAgregarTarifa() {
   const cliente = document.getElementById('flota-tar-cliente').value.trim();
+  const origen = document.getElementById('flota-tar-origen').value.trim().toUpperCase();
   const destino = document.getElementById('flota-tar-destino').value.trim().toUpperCase();
   const valor = parseInt(document.getElementById('flota-tar-valor').value.replace(/\D/g,''))||0;
-  if(!cliente||!destino||!valor) { alert('Completa todos los campos del tarifario'); return; }
-  const {error} = await supa.from('kaptura_tarifarios').insert({cliente, destino, tarifa_neta:valor, empresa:window._flotaEmpresa, activo:true});
+  if(!cliente||!destino||!valor) { alert('Completa cliente, destino y tarifa'); return; }
+  const {error} = await supa.from('kaptura_tarifarios').insert({cliente, origen, destino, tarifa_neta:valor, empresa:window._flotaEmpresa, activo:true});
   if(error) { alert('Error: '+error.message); return; }
   document.getElementById('flota-tar-cliente').value='';
+  document.getElementById('flota-tar-origen').value='';
   document.getElementById('flota-tar-destino').value='';
   document.getElementById('flota-tar-valor').value='';
   cargarConfigFlota(window._flotaEmpresa);
@@ -3243,10 +3306,9 @@ async function flotaAgregarCliente() {
 <!-- ═══ PANTALLA: FLOTA CONFIG ═══ -->
 <div class="screen" id="screen-flota-config" style="background:#0D0D0D;padding:0">
 
-  <!-- Header -->
-  <div style="background:rgba(0,0,0,0.4);padding:14px 16px;border-bottom:1px solid #2A2A2A;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10">
+  <div style="background:rgba(0,0,0,0.4);padding:14px 16px;border-bottom:1px solid #2A2A2A;display:flex;justify-content:space-between;align-items:center">
     <div>
-      <div style="font-family:'DM Sans',sans-serif;font-size:18px;font-weight:900;letter-spacing:0.12em;color:#FF6B00">KAPTURA</div>
+      <div style="font-family:'DM Sans',sans-serif;font-size:18px;font-weight:900;color:#FF6B00">KAPTURA</div>
       <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.5);letter-spacing:0.2em">FLOTA — CONFIGURACIÓN</div>
     </div>
     <button onclick="localStorage.removeItem('kaptura_session');showScreen('screen-pin-go');_goPinIngresado='';actualizarDotsGo();" style="background:transparent;border:1px solid #2A2A2A;border-radius:8px;padding:6px 12px;font-size:11px;color:rgba(255,255,255,0.5);cursor:pointer">Cerrar sesión</button>
@@ -3255,6 +3317,24 @@ async function flotaAgregarCliente() {
   <div style="padding:16px">
     <div style="font-family:'DM Sans',sans-serif;font-size:24px;font-weight:900;color:#fff;margin-bottom:2px">Configuración FLOTA</div>
     <div id="flota-config-empresa" style="font-size:12px;color:#FF6B00;margin-bottom:20px">—</div>
+
+    <!-- 0. MODO DE GESTIÓN -->
+    <div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:12px;padding:14px;margin-bottom:12px">
+      <div style="font-size:11px;font-weight:700;color:#FF6B00;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px">0. Modo de gestión</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+        <div id="flota-modo-btn-flota" onclick="flotaSeleccionarModo('flota')" style="background:#FF6B00;border:2px solid #FF6B00;border-radius:10px;padding:14px;text-align:center;cursor:pointer">
+          <div style="font-size:14px;font-weight:700;color:#000;margin-bottom:4px">Flota completa</div>
+          <div style="font-size:11px;color:rgba(0,0,0,0.6)">Costos compartidos</div>
+        </div>
+        <div id="flota-modo-btn-unidad" onclick="flotaSeleccionarModo('unidad')" style="background:#1A1A1A;border:2px solid #2A2A2A;border-radius:10px;padding:14px;text-align:center;cursor:pointer">
+          <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:4px">Unidad de negocio</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.4)">Costos por equipo</div>
+        </div>
+      </div>
+      <button onclick="document.getElementById('flota-info-modo').style.display=document.getElementById('flota-info-modo').style.display==='none'?'block':'none'" style="background:rgba(255,107,0,0.12);border:1px solid rgba(255,107,0,0.3);border-radius:6px;padding:3px 8px;font-size:10px;font-weight:700;color:#FF6B00;cursor:pointer;margin-top:6px">? Ver detalle</button>
+      <div id="flota-info-modo" style="display:none;background:rgba(255,107,0,0.06);border:1px solid rgba(255,107,0,0.2);border-radius:8px;padding:10px 12px;margin-top:6px"><div style="font-size:11px;font-weight:700;color:#FF6B00;margin-bottom:4px">¿QUÉ MODO ELEGIR?</div><div style="font-size:11px;color:rgba(255,255,255,0.65);line-height:1.5">Define cómo KAPTURA medirá el desempeño de tu operación.</div><div style="background:rgba(255,107,0,0.08);border-radius:6px;padding:7px 10px;margin-top:7px;font-size:11px;color:rgba(255,255,255,0.7);line-height:1.5"><strong style="color:#FF6B00">Flota completa:</strong> Los costos fijos (arriendo, seguros, GPS) se dividen entre todos los equipos activos del día. El margen es del negocio completo. Ideal si todos los camiones trabajan para el mismo pool de clientes.<br><br><strong style="color:#FF6B00">Unidades de negocio:</strong> Cada equipo tiene sus propios costos y genera su propio margen. Ideal si quieres saber exactamente cuánto gana cada camión por separado.</div></div>
+      <input type="hidden" id="flota-modo-gestion" value="flota">
+    </div>
 
     <!-- 1. DATOS DE LA EMPRESA -->
     <div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:12px;padding:14px;margin-bottom:12px">
@@ -3273,44 +3353,45 @@ async function flotaAgregarCliente() {
           <input id="flota-ciudad" type="text" placeholder="Ej: Santiago" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:9px 12px;font-size:13px;color:#fff;font-family:inherit">
         </div>
       </div>
-      <button onclick="flotaGuardarEmpresa()" style="width:100%;background:#FF6B00;border:none;border-radius:8px;padding:10px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;color:#000;cursor:pointer">GUARDAR DATOS</button>
+      <button onclick="flotaGuardarEmpresa()" style="width:100%;background:#FF6B00;border:none;border-radius:8px;padding:10px;font-size:14px;font-weight:700;color:#000;cursor:pointer">GUARDAR DATOS</button>
     </div>
 
     <!-- 2. FLOTA / EQUIPOS -->
     <div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:12px;padding:14px;margin-bottom:12px">
       <div style="font-size:11px;font-weight:700;color:#FF6B00;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px">2. Flota / Equipos</div>
       <div id="flota-lista-equipos" style="margin-bottom:10px"></div>
-      <div style="margin-bottom:8px">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">
-          <div>
-            <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">PATENTE</div>
-            <input id="flota-nueva-patente" type="text" placeholder="Ej: WY1742" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:8px 10px;font-size:13px;color:#fff;font-family:inherit;text-transform:uppercase">
-          </div>
-          <div>
-            <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">TIPO</div>
-            <select id="flota-nuevo-tipo" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:8px 8px;font-size:12px;color:#fff;font-family:inherit">
-              <option value="tracto_rampla">Tracto + Rampla</option>
-              <option value="tracto_frigorifico">Tracto + Frigorífico</option>
-              <option value="tracto_tolva">Tracto + Tolva</option>
-              <option value="tracto_caja_seca">Tracto + Caja seca</option>
-              <option value="camion_rampla">Camión con rampla</option>
-              <option value="camion_solo">Camión sin carro</option>
-              <option value="furgon_grande">Furgón grande</option>
-              <option value="otro">Otro</option>
-            </select>
-          </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">
+        <div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">PATENTE</div>
+          <input id="flota-nueva-patente" type="text" placeholder="Ej: WY1742" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:8px 10px;font-size:13px;color:#fff;font-family:inherit;text-transform:uppercase">
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:6px;align-items:flex-end">
-          <div>
-            <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">RENDIMIENTO km/lt</div>
-            <input id="flota-nuevo-rend" type="number" step="0.1" placeholder="Ej: 2.5" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:8px 10px;font-size:13px;color:#fff;font-family:inherit">
-          </div>
-          <div>
-            <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">VALOR COMERCIAL</div>
-            <input id="flota-nuevo-valor" type="text" placeholder="Ej: 45000000" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:8px 10px;font-size:13px;color:#fff;font-family:inherit">
-          </div>
-          <button onclick="flotaAgregarEquipo()" style="background:#FF6B00;border:none;border-radius:8px;padding:10px 14px;font-size:18px;font-weight:900;color:#000;cursor:pointer">+</button>
+        <div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">TIPO</div>
+          <select id="flota-nuevo-tipo" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:8px;font-size:12px;color:#fff;font-family:inherit">
+            <option value="tracto_rampla">Tracto + Rampla</option>
+            <option value="tracto_frigorifico">Tracto + Frigorífico</option>
+            <option value="tracto_tolva">Tracto + Tolva</option>
+            <option value="tracto_caja_seca">Tracto + Caja seca</option>
+            <option value="tracto_contenedor">Tracto + Contenedor</option>
+            <option value="camion_rampla">Camión con rampla</option>
+            <option value="camion_caja_seca">Camión caja seca</option>
+            <option value="camion_frigorifico">Camión frigorífico</option>
+            <option value="camion_solo">Camión sin carro</option>
+            <option value="furgon_grande">Furgón grande</option>
+            <option value="otro">Otro</option>
+          </select>
         </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:6px;align-items:flex-end">
+        <div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">RENDIMIENTO km/lt</div>
+          <input id="flota-nuevo-rend" type="number" step="0.1" placeholder="Ej: 2.5" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:8px 10px;font-size:13px;color:#fff;font-family:inherit">
+        </div>
+        <div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">VALOR COMERCIAL</div>
+          <input id="flota-nuevo-valor" type="text" placeholder="Ej: 45000000" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:8px 10px;font-size:13px;color:#fff;font-family:inherit">
+        </div>
+        <button onclick="flotaAgregarEquipo()" style="background:#FF6B00;border:none;border-radius:8px;padding:10px 14px;font-size:18px;font-weight:900;color:#000;cursor:pointer;align-self:flex-end">+</button>
       </div>
     </div>
 
@@ -3327,7 +3408,7 @@ async function flotaAgregarCliente() {
           <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">RUT</div>
           <input id="flota-nuevo-conductor-rut" type="text" placeholder="Ej: 12.345.678-9" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:8px 10px;font-size:13px;color:#fff;font-family:inherit">
         </div>
-        <button onclick="flotaAgregarConductor()" style="background:#FF6B00;border:none;border-radius:8px;padding:10px 14px;font-size:18px;font-weight:900;color:#000;cursor:pointer">+</button>
+        <button onclick="flotaAgregarConductor()" style="background:#FF6B00;border:none;border-radius:8px;padding:10px 14px;font-size:18px;font-weight:900;color:#000;cursor:pointer;align-self:flex-end">+</button>
       </div>
     </div>
 
@@ -3344,7 +3425,7 @@ async function flotaAgregarCliente() {
           <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">RUT</div>
           <input id="flota-nuevo-cliente-rut" type="text" placeholder="Ej: 76.XXX.XXX-X" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:8px 10px;font-size:13px;color:#fff;font-family:inherit">
         </div>
-        <button onclick="flotaAgregarCliente()" style="background:#FF6B00;border:none;border-radius:8px;padding:10px 14px;font-size:18px;font-weight:900;color:#000;cursor:pointer">+</button>
+        <button onclick="flotaAgregarCliente()" style="background:#FF6B00;border:none;border-radius:8px;padding:10px 14px;font-size:18px;font-weight:900;color:#000;cursor:pointer;align-self:flex-end">+</button>
       </div>
     </div>
 
@@ -3352,48 +3433,177 @@ async function flotaAgregarCliente() {
     <div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:12px;padding:14px;margin-bottom:12px">
       <div style="font-size:11px;font-weight:700;color:#FF6B00;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px">5. Tarifario</div>
       <div id="flota-lista-tarifario" style="margin-bottom:10px"><div style="font-size:12px;color:rgba(255,255,255,0.3)">Sin tarifas registradas</div></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:6px;align-items:flex-end">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">
         <div>
           <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">CLIENTE</div>
-          <input id="flota-tar-cliente" type="text" placeholder="Cliente" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:8px 8px;font-size:12px;color:#fff;font-family:inherit">
+          <input id="flota-tar-cliente" type="text" placeholder="Cliente" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:8px;font-size:12px;color:#fff;font-family:inherit">
         </div>
         <div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">ORIGEN</div>
+          <input id="flota-tar-origen" type="text" placeholder="Origen" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:8px;font-size:12px;color:#fff;font-family:inherit;text-transform:uppercase">
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:6px;align-items:flex-end">
+        <div>
           <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">DESTINO</div>
-          <input id="flota-tar-destino" type="text" placeholder="Destino" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:8px 8px;font-size:12px;color:#fff;font-family:inherit;text-transform:uppercase">
+          <input id="flota-tar-destino" type="text" placeholder="Destino" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:8px;font-size:12px;color:#fff;font-family:inherit;text-transform:uppercase">
         </div>
         <div>
           <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">TARIFA $</div>
-          <input id="flota-tar-valor" type="text" placeholder="$0" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:8px 8px;font-size:12px;color:#fff;font-family:inherit">
+          <input id="flota-tar-valor" type="text" placeholder="$0" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:8px;font-size:12px;color:#fff;font-family:inherit">
         </div>
-        <button onclick="flotaAgregarTarifa()" style="background:#FF6B00;border:none;border-radius:8px;padding:10px 14px;font-size:18px;font-weight:900;color:#000;cursor:pointer">+</button>
+        <button onclick="flotaAgregarTarifa()" style="background:#FF6B00;border:none;border-radius:8px;padding:10px 14px;font-size:18px;font-weight:900;color:#000;cursor:pointer;align-self:flex-end">+</button>
       </div>
     </div>
 
-    <!-- 6. COSTOS OPERACIONALES -->
+    <!-- 6. COSTOS FIJOS -->
     <div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:12px;padding:14px;margin-bottom:12px">
-      <div style="font-size:11px;font-weight:700;color:#FF6B00;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px">6. Costos operacionales</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-        <div>
-          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">COSTO FIJO MENSUAL</div>
-          <input id="flota-costo-fijo" type="text" placeholder="Ej: 3600000" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:8px 10px;font-size:13px;color:#fff;font-family:inherit">
+      <div style="font-size:11px;font-weight:700;color:#FF6B00;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px">6. Costos fijos</div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:10px">Lo que pagas aunque los camiones no salgan.</div>
+      <button onclick="document.getElementById('flota-cf-lista').style.display=document.getElementById('flota-cf-lista').style.display==='none'?'block':'none'" style="width:100%;background:rgba(255,107,0,0.12);border:1px solid rgba(255,107,0,0.3);border-radius:8px;padding:10px;font-size:13px;font-weight:700;color:#FF6B00;cursor:pointer;margin-bottom:8px">+ Ingresar ítem por ítem</button>
+      <div id="flota-cf-lista" style="display:none;margin-bottom:10px">
+        <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:8px">Ingresa solo los que aplican. KAPTURA suma el total.</div>
+        <div id="flota-cf-items">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #2A2A2A">
+            <div><div style="font-size:12px;color:#fff">Crédito / leasing</div><div style="font-size:10px;color:rgba(255,255,255,0.35)">Por cada equipo o del negocio</div></div>
+            <input type="text" data-cf-item="credito"  onchange="flotaCFSumar()" placeholder="$0" style="width:85px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit">
+          </div><div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #2A2A2A">
+            <div><div style="font-size:12px;color:#fff">Seguro SOAP</div><div style="font-size:10px;color:rgba(255,255,255,0.35)">Anual → ÷12 automático</div></div>
+            <input type="text" data-cf-item="soap" data-anual="true" onchange="flotaCFSumar()" placeholder="$0" style="width:85px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit">
+          </div><div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #2A2A2A">
+            <div><div style="font-size:12px;color:#fff">Seguro de carga / póliza</div><div style="font-size:10px;color:rgba(255,255,255,0.35)">Mensual o anual</div></div>
+            <input type="text" data-cf-item="seguro_carga"  onchange="flotaCFSumar()" placeholder="$0" style="width:85px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit">
+          </div><div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #2A2A2A">
+            <div><div style="font-size:12px;color:#fff">Permiso de circulación</div><div style="font-size:10px;color:rgba(255,255,255,0.35)">Anual → ÷12 automático</div></div>
+            <input type="text" data-cf-item="permiso" data-anual="true" onchange="flotaCFSumar()" placeholder="$0" style="width:85px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit">
+          </div><div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #2A2A2A">
+            <div><div style="font-size:12px;color:#fff">Revisión técnica</div><div style="font-size:10px;color:rgba(255,255,255,0.35)">Anual → ÷12 automático</div></div>
+            <input type="text" data-cf-item="revision" data-anual="true" onchange="flotaCFSumar()" placeholder="$0" style="width:85px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit">
+          </div><div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #2A2A2A">
+            <div><div style="font-size:12px;color:#fff">GPS / rastreo</div><div style="font-size:10px;color:rgba(255,255,255,0.35)">Por equipo o total flota</div></div>
+            <input type="text" data-cf-item="gps"  onchange="flotaCFSumar()" placeholder="$0" style="width:85px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit">
+          </div><div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #2A2A2A">
+            <div><div style="font-size:12px;color:#fff">Plan de datos / comunicaciones</div><div style="font-size:10px;color:rgba(255,255,255,0.35)">Mensual</div></div>
+            <input type="text" data-cf-item="datos"  onchange="flotaCFSumar()" placeholder="$0" style="width:85px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit">
+          </div><div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #2A2A2A">
+            <div><div style="font-size:12px;color:#fff">Contador / administración</div><div style="font-size:10px;color:rgba(255,255,255,0.35)">Mensual</div></div>
+            <input type="text" data-cf-item="contador"  onchange="flotaCFSumar()" placeholder="$0" style="width:85px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit">
+          </div><div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #2A2A2A">
+            <div><div style="font-size:12px;color:#fff">Estacionamiento / patio</div><div style="font-size:10px;color:rgba(255,255,255,0.35)">Mensual</div></div>
+            <input type="text" data-cf-item="estacionamiento"  onchange="flotaCFSumar()" placeholder="$0" style="width:85px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit">
+          </div><div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #2A2A2A">
+            <div><div style="font-size:12px;color:#fff">Depreciación</div><div style="font-size:10px;color:rgba(255,255,255,0.35)">Estimado mensual</div></div>
+            <input type="text" data-cf-item="depreciacion"  onchange="flotaCFSumar()" placeholder="$0" style="width:85px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit">
+          </div>
+          <div style="padding:7px 0">
+            <div style="display:flex;gap:6px;align-items:center">
+              <input type="text" placeholder="Otro gasto fijo" style="flex:1;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 8px;font-size:11px;color:#fff;font-family:inherit">
+              <input type="text" data-cf-item="otro" onchange="flotaCFSumar()" placeholder="$0" style="width:85px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit">
+            </div>
+          </div>
         </div>
+        <div style="background:rgba(255,107,0,0.1);border:1px solid rgba(255,107,0,0.3);border-radius:8px;padding:10px;margin-top:8px;display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.7)">TOTAL FIJOS/MES</span>
+          <span id="flota-cf-total" style="font-size:20px;font-weight:900;color:#FF6B00">$0</span>
+        </div>
+      </div>
+      <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-bottom:4px">O ingresa el total directamente:</div>
+      <input id="flota-costo-fijo" type="text" placeholder="Ej: 3600000" onchange="flotaCFActualizar()" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:9px 12px;font-size:14px;color:#fff;font-family:inherit;margin-bottom:8px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
         <div>
           <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">DÍAS OPERATIVOS/MES</div>
           <input id="flota-dias-op" type="number" placeholder="20" value="20" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:8px 10px;font-size:13px;color:#fff;font-family:inherit">
         </div>
         <div>
-          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">VIÁTICO CONDUCTOR/DÍA</div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">VIÁTICO/DÍA</div>
           <input id="flota-viatico" type="text" placeholder="Ej: 12000" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:8px 10px;font-size:13px;color:#fff;font-family:inherit">
         </div>
-        <div>
-          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">MANTENCIÓN/DÍA</div>
-          <input id="flota-mantencion" type="text" placeholder="Ej: 25000" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:8px 10px;font-size:13px;color:#fff;font-family:inherit">
-        </div>
       </div>
-      <button onclick="flotaGuardarCostos()" style="width:100%;background:#FF6B00;border:none;border-radius:8px;padding:10px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;color:#000;cursor:pointer;margin-top:10px">GUARDAR COSTOS</button>
+      <button onclick="flotaGuardarCostos()" style="width:100%;background:#FF6B00;border:none;border-radius:8px;padding:10px;font-size:14px;font-weight:700;color:#000;cursor:pointer;margin-top:10px">GUARDAR COSTOS FIJOS</button>
     </div>
 
-    <button onclick="alert('Configuración guardada. Panel operativo FLOTA próximamente.')" style="width:100%;padding:18px;border-radius:12px;border:none;background:#FF6B00;font-family:'DM Sans',sans-serif;font-size:20px;font-weight:900;color:#000;cursor:pointer;letter-spacing:0.06em;margin-top:4px">CONFIGURACIÓN COMPLETA ✓</button>
+    <!-- 7. MANTENCIÓN PREVENTIVA -->
+    <div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:12px;padding:14px;margin-bottom:12px">
+      <div style="font-size:11px;font-weight:700;color:#FF6B00;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px">7. Mantención preventiva</div>
+      <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:8px">Cada cuántos km y cuánto cuesta.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+        <div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">CADA CUÁNTOS KM</div>
+          <input id="flota-mant-km" type="number" placeholder="Ej: 20000" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:8px 10px;font-size:13px;color:#fff;font-family:inherit">
+        </div>
+        <div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">COSTO ESTIMADO</div>
+          <input id="flota-mant-costo" type="text" placeholder="Ej: 350000" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:8px 10px;font-size:13px;color:#fff;font-family:inherit">
+        </div>
+      </div>
+      <button onclick="document.getElementById('flota-info-mant').style.display=document.getElementById('flota-info-mant').style.display==='none'?'block':'none'" style="background:rgba(255,107,0,0.12);border:1px solid rgba(255,107,0,0.3);border-radius:6px;padding:3px 8px;font-size:10px;font-weight:700;color:#FF6B00;cursor:pointer;margin-top:6px">? Ver detalle</button><div id="flota-info-mant" style="display:none;background:rgba(255,107,0,0.06);border:1px solid rgba(255,107,0,0.2);border-radius:8px;padding:10px 12px;margin-top:6px"><div style="font-size:11px;font-weight:700;color:#FF6B00;margin-bottom:4px">¿QUÉ INCLUYE LA MANTENCIÓN PREVENTIVA?</div><div style="font-size:11px;color:rgba(255,255,255,0.65);line-height:1.5">Aceite motor, filtros (aceite, aire, combustible), frenos, pastillas, alineación, amortiguadores, sistema eléctrico, luces.</div><div style="background:rgba(255,107,0,0.08);border-radius:6px;padding:7px 10px;margin-top:7px;font-size:11px;color:rgba(255,255,255,0.7);line-height:1.5"><strong style="color:#FF6B00">Ejemplo:</strong> Mantención cada 20.000 km · costo $350.000 → $17,5/km que KAPTURA suma al costo de cada servicio.</div></div>
+    </div>
+
+    <!-- 8. NEUMÁTICOS -->
+    <div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:12px;padding:14px;margin-bottom:12px">
+      <div style="font-size:11px;font-weight:700;color:#FF6B00;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px">8. Neumáticos</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+        <div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">COSTO JUEGO COMPLETO</div>
+          <input id="flota-neum-costo" type="text" placeholder="Ej: 2400000" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:8px 10px;font-size:13px;color:#fff;font-family:inherit">
+        </div>
+        <div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">VIDA ÚTIL EN KM</div>
+          <input id="flota-neum-km" type="number" placeholder="Ej: 150000" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:8px 10px;font-size:13px;color:#fff;font-family:inherit">
+        </div>
+      </div>
+      <button onclick="document.getElementById('flota-info-neum').style.display=document.getElementById('flota-info-neum').style.display==='none'?'block':'none'" style="background:rgba(255,107,0,0.12);border:1px solid rgba(255,107,0,0.3);border-radius:6px;padding:3px 8px;font-size:10px;font-weight:700;color:#FF6B00;cursor:pointer;margin-top:6px">? Ver detalle</button><div id="flota-info-neum" style="display:none;background:rgba(255,107,0,0.06);border:1px solid rgba(255,107,0,0.2);border-radius:8px;padding:10px 12px;margin-top:6px"><div style="font-size:11px;font-weight:700;color:#FF6B00;margin-bottom:4px">VIDA ÚTIL POR TIPO DE NEUMÁTICO</div><div style="font-size:11px;color:rgba(255,255,255,0.65);line-height:1.5">Dirección (delanteros): 150.000–200.000 km · Tracción (motrices): 100.000–150.000 km · Remolque/rampla: 120.000–180.000 km · Camión rígido: 80.000–120.000 km</div><div style="background:rgba(255,107,0,0.08);border-radius:6px;padding:7px 10px;margin-top:7px;font-size:11px;color:rgba(255,255,255,0.7);line-height:1.5"><strong style="color:#FF6B00">Ejemplo:</strong> Juego $2.400.000 · vida útil 150.000 km → $16/km que KAPTURA suma al costo de cada servicio.</div></div>
+    </div>
+
+    <!-- 9. FONDO CONTINGENCIA -->
+    <div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:12px;padding:14px;margin-bottom:12px">
+      <div style="font-size:11px;font-weight:700;color:#FF6B00;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px">9. Fondo de contingencia</div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:10px">Reserva mensual para mantenciones mayores.</div>
+      <button onclick="document.getElementById('flota-mayor-lista').style.display=document.getElementById('flota-mayor-lista').style.display==='none'?'block':'none'" style="width:100%;background:rgba(255,107,0,0.12);border:1px solid rgba(255,107,0,0.3);border-radius:8px;padding:10px;font-size:13px;font-weight:700;color:#FF6B00;cursor:pointer;margin-bottom:8px">+ Ver componentes mayores</button>
+      <div id="flota-mayor-lista" style="display:none;margin-bottom:10px">
+        <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:8px">Ingresa el costo estimado de cada componente. KAPTURA calcula la reserva mensual sugerida.</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #2A2A2A">
+          <div><div style="font-size:12px;color:#fff">Motor</div><div style="font-size:10px;color:rgba(255,255,255,0.35)">$3-8M · 500k–800k km</div></div>
+          <input type="text" data-mayor-item="motor" onchange="flotaMayorSumar()" placeholder="$0" style="width:85px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit">
+        </div><div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #2A2A2A">
+          <div><div style="font-size:12px;color:#fff">Caja de cambios</div><div style="font-size:10px;color:rgba(255,255,255,0.35)">$2.5-5M · 300k–500k km</div></div>
+          <input type="text" data-mayor-item="caja" onchange="flotaMayorSumar()" placeholder="$0" style="width:85px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit">
+        </div><div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #2A2A2A">
+          <div><div style="font-size:12px;color:#fff">Diferencial</div><div style="font-size:10px;color:rgba(255,255,255,0.35)">$1.5-3.5M · 300k–500k km</div></div>
+          <input type="text" data-mayor-item="diferencial" onchange="flotaMayorSumar()" placeholder="$0" style="width:85px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit">
+        </div><div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #2A2A2A">
+          <div><div style="font-size:12px;color:#fff">Embrague</div><div style="font-size:10px;color:rgba(255,255,255,0.35)">$600k-1.5M · 150k–250k km</div></div>
+          <input type="text" data-mayor-item="embrague" onchange="flotaMayorSumar()" placeholder="$0" style="width:85px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit">
+        </div><div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #2A2A2A">
+          <div><div style="font-size:12px;color:#fff">Dirección hidráulica</div><div style="font-size:10px;color:rgba(255,255,255,0.35)">$400-900k · 200k–400k km</div></div>
+          <input type="text" data-mayor-item="direccion" onchange="flotaMayorSumar()" placeholder="$0" style="width:85px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit">
+        </div><div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #2A2A2A">
+          <div><div style="font-size:12px;color:#fff">Sistema eléctrico</div><div style="font-size:10px;color:rgba(255,255,255,0.35)">$300-800k · variable</div></div>
+          <input type="text" data-mayor-item="electrico" onchange="flotaMayorSumar()" placeholder="$0" style="width:85px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit">
+        </div><div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #2A2A2A">
+          <div><div style="font-size:12px;color:#fff">Suspensión</div><div style="font-size:10px;color:rgba(255,255,255,0.35)">$800k-2M · 200k–350k km</div></div>
+          <input type="text" data-mayor-item="suspension" onchange="flotaMayorSumar()" placeholder="$0" style="width:85px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit">
+        </div><div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #2A2A2A">
+          <div><div style="font-size:12px;color:#fff">Sistema hidráulico</div><div style="font-size:10px;color:rgba(255,255,255,0.35)">$500k-1.5M · variable</div></div>
+          <input type="text" data-mayor-item="hidraulico" onchange="flotaMayorSumar()" placeholder="$0" style="width:85px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit">
+        </div>
+        <div style="padding:7px 0">
+          <div style="display:flex;gap:6px;align-items:center">
+            <input type="text" placeholder="Otro componente" style="flex:1;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 8px;font-size:11px;color:#fff;font-family:inherit">
+            <input type="text" data-mayor-item="otro" onchange="flotaMayorSumar()" placeholder="$0" style="width:85px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit">
+          </div>
+        </div>
+        <div style="background:rgba(255,107,0,0.1);border:1px solid rgba(255,107,0,0.3);border-radius:8px;padding:10px;margin-top:8px;display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.7)">RESERVA SUGERIDA/MES</span>
+          <span id="flota-mayor-total" style="font-size:20px;font-weight:900;color:#FF6B00">$0</span>
+        </div>
+      </div>
+      <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-bottom:4px">O ingresa el monto mensual directamente:</div>
+      <input id="flota-fondo" type="text" placeholder="Ej: 150000" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:9px 12px;font-size:14px;color:#fff;font-family:inherit">
+      <button onclick="flotaGuardarContingencia()" style="width:100%;background:#FF6B00;border:none;border-radius:8px;padding:10px;font-size:14px;font-weight:700;color:#000;cursor:pointer;margin-top:10px">GUARDAR CONTINGENCIA</button>
+    </div>
+
+    <button onclick="flotaConfigurarCompleto()" style="width:100%;padding:18px;border-radius:12px;border:none;background:#FF6B00;font-size:20px;font-weight:900;color:#000;cursor:pointer;margin-top:4px">GUARDAR CONFIGURACIÓN COMPLETA ✓</button>
   </div>
 </div>
 
