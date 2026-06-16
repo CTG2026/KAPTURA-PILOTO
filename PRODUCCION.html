@@ -2551,9 +2551,10 @@ function goDetectarTarifa() {
 </script>
 
 <!-- ═══ PANTALLA: GO CARGANDO ═══ -->
-<div class="screen" id="screen-go-cargando" style="padding:40px 20px;text-align:center">
-  <div style="font-family:'DM Sans',sans-serif;font-size:28px;font-weight:900;color:#D8D5CC;letter-spacing:0.08em;margin-bottom:16px">KAPTURA GO</div>
-  <div id="go-cargando-msg" style="font-size:14px;color:rgba(255,255,255,0.5)">Cargando tu perfil...</div>
+<div class="screen" id="screen-go-cargando" style="padding:40px 20px;text-align:center;background:#0D0D0D;min-height:100vh">
+  <div style="font-family:'DM Sans',sans-serif;font-size:28px;font-weight:900;color:#FF6B00;letter-spacing:0.08em;margin-bottom:16px">KAPTURA GO</div>
+  <div id="go-cargando-msg" style="font-size:14px;color:rgba(255,255,255,0.5);margin-bottom:24px">Cargando tu perfil...</div>
+  <button onclick="localStorage.removeItem('kaptura_session');showScreen('screen-pin-go');_goPinIngresado='';actualizarDotsGo();" style="background:transparent;border:1px solid #2A2A2A;border-radius:8px;padding:8px 16px;font-size:12px;color:rgba(255,255,255,0.4);cursor:pointer">← Volver</button>
 </div>
 
 <!-- ═══ PANTALLA: GO ONBOARDING ═══ -->
@@ -2895,10 +2896,13 @@ function goDetectarTarifa() {
       <div style="font-family:'DM Sans',sans-serif;font-size:18px;font-weight:900;letter-spacing:0.12em;color:#fff">KAPTURA</div>
       <div style="font-size:10px;font-weight:700;color:#D8D5CC;letter-spacing:0.2em">GO</div>
     </div>
-    <button onclick="goAbrirConfig()" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:6px 10px;display:flex;align-items:center;gap:5px;cursor:pointer">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-      <span style="font-size:10px;color:rgba(255,255,255,0.6);font-weight:700;letter-spacing:0.1em">CONFIG</span>
-    </button>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button onclick="goAbrirConfig()" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:6px 10px;display:flex;align-items:center;gap:5px;cursor:pointer">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <span style="font-size:10px;color:rgba(255,255,255,0.6);font-weight:700;letter-spacing:0.1em">CONFIG</span>
+      </button>
+      <button onclick="localStorage.removeItem('kaptura_session');showScreen('screen-pin-go');_goPinIngresado='';actualizarDotsGo();" style="background:transparent;border:1px solid #2A2A2A;border-radius:8px;padding:6px 10px;font-size:10px;color:rgba(255,255,255,0.4);cursor:pointer">← Salir</button>
+    </div>
   </div>
 
   <div style="padding:16px">
