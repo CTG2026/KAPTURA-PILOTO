@@ -1038,6 +1038,11 @@ async function validarPinGo() {
     _sessionConductor = {pin: _goPinIngresado, empresa: usr.empresa, rol: usr.rol, nombre: usr.nombre};
     if(usr.rol === 'go') { abrirGoProduccion(usr.empresa); return; }
     if(usr.rol === 'admin_kaptura') { cargarPanelAdmin(); return; }
+    // Roles FLOTA → ir directo a index.html con sesión ya guardada
+    if(['coordinador','controller','administrador','conductor'].includes(usr.rol)) {
+      window.location.href = 'index.html';
+      return;
+    }
     showScreen('screen-modo');
   } else {
     const err = document.getElementById('go-pin-error');
