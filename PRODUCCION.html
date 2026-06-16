@@ -2967,7 +2967,7 @@ async function cargarConfigFlota(empresa) {
     (clientes||[]).map(c => '<div style="background:#0D0D0D;border:1px solid #2A2A2A;border-radius:8px;padding:10px;margin-bottom:6px;font-size:13px;color:#fff">' + c.nombre + '</div>')
   );
   document.getElementById('flota-lista-tarifario').innerHTML = fmt(
-    (tarifario||[]).map(t => '<div style="background:#0D0D0D;border:1px solid #2A2A2A;border-radius:8px;padding:10px;margin-bottom:6px;display:flex;justify-content:space-between"><span style="font-size:12px;color:rgba(255,255,255,0.6)">' + t.cliente + ' · ' + t.destino + '</span><span style="font-size:13px;color:#FF6B00;font-weight:700">$' + (t.tarifa||0).toLocaleString('es-CL') + '</span></div>')
+    (tarifario||[]).map(t => '<div style="background:#0D0D0D;border:1px solid #2A2A2A;border-radius:8px;padding:10px;margin-bottom:6px;display:flex;justify-content:space-between"><span style="font-size:12px;color:rgba(255,255,255,0.6)">' + t.cliente + ' · ' + t.destino + '</span><span style="font-size:13px;color:#FF6B00;font-weight:700">$' + (t.tarifa_neta||0).toLocaleString('es-CL') + '</span></div>')
   );
 }
 
@@ -3024,7 +3024,7 @@ async function flotaAgregarTarifa() {
   const destino = document.getElementById('flota-tar-destino').value.trim().toUpperCase();
   const valor = parseInt(document.getElementById('flota-tar-valor').value.replace(/\D/g,''))||0;
   if(!cliente||!destino||!valor) { alert('Completa todos los campos del tarifario'); return; }
-  const {error} = await supa.from('kaptura_tarifarios').insert({cliente, destino, tarifa:valor, empresa:window._flotaEmpresa, activo:true});
+  const {error} = await supa.from('kaptura_tarifarios').insert({cliente, destino, tarifa_neta:valor, empresa:window._flotaEmpresa, activo:true});
   if(error) { alert('Error: '+error.message); return; }
   document.getElementById('flota-tar-cliente').value='';
   document.getElementById('flota-tar-destino').value='';
