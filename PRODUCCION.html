@@ -1037,7 +1037,15 @@ async function validarPinGo() {
   if(usr) {
     localStorage.setItem('kaptura_session', JSON.stringify({pin: _goPinIngresado, empresa: usr.empresa, rol: usr.rol, nombre: usr.nombre}));
     _sessionConductor = {pin: _goPinIngresado, empresa: usr.empresa, rol: usr.rol, nombre: usr.nombre};
-    if(usr.rol === 'go') { abrirGoProduccion(usr.empresa); return; }
+    if(usr.rol === 'go') {
+      // PIN 1234 = nuevo usuario → selección de modo
+      if(_goPinIngresado === '1234') {
+        showScreen('screen-modo-nuevo');
+        return;
+      }
+      abrirGoProduccion(usr.empresa);
+      return;
+    }
     if(usr.rol === 'admin_kaptura') { cargarPanelAdmin(); return; }
     if(['coordinador','controller','administrador'].includes(usr.rol)) {
       cargarConfigFlota(usr.empresa);
@@ -1230,7 +1238,7 @@ function showScreen(id) {
   window.scrollTo(0,0);
   const sinHeader = ['screen-pin-go','screen-go-cargando','screen-go-onboarding',
     'screen-go-guardado','screen-go-home','screen-go-servicio','screen-go-informe-prod',
-    'screen-admin','screen-admin-nuevo','screen-flota-config'];
+    'screen-admin','screen-admin-nuevo','screen-flota-config','screen-modo-nuevo'];
   const hdr = document.querySelector('.hdr');
   if(hdr) hdr.style.display = sinHeader.includes(id) ? 'none' : '';
 }
@@ -1574,6 +1582,22 @@ function nuevoServicio() {
 
 init();
 document.addEventListener("DOMContentLoaded", cargarSesionConductor);
+
+async function nuevoUsuarioIniciarGo() {
+  // Crear empresa nueva para este usuario
+  const empresa = 'go_' + Date.now().toString().slice(-6);
+  const {error} = await supa.from('kaptura_go_usuarios').insert({
+    empresa, pin:'1234', onboarding_completo:false, clientes:[]
+  });
+  if(error) { alert('Error: '+error.message); return; }
+  // Actualizar sesión con empresa nueva
+  const sess = JSON.parse(localStorage.getItem('kaptura_session')||'{}');
+  sess.empresa = empresa;
+  localStorage.setItem('kaptura_session', JSON.stringify(sess));
+  _sessionConductor = sess;
+  window._goUsuario = null;
+  abrirGoProduccion(empresa);
+}
 
 function adminCrearUsuario() {
   showScreen('screen-admin-nuevo');
@@ -3604,6 +3628,54 @@ async function flotaAgregarCliente() {
     </div>
 
     <button onclick="flotaConfigurarCompleto()" style="width:100%;padding:18px;border-radius:12px;border:none;background:#FF6B00;font-size:20px;font-weight:900;color:#000;cursor:pointer;margin-top:4px">GUARDAR CONFIGURACIÓN COMPLETA ✓</button>
+  </div>
+</div>
+
+
+<!-- ═══ PANTALLA: NUEVO USUARIO — SELECCIÓN MODO ═══ -->
+<div class="screen" id="screen-modo-nuevo" style="background:#0D0D0D;padding:0">
+  <div style="background:rgba(0,0,0,0.4);padding:14px 16px;border-bottom:1px solid #2A2A2A">
+    <div style="font-family:'DM Sans',sans-serif;font-size:18px;font-weight:900;color:#FF6B00">KAPTURA</div>
+    <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.5);letter-spacing:0.2em">BIENVENIDO</div>
+  </div>
+  <div style="padding:20px">
+    <div style="font-family:'DM Sans',sans-serif;font-size:26px;font-weight:900;color:#fff;margin-bottom:6px">¿Qué módulo contrataste?</div>
+    <div style="font-size:13px;color:rgba(255,255,255,0.4);margin-bottom:24px">Selecciona tu plan para comenzar la configuración.</div>
+
+    <!-- GO -->
+    <div onclick="nuevoUsuarioIniciarGo()" style="background:#1A1A1A;border:2px solid #2A2A2A;border-radius:14px;padding:20px;margin-bottom:12px;cursor:pointer;display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div style="font-family:'DM Sans',sans-serif;font-size:22px;font-weight:900;color:#FF6B00;margin-bottom:4px">KAPTURA GO</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.5)">1 camión · Margen por servicio</div>
+      </div>
+      <div style="background:rgba(255,107,0,0.15);border:1px solid rgba(255,107,0,0.3);border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;color:#FF6B00">BÁSICO</div>
+    </div>
+
+    <!-- PRO -->
+    <div style="background:#1A1A1A;border:2px solid #2A2A2A;border-radius:14px;padding:20px;margin-bottom:12px;opacity:0.5">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-family:'DM Sans',sans-serif;font-size:22px;font-weight:900;color:#D4A827;margin-bottom:4px">KAPTURA PRO</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.5)">1-3 camiones · KPIs · Ranking clientes</div>
+        </div>
+        <div style="background:rgba(212,168,39,0.15);border:1px solid rgba(212,168,39,0.3);border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;color:#D4A827">PRO</div>
+      </div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.3);margin-top:8px">Próximamente</div>
+    </div>
+
+    <!-- FLOTA -->
+    <div style="background:#1A1A1A;border:2px solid #2A2A2A;border-radius:14px;padding:20px;margin-bottom:24px;opacity:0.5">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-family:'DM Sans',sans-serif;font-size:22px;font-weight:900;color:#537A6E;margin-bottom:4px">KAPTURA FLOTA</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.5)">4+ equipos · Coordinador · Gestión completa</div>
+        </div>
+        <div style="background:rgba(83,122,110,0.15);border:1px solid rgba(83,122,110,0.3);border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;color:#537A6E">PREMIUM</div>
+      </div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.3);margin-top:8px">Próximamente</div>
+    </div>
+
+    <button onclick="localStorage.removeItem('kaptura_session');showScreen('screen-pin-go');_goPinIngresado='';actualizarDotsGo();" style="width:100%;background:transparent;border:1px solid #2A2A2A;border-radius:10px;padding:12px;font-size:13px;color:rgba(255,255,255,0.4);cursor:pointer">← Volver</button>
   </div>
 </div>
 
