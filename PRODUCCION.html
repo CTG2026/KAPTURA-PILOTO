@@ -1038,9 +1038,12 @@ async function validarPinGo() {
     _sessionConductor = {pin: _goPinIngresado, empresa: usr.empresa, rol: usr.rol, nombre: usr.nombre};
     if(usr.rol === 'go') { abrirGoProduccion(usr.empresa); return; }
     if(usr.rol === 'admin_kaptura') { cargarPanelAdmin(); return; }
-    // Roles FLOTA → ir directo a index.html con sesión ya guardada
-    if(['coordinador','controller','administrador','conductor'].includes(usr.rol)) {
-      window.location.href = 'index.html';
+    if(['coordinador','controller','administrador'].includes(usr.rol)) {
+      cargarConfigFlota(usr.empresa);
+      return;
+    }
+    if(usr.rol === 'conductor') {
+      cargarConfigFlota(usr.empresa);
       return;
     }
     showScreen('screen-modo');
@@ -1226,7 +1229,7 @@ function showScreen(id) {
   window.scrollTo(0,0);
   const sinHeader = ['screen-pin-go','screen-go-cargando','screen-go-onboarding',
     'screen-go-guardado','screen-go-home','screen-go-servicio','screen-go-informe-prod',
-    'screen-admin','screen-admin-nuevo'];
+    'screen-admin','screen-admin-nuevo','screen-flota-config'];
   const hdr = document.querySelector('.hdr');
   if(hdr) hdr.style.display = sinHeader.includes(id) ? 'none' : '';
 }
@@ -2941,6 +2944,58 @@ async function goFinalizarServicio() {
   showScreen('screen-go-informe-prod');
 }
 
+async function cargarConfigFlota(empresa) {
+  window._flotaEmpresa = empresa;
+  showScreen('screen-flota-config');
+  document.getElementById('flota-config-empresa').textContent = empresa;
+  // Cargar datos existentes
+  const {data:flota} = await supa.from('kaptura_flota').select('*').eq('empresa', empresa);
+  const {data:conductores} = await supa.from('kaptura_conductores').select('*').eq('empresa', empresa);
+  const {data:clientes} = await supa.from('kaptura_clientes').select('*').eq('empresa', empresa);
+  
+  const listaFlota = document.getElementById('flota-lista-equipos');
+  const listaCond = document.getElementById('flota-lista-conductores');
+  const listaCli = document.getElementById('flota-lista-clientes');
+  
+  listaFlota.innerHTML = (flota||[]).length === 0 ? '<div style="font-size:12px;color:rgba(255,255,255,0.3)">Sin equipos registrados</div>' :
+    (flota||[]).map(f => '<div style="background:#1A1A1A;border-radius:8px;padding:10px;margin-bottom:6px;font-size:13px;color:#fff">' + f.patente + ' · ' + (f.tipo_equipo||'—') + ' · ' + (f.rendimiento_km_lt||'—') + ' km/lt</div>').join('');
+  
+  listaCond.innerHTML = (conductores||[]).length === 0 ? '<div style="font-size:12px;color:rgba(255,255,255,0.3)">Sin conductores registrados</div>' :
+    (conductores||[]).map(c => '<div style="background:#1A1A1A;border-radius:8px;padding:10px;margin-bottom:6px;font-size:13px;color:#fff">' + c.nombre + '</div>').join('');
+    
+  listaCli.innerHTML = (clientes||[]).length === 0 ? '<div style="font-size:12px;color:rgba(255,255,255,0.3)">Sin clientes registrados</div>' :
+    (clientes||[]).map(c => '<div style="background:#1A1A1A;border-radius:8px;padding:10px;margin-bottom:6px;font-size:13px;color:#fff">' + c.nombre + '</div>').join('');
+}
+
+async function flotaAgregarEquipo() {
+  const patente = document.getElementById('flota-nueva-patente').value.trim().toUpperCase();
+  const tipo = document.getElementById('flota-nuevo-tipo').value;
+  const rend = parseFloat(document.getElementById('flota-nuevo-rend').value)||0;
+  if(!patente) { alert('Ingresa la patente'); return; }
+  const {error} = await supa.from('kaptura_flota').insert({patente, tipo_equipo:tipo, rendimiento_km_lt:rend, empresa:window._flotaEmpresa, activo:true});
+  if(error) { alert('Error: '+error.message); return; }
+  document.getElementById('flota-nueva-patente').value = '';
+  cargarConfigFlota(window._flotaEmpresa);
+}
+
+async function flotaAgregarConductor() {
+  const nombre = document.getElementById('flota-nuevo-conductor').value.trim();
+  if(!nombre) { alert('Ingresa el nombre'); return; }
+  const {error} = await supa.from('kaptura_conductores').insert({nombre, empresa:window._flotaEmpresa, activo:true});
+  if(error) { alert('Error: '+error.message); return; }
+  document.getElementById('flota-nuevo-conductor').value = '';
+  cargarConfigFlota(window._flotaEmpresa);
+}
+
+async function flotaAgregarCliente() {
+  const nombre = document.getElementById('flota-nuevo-cliente').value.trim();
+  if(!nombre) { alert('Ingresa el nombre'); return; }
+  const {error} = await supa.from('kaptura_clientes').insert({nombre, empresa:window._flotaEmpresa, activo:true});
+  if(error) { alert('Error: '+error.message); return; }
+  document.getElementById('flota-nuevo-cliente').value = '';
+  cargarConfigFlota(window._flotaEmpresa);
+}
+
 </script>
 
 <!-- ═══ PANTALLA: PIN GO ═══ -->
@@ -3135,6 +3190,60 @@ async function goFinalizarServicio() {
     <div id="admin-nuevo-error" style="font-size:12px;color:#ef4444;min-height:18px;margin-bottom:10px"></div>
 
     <button id="admin-nuevo-btn" onclick="adminGuardarNuevo()" style="width:100%;padding:18px;border-radius:12px;border:none;background:#FF6B00;font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;color:#000;cursor:pointer;letter-spacing:0.06em">CREAR USUARIO</button>
+  </div>
+</div>
+
+
+<!-- ═══ PANTALLA: FLOTA CONFIG ═══ -->
+<div class="screen" id="screen-flota-config" style="background:#2E3F52;padding:0">
+  <div style="background:rgba(0,0,0,0.3);padding:14px 16px;border-bottom:1px solid rgba(255,255,255,0.1);display:flex;justify-content:space-between;align-items:center">
+    <div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;letter-spacing:0.12em;color:#fff">KAPTURA</div>
+      <div style="font-size:10px;font-weight:700;color:#537A6E;letter-spacing:0.2em">FLOTA — CONFIGURACIÓN</div>
+    </div>
+    <button onclick="localStorage.removeItem('kaptura_session');showScreen('screen-pin-go');_goPinIngresado='';actualizarDotsGo();" style="background:transparent;border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:6px 12px;font-size:11px;color:rgba(255,255,255,0.5);cursor:pointer">Cerrar sesión</button>
+  </div>
+  <div style="padding:16px">
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:#fff;margin-bottom:2px">Configuración FLOTA</div>
+    <div id="flota-config-empresa" style="font-size:12px;color:rgba(255,255,255,0.4);margin-bottom:20px">—</div>
+
+    <!-- EQUIPOS -->
+    <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:14px;margin-bottom:12px">
+      <div style="font-size:11px;font-weight:700;color:#537A6E;letter-spacing:0.1em;margin-bottom:10px">🚛 FLOTA / EQUIPOS</div>
+      <div id="flota-lista-equipos" style="margin-bottom:10px"></div>
+      <div style="display:grid;grid-template-columns:1fr 100px 70px auto;gap:6px;align-items:center">
+        <input id="flota-nueva-patente" type="text" placeholder="Patente" style="background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.15);border-radius:6px;padding:8px 10px;font-size:13px;color:#fff;font-family:inherit;text-transform:uppercase">
+        <select id="flota-nuevo-tipo" style="background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.15);border-radius:6px;padding:8px 6px;font-size:11px;color:#fff;font-family:inherit">
+          <option value="tracto_rampla">Tracto+Rampla</option>
+          <option value="camion_solo">Camión</option>
+          <option value="furgon_grande">Furgón</option>
+        </select>
+        <input id="flota-nuevo-rend" type="number" step="0.1" placeholder="km/lt" style="background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.15);border-radius:6px;padding:8px 6px;font-size:13px;color:#fff;font-family:inherit">
+        <button onclick="flotaAgregarEquipo()" style="background:#537A6E;border:none;border-radius:6px;padding:8px 12px;font-size:13px;font-weight:700;color:#fff;cursor:pointer">+</button>
+      </div>
+    </div>
+
+    <!-- CONDUCTORES -->
+    <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:14px;margin-bottom:12px">
+      <div style="font-size:11px;font-weight:700;color:#537A6E;letter-spacing:0.1em;margin-bottom:10px">👤 CONDUCTORES</div>
+      <div id="flota-lista-conductores" style="margin-bottom:10px"></div>
+      <div style="display:flex;gap:6px">
+        <input id="flota-nuevo-conductor" type="text" placeholder="Nombre del conductor" style="flex:1;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.15);border-radius:6px;padding:8px 10px;font-size:13px;color:#fff;font-family:inherit">
+        <button onclick="flotaAgregarConductor()" style="background:#537A6E;border:none;border-radius:6px;padding:8px 16px;font-size:13px;font-weight:700;color:#fff;cursor:pointer">+</button>
+      </div>
+    </div>
+
+    <!-- CLIENTES -->
+    <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:14px;margin-bottom:12px">
+      <div style="font-size:11px;font-weight:700;color:#537A6E;letter-spacing:0.1em;margin-bottom:10px">🏢 CLIENTES</div>
+      <div id="flota-lista-clientes" style="margin-bottom:10px"></div>
+      <div style="display:flex;gap:6px">
+        <input id="flota-nuevo-cliente" type="text" placeholder="Nombre del cliente" style="flex:1;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.15);border-radius:6px;padding:8px 10px;font-size:13px;color:#fff;font-family:inherit">
+        <button onclick="flotaAgregarCliente()" style="background:#537A6E;border:none;border-radius:6px;padding:8px 16px;font-size:13px;font-weight:700;color:#fff;cursor:pointer">+</button>
+      </div>
+    </div>
+
+    <button onclick="alert('Configuración lista. Próximamente: pantalla de operación FLOTA.')" style="width:100%;padding:16px;border-radius:12px;border:none;background:#537A6E;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;color:#fff;cursor:pointer;letter-spacing:0.06em">IR AL PANEL FLOTA →</button>
   </div>
 </div>
 
