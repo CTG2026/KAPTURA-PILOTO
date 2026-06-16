@@ -945,27 +945,27 @@ let cronoStart = null;
 let _sessionConductor = null;
 
 function cargarSesionConductor() {
-  const saved = localStorage.getItem('kaptura_session');
-  if(saved) {
-    try {
-      const sess = JSON.parse(saved);
-      _sessionConductor = sess;
-      const empLabel = sess.empresa === 'transportes_madrid' ? 'TRANSPORTES MADRID'
-        : sess.empresa === 'demo' ? 'DEMO'
-        : 'GLOBAL SOLUTIONS';
-      document.getElementById('hdr-empresa-nombre').textContent = empLabel;
-      document.getElementById('modo-empresa-label').textContent = empLabel;
-    } catch(e) {}
-  }
-  // Leer módulo desde URL y abrir directamente
   const params = new URLSearchParams(window.location.search);
   const modulo = params.get('modulo');
   if(modulo) {
-    // Limpiar URL sin recargar
+    const saved = localStorage.getItem('kaptura_session');
+    if(saved) {
+      try {
+        const sess = JSON.parse(saved);
+        _sessionConductor = sess;
+        const empLabel = sess.empresa === 'transportes_madrid' ? 'TRANSPORTES MADRID'
+          : sess.empresa === 'demo' ? 'DEMO'
+          : 'GLOBAL SOLUTIONS';
+        document.getElementById('hdr-empresa-nombre').textContent = empLabel;
+        document.getElementById('modo-empresa-label').textContent = empLabel;
+      } catch(e) {}
+    }
     window.history.replaceState(null, '', window.location.pathname);
     abrirModulo(modulo);
   } else {
-    showScreen('screen-modo');
+    localStorage.removeItem('kaptura_session');
+    _sessionConductor = null;
+    showScreen('screen-pin-go');
   }
 }
 
@@ -975,30 +975,103 @@ function abrirModulo(modo) {
     if(sess?.pin === '0000') {
       showScreen('screen-go-demo');
     } else {
-      abrirGoProduccion(sess?.pin);
+      abrirGoProduccion(sess?.empresa);
     }
   } else if(modo === 'pro') {
     showScreen('screen-login');
   } else if(modo === 'flota') {
     window.location.href = 'index.html';
+  } else if(modo === 'admin') {
+    cargarPanelAdmin();
   }
 }
 
-async function abrirGoProduccion(pin) {
-  if(!pin) { showScreen('screen-go-demo'); return; }
+async function abrirGoProduccion(empresa) {
+  if(!empresa) { showScreen('screen-pin-go'); return; }
   showScreen('screen-go-cargando');
-  const { data, error } = await supa.from('kaptura_go_usuarios').select('*').eq('pin', pin).single();
+  const { data, error } = await supa.from('kaptura_go_usuarios').select('*').eq('empresa', empresa).single();
   if(error || !data) {
-    document.getElementById('go-cargando-msg').textContent = 'PIN no válido para KAPTURA GO.';
+    document.getElementById('go-cargando-msg').textContent = 'Perfil GO no encontrado.';
     return;
   }
-  // Guardar perfil GO en memoria
   window._goUsuario = data;
   if(!data.onboarding_completo) {
     goIniciarOnboarding();
   } else {
     goMostrarHome();
   }
+}
+
+// ── LOGIN PIN GO ──
+let _goPinIngresado = '';
+
+function goPinTecla(v) {
+  if(_goPinIngresado.length >= 4) return;
+  _goPinIngresado += v;
+  actualizarDotsGo();
+  if(_goPinIngresado.length === 4) setTimeout(validarPinGo, 150);
+}
+
+function goPinBorrar() {
+  _goPinIngresado = _goPinIngresado.slice(0,-1);
+  actualizarDotsGo();
+}
+
+function actualizarDotsGo() {
+  document.querySelectorAll('.go-pin-dot').forEach((d,i) => {
+    d.style.background = i < _goPinIngresado.length ? '#FF6B00' : 'rgba(255,255,255,0.2)';
+  });
+  const err = document.getElementById('go-pin-error');
+  if(err) err.textContent = '';
+}
+
+async function validarPinGo() {
+  if(_goPinIngresado === '0000') {
+    localStorage.setItem('kaptura_session', JSON.stringify({pin:'0000', empresa:'demo', rol:'conductor'}));
+    showScreen('screen-go-demo');
+    return;
+  }
+  const {data:usr, error} = await supa.from('kaptura_usuarios')
+    .select('*').eq('pin', _goPinIngresado).eq('activo', true).single();
+  if(usr) {
+    localStorage.setItem('kaptura_session', JSON.stringify({pin: _goPinIngresado, empresa: usr.empresa, rol: usr.rol, nombre: usr.nombre}));
+    _sessionConductor = {pin: _goPinIngresado, empresa: usr.empresa, rol: usr.rol, nombre: usr.nombre};
+    if(usr.rol === 'go') { abrirGoProduccion(usr.empresa); return; }
+    if(usr.rol === 'admin_kaptura') { cargarPanelAdmin(); return; }
+    showScreen('screen-modo');
+  } else {
+    const err = document.getElementById('go-pin-error');
+    if(err) err.textContent = 'PIN incorrecto. Intenta de nuevo.';
+    _goPinIngresado = '';
+    actualizarDotsGo();
+  }
+}
+
+async function cargarPanelAdmin() {
+  showScreen('screen-admin');
+  const { data: usuarios } = await supa.from('kaptura_usuarios').select('*').eq('activo', true).order('id');
+  const { data: goUsers } = await supa.from('kaptura_go_usuarios').select('*').order('id');
+  const lista = document.getElementById('admin-lista-usuarios');
+  if(!lista) return;
+  lista.innerHTML = '';
+  const filtrados = (usuarios||[]).filter(u => u.rol === 'go');
+  if(filtrados.length === 0) {
+    lista.innerHTML = '<div style="font-size:13px;color:rgba(255,255,255,0.4);text-align:center;padding:20px">No hay usuarios GO registrados.</div>';
+    return;
+  }
+  filtrados.forEach(u => {
+    const go = (goUsers||[]).find(g => g.empresa === u.empresa);
+    const estado = go ? (go.onboarding_completo ? '✅ Activo' : '⏳ Onboarding pendiente') : '— Sin perfil GO';
+    const nombre = go?.nombre || u.nombre || '—';
+    lista.innerHTML += '<div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:10px;padding:14px;margin-bottom:10px">'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'
+      + '<span style="font-size:15px;font-weight:700;color:#fff">' + nombre + '</span>'
+      + '<span style="font-size:11px;color:#FF6B00;font-weight:700">GO</span>'
+      + '</div>'
+      + '<div style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:4px">PIN: ' + u.pin + ' · Empresa: ' + (u.empresa||'—') + '</div>'
+      + '<div style="font-size:12px;color:rgba(255,255,255,0.6)">' + estado + '</div>'
+      + '</div>';
+  });
 }
 
 let _goDemoCrono = null;
@@ -1460,7 +1533,21 @@ function nuevoServicio() {
 }
 
 init();
-cargarSesionConductor();
+document.addEventListener("DOMContentLoaded", cargarSesionConductor);
+
+function adminCrearUsuario() {
+  const pin = prompt("PIN temporal para el nuevo usuario GO (4 dígitos):");
+  if(!pin || pin.length !== 4) { alert("PIN inválido"); return; }
+  const empresa = "go_" + Date.now().toString().slice(-4);
+  Promise.all([
+    supa.from("kaptura_usuarios").insert({pin, rol:"go", empresa, nombre:"Cliente GO", activo:true}),
+    supa.from("kaptura_go_usuarios").insert({empresa, pin, onboarding_completo:false, clientes:[]})
+  ]).then(([r1,r2]) => {
+    if(r1.error || r2.error) { alert("Error: " + (r1.error?.message || r2.error?.message)); return; }
+    alert("Usuario creado. PIN: " + pin);
+    cargarPanelAdmin();
+  });
+}
 
 // ── MODO GPS ──
 let gpsData = { eventos:[], kmTotal:0, dias:1, horasSvc:{}, tag:0, peajes:0, comb:0, svId:null, dbId:null };
@@ -2659,6 +2746,55 @@ function goDetectarTarifa() {
 </div>
 
 </script>
+
+
+<!-- ═══ PANTALLA: PIN GO ═══ -->
+<div class="screen" id="screen-pin-go" style="background:#0D0D0D;padding:0">
+  <div style="padding:48px 24px 0;text-align:center">
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;letter-spacing:0.25em;color:rgba(255,255,255,0.4);margin-bottom:6px">KAPTURA</div>
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:900;letter-spacing:0.06em;color:#FF6B00;margin-bottom:32px">PILOTO</div>
+    <div style="display:flex;justify-content:center;gap:16px;margin-bottom:12px">
+      <div class="go-pin-dot" style="width:14px;height:14px;border-radius:50%;background:rgba(255,255,255,0.2);transition:background 0.2s"></div>
+      <div class="go-pin-dot" style="width:14px;height:14px;border-radius:50%;background:rgba(255,255,255,0.2);transition:background 0.2s"></div>
+      <div class="go-pin-dot" style="width:14px;height:14px;border-radius:50%;background:rgba(255,255,255,0.2);transition:background 0.2s"></div>
+      <div class="go-pin-dot" style="width:14px;height:14px;border-radius:50%;background:rgba(255,255,255,0.2);transition:background 0.2s"></div>
+    </div>
+    <div id="go-pin-error" style="font-size:12px;color:#FF6B00;min-height:18px;margin-bottom:24px"></div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:0 24px 40px">
+    <button onclick="goPinTecla('1')" style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:12px;padding:22px;font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;color:#fff;cursor:pointer">1</button>
+    <button onclick="goPinTecla('2')" style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:12px;padding:22px;font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;color:#fff;cursor:pointer">2</button>
+    <button onclick="goPinTecla('3')" style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:12px;padding:22px;font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;color:#fff;cursor:pointer">3</button>
+    <button onclick="goPinTecla('4')" style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:12px;padding:22px;font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;color:#fff;cursor:pointer">4</button>
+    <button onclick="goPinTecla('5')" style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:12px;padding:22px;font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;color:#fff;cursor:pointer">5</button>
+    <button onclick="goPinTecla('6')" style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:12px;padding:22px;font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;color:#fff;cursor:pointer">6</button>
+    <button onclick="goPinTecla('7')" style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:12px;padding:22px;font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;color:#fff;cursor:pointer">7</button>
+    <button onclick="goPinTecla('8')" style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:12px;padding:22px;font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;color:#fff;cursor:pointer">8</button>
+    <button onclick="goPinTecla('9')" style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:12px;padding:22px;font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;color:#fff;cursor:pointer">9</button>
+    <button onclick="goPinBorrar()" style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:12px;padding:22px;font-size:20px;color:rgba(255,255,255,0.5);cursor:pointer">←</button>
+    <button onclick="goPinTecla('0')" style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:12px;padding:22px;font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;color:#fff;cursor:pointer">0</button>
+    <div></div>
+  </div>
+</div>
+
+<!-- ═══ PANTALLA: ADMIN KAPTURA ═══ -->
+<div class="screen" id="screen-admin" style="background:#0D0D0D;padding:0">
+  <div style="background:rgba(0,0,0,0.4);padding:16px;border-bottom:1px solid #2A2A2A;display:flex;justify-content:space-between;align-items:center">
+    <div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;letter-spacing:0.12em;color:#FF6B00">KAPTURA</div>
+      <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.5);letter-spacing:0.2em">ADMIN</div>
+    </div>
+    <button onclick="localStorage.removeItem('kaptura_session');showScreen('screen-pin-go');_goPinIngresado='';actualizarDotsGo();" style="background:transparent;border:1px solid #2A2A2A;border-radius:8px;padding:6px 12px;font-size:11px;color:rgba(255,255,255,0.5);cursor:pointer">Cerrar sesión</button>
+  </div>
+  <div style="padding:16px">
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:900;color:#fff;margin-bottom:4px">Panel Admin</div>
+    <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-bottom:20px">Usuarios GO activos</div>
+    <button onclick="adminCrearUsuario()" style="width:100%;background:#FF6B00;border:none;border-radius:10px;padding:14px;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:900;color:#000;cursor:pointer;letter-spacing:0.06em;margin-bottom:16px">+ NUEVO USUARIO GO</button>
+    <div id="admin-lista-usuarios">
+      <div style="font-size:13px;color:rgba(255,255,255,0.4);text-align:center;padding:20px">Cargando...</div>
+    </div>
+  </div>
+</div>
 
 </body>
 </html>
