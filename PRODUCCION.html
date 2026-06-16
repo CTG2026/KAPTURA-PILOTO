@@ -1583,20 +1583,34 @@ function nuevoServicio() {
 init();
 document.addEventListener("DOMContentLoaded", cargarSesionConductor);
 
-async function nuevoUsuarioIniciarGo() {
-  // Crear empresa nueva para este usuario
-  const empresa = 'go_' + Date.now().toString().slice(-6);
-  const {error} = await supa.from('kaptura_go_usuarios').insert({
-    empresa, pin:'1234', onboarding_completo:false, clientes:[]
-  });
-  if(error) { alert('Error: '+error.message); return; }
-  // Actualizar sesión con empresa nueva
-  const sess = JSON.parse(localStorage.getItem('kaptura_session')||'{}');
-  sess.empresa = empresa;
-  localStorage.setItem('kaptura_session', JSON.stringify(sess));
-  _sessionConductor = sess;
-  window._goUsuario = null;
-  abrirGoProduccion(empresa);
+async function nuevoUsuarioIniciar(modo) {
+  const empresa = modo + '_' + Date.now().toString().slice(-6);
+  window._goModo = modo;
+
+  if(modo === 'go' || modo === 'pro') {
+    const {error} = await supa.from('kaptura_go_usuarios').insert({
+      empresa, pin:'1234', onboarding_completo:false, clientes:[]
+    });
+    if(error) { alert('Error: '+error.message); return; }
+    const sess = JSON.parse(localStorage.getItem('kaptura_session')||'{}');
+    sess.empresa = empresa;
+    sess.modo = modo;
+    localStorage.setItem('kaptura_session', JSON.stringify(sess));
+    _sessionConductor = sess;
+    window._goUsuario = {empresa, pin:'1234', onboarding_completo:false, clientes:[]};
+    goIniciarOnboarding();
+  } else if(modo === 'flota') {
+    // Crear empresa FLOTA
+    const {error} = await supa.from('kaptura_usuarios').update({empresa}).eq('pin','1234');
+    const sess = JSON.parse(localStorage.getItem('kaptura_session')||'{}');
+    sess.empresa = empresa;
+    sess.modo = modo;
+    localStorage.setItem('kaptura_session', JSON.stringify(sess));
+    _sessionConductor = sess;
+    window._flotaEmpresa = empresa;
+    showScreen('screen-flota-config');
+    document.getElementById('flota-config-empresa').textContent = empresa;
+  }
 }
 
 function adminCrearUsuario() {
@@ -2363,7 +2377,7 @@ function goIniciarOnboarding() {
 }
 
 function goMostrarStep(n) {
-  for(let i=1;i<=6;i++) {
+  for(let i=1;i<=8;i++) {
     const el = document.getElementById('go-step-'+i);
     if(el) el.style.display = (i===n)?'block':'none';
   }
@@ -2371,8 +2385,12 @@ function goMostrarStep(n) {
   document.querySelectorAll('.go-dot').forEach((d,i)=>{
     d.className = 'go-dot' + (i+1 < n ? ' done' : i+1 === n ? ' active' : '');
   });
-  document.getElementById('go-step-label').textContent = ['','TU NEGOCIO','TU CAMIÓN','TUS INGRESOS','COSTOS FIJOS','COSTOS VARIABLES','REVISIÓN'][n]||'';
-  document.getElementById('go-step-num').textContent = 'Paso '+n+' de 6';
+  document.getElementById('go-step-label').textContent = ['','TU NEGOCIO','TU CAMIÓN','TUS INGRESOS','COSTOS FIJOS','COSTOS VARIABLES','REVISIÓN','FUNCIONES PRO','FUNCIONES FLOTA'][n]||'';
+  document.getElementById('go-step-num').textContent = 'Paso '+n+' de 8';
+  // Mostrar/ocultar candado según modo
+  const modo = window._goModo||'go';
+  if(n===7) { const el=document.getElementById('go-step-7-lock'); if(el) el.style.display=modo==='go'?'block':'none'; }
+  if(n===8) { const el=document.getElementById('go-step-8-lock'); if(el) el.style.display=(modo==='go'||modo==='pro')?'block':'none'; }
 
   if(n===6) {
     const d = window._goDraft || {};
@@ -2462,7 +2480,7 @@ function goSiguiente(n) {
     window._goDraft.neumatico_vida_km   = parseInt(document.getElementById('go-neum-km').value)||0;
     window._goDraft.fondo_contingencia  = parseInt(document.getElementById('go-fondo').value.replace(/\D/g,''))||0;
   }
-  if(n < 6) { goMostrarStep(n+1); window._goStep = n+1; }
+  if(n < 8) { goMostrarStep(n+1); window._goStep = n+1; }
   else { goGuardarOnboarding(); }
 }
 
@@ -2796,7 +2814,73 @@ function goDetectarTarifa() {
 
       <div style="display:flex;gap:8px">
         <button onclick="goVolver()" style="flex:1;padding:16px;border-radius:12px;border:1px solid rgba(255,255,255,0.15);background:transparent;font-family:'DM Sans',sans-serif;font-size:16px;color:rgba(255,255,255,0.5);cursor:pointer">← Volver</button>
-        <button id="go-btn-finalizar" onclick="goSiguiente(6)" style="flex:2;padding:16px;border-radius:12px;border:none;background:#D4A827;font-family:'DM Sans',sans-serif;font-size:20px;font-weight:900;color:#2E3A00;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer">FINALIZAR ✓</button>
+        <button onclick="goMostrarStep(7);window._goStep=7;" style="flex:2;padding:16px;border-radius:12px;border:none;background:#FF6B00;font-family:'DM Sans',sans-serif;font-size:20px;font-weight:900;color:#000;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer">Siguiente →</button>
+      </div>
+    </div>
+
+    <!-- STEP 7: FUNCIONES PRO -->
+    <div id="go-step-7" style="display:none">
+      <div style="font-size:10px;font-weight:700;letter-spacing:0.2em;color:#FF6B00;text-transform:uppercase;margin-bottom:4px">Paso 7</div>
+      <div style="font-size:22px;font-weight:900;color:#fff;margin-bottom:4px">Funciones PRO</div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.5);line-height:1.4;margin-bottom:16px">Disponibles en KAPTURA PRO — 1 a 3 camiones.</div>
+
+      <div id="go-step-7-lock" style="display:none">
+        <div style="background:rgba(255,107,0,0.06);border:1px solid rgba(255,107,0,0.2);border-radius:12px;padding:20px;text-align:center;margin-bottom:12px">
+          <div style="font-size:32px;margin-bottom:8px">🔒</div>
+          <div style="font-size:14px;font-weight:700;color:#FF6B00;margin-bottom:6px">Disponible en KAPTURA PRO</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.4);line-height:1.5">Con PRO puedes gestionar hasta 3 camiones, ver KPIs por equipo, ranking de clientes y costo por km real.</div>
+        </div>
+      </div>
+
+      <div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:10px;padding:14px;margin-bottom:10px;opacity:0.5">
+        <div style="font-size:11px;font-weight:700;color:#FF6B00;margin-bottom:8px">SEGUNDO Y TERCER CAMIÓN</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.4)">Agrega hasta 2 equipos adicionales con su propia ficha de costos.</div>
+      </div>
+      <div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:10px;padding:14px;margin-bottom:10px;opacity:0.5">
+        <div style="font-size:11px;font-weight:700;color:#FF6B00;margin-bottom:8px">KPIs POR EQUIPO</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.4)">$/km real, utilización, días activos vs parados por camión.</div>
+      </div>
+      <div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:10px;padding:14px;margin-bottom:16px;opacity:0.5">
+        <div style="font-size:11px;font-weight:700;color:#FF6B00;margin-bottom:8px">RANKING DE CLIENTES</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.4)">Qué cliente te genera más margen y cuál te cuesta más.</div>
+      </div>
+
+      <div style="display:flex;gap:8px">
+        <button onclick="goVolver()" style="flex:1;padding:16px;border-radius:12px;border:1px solid rgba(255,255,255,0.15);background:transparent;font-family:'DM Sans',sans-serif;font-size:16px;color:rgba(255,255,255,0.5);cursor:pointer">← Volver</button>
+        <button onclick="goMostrarStep(8);window._goStep=8;" style="flex:2;padding:16px;border-radius:12px;border:none;background:#FF6B00;font-family:'DM Sans',sans-serif;font-size:20px;font-weight:900;color:#000;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer">Siguiente →</button>
+      </div>
+    </div>
+
+    <!-- STEP 8: FUNCIONES FLOTA -->
+    <div id="go-step-8" style="display:none">
+      <div style="font-size:10px;font-weight:700;letter-spacing:0.2em;color:#FF6B00;text-transform:uppercase;margin-bottom:4px">Paso 8</div>
+      <div style="font-size:22px;font-weight:900;color:#fff;margin-bottom:4px">Funciones FLOTA</div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.5);line-height:1.4;margin-bottom:16px">Disponibles en KAPTURA FLOTA — 4+ equipos con coordinador.</div>
+
+      <div id="go-step-8-lock" style="display:none">
+        <div style="background:rgba(255,107,0,0.06);border:1px solid rgba(255,107,0,0.2);border-radius:12px;padding:20px;text-align:center;margin-bottom:12px">
+          <div style="font-size:32px;margin-bottom:8px">🔒</div>
+          <div style="font-size:14px;font-weight:700;color:#FF6B00;margin-bottom:6px">Disponible en KAPTURA FLOTA</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.4);line-height:1.5">Con FLOTA tienes panel coordinador, asignación de servicios, gestión completa de equipo y resultados por conductor.</div>
+        </div>
+      </div>
+
+      <div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:10px;padding:14px;margin-bottom:10px;opacity:0.5">
+        <div style="font-size:11px;font-weight:700;color:#FF6B00;margin-bottom:8px">PANEL COORDINADOR</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.4)">Asigna servicios, ve el estado de toda la flota en tiempo real.</div>
+      </div>
+      <div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:10px;padding:14px;margin-bottom:10px;opacity:0.5">
+        <div style="font-size:11px;font-weight:700;color:#FF6B00;margin-bottom:8px">GESTIÓN DE EQUIPO</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.4)">Conductores, liquidaciones, ranking de desempeño.</div>
+      </div>
+      <div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:10px;padding:14px;margin-bottom:16px;opacity:0.5">
+        <div style="font-size:11px;font-weight:700;color:#FF6B00;margin-bottom:8px">INFORMES EJECUTIVOS</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.4)">Resultados consolidados, costos por equipo, margen real del negocio.</div>
+      </div>
+
+      <div style="display:flex;gap:8px">
+        <button onclick="goVolver()" style="flex:1;padding:16px;border-radius:12px;border:1px solid rgba(255,255,255,0.15);background:transparent;font-family:'DM Sans',sans-serif;font-size:16px;color:rgba(255,255,255,0.5);cursor:pointer">← Volver</button>
+        <button id="go-btn-finalizar" onclick="goSiguiente(8)" style="flex:2;padding:16px;border-radius:12px;border:none;background:#FF6B00;font-family:'DM Sans',sans-serif;font-size:20px;font-weight:900;color:#000;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer">GUARDAR ✓</button>
       </div>
     </div>
 
@@ -3643,7 +3727,7 @@ async function flotaAgregarCliente() {
     <div style="font-size:13px;color:rgba(255,255,255,0.4);margin-bottom:24px">Selecciona tu plan para comenzar la configuración.</div>
 
     <!-- GO -->
-    <div onclick="nuevoUsuarioIniciarGo()" style="background:#1A1A1A;border:2px solid #2A2A2A;border-radius:14px;padding:20px;margin-bottom:12px;cursor:pointer;display:flex;justify-content:space-between;align-items:center">
+    <div onclick="nuevoUsuarioIniciar('go')" style="background:#1A1A1A;border:2px solid #2A2A2A;border-radius:14px;padding:20px;margin-bottom:12px;cursor:pointer;display:flex;justify-content:space-between;align-items:center">
       <div>
         <div style="font-family:'DM Sans',sans-serif;font-size:22px;font-weight:900;color:#FF6B00;margin-bottom:4px">KAPTURA GO</div>
         <div style="font-size:12px;color:rgba(255,255,255,0.5)">1 camión · Margen por servicio</div>
@@ -3652,27 +3736,21 @@ async function flotaAgregarCliente() {
     </div>
 
     <!-- PRO -->
-    <div style="background:#1A1A1A;border:2px solid #2A2A2A;border-radius:14px;padding:20px;margin-bottom:12px;opacity:0.5">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <div>
-          <div style="font-family:'DM Sans',sans-serif;font-size:22px;font-weight:900;color:#D4A827;margin-bottom:4px">KAPTURA PRO</div>
-          <div style="font-size:12px;color:rgba(255,255,255,0.5)">1-3 camiones · KPIs · Ranking clientes</div>
-        </div>
-        <div style="background:rgba(212,168,39,0.15);border:1px solid rgba(212,168,39,0.3);border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;color:#D4A827">PRO</div>
+    <div onclick="nuevoUsuarioIniciar('pro')" style="background:#1A1A1A;border:2px solid #2A2A2A;border-radius:14px;padding:20px;margin-bottom:12px;cursor:pointer;display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div style="font-family:'DM Sans',sans-serif;font-size:22px;font-weight:900;color:#FF6B00;margin-bottom:4px">KAPTURA PRO</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.5)">1-3 camiones · KPIs · Ranking clientes</div>
       </div>
-      <div style="font-size:11px;color:rgba(255,255,255,0.3);margin-top:8px">Próximamente</div>
+      <div style="background:rgba(255,107,0,0.15);border:1px solid rgba(255,107,0,0.3);border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;color:#FF6B00">PRO</div>
     </div>
 
     <!-- FLOTA -->
-    <div style="background:#1A1A1A;border:2px solid #2A2A2A;border-radius:14px;padding:20px;margin-bottom:24px;opacity:0.5">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <div>
-          <div style="font-family:'DM Sans',sans-serif;font-size:22px;font-weight:900;color:#537A6E;margin-bottom:4px">KAPTURA FLOTA</div>
-          <div style="font-size:12px;color:rgba(255,255,255,0.5)">4+ equipos · Coordinador · Gestión completa</div>
-        </div>
-        <div style="background:rgba(83,122,110,0.15);border:1px solid rgba(83,122,110,0.3);border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;color:#537A6E">PREMIUM</div>
+    <div onclick="nuevoUsuarioIniciar('flota')" style="background:#1A1A1A;border:2px solid #2A2A2A;border-radius:14px;padding:20px;margin-bottom:24px;cursor:pointer;display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div style="font-family:'DM Sans',sans-serif;font-size:22px;font-weight:900;color:#FF6B00;margin-bottom:4px">KAPTURA FLOTA</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.5)">4+ equipos · Coordinador · Gestión completa</div>
       </div>
-      <div style="font-size:11px;color:rgba(255,255,255,0.3);margin-top:8px">Próximamente</div>
+      <div style="background:rgba(255,107,0,0.15);border:1px solid rgba(255,107,0,0.3);border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;color:#FF6B00">PREMIUM</div>
     </div>
 
     <button onclick="localStorage.removeItem('kaptura_session');showScreen('screen-pin-go');_goPinIngresado='';actualizarDotsGo();" style="width:100%;background:transparent;border:1px solid #2A2A2A;border-radius:10px;padding:12px;font-size:13px;color:rgba(255,255,255,0.4);cursor:pointer">← Volver</button>
