@@ -2745,8 +2745,120 @@ function goDetectarTarifa() {
   </div>
 </div>
 
-</script>
+<script>
+// ── GO PRODUCCIÓN — INICIAR SERVICIO ──
+let _goSvc = {};
 
+async function goIniciarServicio() {
+  const u = window._goUsuario;
+  if(!u) { alert('Sesión expirada. Vuelve a ingresar.'); showScreen('screen-pin-go'); return; }
+  const tarifa = parseInt(document.getElementById('go-home-tarifa').value)||0;
+  if(!tarifa) { alert('Ingresa la tarifa del servicio antes de iniciar.'); return; }
+  const cliente = document.getElementById('go-home-cliente').value ||
+                  document.getElementById('go-home-cliente-manual')?.value?.trim() || '—';
+
+  const {data:prev} = await supa.from('servicios_piloto').select('servicio_id')
+    .eq('empresa', u.empresa).not('servicio_id','is',null)
+    .order('created_at',{ascending:false}).limit(100);
+  let max = 0;
+  (prev||[]).forEach(r=>{ const m=(r.servicio_id||'').match(/GO-(\d+)/); if(m) max=Math.max(max,parseInt(m[1])); });
+  const svId = 'GO-' + String(max+1).padStart(2,'0');
+
+  const fecha = new Date().toLocaleDateString('en-CA',{timeZone:'America/Santiago'});
+  const horaInicio = new Date().toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'});
+
+  const {data:ins, error} = await supa.from('servicios_piloto').insert({
+    servicio_id: svId, empresa: u.empresa, patente: u.patente,
+    conductor: u.nombre, cliente: cliente, fecha: fecha, tarifa: tarifa,
+    estado: 'ejecutado', modo: 'go', margen_servicio: 0, puntos_entrega: 0
+  }).select();
+
+  if(error) { alert('Error al iniciar servicio: ' + error.message); return; }
+
+  _goSvc = { svId, dbId: ins?.[0]?.id, tarifa, cliente, fecha, horaInicio, patente: u.patente, nombre: u.nombre, empresa: u.empresa };
+
+  document.getElementById('go-sv-id').textContent = svId;
+  document.getElementById('go-sv-cliente').textContent = cliente;
+  document.getElementById('go-sv-tarifa').textContent = '$' + tarifa.toLocaleString('es-CL');
+  document.getElementById('go-sv-hora').textContent = horaInicio;
+  document.getElementById('go-sv-patente').textContent = u.patente + ' · ' + (u.tipo_equipo||'');
+  showScreen('screen-go-servicio');
+  goStartCrono();
+}
+
+let _goCronoInterval = null;
+let _goCronoStart = null;
+
+function goStartCrono() {
+  _goCronoStart = Date.now();
+  if(_goCronoInterval) clearInterval(_goCronoInterval);
+  _goCronoInterval = setInterval(() => {
+    const diff = Date.now() - _goCronoStart;
+    const h = Math.floor(diff/3600000);
+    const m = Math.floor((diff%3600000)/60000);
+    const s = Math.floor((diff%60000)/1000);
+    document.getElementById('go-crono').textContent =
+      String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+  }, 1000);
+}
+
+async function goFinalizarServicio() {
+  if(_goCronoInterval) clearInterval(_goCronoInterval);
+  const km = parseInt(prompt('Km recorridos en total:')||'0');
+  const peajes = parseInt(prompt('Total peajes pagados (0 si no pagaste):')||'0');
+  _goSvc.km = km;
+  _goSvc.peajes = peajes;
+
+  const u = window._goUsuario;
+  const precio_lt = 1290;
+  const combustible = km > 0 && u.rendimiento_km_lt > 0 ? Math.round(km * precio_lt / u.rendimiento_km_lt) : 0;
+  const mant = km > 0 && u.mantencion_km > 0 && u.mantencion_costo > 0 ? Math.round(km * u.mantencion_costo / u.mantencion_km) : 0;
+  const neum = km > 0 && u.neumatico_vida_km > 0 && u.neumatico_costo > 0 ? Math.round(km * u.neumatico_costo / u.neumatico_vida_km) : 0;
+  const cf_dia = Math.round((u.costo_fijo_mensual||0) / (u.dias_operativos_mes||20));
+  const viatico = u.viatico || 0;
+  const sueldo = u.sueldo_conductor || 0;
+  const fondo_dia = Math.round((u.fondo_contingencia||0) / (u.dias_operativos_mes||20));
+  const comision = _goSvc.tarifa > 0 && u.comision_pct > 0 ? Math.round(_goSvc.tarifa * u.comision_pct / 100) : (u.comision_fija||0);
+
+  const {data:kopEvts} = await supa.from('kaptura_kopiloto_eventos')
+    .select('monto').eq('empresa', u.empresa)
+    .gte('created_at', new Date().toISOString().split('T')[0]);
+  const gastos_kop = (kopEvts||[]).reduce((s,e)=>s+(e.monto||0),0);
+
+  const costos = combustible + peajes + mant + neum + cf_dia + viatico + sueldo + fondo_dia + comision + gastos_kop;
+  const margen = _goSvc.tarifa - costos;
+
+  _goSvc.costos = { combustible, peajes, mant, neum, cf_dia, viatico, sueldo, fondo_dia, comision, gastos_kop, total: costos };
+  _goSvc.margen = margen;
+
+  if(_goSvc.dbId) {
+    await supa.from('servicios_piloto').update({
+      km_total: km, costos_operacion: costos, margen_servicio: margen, estado: 'cerrado',
+      notas: 'Comb:'+combustible+' Peajes:'+peajes+' CF:'+cf_dia+' Via:'+viatico+' Mant:'+mant+' Neum:'+neum+' KOP:'+gastos_kop
+    }).eq('id', _goSvc.dbId);
+  }
+
+  const fmt = v => '$' + Math.round(v||0).toLocaleString('es-CL');
+  document.getElementById('go-inf-id').textContent = _goSvc.svId;
+  document.getElementById('go-inf-cliente').textContent = _goSvc.cliente;
+  document.getElementById('go-inf-fecha').textContent = _goSvc.fecha;
+  document.getElementById('go-inf-km').textContent = (km||0).toLocaleString('es-CL') + ' km';
+  document.getElementById('go-inf-tarifa').textContent = fmt(_goSvc.tarifa);
+  document.getElementById('go-inf-costos').textContent = fmt(costos);
+  document.getElementById('go-inf-margen').textContent = fmt(margen);
+  document.getElementById('go-inf-margen').style.color = margen >= 0 ? '#22c55e' : '#ef4444';
+  document.getElementById('go-inf-combustible').textContent = fmt(combustible);
+  document.getElementById('go-inf-peajes').textContent = fmt(peajes);
+  document.getElementById('go-inf-cf').textContent = fmt(cf_dia);
+  document.getElementById('go-inf-viatico').textContent = fmt(viatico);
+  document.getElementById('go-inf-mant').textContent = fmt(mant);
+  document.getElementById('go-inf-neum').textContent = fmt(neum);
+  document.getElementById('go-inf-kop').textContent = fmt(gastos_kop);
+  document.getElementById('go-inf-comision').textContent = fmt(comision);
+  showScreen('screen-go-informe-prod');
+}
+
+</script>
 
 <!-- ═══ PANTALLA: PIN GO ═══ -->
 <div class="screen" id="screen-pin-go" style="background:#0D0D0D;padding:0">
@@ -2793,6 +2905,91 @@ function goDetectarTarifa() {
     <div id="admin-lista-usuarios">
       <div style="font-size:13px;color:rgba(255,255,255,0.4);text-align:center;padding:20px">Cargando...</div>
     </div>
+  </div>
+</div>
+
+
+<!-- ═══ PANTALLA: GO SERVICIO EN CURSO ═══ -->
+<div class="screen" id="screen-go-servicio" style="background:#0D0D0D;padding:0">
+  <div style="background:rgba(0,0,0,0.4);padding:12px 16px;border-bottom:1px solid #2A2A2A;display:flex;justify-content:space-between;align-items:center">
+    <div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;letter-spacing:0.12em;color:#FF6B00">KAPTURA</div>
+      <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.5);letter-spacing:0.2em">GO — EN RUTA</div>
+    </div>
+    <div id="go-crono" style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;color:#FF6B00;letter-spacing:0.08em">00:00:00</div>
+  </div>
+  <div style="padding:20px">
+    <div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:12px;padding:16px;margin-bottom:16px">
+      <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #2A2A2A">
+        <span style="font-size:11px;color:rgba(255,255,255,0.45)">Servicio</span>
+        <span id="go-sv-id" style="font-size:14px;font-weight:700;color:#FF6B00">—</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #2A2A2A">
+        <span style="font-size:11px;color:rgba(255,255,255,0.45)">Cliente</span>
+        <span id="go-sv-cliente" style="font-size:14px;font-weight:700;color:#fff">—</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #2A2A2A">
+        <span style="font-size:11px;color:rgba(255,255,255,0.45)">Tarifa</span>
+        <span id="go-sv-tarifa" style="font-size:14px;font-weight:700;color:#fff">—</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #2A2A2A">
+        <span style="font-size:11px;color:rgba(255,255,255,0.45)">Inicio</span>
+        <span id="go-sv-hora" style="font-size:14px;font-weight:700;color:#fff">—</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:6px 0">
+        <span style="font-size:11px;color:rgba(255,255,255,0.45)">Equipo</span>
+        <span id="go-sv-patente" style="font-size:14px;font-weight:700;color:#fff">—</span>
+      </div>
+    </div>
+    <div style="background:rgba(255,107,0,0.08);border:1px solid rgba(255,107,0,0.2);border-radius:12px;padding:14px;margin-bottom:16px;text-align:center">
+      <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:6px">¿Tuviste un gasto en ruta?</div>
+      <button onclick="kopilotoMostrar()" style="background:#FF6B00;border:none;border-radius:8px;padding:10px 20px;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:900;color:#000;cursor:pointer;letter-spacing:0.06em">🎤 KOPILOTO — Registrar gasto</button>
+    </div>
+    <button onclick="goFinalizarServicio()" style="width:100%;padding:20px;border-radius:14px;border:none;background:#FF6B00;font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:900;color:#000;cursor:pointer;letter-spacing:0.06em">FINALIZAR SERVICIO</button>
+  </div>
+</div>
+
+<!-- ═══ PANTALLA: GO INFORME PRODUCCIÓN ═══ -->
+<div class="screen" id="screen-go-informe-prod" style="background:#0D0D0D;padding:0">
+  <div style="background:rgba(0,0,0,0.4);padding:12px 16px;border-bottom:1px solid #2A2A2A">
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;letter-spacing:0.12em;color:#FF6B00">KAPTURA GO</div>
+    <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.5);letter-spacing:0.2em">INFORME DE SERVICIO</div>
+  </div>
+  <div style="padding:16px">
+    <div style="font-size:10px;color:rgba(255,255,255,0.4);letter-spacing:0.1em;margin-bottom:2px">KAPTURA GO</div>
+    <div id="go-inf-id" style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;color:#fff;margin-bottom:2px">—</div>
+    <div id="go-inf-cliente" style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:4px">—</div>
+    <div style="display:flex;gap:12px;font-size:12px;color:rgba(255,255,255,0.4);margin-bottom:16px">
+      <span id="go-inf-fecha">—</span>
+      <span id="go-inf-km">—</span>
+    </div>
+    <div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:12px;padding:14px;margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #2A2A2A">
+        <span style="font-size:13px;color:rgba(255,255,255,0.6)">TARIFA</span>
+        <span id="go-inf-tarifa" style="font-size:16px;font-weight:700;color:#fff">—</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #2A2A2A">
+        <span style="font-size:13px;color:rgba(255,255,255,0.6)">COSTOS</span>
+        <span id="go-inf-costos" style="font-size:16px;font-weight:700;color:#ef4444">—</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:10px 0 6px">
+        <span style="font-size:15px;font-weight:700;color:#fff">MARGEN</span>
+        <span id="go-inf-margen" style="font-size:22px;font-weight:900;font-family:'Barlow Condensed',sans-serif">—</span>
+      </div>
+    </div>
+    <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.4);letter-spacing:0.1em;margin-bottom:8px">DETALLE DE COSTOS</div>
+    <div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:10px;padding:12px;margin-bottom:16px">
+      <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #2A2A2A"><span style="font-size:12px;color:rgba(255,255,255,0.5)">Combustible</span><span id="go-inf-combustible" style="font-size:13px;color:#fff;font-weight:600">—</span></div>
+      <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #2A2A2A"><span style="font-size:12px;color:rgba(255,255,255,0.5)">Peajes</span><span id="go-inf-peajes" style="font-size:13px;color:#fff;font-weight:600">—</span></div>
+      <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #2A2A2A"><span style="font-size:12px;color:rgba(255,255,255,0.5)">Costo fijo día</span><span id="go-inf-cf" style="font-size:13px;color:#fff;font-weight:600">—</span></div>
+      <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #2A2A2A"><span style="font-size:12px;color:rgba(255,255,255,0.5)">Viático</span><span id="go-inf-viatico" style="font-size:13px;color:#fff;font-weight:600">—</span></div>
+      <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #2A2A2A"><span style="font-size:12px;color:rgba(255,255,255,0.5)">Mantención</span><span id="go-inf-mant" style="font-size:13px;color:#fff;font-weight:600">—</span></div>
+      <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #2A2A2A"><span style="font-size:12px;color:rgba(255,255,255,0.5)">Neumáticos</span><span id="go-inf-neum" style="font-size:13px;color:#fff;font-weight:600">—</span></div>
+      <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #2A2A2A"><span style="font-size:12px;color:rgba(255,255,255,0.5)">Gastos KOPILOTO</span><span id="go-inf-kop" style="font-size:13px;color:#fff;font-weight:600">—</span></div>
+      <div style="display:flex;justify-content:space-between;padding:4px 0"><span style="font-size:12px;color:rgba(255,255,255,0.5)">Comisión</span><span id="go-inf-comision" style="font-size:13px;color:#fff;font-weight:600">—</span></div>
+    </div>
+    <button onclick="goMostrarHome()" style="width:100%;padding:16px;border-radius:12px;border:none;background:#FF6B00;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;color:#000;cursor:pointer;letter-spacing:0.06em;margin-bottom:8px">NUEVO SERVICIO →</button>
+    <button onclick="cargarInformesMesDemo();showScreen('screen-go-informes-mes')" style="width:100%;padding:14px;border-radius:12px;border:1px solid #2A2A2A;background:transparent;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#FF6B00;cursor:pointer">VER RESULTADOS DEL MES</button>
   </div>
 </div>
 
