@@ -1049,26 +1049,52 @@ async function validarPinGo() {
 
 async function cargarPanelAdmin() {
   showScreen('screen-admin');
-  const { data: usuarios } = await supa.from('kaptura_usuarios').select('*').eq('activo', true).order('id');
+  const { data: usuarios } = await supa.from('kaptura_usuarios').select('*').eq('activo', true).order('empresa');
   const { data: goUsers } = await supa.from('kaptura_go_usuarios').select('*').order('id');
   const lista = document.getElementById('admin-lista-usuarios');
   if(!lista) return;
   lista.innerHTML = '';
-  const filtrados = (usuarios||[]).filter(u => u.rol === 'go');
-  if(filtrados.length === 0) {
-    lista.innerHTML = '<div style="font-size:13px;color:rgba(255,255,255,0.4);text-align:center;padding:20px">No hay usuarios GO registrados.</div>';
+
+  // Agrupar por empresa
+  const empresas = {};
+  (usuarios||[]).filter(u => u.rol !== 'admin_kaptura').forEach(u => {
+    if(!empresas[u.empresa]) empresas[u.empresa] = {usuarios:[], go: null};
+    empresas[u.empresa].usuarios.push(u);
+  });
+  (goUsers||[]).forEach(g => {
+    if(empresas[g.empresa]) empresas[g.empresa].go = g;
+  });
+
+  if(Object.keys(empresas).length === 0) {
+    lista.innerHTML = '<div style="font-size:13px;color:rgba(255,255,255,0.4);text-align:center;padding:20px">No hay usuarios registrados.</div>';
     return;
   }
-  filtrados.forEach(u => {
-    const go = (goUsers||[]).find(g => g.empresa === u.empresa);
-    const estado = go ? (go.onboarding_completo ? '✅ Activo' : '⏳ Onboarding pendiente') : '— Sin perfil GO';
-    const nombre = go?.nombre || u.nombre || '—';
+
+  Object.entries(empresas).forEach(([emp, data]) => {
+    const roles = data.usuarios.map(u => u.rol);
+    let modo = 'GO';
+    let modoColor = '#FF6B00';
+    if(roles.includes('coordinador') || roles.includes('controller')) { modo = 'FLOTA'; modoColor = '#537A6E'; }
+    else if(roles.includes('pro')) { modo = 'PRO'; modoColor = '#D4A827'; }
+
+    const goData = data.go;
+    const nombre = goData?.nombre || data.usuarios[0]?.nombre || emp;
+    let estado = '';
+    if(modo === 'GO') {
+      estado = goData ? (goData.onboarding_completo ? '✅ Activo' : '⏳ Onboarding pendiente') : '— Sin perfil';
+    } else {
+      estado = '✅ ' + data.usuarios.length + ' usuario(s)';
+    }
+
+    const pines = data.usuarios.map(u => u.pin).join(', ');
+
     lista.innerHTML += '<div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:10px;padding:14px;margin-bottom:10px">'
       + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'
       + '<span style="font-size:15px;font-weight:700;color:#fff">' + nombre + '</span>'
-      + '<span style="font-size:11px;color:#FF6B00;font-weight:700">GO</span>'
+      + '<span style="font-size:11px;font-weight:700;background:rgba(255,255,255,0.1);padding:2px 8px;border-radius:4px;color:' + modoColor + '">' + modo + '</span>'
       + '</div>'
-      + '<div style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:4px">PIN: ' + u.pin + ' · Empresa: ' + (u.empresa||'—') + '</div>'
+      + '<div style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:4px">Empresa: ' + emp + '</div>'
+      + '<div style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:4px">PINs: ' + pines + '</div>'
       + '<div style="font-size:12px;color:rgba(255,255,255,0.6)">' + estado + '</div>'
       + '</div>';
   });
@@ -1536,17 +1562,64 @@ init();
 document.addEventListener("DOMContentLoaded", cargarSesionConductor);
 
 function adminCrearUsuario() {
-  const pin = prompt("PIN temporal para el nuevo usuario GO (4 dígitos):");
-  if(!pin || pin.length !== 4) { alert("PIN inválido"); return; }
-  const empresa = "go_" + Date.now().toString().slice(-4);
-  Promise.all([
-    supa.from("kaptura_usuarios").insert({pin, rol:"go", empresa, nombre:"Cliente GO", activo:true}),
-    supa.from("kaptura_go_usuarios").insert({empresa, pin, onboarding_completo:false, clientes:[]})
-  ]).then(([r1,r2]) => {
-    if(r1.error || r2.error) { alert("Error: " + (r1.error?.message || r2.error?.message)); return; }
-    alert("Usuario creado. PIN: " + pin);
-    cargarPanelAdmin();
-  });
+  showScreen('screen-admin-nuevo');
+  document.getElementById('admin-nuevo-pin').value = '';
+  document.getElementById('admin-nuevo-nombre').value = '';
+  document.getElementById('admin-nuevo-modo').value = 'go';
+  document.getElementById('admin-nuevo-error').textContent = '';
+}
+
+async function adminGuardarNuevo() {
+  const modo = document.getElementById('admin-nuevo-modo').value;
+  const nombre = document.getElementById('admin-nuevo-nombre').value.trim();
+  const pin = document.getElementById('admin-nuevo-pin').value.trim();
+  const errEl = document.getElementById('admin-nuevo-error');
+
+  if(!nombre) { errEl.textContent = 'Ingresa el nombre de la empresa o transportista.'; return; }
+  if(!pin || pin.length !== 4 || isNaN(pin)) { errEl.textContent = 'El PIN debe tener exactamente 4 dígitos.'; return; }
+
+  // Verificar que PIN no exista
+  const {data:existe} = await supa.from('kaptura_usuarios').select('pin').eq('pin', pin).single();
+  if(existe) { errEl.textContent = 'Este PIN ya está en uso. Elige otro.'; return; }
+
+  const empresa = modo + '_' + Date.now().toString().slice(-4);
+  const btn = document.getElementById('admin-nuevo-btn');
+  btn.textContent = 'Creando...'; btn.disabled = true;
+
+  if(modo === 'go') {
+    const [r1, r2] = await Promise.all([
+      supa.from('kaptura_usuarios').insert({pin, rol:'go', empresa, nombre, activo:true}),
+      supa.from('kaptura_go_usuarios').insert({empresa, pin, onboarding_completo:false, clientes:[]})
+    ]);
+    if(r1.error || r2.error) { errEl.textContent = 'Error: ' + (r1.error?.message || r2.error?.message); btn.textContent = 'CREAR'; btn.disabled = false; return; }
+
+  } else if(modo === 'flota') {
+    // Crear roles flota: coordinador + 4 conductores
+    const roles = [
+      {pin: pin, rol:'coordinador', empresa, nombre: nombre + ' — Coordinador', activo:true},
+      {pin: String(parseInt(pin)+1).padStart(4,'0'), rol:'conductor', empresa, nombre: nombre + ' — Conductor 1', activo:true},
+      {pin: String(parseInt(pin)+2).padStart(4,'0'), rol:'conductor', empresa, nombre: nombre + ' — Conductor 2', activo:true},
+      {pin: String(parseInt(pin)+3).padStart(4,'0'), rol:'conductor', empresa, nombre: nombre + ' — Conductor 3', activo:true},
+      {pin: String(parseInt(pin)+4).padStart(4,'0'), rol:'conductor', empresa, nombre: nombre + ' — Conductor 4', activo:true},
+    ];
+    const {error} = await supa.from('kaptura_usuarios').insert(roles);
+    if(error) { errEl.textContent = 'Error: ' + error.message; btn.textContent = 'CREAR'; btn.disabled = false; return; }
+
+  } else if(modo === 'pro') {
+    const {error} = await supa.from('kaptura_usuarios').insert({pin, rol:'pro', empresa, nombre, activo:true});
+    if(error) { errEl.textContent = 'Error: ' + error.message; btn.textContent = 'CREAR'; btn.disabled = false; return; }
+  }
+
+  // Mostrar resumen
+  let resumen = 'Usuario creado exitosamente.\n\n';
+  resumen += 'Modo: ' + modo.toUpperCase() + '\n';
+  resumen += 'Empresa: ' + empresa + '\n';
+  resumen += 'PIN principal: ' + pin;
+  if(modo === 'flota') resumen += '\nPINs conductores: ' + (parseInt(pin)+1) + ' al ' + (parseInt(pin)+4);
+  alert(resumen);
+
+  showScreen('screen-admin');
+  cargarPanelAdmin();
 }
 
 // ── MODO GPS ──
@@ -2990,6 +3063,68 @@ async function goFinalizarServicio() {
     </div>
     <button onclick="goMostrarHome()" style="width:100%;padding:16px;border-radius:12px;border:none;background:#FF6B00;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;color:#000;cursor:pointer;letter-spacing:0.06em;margin-bottom:8px">NUEVO SERVICIO →</button>
     <button onclick="cargarInformesMesDemo();showScreen('screen-go-informes-mes')" style="width:100%;padding:14px;border-radius:12px;border:1px solid #2A2A2A;background:transparent;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#FF6B00;cursor:pointer">VER RESULTADOS DEL MES</button>
+  </div>
+</div>
+
+
+<!-- ═══ PANTALLA: ADMIN NUEVO USUARIO ═══ -->
+<div class="screen" id="screen-admin-nuevo" style="background:#0D0D0D;padding:0">
+  <div style="background:rgba(0,0,0,0.4);padding:16px;border-bottom:1px solid #2A2A2A;display:flex;justify-content:space-between;align-items:center">
+    <div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;letter-spacing:0.12em;color:#FF6B00">KAPTURA</div>
+      <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.5);letter-spacing:0.2em">ADMIN — NUEVO USUARIO</div>
+    </div>
+    <button onclick="showScreen('screen-admin');cargarPanelAdmin()" style="background:transparent;border:1px solid #2A2A2A;border-radius:8px;padding:6px 12px;font-size:11px;color:rgba(255,255,255,0.5);cursor:pointer">← Volver</button>
+  </div>
+  <div style="padding:16px">
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:#fff;margin-bottom:4px">Crear nuevo usuario</div>
+    <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-bottom:20px">Selecciona el modo y define el PIN temporal.</div>
+
+    <!-- Selector modo -->
+    <div style="margin-bottom:16px">
+      <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.5);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px">Modo</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+        <label style="cursor:pointer">
+          <input type="radio" name="admin-modo" id="admin-nuevo-modo" value="go" checked style="display:none">
+          <div onclick="document.querySelectorAll('.modo-btn').forEach(b=>b.style.borderColor='#2A2A2A');this.style.borderColor='#FF6B00'" class="modo-btn" style="background:#1A1A1A;border:2px solid #FF6B00;border-radius:10px;padding:12px;text-align:center;cursor:pointer">
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;color:#FF6B00">GO</div>
+            <div style="font-size:10px;color:rgba(255,255,255,0.4)">1 camión</div>
+          </div>
+        </label>
+        <label style="cursor:pointer">
+          <input type="radio" name="admin-modo" value="pro" style="display:none">
+          <div onclick="document.getElementById('admin-nuevo-modo').value='pro';document.querySelectorAll('.modo-btn').forEach(b=>b.style.borderColor='#2A2A2A');this.style.borderColor='#D4A827'" class="modo-btn" style="background:#1A1A1A;border:2px solid #2A2A2A;border-radius:10px;padding:12px;text-align:center;cursor:pointer">
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;color:#D4A827">PRO</div>
+            <div style="font-size:10px;color:rgba(255,255,255,0.4)">1-3 camiones</div>
+          </div>
+        </label>
+        <label style="cursor:pointer">
+          <input type="radio" name="admin-modo" value="flota" style="display:none">
+          <div onclick="document.getElementById('admin-nuevo-modo').value='flota';document.querySelectorAll('.modo-btn').forEach(b=>b.style.borderColor='#2A2A2A');this.style.borderColor='#537A6E'" class="modo-btn" style="background:#1A1A1A;border:2px solid #2A2A2A;border-radius:10px;padding:12px;text-align:center;cursor:pointer">
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;color:#537A6E">FLOTA</div>
+            <div style="font-size:10px;color:rgba(255,255,255,0.4)">4+ equipos</div>
+          </div>
+        </label>
+      </div>
+      <input type="hidden" id="admin-nuevo-modo" value="go">
+    </div>
+
+    <!-- Nombre empresa -->
+    <div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:10px;padding:12px 14px;margin-bottom:10px">
+      <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.5);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px">Nombre empresa / transportista</div>
+      <input id="admin-nuevo-nombre" type="text" placeholder="Ej: Transportes Madrid" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:9px 12px;font-size:14px;color:#fff;font-family:inherit">
+    </div>
+
+    <!-- PIN temporal -->
+    <div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:10px;padding:12px 14px;margin-bottom:16px">
+      <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.5);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px">PIN temporal (4 dígitos)</div>
+      <input id="admin-nuevo-pin" type="number" maxlength="4" placeholder="Ej: 3301" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:9px 12px;font-size:14px;color:#fff;font-family:inherit">
+      <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-top:6px">Para FLOTA se crearán PINs consecutivos para conductores (PIN+1, PIN+2...)</div>
+    </div>
+
+    <div id="admin-nuevo-error" style="font-size:12px;color:#ef4444;min-height:18px;margin-bottom:10px"></div>
+
+    <button id="admin-nuevo-btn" onclick="adminGuardarNuevo()" style="width:100%;padding:18px;border-radius:12px;border:none;background:#FF6B00;font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;color:#000;cursor:pointer;letter-spacing:0.06em">CREAR USUARIO</button>
   </div>
 </div>
 
