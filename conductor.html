@@ -1219,6 +1219,11 @@ function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   window.scrollTo(0,0);
+  const sinHeader = ['screen-pin-go','screen-go-cargando','screen-go-onboarding',
+    'screen-go-guardado','screen-go-home','screen-go-servicio','screen-go-informe-prod',
+    'screen-admin','screen-admin-nuevo'];
+  const hdr = document.querySelector('.hdr');
+  if(hdr) hdr.style.display = sinHeader.includes(id) ? 'none' : '';
 }
 
 // ── CRONÓMETRO ──
