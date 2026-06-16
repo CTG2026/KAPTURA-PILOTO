@@ -2643,10 +2643,33 @@ function goDetectarTarifa() {
 
       <div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:10px;padding:12px 14px;margin-bottom:10px">
         <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.6);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px">Tipo de equipo</div>
-        <select id="go-tipo-equipo" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:9px 12px;font-size:14px;color:#fff;font-family:inherit">
-          <option value="rampla">Rampla</option>
-          <option value="camion">Camión</option>
-          <option value="furgon">Furgón</option>
+        <select id="go-tipo-equipo" onchange="goTipoEquipoChange()" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:9px 12px;font-size:14px;color:#fff;font-family:inherit">
+          <optgroup label="── Tracto / Articulado ──" style="color:#FF6B00">
+            <option value="tracto_rampla">Tracto + Rampla (semirremolque plataforma)</option>
+            <option value="tracto_frigorifico">Tracto + Carro frigorífico</option>
+            <option value="tracto_thermo">Tracto + Thermo King</option>
+            <option value="tracto_dryvan">Tracto + Dry Van (caja seca)</option>
+            <option value="tracto_tolva">Tracto + Carro tolva</option>
+            <option value="tracto_cisterna">Tracto + Carro cisterna</option>
+            <option value="tracto_contenedor">Tracto + Portacontenedor</option>
+            <option value="tracto_solo">Tracto sin carro (cabeza tractora)</option>
+          </optgroup>
+          <optgroup label="── Camión rígido ──" style="color:#FF6B00">
+            <option value="camion_rampla">Camión con rampla / acoplado</option>
+            <option value="camion_caja_seca">Camión caja seca</option>
+            <option value="camion_thermo">Camión frigorífico / Thermo</option>
+            <option value="camion_dryvan">Camión Dry Van</option>
+            <option value="camion_tolva">Camión tolva</option>
+            <option value="camion_cisterna">Camión cisterna</option>
+            <option value="camion_grua">Camión grúa</option>
+            <option value="camion_solo">Camión sin carro</option>
+          </optgroup>
+          <optgroup label="── Menor tonelaje ──" style="color:#FF6B00">
+            <option value="furgon_grande">Furgón grande</option>
+            <option value="furgon_mediano">Furgón mediano</option>
+            <option value="camioneta_carga">Camioneta carga</option>
+          </optgroup>
+          <option value="otro">Otro (ingresar manualmente)</option>
           <option value="otro">Otro</option>
         </select>
       </div>
