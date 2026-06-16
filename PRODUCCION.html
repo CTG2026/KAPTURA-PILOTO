@@ -4,8 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>KAPTURA — Conductor</title>
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;700;900&family=Barlow:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;900&display=swap" rel="stylesheet">
 <style>
   :root {
     --navy: #1E3A5F;
@@ -27,7 +28,7 @@
   }
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
   body { 
-    font-family: 'Barlow', sans-serif;
+    font-family: 'Outfit', sans-serif;
     background: var(--bg);
     color: var(--text);
     min-height: 100vh;
@@ -47,16 +48,16 @@
     justify-content: space-between;
     border-bottom: 1px solid rgba(255,255,255,0.15);
   }
-  .hdr-logo { font-family: 'Barlow Condensed', sans-serif; font-size: 22px; font-weight: 900; letter-spacing: 0.1em; color: #fff; }
+  .hdr-logo { font-family: 'Outfit', sans-serif; font-size: 22px; font-weight: 900; letter-spacing: 0.1em; color: #fff; }
   .hdr-mode { font-size: 11px; font-weight: 700; color: var(--green); letter-spacing: 0.15em; text-transform: uppercase; }
-  .hdr-time { font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 700; color: var(--yellow); }
+  .hdr-time { font-family: 'Outfit', sans-serif; font-size: 20px; font-weight: 700; color: var(--yellow); }
 
   /* PANTALLA LOGIN */
   .screen { display: none; padding: 20px; }
   .screen.active { display: block; }
 
   .section-title {
-    font-family: 'Barlow Condensed', sans-serif;
+    font-family: 'Outfit', sans-serif;
     font-size: 13px; font-weight: 700;
     letter-spacing: 0.15em;
     color: var(--muted);
@@ -72,7 +73,7 @@
     padding: 16px;
     font-size: 18px;
     color: var(--text);
-    font-family: 'Barlow', sans-serif;
+    font-family: 'Outfit', sans-serif;
     margin-bottom: 12px;
     -webkit-appearance: none;
   }
@@ -85,7 +86,7 @@
     padding: 22px;
     border-radius: 14px;
     border: none;
-    font-family: 'Barlow Condensed', sans-serif;
+    font-family: 'Outfit', sans-serif;
     font-size: 26px;
     font-weight: 900;
     letter-spacing: 0.08em;
@@ -109,7 +110,7 @@
     padding: 14px 20px;
     border-radius: 10px;
     border: none;
-    font-family: 'Barlow Condensed', sans-serif;
+    font-family: 'Outfit', sans-serif;
     font-size: 16px;
     font-weight: 700;
     cursor: pointer;
@@ -133,7 +134,7 @@
   }
   .info-row:last-child { border-bottom: none; }
   .info-lbl { font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; }
-  .info-val { font-family: 'Barlow Condensed', sans-serif; font-size: 18px; font-weight: 700; color: var(--text); }
+  .info-val { font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 700; color: var(--text); }
 
   /* ESTADO BADGE */
   .estado-badge {
@@ -142,7 +143,7 @@
     gap: 8px;
     padding: 10px 18px;
     border-radius: 50px;
-    font-family: 'Barlow Condensed', sans-serif;
+    font-family: 'Outfit', sans-serif;
     font-size: 16px;
     font-weight: 800;
     letter-spacing: 0.1em;
@@ -164,7 +165,7 @@
 
   /* CRONÓMETRO */
   .crono {
-    font-family: 'Barlow Condensed', sans-serif;
+    font-family: 'Outfit', sans-serif;
     font-size: 48px;
     font-weight: 900;
     color: var(--yellow);
@@ -185,7 +186,7 @@
   .hora-inp {
     background: transparent;
     border: none;
-    font-family: 'Barlow Condensed', sans-serif;
+    font-family: 'Outfit', sans-serif;
     font-size: 28px;
     font-weight: 700;
     color: var(--yellow);
@@ -225,7 +226,7 @@
     padding: 14px;
     text-align: center;
   }
-  .kpi-val { font-family: 'Barlow Condensed', sans-serif; font-size: 24px; font-weight: 900; color: var(--green); }
+  .kpi-val { font-family: 'Outfit', sans-serif; font-size: 24px; font-weight: 900; color: var(--green); }
   .kpi-lbl { font-size: 10px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-top: 4px; }
 
   .margen-positivo { color: var(--green); }
@@ -428,7 +429,7 @@
 <div class="screen" id="screen-resumen">
   <div style="margin-top:16px;text-align:center">
     <div style="font-size:48px;margin-bottom:8px">✅</div>
-    <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;color:var(--green)">SERVICIO COMPLETADO</div>
+    <div style="font-family:'Outfit',sans-serif;font-size:28px;font-weight:900;color:var(--green)">SERVICIO COMPLETADO</div>
     <div style="font-size:14px;color:var(--muted);margin-top:4px" id="r-svc-id">—</div>
   </div>
 
@@ -470,8 +471,8 @@
 <!-- ═══ SELECTOR MODO ═══ -->
 <div class="screen" id="screen-modo">
   <div style="margin-top:32px;text-align:center;margin-bottom:28px">
-    <div style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;color:var(--muted);letter-spacing:0.2em;margin-bottom:6px" id="modo-empresa-label">KAPTURA</div>
-    <div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:900;color:var(--text)">SELECCIONA TU MÓDULO</div>
+    <div style="font-family:'Outfit',sans-serif;font-size:12px;font-weight:700;color:var(--muted);letter-spacing:0.2em;margin-bottom:6px" id="modo-empresa-label">KAPTURA</div>
+    <div style="font-family:'Outfit',sans-serif;font-size:26px;font-weight:900;color:var(--text)">SELECCIONA TU MÓDULO</div>
   </div>
 
   <!-- KAPTURA GO -->
@@ -479,11 +480,11 @@
     <div>
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
         <span style="font-size:20px">🚛</span>
-        <span style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:900;color:#2E3F52;letter-spacing:0.05em">KAPTURA GO</span>
+        <span style="font-family:'Outfit',sans-serif;font-size:24px;font-weight:900;color:#2E3F52;letter-spacing:0.05em">KAPTURA GO</span>
       </div>
-      <div style="font-family:'Barlow',sans-serif;font-size:12px;color:#5A5A5A">Inicia · GPS registra todo · Ver margen</div>
+      <div style="font-family:'Outfit',sans-serif;font-size:12px;color:#5A5A5A">Inicia · GPS registra todo · Ver margen</div>
     </div>
-    <div style="background:#537A6E;border-radius:6px;padding:4px 10px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:#fff;letter-spacing:0.1em;white-space:nowrap">BÁSICO</div>
+    <div style="background:#537A6E;border-radius:6px;padding:4px 10px;font-family:'Outfit',sans-serif;font-size:11px;font-weight:700;color:#fff;letter-spacing:0.1em;white-space:nowrap">BÁSICO</div>
   </div>
 
   <!-- KAPTURA PRO -->
@@ -491,11 +492,11 @@
     <div>
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
         <span style="font-size:20px">📊</span>
-        <span style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:900;color:#2E3A00;letter-spacing:0.05em">KAPTURA PRO</span>
+        <span style="font-family:'Outfit',sans-serif;font-size:24px;font-weight:900;color:#2E3A00;letter-spacing:0.05em">KAPTURA PRO</span>
       </div>
-      <div style="font-family:'Barlow',sans-serif;font-size:12px;color:#5A4A00">Guías · Etapas · KPIs · $/km · Ranking clientes</div>
+      <div style="font-family:'Outfit',sans-serif;font-size:12px;color:#5A4A00">Guías · Etapas · KPIs · $/km · Ranking clientes</div>
     </div>
-    <div style="background:#2E3A00;border-radius:6px;padding:4px 10px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:#D4A827;letter-spacing:0.1em;white-space:nowrap">PRO</div>
+    <div style="background:#2E3A00;border-radius:6px;padding:4px 10px;font-family:'Outfit',sans-serif;font-size:11px;font-weight:700;color:#D4A827;letter-spacing:0.1em;white-space:nowrap">PRO</div>
   </div>
 
   <!-- KAPTURA FLOTA -->
@@ -503,11 +504,11 @@
     <div>
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
         <span style="font-size:20px">📋</span>
-        <span style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:900;color:#fff;letter-spacing:0.05em" id="mod-flota-titulo">KAPTURA FLOTA</span>
+        <span style="font-family:'Outfit',sans-serif;font-size:24px;font-weight:900;color:#fff;letter-spacing:0.05em" id="mod-flota-titulo">KAPTURA FLOTA</span>
       </div>
-      <div style="font-family:'Barlow',sans-serif;font-size:12px;color:rgba(255,255,255,0.75)" id="mod-flota-badge-c">Asignación · Flota · Coordinador · Gestión completa</div>
+      <div style="font-family:'Outfit',sans-serif;font-size:12px;color:rgba(255,255,255,0.75)" id="mod-flota-badge-c">Asignación · Flota · Coordinador · Gestión completa</div>
     </div>
-    <div style="background:rgba(0,0,0,0.25);border-radius:6px;padding:4px 10px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:#fff;letter-spacing:0.1em;white-space:nowrap">PREMIUM</div>
+    <div style="background:rgba(0,0,0,0.25);border-radius:6px;padding:4px 10px;font-family:'Outfit',sans-serif;font-size:11px;font-weight:700;color:#fff;letter-spacing:0.1em;white-space:nowrap">PREMIUM</div>
   </div>
 
   <button class="btn-main btn-navy" onclick="cerrarSesionConductor()" style="font-size:14px;margin-top:16px;padding:14px;background:transparent;border:1px solid var(--border);color:var(--muted)">
@@ -518,18 +519,18 @@
 <!-- ═══ PANTALLA GO DEMO ═══ -->
 <div class="screen" id="screen-go-demo" style="padding:20px">
   <div style="margin-top:16px;margin-bottom:8px">
-    <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:#888;letter-spacing:0.2em">KAPTURA GO</div>
-    <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;color:#fff;margin-top:2px">Carlos Torres</div>
+    <div style="font-family:'Outfit',sans-serif;font-size:11px;font-weight:700;color:#888;letter-spacing:0.2em">KAPTURA GO</div>
+    <div style="font-family:'Outfit',sans-serif;font-size:20px;font-weight:900;color:#fff;margin-top:2px">Carlos Torres</div>
   </div>
 
   <div style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:12px;padding:16px;margin-bottom:20px">
     <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.1)">
       <span style="font-size:12px;color:var(--muted)">Servicio</span>
-      <span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#fff">S-DEMO · 22/06/2026</span>
+      <span style="font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;color:#fff">S-DEMO · 22/06/2026</span>
     </div>
     <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.1)">
       <span style="font-size:12px;color:var(--muted)">Patente</span>
-      <span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#fff">GCFF12 · Rampla</span>
+      <span style="font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;color:#fff">GCFF12 · Rampla</span>
     </div>
 
   </div>
@@ -538,12 +539,12 @@
   <div id="go-demo-estado-vacio" style="display:block">
     <div style="margin-bottom:16px">
       <div style="font-size:12px;color:var(--muted);letter-spacing:0.08em;margin-bottom:6px">TARIFA DEL SERVICIO</div>
-      <input type="number" id="go-demo-tarifa" placeholder="$0" style="width:100%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);border-radius:10px;padding:14px 16px;font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:700;color:#D8D5CC;text-align:right">
+      <input type="number" id="go-demo-tarifa" placeholder="$0" style="width:100%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);border-radius:10px;padding:14px 16px;font-family:'Outfit',sans-serif;font-size:24px;font-weight:700;color:#D8D5CC;text-align:right">
     </div>
-    <button onclick="goDemoIniciar()" style="width:100%;padding:22px;border-radius:14px;border:none;background:#D8D5CC;font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:900;color:#2E3F52;cursor:pointer;letter-spacing:0.05em;margin-bottom:10px">
+    <button onclick="goDemoIniciar()" style="width:100%;padding:22px;border-radius:14px;border:none;background:#D8D5CC;font-family:'Outfit',sans-serif;font-size:26px;font-weight:900;color:#2E3F52;cursor:pointer;letter-spacing:0.05em;margin-bottom:10px">
       INICIAR SERVICIO
     </button>
-    <button onclick="cargarInformesMesDemo();showScreen('screen-go-informes-mes')" style="width:100%;padding:16px;border-radius:14px;border:none;background:#D4A827;font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;color:#2E3A00;cursor:pointer;letter-spacing:0.05em">
+    <button onclick="cargarInformesMesDemo();showScreen('screen-go-informes-mes')" style="width:100%;padding:16px;border-radius:14px;border:none;background:#D4A827;font-family:'Outfit',sans-serif;font-size:20px;font-weight:900;color:#2E3A00;cursor:pointer;letter-spacing:0.05em">
       RESULTADOS
     </button>
   </div>
@@ -552,10 +553,10 @@
   <div id="go-demo-estado-activo" style="display:none">
     <div style="background:rgba(216,213,204,0.1);border:1px solid rgba(216,213,204,0.3);border-radius:12px;padding:16px;margin-bottom:16px;text-align:center">
       <div style="font-size:11px;color:var(--muted);letter-spacing:0.1em;margin-bottom:4px">EN SERVICIO DESDE</div>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:900;color:#D8D5CC">08:00</div>
-      <div id="go-demo-crono" style="font-family:'Barlow Condensed',sans-serif;font-size:18px;color:var(--muted);margin-top:4px">00:00:00</div>
+      <div style="font-family:'Outfit',sans-serif;font-size:36px;font-weight:900;color:#D8D5CC">08:00</div>
+      <div id="go-demo-crono" style="font-family:'Outfit',sans-serif;font-size:18px;color:var(--muted);margin-top:4px">00:00:00</div>
     </div>
-    <button onclick="goDemoFinalizar()" style="width:100%;padding:22px;border-radius:14px;border:none;background:#537A6E;font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:900;color:#fff;cursor:pointer;letter-spacing:0.05em;margin-bottom:12px">
+    <button onclick="goDemoFinalizar()" style="width:100%;padding:22px;border-radius:14px;border:none;background:#537A6E;font-family:'Outfit',sans-serif;font-size:26px;font-weight:900;color:#fff;cursor:pointer;letter-spacing:0.05em;margin-bottom:12px">
       FINALIZAR SERVICIO
     </button>
   </div>
@@ -564,30 +565,30 @@
   <div id="go-demo-estado-integrar" style="display:none">
     <div style="text-align:center;margin-bottom:16px">
       <div style="font-size:11px;color:var(--muted);letter-spacing:0.1em">SERVICIO FINALIZADO</div>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#D8D5CC;margin-top:4px">08:00 → 21:00 · 567 km</div>
+      <div style="font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;color:#D8D5CC;margin-top:4px">08:00 → 21:00 · 567 km</div>
     </div>
-    <button onclick="goDemoIntegrar()" id="btn-integrar-demo" style="width:100%;padding:22px;border-radius:14px;border:none;background:#D4A827;font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:900;color:#2E3A00;cursor:pointer;letter-spacing:0.05em;margin-bottom:12px">
+    <button onclick="goDemoIntegrar()" id="btn-integrar-demo" style="width:100%;padding:22px;border-radius:14px;border:none;background:#D4A827;font-family:'Outfit',sans-serif;font-size:24px;font-weight:900;color:#2E3A00;cursor:pointer;letter-spacing:0.05em;margin-bottom:12px">
       INTEGRAR DATOS
     </button>
     <div id="go-demo-integrando" style="display:none;text-align:center;padding:16px">
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;color:#D4A827;letter-spacing:0.1em">⏳ Integrando datos...</div>
+      <div style="font-family:'Outfit',sans-serif;font-size:16px;color:#D4A827;letter-spacing:0.1em">⏳ Integrando datos...</div>
     </div>
   </div>
 
   <!-- Estado: guardado -->
   <div id="go-demo-estado-guardado" style="display:none">
     <div style="text-align:center;margin-bottom:20px;padding:16px;background:rgba(83,122,110,0.2);border:1px solid #537A6E;border-radius:12px">
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;color:#537A6E">✓ SERVICIO GUARDADO</div>
+      <div style="font-family:'Outfit',sans-serif;font-size:18px;font-weight:700;color:#537A6E">✓ SERVICIO GUARDADO</div>
     </div>
-    <button onclick="showScreen('screen-go-informe')" style="width:100%;padding:18px;border-radius:14px;border:none;background:#D8D5CC;font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:#2E3F52;cursor:pointer;letter-spacing:0.05em;margin-bottom:10px">
+    <button onclick="showScreen('screen-go-informe')" style="width:100%;padding:18px;border-radius:14px;border:none;background:#D8D5CC;font-family:'Outfit',sans-serif;font-size:22px;font-weight:900;color:#2E3F52;cursor:pointer;letter-spacing:0.05em;margin-bottom:10px">
       VER INFORME
     </button>
-    <button onclick="goDemoNuevo()" style="width:100%;padding:14px;border-radius:14px;border:1px solid var(--border);background:transparent;font-family:'Barlow Condensed',sans-serif;font-size:16px;color:var(--muted);cursor:pointer;margin-bottom:10px">
+    <button onclick="goDemoNuevo()" style="width:100%;padding:14px;border-radius:14px;border:1px solid var(--border);background:transparent;font-family:'Outfit',sans-serif;font-size:16px;color:var(--muted);cursor:pointer;margin-bottom:10px">
       NUEVO SERVICIO
     </button>
   </div>
 
-  <button onclick="showScreen('screen-modo')" style="width:100%;padding:14px;border-radius:14px;border:1px solid var(--border);background:transparent;font-family:'Barlow Condensed',sans-serif;font-size:16px;color:var(--muted);cursor:pointer;margin-top:4px">
+  <button onclick="showScreen('screen-modo')" style="width:100%;padding:14px;border-radius:14px;border:1px solid var(--border);background:transparent;font-family:'Outfit',sans-serif;font-size:16px;color:var(--muted);cursor:pointer;margin-top:4px">
     ← Volver
   </button>
 </div>
@@ -595,93 +596,93 @@
 <!-- ═══ PANTALLA INFORME GO DEMO ═══ -->
 <div class="screen" id="screen-go-informe" style="padding:20px">
   <div style="margin-top:16px;margin-bottom:16px">
-    <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:#888;letter-spacing:0.2em">KAPTURA GO</div>
-    <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;color:#fff;margin-top:2px">INFORME DEL SERVICIO</div>
+    <div style="font-family:'Outfit',sans-serif;font-size:11px;font-weight:700;color:#888;letter-spacing:0.2em">KAPTURA GO</div>
+    <div style="font-family:'Outfit',sans-serif;font-size:20px;font-weight:900;color:#fff;margin-top:2px">INFORME DEL SERVICIO</div>
     <div style="font-size:12px;color:var(--muted);margin-top:2px">S-DEMO · 22/06/2026 · Carlos Torres · GCFF12</div>
   </div>
 
   <div style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:12px;padding:16px;margin-bottom:12px">
     <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.1)">
       <span style="font-size:12px;color:var(--muted)">Hora inicio</span>
-      <span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#fff">08:00</span>
+      <span style="font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;color:#fff">08:00</span>
     </div>
     <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.1)">
       <span style="font-size:12px;color:var(--muted)">Hora fin</span>
-      <span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#fff">21:00</span>
+      <span style="font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;color:#fff">21:00</span>
     </div>
     <div style="display:flex;justify-content:space-between;padding:6px 0">
       <span style="font-size:12px;color:var(--muted)">Km recorridos</span>
-      <span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#fff">567 km</span>
+      <span style="font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;color:#fff">567 km</span>
     </div>
   </div>
 
   <div style="background:#D8D5CC;border-radius:12px;padding:16px;margin-bottom:12px">
     <div style="display:flex;justify-content:space-between;margin-bottom:10px">
       <span style="font-size:12px;font-weight:700;color:#5A5A5A;letter-spacing:0.08em">TARIFA</span>
-      <span style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:900;color:#2E3F52" id="inf-tarifa">—</span>
+      <span style="font-family:'Outfit',sans-serif;font-size:24px;font-weight:900;color:#2E3F52" id="inf-tarifa">—</span>
     </div>
     <div style="display:flex;justify-content:space-between;margin-bottom:10px">
       <span style="font-size:12px;font-weight:700;color:#5A5A5A;letter-spacing:0.08em">COSTOS</span>
-      <span style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:900;color:#8B2020" id="inf-costos">—</span>
+      <span style="font-family:'Outfit',sans-serif;font-size:24px;font-weight:900;color:#8B2020" id="inf-costos">—</span>
     </div>
     <div style="height:1px;background:rgba(46,63,82,0.2);margin:8px 0"></div>
     <div style="display:flex;justify-content:space-between;margin-bottom:6px">
       <span style="font-size:12px;font-weight:700;color:#5A5A5A;letter-spacing:0.08em">MARGEN</span>
-      <span style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900" id="inf-margen">—</span>
+      <span style="font-family:'Outfit',sans-serif;font-size:28px;font-weight:900" id="inf-margen">—</span>
     </div>
     <div style="display:flex;justify-content:space-between">
       <span style="font-size:11px;color:#8B8B8B;letter-spacing:0.06em">$/KM</span>
-      <span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#5A5A5A" id="inf-pkm">—</span>
+      <span style="font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;color:#5A5A5A" id="inf-pkm">—</span>
     </div>
   </div>
 
-  <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:var(--muted);letter-spacing:0.15em;margin-bottom:8px">DETALLE DE COSTOS</div>
+  <div style="font-family:'Outfit',sans-serif;font-size:11px;font-weight:700;color:var(--muted);letter-spacing:0.15em;margin-bottom:8px">DETALLE DE COSTOS</div>
   <div style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:12px;overflow:hidden;margin-bottom:12px">
     <div style="display:flex;justify-content:space-between;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,0.08)">
       <span style="font-size:13px;color:var(--muted)">Combustible</span>
-      <span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#fff">$283.500</span>
+      <span style="font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;color:#fff">$283.500</span>
     </div>
     <div style="display:flex;justify-content:space-between;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,0.08)">
       <span style="font-size:13px;color:var(--muted)">TAG / Peajes</span>
-      <span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#fff">$52.659</span>
+      <span style="font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;color:#fff">$52.659</span>
     </div>
     <div style="display:flex;justify-content:space-between;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,0.08)">
       <span style="font-size:13px;color:var(--muted)">Contabilidad</span>
-      <span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#fff">$15.000</span>
+      <span style="font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;color:#fff">$15.000</span>
     </div>
     <div style="display:flex;justify-content:space-between;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,0.08)">
       <span style="font-size:13px;color:var(--muted)">Mantención programada</span>
-      <span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#fff">$10.000</span>
+      <span style="font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;color:#fff">$10.000</span>
     </div>
     <div style="display:flex;justify-content:space-between;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,0.08)">
       <span style="font-size:13px;color:var(--muted)">Mantención reactiva</span>
-      <span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#fff">$25.000</span>
+      <span style="font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;color:#fff">$25.000</span>
     </div>
     <div style="display:flex;justify-content:space-between;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,0.08)">
       <span style="font-size:13px;color:var(--muted)">Mantención preventiva</span>
-      <span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--muted)">$0</span>
+      <span style="font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;color:var(--muted)">$0</span>
     </div>
     <div style="display:flex;justify-content:space-between;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,0.08)">
       <span style="font-size:13px;color:var(--muted)">Gastos varios</span>
-      <span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#fff">$5.000</span>
+      <span style="font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;color:#fff">$5.000</span>
     </div>
     <div style="display:flex;justify-content:space-between;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,0.08)">
       <span style="font-size:13px;color:var(--muted)">Viático</span>
-      <span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#fff">$12.000</span>
+      <span style="font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;color:#fff">$12.000</span>
     </div>
     <div style="display:none;justify-content:space-between;padding:10px 16px" id="inf-gastos-kop-row">
       <span style="font-size:13px;color:#D4A827">Gastos KOPILOTO</span>
-      <span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#D4A827" id="inf-gastos-kop">$0</span>
+      <span style="font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;color:#D4A827" id="inf-gastos-kop">$0</span>
     </div>
   </div>
 
-  <button onclick="goDemoGuardar()" style="width:100%;padding:18px;border-radius:14px;border:none;background:#537A6E;font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:#fff;cursor:pointer;letter-spacing:0.05em;margin-bottom:10px">
+  <button onclick="goDemoGuardar()" style="width:100%;padding:18px;border-radius:14px;border:none;background:#537A6E;font-family:'Outfit',sans-serif;font-size:22px;font-weight:900;color:#fff;cursor:pointer;letter-spacing:0.05em;margin-bottom:10px">
     GUARDAR SERVICIO
   </button>
-  <button onclick="cargarInformesMesDemo();showScreen('screen-go-informes-mes')" style="width:100%;padding:18px;border-radius:14px;border:none;background:#D4A827;font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:#2E3A00;cursor:pointer;letter-spacing:0.05em;margin-bottom:10px">
+  <button onclick="cargarInformesMesDemo();showScreen('screen-go-informes-mes')" style="width:100%;padding:18px;border-radius:14px;border:none;background:#D4A827;font-family:'Outfit',sans-serif;font-size:22px;font-weight:900;color:#2E3A00;cursor:pointer;letter-spacing:0.05em;margin-bottom:10px">
     INFORMES DEL MES
   </button>
-  <button onclick="showScreen('screen-modo')" style="width:100%;padding:14px;border-radius:14px;border:1px solid var(--border);background:transparent;font-family:'Barlow Condensed',sans-serif;font-size:16px;color:var(--muted);cursor:pointer">
+  <button onclick="showScreen('screen-modo')" style="width:100%;padding:14px;border-radius:14px;border:1px solid var(--border);background:transparent;font-family:'Outfit',sans-serif;font-size:16px;color:var(--muted);cursor:pointer">
     ← Volver al menú
   </button>
 </div>
@@ -689,46 +690,46 @@
 <!-- ═══ PANTALLA INFORMES MES DEMO ═══ -->
 <div class="screen" id="screen-go-informes-mes" style="padding:20px">
   <div style="margin-top:16px;margin-bottom:16px">
-    <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:#888;letter-spacing:0.2em">KAPTURA GO</div>
-    <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;color:#fff;margin-top:2px">RESULTADOS JUNIO 2026</div>
+    <div style="font-family:'Outfit',sans-serif;font-size:11px;font-weight:700;color:#888;letter-spacing:0.2em">KAPTURA GO</div>
+    <div style="font-family:'Outfit',sans-serif;font-size:20px;font-weight:900;color:#fff;margin-top:2px">RESULTADOS JUNIO 2026</div>
     <div style="font-size:12px;color:var(--muted);margin-top:2px">Carlos Torres · GCFF12</div>
   </div>
 
   <div style="background:#D8D5CC;border-radius:12px;padding:16px;margin-bottom:12px">
     <div onclick="showScreen('screen-demo-ingresos')" style="display:flex;justify-content:space-between;margin-bottom:10px;cursor:pointer">
       <span style="font-size:12px;font-weight:700;color:#5A5A5A;letter-spacing:0.08em">INGRESOS MES ›</span>
-      <span style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:#2E3F52" id="demo-mes-ingresos">—</span>
+      <span style="font-family:'Outfit',sans-serif;font-size:22px;font-weight:900;color:#2E3F52" id="demo-mes-ingresos">—</span>
     </div>
     <div onclick="showScreen('screen-demo-costos')" style="display:flex;justify-content:space-between;margin-bottom:10px;cursor:pointer">
       <span style="font-size:12px;font-weight:700;color:#5A5A5A;letter-spacing:0.08em">COSTOS MES ›</span>
-      <span style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:#8B2020" id="demo-mes-costos">—</span>
+      <span style="font-family:'Outfit',sans-serif;font-size:22px;font-weight:900;color:#8B2020" id="demo-mes-costos">—</span>
     </div>
     <div style="height:1px;background:rgba(46,63,82,0.2);margin:8px 0"></div>
     <div style="display:flex;justify-content:space-between">
       <span style="font-size:12px;font-weight:700;color:#5A5A5A;letter-spacing:0.08em">MARGEN MES</span>
-      <span style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:900;color:#1A5C1A" id="demo-mes-margen">—</span>
+      <span style="font-family:'Outfit',sans-serif;font-size:26px;font-weight:900;color:#1A5C1A" id="demo-mes-margen">—</span>
     </div>
   </div>
 
   <div style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:12px;padding:16px;margin-bottom:12px">
     <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.1)">
       <span style="font-size:12px;color:var(--muted)">Servicios realizados</span>
-      <span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#fff" id="demo-mes-servicios">—</span>
+      <span style="font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;color:#fff" id="demo-mes-servicios">—</span>
     </div>
     <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.1)">
       <span style="font-size:12px;color:var(--muted)">Km recorridos</span>
-      <span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#fff" id="demo-mes-km">—</span>
+      <span style="font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;color:#fff" id="demo-mes-km">—</span>
     </div>
     <div style="display:flex;justify-content:space-between;padding:6px 0">
       <span style="font-size:12px;color:var(--muted)">$/km promedio</span>
-      <span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#fff" id="demo-mes-pkm">—</span>
+      <span style="font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;color:#fff" id="demo-mes-pkm">—</span>
     </div>
   </div>
 
-  <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:var(--muted);letter-spacing:0.15em;margin-bottom:8px">SERVICIOS DEL MES</div>
+  <div style="font-family:'Outfit',sans-serif;font-size:11px;font-weight:700;color:var(--muted);letter-spacing:0.15em;margin-bottom:8px">SERVICIOS DEL MES</div>
   <div style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:12px;overflow:hidden;margin-bottom:20px" id="demo-mes-lista"></div>
 
-  <button onclick="showScreen('screen-modo')" style="width:100%;padding:14px;border-radius:14px;border:1px solid var(--border);background:transparent;font-family:'Barlow Condensed',sans-serif;font-size:16px;color:var(--muted);cursor:pointer">
+  <button onclick="showScreen('screen-modo')" style="width:100%;padding:14px;border-radius:14px;border:1px solid var(--border);background:transparent;font-family:'Outfit',sans-serif;font-size:16px;color:var(--muted);cursor:pointer">
     ← Volver al menú
   </button>
 </div>
@@ -736,12 +737,12 @@
 <!-- ═══ PANTALLA COSTOS MES DEMO ═══ -->
 <div class="screen" id="screen-demo-costos" style="padding:20px">
   <div style="margin-top:16px;margin-bottom:16px">
-    <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:#888;letter-spacing:0.2em">KAPTURA GO</div>
-    <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;color:#fff;margin-top:2px">COSTOS DEL MES</div>
+    <div style="font-family:'Outfit',sans-serif;font-size:11px;font-weight:700;color:#888;letter-spacing:0.2em">KAPTURA GO</div>
+    <div style="font-family:'Outfit',sans-serif;font-size:20px;font-weight:900;color:#fff;margin-top:2px">COSTOS DEL MES</div>
     <div style="font-size:12px;color:var(--muted);margin-top:2px">Carlos Torres · GCFF12</div>
   </div>
   <div style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:12px;overflow:hidden;margin-bottom:20px" id="demo-costos-lista"></div>
-  <button onclick="showScreen('screen-go-informes-mes')" style="width:100%;padding:14px;border-radius:14px;border:1px solid var(--border);background:transparent;font-family:'Barlow Condensed',sans-serif;font-size:16px;color:var(--muted);cursor:pointer">
+  <button onclick="showScreen('screen-go-informes-mes')" style="width:100%;padding:14px;border-radius:14px;border:1px solid var(--border);background:transparent;font-family:'Outfit',sans-serif;font-size:16px;color:var(--muted);cursor:pointer">
     ← Volver
   </button>
 </div>
@@ -749,14 +750,14 @@
 <!-- ═══ PANTALLA INGRESOS MES DEMO ═══ -->
 <div class="screen" id="screen-demo-ingresos" style="padding:20px">
   <div style="margin-top:16px;margin-bottom:16px">
-    <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:#888;letter-spacing:0.2em">KAPTURA GO</div>
-    <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;color:#fff;margin-top:2px">INGRESOS DEL MES</div>
+    <div style="font-family:'Outfit',sans-serif;font-size:11px;font-weight:700;color:#888;letter-spacing:0.2em">KAPTURA GO</div>
+    <div style="font-family:'Outfit',sans-serif;font-size:20px;font-weight:900;color:#fff;margin-top:2px">INGRESOS DEL MES</div>
     <div style="font-size:12px;color:var(--muted);margin-top:2px">Carlos Torres · GCFF12</div>
   </div>
 
   <div style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:12px;overflow:hidden;margin-bottom:20px" id="demo-ingresos-lista"></div>
 
-  <button onclick="showScreen('screen-go-informes-mes')" style="width:100%;padding:14px;border-radius:14px;border:1px solid var(--border);background:transparent;font-family:'Barlow Condensed',sans-serif;font-size:16px;color:var(--muted);cursor:pointer">
+  <button onclick="showScreen('screen-go-informes-mes')" style="width:100%;padding:14px;border-radius:14px;border:1px solid var(--border);background:transparent;font-family:'Outfit',sans-serif;font-size:16px;color:var(--muted);cursor:pointer">
     ← Volver
   </button>
 </div>
@@ -764,46 +765,46 @@
 <!-- ═══ PANTALLA DETALLE SERVICIO DEMO ═══ -->
 <div class="screen" id="screen-demo-detalle" style="padding:20px">
   <div style="margin-top:16px;margin-bottom:16px">
-    <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:#888;letter-spacing:0.2em">KAPTURA GO</div>
-    <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;color:#fff;margin-top:2px" id="det-titulo">INFORME DEL SERVICIO</div>
+    <div style="font-family:'Outfit',sans-serif;font-size:11px;font-weight:700;color:#888;letter-spacing:0.2em">KAPTURA GO</div>
+    <div style="font-family:'Outfit',sans-serif;font-size:20px;font-weight:900;color:#fff;margin-top:2px" id="det-titulo">INFORME DEL SERVICIO</div>
     <div style="font-size:12px;color:var(--muted);margin-top:2px" id="det-subtitulo">—</div>
   </div>
 
   <div style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:12px;padding:16px;margin-bottom:12px">
     <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.1)">
       <span style="font-size:12px;color:var(--muted)">Fecha</span>
-      <span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#fff" id="det-fecha">—</span>
+      <span style="font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;color:#fff" id="det-fecha">—</span>
     </div>
     <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.1)">
       <span style="font-size:12px;color:var(--muted)">Destino</span>
-      <span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#fff" id="det-destino">—</span>
+      <span style="font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;color:#fff" id="det-destino">—</span>
     </div>
     <div style="display:flex;justify-content:space-between;padding:6px 0">
       <span style="font-size:12px;color:var(--muted)">Km recorridos</span>
-      <span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#fff" id="det-km">—</span>
+      <span style="font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;color:#fff" id="det-km">—</span>
     </div>
   </div>
 
   <div style="background:#D8D5CC;border-radius:12px;padding:16px;margin-bottom:12px">
     <div style="display:flex;justify-content:space-between;margin-bottom:10px">
       <span style="font-size:12px;font-weight:700;color:#5A5A5A;letter-spacing:0.08em">TARIFA</span>
-      <span style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:900;color:#2E3F52" id="det-tarifa">—</span>
+      <span style="font-family:'Outfit',sans-serif;font-size:24px;font-weight:900;color:#2E3F52" id="det-tarifa">—</span>
     </div>
     <div style="display:flex;justify-content:space-between;margin-bottom:10px">
       <span style="font-size:12px;font-weight:700;color:#5A5A5A;letter-spacing:0.08em">COSTOS</span>
-      <span style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:900;color:#8B2020" id="det-costos">—</span>
+      <span style="font-family:'Outfit',sans-serif;font-size:24px;font-weight:900;color:#8B2020" id="det-costos">—</span>
     </div>
     <div style="height:1px;background:rgba(46,63,82,0.2);margin:8px 0"></div>
     <div style="display:flex;justify-content:space-between">
       <span style="font-size:12px;font-weight:700;color:#5A5A5A;letter-spacing:0.08em">MARGEN</span>
-      <span style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900" id="det-margen">—</span>
+      <span style="font-family:'Outfit',sans-serif;font-size:28px;font-weight:900" id="det-margen">—</span>
     </div>
   </div>
 
-  <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:var(--muted);letter-spacing:0.15em;margin-bottom:8px">DETALLE DE COSTOS</div>
+  <div style="font-family:'Outfit',sans-serif;font-size:11px;font-weight:700;color:var(--muted);letter-spacing:0.15em;margin-bottom:8px">DETALLE DE COSTOS</div>
   <div style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:12px;overflow:hidden;margin-bottom:20px" id="det-costos-lista"></div>
 
-  <button onclick="showScreen('screen-go-informes-mes')" style="width:100%;padding:14px;border-radius:14px;border:1px solid var(--border);background:transparent;font-family:'Barlow Condensed',sans-serif;font-size:16px;color:var(--muted);cursor:pointer">
+  <button onclick="showScreen('screen-go-informes-mes')" style="width:100%;padding:14px;border-radius:14px;border:1px solid var(--border);background:transparent;font-family:'Outfit',sans-serif;font-size:16px;color:var(--muted);cursor:pointer">
     ← Volver
   </button>
 </div>
@@ -847,7 +848,7 @@
 
   <div id="gps-resultado" style="display:none">
     <div class="divider"></div>
-    <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;color:var(--text);letter-spacing:0.08em;margin-bottom:12px">DATOS INTEGRADOS</div>
+    <div style="font-family:'Outfit',sans-serif;font-size:16px;font-weight:800;color:var(--text);letter-spacing:0.08em;margin-bottom:12px">DATOS INTEGRADOS</div>
     <div class="info-card">
       <div class="info-row"><span class="info-lbl">Hora Inicio</span><span class="info-val" id="gr-h-inicio">—</span></div>
       <div class="info-row"><span class="info-lbl">Hora Fin</span><span class="info-val" id="gr-h-base">—</span></div>
@@ -868,7 +869,7 @@
 <!-- ═══ PANTALLA RESUMEN GPS ═══ -->
 <div class="screen" id="screen-resumen-gps">
   <div style="margin-top:20px;margin-bottom:16px">
-    <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--muted);letter-spacing:0.15em" id="rg-titulo">INFORME DEL SERVICIO</div>
+    <div style="font-family:'Outfit',sans-serif;font-size:13px;font-weight:700;color:var(--muted);letter-spacing:0.15em" id="rg-titulo">INFORME DEL SERVICIO</div>
     <div style="font-size:12px;color:var(--muted);margin-top:2px" id="rg-svc-id">—</div>
   </div>
 
@@ -876,16 +877,16 @@
   <div style="background:linear-gradient(135deg,#0F1F0F,#1A2F1A);border:1px solid #2D5A2D;border-radius:12px;padding:16px;margin-bottom:12px">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
       <div style="font-size:12px;color:#4B8B6B;font-weight:700;letter-spacing:0.08em">TARIFA</div>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:#6EE7A0" id="rg-ingreso">—</div>
+      <div style="font-family:'Outfit',sans-serif;font-size:22px;font-weight:900;color:#6EE7A0" id="rg-ingreso">—</div>
     </div>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
       <div style="font-size:12px;color:#8B5050;font-weight:700;letter-spacing:0.08em">COSTOS</div>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:#F87171" id="rg-costos">—</div>
+      <div style="font-family:'Outfit',sans-serif;font-size:22px;font-weight:900;color:#F87171" id="rg-costos">—</div>
     </div>
     <div style="height:1px;background:#2D5A2D;margin:8px 0"></div>
     <div style="display:flex;justify-content:space-between;align-items:center">
       <div style="font-size:12px;color:var(--muted);font-weight:700;letter-spacing:0.08em">MARGEN</div>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:900" id="rg-margen">—</div>
+      <div style="font-family:'Outfit',sans-serif;font-size:26px;font-weight:900" id="rg-margen">—</div>
     </div>
   </div>
 
@@ -893,14 +894,14 @@
   <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px">
     <div style="display:flex;justify-content:space-between">
       <div style="text-align:center;flex:1">
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;color:var(--text)" id="rg-km">—</div>
+        <div style="font-family:'Outfit',sans-serif;font-size:20px;font-weight:900;color:var(--text)" id="rg-km">—</div>
         <div style="font-size:10px;color:var(--muted);font-weight:700;letter-spacing:0.08em">KM RECORRIDOS</div>
       </div>
     </div>
   </div>
 
   <!-- Detalle costos -->
-  <div style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;color:var(--muted);letter-spacing:0.12em;margin-bottom:8px">DETALLE DE COSTOS</div>
+  <div style="font-family:'Outfit',sans-serif;font-size:12px;font-weight:700;color:var(--muted);letter-spacing:0.12em;margin-bottom:8px">DETALLE DE COSTOS</div>
   <div class="info-card">
     <div class="info-row"><span class="info-lbl">Combustible</span><span class="info-val" id="rg-comb">—</span></div>
     <div class="info-row"><span class="info-lbl">TAG / Peajes</span><span class="info-val" id="rg-peajes">—</span></div>
@@ -917,7 +918,7 @@
   <div id="rg-botones-guardado" style="display:none;margin-top:24px">
     <div style="text-align:center;margin-bottom:16px">
       <div style="font-size:48px">✅</div>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;color:var(--green)">SERVICIO GUARDADO</div>
+      <div style="font-family:'Outfit',sans-serif;font-size:20px;font-weight:900;color:var(--green)">SERVICIO GUARDADO</div>
     </div>
     <button class="btn-main btn-navy" onclick="showScreen('screen-modo')">🔄 NUEVO SERVICIO</button>
   </div>
@@ -1145,7 +1146,7 @@ function goDemoIntegrar() {
   document.getElementById('go-demo-integrando').style.display = 'block';
   setTimeout(()=>{
     document.getElementById('go-demo-integrando').innerHTML =
-      '<div style="font-family:Barlow Condensed,sans-serif;font-size:18px;font-weight:700;color:#537A6E;letter-spacing:0.1em">✓ INTEGRACIÓN DE DATOS OK</div>';
+      '<div style="font-family:Outfit,sans-serif;font-size:18px;font-weight:700;color:#537A6E;letter-spacing:0.1em">✓ INTEGRACIÓN DE DATOS OK</div>';
     // Poblar informe con valores reales + gastos KOPILOTO
     const tarifa = _goDemoTarifa || 720000;
     const costosBase = 283500 + 52659 + 15000 + 35000 + 5000 + 12000;
@@ -1946,7 +1947,7 @@ function verDetalleServicioDemo(s) {
   document.getElementById('det-costos-lista').innerHTML = items.map((item,idx)=>`
     <div style="display:flex;justify-content:space-between;padding:10px 16px;${idx<items.length-1?'border-bottom:1px solid rgba(255,255,255,0.08)':''}">
       <span style="font-size:13px;color:var(--muted)">${item[0]}</span>
-      <span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#fff">${fmt(item[1])}</span>
+      <span style="font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;color:#fff">${fmt(item[1])}</span>
     </div>`).join('');
 
   showScreen('screen-demo-detalle');
@@ -2021,7 +2022,7 @@ async function cargarInformesMesDemo() {
     listaCostos.innerHTML = items.map((item,idx)=>`
       <div style="display:flex;justify-content:space-between;padding:12px 16px;${idx<items.length-1?'border-bottom:1px solid rgba(255,255,255,0.08)':''}">
         <span style="font-size:13px;color:var(--muted)">${item[0]}</span>
-        <span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#F87171">${fmtC(item[1])}</span>
+        <span style="font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;color:#F87171">${fmtC(item[1])}</span>
       </div>`).join('');
   }
 
@@ -2031,7 +2032,7 @@ async function cargarInformesMesDemo() {
     listaIngresos.innerHTML = servicios.map((s,idx)=>`
       <div onclick="verDetalleServicioDemo(${JSON.stringify(s).replace(/"/g,'&quot;')})" style="display:grid;grid-template-columns:1fr auto;gap:4px;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.08);cursor:pointer" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
         <div>
-          <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:#fff">${s.servicio_id} · ${s.destino||'—'}</div>
+          <div style="font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;color:#fff">${s.servicio_id} · ${s.destino||'—'}</div>
           <div style="font-size:11px;color:var(--muted);margin-top:2px">${s.fecha}</div>
           <div style="display:flex;gap:12px;margin-top:4px">
             <span style="font-size:11px;color:#6EE7A0">+$${(s.ingreso_total||s.tarifa_neta||0).toLocaleString('es-CL')}</span>
@@ -2039,7 +2040,7 @@ async function cargarInformesMesDemo() {
           </div>
         </div>
         <div style="text-align:right;display:flex;flex-direction:column;justify-content:center">
-          <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;color:${(s.margen_servicio||0)>=0?'#537A6E':'#8B2020'}">$${Math.abs(s.margen_servicio||0).toLocaleString('es-CL')}</div>
+          <div style="font-family:'Outfit',sans-serif;font-size:18px;font-weight:900;color:${(s.margen_servicio||0)>=0?'#537A6E':'#8B2020'}">$${Math.abs(s.margen_servicio||0).toLocaleString('es-CL')}</div>
           <div style="font-size:10px;color:var(--muted)">margen ›</div>
         </div>
       </div>`).join('');
@@ -2049,11 +2050,11 @@ async function cargarInformesMesDemo() {
   lista.innerHTML = servicios.map(s=>`
     <div onclick="verDetalleServicioDemo(${JSON.stringify(s).replace(/"/g,'&quot;')})" style="display:flex;justify-content:space-between;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,0.08);cursor:pointer" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
       <div>
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:#fff">${s.servicio_id} · ${s.destino||'—'}</div>
+        <div style="font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;color:#fff">${s.servicio_id} · ${s.destino||'—'}</div>
         <div style="font-size:11px;color:var(--muted)">${s.fecha} · ${s.km_total||0} km</div>
       </div>
       <div style="text-align:right">
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:${(s.margen_servicio||0)>=0?'#537A6E':'#8B2020'}">$${Math.abs(s.margen_servicio||0).toLocaleString('es-CL')}</div>
+        <div style="font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;color:${(s.margen_servicio||0)>=0?'#537A6E':'#8B2020'}">$${Math.abs(s.margen_servicio||0).toLocaleString('es-CL')}</div>
         <div style="font-size:11px;color:var(--muted)">›</div>
       </div>
     </div>`).join('');
@@ -2131,8 +2132,8 @@ async function guardarServicioGPS() {
 <div id="kopiloto-panel" style="display:none;position:fixed;bottom:0;left:0;right:0;background:linear-gradient(180deg,#1A2430,#0F1923);border-top:1px solid rgba(212,168,39,0.4);padding:20px;z-index:1000;max-width:480px;margin:0 auto">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
     <div>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:#D4A827;letter-spacing:0.2em">KOPILOTO</div>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;color:#fff" id="kop-estado">Escuchando...</div>
+      <div style="font-family:'Outfit',sans-serif;font-size:11px;font-weight:700;color:#D4A827;letter-spacing:0.2em">KOPILOTO</div>
+      <div style="font-family:'Outfit',sans-serif;font-size:18px;font-weight:900;color:#fff" id="kop-estado">Escuchando...</div>
     </div>
     <button onclick="kopilotoCerrar()" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;border-radius:8px;padding:6px 14px;font-size:13px;cursor:pointer">Cerrar</button>
   </div>
@@ -2147,7 +2148,7 @@ async function guardarServicioGPS() {
   <div id="kop-transcripcion" style="font-size:14px;color:rgba(255,255,255,0.7);min-height:24px;margin-bottom:12px;font-style:italic"></div>
   <div id="kop-respuesta" style="background:rgba(212,168,39,0.1);border:1px solid rgba(212,168,39,0.3);border-radius:10px;padding:12px;font-size:14px;color:#D4A827;display:none;margin-bottom:12px"></div>
 
-  <button id="kop-btn-hablar" onclick="kopilotoHablar()" style="width:100%;padding:16px;border-radius:12px;border:none;background:#D4A827;font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;color:#2E3A00;cursor:pointer">
+  <button id="kop-btn-hablar" onclick="kopilotoHablar()" style="width:100%;padding:16px;border-radius:12px;border:none;background:#D4A827;font-family:'Outfit',sans-serif;font-size:20px;font-weight:900;color:#2E3A00;cursor:pointer">
     🎤 HABLAR
   </button>
 </div>
@@ -2281,7 +2282,7 @@ async function kopilotoProcesar(texto) {
       <input type="number" id="kop-monto-inp" value="${monto||''}" placeholder="Monto $"
         style="width:110px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.3);color:#fff;border-radius:8px;padding:8px;font-size:13px">
     </div>
-    <button onclick="kopilotoGuardar()" style="width:100%;padding:12px;border-radius:10px;border:none;background:#537A6E;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;color:#fff;cursor:pointer">
+    <button onclick="kopilotoGuardar()" style="width:100%;padding:12px;border-radius:10px;border:none;background:#537A6E;font-family:'Outfit',sans-serif;font-size:18px;font-weight:900;color:#fff;cursor:pointer">
       GUARDAR GASTO
     </button>`;
   respEl.style.display = 'block';
@@ -2509,7 +2510,7 @@ function goDetectarTarifa() {
 
 <!-- ═══ PANTALLA: GO CARGANDO ═══ -->
 <div class="screen" id="screen-go-cargando" style="padding:40px 20px;text-align:center">
-  <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;color:#D8D5CC;letter-spacing:0.08em;margin-bottom:16px">KAPTURA GO</div>
+  <div style="font-family:'Outfit',sans-serif;font-size:28px;font-weight:900;color:#D8D5CC;letter-spacing:0.08em;margin-bottom:16px">KAPTURA GO</div>
   <div id="go-cargando-msg" style="font-size:14px;color:rgba(255,255,255,0.5)">Cargando tu perfil...</div>
 </div>
 
@@ -2520,7 +2521,7 @@ function goDetectarTarifa() {
   <div style="background:rgba(0,0,0,0.3);padding:12px 16px 10px;border-bottom:1px solid rgba(255,255,255,0.1)">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
       <div>
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;letter-spacing:0.12em;color:#fff">KAPTURA</div>
+        <div style="font-family:'Outfit',sans-serif;font-size:18px;font-weight:900;letter-spacing:0.12em;color:#fff">KAPTURA</div>
         <div style="font-size:10px;font-weight:700;color:#D8D5CC;letter-spacing:0.2em">GO — Configuración inicial</div>
       </div>
       <div id="go-step-num" style="font-size:11px;color:rgba(255,255,255,0.4)">Paso 1 de 6</div>
@@ -2583,7 +2584,7 @@ function goDetectarTarifa() {
         </div>
       </div>
 
-      <button onclick="goSiguiente(1)" style="width:100%;padding:18px;border-radius:12px;border:none;background:#537A6E;font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:#fff;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer">Siguiente →</button>
+      <button onclick="goSiguiente(1)" style="width:100%;padding:18px;border-radius:12px;border:none;background:#537A6E;font-family:'Outfit',sans-serif;font-size:22px;font-weight:900;color:#fff;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer">Siguiente →</button>
     </div>
 
     <!-- STEP 2: TU CAMIÓN -->
@@ -2626,8 +2627,8 @@ function goDetectarTarifa() {
       </div>
 
       <div style="display:flex;gap:8px">
-        <button onclick="goVolver()" style="flex:1;padding:16px;border-radius:12px;border:1px solid rgba(255,255,255,0.15);background:transparent;font-family:'Barlow Condensed',sans-serif;font-size:16px;color:rgba(255,255,255,0.5);cursor:pointer">← Volver</button>
-        <button onclick="goSiguiente(2)" style="flex:2;padding:16px;border-radius:12px;border:none;background:#537A6E;font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;color:#fff;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer">Siguiente →</button>
+        <button onclick="goVolver()" style="flex:1;padding:16px;border-radius:12px;border:1px solid rgba(255,255,255,0.15);background:transparent;font-family:'Outfit',sans-serif;font-size:16px;color:rgba(255,255,255,0.5);cursor:pointer">← Volver</button>
+        <button onclick="goSiguiente(2)" style="flex:2;padding:16px;border-radius:12px;border:none;background:#537A6E;font-family:'Outfit',sans-serif;font-size:20px;font-weight:900;color:#fff;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer">Siguiente →</button>
       </div>
     </div>
 
@@ -2661,8 +2662,8 @@ function goDetectarTarifa() {
       </div>
 
       <div style="display:flex;gap:8px">
-        <button onclick="goVolver()" style="flex:1;padding:16px;border-radius:12px;border:1px solid rgba(255,255,255,0.15);background:transparent;font-family:'Barlow Condensed',sans-serif;font-size:16px;color:rgba(255,255,255,0.5);cursor:pointer">← Volver</button>
-        <button onclick="goSiguiente(3)" style="flex:2;padding:16px;border-radius:12px;border:none;background:#537A6E;font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;color:#fff;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer">Siguiente →</button>
+        <button onclick="goVolver()" style="flex:1;padding:16px;border-radius:12px;border:1px solid rgba(255,255,255,0.15);background:transparent;font-family:'Outfit',sans-serif;font-size:16px;color:rgba(255,255,255,0.5);cursor:pointer">← Volver</button>
+        <button onclick="goSiguiente(3)" style="flex:2;padding:16px;border-radius:12px;border:none;background:#537A6E;font-family:'Outfit',sans-serif;font-size:20px;font-weight:900;color:#fff;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer">Siguiente →</button>
       </div>
     </div>
 
@@ -2693,8 +2694,8 @@ function goDetectarTarifa() {
       </div>
 
       <div style="display:flex;gap:8px">
-        <button onclick="goVolver()" style="flex:1;padding:16px;border-radius:12px;border:1px solid rgba(255,255,255,0.15);background:transparent;font-family:'Barlow Condensed',sans-serif;font-size:16px;color:rgba(255,255,255,0.5);cursor:pointer">← Volver</button>
-        <button onclick="goSiguiente(4)" style="flex:2;padding:16px;border-radius:12px;border:none;background:#537A6E;font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;color:#fff;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer">Siguiente →</button>
+        <button onclick="goVolver()" style="flex:1;padding:16px;border-radius:12px;border:1px solid rgba(255,255,255,0.15);background:transparent;font-family:'Outfit',sans-serif;font-size:16px;color:rgba(255,255,255,0.5);cursor:pointer">← Volver</button>
+        <button onclick="goSiguiente(4)" style="flex:2;padding:16px;border-radius:12px;border:none;background:#537A6E;font-family:'Outfit',sans-serif;font-size:20px;font-weight:900;color:#fff;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer">Siguiente →</button>
       </div>
     </div>
 
@@ -2748,8 +2749,8 @@ function goDetectarTarifa() {
       </div>
 
       <div style="display:flex;gap:8px">
-        <button onclick="goVolver()" style="flex:1;padding:16px;border-radius:12px;border:1px solid rgba(255,255,255,0.15);background:transparent;font-family:'Barlow Condensed',sans-serif;font-size:16px;color:rgba(255,255,255,0.5);cursor:pointer">← Volver</button>
-        <button onclick="goSiguiente(5)" style="flex:2;padding:16px;border-radius:12px;border:none;background:#537A6E;font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;color:#fff;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer">Siguiente →</button>
+        <button onclick="goVolver()" style="flex:1;padding:16px;border-radius:12px;border:1px solid rgba(255,255,255,0.15);background:transparent;font-family:'Outfit',sans-serif;font-size:16px;color:rgba(255,255,255,0.5);cursor:pointer">← Volver</button>
+        <button onclick="goSiguiente(5)" style="flex:2;padding:16px;border-radius:12px;border:none;background:#537A6E;font-family:'Outfit',sans-serif;font-size:20px;font-weight:900;color:#fff;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer">Siguiente →</button>
       </div>
     </div>
 
@@ -2765,13 +2766,13 @@ function goDetectarTarifa() {
 
       <div style="background:rgba(83,122,110,0.12);border:1px solid rgba(83,122,110,0.3);border-radius:10px;padding:14px;margin-bottom:16px">
         <div style="font-size:11px;font-weight:700;color:#537A6E;letter-spacing:0.1em;margin-bottom:8px">TU COSTO REAL POR SERVICIO</div>
-        <div id="go-resumen-costo" style="font-size:28px;font-weight:900;color:#D4A827;font-family:'Barlow Condensed',sans-serif">Calculando...</div>
+        <div id="go-resumen-costo" style="font-size:28px;font-weight:900;color:#D4A827;font-family:'Outfit',sans-serif">Calculando...</div>
         <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:4px">Costo base estimado por día. La tarifa mínima para no perder plata.</div>
       </div>
 
       <div style="display:flex;gap:8px">
-        <button onclick="goVolver()" style="flex:1;padding:16px;border-radius:12px;border:1px solid rgba(255,255,255,0.15);background:transparent;font-family:'Barlow Condensed',sans-serif;font-size:16px;color:rgba(255,255,255,0.5);cursor:pointer">← Volver</button>
-        <button id="go-btn-finalizar" onclick="goSiguiente(6)" style="flex:2;padding:16px;border-radius:12px;border:none;background:#D4A827;font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;color:#2E3A00;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer">FINALIZAR ✓</button>
+        <button onclick="goVolver()" style="flex:1;padding:16px;border-radius:12px;border:1px solid rgba(255,255,255,0.15);background:transparent;font-family:'Outfit',sans-serif;font-size:16px;color:rgba(255,255,255,0.5);cursor:pointer">← Volver</button>
+        <button id="go-btn-finalizar" onclick="goSiguiente(6)" style="flex:2;padding:16px;border-radius:12px;border:none;background:#D4A827;font-family:'Outfit',sans-serif;font-size:20px;font-weight:900;color:#2E3A00;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer">FINALIZAR ✓</button>
       </div>
     </div>
 
@@ -2783,7 +2784,7 @@ function goDetectarTarifa() {
 
   <div style="background:rgba(0,0,0,0.3);padding:12px 16px 10px;border-bottom:1px solid rgba(255,255,255,0.1);display:flex;justify-content:space-between;align-items:center">
     <div>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;letter-spacing:0.12em;color:#fff">KAPTURA</div>
+      <div style="font-family:'Outfit',sans-serif;font-size:18px;font-weight:900;letter-spacing:0.12em;color:#fff">KAPTURA</div>
       <div style="font-size:10px;font-weight:700;color:#D8D5CC;letter-spacing:0.2em">GO</div>
     </div>
     <button onclick="goAbrirConfig()" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:6px 10px;display:flex;align-items:center;gap:5px;cursor:pointer">
@@ -2823,10 +2824,10 @@ function goDetectarTarifa() {
     <input id="go-home-destino" type="text" placeholder="Ej: CURICÓ" onblur="goDetectarTarifa()" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:10px 12px;font-size:13px;color:#fff;font-family:inherit;margin-bottom:8px;text-transform:uppercase">
 
     <div id="go-home-tarifa-label" style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.5);letter-spacing:0.15em;margin-bottom:6px">TARIFA DEL SERVICIO</div>
-    <input id="go-home-tarifa" type="number" placeholder="$0" style="width:100%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);border-radius:10px;padding:14px 16px;font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:700;color:#D8D5CC;text-align:right;margin-bottom:14px">
+    <input id="go-home-tarifa" type="number" placeholder="$0" style="width:100%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);border-radius:10px;padding:14px 16px;font-family:'Outfit',sans-serif;font-size:24px;font-weight:700;color:#D8D5CC;text-align:right;margin-bottom:14px">
 
-    <button onclick="goIniciarServicio()" style="width:100%;padding:18px;border-radius:14px;border:none;background:#D8D5CC;font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:#2E3F52;cursor:pointer;letter-spacing:0.05em;margin-bottom:10px">INICIAR SERVICIO</button>
-    <button onclick="cargarInformesMesDemo();showScreen('screen-go-informes-mes')" style="width:100%;padding:16px;border-radius:14px;border:none;background:#D4A827;font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;color:#2E3A00;cursor:pointer;letter-spacing:0.05em">RESULTADOS DEL MES</button>
+    <button onclick="goIniciarServicio()" style="width:100%;padding:18px;border-radius:14px;border:none;background:#D8D5CC;font-family:'Outfit',sans-serif;font-size:22px;font-weight:900;color:#2E3F52;cursor:pointer;letter-spacing:0.05em;margin-bottom:10px">INICIAR SERVICIO</button>
+    <button onclick="cargarInformesMesDemo();showScreen('screen-go-informes-mes')" style="width:100%;padding:16px;border-radius:14px;border:none;background:#D4A827;font-family:'Outfit',sans-serif;font-size:20px;font-weight:900;color:#2E3A00;cursor:pointer;letter-spacing:0.05em">RESULTADOS DEL MES</button>
 
   </div>
 </div>
@@ -3046,8 +3047,8 @@ async function flotaAgregarCliente() {
 <!-- ═══ PANTALLA: PIN GO ═══ -->
 <div class="screen" id="screen-pin-go" style="background:#0D0D0D;padding:0">
   <div style="padding:48px 24px 0;text-align:center">
-    <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;letter-spacing:0.25em;color:rgba(255,255,255,0.4);margin-bottom:6px">KAPTURA</div>
-    <div style="font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:900;letter-spacing:0.06em;color:#FF6B00;margin-bottom:32px">PILOTO</div>
+    <div style="font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;letter-spacing:0.25em;color:rgba(255,255,255,0.4);margin-bottom:6px">KAPTURA</div>
+    <div style="font-family:'Outfit',sans-serif;font-size:36px;font-weight:900;letter-spacing:0.06em;color:#FF6B00;margin-bottom:32px">PILOTO</div>
     <div style="display:flex;justify-content:center;gap:16px;margin-bottom:12px">
       <div class="go-pin-dot" style="width:14px;height:14px;border-radius:50%;background:rgba(255,255,255,0.2);transition:background 0.2s"></div>
       <div class="go-pin-dot" style="width:14px;height:14px;border-radius:50%;background:rgba(255,255,255,0.2);transition:background 0.2s"></div>
@@ -3057,17 +3058,17 @@ async function flotaAgregarCliente() {
     <div id="go-pin-error" style="font-size:12px;color:#FF6B00;min-height:18px;margin-bottom:24px"></div>
   </div>
   <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:0 24px 40px">
-    <button onclick="goPinTecla('1')" style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:12px;padding:22px;font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;color:#fff;cursor:pointer">1</button>
-    <button onclick="goPinTecla('2')" style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:12px;padding:22px;font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;color:#fff;cursor:pointer">2</button>
-    <button onclick="goPinTecla('3')" style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:12px;padding:22px;font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;color:#fff;cursor:pointer">3</button>
-    <button onclick="goPinTecla('4')" style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:12px;padding:22px;font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;color:#fff;cursor:pointer">4</button>
-    <button onclick="goPinTecla('5')" style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:12px;padding:22px;font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;color:#fff;cursor:pointer">5</button>
-    <button onclick="goPinTecla('6')" style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:12px;padding:22px;font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;color:#fff;cursor:pointer">6</button>
-    <button onclick="goPinTecla('7')" style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:12px;padding:22px;font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;color:#fff;cursor:pointer">7</button>
-    <button onclick="goPinTecla('8')" style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:12px;padding:22px;font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;color:#fff;cursor:pointer">8</button>
-    <button onclick="goPinTecla('9')" style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:12px;padding:22px;font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;color:#fff;cursor:pointer">9</button>
+    <button onclick="goPinTecla('1')" style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:12px;padding:22px;font-family:'Outfit',sans-serif;font-size:28px;font-weight:700;color:#fff;cursor:pointer">1</button>
+    <button onclick="goPinTecla('2')" style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:12px;padding:22px;font-family:'Outfit',sans-serif;font-size:28px;font-weight:700;color:#fff;cursor:pointer">2</button>
+    <button onclick="goPinTecla('3')" style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:12px;padding:22px;font-family:'Outfit',sans-serif;font-size:28px;font-weight:700;color:#fff;cursor:pointer">3</button>
+    <button onclick="goPinTecla('4')" style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:12px;padding:22px;font-family:'Outfit',sans-serif;font-size:28px;font-weight:700;color:#fff;cursor:pointer">4</button>
+    <button onclick="goPinTecla('5')" style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:12px;padding:22px;font-family:'Outfit',sans-serif;font-size:28px;font-weight:700;color:#fff;cursor:pointer">5</button>
+    <button onclick="goPinTecla('6')" style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:12px;padding:22px;font-family:'Outfit',sans-serif;font-size:28px;font-weight:700;color:#fff;cursor:pointer">6</button>
+    <button onclick="goPinTecla('7')" style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:12px;padding:22px;font-family:'Outfit',sans-serif;font-size:28px;font-weight:700;color:#fff;cursor:pointer">7</button>
+    <button onclick="goPinTecla('8')" style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:12px;padding:22px;font-family:'Outfit',sans-serif;font-size:28px;font-weight:700;color:#fff;cursor:pointer">8</button>
+    <button onclick="goPinTecla('9')" style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:12px;padding:22px;font-family:'Outfit',sans-serif;font-size:28px;font-weight:700;color:#fff;cursor:pointer">9</button>
     <button onclick="goPinBorrar()" style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:12px;padding:22px;font-size:20px;color:rgba(255,255,255,0.5);cursor:pointer">←</button>
-    <button onclick="goPinTecla('0')" style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:12px;padding:22px;font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;color:#fff;cursor:pointer">0</button>
+    <button onclick="goPinTecla('0')" style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:12px;padding:22px;font-family:'Outfit',sans-serif;font-size:28px;font-weight:700;color:#fff;cursor:pointer">0</button>
     <div></div>
   </div>
 </div>
@@ -3076,15 +3077,15 @@ async function flotaAgregarCliente() {
 <div class="screen" id="screen-admin" style="background:#0D0D0D;padding:0">
   <div style="background:rgba(0,0,0,0.4);padding:16px;border-bottom:1px solid #2A2A2A;display:flex;justify-content:space-between;align-items:center">
     <div>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;letter-spacing:0.12em;color:#FF6B00">KAPTURA</div>
+      <div style="font-family:'Outfit',sans-serif;font-size:18px;font-weight:900;letter-spacing:0.12em;color:#FF6B00">KAPTURA</div>
       <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.5);letter-spacing:0.2em">ADMIN</div>
     </div>
     <button onclick="localStorage.removeItem('kaptura_session');showScreen('screen-pin-go');_goPinIngresado='';actualizarDotsGo();" style="background:transparent;border:1px solid #2A2A2A;border-radius:8px;padding:6px 12px;font-size:11px;color:rgba(255,255,255,0.5);cursor:pointer">Cerrar sesión</button>
   </div>
   <div style="padding:16px">
-    <div style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:900;color:#fff;margin-bottom:4px">Panel Admin</div>
+    <div style="font-family:'Outfit',sans-serif;font-size:24px;font-weight:900;color:#fff;margin-bottom:4px">Panel Admin</div>
     <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-bottom:20px">Usuarios GO activos</div>
-    <button onclick="adminCrearUsuario()" style="width:100%;background:#FF6B00;border:none;border-radius:10px;padding:14px;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:900;color:#000;cursor:pointer;letter-spacing:0.06em;margin-bottom:16px">+ NUEVO USUARIO GO</button>
+    <button onclick="adminCrearUsuario()" style="width:100%;background:#FF6B00;border:none;border-radius:10px;padding:14px;font-family:'Outfit',sans-serif;font-size:16px;font-weight:900;color:#000;cursor:pointer;letter-spacing:0.06em;margin-bottom:16px">+ NUEVO USUARIO GO</button>
     <div id="admin-lista-usuarios">
       <div style="font-size:13px;color:rgba(255,255,255,0.4);text-align:center;padding:20px">Cargando...</div>
     </div>
@@ -3096,10 +3097,10 @@ async function flotaAgregarCliente() {
 <div class="screen" id="screen-go-servicio" style="background:#0D0D0D;padding:0">
   <div style="background:rgba(0,0,0,0.4);padding:12px 16px;border-bottom:1px solid #2A2A2A;display:flex;justify-content:space-between;align-items:center">
     <div>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;letter-spacing:0.12em;color:#FF6B00">KAPTURA</div>
+      <div style="font-family:'Outfit',sans-serif;font-size:18px;font-weight:900;letter-spacing:0.12em;color:#FF6B00">KAPTURA</div>
       <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.5);letter-spacing:0.2em">GO — EN RUTA</div>
     </div>
-    <div id="go-crono" style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;color:#FF6B00;letter-spacing:0.08em">00:00:00</div>
+    <div id="go-crono" style="font-family:'Outfit',sans-serif;font-size:28px;font-weight:900;color:#FF6B00;letter-spacing:0.08em">00:00:00</div>
   </div>
   <div style="padding:20px">
     <div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:12px;padding:16px;margin-bottom:16px">
@@ -3126,21 +3127,21 @@ async function flotaAgregarCliente() {
     </div>
     <div style="background:rgba(255,107,0,0.08);border:1px solid rgba(255,107,0,0.2);border-radius:12px;padding:14px;margin-bottom:16px;text-align:center">
       <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:6px">¿Tuviste un gasto en ruta?</div>
-      <button onclick="kopilotoMostrar()" style="background:#FF6B00;border:none;border-radius:8px;padding:10px 20px;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:900;color:#000;cursor:pointer;letter-spacing:0.06em">🎤 KOPILOTO — Registrar gasto</button>
+      <button onclick="kopilotoMostrar()" style="background:#FF6B00;border:none;border-radius:8px;padding:10px 20px;font-family:'Outfit',sans-serif;font-size:16px;font-weight:900;color:#000;cursor:pointer;letter-spacing:0.06em">🎤 KOPILOTO — Registrar gasto</button>
     </div>
-    <button onclick="goFinalizarServicio()" style="width:100%;padding:20px;border-radius:14px;border:none;background:#FF6B00;font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:900;color:#000;cursor:pointer;letter-spacing:0.06em">FINALIZAR SERVICIO</button>
+    <button onclick="goFinalizarServicio()" style="width:100%;padding:20px;border-radius:14px;border:none;background:#FF6B00;font-family:'Outfit',sans-serif;font-size:24px;font-weight:900;color:#000;cursor:pointer;letter-spacing:0.06em">FINALIZAR SERVICIO</button>
   </div>
 </div>
 
 <!-- ═══ PANTALLA: GO INFORME PRODUCCIÓN ═══ -->
 <div class="screen" id="screen-go-informe-prod" style="background:#0D0D0D;padding:0">
   <div style="background:rgba(0,0,0,0.4);padding:12px 16px;border-bottom:1px solid #2A2A2A">
-    <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;letter-spacing:0.12em;color:#FF6B00">KAPTURA GO</div>
+    <div style="font-family:'Outfit',sans-serif;font-size:18px;font-weight:900;letter-spacing:0.12em;color:#FF6B00">KAPTURA GO</div>
     <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.5);letter-spacing:0.2em">INFORME DE SERVICIO</div>
   </div>
   <div style="padding:16px">
     <div style="font-size:10px;color:rgba(255,255,255,0.4);letter-spacing:0.1em;margin-bottom:2px">KAPTURA GO</div>
-    <div id="go-inf-id" style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;color:#fff;margin-bottom:2px">—</div>
+    <div id="go-inf-id" style="font-family:'Outfit',sans-serif;font-size:28px;font-weight:900;color:#fff;margin-bottom:2px">—</div>
     <div id="go-inf-cliente" style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:4px">—</div>
     <div style="display:flex;gap:12px;font-size:12px;color:rgba(255,255,255,0.4);margin-bottom:16px">
       <span id="go-inf-fecha">—</span>
@@ -3157,7 +3158,7 @@ async function flotaAgregarCliente() {
       </div>
       <div style="display:flex;justify-content:space-between;padding:10px 0 6px">
         <span style="font-size:15px;font-weight:700;color:#fff">MARGEN</span>
-        <span id="go-inf-margen" style="font-size:22px;font-weight:900;font-family:'Barlow Condensed',sans-serif">—</span>
+        <span id="go-inf-margen" style="font-size:22px;font-weight:900;font-family:'Outfit',sans-serif">—</span>
       </div>
     </div>
     <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.4);letter-spacing:0.1em;margin-bottom:8px">DETALLE DE COSTOS</div>
@@ -3171,8 +3172,8 @@ async function flotaAgregarCliente() {
       <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #2A2A2A"><span style="font-size:12px;color:rgba(255,255,255,0.5)">Gastos KOPILOTO</span><span id="go-inf-kop" style="font-size:13px;color:#fff;font-weight:600">—</span></div>
       <div style="display:flex;justify-content:space-between;padding:4px 0"><span style="font-size:12px;color:rgba(255,255,255,0.5)">Comisión</span><span id="go-inf-comision" style="font-size:13px;color:#fff;font-weight:600">—</span></div>
     </div>
-    <button onclick="goMostrarHome()" style="width:100%;padding:16px;border-radius:12px;border:none;background:#FF6B00;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;color:#000;cursor:pointer;letter-spacing:0.06em;margin-bottom:8px">NUEVO SERVICIO →</button>
-    <button onclick="cargarInformesMesDemo();showScreen('screen-go-informes-mes')" style="width:100%;padding:14px;border-radius:12px;border:1px solid #2A2A2A;background:transparent;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#FF6B00;cursor:pointer">VER RESULTADOS DEL MES</button>
+    <button onclick="goMostrarHome()" style="width:100%;padding:16px;border-radius:12px;border:none;background:#FF6B00;font-family:'Outfit',sans-serif;font-size:18px;font-weight:900;color:#000;cursor:pointer;letter-spacing:0.06em;margin-bottom:8px">NUEVO SERVICIO →</button>
+    <button onclick="cargarInformesMesDemo();showScreen('screen-go-informes-mes')" style="width:100%;padding:14px;border-radius:12px;border:1px solid #2A2A2A;background:transparent;font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;color:#FF6B00;cursor:pointer">VER RESULTADOS DEL MES</button>
   </div>
 </div>
 
@@ -3181,13 +3182,13 @@ async function flotaAgregarCliente() {
 <div class="screen" id="screen-admin-nuevo" style="background:#0D0D0D;padding:0">
   <div style="background:rgba(0,0,0,0.4);padding:16px;border-bottom:1px solid #2A2A2A;display:flex;justify-content:space-between;align-items:center">
     <div>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;letter-spacing:0.12em;color:#FF6B00">KAPTURA</div>
+      <div style="font-family:'Outfit',sans-serif;font-size:18px;font-weight:900;letter-spacing:0.12em;color:#FF6B00">KAPTURA</div>
       <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.5);letter-spacing:0.2em">ADMIN — NUEVO USUARIO</div>
     </div>
     <button onclick="showScreen('screen-admin');cargarPanelAdmin()" style="background:transparent;border:1px solid #2A2A2A;border-radius:8px;padding:6px 12px;font-size:11px;color:rgba(255,255,255,0.5);cursor:pointer">← Volver</button>
   </div>
   <div style="padding:16px">
-    <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:#fff;margin-bottom:4px">Crear nuevo usuario</div>
+    <div style="font-family:'Outfit',sans-serif;font-size:22px;font-weight:900;color:#fff;margin-bottom:4px">Crear nuevo usuario</div>
     <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-bottom:20px">Selecciona el modo y define el PIN temporal.</div>
 
     <!-- Selector modo -->
@@ -3197,21 +3198,21 @@ async function flotaAgregarCliente() {
         <label style="cursor:pointer">
           <input type="radio" name="admin-modo" id="admin-nuevo-modo" value="go" checked style="display:none">
           <div onclick="document.querySelectorAll('.modo-btn').forEach(b=>b.style.borderColor='#2A2A2A');this.style.borderColor='#FF6B00'" class="modo-btn" style="background:#1A1A1A;border:2px solid #FF6B00;border-radius:10px;padding:12px;text-align:center;cursor:pointer">
-            <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;color:#FF6B00">GO</div>
+            <div style="font-family:'Outfit',sans-serif;font-size:18px;font-weight:900;color:#FF6B00">GO</div>
             <div style="font-size:10px;color:rgba(255,255,255,0.4)">1 camión</div>
           </div>
         </label>
         <label style="cursor:pointer">
           <input type="radio" name="admin-modo" value="pro" style="display:none">
           <div onclick="document.getElementById('admin-nuevo-modo').value='pro';document.querySelectorAll('.modo-btn').forEach(b=>b.style.borderColor='#2A2A2A');this.style.borderColor='#D4A827'" class="modo-btn" style="background:#1A1A1A;border:2px solid #2A2A2A;border-radius:10px;padding:12px;text-align:center;cursor:pointer">
-            <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;color:#D4A827">PRO</div>
+            <div style="font-family:'Outfit',sans-serif;font-size:18px;font-weight:900;color:#D4A827">PRO</div>
             <div style="font-size:10px;color:rgba(255,255,255,0.4)">1-3 camiones</div>
           </div>
         </label>
         <label style="cursor:pointer">
           <input type="radio" name="admin-modo" value="flota" style="display:none">
           <div onclick="document.getElementById('admin-nuevo-modo').value='flota';document.querySelectorAll('.modo-btn').forEach(b=>b.style.borderColor='#2A2A2A');this.style.borderColor='#537A6E'" class="modo-btn" style="background:#1A1A1A;border:2px solid #2A2A2A;border-radius:10px;padding:12px;text-align:center;cursor:pointer">
-            <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;color:#537A6E">FLOTA</div>
+            <div style="font-family:'Outfit',sans-serif;font-size:18px;font-weight:900;color:#537A6E">FLOTA</div>
             <div style="font-size:10px;color:rgba(255,255,255,0.4)">4+ equipos</div>
           </div>
         </label>
@@ -3234,7 +3235,7 @@ async function flotaAgregarCliente() {
 
     <div id="admin-nuevo-error" style="font-size:12px;color:#ef4444;min-height:18px;margin-bottom:10px"></div>
 
-    <button id="admin-nuevo-btn" onclick="adminGuardarNuevo()" style="width:100%;padding:18px;border-radius:12px;border:none;background:#FF6B00;font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;color:#000;cursor:pointer;letter-spacing:0.06em">CREAR USUARIO</button>
+    <button id="admin-nuevo-btn" onclick="adminGuardarNuevo()" style="width:100%;padding:18px;border-radius:12px;border:none;background:#FF6B00;font-family:'Outfit',sans-serif;font-size:20px;font-weight:900;color:#000;cursor:pointer;letter-spacing:0.06em">CREAR USUARIO</button>
   </div>
 </div>
 
@@ -3245,14 +3246,14 @@ async function flotaAgregarCliente() {
   <!-- Header -->
   <div style="background:rgba(0,0,0,0.4);padding:14px 16px;border-bottom:1px solid #2A2A2A;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10">
     <div>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;letter-spacing:0.12em;color:#FF6B00">KAPTURA</div>
+      <div style="font-family:'Outfit',sans-serif;font-size:18px;font-weight:900;letter-spacing:0.12em;color:#FF6B00">KAPTURA</div>
       <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.5);letter-spacing:0.2em">FLOTA — CONFIGURACIÓN</div>
     </div>
     <button onclick="localStorage.removeItem('kaptura_session');showScreen('screen-pin-go');_goPinIngresado='';actualizarDotsGo();" style="background:transparent;border:1px solid #2A2A2A;border-radius:8px;padding:6px 12px;font-size:11px;color:rgba(255,255,255,0.5);cursor:pointer">Cerrar sesión</button>
   </div>
 
   <div style="padding:16px">
-    <div style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:900;color:#fff;margin-bottom:2px">Configuración FLOTA</div>
+    <div style="font-family:'Outfit',sans-serif;font-size:24px;font-weight:900;color:#fff;margin-bottom:2px">Configuración FLOTA</div>
     <div id="flota-config-empresa" style="font-size:12px;color:#FF6B00;margin-bottom:20px">—</div>
 
     <!-- 1. DATOS DE LA EMPRESA -->
@@ -3272,7 +3273,7 @@ async function flotaAgregarCliente() {
           <input id="flota-ciudad" type="text" placeholder="Ej: Santiago" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:9px 12px;font-size:13px;color:#fff;font-family:inherit">
         </div>
       </div>
-      <button onclick="flotaGuardarEmpresa()" style="width:100%;background:#FF6B00;border:none;border-radius:8px;padding:10px;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:#000;cursor:pointer">GUARDAR DATOS</button>
+      <button onclick="flotaGuardarEmpresa()" style="width:100%;background:#FF6B00;border:none;border-radius:8px;padding:10px;font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;color:#000;cursor:pointer">GUARDAR DATOS</button>
     </div>
 
     <!-- 2. FLOTA / EQUIPOS -->
@@ -3389,10 +3390,10 @@ async function flotaAgregarCliente() {
           <input id="flota-mantencion" type="text" placeholder="Ej: 25000" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:8px 10px;font-size:13px;color:#fff;font-family:inherit">
         </div>
       </div>
-      <button onclick="flotaGuardarCostos()" style="width:100%;background:#FF6B00;border:none;border-radius:8px;padding:10px;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:#000;cursor:pointer;margin-top:10px">GUARDAR COSTOS</button>
+      <button onclick="flotaGuardarCostos()" style="width:100%;background:#FF6B00;border:none;border-radius:8px;padding:10px;font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;color:#000;cursor:pointer;margin-top:10px">GUARDAR COSTOS</button>
     </div>
 
-    <button onclick="alert('Configuración guardada. Panel operativo FLOTA próximamente.')" style="width:100%;padding:18px;border-radius:12px;border:none;background:#FF6B00;font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;color:#000;cursor:pointer;letter-spacing:0.06em;margin-top:4px">CONFIGURACIÓN COMPLETA ✓</button>
+    <button onclick="alert('Configuración guardada. Panel operativo FLOTA próximamente.')" style="width:100%;padding:18px;border-radius:12px;border:none;background:#FF6B00;font-family:'Outfit',sans-serif;font-size:20px;font-weight:900;color:#000;cursor:pointer;letter-spacing:0.06em;margin-top:4px">CONFIGURACIÓN COMPLETA ✓</button>
   </div>
 </div>
 
