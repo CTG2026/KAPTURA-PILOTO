@@ -1587,7 +1587,6 @@ function nuevoServicio() {
 }
 
 init();
-document.addEventListener("DOMContentLoaded", cargarSesionConductor);
 
 async function nuevoUsuarioIniciar(modo) {
   const empresa = modo + '_' + Date.now().toString().slice(-6);
@@ -3260,6 +3259,7 @@ async function flotaAgregarCliente() {
   cargarConfigFlota(window._flotaEmpresa);
 }
 
+document.addEventListener("DOMContentLoaded", cargarSesionConductor);
 </script>
 
 <!-- ═══ PANTALLA: PIN GO ═══ -->
