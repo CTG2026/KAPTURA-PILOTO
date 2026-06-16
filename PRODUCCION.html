@@ -239,6 +239,16 @@
 
   .margen-positivo { color: var(--green); }
   .margen-negativo { color: var(--red); }
+
+  /* Mayúsculas en inputs de producción */
+  #screen-go-onboarding input[type="text"],
+  #screen-go-home input[type="text"],
+  #screen-flota-config input[type="text"],
+  #screen-admin input[type="text"],
+  #screen-admin-nuevo input[type="text"],
+  #screen-modo-nuevo input[type="text"] {
+    text-transform: uppercase;
+  }
 </style>
 </head>
 <body>
@@ -2571,10 +2581,16 @@ function goDetectarTarifa() {
   <!-- Header fijo -->
   <div style="background:rgba(0,0,0,0.5);padding:12px 16px 10px;border-bottom:1px solid #2A2A2A">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-      <div>
-        <div style="font-family:'DM Sans',sans-serif;font-size:18px;font-weight:900;letter-spacing:0.12em;color:#fff">KAPTURA</div>
-        <div style="font-size:10px;font-weight:700;color:#D8D5CC;letter-spacing:0.2em">GO — Configuración inicial</div>
-      </div>
+      <div style="display:flex;flex-direction:row;align-items:center;gap:8px">
+          <svg width="30" height="30" viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg">
+            <rect width="160" height="160" fill="#0D0D0D"/>
+            <rect x="10" y="10" width="140" height="140" rx="24" fill="#FF6B00"/>
+            <line x1="50" y1="24" x2="50" y2="136" stroke="#000" stroke-width="24" stroke-linecap="round"/>
+            <line x1="50" y1="80" x2="124" y2="24" stroke="#000" stroke-width="24" stroke-linecap="round"/>
+            <line x1="50" y1="80" x2="124" y2="136" stroke="#000" stroke-width="24" stroke-linecap="round"/>
+          </svg>
+          <span style="font-family:'Arial Black',sans-serif;font-size:11px;font-weight:900;color:#fff;letter-spacing:0.15em">KAPTURA</span>
+        </div>
       <div id="go-step-num" style="font-size:11px;color:rgba(255,255,255,0.4)">Paso 1 de 6</div>
     </div>
     <div style="display:flex;align-items:center;gap:6px">
@@ -2923,10 +2939,16 @@ function goDetectarTarifa() {
 <div class="screen" id="screen-go-home" style="padding:0;background:#0D0D0D;min-height:100vh">
 
   <div style="background:rgba(0,0,0,0.3);padding:12px 16px 10px;border-bottom:1px solid rgba(255,255,255,0.1);display:flex;justify-content:space-between;align-items:center">
-    <div>
-      <div style="font-family:'DM Sans',sans-serif;font-size:18px;font-weight:900;letter-spacing:0.12em;color:#fff">KAPTURA</div>
-      <div style="font-size:10px;font-weight:700;color:#D8D5CC;letter-spacing:0.2em">GO</div>
-    </div>
+      <div style="display:flex;flex-direction:row;align-items:center;gap:8px">
+          <svg width="30" height="30" viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg">
+            <rect width="160" height="160" fill="#0D0D0D"/>
+            <rect x="10" y="10" width="140" height="140" rx="24" fill="#FF6B00"/>
+            <line x1="50" y1="24" x2="50" y2="136" stroke="#000" stroke-width="24" stroke-linecap="round"/>
+            <line x1="50" y1="80" x2="124" y2="24" stroke="#000" stroke-width="24" stroke-linecap="round"/>
+            <line x1="50" y1="80" x2="124" y2="136" stroke="#000" stroke-width="24" stroke-linecap="round"/>
+          </svg>
+          <span style="font-family:'Arial Black',sans-serif;font-size:11px;font-weight:900;color:#fff;letter-spacing:0.15em">KAPTURA</span>
+        </div>
     <div style="display:flex;gap:8px;align-items:center">
       <button onclick="goAbrirConfig()" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:6px 10px;display:flex;align-items:center;gap:5px;cursor:pointer">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -3253,8 +3275,16 @@ async function flotaAgregarCliente() {
 <!-- ═══ PANTALLA: PIN GO ═══ -->
 <div class="screen" id="screen-pin-go" style="background:#0D0D0D;padding:0;min-height:100vh">
   <div style="padding:48px 24px 0;text-align:center">
-    <div style="font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;letter-spacing:0.25em;color:rgba(255,255,255,0.4);margin-bottom:6px">KAPTURA</div>
-    <div style="font-family:'DM Sans',sans-serif;font-size:36px;font-weight:900;letter-spacing:0.06em;color:#FF6B00;margin-bottom:32px">PILOTO</div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:8px;margin-bottom:32px">
+      <svg width="80" height="80" viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg">
+        <rect width="160" height="160" fill="#0D0D0D"/>
+        <rect x="10" y="10" width="140" height="140" rx="24" fill="#FF6B00"/>
+        <line x1="50" y1="24" x2="50" y2="136" stroke="#000" stroke-width="24" stroke-linecap="round"/>
+        <line x1="50" y1="80" x2="124" y2="24" stroke="#000" stroke-width="24" stroke-linecap="round"/>
+        <line x1="50" y1="80" x2="124" y2="136" stroke="#000" stroke-width="24" stroke-linecap="round"/>
+      </svg>
+      <span style="font-family:'Arial Black',sans-serif;font-size:16px;font-weight:900;color:#fff;letter-spacing:0.3em">KAPTURA</span>
+    </div>
     <div style="display:flex;justify-content:center;gap:16px;margin-bottom:12px">
       <div class="go-pin-dot" style="width:14px;height:14px;border-radius:50%;background:rgba(255,255,255,0.2);transition:background 0.2s"></div>
       <div class="go-pin-dot" style="width:14px;height:14px;border-radius:50%;background:rgba(255,255,255,0.2);transition:background 0.2s"></div>
@@ -3282,10 +3312,16 @@ async function flotaAgregarCliente() {
 <!-- ═══ PANTALLA: ADMIN KAPTURA ═══ -->
 <div class="screen" id="screen-admin" style="background:#0D0D0D;padding:0;min-height:100vh">
   <div style="background:rgba(0,0,0,0.4);padding:16px;border-bottom:1px solid #2A2A2A;display:flex;justify-content:space-between;align-items:center">
-    <div>
-      <div style="font-family:'DM Sans',sans-serif;font-size:18px;font-weight:900;letter-spacing:0.12em;color:#FF6B00">KAPTURA</div>
-      <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.5);letter-spacing:0.2em">ADMIN</div>
-    </div>
+      <div style="display:flex;flex-direction:row;align-items:center;gap:8px">
+          <svg width="30" height="30" viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg">
+            <rect width="160" height="160" fill="#0D0D0D"/>
+            <rect x="10" y="10" width="140" height="140" rx="24" fill="#FF6B00"/>
+            <line x1="50" y1="24" x2="50" y2="136" stroke="#000" stroke-width="24" stroke-linecap="round"/>
+            <line x1="50" y1="80" x2="124" y2="24" stroke="#000" stroke-width="24" stroke-linecap="round"/>
+            <line x1="50" y1="80" x2="124" y2="136" stroke="#000" stroke-width="24" stroke-linecap="round"/>
+          </svg>
+          <span style="font-family:'Arial Black',sans-serif;font-size:11px;font-weight:900;color:#fff;letter-spacing:0.15em">KAPTURA</span>
+        </div>
     <button onclick="localStorage.removeItem('kaptura_session');showScreen('screen-pin-go');_goPinIngresado='';actualizarDotsGo();" style="background:transparent;border:1px solid #2A2A2A;border-radius:8px;padding:6px 12px;font-size:11px;color:rgba(255,255,255,0.5);cursor:pointer">Cerrar sesión</button>
   </div>
   <div style="padding:16px">
@@ -3302,10 +3338,16 @@ async function flotaAgregarCliente() {
 <!-- ═══ PANTALLA: GO SERVICIO EN CURSO ═══ -->
 <div class="screen" id="screen-go-servicio" style="background:#0D0D0D;padding:0;min-height:100vh">
   <div style="background:rgba(0,0,0,0.4);padding:12px 16px;border-bottom:1px solid #2A2A2A;display:flex;justify-content:space-between;align-items:center">
-    <div>
-      <div style="font-family:'DM Sans',sans-serif;font-size:18px;font-weight:900;letter-spacing:0.12em;color:#FF6B00">KAPTURA</div>
-      <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.5);letter-spacing:0.2em">GO — EN RUTA</div>
-    </div>
+      <div style="display:flex;flex-direction:row;align-items:center;gap:8px">
+          <svg width="30" height="30" viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg">
+            <rect width="160" height="160" fill="#0D0D0D"/>
+            <rect x="10" y="10" width="140" height="140" rx="24" fill="#FF6B00"/>
+            <line x1="50" y1="24" x2="50" y2="136" stroke="#000" stroke-width="24" stroke-linecap="round"/>
+            <line x1="50" y1="80" x2="124" y2="24" stroke="#000" stroke-width="24" stroke-linecap="round"/>
+            <line x1="50" y1="80" x2="124" y2="136" stroke="#000" stroke-width="24" stroke-linecap="round"/>
+          </svg>
+          <span style="font-family:'Arial Black',sans-serif;font-size:11px;font-weight:900;color:#fff;letter-spacing:0.15em">KAPTURA</span>
+        </div>
     <div id="go-crono" style="font-family:'DM Sans',sans-serif;font-size:28px;font-weight:900;color:#FF6B00;letter-spacing:0.08em">00:00:00</div>
   </div>
   <div style="padding:20px">
@@ -3387,10 +3429,16 @@ async function flotaAgregarCliente() {
 <!-- ═══ PANTALLA: ADMIN NUEVO USUARIO ═══ -->
 <div class="screen" id="screen-admin-nuevo" style="background:#0D0D0D;padding:0;min-height:100vh">
   <div style="background:rgba(0,0,0,0.4);padding:16px;border-bottom:1px solid #2A2A2A;display:flex;justify-content:space-between;align-items:center">
-    <div>
-      <div style="font-family:'DM Sans',sans-serif;font-size:18px;font-weight:900;letter-spacing:0.12em;color:#FF6B00">KAPTURA</div>
-      <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.5);letter-spacing:0.2em">ADMIN — NUEVO USUARIO</div>
-    </div>
+      <div style="display:flex;flex-direction:row;align-items:center;gap:8px">
+          <svg width="30" height="30" viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg">
+            <rect width="160" height="160" fill="#0D0D0D"/>
+            <rect x="10" y="10" width="140" height="140" rx="24" fill="#FF6B00"/>
+            <line x1="50" y1="24" x2="50" y2="136" stroke="#000" stroke-width="24" stroke-linecap="round"/>
+            <line x1="50" y1="80" x2="124" y2="24" stroke="#000" stroke-width="24" stroke-linecap="round"/>
+            <line x1="50" y1="80" x2="124" y2="136" stroke="#000" stroke-width="24" stroke-linecap="round"/>
+          </svg>
+          <span style="font-family:'Arial Black',sans-serif;font-size:11px;font-weight:900;color:#fff;letter-spacing:0.15em">KAPTURA</span>
+        </div>
     <button onclick="showScreen('screen-admin');cargarPanelAdmin()" style="background:transparent;border:1px solid #2A2A2A;border-radius:8px;padding:6px 12px;font-size:11px;color:rgba(255,255,255,0.5);cursor:pointer">← Volver</button>
   </div>
   <div style="padding:16px">
@@ -3450,10 +3498,16 @@ async function flotaAgregarCliente() {
 <div class="screen" id="screen-flota-config" style="background:#0D0D0D;padding:0;min-height:100vh">
 
   <div style="background:rgba(0,0,0,0.4);padding:14px 16px;border-bottom:1px solid #2A2A2A;display:flex;justify-content:space-between;align-items:center">
-    <div>
-      <div style="font-family:'DM Sans',sans-serif;font-size:18px;font-weight:900;color:#FF6B00">KAPTURA</div>
-      <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.5);letter-spacing:0.2em">FLOTA — CONFIGURACIÓN</div>
-    </div>
+      <div style="display:flex;flex-direction:row;align-items:center;gap:8px">
+          <svg width="30" height="30" viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg">
+            <rect width="160" height="160" fill="#0D0D0D"/>
+            <rect x="10" y="10" width="140" height="140" rx="24" fill="#FF6B00"/>
+            <line x1="50" y1="24" x2="50" y2="136" stroke="#000" stroke-width="24" stroke-linecap="round"/>
+            <line x1="50" y1="80" x2="124" y2="24" stroke="#000" stroke-width="24" stroke-linecap="round"/>
+            <line x1="50" y1="80" x2="124" y2="136" stroke="#000" stroke-width="24" stroke-linecap="round"/>
+          </svg>
+          <span style="font-family:'Arial Black',sans-serif;font-size:11px;font-weight:900;color:#fff;letter-spacing:0.15em">KAPTURA</span>
+        </div>
     <button onclick="localStorage.removeItem('kaptura_session');showScreen('screen-pin-go');_goPinIngresado='';actualizarDotsGo();" style="background:transparent;border:1px solid #2A2A2A;border-radius:8px;padding:6px 12px;font-size:11px;color:rgba(255,255,255,0.5);cursor:pointer">Cerrar sesión</button>
   </div>
 
@@ -3754,8 +3808,16 @@ async function flotaAgregarCliente() {
 <!-- ═══ PANTALLA: NUEVO USUARIO — SELECCIÓN MODO ═══ -->
 <div class="screen" id="screen-modo-nuevo" style="background:#0D0D0D;padding:0;min-height:100vh">
   <div style="background:rgba(0,0,0,0.4);padding:14px 16px;border-bottom:1px solid #2A2A2A">
-    <div style="font-family:'DM Sans',sans-serif;font-size:18px;font-weight:900;color:#FF6B00">KAPTURA</div>
-    <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.5);letter-spacing:0.2em">BIENVENIDO</div>
+    <div style="display:flex;flex-direction:row;align-items:center;gap:8px">
+        <svg width="34" height="34" viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg">
+          <rect width="160" height="160" fill="#0D0D0D"/>
+          <rect x="10" y="10" width="140" height="140" rx="24" fill="#FF6B00"/>
+          <line x1="46" y1="26" x2="46" y2="134" stroke="#000" stroke-width="26" stroke-linecap="round"/>
+          <line x1="46" y1="80" x2="128" y2="26" stroke="#000" stroke-width="22" stroke-linecap="round"/>
+          <line x1="46" y1="80" x2="128" y2="134" stroke="#000" stroke-width="22" stroke-linecap="round"/>
+        </svg>
+        <span style="font-family:'Arial Black',sans-serif;font-size:11px;font-weight:900;color:#fff;letter-spacing:0.15em">KAPTURA</span>
+      </div>
   </div>
   <div style="padding:20px">
     <div style="font-family:'DM Sans',sans-serif;font-size:26px;font-weight:900;color:#fff;margin-bottom:6px">¿Qué módulo contrataste?</div>
