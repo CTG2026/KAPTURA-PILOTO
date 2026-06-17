@@ -961,7 +961,7 @@ body{font-family:'DM Sans',sans-serif;background:#0D0D0D;color:#fff;min-height:1
       </div>
       <div style="margin-top:8px">
         <label class="lbl">Fecha término del servicio</label>
-        <input class="inp" id="reg-fecha-termino" type="date" onchange="onFechaTermino()" style="border-color:var(--orange);background:#FFFBEB">
+        <input class="inp" id="reg-fecha-termino" type="date" onchange="onFechaTermino()" style="border-color:#FF6B00">
       </div></div>
       <div class="section-ttl">📍 Puntos de Entrega</div>
       <div id="puntos-container"></div>
@@ -1025,7 +1025,7 @@ body{font-family:'DM Sans',sans-serif;background:#0D0D0D;color:#fff;min-height:1
       <button class="modal-cls" onclick="cerrar('modal-costos')">✕</button>
     </div>
     <div class="modal-body">
-      <div style="background:#FEF3C7;border-radius:8px;padding:10px 12px;margin-bottom:14px;border:1px solid var(--orange)">
+      <div style="background:rgba(255,107,0,0.1);border-radius:8px;padding:10px 12px;margin-bottom:14px;border:1px solid #FF6B00">
         <div style="font-size:9px;font-weight:800;color:#92400E;letter-spacing:0.1em;margin-bottom:6px">RANGO GPS — FECHA INICIO → FECHA TÉRMINO</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
           <div><label class="lbl">Fecha Inicio (asignación)</label><input class="inp" id="cos-fecha-inicio" type="date" readonly style=""></div>
@@ -1038,18 +1038,18 @@ body{font-family:'DM Sans',sans-serif;background:#0D0D0D;color:#fff;min-height:1
       <!-- A COSTOS DIRECTOS -->
       <div class="section-ttl">⚙ A — Costos Directos</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
-        <div class="fld"><label class="lbl">Km GPS <span id="lbl-km" style="font-size:8px;font-weight:800;background:#FEF3C7;color:#92400E;padding:1px 5px;border-radius:3px">PENDIENTE</span></label><input class="inp" id="cos-km" type="number" placeholder="0" oninput="calcCostos();recalcRendimientoCargas()"></div>
+        <div class="fld"><label class="lbl">Km GPS <span id="lbl-km" style="font-size:8px;font-weight:800;background:rgba(255,107,0,0.2);color:#FF6B00;padding:1px 5px;border-radius:3px">PENDIENTE</span></label><input class="inp" id="cos-km" type="number" placeholder="0" oninput="calcCostos();recalcRendimientoCargas()"></div>
         <div class="fld"><label class="lbl">Litros teórico <span style="font-size:8px;font-weight:800;background:#FF6B00;color:#fff;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-litros" style=""></div>
-        <div class="fld"><label class="lbl">Estación de servicio <span style="font-size:8px;font-weight:800;background:#D1FAE5;color:#065F46;padding:1px 5px;border-radius:3px" id="lbl-litros-real">—</span></label>
-          <input class="inp" id="cos-litros-real" readonly style="background:var(--g50);color:#065F46">
+        <div class="fld"><label class="lbl">Estación de servicio <span style="font-size:8px;font-weight:800;background:rgba(34,197,94,0.2);color:#22c55e;padding:1px 5px;border-radius:3px" id="lbl-litros-real">—</span></label>
+          <input class="inp" id="cos-litros-real" readonly style="color:#22c55e">
           <div id="cos-rendimiento-cargas" style="font-size:10px;font-weight:700;color:#FF6B00;margin-top:4px;display:none">
             📊 Rendimiento según cargas: <span id="cos-rend-valor">—</span> km/lt
             <span style="font-size:9px;color:var(--g400);margin-left:4px">(<span id="cos-rend-km">—</span> km / <span id="cos-rend-lt">—</span> lt desde inicio Kaptura)</span>
           </div>
         </div>
         <div class="fld"><label class="lbl">Combustible <span style="font-size:8px;font-weight:800;background:#FF6B00;color:#fff;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-comb" oninput="calcCostos()" style=""></div>
-        <div class="fld"><label class="lbl">TAG Autopista <span id="lbl-tag" style="font-size:8px;font-weight:800;background:#FEF3C7;color:#92400E;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-tag" type="number" placeholder="0" oninput="calcCostos()"></div>
-        <div class="fld"><label class="lbl">Peajes Ruta <span id="lbl-peajes" style="font-size:8px;font-weight:800;background:#FEF3C7;color:#92400E;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-peajes" type="number" placeholder="0" oninput="calcCostos()"></div>
+        <div class="fld"><label class="lbl">TAG Autopista <span id="lbl-tag" style="font-size:8px;font-weight:800;background:rgba(255,107,0,0.2);color:#FF6B00;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-tag" type="number" placeholder="0" oninput="calcCostos()"></div>
+        <div class="fld"><label class="lbl">Peajes Ruta <span id="lbl-peajes" style="font-size:8px;font-weight:800;background:rgba(255,107,0,0.2);color:#FF6B00;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-peajes" type="number" placeholder="0" oninput="calcCostos()"></div>
       </div>
       <!-- B OPERACIONAL -->
       <div class="section-ttl">📊 B — Operacional</div>
@@ -1089,7 +1089,7 @@ body{font-family:'DM Sans',sans-serif;background:#0D0D0D;color:#fff;min-height:1
         </div>
       </div>
       <!-- MARGEN -->
-      <div style="background:#152038;border-radius:10px;padding:14px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div style="background:#0D0D0D;border-radius:10px;padding:14px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
         <div>
           <div style="font-size:9px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.45);margin-bottom:4px">Margen Servicio</div>
           <div style="font-family:'DM Sans',sans-serif;font-size:26px;font-weight:900;line-height:1" id="cos-margen">$—</div>
@@ -1151,7 +1151,7 @@ async function abrirRendFlota() {
   const flota = DB.flota.filter(f => f.activo !== false);
   const lista = document.getElementById('rend-flota-list');
   lista.innerHTML = flota.map(f => `
-    <div style="display:flex;align-items:center;gap:10px;padding:8px;background:var(--g50);border-radius:8px;border:1px solid var(--g200)">
+    <div style="display:flex;align-items:center;gap:10px;padding:8px;background:#1A1A1A;border-radius:8px;border:1px solid #2A2A2A">
       <div style="flex:1">
         <div style="font-weight:700;font-size:13px">${f.patente}</div>
         <div style="font-size:11px;color:var(--g400)">${f.tipo||'—'}</div>
@@ -1425,7 +1425,7 @@ function renderDetalleTab() {
     thead.innerHTML = '<th style="padding:8px;text-align:left">Fecha</th><th style="padding:8px;text-align:left">Equipo</th><th style="padding:8px;text-align:left">Descripción</th><th style="padding:8px;text-align:right">Monto Neto</th><th style="padding:8px;text-align:center">Foto</th><th style="padding:8px"></th>';
     const rows = DB_gastos.filter(g=>g.categoria==='inversion'&&(!filtPat||g.patente===filtPat));
     tbody.innerHTML = rows.length===0 ? '<tr><td colspan="6" style="padding:16px;text-align:center;color:var(--g400)">Sin gastos de inversión</td></tr>'
-      : rows.map(g=>`<tr style="border-bottom:1px solid var(--g100);background:#FFF7ED">
+      : rows.map(g=>`<tr style="border-bottom:1px solid #2A2A2A;background:#1A1A1A">
           <td style="padding:7px">${g.fecha}</td>
           <td style="padding:7px;font-weight:700">${g.patente||'—'}</td>
           <td style="padding:7px;color:var(--g500)">${g.descripcion||'—'}</td>
@@ -1545,7 +1545,7 @@ function renderGastosResumen() {
       <div style="font-size:18px;font-weight:900;color:#EF4444">${fmt(total)}</div>
     </div>`).join('');
   const invCards = Object.entries(porInversion).map(([pat,total]) => `
-    <div style="background:#FFF7ED;border-radius:8px;padding:12px;border-left:3px solid #F59E0B">
+    <div style="background:rgba(255,107,0,0.1);border-radius:8px;padding:12px;border-left:3px solid #FF6B00">
       <div style="font-weight:900;font-size:14px">${pat}</div>
       <div style="font-size:11px;color:#92400E;margin-bottom:4px">🔧 Inversión / Puesta en marcha</div>
       <div style="font-size:18px;font-weight:900;color:#D97706">${fmt(total)}</div>
@@ -1635,7 +1635,7 @@ function toggleGastoEquipo() {
   const nProrrateo = parseInt(DB.config['prorrateo_equipos']||6);
   if(!field) return;
   if(cat === 'distribucion') {
-    field.innerHTML = `<label class="lbl">Equipo</label><div style="padding:8px;background:var(--g50);border-radius:6px;font-size:12px;color:var(--g500)">📋 Se prorrateará entre <strong>${nProrrateo} equipos</strong> de la flota</div>`;
+    field.innerHTML = `<label class="lbl">Equipo</label><div style="padding:8px;background:#1A1A1A;border-radius:6px;font-size:12px;color:rgba(255,255,255,0.6)">📋 Se prorrateará entre <strong>${nProrrateo} equipos</strong> de la flota</div>`;
   } else {
     field.innerHTML = `<label class="lbl">Equipo</label><select class="inp" id="gasto-patente"><option value="">Seleccione equipo...</option>${DB.flota.filter(f=>f.activo!==false).map(f=>`<option value="${f.patente}">${f.patente} — ${f.tipo||''}</option>`).join('')}</select>`;
   }
@@ -2466,7 +2466,7 @@ function puntosHTML(p, pi) {
         <div id="guia-card-${pi}-${gi}" style="margin-bottom:6px">
           <!-- Vista normal -->
           <div id="guia-view-${pi}-${gi}" style="display:flex;align-items:center;gap:8px;background:rgba(34,197,94,0.1);border-radius:8px;padding:6px 10px;border:1px solid rgba(34,197,94,0.3)">
-            ${g.img_url ? `<img src="${g.img_url}" style="width:48px;height:48px;object-fit:cover;border-radius:6px;cursor:pointer" onclick="window.open('${g.img_url}','_blank')">` : '<div style="width:48px;height:48px;background:#D1FAE5;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:18px">📄</div>'}
+            ${g.img_url ? `<img src="${g.img_url}" style="width:48px;height:48px;object-fit:cover;border-radius:6px;cursor:pointer" onclick="window.open('${g.img_url}','_blank')">` : '<div style="width:48px;height:48px;background:rgba(34,197,94,0.15);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:18px">📄</div>'}
             <div style="flex:1">
               <div style="font-size:11px;font-weight:800;color:#22c55e">Guía N° ${g.num_guia}</div>
               <div style="font-size:10px;color:rgba(255,255,255,0.5)">${g.fecha_guia||'—'}</div>
