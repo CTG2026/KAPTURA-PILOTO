@@ -1608,20 +1608,32 @@ async function nuevoUsuarioIniciar(modo) {
   window._goModo = modo;
 
   if(modo === 'go' || modo === 'pro') {
-    const {error} = await supa.from('kaptura_go_usuarios').insert({
-      empresa, pin:'1234', onboarding_completo:false, clientes:[]
+    // Crear usuario en kaptura_usuarios con PIN temporal
+    const pinTemp = '1234';
+    const {error: e1} = await supa.from('kaptura_usuarios').insert({
+      pin: pinTemp, rol: modo, empresa, nombre: 'Nuevo usuario', activo: true
     });
-    if(error) { alert('Error: '+error.message); return; }
+    if(e1) { alert('Error creando usuario: '+e1.message); return; }
+
+    // Crear perfil GO
+    const {error: e2} = await supa.from('kaptura_go_usuarios').insert({
+      empresa, pin: pinTemp, onboarding_completo: false, clientes: []
+    });
+    if(e2) { alert('Error creando perfil: '+e2.message); return; }
+
     const sess = JSON.parse(localStorage.getItem('kaptura_session')||'{}');
     sess.empresa = empresa;
     sess.modo = modo;
     localStorage.setItem('kaptura_session', JSON.stringify(sess));
     _sessionConductor = sess;
-    window._goUsuario = {empresa, pin:'1234', onboarding_completo:false, clientes:[]};
+    window._goUsuario = {empresa, pin: pinTemp, onboarding_completo: false, clientes: []};
     goIniciarOnboarding();
+
   } else if(modo === 'flota') {
-    // Crear empresa FLOTA
-    const {error} = await supa.from('kaptura_usuarios').update({empresa}).eq('pin','1234');
+    // Crear empresa FLOTA en kaptura_usuarios
+    const {error} = await supa.from('kaptura_usuarios').insert({
+      pin: '1234_flota_'+Date.now().toString().slice(-4), rol:'coordinador', empresa, nombre:'Coordinador', activo:true
+    });
     const sess = JSON.parse(localStorage.getItem('kaptura_session')||'{}');
     sess.empresa = empresa;
     sess.modo = modo;
@@ -2512,14 +2524,53 @@ async function goGuardarOnboarding() {
   const btn = document.getElementById('go-btn-finalizar');
   if(btn) { btn.textContent = 'Guardando...'; btn.disabled = true; }
   const draft = window._goDraft;
-  draft.onboarding_completo = true;
-  const { id: _id, created_at: _ca, ...payload } = draft;
-  const { error } = await supa.from('kaptura_go_usuarios').update(payload).eq('id', draft.id);
-  if(error) {
-    alert('Error al guardar: ' + error.message);
-    if(btn) { btn.textContent = 'FINALIZAR'; btn.disabled = false; }
+  const pinNuevo = draft.pin ? String(draft.pin).trim() : '';
+  const empresa = draft.empresa || window._goUsuario?.empresa;
+
+  if(!empresa) {
+    alert('Error: empresa no definida. Vuelve a ingresar.');
+    if(btn) { btn.textContent = 'GUARDAR ✓'; btn.disabled = false; }
     return;
   }
+
+  if(pinNuevo && pinNuevo.length === 4 && pinNuevo !== '1234') {
+    // Verificar que el PIN no esté en uso
+    const {data: pinExiste} = await supa.from('kaptura_usuarios').select('pin').eq('pin', pinNuevo).single();
+    if(pinExiste) {
+      alert('El PIN ' + pinNuevo + ' ya está en uso. Elige otro.');
+      if(btn) { btn.textContent = 'GUARDAR ✓'; btn.disabled = false; }
+      return;
+    }
+    // Actualizar PIN en kaptura_usuarios
+    await supa.from('kaptura_usuarios').update({pin: pinNuevo, nombre: draft.nombre}).eq('empresa', empresa);
+    // Actualizar sesión
+    const sess = JSON.parse(localStorage.getItem('kaptura_session')||'{}');
+    sess.pin = pinNuevo;
+    sess.nombre = draft.nombre;
+    localStorage.setItem('kaptura_session', JSON.stringify(sess));
+  }
+
+  draft.onboarding_completo = true;
+  draft.empresa = empresa;
+
+  // Verificar si ya existe fila en kaptura_go_usuarios
+  const {data: existing} = await supa.from('kaptura_go_usuarios').select('id').eq('empresa', empresa).single();
+  let error;
+  if(existing) {
+    const {id: _id, created_at: _ca, ...payload} = draft;
+    const r = await supa.from('kaptura_go_usuarios').update(payload).eq('empresa', empresa);
+    error = r.error;
+  } else {
+    const r = await supa.from('kaptura_go_usuarios').insert(draft);
+    error = r.error;
+  }
+
+  if(error) {
+    alert('Error al guardar: ' + error.message);
+    if(btn) { btn.textContent = 'GUARDAR ✓'; btn.disabled = false; }
+    return;
+  }
+
   window._goUsuario = draft;
   goMostrarHome();
 }
