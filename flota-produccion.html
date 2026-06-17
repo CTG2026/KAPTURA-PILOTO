@@ -3717,7 +3717,7 @@ async function iniciarLogin() {
     try {
       const sess = JSON.parse(saved);
       console.log('ROL:', sess.rol, 'EMPRESA:', sess.empresa);
-      if(sess.pin && sess.empresa && ['coordinador','controller','administrador','conductor'].includes(sess.rol)) {
+      if(sess.pin && sess.empresa && (['coordinador','controller','administrador','conductor'].includes(sess.rol) || sess.modo === 'flota')) {
         _sessionUsuario = sess;
         document.getElementById('login-screen').style.display = 'none';
         document.getElementById('pantalla-modulos').style.display = 'none';
