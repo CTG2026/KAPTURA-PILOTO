@@ -1067,7 +1067,19 @@ async function validarPinGo() {
       return;
     }
     if(usr.rol === 'admin_kaptura') { cargarPanelAdmin(); return; }
-    if(['coordinador','controller','administrador','conductor'].includes(usr.rol)) {
+    if(['coordinador','controller','administrador'].includes(usr.rol)) {
+      // Verificar si tiene equipos — si no, completar onboarding primero
+      const {data: equipos} = await supa.from('kaptura_flota').select('id').eq('empresa', usr.empresa).eq('activo', true).limit(1);
+      if(!equipos || equipos.length === 0) {
+        // No tiene equipos — ir a completar configuración
+        window._flotaEmpresa = usr.empresa;
+        cargarConfigFlota(usr.empresa);
+        return;
+      }
+      window.location.href = 'flota-produccion.html';
+      return;
+    }
+    if(usr.rol === 'conductor') {
       window.location.href = 'flota-produccion.html';
       return;
     }
