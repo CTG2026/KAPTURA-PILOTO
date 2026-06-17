@@ -2175,7 +2175,7 @@ function filaHTML(s,i) {
   const tarifaFinal = pFinal?.valor || 0;
   const tarifaTotal = s.tarifa_neta || (tarifaFinal + ptsVal) || 0;
   const tarifa      = tarifaTotal ? fmt(tarifaTotal) : '—';
-  const totalIngVal = s.ingreso_total || tarifaTotal || 0;
+  const totalIngVal = s.ingreso_total || (tarifaFinal + ptsVal) || tarifaTotal || 0;
   const totalIng    = totalIngVal ? fmt(totalIngVal) : '—';
   const costos    = s.total_costos ? fmt(s.total_costos) : '—';
   const margenVal = s.margen_servicio||s.margen||0;
@@ -2626,20 +2626,21 @@ async function guardarBorrador() {
   const fechaTerm = document.getElementById('reg-fecha-termino').value;
   const final = puntosData.find(p=>p.tipo==='final');
   const ints  = puntosData.filter(p=>p.tipo==='intermedio');
-  const tarifa = final?.valor || 0;
-  const nguia  = puntosData[0]?.num_guia || '';
-  const destino = final?.destino || '';
+  const tarifa    = final?.valor || 0;
+  const valorPts  = ints.reduce((a,p)=>a+(p.valor||0),0);
+  const ingreso   = tarifa + valorPts;
+  const nguia     = puntosData[0]?.num_guia || '';
+  const destino   = final?.destino || '';
   const puntosJSON = JSON.stringify(puntosData.map(p=>({tipo:p.tipo,destino:p.destino,valor:p.valor||0,num_guia:p.num_guia||'',guias:p.guias||[]})));
-  const tipoEntrega = document.getElementById('reg-tipo-entrega')?.value || 'normal';
-  const obsConduc   = document.getElementById('reg-observacion')?.value || '';
 
   const {error} = await supa.from('servicios_piloto').update({
     estado:'borrador', destino, num_guia:nguia, tarifa_neta:tarifa,
+    ingreso_total: ingreso,
     puntos_entrega:puntosData.length,
     notas:'Retorno: '+((s.notas?.match(/Retorno: (\w+)/)||[])[1]||'base')+'|_PUNTOS:'+puntosJSON
   }).eq('id',s.id);
   if(error) { toast('Error: '+error.message); return; }
-  DB.servicios[svcActivoIdx] = {...s, estado:'borrador', destino, num_guia:nguia, tarifa_neta:tarifa, _puntos:puntosData, _fecha_termino:fechaTerm};
+  DB.servicios[svcActivoIdx] = {...s, estado:'borrador', destino, num_guia:nguia, tarifa_neta:tarifa, ingreso_total:ingreso, _puntos:puntosData, _fecha_termino:fechaTerm};
   cerrar('modal-registrar'); renderServicios(); renderKPIs();
   toast(`✓ Borrador guardado — ${s.servicio_id}`);
 }
