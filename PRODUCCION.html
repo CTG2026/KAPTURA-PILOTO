@@ -1121,6 +1121,9 @@ async function cargarPanelAdmin() {
 
     const pines = data.usuarios.map(u => u.pin).join(', ');
 
+    const btnVerPanel = modo === 'FLOTA'
+      ? '<div style="margin-top:10px"><button onclick="adminEntrarComoFlota(\''+emp+'\',\''+nombre+'\')" style="width:100%;background:#FF6B00;border:none;border-radius:8px;padding:10px;font-size:12px;font-weight:800;color:#000;cursor:pointer;letter-spacing:0.05em">▶ VER PANEL FLOTA</button></div>'
+      : '';
     lista.innerHTML += '<div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:10px;padding:14px;margin-bottom:10px">'
       + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'
       + '<span style="font-size:15px;font-weight:700;color:#fff">' + nombre + '</span>'
@@ -1129,6 +1132,7 @@ async function cargarPanelAdmin() {
       + '<div style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:4px">Empresa: ' + emp + '</div>'
       + '<div style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:4px">PINs: ' + pines + '</div>'
       + '<div style="font-size:12px;color:rgba(255,255,255,0.6)">' + estado + '</div>'
+      + btnVerPanel
       + '</div>';
   });
 }
