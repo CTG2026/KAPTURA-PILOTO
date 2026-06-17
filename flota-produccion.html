@@ -3190,7 +3190,13 @@ async function cargarGPS() {
       const puntoFinal = (s._puntos||puntosData||[]).find(p=>p.tipo==='final');
       const destinoSvc = (puntoFinal?.destino||s.destino||'').toUpperCase().trim();
       const origenSvc = (s?.origen||'').toUpperCase().trim();
-      const destinoConfig = DB_tarifario.find(d=>d.destino===destinoSvc && (d.origen===origenSvc||!d.origen||d.origen==='COLTAUCO'))
+      // Buscar corredor: empresa específica primero, luego global (sin empresa)
+      const empActual = DB._empresa || '';
+      const destinoConfig = 
+        DB_tarifario.find(d=>d.destino===destinoSvc && d.empresa===empActual && d.origen===origenSvc)
+        || DB_tarifario.find(d=>d.destino===destinoSvc && d.empresa===empActual)
+        || DB_tarifario.find(d=>d.destino===destinoSvc && (d.origen===origenSvc||!d.origen||d.origen==='COLTAUCO') && !d.empresa)
+        || DB_tarifario.find(d=>d.destino===destinoSvc && !d.empresa)
         || DB_tarifario.find(d=>d.destino===destinoSvc);
 
       if(destinoConfig) {
