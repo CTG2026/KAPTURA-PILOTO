@@ -3290,7 +3290,8 @@ async function flotaConfigurarCompleto() {
   }
   if(!window._flotaEmpresa) { alert('Error: sesión expirada. Vuelve a ingresar.'); return; }
   await flotaGuardarCostos();
-  alert('Configuración completa guardada.');
+  // Redirigir al panel operativo FLOTA
+  window.location.href = 'FLOTA%20PRODUCCION';
 }
 
 async function flotaGuardarEmpresa() {
