@@ -2258,7 +2258,20 @@ function poblarConfig() {
 
 
 // ══ PASO 0 — ASIGNAR ══
-function abrirAsignar() {
+async function abrirAsignar() {
+  // Si flota o conductores vacíos, recargar frescos desde Supabase
+  if(DB.flota.length === 0 || DB.conductores.length === 0) {
+    const emp = DB._empresa || _sessionUsuario?.empresa || 'global_solutions';
+    if(!DB._empresa) DB._empresa = emp;
+    const [rf, rc, rcl] = await Promise.all([
+      supa.from('kaptura_flota').select('*').eq('empresa', emp).eq('activo', true).order('patente'),
+      supa.from('kaptura_conductores').select('*').eq('empresa', emp).eq('activo', true).order('nombre'),
+      supa.from('kaptura_clientes').select('*').eq('empresa', emp).order('nombre')
+    ]);
+    DB.flota       = rf.data || [];
+    DB.conductores = rc.data || [];
+    DB.clientes    = rcl.data || [];
+  }
   poblarSelects();
   document.getElementById('asig-fecha').value = hoyStr;
   // Pre-seleccionar punto de inicio según servicio anterior del equipo
