@@ -713,27 +713,61 @@ body{font-family:'DM Sans',sans-serif;background:#0D0D0D;color:#fff;min-height:1
     <div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:12px;padding:14px;margin-bottom:12px">
       <div style="font-size:11px;font-weight:700;color:#FF6B00;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px">6. Costos fijos mensuales</div>
       <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:10px">Lo que pagas aunque los camiones no salgan.</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
-        <div>
-          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">TOTAL FIJOS/MES ($)</div>
-          <input id="setup-costo-fijo" type="text" placeholder="Ej: 3600000" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:9px 12px;font-size:13px;color:#fff;font-family:inherit">
+      <button onclick="document.getElementById('setup-cf-lista').style.display=document.getElementById('setup-cf-lista').style.display==='none'?'block':'none'" style="width:100%;background:rgba(255,107,0,0.12);border:1px solid rgba(255,107,0,0.3);border-radius:8px;padding:10px;font-size:13px;font-weight:700;color:#FF6B00;cursor:pointer;margin-bottom:8px">+ Ingresar ítem por ítem</button>
+      <div id="setup-cf-lista" style="display:none;margin-bottom:10px">
+        <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:8px">Ingresa solo los que aplican. KAPTURA suma el total.</div>
+        <div id="setup-cf-items">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #2A2A2A"><div><div style="font-size:12px;color:#fff">Crédito / leasing</div></div><input type="text" data-scf-item="credito" onchange="setupCFSumar()" placeholder="$0" style="width:85px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit"></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #2A2A2A"><div><div style="font-size:12px;color:#fff">Seguro SOAP</div><div style="font-size:10px;color:rgba(255,255,255,0.35)">Anual ÷12</div></div><input type="text" data-scf-item="soap" data-anual="true" onchange="setupCFSumar()" placeholder="$0" style="width:85px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit"></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #2A2A2A"><div><div style="font-size:12px;color:#fff">Seguro de carga</div></div><input type="text" data-scf-item="seguro_carga" onchange="setupCFSumar()" placeholder="$0" style="width:85px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit"></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #2A2A2A"><div><div style="font-size:12px;color:#fff">Permiso de circulación</div><div style="font-size:10px;color:rgba(255,255,255,0.35)">Anual ÷12</div></div><input type="text" data-scf-item="permiso" data-anual="true" onchange="setupCFSumar()" placeholder="$0" style="width:85px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit"></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #2A2A2A"><div><div style="font-size:12px;color:#fff">Revisión técnica</div><div style="font-size:10px;color:rgba(255,255,255,0.35)">Anual ÷12</div></div><input type="text" data-scf-item="revision" data-anual="true" onchange="setupCFSumar()" placeholder="$0" style="width:85px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit"></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #2A2A2A"><div><div style="font-size:12px;color:#fff">GPS / rastreo</div></div><input type="text" data-scf-item="gps" onchange="setupCFSumar()" placeholder="$0" style="width:85px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit"></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #2A2A2A"><div><div style="font-size:12px;color:#fff">Plan de datos</div></div><input type="text" data-scf-item="datos" onchange="setupCFSumar()" placeholder="$0" style="width:85px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit"></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #2A2A2A"><div><div style="font-size:12px;color:#fff">Contador / administración</div></div><input type="text" data-scf-item="contador" onchange="setupCFSumar()" placeholder="$0" style="width:85px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit"></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #2A2A2A"><div><div style="font-size:12px;color:#fff">Estacionamiento / patio</div></div><input type="text" data-scf-item="estacionamiento" onchange="setupCFSumar()" placeholder="$0" style="width:85px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit"></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #2A2A2A"><div><div style="font-size:12px;color:#fff">Depreciación</div></div><input type="text" data-scf-item="depreciacion" onchange="setupCFSumar()" placeholder="$0" style="width:85px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit"></div>
+          <div style="padding:7px 0"><div style="display:flex;gap:6px;align-items:center"><input type="text" placeholder="Otro gasto fijo" style="flex:1;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 8px;font-size:11px;color:#fff;font-family:inherit"><input type="text" data-scf-item="otro" onchange="setupCFSumar()" placeholder="$0" style="width:85px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit"></div></div>
+          <div style="background:rgba(255,107,0,0.1);border:1px solid rgba(255,107,0,0.3);border-radius:8px;padding:10px;margin-top:8px;display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.7)">TOTAL FIJOS/MES</span>
+            <span id="setup-cf-total" style="font-size:20px;font-weight:900;color:#FF6B00">$0</span>
+          </div>
         </div>
+      </div>
+      <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-bottom:4px">O ingresa el total directamente:</div>
+      <input id="setup-costo-fijo" type="text" placeholder="Ej: 3600000" onchange="setupCFActualizar()" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:9px 12px;font-size:14px;color:#fff;font-family:inherit;margin-bottom:8px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
         <div>
           <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">DÍAS OPERATIVOS/MES</div>
-          <input id="setup-dias-op" type="number" placeholder="20" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:9px 12px;font-size:13px;color:#fff;font-family:inherit">
+          <input id="setup-dias-op" type="number" placeholder="20" value="20" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:8px 10px;font-size:13px;color:#fff;font-family:inherit">
         </div>
         <div>
           <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">VIÁTICO/DÍA ($)</div>
-          <input id="setup-viatico" type="text" placeholder="Ej: 12000" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:9px 12px;font-size:13px;color:#fff;font-family:inherit">
-        </div>
-        <div>
-          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">FONDO CONTINGENCIA/MES ($)</div>
-          <input id="setup-fondo" type="text" placeholder="Ej: 150000" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:9px 12px;font-size:13px;color:#fff;font-family:inherit">
+          <input id="setup-viatico" type="text" placeholder="Ej: 12000" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:8px 10px;font-size:13px;color:#fff;font-family:inherit">
         </div>
       </div>
-      <div style="text-align:right">
-        <button class="btn btn-navy" onclick="setupGuardarCostos()">Guardar costos</button>
+    </div>
+
+    <!-- 9. FONDO CONTINGENCIA -->
+    <div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:12px;padding:14px;margin-bottom:12px">
+      <div style="font-size:11px;font-weight:700;color:#FF6B00;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px">9. Fondo de contingencia</div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:10px">Reserva mensual para mantenciones mayores.</div>
+      <button onclick="document.getElementById('setup-mayor-lista').style.display=document.getElementById('setup-mayor-lista').style.display==='none'?'block':'none'" style="width:100%;background:rgba(255,107,0,0.12);border:1px solid rgba(255,107,0,0.3);border-radius:8px;padding:10px;font-size:13px;font-weight:700;color:#FF6B00;cursor:pointer;margin-bottom:8px">+ Ver componentes mayores</button>
+      <div id="setup-mayor-lista" style="display:none;margin-bottom:10px">
+        <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:8px">Ingresa el costo estimado de cada componente. KAPTURA calcula la reserva mensual sugerida.</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #2A2A2A"><div><div style="font-size:12px;color:#fff">Motor</div><div style="font-size:10px;color:rgba(255,255,255,0.35)">$3-8M · 500k–800k km</div></div><input type="text" data-smayor-item="motor" onchange="setupMayorSumar()" placeholder="$0" style="width:85px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #2A2A2A"><div><div style="font-size:12px;color:#fff">Caja de cambios</div><div style="font-size:10px;color:rgba(255,255,255,0.35)">$2.5-5M · 300k–500k km</div></div><input type="text" data-smayor-item="caja" onchange="setupMayorSumar()" placeholder="$0" style="width:85px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #2A2A2A"><div><div style="font-size:12px;color:#fff">Diferencial</div><div style="font-size:10px;color:rgba(255,255,255,0.35)">$1.5-3.5M · 300k–500k km</div></div><input type="text" data-smayor-item="diferencial" onchange="setupMayorSumar()" placeholder="$0" style="width:85px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #2A2A2A"><div><div style="font-size:12px;color:#fff">Embrague</div><div style="font-size:10px;color:rgba(255,255,255,0.35)">$600k-1.5M · 150k–250k km</div></div><input type="text" data-smayor-item="embrague" onchange="setupMayorSumar()" placeholder="$0" style="width:85px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #2A2A2A"><div><div style="font-size:12px;color:#fff">Suspensión</div><div style="font-size:10px;color:rgba(255,255,255,0.35)">$800k-2M · 200k–350k km</div></div><input type="text" data-smayor-item="suspension" onchange="setupMayorSumar()" placeholder="$0" style="width:85px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit"></div>
+        <div style="padding:7px 0"><div style="display:flex;gap:6px;align-items:center"><input type="text" placeholder="Otro componente" style="flex:1;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 8px;font-size:11px;color:#fff;font-family:inherit"><input type="text" data-smayor-item="otro" onchange="setupMayorSumar()" placeholder="$0" style="width:85px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit"></div></div>
+        <div style="background:rgba(255,107,0,0.1);border:1px solid rgba(255,107,0,0.3);border-radius:8px;padding:10px;margin-top:8px;display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.7)">RESERVA SUGERIDA/MES</span>
+          <span id="setup-mayor-total" style="font-size:20px;font-weight:900;color:#FF6B00">$0</span>
+        </div>
       </div>
+      <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-bottom:4px">O ingresa el monto mensual directamente:</div>
+      <input id="setup-fondo" type="text" placeholder="Ej: 150000" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:9px 12px;font-size:14px;color:#fff;font-family:inherit">
     </div>
 
     <!-- 7. MANTENCIÓN Y NEUMÁTICOS -->
@@ -762,8 +796,14 @@ body{font-family:'DM Sans',sans-serif;background:#0D0D0D;color:#fff;min-height:1
       </div>
     </div>
 
+    <div style="height:80px"></div>
   </div>
 </main>
+
+<!-- BOTÓN FIJO SETUP -->
+<div id="btn-setup-fixed" style="display:none;position:fixed;bottom:0;left:0;right:0;padding:12px 16px;background:#0D0D0D;border-top:2px solid #FF6B00;z-index:999">
+  <button onclick="setupGuardarTodo()" style="width:100%;padding:16px;border-radius:12px;border:none;background:#FF6B00;font-size:16px;font-weight:900;color:#000;cursor:pointer">GUARDAR TODA LA CONFIGURACIÓN ✓</button>
+</div>
 
 
 
@@ -3875,6 +3915,9 @@ function setTab(nombre, btn) {
   if(nombre==='resultados') renderResultados();
   if(nombre==='informes') renderInformes();
   if(nombre==='setup') cargarSetup();
+  // Mostrar/ocultar botón fijo SETUP
+  const btnFijo = document.getElementById('btn-setup-fixed');
+  if(btnFijo) btnFijo.style.display = nombre==='setup' ? 'block' : 'none';
 }
 function resetFecha() {
   document.getElementById('filtro-fecha').value = '';
@@ -4203,16 +4246,19 @@ async function setupGuardarEmpresa() {
 
 async function setupGuardarCostos() {
   const emp = DB._empresa;
+  if(!emp) return;
+  const cf   = (document.getElementById('setup-costo-fijo').value||'0').replace(/[^0-9]/g,'');
+  const dias = document.getElementById('setup-dias-op').value||'20';
+  const cfDia = Math.round(parseInt(cf)||0 / (parseInt(dias)||20));
   const rows = [
-    {clave:'costo_fijo_mensual_'+emp, valor:document.getElementById('setup-costo-fijo').value, empresa:emp},
-    {clave:'dias_operativos_'+emp,    valor:document.getElementById('setup-dias-op').value,    empresa:emp},
-    {clave:'viatico_dia_'+emp,        valor:document.getElementById('setup-viatico').value,    empresa:emp},
-    {clave:'fondo_contingencia_'+emp, valor:document.getElementById('setup-fondo').value,      empresa:emp},
+    {clave:'costo_fijo_mensual_'+emp, valor:cf,            empresa:emp},
+    {clave:'costo_fijo_dia_'+emp,     valor:String(cfDia), empresa:emp},
+    {clave:'dias_operativos_'+emp,    valor:dias,          empresa:emp},
+    {clave:'viatico_dia_'+emp,        valor:(document.getElementById('setup-viatico').value||'0').replace(/[^0-9]/g,''), empresa:emp},
+    {clave:'fondo_contingencia_'+emp, valor:(document.getElementById('setup-fondo').value||'0').replace(/[^0-9]/g,''),  empresa:emp},
   ];
-  for(const r of rows) {
-    await supa.from('kaptura_config').upsert(r, {onConflict:'clave,empresa'});
-  }
-  toast('✓ Costos guardados');
+  const {error} = await supa.from('kaptura_config').upsert(rows, {onConflict:'clave,empresa'});
+  if(error) throw new Error(error.message);
 }
 
 async function setupGuardarMant() {
@@ -4318,6 +4364,48 @@ async function setupEliminarTarifa(id) {
   await supa.from('kaptura_tarifarios').delete().eq('id', id);
   toast('Tarifa eliminada');
   cargarSetup();
+}
+
+function setupCFSumar() {
+  let total = 0;
+  document.querySelectorAll('[data-scf-item]').forEach(inp => {
+    const v = parseInt((inp.value||'0').replace(/[^0-9]/g,''))||0;
+    total += inp.dataset.anual ? Math.round(v/12) : v;
+  });
+  document.getElementById('setup-cf-total').textContent = '$' + total.toLocaleString('es-CL');
+  document.getElementById('setup-costo-fijo').value = String(total);
+}
+
+function setupCFActualizar() {
+  const v = parseInt((document.getElementById('setup-costo-fijo').value||'0').replace(/[^0-9]/g,''))||0;
+  document.getElementById('setup-cf-total').textContent = '$' + v.toLocaleString('es-CL');
+}
+
+function setupMayorSumar() {
+  let total = 0;
+  document.querySelectorAll('[data-smayor-item]').forEach(inp => {
+    const v = parseInt((inp.value||'0').replace(/[^0-9]/g,''))||0;
+    total += Math.round(v / 60);
+  });
+  document.getElementById('setup-mayor-total').textContent = '$' + total.toLocaleString('es-CL');
+  document.getElementById('setup-fondo').value = String(total);
+}
+
+async function setupGuardarTodo() {
+  const emp = DB._empresa;
+  if(!emp) { toast('Error: sesión sin empresa'); return; }
+  const btn = document.querySelector('#btn-setup-fixed button');
+  if(btn) { btn.textContent = 'Guardando...'; btn.disabled = true; }
+  try {
+    await setupGuardarEmpresa();
+    await setupGuardarCostos();
+    await setupGuardarMant();
+    toast('✓ Configuración guardada completa');
+  } catch(e) {
+    toast('Error: ' + e.message);
+  } finally {
+    if(btn) { btn.textContent = 'GUARDAR TODA LA CONFIGURACIÓN ✓'; btn.disabled = false; }
+  }
 }
 
 iniciarLogin();
