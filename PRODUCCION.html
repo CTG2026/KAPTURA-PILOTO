@@ -1258,7 +1258,7 @@ function showScreen(id) {
   window.scrollTo(0,0);
   const sinHeader = ['screen-pin-go','screen-go-cargando','screen-go-onboarding',
     'screen-go-guardado','screen-go-home','screen-go-servicio','screen-go-informe-prod',
-    'screen-admin','screen-admin-nuevo','screen-flota-config','screen-modo-nuevo'];
+    'screen-admin','screen-admin-nuevo','screen-flota-config','screen-modo-nuevo','screen-crear-pin'];
   const hdr = document.querySelector('.hdr');
   if(hdr) hdr.style.display = sinHeader.includes(id) ? 'none' : '';
 }
@@ -1630,13 +1630,42 @@ async function nuevoUsuarioIniciar(modo) {
     goIniciarOnboarding();
 
   } else if(modo === 'flota') {
-    // Crear empresa FLOTA en kaptura_usuarios
+    // Guardar empresa temporal y mostrar pantalla crear PIN
+    window._nuevaEmpresa = empresa;
+    window._nuevoModo = modo;
+    document.getElementById('crear-pin-titulo').textContent = 'KAPTURA FLOTA';
+    document.getElementById('crear-pin-nombre').value = '';
+    document.getElementById('crear-pin-input').value = '';
+    document.getElementById('crear-pin-error').textContent = '';
+    showScreen('screen-crear-pin');
+  }
+}
+
+async function crearPinConfirmar() {
+  const nombre = document.getElementById('crear-pin-nombre').value.trim();
+  const pin = document.getElementById('crear-pin-input').value.trim();
+  const errEl = document.getElementById('crear-pin-error');
+
+  if(!nombre) { errEl.textContent = 'Ingresa tu nombre.'; return; }
+  if(!pin || pin.length !== 4 || isNaN(pin)) { errEl.textContent = 'El PIN debe tener exactamente 4 dígitos.'; return; }
+  if(pin === '1234') { errEl.textContent = 'No puedes usar 1234 como PIN definitivo.'; return; }
+
+  // Verificar PIN no en uso
+  const {data: existe} = await supa.from('kaptura_usuarios').select('pin').eq('pin', pin).single();
+  if(existe) { errEl.textContent = 'PIN en uso. Elige otro.'; return; }
+
+  const empresa = window._nuevaEmpresa;
+  const modo = window._nuevoModo;
+  const btn = document.getElementById('crear-pin-btn');
+  btn.textContent = 'Creando...'; btn.disabled = true;
+
+  if(modo === 'flota') {
     const {error} = await supa.from('kaptura_usuarios').insert({
-      pin: '1234_flota_'+Date.now().toString().slice(-4), rol:'coordinador', empresa, nombre:'Coordinador', activo:true
+      pin, rol:'coordinador', empresa, nombre, activo:true
     });
+    if(error) { errEl.textContent = 'Error: '+error.message; btn.textContent = 'CONTINUAR'; btn.disabled=false; return; }
     const sess = JSON.parse(localStorage.getItem('kaptura_session')||'{}');
-    sess.empresa = empresa;
-    sess.modo = modo;
+    sess.empresa = empresa; sess.pin = pin; sess.nombre = nombre; sess.modo = modo;
     localStorage.setItem('kaptura_session', JSON.stringify(sess));
     _sessionConductor = sess;
     window._flotaEmpresa = empresa;
@@ -3936,6 +3965,37 @@ async function flotaAgregarCliente() {
     </div>
 
     <button onclick="localStorage.removeItem('kaptura_session');showScreen('screen-pin-go');_goPinIngresado='';actualizarDotsGo();" style="width:100%;background:transparent;border:1px solid #2A2A2A;border-radius:10px;padding:12px;font-size:13px;color:rgba(255,255,255,0.4);cursor:pointer">← Volver</button>
+  </div>
+</div>
+
+
+<!-- ═══ PANTALLA: CREAR PIN ═══ -->
+<div class="screen" id="screen-crear-pin" style="background:#0D0D0D;padding:0;min-height:100vh">
+  <div style="background:rgba(0,0,0,0.4);padding:14px 16px;border-bottom:1px solid #2A2A2A;display:flex;justify-content:space-between;align-items:center">
+    <div>
+      <div style="font-family:'DM Sans',sans-serif;font-size:18px;font-weight:900;color:#FF6B00">KAPTURA</div>
+      <div id="crear-pin-titulo" style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.5);letter-spacing:0.2em">NUEVO USUARIO</div>
+    </div>
+    <button onclick="showScreen('screen-modo-nuevo')" style="background:transparent;border:1px solid #2A2A2A;border-radius:8px;padding:6px 12px;font-size:11px;color:rgba(255,255,255,0.5);cursor:pointer">← Volver</button>
+  </div>
+  <div style="padding:20px">
+    <div style="font-family:'DM Sans',sans-serif;font-size:24px;font-weight:900;color:#fff;margin-bottom:6px">Crea tu acceso</div>
+    <div style="font-size:13px;color:rgba(255,255,255,0.4);margin-bottom:24px">Define tu nombre y PIN de acceso definitivo.</div>
+
+    <div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:12px;padding:14px;margin-bottom:12px">
+      <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.5);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px">Nombre / Razón social</div>
+      <input id="crear-pin-nombre" type="text" placeholder="Ej: Transportes Madrid" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:10px 12px;font-size:14px;color:#fff;font-family:inherit">
+    </div>
+
+    <div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:12px;padding:14px;margin-bottom:12px">
+      <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.5);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px">PIN definitivo (4 dígitos)</div>
+      <input id="crear-pin-input" type="number" maxlength="4" placeholder="Ej: 5528" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:10px 12px;font-size:18px;color:#fff;font-family:inherit;letter-spacing:0.3em">
+      <div style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:8px">Este será tu PIN para ingresar a KAPTURA. Anótalo en un lugar seguro.</div>
+    </div>
+
+    <div id="crear-pin-error" style="font-size:12px;color:#FF6B00;min-height:18px;margin-bottom:12px"></div>
+
+    <button id="crear-pin-btn" onclick="crearPinConfirmar()" style="width:100%;padding:18px;border-radius:12px;border:none;background:#FF6B00;font-family:'DM Sans',sans-serif;font-size:20px;font-weight:900;color:#000;cursor:pointer;letter-spacing:0.06em">CONTINUAR →</button>
   </div>
 </div>
 
