@@ -1908,8 +1908,8 @@ async function init() {
       supa.from('kaptura_flota').select('*').eq('empresa',emp).order('patente'),
       supa.from('kaptura_conductores').select('*').eq('activo',true).eq('empresa',emp).order('nombre'),
       supa.from('kaptura_clientes').select('*').eq('empresa',emp).order('nombre'),
-      supa.from('kaptura_tarifarios').select('*'),
-      supa.from('kaptura_config').select('*'),
+      supa.from('kaptura_tarifarios').select('*').eq('empresa',emp),
+      supa.from('kaptura_config').select('*').eq('empresa',emp),
       supa.from('servicios_piloto').select('*').eq('empresa',emp).order('created_at',{ascending:false}).limit(500)
     ]);
     DB.flota       = f.data  || [];
@@ -1943,7 +1943,32 @@ async function init() {
       if(!svc.fecha_termino) svc.fecha_termino = svc.fecha;
       return svc;
     });
+    // Mapear config: primero todas las claves tal como están
     (cfg.data||[]).forEach(r => { DB.config[r.clave||r.nombre] = r.valor||r.value; });
+    // Segundo paso: claves con sufijo de empresa → mapear también sin sufijo
+    // Ej: "costo_fijo_mensual_flota_297221" → DB.config["costo_fijo_mensual"]
+    const emp = DB._empresa || '';
+    if(emp) {
+      const sufijo = '_' + emp;
+      (cfg.data||[]).forEach(r => {
+        const clave = r.clave || r.nombre || '';
+        if(clave.endsWith(sufijo)) {
+          const claveBase = clave.slice(0, -sufijo.length);
+          // Solo sobreescribe si no existe ya una clave simple con ese nombre
+          // Las del SETUP tienen prioridad sobre defaults
+          DB.config[claveBase] = r.valor || r.value;
+        }
+      });
+      // Mapeos específicos que el sistema usa con nombres distintos
+      if(DB.config['costo_fijo_mensual']) DB.config['costo_fijo_mes'] = DB.config['costo_fijo_mensual'];
+      if(DB.config['viatico_dia'])        DB.config['viatico']        = DB.config['viatico_dia'];
+      if(DB.config['mant_km'])            DB.config['mant_cada_km']   = DB.config['mant_km'];
+      if(DB.config['mant_costo'])         DB.config['mantencion']     = DB.config['mant_costo'];
+      if(DB.config['neum_costo'])         DB.config['neumaticos']     = DB.config['neum_costo'];
+      if(DB.config['neum_km'])            DB.config['neumaticos_km']  = DB.config['neum_km'];
+      if(DB.config['dias_operativos'])    DB.config['dias_op']        = DB.config['dias_operativos'];
+      if(DB.config['fondo_contingencia']) DB.config['contingencia']   = DB.config['fondo_contingencia'];
+    }
 
     let ck = localStorage.getItem('kaptura_claude_key') || '';
     if(!ck && DB.config['claude_api_key']) {
@@ -4403,7 +4428,20 @@ async function setupGuardarTodo() {
     await setupGuardarEmpresa();
     await setupGuardarCostos();
     await setupGuardarMant();
-    toast('✓ Configuración guardada completa');
+    // Recargar DB para que los selects de asignar tengan los datos frescos
+    const emp = DB._empresa;
+    const [rf, rc, rcl, rt] = await Promise.all([
+      supa.from('kaptura_flota').select('*').eq('empresa', emp).eq('activo', true),
+      supa.from('kaptura_conductores').select('*').eq('empresa', emp).eq('activo', true),
+      supa.from('kaptura_clientes').select('*').eq('empresa', emp),
+      supa.from('kaptura_tarifarios').select('*').eq('empresa', emp)
+    ]);
+    DB.flota       = rf.data || [];
+    DB.conductores = rc.data || [];
+    DB.clientes    = rcl.data || [];
+    DB.tarifarios  = rt.data || [];
+    poblarSelects();
+    toast('✓ Configuración guardada — datos listos para operar');
   } catch(e) {
     toast('Error: ' + e.message);
   } finally {
