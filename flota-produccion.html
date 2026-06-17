@@ -81,8 +81,8 @@ body{font-family:'DM Sans',sans-serif;background:#0D0D0D;color:#fff;min-height:1
 .fld{display:flex;flex-direction:column;margin-bottom:10px}
 .fld2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
 .lbl{font-size:9px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.5);margin-bottom:3px}
-.inp{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;padding:8px 10px;border:1.5px solid #2A2A2A;border-radius:6px;color:#fff;background:#0D0D0D;outline:none;width:100%}
-.inp:focus{border-color:#FF6B00}.inp.pend{border-color:#FF6B00;background:rgba(255,107,0,0.08)}.inp.ok{border-color:#22c55e;background:rgba(34,197,94,0.08)}
+.inp{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;padding:8px 10px;border:none;border-radius:6px;color:#fff;background:#FF6B00;outline:none;width:100%}
+.inp:focus{outline:2px solid #fff;outline-offset:2px}.inp.pend{background:#FF6B00;outline:2px solid #fff}.inp.ok{background:#22c55e}
 .info-box{background:#0D0D0D;border-radius:8px;padding:10px 12px;margin-bottom:14px;border:1px solid #2A2A2A}
 .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:11px}
 .info-item .lbl2{color:rgba(255,255,255,0.4);font-weight:700;font-size:9px;text-transform:uppercase;letter-spacing:0.1em}
@@ -303,23 +303,23 @@ body{font-family:'DM Sans',sans-serif;background:#0D0D0D;color:#fff;min-height:1
     </div>
 
     <!-- KPI total costos -->
-    <div id="costos-total-banner" style="background:#1C2B4A;color:#fff;border-radius:10px;padding:14px 18px;margin-bottom:14px;display:flex;gap:24px;align-items:center;flex-wrap:wrap"></div>
+    <div id="costos-total-banner" style="background:#FF6B00;color:#fff;border-radius:10px;padding:14px 18px;margin-bottom:14px;display:flex;gap:24px;align-items:center;flex-wrap:wrap"></div>
 
     <!-- KPIs por categoría -->
     <div id="costos-kpis" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:16px"></div>
 
     <!-- Tabs detalle -->
     <div style="border-bottom:2px solid var(--g200);margin-bottom:12px;display:flex;gap:0">
-      <button class="btn" id="dtab-combustible" onclick="setDetalleTab('combustible')" style="border-radius:0;border-bottom:2px solid #1E3A5F;font-size:12px;padding:6px 14px">Combustible</button>
-      <button class="btn btn-outline" id="dtab-mantencion" onclick="setDetalleTab('mantencion')" style="border-radius:0;font-size:12px;padding:6px 14px">Mantención</button>
-      <button class="btn btn-outline" id="dtab-inversion" onclick="setDetalleTab('inversion')" style="border-radius:0;font-size:12px;padding:6px 14px">Inversión</button>
-      <button class="btn btn-outline" id="dtab-servicios" onclick="setDetalleTab('servicios')" style="border-radius:0;font-size:12px;padding:6px 14px">Desde Servicios</button>
+      <button class="btn" id="dtab-combustible" onclick="setDetalleTab('combustible')" style="border-radius:6px;background:#FF6B00;color:#fff;font-size:12px;padding:6px 14px">Combustible</button>
+      <button class="btn btn-outline" id="dtab-mantencion" onclick="setDetalleTab('mantencion')" style="border-radius:6px;background:#2A2A2A;color:rgba(255,255,255,0.5);border:none;font-size:12px;padding:6px 14px">Mantención</button>
+      <button class="btn btn-outline" id="dtab-inversion" onclick="setDetalleTab('inversion')" style="border-radius:6px;background:#2A2A2A;color:rgba(255,255,255,0.5);border:none;font-size:12px;padding:6px 14px">Inversión</button>
+      <button class="btn btn-outline" id="dtab-servicios" onclick="setDetalleTab('servicios')" style="border-radius:6px;background:#2A2A2A;color:rgba(255,255,255,0.5);border:none;font-size:12px;padding:6px 14px">Desde Servicios</button>
     </div>
 
     <!-- Tabla detalle -->
     <div style="overflow-x:auto">
       <table style="width:100%;border-collapse:collapse;font-size:13px">
-        <thead><tr style="background:#1C2B4A;color:#fff" id="costos-thead"></tr></thead>
+        <thead><tr style="background:#0D0D0D;color:rgba(255,255,255,0.5)" id="costos-thead"></tr></thead>
         <tbody id="gastos-tbody"></tbody>
       </table>
     </div>
@@ -383,7 +383,7 @@ body{font-family:'DM Sans',sans-serif;background:#0D0D0D;color:#fff;min-height:1
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
       <div style="font-family:'DM Sans',sans-serif;font-size:20px;font-weight:900;letter-spacing:0.05em">LIQUIDACIONES</div>
     </div>
-    <div style="background:#F9FAFB;border-radius:12px;padding:40px;text-align:center;color:#9CA3AF">
+    <div style="background:#1A1A1A;border-radius:12px;padding:40px;text-align:center;color:rgba(255,255,255,0.4)">
       <div style="font-size:32px;margin-bottom:12px">🚧</div>
       <div style="font-size:14px;font-weight:700">Módulo en construcción</div>
       <div style="font-size:12px;margin-top:4px">Próximamente disponible</div>
@@ -438,9 +438,9 @@ body{font-family:'DM Sans',sans-serif;background:#0D0D0D;color:#fff;min-height:1
         <!-- Tabla -->
         <table style="width:100%;border-collapse:collapse">
           <thead>
-            <tr style="background:#F0FDF4">
-              <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:800;color:var(--navy);letter-spacing:0.08em;border-bottom:1.5px solid #E5E7EB">CONCEPTO</th>
-              <th style="padding:10px 16px;text-align:right;font-size:11px;font-weight:800;color:var(--navy);letter-spacing:0.08em;border-bottom:1.5px solid #E5E7EB">MONTO</th>
+            <tr style="background:#0D0D0D">
+              <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:800;color:#FF6B00;letter-spacing:0.08em;border-bottom:1.5px solid #2A2A2A">CONCEPTO</th>
+              <th style="padding:10px 16px;text-align:right;font-size:11px;font-weight:800;color:#FF6B00;letter-spacing:0.08em;border-bottom:1.5px solid #2A2A2A">MONTO</th>
             </tr>
           </thead>
           <tbody id="inf-er-body"></tbody>
@@ -452,7 +452,7 @@ body{font-family:'DM Sans',sans-serif;background:#0D0D0D;color:#fff;min-height:1
   <!-- TAB CONFIG -->
   <div id="tab-config" style="display:none">
     <div class="sec-ttl" style="margin-bottom:12px">Configuración</div>
-    <div style="background:#fff;border-radius:10px;padding:16px;box-shadow:var(--sh);border:1px solid var(--g200)">
+    <div style="background:#1A1A1A;border-radius:10px;padding:16px;border:1px solid #2A2A2A">
       <div class="fld2">
         <div class="fld">
           <label class="lbl">Precio Litro ($) <span style="font-size:9px;color:var(--g400)">(modo manual)</span></label>
@@ -520,14 +520,14 @@ body{font-family:'DM Sans',sans-serif;background:#0D0D0D;color:#fff;min-height:1
       <div style="border-top:1px solid var(--g200);margin-top:16px;padding-top:16px">
         <div style="font-size:11px;font-weight:800;letter-spacing:0.08em;color:var(--g400);margin-bottom:10px">CARGA DE DATOS</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-          <div style="border:1px solid var(--g200);border-radius:8px;padding:12px">
+          <div style="border:1px solid #2A2A2A;border-radius:8px;padding:12px;background:#0D0D0D">
             <div style="font-weight:700;font-size:12px;margin-bottom:4px">📡 GPS Forguard (.xlsx)</div>
             <div style="font-size:11px;color:var(--g400);margin-bottom:8px">Exportar desde portal Forguard</div>
             <input type="file" id="upload-gps" accept=".xlsx" style="display:none" onchange="procesarGPS(this)">
             <button class="btn btn-outline" style="width:100%;font-size:11px" onclick="document.getElementById('upload-gps').click()">⬆ Subir GPS</button>
             <div id="gps-status" style="font-size:11px;margin-top:6px;color:var(--g400);min-height:16px"></div>
           </div>
-          <div style="border:1px solid var(--g200);border-radius:8px;padding:12px">
+          <div style="border:1px solid #2A2A2A;border-radius:8px;padding:12px;background:#0D0D0D">
             <div style="font-weight:700;font-size:12px;margin-bottom:4px">⛽ Copec (.csv)</div>
             <div style="font-size:11px;color:var(--g400);margin-bottom:8px">Exportar desde portal Copec</div>
             <input type="file" id="upload-copec" accept=".csv" style="display:none" onchange="procesarCopec(this)">
@@ -567,12 +567,12 @@ body{font-family:'DM Sans',sans-serif;background:#0D0D0D;color:#fff;min-height:1
     <div class="modal-hdr">
       <div>
         <div style="font-family:'DM Sans',sans-serif;font-size:16px;font-weight:900;letter-spacing:0.05em">EDITAR SERVICIO</div>
-        <div style="font-size:11px;color:#6B7280;margin-top:2px" id="editar-cerrado-sub">—</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.5);margin-top:2px" id="editar-cerrado-sub">—</div>
       </div>
       <button class="modal-cls" onclick="cerrar('modal-editar-cerrado')">✕</button>
     </div>
     <div style="padding:16px;display:flex;flex-direction:column;gap:10px">
-      <div style="font-size:11px;color:#6B7280;margin-bottom:4px">Selecciona la fase que deseas editar:</div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.5);margin-bottom:4px">Selecciona la fase que deseas editar:</div>
       <button class="btn btn-navy" onclick="editarFaseCerrado('asignar')" style="width:100%;justify-content:flex-start;gap:10px">
         📋 <span>Asignación</span>
       </button>
@@ -630,7 +630,7 @@ body{font-family:'DM Sans',sans-serif;background:#0D0D0D;color:#fff;min-height:1
           <option value="base">🏠 Sale desde Base (Coltauco)</option>
           <option value="destino_anterior">📍 Sale desde destino del servicio anterior</option>
         </select>
-        <div style="font-size:10px;color:#6B7280;margin-top:4px" id="asig-punto-inicio-hint"></div>
+        <div style="font-size:10px;color:rgba(255,255,255,0.5);margin-top:4px" id="asig-punto-inicio-hint"></div>
       </div>
     </div>
     <div class="modal-ftr">
@@ -655,10 +655,10 @@ body{font-family:'DM Sans',sans-serif;background:#0D0D0D;color:#fff;min-height:1
         <div class="info-item"><div class="lbl2">ORIGEN</div><div class="val" id="ini-origen">—</div></div>
       </div></div>
       <div class="fld2">
-        <div class="fld"><label class="lbl">Fecha inicio</label><input class="inp" id="ini-fecha-inicio" type="date" readonly style="background:var(--g50)"></div>
+        <div class="fld"><label class="lbl">Fecha inicio</label><input class="inp" id="ini-fecha-inicio" type="date" readonly style=""></div>
         <div class="fld"><label class="lbl">Hora inicio (producción)</label><input class="inp" id="ini-hora" type="time" disabled style="background:var(--g100);color:var(--g400);cursor:not-allowed"></div>
       </div>
-      <div style="background:#EEF2FF;border-radius:8px;padding:10px 12px;font-size:11px;color:#3730A3;font-weight:700">
+      <div style="background:rgba(255,107,0,0.12);border-radius:8px;padding:10px 12px;font-size:11px;color:#FF6B00;font-weight:700;border:1px solid rgba(255,107,0,0.3)">
         ℹ️ Al confirmar, el servicio cambia a EN PROCESO.
       </div>
     </div>
@@ -730,7 +730,7 @@ body{font-family:'DM Sans',sans-serif;background:#0D0D0D;color:#fff;min-height:1
           <option value="pernocta">Pernocta en destino</option>
         </select>
       </div>
-      <div style="background:#EEF2FF;border-radius:8px;padding:10px 12px;font-size:11px;color:#3730A3;font-weight:700">
+      <div style="background:rgba(255,107,0,0.12);border-radius:8px;padding:10px 12px;font-size:11px;color:#FF6B00;font-weight:700;border:1px solid rgba(255,107,0,0.3)">
         ✓ Al confirmar, el servicio queda como EJECUTADO y pasa al coordinador para cierre.
       </div>
     </div>
@@ -753,46 +753,46 @@ body{font-family:'DM Sans',sans-serif;background:#0D0D0D;color:#fff;min-height:1
       <div style="background:#FEF3C7;border-radius:8px;padding:10px 12px;margin-bottom:14px;border:1px solid var(--orange)">
         <div style="font-size:9px;font-weight:800;color:#92400E;letter-spacing:0.1em;margin-bottom:6px">RANGO GPS — FECHA INICIO → FECHA TÉRMINO</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-          <div><label class="lbl">Fecha Inicio (asignación)</label><input class="inp" id="cos-fecha-inicio" type="date" readonly style="background:var(--g50)"></div>
+          <div><label class="lbl">Fecha Inicio (asignación)</label><input class="inp" id="cos-fecha-inicio" type="date" readonly style=""></div>
           <div><label class="lbl">Fecha Término servicio</label><input class="inp" id="cos-fecha-termino" type="date"></div>
         </div>
         <button class="btn btn-orange btn-sm btn-full" style="margin-top:8px" onclick="cargarGPS()">↺ Integrar Datos</button>
       </div>
       <!-- Resumen puntos -->
-      <div style="background:#EEF2FF;border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:11px;font-weight:700;color:#3730A3" id="cos-puntos-resumen">— puntos sin registrar</div>
+      <div style="background:rgba(255,107,0,0.12);border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:11px;font-weight:700;color:#FF6B00;border:1px solid rgba(255,107,0,0.3)" id="cos-puntos-resumen">— puntos sin registrar</div>
       <!-- A COSTOS DIRECTOS -->
       <div class="section-ttl">⚙ A — Costos Directos</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
         <div class="fld"><label class="lbl">Km GPS <span id="lbl-km" style="font-size:8px;font-weight:800;background:#FEF3C7;color:#92400E;padding:1px 5px;border-radius:3px">PENDIENTE</span></label><input class="inp" id="cos-km" type="number" placeholder="0" oninput="calcCostos();recalcRendimientoCargas()"></div>
-        <div class="fld"><label class="lbl">Litros teórico <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-litros" style="background:var(--g50)"></div>
+        <div class="fld"><label class="lbl">Litros teórico <span style="font-size:8px;font-weight:800;background:#FF6B00;color:#fff;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-litros" style=""></div>
         <div class="fld"><label class="lbl">Estación de servicio <span style="font-size:8px;font-weight:800;background:#D1FAE5;color:#065F46;padding:1px 5px;border-radius:3px" id="lbl-litros-real">—</span></label>
           <input class="inp" id="cos-litros-real" readonly style="background:var(--g50);color:#065F46">
-          <div id="cos-rendimiento-cargas" style="font-size:10px;font-weight:700;color:#1E3A5F;margin-top:4px;display:none">
+          <div id="cos-rendimiento-cargas" style="font-size:10px;font-weight:700;color:#FF6B00;margin-top:4px;display:none">
             📊 Rendimiento según cargas: <span id="cos-rend-valor">—</span> km/lt
             <span style="font-size:9px;color:var(--g400);margin-left:4px">(<span id="cos-rend-km">—</span> km / <span id="cos-rend-lt">—</span> lt desde inicio Kaptura)</span>
           </div>
         </div>
-        <div class="fld"><label class="lbl">Combustible <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-comb" oninput="calcCostos()" style=""></div>
+        <div class="fld"><label class="lbl">Combustible <span style="font-size:8px;font-weight:800;background:#FF6B00;color:#fff;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-comb" oninput="calcCostos()" style=""></div>
         <div class="fld"><label class="lbl">TAG Autopista <span id="lbl-tag" style="font-size:8px;font-weight:800;background:#FEF3C7;color:#92400E;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-tag" type="number" placeholder="0" oninput="calcCostos()"></div>
         <div class="fld"><label class="lbl">Peajes Ruta <span id="lbl-peajes" style="font-size:8px;font-weight:800;background:#FEF3C7;color:#92400E;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-peajes" type="number" placeholder="0" oninput="calcCostos()"></div>
       </div>
       <!-- B OPERACIONAL -->
       <div class="section-ttl">📊 B — Operacional</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
-        <div class="fld"><label class="lbl">Días en ruta <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-dias" type="number" step="0.5" min="0.5" placeholder="1" oninput="calcCostos()" style="background:var(--g50)"></div>
-        <div class="fld"><label class="lbl">Km Vacíos <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-km-vacio-ida" type="number" placeholder="0" oninput="calcCostos()"></div>
-        <div class="fld"><label class="lbl">Km Cargados <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-km-cargado" type="number" placeholder="0" oninput="calcCostos()"></div>
+        <div class="fld"><label class="lbl">Días en ruta <span style="font-size:8px;font-weight:800;background:#FF6B00;color:#fff;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-dias" type="number" step="0.5" min="0.5" placeholder="1" oninput="calcCostos()" style=""></div>
+        <div class="fld"><label class="lbl">Km Vacíos <span style="font-size:8px;font-weight:800;background:#FF6B00;color:#fff;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-km-vacio-ida" type="number" placeholder="0" oninput="calcCostos()"></div>
+        <div class="fld"><label class="lbl">Km Cargados <span style="font-size:8px;font-weight:800;background:#FF6B00;color:#fff;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-km-cargado" type="number" placeholder="0" oninput="calcCostos()"></div>
         <input type="hidden" id="cos-km-retorno" value="0">
         <input type="hidden" id="cos-pct-retorno" value="">
       </div>
       <!-- D COSTOS FIJOS -->
       <div class="section-ttl">🏢 D — Costos Fijos</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
-        <div class="fld"><label class="lbl">Costo conductor <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-conductor" oninput="this.dataset.manual='1';calcCostos()" style=""></div>
-        <div class="fld"><label class="lbl">Comisión conductor <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-comision" type="number" placeholder="0" oninput="this.dataset.manual='1';calcCostos()"></div>
-        <div class="fld"><label class="lbl">Costo fijo/día <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-cf" oninput="this.dataset.manual='1';calcCostos()" style=""></div>
-        <div class="fld"><label class="lbl">Mantención <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-mant" oninput="this.dataset.manual='1';calcCostos()" style=""></div>
-        <div class="fld"><label class="lbl">Viático <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-viatico" oninput="this.dataset.manual='1';calcCostos()" style=""></div>
+        <div class="fld"><label class="lbl">Costo conductor <span style="font-size:8px;font-weight:800;background:#FF6B00;color:#fff;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-conductor" oninput="this.dataset.manual='1';calcCostos()" style=""></div>
+        <div class="fld"><label class="lbl">Comisión conductor <span style="font-size:8px;font-weight:800;background:#FF6B00;color:#fff;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-comision" type="number" placeholder="0" oninput="this.dataset.manual='1';calcCostos()"></div>
+        <div class="fld"><label class="lbl">Costo fijo/día <span style="font-size:8px;font-weight:800;background:#FF6B00;color:#fff;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-cf" oninput="this.dataset.manual='1';calcCostos()" style=""></div>
+        <div class="fld"><label class="lbl">Mantención <span style="font-size:8px;font-weight:800;background:#FF6B00;color:#fff;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-mant" oninput="this.dataset.manual='1';calcCostos()" style=""></div>
+        <div class="fld"><label class="lbl">Viático <span style="font-size:8px;font-weight:800;background:#FF6B00;color:#fff;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-viatico" oninput="this.dataset.manual='1';calcCostos()" style=""></div>
       </div>
       <!-- E FINANCIERO -->
       <div class="section-ttl">💳 E — Financiero</div>
@@ -806,7 +806,7 @@ body{font-family:'DM Sans',sans-serif;background:#0D0D0D;color:#fff;min-height:1
             <option value="manual">Manual</option>
           </select>
         </div>
-        <div class="fld"><label class="lbl">Factoring <span style="font-size:8px;font-weight:800;background:#1E3A5F;color:white;padding:1px 5px;border-radius:3px">AUTO</span></label>
+        <div class="fld"><label class="lbl">Factoring <span style="font-size:8px;font-weight:800;background:#FF6B00;color:#fff;padding:1px 5px;border-radius:3px">AUTO</span></label>
           <div style="display:flex;gap:4px;align-items:center">
             <input class="inp" id="cos-factoring" style="flex:1">
             <input class="inp" id="cos-plazo-manual" type="number" step="0.1" min="0" max="10" placeholder="%" style="width:60px;display:none" oninput="calcCostos()">
@@ -960,7 +960,7 @@ function renderGastos() {
         <td style="padding:8px;text-transform:capitalize">${g.categoria}</td>
         <td style="padding:8px;color:var(--g500)">${g.descripcion||'—'}</td>
         <td style="padding:8px;text-align:right;font-weight:700">${fmt(g.monto_neto)}</td>
-        <td style="padding:8px;text-align:center">${g.foto_url ? `<a href="${g.foto_url}" target="_blank" style="color:#1E3A5F">📎</a>` : '—'}</td>
+        <td style="padding:8px;text-align:center">${g.foto_url ? `<a href="${g.foto_url}" target="_blank" style="color:#FF6B00">📎</a>` : '—'}</td>
         <td style="padding:8px;text-align:center"><button class="btn btn-outline" style="font-size:10px;padding:2px 8px" onclick="eliminarGasto('${g.id}')">✕</button></td>
       </tr>`).join('');
 }
@@ -976,8 +976,8 @@ function setDetalleTab(tab) {
     if(!btn) return;
     btn.className = t===tab ? 'btn' : 'btn btn-outline';
     btn.style.cssText = t===tab
-      ? 'border-radius:0;border-bottom:2px solid #1E3A5F;font-size:12px;padding:6px 14px'
-      : 'border-radius:0;font-size:12px;padding:6px 14px';
+      ? 'border-radius:6px;background:#FF6B00;color:#fff;font-size:12px;padding:6px 14px'
+      : 'border-radius:6px;background:#2A2A2A;color:rgba(255,255,255,0.5);border:none;font-size:12px;padding:6px 14px';
   });
   renderDetalleTab();
 }
@@ -2148,7 +2148,7 @@ function puntosHTML(p, pi) {
               <div style="font-size:10px;color:#4E5A78">${g.fecha_guia||'—'}</div>
             </div>
             ${g.img_url ? `<button class="btn btn-outline btn-sm" onclick="window.open('${g.img_url}','_blank')">👁 Ver</button>` : ''}
-            <button class="btn btn-sm" style="background:#EEF2FF;color:#3730A3;padding:4px 8px" onclick="editarGuia(${pi},${gi})">✏</button>
+            <button class="btn btn-sm" style="background:rgba(255,107,0,0.15);color:#FF6B00;padding:4px 8px;border:1px solid rgba(255,107,0,0.3)" onclick="editarGuia(${pi},${gi})">✏</button>
             <button class="btn btn-red btn-sm" onclick="eliminarGuia(${pi},${gi})">✕</button>
           </div>
           <!-- Modo edición (oculto por defecto) -->
@@ -3143,7 +3143,7 @@ async function abrirInforme(i) {
   });
 
   let html = `
-  <div style="border:2px solid #DDE2EC;border-radius:8px;overflow:hidden;margin-bottom:16px">
+  <div style="border:2px solid #2A2A2A;border-radius:8px;overflow:hidden;margin-bottom:16px">
     <div class="inf-hdr">
       <div style="font-family:'DM Sans',sans-serif;font-size:18px;font-weight:900">KAPTURA — INFORME DE SERVICIO</div>
       <div style="font-size:11px;opacity:0.7">${new Date().toLocaleDateString('es-CL')}</div>
@@ -3192,7 +3192,7 @@ async function abrirInforme(i) {
             <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
               <span style="font-weight:700">N° ${g.num_guia}</span>
               <span style="color:#8C96B0;font-size:9px">${g.fecha_guia||''}</span>
-              ${g.img_url ? `<a href="${g.img_url}" target="_blank" style="font-size:9px;font-weight:800;color:#1E3A5F;text-decoration:none;background:#EEF2FF;padding:1px 6px;border-radius:3px">👁 Ver</a>` : ''}
+              ${g.img_url ? `<a href="${g.img_url}" target="_blank" style="font-size:9px;font-weight:800;color:#FF6B00;text-decoration:none;background:rgba(255,107,0,0.15);padding:1px 6px;border-radius:3px">👁 Ver</a>` : ''}
             </div>`).join('') : '—'}
         </td>
         <td style="text-align:right;font-weight:700;color:#065F46">${fmt(p.valor||0)}</td>
@@ -3201,7 +3201,7 @@ async function abrirInforme(i) {
   } else {
     html += `<tr><td colspan="5" style="text-align:center;color:#8C96B0;padding:12px">Sin puntos registrados</td></tr>`;
   }
-  html += `<tr style="background:#F5F7FA">
+  html += `<tr style="background:#0D0D0D">
     <td colspan="4" style="text-align:right;font-weight:800;color:#fff;padding:8px">TOTAL INGRESOS</td>
     <td style="text-align:right;font-weight:800;color:#065F46;padding:8px">${fmt(ingreso)}</td>
   </tr></tbody></table></div>
@@ -3226,7 +3226,7 @@ async function abrirInforme(i) {
   });
   html += `</tbody></table></div>
 
-  <div style="background:#1C2B4A;color:#fff;padding:12px 16px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;border-radius:0 0 8px 8px;margin-top:4px">
+  <div style="background:#FF6B00;color:#fff;padding:12px 16px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;border-radius:0 0 8px 8px;margin-top:4px">
     <div>
       <div style="font-size:9px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.45);margin-bottom:4px">Total Ingresos</div>
       <div style="font-family:'DM Sans',sans-serif;font-size:28px;font-weight:900;color:#34D399">${fmt(s.ingreso_total||s.tarifa_neta||0)}</div>
@@ -3292,7 +3292,7 @@ async function abrirInforme(i) {
             <td style="padding:6px 8px;text-align:right;font-weight:700">${fmt(p.valor)}</td>
           </tr>`;
         }
-        html += `<tr style="background:#F5F7FA;font-weight:700">
+        html += `<tr style="background:#0D0D0D;font-weight:700">
           <td colspan="2" style="padding:6px 8px">TOTAL</td>
           <td style="padding:6px 8px;text-align:right">${fmt(totalPort)}</td>
         </tr></tbody></table></div>`;
@@ -3324,9 +3324,9 @@ async function abrirInforme(i) {
         let porticoLabel = '';
         if(e.evento === 'trip' && e.km_tramo > KM_PORTICO && porticosCola.length > 0) {
           const p = porticosCola.shift();
-          porticoLabel = `<span style="font-weight:700;color:#1E3A5F">${p.nombre} $${(p.valor||0).toLocaleString('es-CL')}</span>`;
+          porticoLabel = `<span style="font-weight:700;color:#FF6B00">${p.nombre} $${(p.valor||0).toLocaleString('es-CL')}</span>`;
         }
-        html += `<tr style="${e.evento!=='trip'?'background:#F5F7FA':''}">
+        html += `<tr style="${e.evento!=='trip'?'background:#1A1A1A':''}">
           <td style="font-weight:700;color:#fff">${hora}</td>
           <td style="color:rgba(255,255,255,0.7)">${tipo}</td>
           <td style="color:rgba(255,255,255,0.7)">${addr}</td>
@@ -3355,7 +3355,7 @@ function imprimirInforme() {
     <style>
       body{font-family:'Barlow',sans-serif;font-size:11px;padding:20px;color:rgba(255,255,255,0.7)}
       table{width:100%;border-collapse:collapse}
-      th{background:#1E3A5F;color:rgba(255,255,255,0.8);padding:6px 8px;text-align:left;font-size:9px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase}
+      th{background:#FF6B00;color:#fff;padding:6px 8px;text-align:left;font-size:9px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase}
       td{padding:5px 8px;border-bottom:1px solid #EEF1F6;color:rgba(255,255,255,0.7)}
       .inf-hdr{background:#1C2B4A;color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center}
       .inf-grid{display:grid;grid-template-columns:1fr 1fr;border:1px solid #DDE2EC;border-top:none}
@@ -3363,7 +3363,7 @@ function imprimirInforme() {
       .inf-cell:nth-child(even){border-right:none}
       .inf-lbl{font-size:9px;font-weight:800;color:#4E5A78;letter-spacing:0.1em;text-transform:uppercase}
       .inf-val{font-weight:700;color:#fff;margin-top:2px}
-      .inf-section{font-size:12px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:#fff;padding:10px 0 5px;border-bottom:2px solid #1E3A5F;margin:14px 0 8px}
+      .inf-section{font-size:12px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:#FF6B00;padding:10px 0 5px;border-bottom:2px solid #FF6B00;margin:14px 0 8px}
       .inf-margen{background:#1C2B4A;color:#fff;padding:12px 16px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
       @media print{button{display:none}}
     </style>
@@ -3472,19 +3472,19 @@ function renderInformes() {
   const lista = document.getElementById('inf-lista');
   const keys = Object.keys(mesesConDatos).sort().reverse();
   if(keys.length === 0) {
-    lista.innerHTML = '<div style="color:#6B7280;font-size:13px">No hay servicios cerrados aún.</div>';
+    lista.innerHTML = '<div style="color:rgba(255,255,255,0.4);font-size:13px">No hay servicios cerrados aún.</div>';
     return;
   }
   lista.innerHTML = keys.map(k => {
     const [y, m] = k.split('-');
     const nombreMes = MESES_LARGO[parseInt(m)-1] + ' ' + y;
     const cant = mesesConDatos[k];
-    return `<div onclick="abrirInformeResultados('${k}')" style="display:flex;align-items:center;justify-content:space-between;background:#fff;border:1.5px solid #E5E7EB;border-radius:10px;padding:14px 18px;cursor:pointer;transition:border-color 0.15s" onmouseover="this.style.borderColor='var(--navy)'" onmouseout="this.style.borderColor='#E5E7EB'">
+    return `<div onclick="abrirInformeResultados('${k}')" style="display:flex;align-items:center;justify-content:space-between;background:#1A1A1A;border:1.5px solid #2A2A2A;border-radius:10px;padding:14px 18px;cursor:pointer;transition:border-color 0.15s" onmouseover="this.style.borderColor='#FF6B00'" onmouseout="this.style.borderColor='#2A2A2A'">
       <div>
         <div style="font-size:13px;font-weight:800;color:var(--navy)">📊 Informe Resultados ${nombreMes}</div>
-        <div style="font-size:11px;color:#6B7280;margin-top:2px">${cant} servicio${cant>1?'s':''} cerrado${cant>1?'s':''}</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px">${cant} servicio${cant>1?'s':''} cerrado${cant>1?'s':''}</div>
       </div>
-      <div style="font-size:18px;color:#9CA3AF">›</div>
+      <div style="font-size:18px;color:rgba(255,255,255,0.3)">›</div>
     </div>`;
   }).join('');
 }
@@ -3545,12 +3545,12 @@ function abrirInformeResultados(mesKey) {
 
   const body = document.getElementById('inf-er-body');
   body.innerHTML = filas.map(f => {
-    const bg    = f.sep ? 'background:#F9FAFB;border-top:1.5px solid #E5E7EB' : '';
+    const bg    = f.sep ? 'background:#0D0D0D;border-top:1.5px solid #2A2A2A' : '';
     const fw    = f.bold ? 'font-weight:800' : 'font-weight:400';
-    const fs    = f.sub ? 'font-size:11px;color:#6B7280' : 'font-size:13px';
+    const fs    = f.sub ? 'font-size:11px;color:rgba(255,255,255,0.5)' : 'font-size:13px';
     const dis   = f.disabled ? 'opacity:0.35' : '';
     const valTxt = f.disabled ? '—' : (f.val !== null ? fmt(Math.abs(f.val)) : '—');
-    const valColor = f.disabled ? '#9CA3AF' : (f.val < 0 ? '#DC2626' : (f.val > 0 ? f.color||'var(--navy)' : '#6B7280'));
+    const valColor = f.disabled ? 'rgba(255,255,255,0.3)' : (f.val < 0 ? '#ef4444' : (f.val > 0 ? f.color||'#22c55e' : 'rgba(255,255,255,0.5)'));
     const signo = (!f.disabled && f.val !== null && f.val < 0) ? '-' : '';
     return `<tr style="${bg}${dis?';'+dis:''}">
       <td style="padding:10px 16px;${fs};${fw};color:var(--navy);border-bottom:1px solid #F3F4F6">${f.label}</td>
@@ -3593,7 +3593,7 @@ function renderResultados() {
 
   const colors = {green:'var(--green)', red:'var(--red)', '':'var(--navy)'};
   document.getElementById('res-kpis').innerHTML = kpis.map(k=>`
-    <div style="background:#fff;border-radius:10px;padding:16px;box-shadow:var(--sh);border:1px solid var(--g200);position:relative;overflow:hidden">
+    <div style="background:#1A1A1A;border-radius:10px;padding:16px;border:1px solid #2A2A2A;position:relative;overflow:hidden">
       <div style="position:absolute;top:0;left:0;right:0;height:3px;background:${colors[k.color]}"></div>
       <div style="font-size:9px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:var(--g400);margin-bottom:6px">${k.label}</div>
       <div style="font-family:'DM Sans',sans-serif;font-size:28px;font-weight:900;color:${colors[k.color]};line-height:1">${k.val}</div>
@@ -3674,9 +3674,9 @@ function verGuias(i) {
       </div>`;
     guias.forEach((g, gi) => {
       totalGuias++;
-      html += `<div style="display:flex;align-items:center;gap:10px;padding:10px;background:#F5F7FA;border-radius:8px;margin-bottom:6px;border:1px solid #DDE2EC">
+      html += `<div style="display:flex;align-items:center;gap:10px;padding:10px;background:#1A1A1A;border-radius:8px;margin-bottom:6px;border:1px solid #2A2A2A">
         ${g.img_url
-          ? `<img src="${g.img_url}" style="width:64px;height:64px;object-fit:cover;border-radius:6px;cursor:pointer;border:2px solid #DDE2EC"
+          ? `<img src="${g.img_url}" style="width:64px;height:64px;object-fit:cover;border-radius:6px;cursor:pointer;border:2px solid #2A2A2A"
                onclick="window.open('${g.img_url}','_blank')">`
           : `<div style="width:64px;height:64px;background:#EEF1F6;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:24px">📄</div>`
         }
@@ -3802,12 +3802,12 @@ function aplicarAccesoKaptura() {
     modFlota.style.opacity = '0.5';
     modFlota.style.cursor = 'not-allowed';
     modFlotaBadge.textContent = '🔒 BLOQUEADO';
-    modFlotaBadge.style.background = '#9CA3AF';
+    modFlotaBadge.style.background = '#2A2A2A';
   } else {
     modFlota.style.opacity = '1';
     modFlota.style.cursor = 'pointer';
     modFlotaBadge.textContent = 'PREMIUM';
-    modFlotaBadge.style.background = '#1E3A5F';
+    modFlotaBadge.style.background = '#FF6B00';
   }
   // Mostrar pantalla módulos
   document.getElementById('pantalla-modulos').style.display = 'block';
