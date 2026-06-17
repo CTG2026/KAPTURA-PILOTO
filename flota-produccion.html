@@ -4213,35 +4213,14 @@ async function cargarSetup() {
   DB.flota = flota || [];
   _setupEquipos = [];
   renderSetupListaEquipos();
-  const listaF = {innerHTML:''}; // dummy
-  listaF.innerHTML = (flota||[]).length === 0
-    ? ''
-    : (flota||[]).map(f => `
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:#0D0D0D;border-radius:7px;margin-bottom:6px;border:1px solid #2A2A2A">
-          <div>
-            <span style="font-size:13px;font-weight:800;color:#FF6B00">${f.patente}</span>
-            <span style="font-size:11px;color:rgba(255,255,255,0.5);margin-left:8px">${f.tipo||''}</span>
-            <span style="font-size:11px;color:rgba(255,255,255,0.4);margin-left:8px">${f.rendimiento_km_lt||'—'} km/lt</span>
-          </div>
-          <button onclick="setupEliminarEquipo('${f.id}')" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:#ef4444;border-radius:5px;padding:3px 8px;font-size:10px;font-weight:800;cursor:pointer">✕</button>
-        </div>`).join('');
+
 
   // Cargar conductores
   const {data: conds} = await supa.from('kaptura_conductores').select('*').eq('empresa', emp).eq('activo', true);
   DB.conductores = conds || [];
   _setupConductores = [];
   renderSetupListaConductores();
-  const listaC = {innerHTML:''};
-  listaC.innerHTML = (conds||[]).length === 0
-    ? ''
-    : (conds||[]).map(c => `
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:#0D0D0D;border-radius:7px;margin-bottom:6px;border:1px solid #2A2A2A">
-          <div>
-            <span style="font-size:13px;font-weight:700;color:#fff">${c.nombre}</span>
-            ${c.rut ? `<span style="font-size:11px;color:rgba(255,255,255,0.4);margin-left:8px">${c.rut}</span>` : ''}
-          </div>
-          <button onclick="setupEliminarConductor('${c.id}')" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:#ef4444;border-radius:5px;padding:3px 8px;font-size:10px;font-weight:800;cursor:pointer">✕</button>
-        </div>`).join('');
+
 
   // Cargar clientes
   const {data: clientes} = await supa.from('kaptura_clientes').select('*').eq('empresa', emp);
@@ -4262,17 +4241,7 @@ async function cargarSetup() {
   DB.tarifarios = tarifas || [];
   _setupTarifas = [];
   renderSetupListaTarifas();
-  const listaTar = {innerHTML:''};
-  listaTar.innerHTML = (tarifas||[]).length === 0
-    ? ''
-    : (tarifas||[]).map(t => `
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 10px;background:#0D0D0D;border-radius:7px;margin-bottom:5px;border:1px solid #2A2A2A">
-          <div style="font-size:12px;color:#fff">${t.cliente||'—'} · ${t.origen||'—'} → ${t.destino||'—'}</div>
-          <div style="display:flex;align-items:center;gap:8px">
-            <span style="font-size:13px;font-weight:800;color:#22c55e">$${Number(t.tarifa_neta||0).toLocaleString('es-CL')}</span>
-            <button onclick="setupEliminarTarifa('${t.id}')" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:#ef4444;border-radius:5px;padding:3px 8px;font-size:10px;font-weight:800;cursor:pointer">✕</button>
-          </div>
-        </div>`).join('');
+
 }
 
 function setupSeleccionarModo(modo) {
