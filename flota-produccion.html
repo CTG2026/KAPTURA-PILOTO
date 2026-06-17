@@ -81,8 +81,9 @@ body{font-family:'DM Sans',sans-serif;background:#0D0D0D;color:#fff;min-height:1
 .fld{display:flex;flex-direction:column;margin-bottom:10px}
 .fld2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
 .lbl{font-size:9px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.5);margin-bottom:3px}
-.inp{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;padding:8px 10px;border:none;border-radius:6px;color:#fff;background:#FF6B00;outline:none;width:100%}
-.inp:focus{outline:2px solid #fff;outline-offset:2px}.inp.pend{background:#FF6B00;outline:2px solid #fff}.inp.ok{background:#22c55e}
+.inp{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;padding:8px 10px;border:none;border-radius:6px;color:#000;background:#FF6B00;outline:none;width:100%}
+.inp:focus{outline:2px solid #000;outline-offset:2px}
+.inp::placeholder{color:rgba(0,0,0,0.4)}.inp.pend{background:#FF6B00;outline:2px solid #fff}.inp.ok{background:#22c55e}
 .info-box{background:#0D0D0D;border-radius:8px;padding:10px 12px;margin-bottom:14px;border:1px solid #2A2A2A}
 .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:11px}
 .info-item .lbl2{color:rgba(255,255,255,0.4);font-weight:700;font-size:9px;text-transform:uppercase;letter-spacing:0.1em}
@@ -1041,7 +1042,7 @@ body{font-family:'DM Sans',sans-serif;background:#0D0D0D;color:#fff;min-height:1
         <div class="fld"><label class="lbl">Km GPS <span id="lbl-km" style="font-size:8px;font-weight:800;background:rgba(255,107,0,0.2);color:#FF6B00;padding:1px 5px;border-radius:3px">PENDIENTE</span></label><input class="inp" id="cos-km" type="number" placeholder="0" oninput="calcCostos();recalcRendimientoCargas()"></div>
         <div class="fld"><label class="lbl">Litros teórico <span style="font-size:8px;font-weight:800;background:#FF6B00;color:#fff;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-litros" style=""></div>
         <div class="fld"><label class="lbl">Estación de servicio <span style="font-size:8px;font-weight:800;background:rgba(34,197,94,0.2);color:#22c55e;padding:1px 5px;border-radius:3px" id="lbl-litros-real">—</span></label>
-          <input class="inp" id="cos-litros-real" readonly style="color:#22c55e">
+          <input class="inp" id="cos-litros-real" readonly style="color:#000;background:#22c55e">
           <div id="cos-rendimiento-cargas" style="font-size:10px;font-weight:700;color:#FF6B00;margin-top:4px;display:none">
             📊 Rendimiento según cargas: <span id="cos-rend-valor">—</span> km/lt
             <span style="font-size:9px;color:var(--g400);margin-left:4px">(<span id="cos-rend-km">—</span> km / <span id="cos-rend-lt">—</span> lt desde inicio Kaptura)</span>
