@@ -10,103 +10,107 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --navy:#FF6B00;--red:#FF6B00;--blue:#FF6B00;
-  --g50:#0D0D0D;--g100:#1A1A1A;--g200:#2A2A2A;--g400:rgba(255,255,255,0.4);--g600:rgba(255,255,255,0.6);--g800:#fff;
-  --white:#1A1A1A;--green:#22c55e;--orange:#FF6B00;
-  --sh:0 1px 4px rgba(0,0,0,0.4);--shl:0 8px 36px rgba(0,0,0,0.6);
+  --gold:#C9A84C;--gold-light:#E8C96A;--gold-dim:rgba(201,168,76,0.15);
+  --navy:#C9A84C;--red:#C9A84C;--blue:#C9A84C;--orange:#C9A84C;
+  --bg:#0A0A0A;--surface:#111111;--surface2:#191919;--border:#242424;
+  --text:#F5F0E8;--muted:rgba(245,240,232,0.45);
+  --green:#4CAF7A;--danger:#E05555;
+  --g50:#0A0A0A;--g100:#111111;--g200:#242424;--g400:rgba(245,240,232,0.4);--g600:rgba(245,240,232,0.6);--g800:#F5F0E8;
+  --white:#191919;
+  --sh:0 1px 6px rgba(0,0,0,0.6);--shl:0 8px 40px rgba(0,0,0,0.8);
 }
-body{font-family:'DM Sans',sans-serif;background:#0D0D0D;color:#fff;min-height:100vh;font-size:14px}
-.hdr{background:#1A1A1A;border-bottom:2px solid #2A2A2A;padding:0 16px;display:flex;align-items:center;justify-content:space-between;height:52px;box-shadow:var(--sh);position:sticky;top:0;z-index:100}
-.logo{font-family:'DM Sans',sans-serif;font-size:22px;font-weight:900;color:#FF6B00;letter-spacing:-0.5px}
-.hdr-info{font-size:11px;color:rgba(255,255,255,0.5);font-weight:700;text-align:right;line-height:1.4}
-.nav{background:#1A1A1A;border-bottom:1px solid #2A2A2A;display:flex;overflow-x:auto;scrollbar-width:none}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px}
+.hdr{background:var(--surface);border-bottom:1px solid var(--border);padding:0 16px;display:flex;align-items:center;justify-content:space-between;height:52px;box-shadow:var(--sh);position:sticky;top:0;z-index:100}
+.logo{font-family:'DM Sans',sans-serif;font-size:22px;font-weight:900;color:var(--gold);letter-spacing:0.05em}
+.hdr-info{font-size:11px;color:var(--muted);font-weight:700;text-align:right;line-height:1.4}
+.nav{background:var(--surface);border-bottom:1px solid var(--border);display:flex;overflow-x:auto;scrollbar-width:none}
 .nav::-webkit-scrollbar{display:none}
-.ntab{padding:10px 16px;font-size:11px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:rgba(255,255,255,0.4);cursor:pointer;border-bottom:3px solid transparent;border-top:none;border-left:none;border-right:none;background:none;font-family:'DM Sans',sans-serif;white-space:nowrap}
-.ntab.active{color:#fff;border-bottom-color:#FF6B00}
+.ntab{padding:10px 16px;font-size:11px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;border-top:none;border-left:none;border-right:none;background:none;font-family:'DM Sans',sans-serif;white-space:nowrap}
+.ntab.active{color:var(--gold);border-bottom-color:var(--gold)}
 .main{padding:12px;max-width:100%}
 @media(min-width:768px){.main{padding:24px 32px;max-width:1600px;margin:0 auto}}
 .kpis{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
 @media(min-width:768px){.kpis{grid-template-columns:repeat(8,1fr)}}
-.kpi{background:#1A1A1A;border-radius:8px;padding:12px 14px;box-shadow:var(--sh);border:1px solid #2A2A2A;position:relative;overflow:hidden}
-.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:#FF6B00}
-.kpi.orange::before{background:#FF6B00}.kpi.green::before{background:#22c55e}.kpi.red::before{background:#ef4444}
-.kpi-lbl{font-size:9px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.4);margin-bottom:5px}
-.kpi-val{font-family:'DM Sans',sans-serif;font-size:22px;font-weight:900;color:#fff;line-height:1}
-.kpi-val.green{color:#22c55e}.kpi-val.orange{color:#FF6B00}.kpi-val.red{color:#ef4444}
-.kpi-sub{font-size:9px;color:rgba(255,255,255,0.4);margin-top:3px;font-weight:600}
+.kpi{background:var(--surface);border-radius:8px;padding:12px 14px;box-shadow:var(--sh);border:1px solid var(--border);position:relative;overflow:hidden}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--gold)}
+.kpi.orange::before{background:var(--gold)}.kpi.green::before{background:var(--green)}.kpi.red::before{background:var(--danger)}
+.kpi-lbl{font-size:9px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+.kpi-val{font-family:'DM Sans',sans-serif;font-size:22px;font-weight:900;color:var(--text);line-height:1}
+.kpi-val.green{color:var(--green)}.kpi-val.orange{color:var(--gold)}.kpi-val.red{color:var(--danger)}
+.kpi-sub{font-size:9px;color:var(--muted);margin-top:3px;font-weight:600}
 .sec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:8px}
-.sec-ttl{font-family:'DM Sans',sans-serif;font-size:15px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;color:#fff}
+.sec-ttl{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold)}
 .filtro{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
-.filtro input{font-family:'DM Sans',sans-serif;font-size:12px;padding:6px 10px;border:1.5px solid #2A2A2A;border-radius:6px;outline:none;background:#1A1A1A;color:#fff}
+.filtro input{font-family:'DM Sans',sans-serif;font-size:12px;padding:6px 10px;border:1px solid var(--border);border-radius:6px;outline:none;background:var(--surface2);color:var(--text)}
 .btn{font-family:'DM Sans',sans-serif;font-size:11px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;padding:8px 14px;border-radius:6px;cursor:pointer;border:none;transition:all 0.15s;white-space:nowrap;display:inline-flex;align-items:center;gap:5px}
-.btn-navy{background:#FF6B00;color:#fff}.btn-navy:active{opacity:0.85}
-.btn-outline{background:transparent;color:#FF6B00;border:1.5px solid #FF6B00}
-.btn-ghost{background:#2A2A2A;color:rgba(255,255,255,0.4);cursor:default}
-.btn-green{background:rgba(34,197,94,0.15);color:#22c55e;border:1px solid rgba(34,197,94,0.3)}.btn-orange{background:rgba(255,107,0,0.15);color:#FF6B00;border:1.5px solid #FF6B00}
-.btn-red{background:rgba(239,68,68,0.15);color:#ef4444;border:1px solid rgba(239,68,68,0.3)}.btn-purple{background:rgba(139,92,246,0.15);color:#a78bfa}
+.btn-navy{background:var(--gold);color:#000}.btn-navy:active{opacity:0.85}
+.btn-outline{background:transparent;color:var(--gold);border:1px solid var(--gold)}
+.btn-ghost{background:var(--surface2);color:var(--muted);cursor:default}
+.btn-green{background:rgba(76,175,122,0.15);color:var(--green);border:1px solid rgba(76,175,122,0.3)}.btn-orange{background:var(--gold-dim);color:var(--gold);border:1px solid var(--gold)}
+.btn-red{background:rgba(224,85,85,0.15);color:var(--danger);border:1px solid rgba(224,85,85,0.3)}.btn-purple{background:rgba(139,92,246,0.15);color:#a78bfa}
 .btn-sm{padding:5px 10px;font-size:10px}.btn-full{width:100%;justify-content:center}
 .svc-list{display:flex;flex-direction:column;gap:8px}
-.svc-card{background:#1A1A1A;border-radius:8px;box-shadow:var(--sh);border:1px solid #2A2A2A;overflow:hidden}
+.svc-card{background:var(--surface);border-radius:8px;box-shadow:var(--sh);border:1px solid var(--border);overflow:hidden}
 .svc-top{padding:10px 12px 8px;display:flex;align-items:flex-start;justify-content:space-between;gap:6px}
-.svc-id{font-family:'DM Sans',sans-serif;font-size:15px;font-weight:900;color:#FF6B00}
-.svc-pat{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;color:#fff}
-.svc-line{font-size:11px;color:rgba(255,255,255,0.6);font-weight:600;margin-top:2px}
-.svc-body{padding:8px 12px 10px;border-top:1px solid #2A2A2A}
+.svc-id{font-family:'DM Sans',sans-serif;font-size:15px;font-weight:900;color:var(--gold)}
+.svc-pat{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;color:var(--text)}
+.svc-line{font-size:11px;color:var(--muted);font-weight:600;margin-top:2px}
+.svc-body{padding:8px 12px 10px;border-top:1px solid var(--border)}
 .svc-acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
 .pill{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:9px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;white-space:nowrap}
-.p-asignado{background:rgba(99,102,241,0.2);color:#a5b4fc}.p-proceso{background:rgba(255,107,0,0.2);color:#FF6B00}
-.p-borrador{background:rgba(239,68,68,0.2);color:#ef4444}.p-ejecutado{background:rgba(34,197,94,0.2);color:#22c55e;border:1px solid rgba(34,197,94,0.3)}
-.p-confirmado{background:rgba(34,197,94,0.2);color:#22c55e}.p-cerrado{background:#2A2A2A;color:rgba(255,255,255,0.5)}
+.p-asignado{background:rgba(201,168,76,0.15);color:var(--gold)}.p-proceso{background:rgba(201,168,76,0.2);color:var(--gold-light)}
+.p-borrador{background:rgba(224,85,85,0.2);color:var(--danger)}.p-ejecutado{background:rgba(76,175,122,0.15);color:var(--green);border:1px solid rgba(76,175,122,0.25)}
+.p-confirmado{background:rgba(76,175,122,0.15);color:var(--green)}.p-cerrado{background:var(--surface2);color:var(--muted)}
 .desk-tbl{display:none}
 @media(min-width:900px){
   .svc-list{display:none}
-  .desk-tbl{display:block;background:#1A1A1A;border-radius:10px;box-shadow:var(--sh);border:1px solid #2A2A2A;overflow:hidden}
+  .desk-tbl{display:block;background:var(--surface);border-radius:10px;box-shadow:var(--sh);border:1px solid var(--border);overflow:hidden}
   .desk-tbl table{width:100%;border-collapse:collapse;min-width:1200px}
-  .desk-tbl thead{background:#0D0D0D}
-  .desk-tbl thead th{padding:10px 10px;text-align:left;font-size:9px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.5);white-space:nowrap}
-  .desk-tbl tbody tr{border-bottom:1px solid #2A2A2A}
-  .desk-tbl tbody tr:hover{background:#0D0D0D}
-  .desk-tbl tbody td{padding:9px 10px;font-size:12px;vertical-align:middle;color:#fff}
+  .desk-tbl thead{background:var(--bg)}
+  .desk-tbl thead th{padding:10px 10px;text-align:left;font-size:9px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+  .desk-tbl tbody tr{border-bottom:1px solid var(--border)}
+  .desk-tbl tbody tr:hover{background:var(--surface2)}
+  .desk-tbl tbody td{padding:9px 10px;font-size:12px;vertical-align:middle;color:var(--text)}
 }
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(3px);z-index:200;display:flex;align-items:flex-end;justify-content:center}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(4px);z-index:200;display:flex;align-items:flex-end;justify-content:center}
 @media(min-width:640px){.overlay{align-items:center;padding:20px}}
-.modal{background:#1A1A1A;border-radius:16px 16px 0 0;width:100%;max-height:95vh;overflow-y:auto;box-shadow:var(--shl)}
+.modal{background:var(--surface);border-radius:16px 16px 0 0;width:100%;max-height:95vh;overflow-y:auto;box-shadow:var(--shl);border:1px solid var(--border)}
 @media(min-width:640px){.modal{border-radius:16px;max-width:620px}}
-.modal-hdr{padding:14px 16px 12px;border-bottom:1px solid #2A2A2A;display:flex;align-items:flex-start;justify-content:space-between;position:sticky;top:0;background:#1A1A1A;z-index:1}
-.modal-ttl{font-family:'DM Sans',sans-serif;font-size:17px;font-weight:900;text-transform:uppercase;letter-spacing:0.05em;color:#FF6B00}
-.modal-sub{font-size:11px;color:rgba(255,255,255,0.5);font-weight:600;margin-top:2px}
-.modal-cls{background:#2A2A2A;border:none;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:13px;color:rgba(255,255,255,0.6);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.modal-hdr{padding:14px 16px 12px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;position:sticky;top:0;background:var(--surface);z-index:1}
+.modal-ttl{font-family:'DM Sans',sans-serif;font-size:17px;font-weight:900;text-transform:uppercase;letter-spacing:0.05em;color:var(--gold)}
+.modal-sub{font-size:11px;color:var(--muted);font-weight:600;margin-top:2px}
+.modal-cls{background:var(--surface2);border:none;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:13px;color:var(--muted);display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .modal-body{padding:16px}
-.modal-ftr{padding:12px 16px;border-top:1px solid #2A2A2A;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;position:sticky;bottom:0;background:#1A1A1A}
+.modal-ftr{padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;position:sticky;bottom:0;background:var(--surface)}
 .fld{display:flex;flex-direction:column;margin-bottom:10px}
 .fld2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
-.lbl{font-size:9px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.5);margin-bottom:3px}
-.inp{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;padding:8px 10px;border:none;border-radius:6px;color:#000;background:#FF6B00;outline:none;width:100%}
-.inp:focus{outline:2px solid #000;outline-offset:2px}
-.inp::placeholder{color:rgba(0,0,0,0.4)}.inp.pend{background:#FF6B00;outline:2px solid #fff}.inp.ok{background:#22c55e}
-.info-box{background:#0D0D0D;border-radius:8px;padding:10px 12px;margin-bottom:14px;border:1px solid #2A2A2A}
+.lbl{font-size:9px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
+.inp{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;padding:8px 10px;border:none;border-radius:6px;color:#000;background:var(--gold);outline:none;width:100%}
+.inp:focus{outline:2px solid var(--text);outline-offset:2px}
+.inp::placeholder{color:rgba(0,0,0,0.4)}.inp.pend{background:var(--gold);outline:2px solid var(--text)}.inp.ok{background:var(--green)}
+.info-box{background:var(--bg);border-radius:8px;padding:10px 12px;margin-bottom:14px;border:1px solid var(--border)}
 .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:11px}
-.info-item .lbl2{color:rgba(255,255,255,0.4);font-weight:700;font-size:9px;text-transform:uppercase;letter-spacing:0.1em}
-.info-item .val{font-weight:800;color:#fff;margin-top:2px}
-.section-ttl{font-family:'DM Sans',sans-serif;font-size:11px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:#FF6B00;padding:6px 0 5px;border-bottom:2px solid #FF6B00;margin-bottom:10px}
-.empty{text-align:center;padding:40px 20px;color:rgba(255,255,255,0.4)}
-.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#FF6B00;color:#fff;padding:10px 18px;border-radius:8px;font-size:12px;font-weight:700;z-index:999;opacity:0;transition:opacity 0.3s;pointer-events:none;max-width:90vw;text-align:center}
+.info-item .lbl2{color:var(--muted);font-weight:700;font-size:9px;text-transform:uppercase;letter-spacing:0.1em}
+.info-item .val{font-weight:800;color:var(--text);margin-top:2px}
+.section-ttl{font-family:'DM Sans',sans-serif;font-size:11px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);padding:6px 0 5px;border-bottom:1px solid var(--border);margin-bottom:10px}
+.empty{text-align:center;padding:40px 20px;color:var(--muted)}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--gold);color:#000;padding:10px 18px;border-radius:8px;font-size:12px;font-weight:700;z-index:999;opacity:0;transition:opacity 0.3s;pointer-events:none;max-width:90vw;text-align:center}
 .toast.show{opacity:1}
-.loading{position:fixed;inset:0;background:rgba(13,13,13,0.95);z-index:300;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px}
-.spin{width:32px;height:32px;border:3px solid #2A2A2A;border-top-color:#FF6B00;border-radius:50%;animation:spin 0.8s linear infinite}
+.loading{position:fixed;inset:0;background:rgba(10,10,10,0.97);z-index:300;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px}
+.spin{width:32px;height:32px;border:2px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin 0.8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 /* Informe styles */
-.inf-hdr{background:#FF6B00;color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;border-radius:8px 8px 0 0}
-.inf-grid{display:grid;grid-template-columns:1fr 1fr;border:1px solid #2A2A2A;border-top:none}
-.inf-cell{padding:8px 12px;border-right:1px solid #2A2A2A;border-bottom:1px solid #2A2A2A;background:#1A1A1A}
+.inf-hdr{background:var(--gold);color:var(--text);padding:12px 16px;display:flex;justify-content:space-between;align-items:center;border-radius:8px 8px 0 0}
+.inf-grid{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--border);border-top:none}
+.inf-cell{padding:8px 12px;border-right:1px solid #2A2A2A;border-bottom:1px solid var(--border);background:var(--surface)}
 .inf-cell:nth-child(even){border-right:none}
-.inf-lbl{font-size:9px;font-weight:800;color:rgba(255,255,255,0.5);letter-spacing:0.1em;text-transform:uppercase}
-.inf-val{font-weight:700;color:#fff;margin-top:2px;font-size:13px}
-.inf-section{font-family:'DM Sans',sans-serif;font-size:12px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:#FF6B00;padding:10px 0 5px;border-bottom:2px solid #FF6B00;margin:14px 0 8px}
-.inf-table{width:100%;border-collapse:collapse;font-size:11px;color:#fff}
-.inf-table th{background:#0D0D0D;color:rgba(255,255,255,0.6);padding:6px 8px;text-align:left;font-size:9px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase}
-.inf-table td{padding:5px 8px;border-bottom:1px solid #2A2A2A;color:#fff}
-.inf-margen{background:#FF6B00;color:#fff;padding:12px 16px;display:grid;grid-template-columns:1fr 1fr;gap:12px;border-radius:0 0 8px 8px;margin-top:4px}
+.inf-lbl{font-size:9px;font-weight:800;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase}
+.inf-val{font-weight:700;color:var(--text);margin-top:2px;font-size:13px}
+.inf-section{font-family:'DM Sans',sans-serif;font-size:12px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);padding:10px 0 5px;border-bottom:2px solid var(--gold);margin:14px 0 8px}
+.inf-table{width:100%;border-collapse:collapse;font-size:11px;color:var(--text)}
+.inf-table th{background:var(--bg);color:rgba(255,255,255,0.6);padding:6px 8px;text-align:left;font-size:9px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase}
+.inf-table td{padding:5px 8px;border-bottom:1px solid var(--border);color:var(--text)}
+.inf-margen{background:var(--gold);color:var(--text);padding:12px 16px;display:grid;grid-template-columns:1fr 1fr;gap:12px;border-radius:0 0 8px 8px;margin-top:4px}
 </style>
 </head>
 <body>
@@ -116,10 +120,10 @@ body{font-family:'DM Sans',sans-serif;background:#0D0D0D;color:#fff;min-height:1
   <div style="max-width:400px;margin:0 auto;padding:40px 20px">
     <div style="text-align:center;margin-bottom:32px">
       <div style="color:rgba(255,255,255,0.7);font-size:11px;letter-spacing:3px;font-weight:700">KAPTURA</div>
-      <div style="color:white;font-size:26px;font-weight:800;margin-top:4px">Sistema de Gestión</div>
+      <div style="color:var(--text);font-size:26px;font-weight:800;margin-top:4px">Sistema de Gestión</div>
     </div>
     <div id="login-step-pin">
-      <div id="login-quien" style="color:white;font-size:16px;font-weight:700;text-align:center;margin-bottom:6px"></div>
+      <div id="login-quien" style="color:var(--text);font-size:16px;font-weight:700;text-align:center;margin-bottom:6px"></div>
       <div style="color:rgba(255,255,255,0.6);font-size:11px;letter-spacing:2px;margin-bottom:20px;text-align:center">INGRESA TU PIN</div>
       <div id="pin-dots" style="display:flex;justify-content:center;gap:16px;margin-bottom:24px">
         <div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div>
@@ -145,8 +149,8 @@ body{font-family:'DM Sans',sans-serif;background:#0D0D0D;color:#fff;min-height:1
 
 <style>
 .pin-dot { width:16px;height:16px;border-radius:50%;border:2px solid rgba(255,255,255,0.5);background:transparent;transition:background 0.15s; }
-.pin-dot.filled { background:white;border-color:white; }
-.pin-btn { background:rgba(255,255,255,0.12);color:white;border:1px solid rgba(255,255,255,0.2);border-radius:12px;padding:18px;font-size:22px;font-weight:600;cursor:pointer;transition:all 0.15s; }
+.pin-dot.filled { background:white;border-color:var(--text); }
+.pin-btn { background:rgba(255,255,255,0.12);color:var(--text);border:1px solid rgba(255,255,255,0.2);border-radius:12px;padding:18px;font-size:22px;font-weight:600;cursor:pointer;transition:all 0.15s; }
 .pin-btn:active { background:rgba(255,255,255,0.25); }
 .pin-btn-del { background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.7);font-size:18px; }
 </style>
@@ -159,11 +163,11 @@ body{font-family:'DM Sans',sans-serif;background:#0D0D0D;color:#fff;min-height:1
 <header class="hdr">
   <div style="display:flex;flex-direction:column">
     <div class="logo">KAPTURA</div>
-    <div id="hdr-empresa" style="font-size:11px;font-weight:800;color:#FF6B00;letter-spacing:0.05em;margin-top:1px"></div>
+    <div id="hdr-empresa" style="font-size:11px;font-weight:800;color:var(--gold);letter-spacing:0.05em;margin-top:1px"></div>
   </div>
   <div style="display:flex;align-items:center;gap:12px">
     <div class="hdr-info" id="hdr-info"></div>
-    <button id="btn-cerrar-sesion" onclick="cerrarSesionKaptura()" style="display:none;background:rgba(255,107,0,0.15);border:1px solid #FF6B00;color:#FF6B00;border-radius:6px;padding:6px 14px;font-size:12px;cursor:pointer;font-weight:700">⏏ Salir</button>
+    <button id="btn-cerrar-sesion" onclick="cerrarSesionKaptura()" style="display:none;background:rgba(255,107,0,0.15);border:1px solid var(--gold);color:var(--gold);border-radius:6px;padding:6px 14px;font-size:12px;cursor:pointer;font-weight:700">⏏ Salir</button>
   </div>
 </header>
 
@@ -187,35 +191,35 @@ body{font-family:'DM Sans',sans-serif;background:#0D0D0D;color:#fff;min-height:1
   </div>
 
   <!-- KAPTURA GO -->
-  <div id="mod-go" onclick="entrarModulo('go')" style="background:#1A1A1A;border:2px solid #22c55e;border-radius:14px;padding:18px;margin-bottom:12px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.4)">
+  <div id="mod-go" onclick="entrarModulo('go')" style="background:var(--surface);border:2px solid #22c55e;border-radius:14px;padding:18px;margin-bottom:12px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.4)">
     <div style="display:flex;align-items:center;justify-content:space-between">
       <div>
-        <div style="font-family:'DM Sans',sans-serif;font-size:22px;font-weight:900;color:#22c55e">📡 KAPTURA GO</div>
-        <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-top:4px">Inicia · GPS registra todo · Ver margen</div>
+        <div style="font-family:'DM Sans',sans-serif;font-size:22px;font-weight:900;color:var(--green)">📡 KAPTURA GO</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px">Inicia · GPS registra todo · Ver margen</div>
       </div>
-      <div style="background:#22c55e;color:#fff;font-size:10px;font-weight:800;padding:4px 10px;border-radius:20px">BÁSICO</div>
+      <div style="background:var(--green);color:var(--text);font-size:10px;font-weight:800;padding:4px 10px;border-radius:20px">BÁSICO</div>
     </div>
   </div>
 
   <!-- KAPTURA PRO -->
-  <div id="mod-pro" onclick="entrarModulo('pro')" style="background:#1A1A1A;border:2px solid #FF6B00;border-radius:14px;padding:18px;margin-bottom:12px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.4)">
+  <div id="mod-pro" onclick="entrarModulo('pro')" style="background:var(--surface);border:2px solid var(--gold);border-radius:14px;padding:18px;margin-bottom:12px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.4)">
     <div style="display:flex;align-items:center;justify-content:space-between">
       <div>
-        <div style="font-family:'DM Sans',sans-serif;font-size:22px;font-weight:900;color:#FF6B00">📱 KAPTURA PRO</div>
-        <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-top:4px">Guías · Etapas · KPIs · $/km · Ranking clientes</div>
+        <div style="font-family:'DM Sans',sans-serif;font-size:22px;font-weight:900;color:var(--gold)">📱 KAPTURA PRO</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px">Guías · Etapas · KPIs · $/km · Ranking clientes</div>
       </div>
-      <div style="background:#FF6B00;color:#fff;font-size:10px;font-weight:800;padding:4px 10px;border-radius:20px">PRO</div>
+      <div style="background:var(--gold);color:var(--text);font-size:10px;font-weight:800;padding:4px 10px;border-radius:20px">PRO</div>
     </div>
   </div>
 
   <!-- KAPTURA FLOTA -->
-  <div id="mod-flota" onclick="entrarModulo('flota')" style="background:#1A1A1A;border:2px solid #FF6B00;border-radius:14px;padding:18px;margin-bottom:12px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.4)">
+  <div id="mod-flota" onclick="entrarModulo('flota')" style="background:var(--surface);border:2px solid var(--gold);border-radius:14px;padding:18px;margin-bottom:12px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.4)">
     <div style="display:flex;align-items:center;justify-content:space-between">
       <div>
-        <div style="font-family:'DM Sans',sans-serif;font-size:22px;font-weight:900;color:#FF6B00">🖥 KAPTURA FLOTA</div>
-        <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-top:4px">Asignación · Flota · Coordinador · Gestión completa</div>
+        <div style="font-family:'DM Sans',sans-serif;font-size:22px;font-weight:900;color:var(--gold)">🖥 KAPTURA FLOTA</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px">Asignación · Flota · Coordinador · Gestión completa</div>
       </div>
-      <div id="mod-flota-badge" style="background:#FF6B00;color:#fff;font-size:10px;font-weight:800;padding:4px 10px;border-radius:20px">PREMIUM</div>
+      <div id="mod-flota-badge" style="background:var(--gold);color:var(--text);font-size:10px;font-weight:800;padding:4px 10px;border-radius:20px">PREMIUM</div>
     </div>
   </div>
 </div>
@@ -305,23 +309,23 @@ body{font-family:'DM Sans',sans-serif;background:#0D0D0D;color:#fff;min-height:1
     </div>
 
     <!-- KPI total costos -->
-    <div id="costos-total-banner" style="background:#FF6B00;color:#fff;border-radius:10px;padding:14px 18px;margin-bottom:14px;display:flex;gap:24px;align-items:center;flex-wrap:wrap"></div>
+    <div id="costos-total-banner" style="background:var(--gold);color:var(--text);border-radius:10px;padding:14px 18px;margin-bottom:14px;display:flex;gap:24px;align-items:center;flex-wrap:wrap"></div>
 
     <!-- KPIs por categoría -->
     <div id="costos-kpis" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:16px"></div>
 
     <!-- Tabs detalle -->
     <div style="border-bottom:2px solid var(--g200);margin-bottom:12px;display:flex;gap:0">
-      <button class="btn" id="dtab-combustible" onclick="setDetalleTab('combustible')" style="border-radius:6px;background:#FF6B00;color:#fff;font-size:12px;padding:6px 14px">Combustible</button>
-      <button class="btn btn-outline" id="dtab-mantencion" onclick="setDetalleTab('mantencion')" style="border-radius:6px;background:#2A2A2A;color:rgba(255,255,255,0.5);border:none;font-size:12px;padding:6px 14px">Mantención</button>
-      <button class="btn btn-outline" id="dtab-inversion" onclick="setDetalleTab('inversion')" style="border-radius:6px;background:#2A2A2A;color:rgba(255,255,255,0.5);border:none;font-size:12px;padding:6px 14px">Inversión</button>
-      <button class="btn btn-outline" id="dtab-servicios" onclick="setDetalleTab('servicios')" style="border-radius:6px;background:#2A2A2A;color:rgba(255,255,255,0.5);border:none;font-size:12px;padding:6px 14px">Desde Servicios</button>
+      <button class="btn" id="dtab-combustible" onclick="setDetalleTab('combustible')" style="border-radius:6px;background:var(--gold);color:var(--text);font-size:12px;padding:6px 14px">Combustible</button>
+      <button class="btn btn-outline" id="dtab-mantencion" onclick="setDetalleTab('mantencion')" style="border-radius:6px;background:var(--surface2);color:var(--muted);border:none;font-size:12px;padding:6px 14px">Mantención</button>
+      <button class="btn btn-outline" id="dtab-inversion" onclick="setDetalleTab('inversion')" style="border-radius:6px;background:var(--surface2);color:var(--muted);border:none;font-size:12px;padding:6px 14px">Inversión</button>
+      <button class="btn btn-outline" id="dtab-servicios" onclick="setDetalleTab('servicios')" style="border-radius:6px;background:var(--surface2);color:var(--muted);border:none;font-size:12px;padding:6px 14px">Desde Servicios</button>
     </div>
 
     <!-- Tabla detalle -->
     <div style="overflow-x:auto">
       <table style="width:100%;border-collapse:collapse;font-size:13px">
-        <thead><tr style="background:#0D0D0D;color:rgba(255,255,255,0.5)" id="costos-thead"></tr></thead>
+        <thead><tr style="background:var(--bg);color:var(--muted)" id="costos-thead"></tr></thead>
         <tbody id="gastos-tbody"></tbody>
       </table>
     </div>
@@ -385,7 +389,7 @@ body{font-family:'DM Sans',sans-serif;background:#0D0D0D;color:#fff;min-height:1
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
       <div style="font-family:'DM Sans',sans-serif;font-size:20px;font-weight:900;letter-spacing:0.05em">LIQUIDACIONES</div>
     </div>
-    <div style="background:#1A1A1A;border-radius:12px;padding:40px;text-align:center;color:rgba(255,255,255,0.4)">
+    <div style="background:var(--surface);border-radius:12px;padding:40px;text-align:center;color:var(--muted)">
       <div style="font-size:32px;margin-bottom:12px">🚧</div>
       <div style="font-size:14px;font-weight:700">Módulo en construcción</div>
       <div style="font-size:12px;margin-top:4px">Próximamente disponible</div>
@@ -431,18 +435,18 @@ body{font-family:'DM Sans',sans-serif;background:#0D0D0D;color:#fff;min-height:1
         <div style="font-family:'DM Sans',sans-serif;font-size:18px;font-weight:900;letter-spacing:0.05em" id="inf-detalle-titulo">—</div>
         <button class="btn btn-outline btn-sm" onclick="window.print()">🖨 Imprimir</button>
       </div>
-      <div style="background:#1A1A1A;border-radius:12px;overflow:hidden;border:1.5px solid #2A2A2A;max-width:700px">
+      <div style="background:var(--surface);border-radius:12px;overflow:hidden;border:1.5px solid #2A2A2A;max-width:700px">
         <!-- Header -->
-        <div style="background:var(--navy);color:#fff;padding:16px 20px">
+        <div style="background:var(--navy);color:var(--text);padding:16px 20px">
           <div style="font-family:'DM Sans',sans-serif;font-size:18px;font-weight:900;letter-spacing:0.05em">ESTADO DE RESULTADOS</div>
           <div style="font-size:11px;opacity:0.7;margin-top:2px" id="inf-er-subtitulo">—</div>
         </div>
         <!-- Tabla -->
         <table style="width:100%;border-collapse:collapse">
           <thead>
-            <tr style="background:#0D0D0D">
-              <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:800;color:#FF6B00;letter-spacing:0.08em;border-bottom:1.5px solid #2A2A2A">CONCEPTO</th>
-              <th style="padding:10px 16px;text-align:right;font-size:11px;font-weight:800;color:#FF6B00;letter-spacing:0.08em;border-bottom:1.5px solid #2A2A2A">MONTO</th>
+            <tr style="background:var(--bg)">
+              <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:800;color:var(--gold);letter-spacing:0.08em;border-bottom:1.5px solid #2A2A2A">CONCEPTO</th>
+              <th style="padding:10px 16px;text-align:right;font-size:11px;font-weight:800;color:var(--gold);letter-spacing:0.08em;border-bottom:1.5px solid #2A2A2A">MONTO</th>
             </tr>
           </thead>
           <tbody id="inf-er-body"></tbody>
@@ -454,7 +458,7 @@ body{font-family:'DM Sans',sans-serif;background:#0D0D0D;color:#fff;min-height:1
   <!-- TAB CONFIG -->
   <div id="tab-config" style="display:none">
     <div class="sec-ttl" style="margin-bottom:12px">Configuración</div>
-    <div style="background:#1A1A1A;border-radius:10px;padding:16px;border:1px solid #2A2A2A">
+    <div style="background:var(--surface);border-radius:10px;padding:16px;border:1px solid var(--border)">
       <div class="fld2">
         <div class="fld">
           <label class="lbl">Precio Litro ($) <span style="font-size:9px;color:var(--g400)">(modo manual)</span></label>
@@ -522,14 +526,14 @@ body{font-family:'DM Sans',sans-serif;background:#0D0D0D;color:#fff;min-height:1
       <div style="border-top:1px solid var(--g200);margin-top:16px;padding-top:16px">
         <div style="font-size:11px;font-weight:800;letter-spacing:0.08em;color:var(--g400);margin-bottom:10px">CARGA DE DATOS</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-          <div style="border:1px solid #2A2A2A;border-radius:8px;padding:12px;background:#0D0D0D">
+          <div style="border:1px solid var(--border);border-radius:8px;padding:12px;background:var(--bg)">
             <div style="font-weight:700;font-size:12px;margin-bottom:4px">📡 GPS Forguard (.xlsx)</div>
             <div style="font-size:11px;color:var(--g400);margin-bottom:8px">Exportar desde portal Forguard</div>
             <input type="file" id="upload-gps" accept=".xlsx" style="display:none" onchange="procesarGPS(this)">
             <button class="btn btn-outline" style="width:100%;font-size:11px" onclick="document.getElementById('upload-gps').click()">⬆ Subir GPS</button>
             <div id="gps-status" style="font-size:11px;margin-top:6px;color:var(--g400);min-height:16px"></div>
           </div>
-          <div style="border:1px solid #2A2A2A;border-radius:8px;padding:12px;background:#0D0D0D">
+          <div style="border:1px solid var(--border);border-radius:8px;padding:12px;background:var(--bg)">
             <div style="font-weight:700;font-size:12px;margin-bottom:4px">⛽ Copec (.csv)</div>
             <div style="font-size:11px;color:var(--g400);margin-bottom:8px">Exportar desde portal Copec</div>
             <input type="file" id="upload-copec" accept=".csv" style="display:none" onchange="procesarCopec(this)">
@@ -548,36 +552,36 @@ body{font-family:'DM Sans',sans-serif;background:#0D0D0D;color:#fff;min-height:1
     <div class="sec-ttl" style="margin-bottom:16px">Configuración Inicial</div>
 
     <!-- 0. MODO DE GESTIÓN -->
-    <div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:12px;padding:14px;margin-bottom:12px">
-      <div style="font-size:11px;font-weight:700;color:#FF6B00;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px">0. Modo de gestión</div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px">
+      <div style="font-size:11px;font-weight:700;color:var(--gold);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px">0. Modo de gestión</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
-        <div id="setup-modo-btn-flota" onclick="setupSeleccionarModo('flota')" style="background:#FF6B00;border:2px solid #FF6B00;border-radius:10px;padding:14px;text-align:center;cursor:pointer">
+        <div id="setup-modo-btn-flota" onclick="setupSeleccionarModo('flota')" style="background:var(--gold);border:2px solid var(--gold);border-radius:10px;padding:14px;text-align:center;cursor:pointer">
           <div style="font-size:14px;font-weight:700;color:#000;margin-bottom:4px">Flota completa</div>
           <div style="font-size:11px;color:rgba(0,0,0,0.6)">Costos compartidos</div>
         </div>
-        <div id="setup-modo-btn-unidad" onclick="setupSeleccionarModo('unidad')" style="background:#1A1A1A;border:2px solid #2A2A2A;border-radius:10px;padding:14px;text-align:center;cursor:pointer">
-          <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:4px">Unidad de negocio</div>
-          <div style="font-size:11px;color:rgba(255,255,255,0.4)">Costos por equipo</div>
+        <div id="setup-modo-btn-unidad" onclick="setupSeleccionarModo('unidad')" style="background:var(--surface);border:2px solid #2A2A2A;border-radius:10px;padding:14px;text-align:center;cursor:pointer">
+          <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px">Unidad de negocio</div>
+          <div style="font-size:11px;color:var(--muted)">Costos por equipo</div>
         </div>
       </div>
       <input type="hidden" id="setup-modo-gestion" value="flota">
     </div>
 
     <!-- 1. DATOS DE LA EMPRESA -->
-    <div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:12px;padding:14px;margin-bottom:12px">
-      <div style="font-size:11px;font-weight:700;color:#FF6B00;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px">1. Datos de la empresa</div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px">
+      <div style="font-size:11px;font-weight:700;color:var(--gold);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px">1. Datos de la empresa</div>
       <div style="margin-bottom:8px">
-        <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">NOMBRE EMPRESA</div>
-        <input id="setup-nombre-empresa" type="text" placeholder="Ej: Transportes Madrid SpA" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:9px 12px;font-size:13px;color:#fff;font-family:inherit">
+        <div style="font-size:10px;color:var(--muted);margin-bottom:4px">NOMBRE EMPRESA</div>
+        <input id="setup-nombre-empresa" type="text" placeholder="Ej: Transportes Madrid SpA" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:9px 12px;font-size:13px;color:var(--text);font-family:inherit">
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
         <div>
-          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">RUT EMPRESA</div>
-          <input id="setup-rut" type="text" placeholder="Ej: 76.XXX.XXX-X" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:9px 12px;font-size:13px;color:#fff;font-family:inherit">
+          <div style="font-size:10px;color:var(--muted);margin-bottom:4px">RUT EMPRESA</div>
+          <input id="setup-rut" type="text" placeholder="Ej: 76.XXX.XXX-X" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:9px 12px;font-size:13px;color:var(--text);font-family:inherit">
         </div>
         <div>
-          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">CIUDAD BASE</div>
-          <input id="setup-ciudad" type="text" placeholder="Ej: Santiago" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:9px 12px;font-size:13px;color:#fff;font-family:inherit">
+          <div style="font-size:10px;color:var(--muted);margin-bottom:4px">CIUDAD BASE</div>
+          <input id="setup-ciudad" type="text" placeholder="Ej: Santiago" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:9px 12px;font-size:13px;color:var(--text);font-family:inherit">
         </div>
       </div>
       <div style="text-align:right;margin-top:10px">
@@ -586,17 +590,17 @@ body{font-family:'DM Sans',sans-serif;background:#0D0D0D;color:#fff;min-height:1
     </div>
 
     <!-- 2. FLOTA / EQUIPOS -->
-    <div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:12px;padding:14px;margin-bottom:12px">
-      <div style="font-size:11px;font-weight:700;color:#FF6B00;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px">2. Flota / Equipos</div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px">
+      <div style="font-size:11px;font-weight:700;color:var(--gold);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px">2. Flota / Equipos</div>
       <div id="setup-lista-equipos" style="margin-bottom:10px"></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">
         <div>
-          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">PATENTE</div>
-          <input id="setup-nueva-patente" type="text" placeholder="Ej: WY1742" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:8px 10px;font-size:13px;color:#fff;font-family:inherit;text-transform:uppercase">
+          <div style="font-size:10px;color:var(--muted);margin-bottom:4px">PATENTE</div>
+          <input id="setup-nueva-patente" type="text" placeholder="Ej: WY1742" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:13px;color:var(--text);font-family:inherit;text-transform:uppercase">
         </div>
         <div>
-          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">TIPO</div>
-          <select id="setup-nuevo-tipo" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:8px;font-size:12px;color:#fff;font-family:inherit">
+          <div style="font-size:10px;color:var(--muted);margin-bottom:4px">TIPO</div>
+          <select id="setup-nuevo-tipo" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px;font-size:12px;color:var(--text);font-family:inherit">
             <option value="tracto_rampla">Tracto + Rampla</option>
             <option value="tracto_frigorifico">Tracto + Frigorífico</option>
             <option value="tracto_tolva">Tracto + Tolva</option>
@@ -610,198 +614,198 @@ body{font-family:'DM Sans',sans-serif;background:#0D0D0D;color:#fff;min-height:1
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:6px;align-items:flex-end">
         <div>
-          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">RENDIMIENTO km/lt</div>
-          <input id="setup-nuevo-rend" type="number" step="0.1" placeholder="Ej: 2.5" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:8px 10px;font-size:13px;color:#fff;font-family:inherit">
+          <div style="font-size:10px;color:var(--muted);margin-bottom:4px">RENDIMIENTO km/lt</div>
+          <input id="setup-nuevo-rend" type="number" step="0.1" placeholder="Ej: 2.5" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:13px;color:var(--text);font-family:inherit">
         </div>
         <div>
-          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">VALOR COMERCIAL</div>
-          <input id="setup-nuevo-valor" type="text" placeholder="Ej: 45000000" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:8px 10px;font-size:13px;color:#fff;font-family:inherit">
+          <div style="font-size:10px;color:var(--muted);margin-bottom:4px">VALOR COMERCIAL</div>
+          <input id="setup-nuevo-valor" type="text" placeholder="Ej: 45000000" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:13px;color:var(--text);font-family:inherit">
         </div>
-        <button onclick="setupListaAgregarEquipo()" style="background:#2A2A2A;border:1px solid #FF6B00;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:800;color:#FF6B00;cursor:pointer;align-self:flex-end;white-space:nowrap">+ AGREGAR</button>
+        <button onclick="setupListaAgregarEquipo()" style="background:var(--surface2);border:1px solid var(--gold);border-radius:8px;padding:10px 14px;font-size:12px;font-weight:800;color:var(--gold);cursor:pointer;align-self:flex-end;white-space:nowrap">+ AGREGAR</button>
       </div>
     </div>
 
     <!-- 3. CONDUCTORES -->
-    <div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:12px;padding:14px;margin-bottom:12px">
-      <div style="font-size:11px;font-weight:700;color:#FF6B00;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px">3. Conductores</div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px">
+      <div style="font-size:11px;font-weight:700;color:var(--gold);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px">3. Conductores</div>
       <div id="setup-lista-conductores" style="margin-bottom:10px"></div>
       <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:6px;align-items:flex-end">
         <div>
-          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">NOMBRE</div>
-          <input id="setup-nuevo-conductor" type="text" placeholder="Nombre completo" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:8px 10px;font-size:13px;color:#fff;font-family:inherit">
+          <div style="font-size:10px;color:var(--muted);margin-bottom:4px">NOMBRE</div>
+          <input id="setup-nuevo-conductor" type="text" placeholder="Nombre completo" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:13px;color:var(--text);font-family:inherit">
         </div>
         <div>
-          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">RUT</div>
-          <input id="setup-nuevo-conductor-rut" type="text" placeholder="Ej: 12.345.678-9" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:8px 10px;font-size:13px;color:#fff;font-family:inherit">
+          <div style="font-size:10px;color:var(--muted);margin-bottom:4px">RUT</div>
+          <input id="setup-nuevo-conductor-rut" type="text" placeholder="Ej: 12.345.678-9" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:13px;color:var(--text);font-family:inherit">
         </div>
-        <button onclick="setupListaAgregarConductor()" style="background:#2A2A2A;border:1px solid #FF6B00;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:800;color:#FF6B00;cursor:pointer;align-self:flex-end;white-space:nowrap">+ AGREGAR</button>
+        <button onclick="setupListaAgregarConductor()" style="background:var(--surface2);border:1px solid var(--gold);border-radius:8px;padding:10px 14px;font-size:12px;font-weight:800;color:var(--gold);cursor:pointer;align-self:flex-end;white-space:nowrap">+ AGREGAR</button>
       </div>
     </div>
 
     <!-- 4. CLIENTES -->
-    <div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:12px;padding:14px;margin-bottom:12px">
-      <div style="font-size:11px;font-weight:700;color:#FF6B00;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px">4. Clientes</div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px">
+      <div style="font-size:11px;font-weight:700;color:var(--gold);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px">4. Clientes</div>
       <div id="setup-lista-clientes" style="margin-bottom:10px"></div>
-      <button onclick="document.getElementById('setup-ficha-cliente').style.display=document.getElementById('setup-ficha-cliente').style.display==='none'?'block':'none'" style="width:100%;background:rgba(255,107,0,0.12);border:1px solid rgba(255,107,0,0.3);border-radius:8px;padding:12px;font-size:13px;font-weight:700;color:#FF6B00;cursor:pointer">+ Agregar cliente</button>
-      <div id="setup-ficha-cliente" style="display:none;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:10px;padding:14px;margin-top:8px">
-        <div style="font-size:11px;font-weight:700;color:#FF6B00;letter-spacing:0.08em;margin-bottom:12px">DATOS DEL CLIENTE</div>
+      <button onclick="document.getElementById('setup-ficha-cliente').style.display=document.getElementById('setup-ficha-cliente').style.display==='none'?'block':'none'" style="width:100%;background:rgba(255,107,0,0.12);border:1px solid rgba(255,107,0,0.3);border-radius:8px;padding:12px;font-size:13px;font-weight:700;color:var(--gold);cursor:pointer">+ Agregar cliente</button>
+      <div id="setup-ficha-cliente" style="display:none;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:14px;margin-top:8px">
+        <div style="font-size:11px;font-weight:700;color:var(--gold);letter-spacing:0.08em;margin-bottom:12px">DATOS DEL CLIENTE</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
           <div>
-            <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">NOMBRE / RAZÓN SOCIAL</div>
-            <input id="setup-fc-nombre" type="text" placeholder="Ej: Agrícola del Sur" style="width:100%;background:#1A1A1A;border:1px solid #2A2A2A;border-radius:7px;padding:8px 10px;font-size:12px;color:#fff;font-family:inherit">
+            <div style="font-size:10px;color:var(--muted);margin-bottom:4px">NOMBRE / RAZÓN SOCIAL</div>
+            <input id="setup-fc-nombre" type="text" placeholder="Ej: Agrícola del Sur" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:12px;color:var(--text);font-family:inherit">
           </div>
           <div>
-            <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">RUT</div>
-            <input id="setup-fc-rut" type="text" placeholder="Ej: 76.XXX.XXX-X" style="width:100%;background:#1A1A1A;border:1px solid #2A2A2A;border-radius:7px;padding:8px 10px;font-size:12px;color:#fff;font-family:inherit">
+            <div style="font-size:10px;color:var(--muted);margin-bottom:4px">RUT</div>
+            <input id="setup-fc-rut" type="text" placeholder="Ej: 76.XXX.XXX-X" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:12px;color:var(--text);font-family:inherit">
           </div>
         </div>
         <div style="margin-bottom:8px">
-          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">DIRECCIÓN</div>
-          <input id="setup-fc-direccion" type="text" placeholder="Ej: Av. Principal 1234" style="width:100%;background:#1A1A1A;border:1px solid #2A2A2A;border-radius:7px;padding:8px 10px;font-size:12px;color:#fff;font-family:inherit">
+          <div style="font-size:10px;color:var(--muted);margin-bottom:4px">DIRECCIÓN</div>
+          <input id="setup-fc-direccion" type="text" placeholder="Ej: Av. Principal 1234" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:12px;color:var(--text);font-family:inherit">
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
           <div>
-            <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">CIUDAD</div>
-            <input id="setup-fc-ciudad" type="text" placeholder="Ej: Santiago" style="width:100%;background:#1A1A1A;border:1px solid #2A2A2A;border-radius:7px;padding:8px 10px;font-size:12px;color:#fff;font-family:inherit">
+            <div style="font-size:10px;color:var(--muted);margin-bottom:4px">CIUDAD</div>
+            <input id="setup-fc-ciudad" type="text" placeholder="Ej: Santiago" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:12px;color:var(--text);font-family:inherit">
           </div>
           <div>
-            <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">TELÉFONO</div>
-            <input id="setup-fc-telefono" type="text" placeholder="+56 9 XXXX XXXX" style="width:100%;background:#1A1A1A;border:1px solid #2A2A2A;border-radius:7px;padding:8px 10px;font-size:12px;color:#fff;font-family:inherit">
+            <div style="font-size:10px;color:var(--muted);margin-bottom:4px">TELÉFONO</div>
+            <input id="setup-fc-telefono" type="text" placeholder="+56 9 XXXX XXXX" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:12px;color:var(--text);font-family:inherit">
           </div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
           <div>
-            <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">EMAIL</div>
-            <input id="setup-fc-email" type="text" placeholder="contacto@empresa.cl" style="width:100%;background:#1A1A1A;border:1px solid #2A2A2A;border-radius:7px;padding:8px 10px;font-size:12px;color:#fff;font-family:inherit">
+            <div style="font-size:10px;color:var(--muted);margin-bottom:4px">EMAIL</div>
+            <input id="setup-fc-email" type="text" placeholder="contacto@empresa.cl" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:12px;color:var(--text);font-family:inherit">
           </div>
           <div>
-            <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">CONTACTO</div>
-            <input id="setup-fc-contacto" type="text" placeholder="Nombre del contacto" style="width:100%;background:#1A1A1A;border:1px solid #2A2A2A;border-radius:7px;padding:8px 10px;font-size:12px;color:#fff;font-family:inherit">
+            <div style="font-size:10px;color:var(--muted);margin-bottom:4px">CONTACTO</div>
+            <input id="setup-fc-contacto" type="text" placeholder="Nombre del contacto" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:12px;color:var(--text);font-family:inherit">
           </div>
         </div>
-        <button onclick="setupAgregarCliente()" style="width:100%;background:#FF6B00;border:none;border-radius:8px;padding:12px;font-size:14px;font-weight:700;color:#000;cursor:pointer">GUARDAR CLIENTE</button>
+        <button onclick="setupAgregarCliente()" style="width:100%;background:var(--gold);border:none;border-radius:8px;padding:12px;font-size:14px;font-weight:700;color:#000;cursor:pointer">GUARDAR CLIENTE</button>
       </div>
     </div>
 
     <!-- 5. TARIFARIO -->
-    <div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:12px;padding:14px;margin-bottom:12px">
-      <div style="font-size:11px;font-weight:700;color:#FF6B00;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px">5. Tarifario</div>
-      <div id="setup-lista-tarifario" style="margin-bottom:10px"><div style="font-size:12px;color:rgba(255,255,255,0.3)">Sin tarifas registradas</div></div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px">
+      <div style="font-size:11px;font-weight:700;color:var(--gold);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px">5. Tarifario</div>
+      <div id="setup-lista-tarifario" style="margin-bottom:10px"><div style="font-size:12px;color:var(--muted)">Sin tarifas registradas</div></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">
         <div>
-          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">CLIENTE</div>
-          <input id="setup-tar-cliente" type="text" placeholder="Cliente" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:8px;font-size:12px;color:#fff;font-family:inherit">
+          <div style="font-size:10px;color:var(--muted);margin-bottom:4px">CLIENTE</div>
+          <input id="setup-tar-cliente" type="text" placeholder="Cliente" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px;font-size:12px;color:var(--text);font-family:inherit">
         </div>
         <div>
-          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">ORIGEN</div>
-          <input id="setup-tar-origen" type="text" placeholder="Origen" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:8px;font-size:12px;color:#fff;font-family:inherit;text-transform:uppercase">
+          <div style="font-size:10px;color:var(--muted);margin-bottom:4px">ORIGEN</div>
+          <input id="setup-tar-origen" type="text" placeholder="Origen" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px;font-size:12px;color:var(--text);font-family:inherit;text-transform:uppercase">
         </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">
         <div>
-          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">DESTINO</div>
-          <input id="setup-tar-destino" type="text" placeholder="Destino" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:8px;font-size:12px;color:#fff;font-family:inherit;text-transform:uppercase">
+          <div style="font-size:10px;color:var(--muted);margin-bottom:4px">DESTINO</div>
+          <input id="setup-tar-destino" type="text" placeholder="Destino" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px;font-size:12px;color:var(--text);font-family:inherit;text-transform:uppercase">
         </div>
         <div>
-          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">TARIFA $</div>
-          <input id="setup-tar-valor" type="text" placeholder="$0" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:8px;font-size:12px;color:#fff;font-family:inherit">
+          <div style="font-size:10px;color:var(--muted);margin-bottom:4px">TARIFA $</div>
+          <input id="setup-tar-valor" type="text" placeholder="$0" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px;font-size:12px;color:var(--text);font-family:inherit">
         </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">
         <div>
-          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">VALOR PUNTO ADICIONAL $</div>
-          <input id="setup-tar-punto" type="text" placeholder="$0 (opcional)" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:8px;font-size:12px;color:#fff;font-family:inherit">
+          <div style="font-size:10px;color:var(--muted);margin-bottom:4px">VALOR PUNTO ADICIONAL $</div>
+          <input id="setup-tar-punto" type="text" placeholder="$0 (opcional)" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px;font-size:12px;color:var(--text);font-family:inherit">
         </div>
         <div>
-          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">NOMBRE / DESCRIPCIÓN</div>
-          <input id="setup-tar-nombre" type="text" placeholder="Ej: Pallet completo, Media carga..." style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:8px;font-size:12px;color:#fff;font-family:inherit">
+          <div style="font-size:10px;color:var(--muted);margin-bottom:4px">NOMBRE / DESCRIPCIÓN</div>
+          <input id="setup-tar-nombre" type="text" placeholder="Ej: Pallet completo, Media carga..." style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px;font-size:12px;color:var(--text);font-family:inherit">
         </div>
       </div>
       <div style="text-align:right">
-        <button onclick="setupListaAgregarTarifa()" style="background:#2A2A2A;border:1px solid #FF6B00;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:800;color:#FF6B00;cursor:pointer;white-space:nowrap">+ AGREGAR</button>
+        <button onclick="setupListaAgregarTarifa()" style="background:var(--surface2);border:1px solid var(--gold);border-radius:8px;padding:10px 14px;font-size:12px;font-weight:800;color:var(--gold);cursor:pointer;white-space:nowrap">+ AGREGAR</button>
       </div>
     </div>
 
     <!-- 6. COSTOS FIJOS -->
-    <div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:12px;padding:14px;margin-bottom:12px">
-      <div style="font-size:11px;font-weight:700;color:#FF6B00;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px">6. Costos fijos mensuales</div>
-      <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:10px">Lo que pagas aunque los camiones no salgan.</div>
-      <button onclick="document.getElementById('setup-cf-lista').style.display=document.getElementById('setup-cf-lista').style.display==='none'?'block':'none'" style="width:100%;background:rgba(255,107,0,0.12);border:1px solid rgba(255,107,0,0.3);border-radius:8px;padding:10px;font-size:13px;font-weight:700;color:#FF6B00;cursor:pointer;margin-bottom:8px">+ Ingresar ítem por ítem</button>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px">
+      <div style="font-size:11px;font-weight:700;color:var(--gold);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px">6. Costos fijos mensuales</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Lo que pagas aunque los camiones no salgan.</div>
+      <button onclick="document.getElementById('setup-cf-lista').style.display=document.getElementById('setup-cf-lista').style.display==='none'?'block':'none'" style="width:100%;background:rgba(255,107,0,0.12);border:1px solid rgba(255,107,0,0.3);border-radius:8px;padding:10px;font-size:13px;font-weight:700;color:var(--gold);cursor:pointer;margin-bottom:8px">+ Ingresar ítem por ítem</button>
       <div id="setup-cf-lista" style="display:none;margin-bottom:10px">
-        <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:8px">Ingresa solo los que aplican. KAPTURA suma el total.</div>
+        <div style="font-size:10px;color:var(--muted);margin-bottom:8px">Ingresa solo los que aplican. KAPTURA suma el total.</div>
         <div id="setup-cf-items">
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #2A2A2A"><div><div style="font-size:12px;color:#fff">Crédito / leasing</div></div><input type="text" data-scf-item="credito" onchange="setupCFSumar()" placeholder="$0" style="width:85px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit"></div>
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #2A2A2A"><div><div style="font-size:12px;color:#fff">Seguro SOAP</div><div style="font-size:10px;color:rgba(255,255,255,0.35)">Anual ÷12</div></div><input type="text" data-scf-item="soap" data-anual="true" onchange="setupCFSumar()" placeholder="$0" style="width:85px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit"></div>
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #2A2A2A"><div><div style="font-size:12px;color:#fff">Seguro de carga</div></div><input type="text" data-scf-item="seguro_carga" onchange="setupCFSumar()" placeholder="$0" style="width:85px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit"></div>
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #2A2A2A"><div><div style="font-size:12px;color:#fff">Permiso de circulación</div><div style="font-size:10px;color:rgba(255,255,255,0.35)">Anual ÷12</div></div><input type="text" data-scf-item="permiso" data-anual="true" onchange="setupCFSumar()" placeholder="$0" style="width:85px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit"></div>
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #2A2A2A"><div><div style="font-size:12px;color:#fff">Revisión técnica</div><div style="font-size:10px;color:rgba(255,255,255,0.35)">Anual ÷12</div></div><input type="text" data-scf-item="revision" data-anual="true" onchange="setupCFSumar()" placeholder="$0" style="width:85px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit"></div>
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #2A2A2A"><div><div style="font-size:12px;color:#fff">GPS / rastreo</div></div><input type="text" data-scf-item="gps" onchange="setupCFSumar()" placeholder="$0" style="width:85px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit"></div>
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #2A2A2A"><div><div style="font-size:12px;color:#fff">Plan de datos</div></div><input type="text" data-scf-item="datos" onchange="setupCFSumar()" placeholder="$0" style="width:85px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit"></div>
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #2A2A2A"><div><div style="font-size:12px;color:#fff">Contador / administración</div></div><input type="text" data-scf-item="contador" onchange="setupCFSumar()" placeholder="$0" style="width:85px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit"></div>
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #2A2A2A"><div><div style="font-size:12px;color:#fff">Estacionamiento / patio</div></div><input type="text" data-scf-item="estacionamiento" onchange="setupCFSumar()" placeholder="$0" style="width:85px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit"></div>
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #2A2A2A"><div><div style="font-size:12px;color:#fff">Depreciación</div></div><input type="text" data-scf-item="depreciacion" onchange="setupCFSumar()" placeholder="$0" style="width:85px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit"></div>
-          <div style="padding:7px 0"><div style="display:flex;gap:6px;align-items:center"><input type="text" placeholder="Otro gasto fijo" style="flex:1;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 8px;font-size:11px;color:#fff;font-family:inherit"><input type="text" data-scf-item="otro" onchange="setupCFSumar()" placeholder="$0" style="width:85px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit"></div></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)"><div><div style="font-size:12px;color:var(--text)">Crédito / leasing</div></div><input type="text" data-scf-item="credito" onchange="setupCFSumar()" placeholder="$0" style="width:85px;background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:5px 6px;font-size:12px;color:var(--text);text-align:right;font-family:inherit"></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)"><div><div style="font-size:12px;color:var(--text)">Seguro SOAP</div><div style="font-size:10px;color:rgba(255,255,255,0.35)">Anual ÷12</div></div><input type="text" data-scf-item="soap" data-anual="true" onchange="setupCFSumar()" placeholder="$0" style="width:85px;background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:5px 6px;font-size:12px;color:var(--text);text-align:right;font-family:inherit"></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)"><div><div style="font-size:12px;color:var(--text)">Seguro de carga</div></div><input type="text" data-scf-item="seguro_carga" onchange="setupCFSumar()" placeholder="$0" style="width:85px;background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:5px 6px;font-size:12px;color:var(--text);text-align:right;font-family:inherit"></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)"><div><div style="font-size:12px;color:var(--text)">Permiso de circulación</div><div style="font-size:10px;color:rgba(255,255,255,0.35)">Anual ÷12</div></div><input type="text" data-scf-item="permiso" data-anual="true" onchange="setupCFSumar()" placeholder="$0" style="width:85px;background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:5px 6px;font-size:12px;color:var(--text);text-align:right;font-family:inherit"></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)"><div><div style="font-size:12px;color:var(--text)">Revisión técnica</div><div style="font-size:10px;color:rgba(255,255,255,0.35)">Anual ÷12</div></div><input type="text" data-scf-item="revision" data-anual="true" onchange="setupCFSumar()" placeholder="$0" style="width:85px;background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:5px 6px;font-size:12px;color:var(--text);text-align:right;font-family:inherit"></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)"><div><div style="font-size:12px;color:var(--text)">GPS / rastreo</div></div><input type="text" data-scf-item="gps" onchange="setupCFSumar()" placeholder="$0" style="width:85px;background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:5px 6px;font-size:12px;color:var(--text);text-align:right;font-family:inherit"></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)"><div><div style="font-size:12px;color:var(--text)">Plan de datos</div></div><input type="text" data-scf-item="datos" onchange="setupCFSumar()" placeholder="$0" style="width:85px;background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:5px 6px;font-size:12px;color:var(--text);text-align:right;font-family:inherit"></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)"><div><div style="font-size:12px;color:var(--text)">Contador / administración</div></div><input type="text" data-scf-item="contador" onchange="setupCFSumar()" placeholder="$0" style="width:85px;background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:5px 6px;font-size:12px;color:var(--text);text-align:right;font-family:inherit"></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)"><div><div style="font-size:12px;color:var(--text)">Estacionamiento / patio</div></div><input type="text" data-scf-item="estacionamiento" onchange="setupCFSumar()" placeholder="$0" style="width:85px;background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:5px 6px;font-size:12px;color:var(--text);text-align:right;font-family:inherit"></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)"><div><div style="font-size:12px;color:var(--text)">Depreciación</div></div><input type="text" data-scf-item="depreciacion" onchange="setupCFSumar()" placeholder="$0" style="width:85px;background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:5px 6px;font-size:12px;color:var(--text);text-align:right;font-family:inherit"></div>
+          <div style="padding:7px 0"><div style="display:flex;gap:6px;align-items:center"><input type="text" placeholder="Otro gasto fijo" style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:5px 8px;font-size:11px;color:var(--text);font-family:inherit"><input type="text" data-scf-item="otro" onchange="setupCFSumar()" placeholder="$0" style="width:85px;background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:5px 6px;font-size:12px;color:var(--text);text-align:right;font-family:inherit"></div></div>
           <div style="background:rgba(255,107,0,0.1);border:1px solid rgba(255,107,0,0.3);border-radius:8px;padding:10px;margin-top:8px;display:flex;justify-content:space-between;align-items:center">
             <span style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.7)">TOTAL FIJOS/MES</span>
-            <span id="setup-cf-total" style="font-size:20px;font-weight:900;color:#FF6B00">$0</span>
+            <span id="setup-cf-total" style="font-size:20px;font-weight:900;color:var(--gold)">$0</span>
           </div>
         </div>
       </div>
       <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-bottom:4px">O ingresa el total directamente:</div>
-      <input id="setup-costo-fijo" type="text" placeholder="Ej: 3600000" onchange="setupCFActualizar()" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:9px 12px;font-size:14px;color:#fff;font-family:inherit;margin-bottom:8px">
+      <input id="setup-costo-fijo" type="text" placeholder="Ej: 3600000" onchange="setupCFActualizar()" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:9px 12px;font-size:14px;color:var(--text);font-family:inherit;margin-bottom:8px">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
         <div>
-          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">DÍAS OPERATIVOS/MES</div>
-          <input id="setup-dias-op" type="number" placeholder="20" value="20" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:8px 10px;font-size:13px;color:#fff;font-family:inherit">
+          <div style="font-size:10px;color:var(--muted);margin-bottom:4px">DÍAS OPERATIVOS/MES</div>
+          <input id="setup-dias-op" type="number" placeholder="20" value="20" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:13px;color:var(--text);font-family:inherit">
         </div>
         <div>
-          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">VIÁTICO/DÍA ($)</div>
-          <input id="setup-viatico" type="text" placeholder="Ej: 12000" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:8px 10px;font-size:13px;color:#fff;font-family:inherit">
+          <div style="font-size:10px;color:var(--muted);margin-bottom:4px">VIÁTICO/DÍA ($)</div>
+          <input id="setup-viatico" type="text" placeholder="Ej: 12000" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:13px;color:var(--text);font-family:inherit">
         </div>
       </div>
     </div>
 
     <!-- 9. FONDO CONTINGENCIA -->
-    <div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:12px;padding:14px;margin-bottom:12px">
-      <div style="font-size:11px;font-weight:700;color:#FF6B00;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px">9. Fondo de contingencia</div>
-      <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:10px">Reserva mensual para mantenciones mayores.</div>
-      <button onclick="document.getElementById('setup-mayor-lista').style.display=document.getElementById('setup-mayor-lista').style.display==='none'?'block':'none'" style="width:100%;background:rgba(255,107,0,0.12);border:1px solid rgba(255,107,0,0.3);border-radius:8px;padding:10px;font-size:13px;font-weight:700;color:#FF6B00;cursor:pointer;margin-bottom:8px">+ Ver componentes mayores</button>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px">
+      <div style="font-size:11px;font-weight:700;color:var(--gold);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px">9. Fondo de contingencia</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Reserva mensual para mantenciones mayores.</div>
+      <button onclick="document.getElementById('setup-mayor-lista').style.display=document.getElementById('setup-mayor-lista').style.display==='none'?'block':'none'" style="width:100%;background:rgba(255,107,0,0.12);border:1px solid rgba(255,107,0,0.3);border-radius:8px;padding:10px;font-size:13px;font-weight:700;color:var(--gold);cursor:pointer;margin-bottom:8px">+ Ver componentes mayores</button>
       <div id="setup-mayor-lista" style="display:none;margin-bottom:10px">
-        <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:8px">Ingresa el costo estimado de cada componente. KAPTURA calcula la reserva mensual sugerida.</div>
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #2A2A2A"><div><div style="font-size:12px;color:#fff">Motor</div><div style="font-size:10px;color:rgba(255,255,255,0.35)">$3-8M · 500k–800k km</div></div><input type="text" data-smayor-item="motor" onchange="setupMayorSumar()" placeholder="$0" style="width:85px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit"></div>
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #2A2A2A"><div><div style="font-size:12px;color:#fff">Caja de cambios</div><div style="font-size:10px;color:rgba(255,255,255,0.35)">$2.5-5M · 300k–500k km</div></div><input type="text" data-smayor-item="caja" onchange="setupMayorSumar()" placeholder="$0" style="width:85px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit"></div>
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #2A2A2A"><div><div style="font-size:12px;color:#fff">Diferencial</div><div style="font-size:10px;color:rgba(255,255,255,0.35)">$1.5-3.5M · 300k–500k km</div></div><input type="text" data-smayor-item="diferencial" onchange="setupMayorSumar()" placeholder="$0" style="width:85px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit"></div>
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #2A2A2A"><div><div style="font-size:12px;color:#fff">Embrague</div><div style="font-size:10px;color:rgba(255,255,255,0.35)">$600k-1.5M · 150k–250k km</div></div><input type="text" data-smayor-item="embrague" onchange="setupMayorSumar()" placeholder="$0" style="width:85px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit"></div>
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #2A2A2A"><div><div style="font-size:12px;color:#fff">Suspensión</div><div style="font-size:10px;color:rgba(255,255,255,0.35)">$800k-2M · 200k–350k km</div></div><input type="text" data-smayor-item="suspension" onchange="setupMayorSumar()" placeholder="$0" style="width:85px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit"></div>
-        <div style="padding:7px 0"><div style="display:flex;gap:6px;align-items:center"><input type="text" placeholder="Otro componente" style="flex:1;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 8px;font-size:11px;color:#fff;font-family:inherit"><input type="text" data-smayor-item="otro" onchange="setupMayorSumar()" placeholder="$0" style="width:85px;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:5px;padding:5px 6px;font-size:12px;color:#fff;text-align:right;font-family:inherit"></div></div>
+        <div style="font-size:10px;color:var(--muted);margin-bottom:8px">Ingresa el costo estimado de cada componente. KAPTURA calcula la reserva mensual sugerida.</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)"><div><div style="font-size:12px;color:var(--text)">Motor</div><div style="font-size:10px;color:rgba(255,255,255,0.35)">$3-8M · 500k–800k km</div></div><input type="text" data-smayor-item="motor" onchange="setupMayorSumar()" placeholder="$0" style="width:85px;background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:5px 6px;font-size:12px;color:var(--text);text-align:right;font-family:inherit"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)"><div><div style="font-size:12px;color:var(--text)">Caja de cambios</div><div style="font-size:10px;color:rgba(255,255,255,0.35)">$2.5-5M · 300k–500k km</div></div><input type="text" data-smayor-item="caja" onchange="setupMayorSumar()" placeholder="$0" style="width:85px;background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:5px 6px;font-size:12px;color:var(--text);text-align:right;font-family:inherit"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)"><div><div style="font-size:12px;color:var(--text)">Diferencial</div><div style="font-size:10px;color:rgba(255,255,255,0.35)">$1.5-3.5M · 300k–500k km</div></div><input type="text" data-smayor-item="diferencial" onchange="setupMayorSumar()" placeholder="$0" style="width:85px;background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:5px 6px;font-size:12px;color:var(--text);text-align:right;font-family:inherit"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)"><div><div style="font-size:12px;color:var(--text)">Embrague</div><div style="font-size:10px;color:rgba(255,255,255,0.35)">$600k-1.5M · 150k–250k km</div></div><input type="text" data-smayor-item="embrague" onchange="setupMayorSumar()" placeholder="$0" style="width:85px;background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:5px 6px;font-size:12px;color:var(--text);text-align:right;font-family:inherit"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)"><div><div style="font-size:12px;color:var(--text)">Suspensión</div><div style="font-size:10px;color:rgba(255,255,255,0.35)">$800k-2M · 200k–350k km</div></div><input type="text" data-smayor-item="suspension" onchange="setupMayorSumar()" placeholder="$0" style="width:85px;background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:5px 6px;font-size:12px;color:var(--text);text-align:right;font-family:inherit"></div>
+        <div style="padding:7px 0"><div style="display:flex;gap:6px;align-items:center"><input type="text" placeholder="Otro componente" style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:5px 8px;font-size:11px;color:var(--text);font-family:inherit"><input type="text" data-smayor-item="otro" onchange="setupMayorSumar()" placeholder="$0" style="width:85px;background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:5px 6px;font-size:12px;color:var(--text);text-align:right;font-family:inherit"></div></div>
         <div style="background:rgba(255,107,0,0.1);border:1px solid rgba(255,107,0,0.3);border-radius:8px;padding:10px;margin-top:8px;display:flex;justify-content:space-between;align-items:center">
           <span style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.7)">RESERVA SUGERIDA/MES</span>
-          <span id="setup-mayor-total" style="font-size:20px;font-weight:900;color:#FF6B00">$0</span>
+          <span id="setup-mayor-total" style="font-size:20px;font-weight:900;color:var(--gold)">$0</span>
         </div>
       </div>
       <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-bottom:4px">O ingresa el monto mensual directamente:</div>
-      <input id="setup-fondo" type="text" placeholder="Ej: 150000" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:9px 12px;font-size:14px;color:#fff;font-family:inherit">
+      <input id="setup-fondo" type="text" placeholder="Ej: 150000" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:9px 12px;font-size:14px;color:var(--text);font-family:inherit">
     </div>
 
     <!-- 7. MANTENCIÓN Y NEUMÁTICOS -->
-    <div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:12px;padding:14px;margin-bottom:12px">
-      <div style="font-size:11px;font-weight:700;color:#FF6B00;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px">7. Mantención y Neumáticos</div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px">
+      <div style="font-size:11px;font-weight:700;color:var(--gold);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px">7. Mantención y Neumáticos</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
         <div>
-          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">MANTENCIÓN CADA (km)</div>
-          <input id="setup-mant-km" type="number" placeholder="Ej: 20000" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:8px 10px;font-size:13px;color:#fff;font-family:inherit">
+          <div style="font-size:10px;color:var(--muted);margin-bottom:4px">MANTENCIÓN CADA (km)</div>
+          <input id="setup-mant-km" type="number" placeholder="Ej: 20000" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:13px;color:var(--text);font-family:inherit">
         </div>
         <div>
-          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">COSTO MANTENCIÓN ($)</div>
-          <input id="setup-mant-costo" type="text" placeholder="Ej: 350000" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:8px 10px;font-size:13px;color:#fff;font-family:inherit">
+          <div style="font-size:10px;color:var(--muted);margin-bottom:4px">COSTO MANTENCIÓN ($)</div>
+          <input id="setup-mant-costo" type="text" placeholder="Ej: 350000" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:13px;color:var(--text);font-family:inherit">
         </div>
         <div>
-          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">COSTO JUEGO NEUMÁTICOS ($)</div>
-          <input id="setup-neum-costo" type="text" placeholder="Ej: 2400000" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:8px 10px;font-size:13px;color:#fff;font-family:inherit">
+          <div style="font-size:10px;color:var(--muted);margin-bottom:4px">COSTO JUEGO NEUMÁTICOS ($)</div>
+          <input id="setup-neum-costo" type="text" placeholder="Ej: 2400000" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:13px;color:var(--text);font-family:inherit">
         </div>
         <div>
-          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">VIDA ÚTIL NEUMÁTICOS (km)</div>
-          <input id="setup-neum-km" type="number" placeholder="Ej: 150000" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:8px 10px;font-size:13px;color:#fff;font-family:inherit">
+          <div style="font-size:10px;color:var(--muted);margin-bottom:4px">VIDA ÚTIL NEUMÁTICOS (km)</div>
+          <input id="setup-neum-km" type="number" placeholder="Ej: 150000" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:13px;color:var(--text);font-family:inherit">
         </div>
       </div>
       <div style="text-align:right">
@@ -814,8 +818,8 @@ body{font-family:'DM Sans',sans-serif;background:#0D0D0D;color:#fff;min-height:1
 </main>
 
 <!-- BOTÓN FIJO SETUP -->
-<div id="btn-setup-fixed" style="display:none;position:fixed;bottom:0;left:0;right:0;padding:12px 16px;background:#0D0D0D;border-top:2px solid #FF6B00;z-index:999">
-  <button onclick="setupGuardarTodo()" style="width:100%;padding:16px;border-radius:12px;border:none;background:#FF6B00;font-size:16px;font-weight:900;color:#000;cursor:pointer">GUARDAR TODA LA CONFIGURACIÓN ✓</button>
+<div id="btn-setup-fixed" style="display:none;position:fixed;bottom:0;left:0;right:0;padding:12px 16px;background:var(--bg);border-top:2px solid var(--gold);z-index:999">
+  <button onclick="setupGuardarTodo()" style="width:100%;padding:16px;border-radius:12px;border:none;background:var(--gold);font-size:16px;font-weight:900;color:#000;cursor:pointer">GUARDAR TODA LA CONFIGURACIÓN ✓</button>
 </div>
 
 
@@ -843,12 +847,12 @@ body{font-family:'DM Sans',sans-serif;background:#0D0D0D;color:#fff;min-height:1
     <div class="modal-hdr">
       <div>
         <div style="font-family:'DM Sans',sans-serif;font-size:16px;font-weight:900;letter-spacing:0.05em">EDITAR SERVICIO</div>
-        <div style="font-size:11px;color:rgba(255,255,255,0.5);margin-top:2px" id="editar-cerrado-sub">—</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px" id="editar-cerrado-sub">—</div>
       </div>
       <button class="modal-cls" onclick="cerrar('modal-editar-cerrado')">✕</button>
     </div>
     <div style="padding:16px;display:flex;flex-direction:column;gap:10px">
-      <div style="font-size:11px;color:rgba(255,255,255,0.5);margin-bottom:4px">Selecciona la fase que deseas editar:</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:4px">Selecciona la fase que deseas editar:</div>
       <button class="btn btn-navy" onclick="editarFaseCerrado('asignar')" style="width:100%;justify-content:flex-start;gap:10px">
         📋 <span>Asignación</span>
       </button>
@@ -906,7 +910,7 @@ body{font-family:'DM Sans',sans-serif;background:#0D0D0D;color:#fff;min-height:1
           <option value="base">🏠 Sale desde Base (Coltauco)</option>
           <option value="destino_anterior">📍 Sale desde destino del servicio anterior</option>
         </select>
-        <div style="font-size:10px;color:rgba(255,255,255,0.5);margin-top:4px" id="asig-punto-inicio-hint"></div>
+        <div style="font-size:10px;color:var(--muted);margin-top:4px" id="asig-punto-inicio-hint"></div>
       </div>
     </div>
     <div class="modal-ftr">
@@ -934,7 +938,7 @@ body{font-family:'DM Sans',sans-serif;background:#0D0D0D;color:#fff;min-height:1
         <div class="fld"><label class="lbl">Fecha inicio</label><input class="inp" id="ini-fecha-inicio" type="date" readonly style=""></div>
         <div class="fld"><label class="lbl">Hora inicio (producción)</label><input class="inp" id="ini-hora" type="time" disabled style="background:var(--g100);color:var(--g400);cursor:not-allowed"></div>
       </div>
-      <div style="background:rgba(255,107,0,0.12);border-radius:8px;padding:10px 12px;font-size:11px;color:#FF6B00;font-weight:700;border:1px solid rgba(255,107,0,0.3)">
+      <div style="background:rgba(255,107,0,0.12);border-radius:8px;padding:10px 12px;font-size:11px;color:var(--gold);font-weight:700;border:1px solid rgba(255,107,0,0.3)">
         ℹ️ Al confirmar, el servicio cambia a EN PROCESO.
       </div>
     </div>
@@ -962,7 +966,7 @@ body{font-family:'DM Sans',sans-serif;background:#0D0D0D;color:#fff;min-height:1
       </div>
       <div style="margin-top:8px">
         <label class="lbl">Fecha término del servicio</label>
-        <input class="inp" id="reg-fecha-termino" type="date" onchange="onFechaTermino()" style="border-color:#FF6B00">
+        <input class="inp" id="reg-fecha-termino" type="date" onchange="onFechaTermino()" style="border-color:var(--gold)">
       </div></div>
       <div class="section-ttl">📍 Puntos de Entrega</div>
       <div id="puntos-container"></div>
@@ -1006,7 +1010,7 @@ body{font-family:'DM Sans',sans-serif;background:#0D0D0D;color:#fff;min-height:1
           <option value="pernocta">Pernocta en destino</option>
         </select>
       </div>
-      <div style="background:rgba(255,107,0,0.12);border-radius:8px;padding:10px 12px;font-size:11px;color:#FF6B00;font-weight:700;border:1px solid rgba(255,107,0,0.3)">
+      <div style="background:rgba(255,107,0,0.12);border-radius:8px;padding:10px 12px;font-size:11px;color:var(--gold);font-weight:700;border:1px solid rgba(255,107,0,0.3)">
         ✓ Al confirmar, el servicio queda como EJECUTADO y pasa al coordinador para cierre.
       </div>
     </div>
@@ -1026,49 +1030,49 @@ body{font-family:'DM Sans',sans-serif;background:#0D0D0D;color:#fff;min-height:1
       <button class="modal-cls" onclick="cerrar('modal-costos')">✕</button>
     </div>
     <div class="modal-body">
-      <div style="background:rgba(255,107,0,0.1);border-radius:8px;padding:10px 12px;margin-bottom:14px;border:1px solid #FF6B00">
+      <div style="background:rgba(255,107,0,0.1);border-radius:8px;padding:10px 12px;margin-bottom:14px;border:1px solid var(--gold)">
         <div style="font-size:9px;font-weight:800;color:#92400E;letter-spacing:0.1em;margin-bottom:6px">RANGO GPS — FECHA INICIO → FECHA TÉRMINO</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
           <div><label class="lbl">Fecha Inicio (asignación)</label><input class="inp" id="cos-fecha-inicio" type="date" readonly style=""></div>
           <div><label class="lbl">Fecha Término servicio</label><input class="inp" id="cos-fecha-termino" type="date"></div>
         </div>
-        <button class="btn btn-navy btn-full" style="margin-top:8px;font-size:14px;font-weight:900;letter-spacing:0.1em;padding:12px;background:#FF6B00;color:#000;border:none" onclick="cargarGPS()">↺ INTEGRAR DATOS GPS</button>
+        <button class="btn btn-navy btn-full" style="margin-top:8px;font-size:14px;font-weight:900;letter-spacing:0.1em;padding:12px;background:var(--gold);color:#000;border:none" onclick="cargarGPS()">↺ INTEGRAR DATOS GPS</button>
       </div>
       <!-- Resumen puntos -->
-      <div style="background:rgba(255,107,0,0.12);border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:11px;font-weight:700;color:#FF6B00;border:1px solid rgba(255,107,0,0.3)" id="cos-puntos-resumen">— puntos sin registrar</div>
+      <div style="background:rgba(255,107,0,0.12);border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:11px;font-weight:700;color:var(--gold);border:1px solid rgba(255,107,0,0.3)" id="cos-puntos-resumen">— puntos sin registrar</div>
       <!-- A COSTOS DIRECTOS -->
       <div class="section-ttl">⚙ A — Costos Directos</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
-        <div class="fld"><label class="lbl">Km GPS <span id="lbl-km" style="font-size:8px;font-weight:800;background:rgba(255,107,0,0.2);color:#FF6B00;padding:1px 5px;border-radius:3px">PENDIENTE</span></label><input class="inp" id="cos-km" type="number" placeholder="0" oninput="calcCostos();recalcRendimientoCargas()"></div>
-        <div class="fld"><label class="lbl">Litros teórico <span style="font-size:8px;font-weight:800;background:#FF6B00;color:#fff;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-litros" style=""></div>
-        <div class="fld"><label class="lbl">Estación de servicio <span style="font-size:8px;font-weight:800;background:rgba(34,197,94,0.2);color:#22c55e;padding:1px 5px;border-radius:3px" id="lbl-litros-real">—</span></label>
-          <input class="inp" id="cos-litros-real" readonly style="color:#000;background:#22c55e">
-          <div id="cos-rendimiento-cargas" style="font-size:10px;font-weight:700;color:#FF6B00;margin-top:4px;display:none">
+        <div class="fld"><label class="lbl">Km GPS <span id="lbl-km" style="font-size:8px;font-weight:800;background:rgba(255,107,0,0.2);color:var(--gold);padding:1px 5px;border-radius:3px">PENDIENTE</span></label><input class="inp" id="cos-km" type="number" placeholder="0" oninput="calcCostos();recalcRendimientoCargas()"></div>
+        <div class="fld"><label class="lbl">Litros teórico <span style="font-size:8px;font-weight:800;background:var(--gold);color:var(--text);padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-litros" style=""></div>
+        <div class="fld"><label class="lbl">Estación de servicio <span style="font-size:8px;font-weight:800;background:rgba(34,197,94,0.2);color:var(--green);padding:1px 5px;border-radius:3px" id="lbl-litros-real">—</span></label>
+          <input class="inp" id="cos-litros-real" readonly style="color:#000;background:var(--green)">
+          <div id="cos-rendimiento-cargas" style="font-size:10px;font-weight:700;color:var(--gold);margin-top:4px;display:none">
             📊 Rendimiento según cargas: <span id="cos-rend-valor">—</span> km/lt
             <span style="font-size:9px;color:var(--g400);margin-left:4px">(<span id="cos-rend-km">—</span> km / <span id="cos-rend-lt">—</span> lt desde inicio Kaptura)</span>
           </div>
         </div>
-        <div class="fld"><label class="lbl">Combustible <span style="font-size:8px;font-weight:800;background:#FF6B00;color:#fff;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-comb" oninput="calcCostos()" style=""></div>
-        <div class="fld"><label class="lbl">TAG Autopista <span id="lbl-tag" style="font-size:8px;font-weight:800;background:rgba(255,107,0,0.2);color:#FF6B00;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-tag" type="number" placeholder="0" oninput="calcCostos()"></div>
-        <div class="fld"><label class="lbl">Peajes Ruta <span id="lbl-peajes" style="font-size:8px;font-weight:800;background:rgba(255,107,0,0.2);color:#FF6B00;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-peajes" type="number" placeholder="0" oninput="calcCostos()"></div>
+        <div class="fld"><label class="lbl">Combustible <span style="font-size:8px;font-weight:800;background:var(--gold);color:var(--text);padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-comb" oninput="calcCostos()" style=""></div>
+        <div class="fld"><label class="lbl">TAG Autopista <span id="lbl-tag" style="font-size:8px;font-weight:800;background:rgba(255,107,0,0.2);color:var(--gold);padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-tag" type="number" placeholder="0" oninput="calcCostos()"></div>
+        <div class="fld"><label class="lbl">Peajes Ruta <span id="lbl-peajes" style="font-size:8px;font-weight:800;background:rgba(255,107,0,0.2);color:var(--gold);padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-peajes" type="number" placeholder="0" oninput="calcCostos()"></div>
       </div>
       <!-- B OPERACIONAL -->
       <div class="section-ttl">📊 B — Operacional</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
-        <div class="fld"><label class="lbl">Días en ruta <span style="font-size:8px;font-weight:800;background:#FF6B00;color:#fff;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-dias" type="number" step="0.5" min="0.5" placeholder="1" oninput="calcCostos()" style=""></div>
-        <div class="fld"><label class="lbl">Km Vacíos <span style="font-size:8px;font-weight:800;background:#FF6B00;color:#fff;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-km-vacio-ida" type="number" placeholder="0" oninput="calcCostos()"></div>
-        <div class="fld"><label class="lbl">Km Cargados <span style="font-size:8px;font-weight:800;background:#FF6B00;color:#fff;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-km-cargado" type="number" placeholder="0" oninput="calcCostos()"></div>
+        <div class="fld"><label class="lbl">Días en ruta <span style="font-size:8px;font-weight:800;background:var(--gold);color:var(--text);padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-dias" type="number" step="0.5" min="0.5" placeholder="1" oninput="calcCostos()" style=""></div>
+        <div class="fld"><label class="lbl">Km Vacíos <span style="font-size:8px;font-weight:800;background:var(--gold);color:var(--text);padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-km-vacio-ida" type="number" placeholder="0" oninput="calcCostos()"></div>
+        <div class="fld"><label class="lbl">Km Cargados <span style="font-size:8px;font-weight:800;background:var(--gold);color:var(--text);padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-km-cargado" type="number" placeholder="0" oninput="calcCostos()"></div>
         <input type="hidden" id="cos-km-retorno" value="0">
         <input type="hidden" id="cos-pct-retorno" value="">
       </div>
       <!-- D COSTOS FIJOS -->
       <div class="section-ttl">🏢 D — Costos Fijos</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
-        <div class="fld"><label class="lbl">Costo conductor <span style="font-size:8px;font-weight:800;background:#FF6B00;color:#fff;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-conductor" oninput="this.dataset.manual='1';calcCostos()" style=""></div>
-        <div class="fld"><label class="lbl">Comisión conductor <span style="font-size:8px;font-weight:800;background:#FF6B00;color:#fff;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-comision" type="number" placeholder="0" oninput="this.dataset.manual='1';calcCostos()"></div>
-        <div class="fld"><label class="lbl">Costo fijo/día <span style="font-size:8px;font-weight:800;background:#FF6B00;color:#fff;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-cf" oninput="this.dataset.manual='1';calcCostos()" style=""></div>
-        <div class="fld"><label class="lbl">Mantención <span style="font-size:8px;font-weight:800;background:#FF6B00;color:#fff;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-mant" oninput="this.dataset.manual='1';calcCostos()" style=""></div>
-        <div class="fld"><label class="lbl">Viático <span style="font-size:8px;font-weight:800;background:#FF6B00;color:#fff;padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-viatico" oninput="this.dataset.manual='1';calcCostos()" style=""></div>
+        <div class="fld"><label class="lbl">Costo conductor <span style="font-size:8px;font-weight:800;background:var(--gold);color:var(--text);padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-conductor" oninput="this.dataset.manual='1';calcCostos()" style=""></div>
+        <div class="fld"><label class="lbl">Comisión conductor <span style="font-size:8px;font-weight:800;background:var(--gold);color:var(--text);padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-comision" type="number" placeholder="0" oninput="this.dataset.manual='1';calcCostos()"></div>
+        <div class="fld"><label class="lbl">Costo fijo/día <span style="font-size:8px;font-weight:800;background:var(--gold);color:var(--text);padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-cf" oninput="this.dataset.manual='1';calcCostos()" style=""></div>
+        <div class="fld"><label class="lbl">Mantención <span style="font-size:8px;font-weight:800;background:var(--gold);color:var(--text);padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-mant" oninput="this.dataset.manual='1';calcCostos()" style=""></div>
+        <div class="fld"><label class="lbl">Viático <span style="font-size:8px;font-weight:800;background:var(--gold);color:var(--text);padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-viatico" oninput="this.dataset.manual='1';calcCostos()" style=""></div>
       </div>
       <!-- E FINANCIERO -->
       <div class="section-ttl">💳 E — Financiero</div>
@@ -1082,7 +1086,7 @@ body{font-family:'DM Sans',sans-serif;background:#0D0D0D;color:#fff;min-height:1
             <option value="manual">Manual</option>
           </select>
         </div>
-        <div class="fld"><label class="lbl">Factoring <span style="font-size:8px;font-weight:800;background:#FF6B00;color:#fff;padding:1px 5px;border-radius:3px">AUTO</span></label>
+        <div class="fld"><label class="lbl">Factoring <span style="font-size:8px;font-weight:800;background:var(--gold);color:var(--text);padding:1px 5px;border-radius:3px">AUTO</span></label>
           <div style="display:flex;gap:4px;align-items:center">
             <input class="inp" id="cos-factoring" style="flex:1">
             <input class="inp" id="cos-plazo-manual" type="number" step="0.1" min="0" max="10" placeholder="%" style="width:60px;display:none" oninput="calcCostos()">
@@ -1090,11 +1094,11 @@ body{font-family:'DM Sans',sans-serif;background:#0D0D0D;color:#fff;min-height:1
         </div>
       </div>
       <!-- MARGEN -->
-      <div style="background:#0D0D0D;border-radius:10px;padding:14px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div style="background:var(--bg);border-radius:10px;padding:14px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
         <div>
           <div style="font-size:9px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.45);margin-bottom:4px">Margen Servicio</div>
           <div style="font-family:'DM Sans',sans-serif;font-size:26px;font-weight:900;line-height:1" id="cos-margen">$—</div>
-          <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.4);margin-top:2px" id="cos-margen-pct">—</div>
+          <div style="font-size:10px;font-weight:700;color:var(--muted);margin-top:2px" id="cos-margen-pct">—</div>
         </div>
         <div>
           <div style="font-size:9px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.45);margin-bottom:4px">Total Ingresos</div>
@@ -1137,7 +1141,7 @@ body{font-family:'DM Sans',sans-serif;background:#0D0D0D;color:#fff;min-height:1
         <button class="modal-cls" onclick="cerrar('modal-informe')">✕</button>
       </div>
     </div>
-    <div class="modal-body" id="inf-body" style="overflow-x:auto;color:#fff">
+    <div class="modal-body" id="inf-body" style="overflow-x:auto;color:var(--text)">
       <div style="text-align:center;padding:20px;color:var(--g400)">Cargando...</div>
     </div>
   </div>
@@ -1152,7 +1156,7 @@ async function abrirRendFlota() {
   const flota = DB.flota.filter(f => f.activo !== false);
   const lista = document.getElementById('rend-flota-list');
   lista.innerHTML = flota.map(f => `
-    <div style="display:flex;align-items:center;gap:10px;padding:8px;background:#1A1A1A;border-radius:8px;border:1px solid #2A2A2A">
+    <div style="display:flex;align-items:center;gap:10px;padding:8px;background:var(--surface);border-radius:8px;border:1px solid var(--border)">
       <div style="flex:1">
         <div style="font-weight:700;font-size:13px">${f.patente}</div>
         <div style="font-size:11px;color:var(--g400)">${f.tipo||'—'}</div>
@@ -1236,7 +1240,7 @@ function renderGastos() {
         <td style="padding:8px;text-transform:capitalize">${g.categoria}</td>
         <td style="padding:8px;color:var(--g500)">${g.descripcion||'—'}</td>
         <td style="padding:8px;text-align:right;font-weight:700">${fmt(g.monto_neto)}</td>
-        <td style="padding:8px;text-align:center">${g.foto_url ? `<a href="${g.foto_url}" target="_blank" style="color:#FF6B00">📎</a>` : '—'}</td>
+        <td style="padding:8px;text-align:center">${g.foto_url ? `<a href="${g.foto_url}" target="_blank" style="color:var(--gold)">📎</a>` : '—'}</td>
         <td style="padding:8px;text-align:center"><button class="btn btn-outline" style="font-size:10px;padding:2px 8px" onclick="eliminarGasto('${g.id}')">✕</button></td>
       </tr>`).join('');
 }
@@ -1252,8 +1256,8 @@ function setDetalleTab(tab) {
     if(!btn) return;
     btn.className = t===tab ? 'btn' : 'btn btn-outline';
     btn.style.cssText = t===tab
-      ? 'border-radius:6px;background:#FF6B00;color:#fff;font-size:12px;padding:6px 14px'
-      : 'border-radius:6px;background:#2A2A2A;color:rgba(255,255,255,0.5);border:none;font-size:12px;padding:6px 14px';
+      ? 'border-radius:6px;background:var(--gold);color:var(--text);font-size:12px;padding:6px 14px'
+      : 'border-radius:6px;background:var(--surface2);color:var(--muted);border:none;font-size:12px;padding:6px 14px';
   });
   renderDetalleTab();
 }
@@ -1333,7 +1337,7 @@ function renderDetalleTab() {
       </td></tr>`;
       const detalleHTML = `<div id="${detalleDivId}" style="display:none;margin-top:4px;overflow-x:auto">
         <table style="width:100%;border-collapse:collapse;font-size:12px">
-          <thead><tr style="background:#0D0D0D">
+          <thead><tr style="background:var(--bg)">
             <th style="padding:6px;text-align:left">Fecha</th>
             <th style="padding:6px;text-align:left">Equipo</th>
             <th style="padding:6px;text-align:right">Litros</th>
@@ -1399,7 +1403,7 @@ function renderDetalleTab() {
       </td></tr>`;
       const detHTMLM = `<div id="${detIdM}" style="display:none;margin-top:4px;overflow-x:auto">
         <table style="width:100%;border-collapse:collapse;font-size:12px">
-          <thead><tr style="background:#0D0D0D">
+          <thead><tr style="background:var(--bg)">
             <th style="padding:6px;text-align:left">Fecha</th>
             <th style="padding:6px;text-align:left">Equipo</th>
             <th style="padding:6px">Cat.</th>
@@ -1426,7 +1430,7 @@ function renderDetalleTab() {
     thead.innerHTML = '<th style="padding:8px;text-align:left">Fecha</th><th style="padding:8px;text-align:left">Equipo</th><th style="padding:8px;text-align:left">Descripción</th><th style="padding:8px;text-align:right">Monto Neto</th><th style="padding:8px;text-align:center">Foto</th><th style="padding:8px"></th>';
     const rows = DB_gastos.filter(g=>g.categoria==='inversion'&&(!filtPat||g.patente===filtPat));
     tbody.innerHTML = rows.length===0 ? '<tr><td colspan="6" style="padding:16px;text-align:center;color:var(--g400)">Sin gastos de inversión</td></tr>'
-      : rows.map(g=>`<tr style="border-bottom:1px solid #2A2A2A;background:#1A1A1A">
+      : rows.map(g=>`<tr style="border-bottom:1px solid var(--border);background:var(--surface)">
           <td style="padding:7px">${g.fecha}</td>
           <td style="padding:7px;font-weight:700">${g.patente||'—'}</td>
           <td style="padding:7px;color:var(--g500)">${g.descripcion||'—'}</td>
@@ -1512,9 +1516,9 @@ async function renderCostosDash() {
       {label:'Costo Fijo',  val:fijoTotal,        tipo:'TEÓRICO', color:'#F59E0B'},
     ];
     kpis.innerHTML = items.map(it=>`
-      <div style="background:#1A1A1A;border-radius:8px;padding:12px;box-shadow:var(--sh);border:1px solid #2A2A2A">
+      <div style="background:var(--surface);border-radius:8px;padding:12px;box-shadow:var(--sh);border:1px solid var(--border)">
         <div style="font-size:9px;font-weight:800;letter-spacing:0.1em;color:var(--g400);margin-bottom:4px">${it.label}</div>
-        <div style="font-family:'DM Sans',sans-serif;font-size:20px;font-weight:900;color:#fff">${fmt(it.val)}</div>
+        <div style="font-family:'DM Sans',sans-serif;font-size:20px;font-weight:900;color:var(--text)">${fmt(it.val)}</div>
         <div style="display:flex;justify-content:space-between;margin-top:4px">
           <span style="font-size:9px;color:var(--g400)">${pct(it.val)} del total</span>
           <span style="font-size:9px;font-weight:700;color:${it.color}">${it.tipo}</span>
@@ -1540,13 +1544,13 @@ function renderGastosResumen() {
     }
   }
   const cards = Object.entries(porPatente).map(([pat,total]) => `
-    <div style="background:#1A1A1A;border-radius:8px;padding:12px;border-left:3px solid #FF6B00">
+    <div style="background:var(--surface);border-radius:8px;padding:12px;border-left:3px solid var(--gold)">
       <div style="font-weight:900;font-size:14px">${pat}</div>
       <div style="font-size:11px;color:var(--g400);margin-bottom:4px">Gastos operacionales</div>
       <div style="font-size:18px;font-weight:900;color:#EF4444">${fmt(total)}</div>
     </div>`).join('');
   const invCards = Object.entries(porInversion).map(([pat,total]) => `
-    <div style="background:rgba(255,107,0,0.1);border-radius:8px;padding:12px;border-left:3px solid #FF6B00">
+    <div style="background:rgba(255,107,0,0.1);border-radius:8px;padding:12px;border-left:3px solid var(--gold)">
       <div style="font-weight:900;font-size:14px">${pat}</div>
       <div style="font-size:11px;color:#92400E;margin-bottom:4px">🔧 Inversión / Puesta en marcha</div>
       <div style="font-size:18px;font-weight:900;color:#D97706">${fmt(total)}</div>
@@ -1636,7 +1640,7 @@ function toggleGastoEquipo() {
   const nProrrateo = parseInt(DB.config['prorrateo_equipos']||6);
   if(!field) return;
   if(cat === 'distribucion') {
-    field.innerHTML = `<label class="lbl">Equipo</label><div style="padding:8px;background:#1A1A1A;border-radius:6px;font-size:12px;color:rgba(255,255,255,0.6)">📋 Se prorrateará entre <strong>${nProrrateo} equipos</strong> de la flota</div>`;
+    field.innerHTML = `<label class="lbl">Equipo</label><div style="padding:8px;background:var(--surface);border-radius:6px;font-size:12px;color:rgba(255,255,255,0.6)">📋 Se prorrateará entre <strong>${nProrrateo} equipos</strong> de la flota</div>`;
   } else {
     field.innerHTML = `<label class="lbl">Equipo</label><select class="inp" id="gasto-patente"><option value="">Seleccione equipo...</option>${DB.flota.filter(f=>f.activo!==false).map(f=>`<option value="${f.patente}">${f.patente} — ${f.tipo||''}</option>`).join('')}</select>`;
   }
@@ -2191,7 +2195,7 @@ function filaHTML(s,i) {
     <td>${s.cliente||'—'}</td>
     <td>${s.origen||'—'}</td>
     <td style="font-weight:700">${destino}</td>
-    <td style="font-size:12px;font-weight:700;color:#fff">${guia}</td>
+    <td style="font-size:12px;font-weight:700;color:var(--text)">${guia}</td>
     <td style="font-weight:700;color:#065F46">${tarifa}</td>
     <td style="text-align:center">${cantPtos}</td>
     <td style="color:rgba(255,255,255,0.7)">${totalPtos}</td>
@@ -2437,9 +2441,9 @@ function renderPuntos() {
 }
 
 function puntosHTML(p, pi) {
-  return `<div style="background:#1A1A1A;border-radius:10px;padding:12px;margin-bottom:10px;border:1px solid #2A2A2A">
+  return `<div style="background:var(--surface);border-radius:10px;padding:12px;margin-bottom:10px;border:1px solid var(--border)">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-      <div style="font-family:'DM Sans',sans-serif;font-size:14px;font-weight:800;color:#FF6B00">
+      <div style="font-family:'DM Sans',sans-serif;font-size:14px;font-weight:800;color:var(--gold)">
         📍 PUNTO ${pi+1} ${p.capturada ? '<span style="color:var(--green)">✓</span>' : ''}
       </div>
       ${puntosData.length > 1 ? `<button class="btn btn-red btn-sm" onclick="eliminarPunto(${pi})">✕</button>` : ''}
@@ -2456,9 +2460,9 @@ function puntosHTML(p, pi) {
     </div>
     ${p.tipo ? `<div style="margin-bottom:10px">
       <label class="lbl">${p.tipo==='final'?'Tarifa del servicio':'Valor del punto'}
-        <span style="font-size:8px;font-weight:800;background:${p.valor?'rgba(34,197,94,0.2)':'rgba(255,107,0,0.2)'};color:${p.valor?'#22c55e':'#FF6B00'};padding:1px 5px;border-radius:3px">${p.valor?'AUTO':'PENDIENTE'}</span>
+        <span style="font-size:8px;font-weight:800;background:${p.valor?'rgba(34,197,94,0.2)':'rgba(255,107,0,0.2)'};color:${p.valor?'#22c55e':'var(--gold)'};padding:1px 5px;border-radius:3px">${p.valor?'AUTO':'PENDIENTE'}</span>
       </label>
-      <input class="inp" style="${p.valor?'border-color:#22c55e':'border-color:#FF6B00'}"
+      <input class="inp" style="${p.valor?'border-color:var(--green)':'border-color:var(--gold)'}"
         type="number" value="${p.valor||''}" placeholder="0" onchange="setValorManual(${pi},this.value)">
     </div>` : ''}
     <!-- Guías registradas -->
@@ -2469,16 +2473,16 @@ function puntosHTML(p, pi) {
           <div id="guia-view-${pi}-${gi}" style="display:flex;align-items:center;gap:8px;background:rgba(34,197,94,0.1);border-radius:8px;padding:6px 10px;border:1px solid rgba(34,197,94,0.3)">
             ${g.img_url ? `<img src="${g.img_url}" style="width:48px;height:48px;object-fit:cover;border-radius:6px;cursor:pointer" onclick="window.open('${g.img_url}','_blank')">` : '<div style="width:48px;height:48px;background:rgba(34,197,94,0.15);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:18px">📄</div>'}
             <div style="flex:1">
-              <div style="font-size:11px;font-weight:800;color:#22c55e">Guía N° ${g.num_guia}</div>
-              <div style="font-size:10px;color:rgba(255,255,255,0.5)">${g.fecha_guia||'—'}</div>
+              <div style="font-size:11px;font-weight:800;color:var(--green)">Guía N° ${g.num_guia}</div>
+              <div style="font-size:10px;color:var(--muted)">${g.fecha_guia||'—'}</div>
             </div>
             ${g.img_url ? `<button class="btn btn-outline btn-sm" onclick="window.open('${g.img_url}','_blank')">👁 Ver</button>` : ''}
-            <button class="btn btn-sm" style="background:rgba(255,107,0,0.15);color:#FF6B00;padding:4px 8px;border:1px solid rgba(255,107,0,0.3)" onclick="editarGuia(${pi},${gi})">✏</button>
+            <button class="btn btn-sm" style="background:rgba(255,107,0,0.15);color:var(--gold);padding:4px 8px;border:1px solid rgba(255,107,0,0.3)" onclick="editarGuia(${pi},${gi})">✏</button>
             <button class="btn btn-red btn-sm" onclick="eliminarGuia(${pi},${gi})">✕</button>
           </div>
           <!-- Modo edición (oculto por defecto) -->
-          <div id="guia-edit-${pi}-${gi}" style="display:none;background:rgba(255,107,0,0.1);border-radius:8px;padding:10px;border:1.5px solid #FF6B00">
-            <div style="font-size:9px;font-weight:800;letter-spacing:0.1em;color:#FF6B00;margin-bottom:8px">✏ EDITAR GUÍA</div>
+          <div id="guia-edit-${pi}-${gi}" style="display:none;background:rgba(255,107,0,0.1);border-radius:8px;padding:10px;border:1.5px solid var(--gold)">
+            <div style="font-size:9px;font-weight:800;letter-spacing:0.1em;color:var(--gold);margin-bottom:8px">✏ EDITAR GUÍA</div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
               <div>
                 <label class="lbl">N° Guía</label>
@@ -3271,14 +3275,14 @@ async function cargarGPS() {
       elTag.value = totalTag;
       document.getElementById('lbl-tag').textContent = totalTag>0 ? 'AUTO ✓' : 'AUTO';
       document.getElementById('lbl-tag').style.background = totalTag>0 ? 'rgba(34,197,94,0.2)' : 'rgba(255,107,0,0.2)';
-      document.getElementById('lbl-tag').style.color = totalTag>0 ? '#22c55e' : '#FF6B00';
+      document.getElementById('lbl-tag').style.color = totalTag>0 ? '#22c55e' : 'var(--gold)';
     }
     const elPeajes = document.getElementById('cos-peajes');
     if(elPeajes) {
       elPeajes.value = totalPeajes;
       document.getElementById('lbl-peajes').textContent = totalPeajes>0 ? 'AUTO ✓' : 'AUTO';
       document.getElementById('lbl-peajes').style.background = totalPeajes>0 ? 'rgba(34,197,94,0.2)' : 'rgba(255,107,0,0.2)';
-      document.getElementById('lbl-peajes').style.color = totalPeajes>0 ? '#22c55e' : '#FF6B00';
+      document.getElementById('lbl-peajes').style.color = totalPeajes>0 ? '#22c55e' : 'var(--gold)';
     }
     _integrando = false;
     calcCostos();
@@ -3535,13 +3539,13 @@ async function abrirInforme(i) {
       html += `<tr>
         <td style="color:rgba(255,255,255,0.7)">${idx+1}</td>
         <td style="color:rgba(255,255,255,0.7)">${p.tipo==='final'?'🏁 Final':'🔁 Intermedio'}</td>
-        <td style="font-weight:700;color:#fff">${p.destino||'—'}</td>
+        <td style="font-weight:700;color:var(--text)">${p.destino||'—'}</td>
         <td style="color:rgba(255,255,255,0.7)">
           ${guias.length > 0 ? guias.map(g => `
             <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
               <span style="font-weight:700">N° ${g.num_guia}</span>
               <span style="color:#8C96B0;font-size:9px">${g.fecha_guia||''}</span>
-              ${g.img_url ? `<a href="${g.img_url}" target="_blank" style="font-size:9px;font-weight:800;color:#FF6B00;text-decoration:none;background:rgba(255,107,0,0.15);padding:1px 6px;border-radius:3px">👁 Ver</a>` : ''}
+              ${g.img_url ? `<a href="${g.img_url}" target="_blank" style="font-size:9px;font-weight:800;color:var(--gold);text-decoration:none;background:rgba(255,107,0,0.15);padding:1px 6px;border-radius:3px">👁 Ver</a>` : ''}
             </div>`).join('') : '—'}
         </td>
         <td style="text-align:right;font-weight:700;color:#065F46">${fmt(p.valor||0)}</td>
@@ -3550,8 +3554,8 @@ async function abrirInforme(i) {
   } else {
     html += `<tr><td colspan="5" style="text-align:center;color:#8C96B0;padding:12px">Sin puntos registrados</td></tr>`;
   }
-  html += `<tr style="background:#0D0D0D">
-    <td colspan="4" style="text-align:right;font-weight:800;color:#fff;padding:8px">TOTAL INGRESOS</td>
+  html += `<tr style="background:var(--bg)">
+    <td colspan="4" style="text-align:right;font-weight:800;color:var(--text);padding:8px">TOTAL INGRESOS</td>
     <td style="text-align:right;font-weight:800;color:#065F46;padding:8px">${fmt(ingreso)}</td>
   </tr></tbody></table></div>
 
@@ -3575,7 +3579,7 @@ async function abrirInforme(i) {
   });
   html += `</tbody></table></div>
 
-  <div style="background:#FF6B00;color:#fff;padding:12px 16px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;border-radius:0 0 8px 8px;margin-top:4px">
+  <div style="background:var(--gold);color:var(--text);padding:12px 16px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;border-radius:0 0 8px 8px;margin-top:4px">
     <div>
       <div style="font-size:9px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.45);margin-bottom:4px">Total Ingresos</div>
       <div style="font-family:'DM Sans',sans-serif;font-size:28px;font-weight:900;color:#34D399">${fmt(s.ingreso_total||s.tarifa_neta||0)}</div>
@@ -3627,7 +3631,7 @@ async function abrirInforme(i) {
         html += `<div style="margin-bottom:16px">
           <div style="font-weight:700;font-size:11px;letter-spacing:0.08em;color:#8C96B0;margin-bottom:8px">🏷 PEAJES / TAG DETECTADOS</div>
           <table style="width:100%;border-collapse:collapse;font-size:12px">
-            <thead><tr style="background:#0D0D0D">
+            <thead><tr style="background:var(--bg)">
               <th style="text-align:left;padding:6px 8px;color:#8C96B0">Pórtico</th>
               <th style="text-align:left;padding:6px 8px;color:#8C96B0">Tipo</th>
               <th style="text-align:right;padding:6px 8px;color:#8C96B0">Valor</th>
@@ -3641,7 +3645,7 @@ async function abrirInforme(i) {
             <td style="padding:6px 8px;text-align:right;font-weight:700">${fmt(p.valor)}</td>
           </tr>`;
         }
-        html += `<tr style="background:#0D0D0D;font-weight:700">
+        html += `<tr style="background:var(--bg);font-weight:700">
           <td colspan="2" style="padding:6px 8px">TOTAL</td>
           <td style="padding:6px 8px;text-align:right">${fmt(totalPort)}</td>
         </tr></tbody></table></div>`;
@@ -3673,16 +3677,16 @@ async function abrirInforme(i) {
         let porticoLabel = '';
         if(e.evento === 'trip' && e.km_tramo > KM_PORTICO && porticosCola.length > 0) {
           const p = porticosCola.shift();
-          porticoLabel = `<span style="font-weight:700;color:#FF6B00">${p.nombre} $${(p.valor||0).toLocaleString('es-CL')}</span>`;
+          porticoLabel = `<span style="font-weight:700;color:var(--gold)">${p.nombre} $${(p.valor||0).toLocaleString('es-CL')}</span>`;
         }
-        html += `<tr style="${e.evento!=='trip'?'background:#1A1A1A':''}">
-          <td style="font-weight:700;color:#fff">${hora}</td>
+        html += `<tr style="${e.evento!=='trip'?'background:var(--surface)':''}">
+          <td style="font-weight:700;color:var(--text)">${hora}</td>
           <td style="color:rgba(255,255,255,0.7)">${tipo}</td>
           <td style="color:rgba(255,255,255,0.7)">${addr}</td>
           <td style="text-align:right;color:rgba(255,255,255,0.7)">${e.km_tramo>0?e.km_tramo.toFixed(1):''}</td>
           <td style="font-size:9px">${porticoLabel}</td>
           <td style="text-align:right;color:rgba(255,255,255,0.7)">${e.duracion||''}</td>
-          <td style="text-align:right;font-weight:700;color:#fff">${acumH}h ${String(acumM).padStart(2,'0')}m</td>
+          <td style="text-align:right;font-weight:700;color:var(--text)">${acumH}h ${String(acumM).padStart(2,'0')}m</td>
         </tr>`;
       }
       html += '</tbody></table></div>';
@@ -3704,16 +3708,16 @@ function imprimirInforme() {
     <style>
       body{font-family:'Barlow',sans-serif;font-size:11px;padding:20px;color:rgba(255,255,255,0.7)}
       table{width:100%;border-collapse:collapse}
-      th{background:#FF6B00;color:#fff;padding:6px 8px;text-align:left;font-size:9px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase}
+      th{background:var(--gold);color:var(--text);padding:6px 8px;text-align:left;font-size:9px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase}
       td{padding:5px 8px;border-bottom:1px solid #EEF1F6;color:rgba(255,255,255,0.7)}
-      .inf-hdr{background:#1C2B4A;color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center}
+      .inf-hdr{background:#1C2B4A;color:var(--text);padding:12px 16px;display:flex;justify-content:space-between;align-items:center}
       .inf-grid{display:grid;grid-template-columns:1fr 1fr;border:1px solid #DDE2EC;border-top:none}
       .inf-cell{padding:8px 12px;border-right:1px solid #DDE2EC;border-bottom:1px solid #DDE2EC}
       .inf-cell:nth-child(even){border-right:none}
       .inf-lbl{font-size:9px;font-weight:800;color:#4E5A78;letter-spacing:0.1em;text-transform:uppercase}
-      .inf-val{font-weight:700;color:#fff;margin-top:2px}
-      .inf-section{font-size:12px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:#FF6B00;padding:10px 0 5px;border-bottom:2px solid #FF6B00;margin:14px 0 8px}
-      .inf-margen{background:#1C2B4A;color:#fff;padding:12px 16px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+      .inf-val{font-weight:700;color:var(--text);margin-top:2px}
+      .inf-section{font-size:12px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);padding:10px 0 5px;border-bottom:2px solid var(--gold);margin:14px 0 8px}
+      .inf-margen{background:#1C2B4A;color:var(--text);padding:12px 16px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
       @media print{button{display:none}}
     </style>
   </head><body>${body}</body></html>`);
@@ -3821,19 +3825,19 @@ function renderInformes() {
   const lista = document.getElementById('inf-lista');
   const keys = Object.keys(mesesConDatos).sort().reverse();
   if(keys.length === 0) {
-    lista.innerHTML = '<div style="color:rgba(255,255,255,0.4);font-size:13px">No hay servicios cerrados aún.</div>';
+    lista.innerHTML = '<div style="color:var(--muted);font-size:13px">No hay servicios cerrados aún.</div>';
     return;
   }
   lista.innerHTML = keys.map(k => {
     const [y, m] = k.split('-');
     const nombreMes = MESES_LARGO[parseInt(m)-1] + ' ' + y;
     const cant = mesesConDatos[k];
-    return `<div onclick="abrirInformeResultados('${k}')" style="display:flex;align-items:center;justify-content:space-between;background:#1A1A1A;border:1.5px solid #2A2A2A;border-radius:10px;padding:14px 18px;cursor:pointer;transition:border-color 0.15s" onmouseover="this.style.borderColor='#FF6B00'" onmouseout="this.style.borderColor='#2A2A2A'">
+    return `<div onclick="abrirInformeResultados('${k}')" style="display:flex;align-items:center;justify-content:space-between;background:var(--surface);border:1.5px solid #2A2A2A;border-radius:10px;padding:14px 18px;cursor:pointer;transition:border-color 0.15s" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='#2A2A2A'">
       <div>
         <div style="font-size:13px;font-weight:800;color:var(--navy)">📊 Informe Resultados ${nombreMes}</div>
-        <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px">${cant} servicio${cant>1?'s':''} cerrado${cant>1?'s':''}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px">${cant} servicio${cant>1?'s':''} cerrado${cant>1?'s':''}</div>
       </div>
-      <div style="font-size:18px;color:rgba(255,255,255,0.3)">›</div>
+      <div style="font-size:18px;color:var(--muted)">›</div>
     </div>`;
   }).join('');
 }
@@ -3894,9 +3898,9 @@ function abrirInformeResultados(mesKey) {
 
   const body = document.getElementById('inf-er-body');
   body.innerHTML = filas.map(f => {
-    const bg    = f.sep ? 'background:#0D0D0D;border-top:1.5px solid #2A2A2A' : '';
+    const bg    = f.sep ? 'background:var(--bg);border-top:1.5px solid #2A2A2A' : '';
     const fw    = f.bold ? 'font-weight:800' : 'font-weight:400';
-    const fs    = f.sub ? 'font-size:11px;color:rgba(255,255,255,0.5)' : 'font-size:13px';
+    const fs    = f.sub ? 'font-size:11px;color:var(--muted)' : 'font-size:13px';
     const dis   = f.disabled ? 'opacity:0.35' : '';
     const valTxt = f.disabled ? '—' : (f.val !== null ? fmt(Math.abs(f.val)) : '—');
     const valColor = f.disabled ? 'rgba(255,255,255,0.3)' : (f.val < 0 ? '#ef4444' : (f.val > 0 ? f.color||'#22c55e' : 'rgba(255,255,255,0.5)'));
@@ -3942,7 +3946,7 @@ function renderResultados() {
 
   const colors = {green:'var(--green)', red:'var(--red)', '':'var(--navy)'};
   document.getElementById('res-kpis').innerHTML = kpis.map(k=>`
-    <div style="background:#1A1A1A;border-radius:10px;padding:16px;border:1px solid #2A2A2A;position:relative;overflow:hidden">
+    <div style="background:var(--surface);border-radius:10px;padding:16px;border:1px solid var(--border);position:relative;overflow:hidden">
       <div style="position:absolute;top:0;left:0;right:0;height:3px;background:${colors[k.color]}"></div>
       <div style="font-size:9px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:var(--g400);margin-bottom:6px">${k.label}</div>
       <div style="font-family:'DM Sans',sans-serif;font-size:28px;font-weight:900;color:${colors[k.color]};line-height:1">${k.val}</div>
@@ -4028,14 +4032,14 @@ function verGuias(i) {
       </div>`;
     guias.forEach((g, gi) => {
       totalGuias++;
-      html += `<div style="display:flex;align-items:center;gap:10px;padding:10px;background:#1A1A1A;border-radius:8px;margin-bottom:6px;border:1px solid #2A2A2A">
+      html += `<div style="display:flex;align-items:center;gap:10px;padding:10px;background:var(--surface);border-radius:8px;margin-bottom:6px;border:1px solid var(--border)">
         ${g.img_url
           ? `<img src="${g.img_url}" style="width:64px;height:64px;object-fit:cover;border-radius:6px;cursor:pointer;border:2px solid #2A2A2A"
                onclick="window.open('${g.img_url}','_blank')">`
           : `<div style="width:64px;height:64px;background:#EEF1F6;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:24px">📄</div>`
         }
         <div style="flex:1">
-          <div style="font-size:13px;font-weight:800;color:#fff">N° ${g.num_guia||'—'}</div>
+          <div style="font-size:13px;font-weight:800;color:var(--text)">N° ${g.num_guia||'—'}</div>
           <div style="font-size:11px;color:#4E5A78;margin-top:2px">Fecha: ${g.fecha_guia||'—'}</div>
           ${g.img_url
             ? `<button class="btn btn-outline btn-sm" style="margin-top:6px" onclick="window.open('${g.img_url}','_blank')">👁 Ver foto</button>`
@@ -4164,7 +4168,7 @@ function aplicarAccesoKaptura() {
     modFlota.style.opacity = '1';
     modFlota.style.cursor = 'pointer';
     modFlotaBadge.textContent = 'PREMIUM';
-    modFlotaBadge.style.background = '#FF6B00';
+    modFlotaBadge.style.background = 'var(--gold)';
   }
   // Mostrar pantalla módulos
   document.getElementById('pantalla-modulos').style.display = 'block';
@@ -4252,14 +4256,14 @@ async function cargarSetup() {
   const {data: clientes} = await supa.from('kaptura_clientes').select('*').eq('empresa', emp);
   const listaClientes = document.getElementById('setup-lista-clientes');
   listaClientes.innerHTML = (clientes||[]).length === 0
-    ? '<div style="font-size:12px;color:rgba(255,255,255,0.3);margin-bottom:8px">Sin clientes registrados</div>'
+    ? '<div style="font-size:12px;color:var(--muted);margin-bottom:8px">Sin clientes registrados</div>'
     : (clientes||[]).map(c => `
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:#0D0D0D;border-radius:7px;margin-bottom:6px;border:1px solid #2A2A2A">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:var(--bg);border-radius:7px;margin-bottom:6px;border:1px solid var(--border)">
           <div>
-            <span style="font-size:13px;font-weight:700;color:#fff">${c.nombre}</span>
-            ${c.ciudad ? `<span style="font-size:11px;color:rgba(255,255,255,0.4);margin-left:8px">${c.ciudad}</span>` : ''}
+            <span style="font-size:13px;font-weight:700;color:var(--text)">${c.nombre}</span>
+            ${c.ciudad ? `<span style="font-size:11px;color:var(--muted);margin-left:8px">${c.ciudad}</span>` : ''}
           </div>
-          <button onclick="setupEliminarCliente('${c.id}')" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:#ef4444;border-radius:5px;padding:3px 8px;font-size:10px;font-weight:800;cursor:pointer">✕</button>
+          <button onclick="setupEliminarCliente('${c.id}')" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:var(--danger);border-radius:5px;padding:3px 8px;font-size:10px;font-weight:800;cursor:pointer">✕</button>
         </div>`).join('');
 
   // Cargar tarifario
@@ -4272,11 +4276,11 @@ async function cargarSetup() {
 
 function setupSeleccionarModo(modo) {
   document.getElementById('setup-modo-gestion').value = modo;
-  document.getElementById('setup-modo-btn-flota').style.background  = modo==='flota'   ? '#FF6B00' : '#1A1A1A';
-  document.getElementById('setup-modo-btn-flota').style.border      = modo==='flota'   ? '2px solid #FF6B00' : '2px solid #2A2A2A';
+  document.getElementById('setup-modo-btn-flota').style.background  = modo==='flota'   ? 'var(--gold)' : '#1A1A1A';
+  document.getElementById('setup-modo-btn-flota').style.border      = modo==='flota'   ? '2px solid var(--gold)' : '2px solid #2A2A2A';
   document.getElementById('setup-modo-btn-flota').querySelector('div').style.color = modo==='flota' ? '#000' : '#fff';
-  document.getElementById('setup-modo-btn-unidad').style.background = modo==='unidad'  ? '#FF6B00' : '#1A1A1A';
-  document.getElementById('setup-modo-btn-unidad').style.border     = modo==='unidad'  ? '2px solid #FF6B00' : '2px solid #2A2A2A';
+  document.getElementById('setup-modo-btn-unidad').style.background = modo==='unidad'  ? 'var(--gold)' : '#1A1A1A';
+  document.getElementById('setup-modo-btn-unidad').style.border     = modo==='unidad'  ? '2px solid var(--gold)' : '2px solid #2A2A2A';
   document.getElementById('setup-modo-btn-unidad').querySelector('div').style.color = modo==='unidad' ? '#000' : '#fff';
 }
 
@@ -4455,17 +4459,17 @@ function renderSetupListaEquipos() {
   const el = document.getElementById('setup-lista-equipos');
   // Primero los ya guardados en Supabase (de cargarSetup)
   const guardados = (DB.flota||[]).map(f => `
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:#0D0D0D;border-radius:7px;margin-bottom:5px;border:1px solid #2A2A2A">
-      <div><span style="font-size:13px;font-weight:800;color:#FF6B00">${f.patente}</span><span style="font-size:11px;color:rgba(255,255,255,0.5);margin-left:8px">${f.tipo||''}</span><span style="font-size:10px;color:rgba(255,255,255,0.3);margin-left:6px">✓ guardado</span></div>
-      <button onclick="setupEliminarEquipo('${f.id}')" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:#ef4444;border-radius:5px;padding:3px 8px;font-size:10px;cursor:pointer">✕</button>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:var(--bg);border-radius:7px;margin-bottom:5px;border:1px solid var(--border)">
+      <div><span style="font-size:13px;font-weight:800;color:var(--gold)">${f.patente}</span><span style="font-size:11px;color:var(--muted);margin-left:8px">${f.tipo||''}</span><span style="font-size:10px;color:var(--muted);margin-left:6px">✓ guardado</span></div>
+      <button onclick="setupEliminarEquipo('${f.id}')" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:var(--danger);border-radius:5px;padding:3px 8px;font-size:10px;cursor:pointer">✕</button>
     </div>`).join('');
   // Luego los nuevos en memoria
   const nuevos = _setupEquipos.map((e,i) => `
     <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:rgba(255,107,0,0.08);border-radius:7px;margin-bottom:5px;border:1px solid rgba(255,107,0,0.3)">
-      <div><span style="font-size:13px;font-weight:800;color:#FF6B00">${e.patente}</span><span style="font-size:11px;color:rgba(255,255,255,0.5);margin-left:8px">${e.tipo||''}</span><span style="font-size:10px;color:#FF6B00;margin-left:6px">● pendiente</span></div>
-      <button onclick="_setupEquipos.splice(${i},1);renderSetupListaEquipos()" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:#ef4444;border-radius:5px;padding:3px 8px;font-size:10px;cursor:pointer">✕</button>
+      <div><span style="font-size:13px;font-weight:800;color:var(--gold)">${e.patente}</span><span style="font-size:11px;color:var(--muted);margin-left:8px">${e.tipo||''}</span><span style="font-size:10px;color:var(--gold);margin-left:6px">● pendiente</span></div>
+      <button onclick="_setupEquipos.splice(${i},1);renderSetupListaEquipos()" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:var(--danger);border-radius:5px;padding:3px 8px;font-size:10px;cursor:pointer">✕</button>
     </div>`).join('');
-  el.innerHTML = guardados + nuevos || '<div style="font-size:12px;color:rgba(255,255,255,0.3);margin-bottom:8px">Sin equipos</div>';
+  el.innerHTML = guardados + nuevos || '<div style="font-size:12px;color:var(--muted);margin-bottom:8px">Sin equipos</div>';
 }
 
 function setupListaAgregarConductor() {
@@ -4484,20 +4488,20 @@ function renderSetupListaConductores() {
   const el = document.getElementById('setup-lista-conductores');
   let html = '';
   (DB.conductores||[]).forEach(function(c) {
-    const rut = c.rut ? '<span style="font-size:11px;color:rgba(255,255,255,0.4);margin-left:8px">'+c.rut+'</span>' : '';
-    html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:#0D0D0D;border-radius:7px;margin-bottom:5px;border:1px solid #2A2A2A">'
-      + '<div><span style="font-size:13px;font-weight:700;color:#fff">'+c.nombre+'</span>'+rut+'<span style="font-size:10px;color:rgba(255,255,255,0.3);margin-left:6px">✓</span></div>'
-      + '<button data-cid="'+c.id+'" onclick="setupEliminarConductor(this.dataset.cid)" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:#ef4444;border-radius:5px;padding:3px 8px;font-size:10px;cursor:pointer">✕</button>'
+    const rut = c.rut ? '<span style="font-size:11px;color:var(--muted);margin-left:8px">'+c.rut+'</span>' : '';
+    html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:var(--bg);border-radius:7px;margin-bottom:5px;border:1px solid var(--border)">'
+      + '<div><span style="font-size:13px;font-weight:700;color:var(--text)">'+c.nombre+'</span>'+rut+'<span style="font-size:10px;color:var(--muted);margin-left:6px">✓</span></div>'
+      + '<button data-cid="'+c.id+'" onclick="setupEliminarConductor(this.dataset.cid)" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:var(--danger);border-radius:5px;padding:3px 8px;font-size:10px;cursor:pointer">✕</button>'
       + '</div>';
   });
   _setupConductores.forEach(function(c,i) {
-    const rut = c.rut ? '<span style="font-size:11px;color:rgba(255,255,255,0.4);margin-left:8px">'+c.rut+'</span>' : '';
+    const rut = c.rut ? '<span style="font-size:11px;color:var(--muted);margin-left:8px">'+c.rut+'</span>' : '';
     html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:rgba(255,107,0,0.08);border-radius:7px;margin-bottom:5px;border:1px solid rgba(255,107,0,0.3)">'
-      + '<div><span style="font-size:13px;font-weight:700;color:#fff">'+c.nombre+'</span>'+rut+'<span style="font-size:10px;color:#FF6B00;margin-left:6px">● pendiente</span></div>'
-      + '<button data-idx="'+i+'" onclick="_setupConductores.splice(parseInt(this.dataset.idx),1);renderSetupListaConductores()" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:#ef4444;border-radius:5px;padding:3px 8px;font-size:10px;cursor:pointer">✕</button>'
+      + '<div><span style="font-size:13px;font-weight:700;color:var(--text)">'+c.nombre+'</span>'+rut+'<span style="font-size:10px;color:var(--gold);margin-left:6px">● pendiente</span></div>'
+      + '<button data-idx="'+i+'" onclick="_setupConductores.splice(parseInt(this.dataset.idx),1);renderSetupListaConductores()" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:var(--danger);border-radius:5px;padding:3px 8px;font-size:10px;cursor:pointer">✕</button>'
       + '</div>';
   });
-  el.innerHTML = html || '<div style="font-size:12px;color:rgba(255,255,255,0.3);margin-bottom:8px">Sin conductores</div>';
+  el.innerHTML = html || '<div style="font-size:12px;color:var(--muted);margin-bottom:8px">Sin conductores</div>';
 }
 
 function setupListaAgregarTarifa() {
@@ -4522,22 +4526,22 @@ function setupListaAgregarTarifa() {
 function renderSetupListaTarifas() {
   const el = document.getElementById('setup-lista-tarifario');
   const guardados = (DB.tarifarios||[]).map(t => `
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 10px;background:#0D0D0D;border-radius:7px;margin-bottom:5px;border:1px solid #2A2A2A">
-      <div style="font-size:12px;color:#fff">${t.cliente||'—'} · ${t.origen||'—'} → ${t.destino||'—'}<span style="font-size:10px;color:rgba(255,255,255,0.3);margin-left:6px">✓</span></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 10px;background:var(--bg);border-radius:7px;margin-bottom:5px;border:1px solid var(--border)">
+      <div style="font-size:12px;color:var(--text)">${t.cliente||'—'} · ${t.origen||'—'} → ${t.destino||'—'}<span style="font-size:10px;color:var(--muted);margin-left:6px">✓</span></div>
       <div style="display:flex;align-items:center;gap:8px">
-        <span style="font-size:13px;font-weight:800;color:#22c55e">$${Number(t.tarifa_neta||0).toLocaleString('es-CL')}</span>
-        <button onclick="setupEliminarTarifa('${t.id}')" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:#ef4444;border-radius:5px;padding:3px 8px;font-size:10px;cursor:pointer">✕</button>
+        <span style="font-size:13px;font-weight:800;color:var(--green)">$${Number(t.tarifa_neta||0).toLocaleString('es-CL')}</span>
+        <button onclick="setupEliminarTarifa('${t.id}')" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:var(--danger);border-radius:5px;padding:3px 8px;font-size:10px;cursor:pointer">✕</button>
       </div>
     </div>`).join('');
   const nuevos = _setupTarifas.map((t,i) => `
     <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 10px;background:rgba(255,107,0,0.08);border-radius:7px;margin-bottom:5px;border:1px solid rgba(255,107,0,0.3)">
-      <div style="font-size:12px;color:#fff">${t.nombre?t.nombre+' — ':''}${t.cliente} · ${t.origen} → ${t.destino}${t.punto?' · pto: $'+t.punto.toLocaleString('es-CL'):''}<span style="font-size:10px;color:#FF6B00;margin-left:6px">● pendiente</span></div>
+      <div style="font-size:12px;color:var(--text)">${t.nombre?t.nombre+' — ':''}${t.cliente} · ${t.origen} → ${t.destino}${t.punto?' · pto: $'+t.punto.toLocaleString('es-CL'):''}<span style="font-size:10px;color:var(--gold);margin-left:6px">● pendiente</span></div>
       <div style="display:flex;align-items:center;gap:8px">
-        <span style="font-size:13px;font-weight:800;color:#22c55e">$${t.valor.toLocaleString('es-CL')}</span>
-        <button onclick="_setupTarifas.splice(${i},1);renderSetupListaTarifas()" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:#ef4444;border-radius:5px;padding:3px 8px;font-size:10px;cursor:pointer">✕</button>
+        <span style="font-size:13px;font-weight:800;color:var(--green)">$${t.valor.toLocaleString('es-CL')}</span>
+        <button onclick="_setupTarifas.splice(${i},1);renderSetupListaTarifas()" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:var(--danger);border-radius:5px;padding:3px 8px;font-size:10px;cursor:pointer">✕</button>
       </div>
     </div>`).join('');
-  el.innerHTML = guardados + nuevos || '<div style="font-size:12px;color:rgba(255,255,255,0.3)">Sin tarifas</div>';
+  el.innerHTML = guardados + nuevos || '<div style="font-size:12px;color:var(--muted)">Sin tarifas</div>';
 }
 
 function setupCFSumar() {
