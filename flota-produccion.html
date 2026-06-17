@@ -5,107 +5,107 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>KAPTURA v8.1</title>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700;800;900&family=Barlow+Condensed:wght@600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --navy:#1C2B4A;--red:#E8192C;--blue:#1E3A5F;
-  --g50:#F5F7FA;--g100:#EEF1F6;--g200:#DDE2EC;--g400:#8C96B0;--g600:#4E5A78;--g800:#2A3350;
-  --white:#fff;--green:#00A86B;--orange:#F59E0B;
-  --sh:0 1px 4px rgba(28,43,74,0.08);--shl:0 8px 36px rgba(28,43,74,0.16);
+  --navy:#FF6B00;--red:#FF6B00;--blue:#FF6B00;
+  --g50:#0D0D0D;--g100:#1A1A1A;--g200:#2A2A2A;--g400:rgba(255,255,255,0.4);--g600:rgba(255,255,255,0.6);--g800:#fff;
+  --white:#1A1A1A;--green:#22c55e;--orange:#FF6B00;
+  --sh:0 1px 4px rgba(0,0,0,0.4);--shl:0 8px 36px rgba(0,0,0,0.6);
 }
-body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min-height:100vh;font-size:14px}
-.hdr{background:#fff;border-bottom:2px solid var(--g100);padding:0 16px;display:flex;align-items:center;justify-content:space-between;height:52px;box-shadow:var(--sh);position:sticky;top:0;z-index:100}
-.logo{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:#808080;letter-spacing:-0.5px}
-.hdr-info{font-size:11px;color:var(--g400);font-weight:700;text-align:right;line-height:1.4}
-.nav{background:#fff;border-bottom:1px solid var(--g200);display:flex;overflow-x:auto;scrollbar-width:none}
+body{font-family:'DM Sans',sans-serif;background:#0D0D0D;color:#fff;min-height:100vh;font-size:14px}
+.hdr{background:#1A1A1A;border-bottom:2px solid #2A2A2A;padding:0 16px;display:flex;align-items:center;justify-content:space-between;height:52px;box-shadow:var(--sh);position:sticky;top:0;z-index:100}
+.logo{font-family:'DM Sans',sans-serif;font-size:22px;font-weight:900;color:#FF6B00;letter-spacing:-0.5px}
+.hdr-info{font-size:11px;color:rgba(255,255,255,0.5);font-weight:700;text-align:right;line-height:1.4}
+.nav{background:#1A1A1A;border-bottom:1px solid #2A2A2A;display:flex;overflow-x:auto;scrollbar-width:none}
 .nav::-webkit-scrollbar{display:none}
-.ntab{padding:10px 16px;font-size:11px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--g400);cursor:pointer;border-bottom:3px solid transparent;border-top:none;border-left:none;border-right:none;background:none;font-family:'Barlow',sans-serif;white-space:nowrap}
-.ntab.active{color:var(--navy);border-bottom-color:var(--red)}
+.ntab{padding:10px 16px;font-size:11px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:rgba(255,255,255,0.4);cursor:pointer;border-bottom:3px solid transparent;border-top:none;border-left:none;border-right:none;background:none;font-family:'DM Sans',sans-serif;white-space:nowrap}
+.ntab.active{color:#fff;border-bottom-color:#FF6B00}
 .main{padding:12px;max-width:100%}
 @media(min-width:768px){.main{padding:24px 32px;max-width:1600px;margin:0 auto}}
 .kpis{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
 @media(min-width:768px){.kpis{grid-template-columns:repeat(8,1fr)}}
-.kpi{background:#fff;border-radius:8px;padding:12px 14px;box-shadow:var(--sh);border:1px solid var(--g200);position:relative;overflow:hidden}
-.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--navy)}
-.kpi.orange::before{background:var(--orange)}.kpi.green::before{background:var(--green)}.kpi.red::before{background:var(--red)}
-.kpi-lbl{font-size:9px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:var(--g400);margin-bottom:5px}
-.kpi-val{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;color:var(--navy);line-height:1}
-.kpi-val.green{color:var(--green)}.kpi-val.orange{color:var(--orange)}.kpi-val.red{color:var(--red)}
-.kpi-sub{font-size:9px;color:var(--g400);margin-top:3px;font-weight:600}
+.kpi{background:#1A1A1A;border-radius:8px;padding:12px 14px;box-shadow:var(--sh);border:1px solid #2A2A2A;position:relative;overflow:hidden}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:#FF6B00}
+.kpi.orange::before{background:#FF6B00}.kpi.green::before{background:#22c55e}.kpi.red::before{background:#ef4444}
+.kpi-lbl{font-size:9px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.4);margin-bottom:5px}
+.kpi-val{font-family:'DM Sans',sans-serif;font-size:22px;font-weight:900;color:#fff;line-height:1}
+.kpi-val.green{color:#22c55e}.kpi-val.orange{color:#FF6B00}.kpi-val.red{color:#ef4444}
+.kpi-sub{font-size:9px;color:rgba(255,255,255,0.4);margin-top:3px;font-weight:600}
 .sec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:8px}
-.sec-ttl{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;color:var(--navy)}
+.sec-ttl{font-family:'DM Sans',sans-serif;font-size:15px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;color:#fff}
 .filtro{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
-.filtro input{font-family:'Barlow',sans-serif;font-size:12px;padding:6px 10px;border:1.5px solid var(--g200);border-radius:6px;outline:none;background:#fff}
-.btn{font-family:'Barlow',sans-serif;font-size:11px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;padding:8px 14px;border-radius:6px;cursor:pointer;border:none;transition:all 0.15s;white-space:nowrap;display:inline-flex;align-items:center;gap:5px}
-.btn-navy{background:var(--navy);color:#fff}.btn-navy:active{opacity:0.85}
-.btn-outline{background:#fff;color:var(--navy);border:1.5px solid var(--navy)}
-.btn-ghost{background:var(--g100);color:var(--g400);cursor:default}
-.btn-green{background:#D1FAE5;color:#065F46}.btn-orange{background:#FEF3C7;color:#92400E;border:1.5px solid var(--orange)}
-.btn-red{background:#FEE2E2;color:#B91C1C}.btn-purple{background:#EDE9FE;color:#5B21B6}
+.filtro input{font-family:'DM Sans',sans-serif;font-size:12px;padding:6px 10px;border:1.5px solid #2A2A2A;border-radius:6px;outline:none;background:#1A1A1A;color:#fff}
+.btn{font-family:'DM Sans',sans-serif;font-size:11px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;padding:8px 14px;border-radius:6px;cursor:pointer;border:none;transition:all 0.15s;white-space:nowrap;display:inline-flex;align-items:center;gap:5px}
+.btn-navy{background:#FF6B00;color:#fff}.btn-navy:active{opacity:0.85}
+.btn-outline{background:transparent;color:#FF6B00;border:1.5px solid #FF6B00}
+.btn-ghost{background:#2A2A2A;color:rgba(255,255,255,0.4);cursor:default}
+.btn-green{background:rgba(34,197,94,0.15);color:#22c55e;border:1px solid rgba(34,197,94,0.3)}.btn-orange{background:rgba(255,107,0,0.15);color:#FF6B00;border:1.5px solid #FF6B00}
+.btn-red{background:rgba(239,68,68,0.15);color:#ef4444;border:1px solid rgba(239,68,68,0.3)}.btn-purple{background:rgba(139,92,246,0.15);color:#a78bfa}
 .btn-sm{padding:5px 10px;font-size:10px}.btn-full{width:100%;justify-content:center}
 .svc-list{display:flex;flex-direction:column;gap:8px}
-.svc-card{background:#fff;border-radius:8px;box-shadow:var(--sh);border:1px solid var(--g200);overflow:hidden}
+.svc-card{background:#1A1A1A;border-radius:8px;box-shadow:var(--sh);border:1px solid #2A2A2A;overflow:hidden}
 .svc-top{padding:10px 12px 8px;display:flex;align-items:flex-start;justify-content:space-between;gap:6px}
-.svc-id{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:var(--navy)}
-.svc-pat{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--g800)}
-.svc-line{font-size:11px;color:var(--g600);font-weight:600;margin-top:2px}
-.svc-body{padding:8px 12px 10px;border-top:1px solid var(--g100)}
+.svc-id{font-family:'DM Sans',sans-serif;font-size:15px;font-weight:900;color:#FF6B00}
+.svc-pat{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;color:#fff}
+.svc-line{font-size:11px;color:rgba(255,255,255,0.6);font-weight:600;margin-top:2px}
+.svc-body{padding:8px 12px 10px;border-top:1px solid #2A2A2A}
 .svc-acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
 .pill{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:9px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;white-space:nowrap}
-.p-asignado{background:#EEF2FF;color:#3730A3}.p-proceso{background:#FEF3C7;color:#92400E}
-.p-borrador{background:#FEE2E2;color:#B91C1C}.p-ejecutado{background:#ECFDF5;color:#065F46;border:1px solid #6EE7B7}
-.p-confirmado{background:#D1FAE5;color:#065F46}.p-cerrado{background:var(--g100);color:#374151}
+.p-asignado{background:rgba(99,102,241,0.2);color:#a5b4fc}.p-proceso{background:rgba(255,107,0,0.2);color:#FF6B00}
+.p-borrador{background:rgba(239,68,68,0.2);color:#ef4444}.p-ejecutado{background:rgba(34,197,94,0.2);color:#22c55e;border:1px solid rgba(34,197,94,0.3)}
+.p-confirmado{background:rgba(34,197,94,0.2);color:#22c55e}.p-cerrado{background:#2A2A2A;color:rgba(255,255,255,0.5)}
 .desk-tbl{display:none}
 @media(min-width:900px){
   .svc-list{display:none}
-  .desk-tbl{display:block;background:#fff;border-radius:10px;box-shadow:var(--sh);border:1px solid var(--g200);overflow:hidden}
+  .desk-tbl{display:block;background:#1A1A1A;border-radius:10px;box-shadow:var(--sh);border:1px solid #2A2A2A;overflow:hidden}
   .desk-tbl table{width:100%;border-collapse:collapse;min-width:1200px}
-  .desk-tbl thead{background:var(--blue)}
-  .desk-tbl thead th{padding:10px 10px;text-align:left;font-size:9px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.75);white-space:nowrap}
-  .desk-tbl tbody tr{border-bottom:1px solid var(--g100)}
-  .desk-tbl tbody tr:hover{background:var(--g50)}
-  .desk-tbl tbody td{padding:9px 10px;font-size:12px;vertical-align:middle}
+  .desk-tbl thead{background:#0D0D0D}
+  .desk-tbl thead th{padding:10px 10px;text-align:left;font-size:9px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.5);white-space:nowrap}
+  .desk-tbl tbody tr{border-bottom:1px solid #2A2A2A}
+  .desk-tbl tbody tr:hover{background:#0D0D0D}
+  .desk-tbl tbody td{padding:9px 10px;font-size:12px;vertical-align:middle;color:#fff}
 }
-.overlay{position:fixed;inset:0;background:rgba(21,32,56,0.55);backdrop-filter:blur(3px);z-index:200;display:flex;align-items:flex-end;justify-content:center}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(3px);z-index:200;display:flex;align-items:flex-end;justify-content:center}
 @media(min-width:640px){.overlay{align-items:center;padding:20px}}
-.modal{background:#fff;border-radius:16px 16px 0 0;width:100%;max-height:95vh;overflow-y:auto;box-shadow:var(--shl)}
+.modal{background:#1A1A1A;border-radius:16px 16px 0 0;width:100%;max-height:95vh;overflow-y:auto;box-shadow:var(--shl)}
 @media(min-width:640px){.modal{border-radius:16px;max-width:620px}}
-.modal-hdr{padding:14px 16px 12px;border-bottom:1px solid var(--g200);display:flex;align-items:flex-start;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:1}
-.modal-ttl{font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:900;text-transform:uppercase;letter-spacing:0.05em;color:var(--navy)}
-.modal-sub{font-size:11px;color:var(--g400);font-weight:600;margin-top:2px}
-.modal-cls{background:var(--g100);border:none;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:13px;color:var(--g600);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.modal-hdr{padding:14px 16px 12px;border-bottom:1px solid #2A2A2A;display:flex;align-items:flex-start;justify-content:space-between;position:sticky;top:0;background:#1A1A1A;z-index:1}
+.modal-ttl{font-family:'DM Sans',sans-serif;font-size:17px;font-weight:900;text-transform:uppercase;letter-spacing:0.05em;color:#FF6B00}
+.modal-sub{font-size:11px;color:rgba(255,255,255,0.5);font-weight:600;margin-top:2px}
+.modal-cls{background:#2A2A2A;border:none;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:13px;color:rgba(255,255,255,0.6);display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .modal-body{padding:16px}
-.modal-ftr{padding:12px 16px;border-top:1px solid var(--g200);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;position:sticky;bottom:0;background:#fff}
+.modal-ftr{padding:12px 16px;border-top:1px solid #2A2A2A;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;position:sticky;bottom:0;background:#1A1A1A}
 .fld{display:flex;flex-direction:column;margin-bottom:10px}
 .fld2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
-.lbl{font-size:9px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:var(--g600);margin-bottom:3px}
-.inp{font-family:'Barlow',sans-serif;font-size:13px;font-weight:600;padding:8px 10px;border:1.5px solid var(--g200);border-radius:6px;color:var(--g800);background:#fff;outline:none;width:100%}
-.inp:focus{border-color:var(--navy)}.inp.pend{border-color:var(--orange);background:#FFFBEB}.inp.ok{border-color:var(--green);background:#ECFDF5}
-.info-box{background:var(--g50);border-radius:8px;padding:10px 12px;margin-bottom:14px;border:1px solid var(--g200)}
+.lbl{font-size:9px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.5);margin-bottom:3px}
+.inp{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;padding:8px 10px;border:1.5px solid #2A2A2A;border-radius:6px;color:#fff;background:#0D0D0D;outline:none;width:100%}
+.inp:focus{border-color:#FF6B00}.inp.pend{border-color:#FF6B00;background:rgba(255,107,0,0.08)}.inp.ok{border-color:#22c55e;background:rgba(34,197,94,0.08)}
+.info-box{background:#0D0D0D;border-radius:8px;padding:10px 12px;margin-bottom:14px;border:1px solid #2A2A2A}
 .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:11px}
-.info-item .lbl2{color:var(--g400);font-weight:700;font-size:9px;text-transform:uppercase;letter-spacing:0.1em}
-.info-item .val{font-weight:800;color:var(--navy);margin-top:2px}
-.section-ttl{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:var(--navy);padding:6px 0 5px;border-bottom:2px solid var(--blue);margin-bottom:10px}
-.empty{text-align:center;padding:40px 20px;color:var(--g400)}
-.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 18px;border-radius:8px;font-size:12px;font-weight:700;z-index:999;opacity:0;transition:opacity 0.3s;pointer-events:none;max-width:90vw;text-align:center}
+.info-item .lbl2{color:rgba(255,255,255,0.4);font-weight:700;font-size:9px;text-transform:uppercase;letter-spacing:0.1em}
+.info-item .val{font-weight:800;color:#fff;margin-top:2px}
+.section-ttl{font-family:'DM Sans',sans-serif;font-size:11px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:#FF6B00;padding:6px 0 5px;border-bottom:2px solid #FF6B00;margin-bottom:10px}
+.empty{text-align:center;padding:40px 20px;color:rgba(255,255,255,0.4)}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#FF6B00;color:#fff;padding:10px 18px;border-radius:8px;font-size:12px;font-weight:700;z-index:999;opacity:0;transition:opacity 0.3s;pointer-events:none;max-width:90vw;text-align:center}
 .toast.show{opacity:1}
-.loading{position:fixed;inset:0;background:rgba(255,255,255,0.9);z-index:300;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px}
-.spin{width:32px;height:32px;border:3px solid var(--g200);border-top-color:var(--navy);border-radius:50%;animation:spin 0.8s linear infinite}
+.loading{position:fixed;inset:0;background:rgba(13,13,13,0.95);z-index:300;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px}
+.spin{width:32px;height:32px;border:3px solid #2A2A2A;border-top-color:#FF6B00;border-radius:50%;animation:spin 0.8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-/* Informe styles - all hardcoded, no CSS vars */
-.inf-hdr{background:#1C2B4A;color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;border-radius:8px 8px 0 0}
-.inf-grid{display:grid;grid-template-columns:1fr 1fr;border:1px solid #DDE2EC;border-top:none}
-.inf-cell{padding:8px 12px;border-right:1px solid #DDE2EC;border-bottom:1px solid #DDE2EC}
+/* Informe styles */
+.inf-hdr{background:#FF6B00;color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;border-radius:8px 8px 0 0}
+.inf-grid{display:grid;grid-template-columns:1fr 1fr;border:1px solid #2A2A2A;border-top:none}
+.inf-cell{padding:8px 12px;border-right:1px solid #2A2A2A;border-bottom:1px solid #2A2A2A;background:#1A1A1A}
 .inf-cell:nth-child(even){border-right:none}
-.inf-lbl{font-size:9px;font-weight:800;color:#4E5A78;letter-spacing:0.1em;text-transform:uppercase}
-.inf-val{font-weight:700;color:#1C2B4A;margin-top:2px;font-size:13px}
-.inf-section{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:#1C2B4A;padding:10px 0 5px;border-bottom:2px solid #1E3A5F;margin:14px 0 8px}
-.inf-table{width:100%;border-collapse:collapse;font-size:11px;color:#2A3350}
-.inf-table th{background:#1E3A5F;color:rgba(255,255,255,0.8);padding:6px 8px;text-align:left;font-size:9px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase}
-.inf-table td{padding:5px 8px;border-bottom:1px solid #EEF1F6;color:#2A3350}
-.inf-margen{background:#1C2B4A;color:#fff;padding:12px 16px;display:grid;grid-template-columns:1fr 1fr;gap:12px;border-radius:0 0 8px 8px;margin-top:4px}
+.inf-lbl{font-size:9px;font-weight:800;color:rgba(255,255,255,0.5);letter-spacing:0.1em;text-transform:uppercase}
+.inf-val{font-weight:700;color:#fff;margin-top:2px;font-size:13px}
+.inf-section{font-family:'DM Sans',sans-serif;font-size:12px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:#FF6B00;padding:10px 0 5px;border-bottom:2px solid #FF6B00;margin:14px 0 8px}
+.inf-table{width:100%;border-collapse:collapse;font-size:11px;color:#fff}
+.inf-table th{background:#0D0D0D;color:rgba(255,255,255,0.6);padding:6px 8px;text-align:left;font-size:9px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase}
+.inf-table td{padding:5px 8px;border-bottom:1px solid #2A2A2A;color:#fff}
+.inf-margen{background:#FF6B00;color:#fff;padding:12px 16px;display:grid;grid-template-columns:1fr 1fr;gap:12px;border-radius:0 0 8px 8px;margin-top:4px}
 </style>
 </head>
 <body>
@@ -158,11 +158,11 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
 <header class="hdr">
   <div style="display:flex;flex-direction:column">
     <div class="logo">KAPTURA</div>
-    <div id="hdr-empresa" style="font-size:11px;font-weight:800;color:var(--blue);letter-spacing:0.05em;margin-top:1px"></div>
+    <div id="hdr-empresa" style="font-size:11px;font-weight:800;color:#FF6B00;letter-spacing:0.05em;margin-top:1px"></div>
   </div>
   <div style="display:flex;align-items:center;gap:12px">
     <div class="hdr-info" id="hdr-info"></div>
-    <button id="btn-cerrar-sesion" onclick="cerrarSesionKaptura()" style="display:none;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:white;border-radius:6px;padding:6px 14px;font-size:12px;cursor:pointer;font-weight:700">⏏ Salir</button>
+    <button id="btn-cerrar-sesion" onclick="cerrarSesionKaptura()" style="display:none;background:rgba(255,107,0,0.15);border:1px solid #FF6B00;color:#FF6B00;border-radius:6px;padding:6px 14px;font-size:12px;cursor:pointer;font-weight:700">⏏ Salir</button>
   </div>
 </header>
 
@@ -180,40 +180,40 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
 <!-- ═══ PANTALLA MÓDULOS ═══ -->
 <div id="pantalla-modulos" style="display:none;max-width:480px;margin:0 auto;padding:24px 16px">
   <div style="text-align:center;margin-bottom:24px">
-    <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--g400);letter-spacing:0.15em" id="mod-empresa-label">—</div>
-    <div style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:900;color:var(--navy)">SELECCIONA TU MÓDULO</div>
+    <div style="font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;color:var(--g400);letter-spacing:0.15em" id="mod-empresa-label">—</div>
+    <div style="font-family:'DM Sans',sans-serif;font-size:24px;font-weight:900;color:var(--navy)">SELECCIONA TU MÓDULO</div>
   </div>
 
   <!-- KAPTURA GO -->
-  <div id="mod-go" onclick="entrarModulo('go')" style="background:#fff;border:2px solid #059669;border-radius:14px;padding:18px;margin-bottom:12px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.08)">
+  <div id="mod-go" onclick="entrarModulo('go')" style="background:#1A1A1A;border:2px solid #22c55e;border-radius:14px;padding:18px;margin-bottom:12px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.4)">
     <div style="display:flex;align-items:center;justify-content:space-between">
       <div>
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:#059669">📡 KAPTURA GO</div>
-        <div style="font-size:12px;color:#6B7280;margin-top:4px">Inicia · GPS registra todo · Ver margen</div>
+        <div style="font-family:'DM Sans',sans-serif;font-size:22px;font-weight:900;color:#22c55e">📡 KAPTURA GO</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-top:4px">Inicia · GPS registra todo · Ver margen</div>
       </div>
-      <div style="background:#059669;color:#fff;font-size:10px;font-weight:800;padding:4px 10px;border-radius:20px">BÁSICO</div>
+      <div style="background:#22c55e;color:#fff;font-size:10px;font-weight:800;padding:4px 10px;border-radius:20px">BÁSICO</div>
     </div>
   </div>
 
   <!-- KAPTURA PRO -->
-  <div id="mod-pro" onclick="entrarModulo('pro')" style="background:#fff;border:2px solid #D97706;border-radius:14px;padding:18px;margin-bottom:12px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.08)">
+  <div id="mod-pro" onclick="entrarModulo('pro')" style="background:#1A1A1A;border:2px solid #FF6B00;border-radius:14px;padding:18px;margin-bottom:12px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.4)">
     <div style="display:flex;align-items:center;justify-content:space-between">
       <div>
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:#D97706">📱 KAPTURA PRO</div>
-        <div style="font-size:12px;color:#6B7280;margin-top:4px">Guías · Etapas · KPIs · $/km · Ranking clientes</div>
+        <div style="font-family:'DM Sans',sans-serif;font-size:22px;font-weight:900;color:#FF6B00">📱 KAPTURA PRO</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-top:4px">Guías · Etapas · KPIs · $/km · Ranking clientes</div>
       </div>
-      <div style="background:#D97706;color:#fff;font-size:10px;font-weight:800;padding:4px 10px;border-radius:20px">PRO</div>
+      <div style="background:#FF6B00;color:#fff;font-size:10px;font-weight:800;padding:4px 10px;border-radius:20px">PRO</div>
     </div>
   </div>
 
   <!-- KAPTURA FLOTA -->
-  <div id="mod-flota" onclick="entrarModulo('flota')" style="background:#fff;border:2px solid #1E3A5F;border-radius:14px;padding:18px;margin-bottom:12px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.08)">
+  <div id="mod-flota" onclick="entrarModulo('flota')" style="background:#1A1A1A;border:2px solid #FF6B00;border-radius:14px;padding:18px;margin-bottom:12px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.4)">
     <div style="display:flex;align-items:center;justify-content:space-between">
       <div>
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:#1E3A5F">🖥 KAPTURA FLOTA</div>
-        <div style="font-size:12px;color:#6B7280;margin-top:4px">Asignación · Flota · Coordinador · Gestión completa</div>
+        <div style="font-family:'DM Sans',sans-serif;font-size:22px;font-weight:900;color:#FF6B00">🖥 KAPTURA FLOTA</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-top:4px">Asignación · Flota · Coordinador · Gestión completa</div>
       </div>
-      <div id="mod-flota-badge" style="background:#1E3A5F;color:#fff;font-size:10px;font-weight:800;padding:4px 10px;border-radius:20px">PREMIUM</div>
+      <div id="mod-flota-badge" style="background:#FF6B00;color:#fff;font-size:10px;font-weight:800;padding:4px 10px;border-radius:20px">PREMIUM</div>
     </div>
   </div>
 </div>
@@ -292,7 +292,7 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
 
     <!-- Header y filtros -->
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;letter-spacing:0.05em">COSTOS</div>
+      <div style="font-family:'DM Sans',sans-serif;font-size:20px;font-weight:900;letter-spacing:0.05em">COSTOS</div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
         <input type="month" class="inp" id="gasto-filtro-mes" style="width:auto" onchange="cargarGastos()">
         <select class="inp" id="gasto-filtro-patente" style="width:auto" onchange="renderCostosDash()">
@@ -381,7 +381,7 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
   <!-- TAB LIQUIDACIONES -->
   <div id="tab-liquidaciones" style="display:none">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;letter-spacing:0.05em">LIQUIDACIONES</div>
+      <div style="font-family:'DM Sans',sans-serif;font-size:20px;font-weight:900;letter-spacing:0.05em">LIQUIDACIONES</div>
     </div>
     <div style="background:#F9FAFB;border-radius:12px;padding:40px;text-align:center;color:#9CA3AF">
       <div style="font-size:32px;margin-bottom:12px">🚧</div>
@@ -393,7 +393,7 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
   <!-- TAB RESULTADOS -->
   <div id="tab-resultados" style="display:none">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;letter-spacing:0.05em">RESULTADOS</div>
+      <div style="font-family:'DM Sans',sans-serif;font-size:20px;font-weight:900;letter-spacing:0.05em">RESULTADOS</div>
       <select id="res-mes" class="inp" style="width:auto;font-size:11px;padding:4px 8px" onchange="renderResultados()">
         <option value="0">Enero</option>
         <option value="1">Febrero</option>
@@ -415,7 +415,7 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
   <!-- TAB INFORMES -->
   <div id="tab-informes" style="display:none">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;letter-spacing:0.05em">INFORMES</div>
+      <div style="font-family:'DM Sans',sans-serif;font-size:20px;font-weight:900;letter-spacing:0.05em">INFORMES</div>
     </div>
     <!-- Lista de informes -->
     <div id="inf-lista-container" style="display:block">
@@ -426,13 +426,13 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
     <div id="inf-detalle-container" style="display:none">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
         <button class="btn btn-outline btn-sm" onclick="volverListaInformes()">← Volver</button>
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;letter-spacing:0.05em" id="inf-detalle-titulo">—</div>
+        <div style="font-family:'DM Sans',sans-serif;font-size:18px;font-weight:900;letter-spacing:0.05em" id="inf-detalle-titulo">—</div>
         <button class="btn btn-outline btn-sm" onclick="window.print()">🖨 Imprimir</button>
       </div>
-      <div style="background:#fff;border-radius:12px;overflow:hidden;border:1.5px solid #E5E7EB;max-width:700px">
+      <div style="background:#1A1A1A;border-radius:12px;overflow:hidden;border:1.5px solid #2A2A2A;max-width:700px">
         <!-- Header -->
         <div style="background:var(--navy);color:#fff;padding:16px 20px">
-          <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;letter-spacing:0.05em">ESTADO DE RESULTADOS</div>
+          <div style="font-family:'DM Sans',sans-serif;font-size:18px;font-weight:900;letter-spacing:0.05em">ESTADO DE RESULTADOS</div>
           <div style="font-size:11px;opacity:0.7;margin-top:2px" id="inf-er-subtitulo">—</div>
         </div>
         <!-- Tabla -->
@@ -566,7 +566,7 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
   <div class="modal" style="max-width:340px">
     <div class="modal-hdr">
       <div>
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:900;letter-spacing:0.05em">EDITAR SERVICIO</div>
+        <div style="font-family:'DM Sans',sans-serif;font-size:16px;font-weight:900;letter-spacing:0.05em">EDITAR SERVICIO</div>
         <div style="font-size:11px;color:#6B7280;margin-top:2px" id="editar-cerrado-sub">—</div>
       </div>
       <button class="modal-cls" onclick="cerrar('modal-editar-cerrado')">✕</button>
@@ -817,12 +817,12 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
       <div style="background:#152038;border-radius:10px;padding:14px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
         <div>
           <div style="font-size:9px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.45);margin-bottom:4px">Margen Servicio</div>
-          <div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:900;line-height:1" id="cos-margen">$—</div>
+          <div style="font-family:'DM Sans',sans-serif;font-size:26px;font-weight:900;line-height:1" id="cos-margen">$—</div>
           <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.4);margin-top:2px" id="cos-margen-pct">—</div>
         </div>
         <div>
           <div style="font-size:9px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.45);margin-bottom:4px">Total Ingresos</div>
-          <div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:900;line-height:1;color:#34D399" id="cos-ingreso">$—</div>
+          <div style="font-family:'DM Sans',sans-serif;font-size:26px;font-weight:900;line-height:1;color:#34D399" id="cos-ingreso">$—</div>
         </div>
       </div>
     </div>
@@ -861,7 +861,7 @@ body{font-family:'Barlow',sans-serif;background:var(--g50);color:var(--g800);min
         <button class="modal-cls" onclick="cerrar('modal-informe')">✕</button>
       </div>
     </div>
-    <div class="modal-body" id="inf-body" style="overflow-x:auto;color:#2A3350">
+    <div class="modal-body" id="inf-body" style="overflow-x:auto;color:#fff">
       <div style="text-align:center;padding:20px;color:var(--g400)">Cargando...</div>
     </div>
   </div>
@@ -1057,7 +1057,7 @@ function renderDetalleTab() {
       </td></tr>`;
       const detalleHTML = `<div id="${detalleDivId}" style="display:none;margin-top:4px;overflow-x:auto">
         <table style="width:100%;border-collapse:collapse;font-size:12px">
-          <thead><tr style="background:#F5F7FA">
+          <thead><tr style="background:#0D0D0D">
             <th style="padding:6px;text-align:left">Fecha</th>
             <th style="padding:6px;text-align:left">Equipo</th>
             <th style="padding:6px;text-align:right">Litros</th>
@@ -1123,7 +1123,7 @@ function renderDetalleTab() {
       </td></tr>`;
       const detHTMLM = `<div id="${detIdM}" style="display:none;margin-top:4px;overflow-x:auto">
         <table style="width:100%;border-collapse:collapse;font-size:12px">
-          <thead><tr style="background:#F5F7FA">
+          <thead><tr style="background:#0D0D0D">
             <th style="padding:6px;text-align:left">Fecha</th>
             <th style="padding:6px;text-align:left">Equipo</th>
             <th style="padding:6px">Cat.</th>
@@ -1218,11 +1218,11 @@ async function renderCostosDash() {
   const banner = document.getElementById('costos-total-banner');
   if(banner) banner.innerHTML = `
     <div><div style="font-size:9px;font-weight:800;letter-spacing:0.1em;opacity:0.6">TOTAL COSTOS OPERACIONALES</div>
-    <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900">${fmt(totalOp)}</div></div>
+    <div style="font-family:'DM Sans',sans-serif;font-size:28px;font-weight:900">${fmt(totalOp)}</div></div>
     ${inversion>0?`<div style="border-left:1px solid rgba(255,255,255,0.2);padding-left:16px"><div style="font-size:9px;font-weight:800;letter-spacing:0.1em;opacity:0.6">INVERSIÓN (separada)</div>
-    <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:#FCD34D">${fmt(inversion)}</div></div>`:''}
+    <div style="font-family:'DM Sans',sans-serif;font-size:22px;font-weight:900;color:#FCD34D">${fmt(inversion)}</div></div>`:''}
     <div style="border-left:1px solid rgba(255,255,255,0.2);padding-left:16px"><div style="font-size:9px;font-weight:800;letter-spacing:0.1em;opacity:0.6">SERVICIOS CERRADOS</div>
-    <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900">${svcsMes.length}</div></div>`;
+    <div style="font-family:'DM Sans',sans-serif;font-size:22px;font-weight:900">${svcsMes.length}</div></div>`;
 
   // KPIs por categoría
   const kpis = document.getElementById('costos-kpis');
@@ -1236,9 +1236,9 @@ async function renderCostosDash() {
       {label:'Costo Fijo',  val:fijoTotal,        tipo:'TEÓRICO', color:'#F59E0B'},
     ];
     kpis.innerHTML = items.map(it=>`
-      <div style="background:#fff;border-radius:8px;padding:12px;box-shadow:var(--sh);border:1px solid var(--g200)">
+      <div style="background:#1A1A1A;border-radius:8px;padding:12px;box-shadow:var(--sh);border:1px solid #2A2A2A">
         <div style="font-size:9px;font-weight:800;letter-spacing:0.1em;color:var(--g400);margin-bottom:4px">${it.label}</div>
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;color:#1C2B4A">${fmt(it.val)}</div>
+        <div style="font-family:'DM Sans',sans-serif;font-size:20px;font-weight:900;color:#fff">${fmt(it.val)}</div>
         <div style="display:flex;justify-content:space-between;margin-top:4px">
           <span style="font-size:9px;color:var(--g400)">${pct(it.val)} del total</span>
           <span style="font-size:9px;font-weight:700;color:${it.color}">${it.tipo}</span>
@@ -1264,7 +1264,7 @@ function renderGastosResumen() {
     }
   }
   const cards = Object.entries(porPatente).map(([pat,total]) => `
-    <div style="background:#F5F7FA;border-radius:8px;padding:12px;border-left:3px solid #1E3A5F">
+    <div style="background:#1A1A1A;border-radius:8px;padding:12px;border-left:3px solid #FF6B00">
       <div style="font-weight:900;font-size:14px">${pat}</div>
       <div style="font-size:11px;color:var(--g400);margin-bottom:4px">Gastos operacionales</div>
       <div style="font-size:18px;font-weight:900;color:#EF4444">${fmt(total)}</div>
@@ -1872,18 +1872,18 @@ function filaHTML(s,i) {
   const margen    = margenVal ? fmt(margenVal) : '—';
   const mColor    = margenVal >= 0 ? '#065F46' : '#B91C1C';
   return `<tr>
-    <td style="font-family:'Barlow Condensed',sans-serif;font-weight:800;color:var(--navy);${s.estado==='cerrado'?'cursor:pointer;text-decoration:underline dotted':''}" ${s.estado==='cerrado'?`onclick="editarServicioCerrado(${i})" title="Editar servicio"`:''}>${s.servicio_id||'—'}</td>
+    <td style="font-family:'DM Sans',sans-serif;font-weight:800;color:var(--navy);${s.estado==='cerrado'?'cursor:pointer;text-decoration:underline dotted':''}" ${s.estado==='cerrado'?`onclick="editarServicioCerrado(${i})" title="Editar servicio"`:''}>${s.servicio_id||'—'}</td>
     <td>${s.fecha||'—'}</td>
     <td>${s._fecha_termino || (s.hora_termino ? s.hora_termino.substring(0,10) : '—')}</td>
-    <td style="font-family:'Barlow Condensed',sans-serif;font-weight:700">${s.patente||'—'}</td>
+    <td style="font-family:'DM Sans',sans-serif;font-weight:700">${s.patente||'—'}</td>
     <td>${s.conductor||'—'}</td>
     <td>${s.cliente||'—'}</td>
     <td>${s.origen||'—'}</td>
     <td style="font-weight:700">${destino}</td>
-    <td style="font-size:12px;font-weight:700;color:#1C2B4A">${guia}</td>
+    <td style="font-size:12px;font-weight:700;color:#fff">${guia}</td>
     <td style="font-weight:700;color:#065F46">${tarifa}</td>
     <td style="text-align:center">${cantPtos}</td>
-    <td style="color:#2A3350">${totalPtos}</td>
+    <td style="color:rgba(255,255,255,0.7)">${totalPtos}</td>
     <td style="font-weight:700">${totalIng}</td>
     <td>${costos}</td>
     <td style="font-weight:700;color:${mColor}">${margen}</td>
@@ -2114,7 +2114,7 @@ function renderPuntos() {
 function puntosHTML(p, pi) {
   return `<div style="background:var(--g50);border-radius:10px;padding:12px;margin-bottom:10px;border:1px solid var(--g200)">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;color:var(--blue)">
+      <div style="font-family:'DM Sans',sans-serif;font-size:14px;font-weight:800;color:var(--blue)">
         📍 PUNTO ${pi+1} ${p.capturada ? '<span style="color:var(--green)">✓</span>' : ''}
       </div>
       ${puntosData.length > 1 ? `<button class="btn btn-red btn-sm" onclick="eliminarPunto(${pi})">✕</button>` : ''}
@@ -3145,7 +3145,7 @@ async function abrirInforme(i) {
   let html = `
   <div style="border:2px solid #DDE2EC;border-radius:8px;overflow:hidden;margin-bottom:16px">
     <div class="inf-hdr">
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900">KAPTURA — INFORME DE SERVICIO</div>
+      <div style="font-family:'DM Sans',sans-serif;font-size:18px;font-weight:900">KAPTURA — INFORME DE SERVICIO</div>
       <div style="font-size:11px;opacity:0.7">${new Date().toLocaleDateString('es-CL')}</div>
     </div>
     <div class="inf-grid">
@@ -3184,10 +3184,10 @@ async function abrirInforme(i) {
     puntos.forEach((p,idx) => {
       const guias = p.guias || (p.num_guia ? [{num_guia:p.num_guia, fecha_guia:p.fecha_guia||'', img_url:null}] : []);
       html += `<tr>
-        <td style="color:#2A3350">${idx+1}</td>
-        <td style="color:#2A3350">${p.tipo==='final'?'🏁 Final':'🔁 Intermedio'}</td>
-        <td style="font-weight:700;color:#1C2B4A">${p.destino||'—'}</td>
-        <td style="color:#2A3350">
+        <td style="color:rgba(255,255,255,0.7)">${idx+1}</td>
+        <td style="color:rgba(255,255,255,0.7)">${p.tipo==='final'?'🏁 Final':'🔁 Intermedio'}</td>
+        <td style="font-weight:700;color:#fff">${p.destino||'—'}</td>
+        <td style="color:rgba(255,255,255,0.7)">
           ${guias.length > 0 ? guias.map(g => `
             <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
               <span style="font-weight:700">N° ${g.num_guia}</span>
@@ -3202,7 +3202,7 @@ async function abrirInforme(i) {
     html += `<tr><td colspan="5" style="text-align:center;color:#8C96B0;padding:12px">Sin puntos registrados</td></tr>`;
   }
   html += `<tr style="background:#F5F7FA">
-    <td colspan="4" style="text-align:right;font-weight:800;color:#1C2B4A;padding:8px">TOTAL INGRESOS</td>
+    <td colspan="4" style="text-align:right;font-weight:800;color:#fff;padding:8px">TOTAL INGRESOS</td>
     <td style="text-align:right;font-weight:800;color:#065F46;padding:8px">${fmt(ingreso)}</td>
   </tr></tbody></table></div>
 
@@ -3222,22 +3222,22 @@ async function abrirInforme(i) {
   ];
   costoItems.forEach(([label, val]) => {
     if(!val && val !== 0) return;
-    html += `<tr><td style="color:#2A3350;padding:6px 8px">${label}</td><td style="text-align:right;font-weight:700;color:#2A3350;padding:6px 8px">${fmt(val)}</td></tr>`;
+    html += `<tr><td style="color:rgba(255,255,255,0.7);padding:6px 8px">${label}</td><td style="text-align:right;font-weight:700;color:rgba(255,255,255,0.7);padding:6px 8px">${fmt(val)}</td></tr>`;
   });
   html += `</tbody></table></div>
 
   <div style="background:#1C2B4A;color:#fff;padding:12px 16px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;border-radius:0 0 8px 8px;margin-top:4px">
     <div>
       <div style="font-size:9px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.45);margin-bottom:4px">Total Ingresos</div>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;color:#34D399">${fmt(s.ingreso_total||s.tarifa_neta||0)}</div>
+      <div style="font-family:'DM Sans',sans-serif;font-size:28px;font-weight:900;color:#34D399">${fmt(s.ingreso_total||s.tarifa_neta||0)}</div>
     </div>
     <div>
       <div style="font-size:9px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.45);margin-bottom:4px">Total Costos</div>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;color:#F87171">${fmt(s.total_costos||0)}</div>
+      <div style="font-family:'DM Sans',sans-serif;font-size:28px;font-weight:900;color:#F87171">${fmt(s.total_costos||0)}</div>
     </div>
     <div>
       <div style="font-size:9px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.45);margin-bottom:4px">Margen Servicio</div>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;color:${(s.margen_servicio||s.margen||0)>=0?'#34D399':'#F87171'}">${fmt(s.margen_servicio||s.margen||0)}</div>
+      <div style="font-family:'DM Sans',sans-serif;font-size:28px;font-weight:900;color:${(s.margen_servicio||s.margen||0)>=0?'#34D399':'#F87171'}">${fmt(s.margen_servicio||s.margen||0)}</div>
     </div>
   </div>`;
 
@@ -3278,7 +3278,7 @@ async function abrirInforme(i) {
         html += `<div style="margin-bottom:16px">
           <div style="font-weight:700;font-size:11px;letter-spacing:0.08em;color:#8C96B0;margin-bottom:8px">🏷 PEAJES / TAG DETECTADOS</div>
           <table style="width:100%;border-collapse:collapse;font-size:12px">
-            <thead><tr style="background:#F5F7FA">
+            <thead><tr style="background:#0D0D0D">
               <th style="text-align:left;padding:6px 8px;color:#8C96B0">Pórtico</th>
               <th style="text-align:left;padding:6px 8px;color:#8C96B0">Tipo</th>
               <th style="text-align:right;padding:6px 8px;color:#8C96B0">Valor</th>
@@ -3327,13 +3327,13 @@ async function abrirInforme(i) {
           porticoLabel = `<span style="font-weight:700;color:#1E3A5F">${p.nombre} $${(p.valor||0).toLocaleString('es-CL')}</span>`;
         }
         html += `<tr style="${e.evento!=='trip'?'background:#F5F7FA':''}">
-          <td style="font-weight:700;color:#1C2B4A">${hora}</td>
-          <td style="color:#2A3350">${tipo}</td>
-          <td style="color:#2A3350">${addr}</td>
-          <td style="text-align:right;color:#2A3350">${e.km_tramo>0?e.km_tramo.toFixed(1):''}</td>
+          <td style="font-weight:700;color:#fff">${hora}</td>
+          <td style="color:rgba(255,255,255,0.7)">${tipo}</td>
+          <td style="color:rgba(255,255,255,0.7)">${addr}</td>
+          <td style="text-align:right;color:rgba(255,255,255,0.7)">${e.km_tramo>0?e.km_tramo.toFixed(1):''}</td>
           <td style="font-size:9px">${porticoLabel}</td>
-          <td style="text-align:right;color:#2A3350">${e.duracion||''}</td>
-          <td style="text-align:right;font-weight:700;color:#1C2B4A">${acumH}h ${String(acumM).padStart(2,'0')}m</td>
+          <td style="text-align:right;color:rgba(255,255,255,0.7)">${e.duracion||''}</td>
+          <td style="text-align:right;font-weight:700;color:#fff">${acumH}h ${String(acumM).padStart(2,'0')}m</td>
         </tr>`;
       }
       html += '</tbody></table></div>';
@@ -3353,17 +3353,17 @@ function imprimirInforme() {
   win.document.write(`<html><head><title>Informe Kaptura</title>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
-      body{font-family:'Barlow',sans-serif;font-size:11px;padding:20px;color:#2A3350}
+      body{font-family:'Barlow',sans-serif;font-size:11px;padding:20px;color:rgba(255,255,255,0.7)}
       table{width:100%;border-collapse:collapse}
       th{background:#1E3A5F;color:rgba(255,255,255,0.8);padding:6px 8px;text-align:left;font-size:9px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase}
-      td{padding:5px 8px;border-bottom:1px solid #EEF1F6;color:#2A3350}
+      td{padding:5px 8px;border-bottom:1px solid #EEF1F6;color:rgba(255,255,255,0.7)}
       .inf-hdr{background:#1C2B4A;color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center}
       .inf-grid{display:grid;grid-template-columns:1fr 1fr;border:1px solid #DDE2EC;border-top:none}
       .inf-cell{padding:8px 12px;border-right:1px solid #DDE2EC;border-bottom:1px solid #DDE2EC}
       .inf-cell:nth-child(even){border-right:none}
       .inf-lbl{font-size:9px;font-weight:800;color:#4E5A78;letter-spacing:0.1em;text-transform:uppercase}
-      .inf-val{font-weight:700;color:#1C2B4A;margin-top:2px}
-      .inf-section{font-size:12px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:#1C2B4A;padding:10px 0 5px;border-bottom:2px solid #1E3A5F;margin:14px 0 8px}
+      .inf-val{font-weight:700;color:#fff;margin-top:2px}
+      .inf-section{font-size:12px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:#fff;padding:10px 0 5px;border-bottom:2px solid #1E3A5F;margin:14px 0 8px}
       .inf-margen{background:#1C2B4A;color:#fff;padding:12px 16px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
       @media print{button{display:none}}
     </style>
@@ -3596,7 +3596,7 @@ function renderResultados() {
     <div style="background:#fff;border-radius:10px;padding:16px;box-shadow:var(--sh);border:1px solid var(--g200);position:relative;overflow:hidden">
       <div style="position:absolute;top:0;left:0;right:0;height:3px;background:${colors[k.color]}"></div>
       <div style="font-size:9px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:var(--g400);margin-bottom:6px">${k.label}</div>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;color:${colors[k.color]};line-height:1">${k.val}</div>
+      <div style="font-family:'DM Sans',sans-serif;font-size:28px;font-weight:900;color:${colors[k.color]};line-height:1">${k.val}</div>
       <div style="font-size:10px;color:var(--g400);margin-top:4px;font-weight:600">${k.sub}</div>
     </div>`).join('');
 }
@@ -3681,7 +3681,7 @@ function verGuias(i) {
           : `<div style="width:64px;height:64px;background:#EEF1F6;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:24px">📄</div>`
         }
         <div style="flex:1">
-          <div style="font-size:13px;font-weight:800;color:#1C2B4A">N° ${g.num_guia||'—'}</div>
+          <div style="font-size:13px;font-weight:800;color:#fff">N° ${g.num_guia||'—'}</div>
           <div style="font-size:11px;color:#4E5A78;margin-top:2px">Fecha: ${g.fecha_guia||'—'}</div>
           ${g.img_url
             ? `<button class="btn btn-outline btn-sm" style="margin-top:6px" onclick="window.open('${g.img_url}','_blank')">👁 Ver foto</button>`
