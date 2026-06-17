@@ -706,12 +706,18 @@ body{font-family:'DM Sans',sans-serif;background:#0D0D0D;color:#fff;min-height:1
           <input id="setup-tar-valor" type="text" placeholder="$0" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:8px;font-size:12px;color:#fff;font-family:inherit">
         </div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr auto;gap:6px;align-items:flex-end">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">
         <div>
           <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">VALOR PUNTO ADICIONAL $</div>
           <input id="setup-tar-punto" type="text" placeholder="$0 (opcional)" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:8px;font-size:12px;color:#fff;font-family:inherit">
         </div>
-        <button onclick="setupListaAgregarTarifa()" style="background:#2A2A2A;border:1px solid #FF6B00;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:800;color:#FF6B00;cursor:pointer;align-self:flex-end;white-space:nowrap">+ AGREGAR</button>
+        <div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">NOMBRE / DESCRIPCIÓN</div>
+          <input id="setup-tar-nombre" type="text" placeholder="Ej: Pallet completo, Media carga..." style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:8px;font-size:12px;color:#fff;font-family:inherit">
+        </div>
+      </div>
+      <div style="text-align:right">
+        <button onclick="setupListaAgregarTarifa()" style="background:#2A2A2A;border:1px solid #FF6B00;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:800;color:#FF6B00;cursor:pointer;white-space:nowrap">+ AGREGAR</button>
       </div>
     </div>
 
@@ -4500,13 +4506,15 @@ function setupListaAgregarTarifa() {
   const destino = document.getElementById('setup-tar-destino').value.trim().toUpperCase();
   const valor   = parseFloat(document.getElementById('setup-tar-valor').value.replace(/[^0-9]/g,'')) || 0;
   const punto   = parseFloat(document.getElementById('setup-tar-punto').value.replace(/[^0-9]/g,'')) || 0;
+  const nombre  = document.getElementById('setup-tar-nombre').value.trim();
   if(!cliente || !origen || !destino || !valor) { toast('Completa cliente, origen, destino y tarifa'); return; }
-  _setupTarifas.push({cliente, origen, destino, valor, punto});
+  _setupTarifas.push({cliente, origen, destino, valor, punto, nombre});
   document.getElementById('setup-tar-cliente').value = '';
   document.getElementById('setup-tar-origen').value  = '';
   document.getElementById('setup-tar-destino').value = '';
   document.getElementById('setup-tar-valor').value   = '';
   document.getElementById('setup-tar-punto').value   = '';
+  document.getElementById('setup-tar-nombre').value  = '';
   renderSetupListaTarifas();
   toast('Tarifa agregada a la lista — presiona GUARDAR para confirmar');
 }
@@ -4523,7 +4531,7 @@ function renderSetupListaTarifas() {
     </div>`).join('');
   const nuevos = _setupTarifas.map((t,i) => `
     <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 10px;background:rgba(255,107,0,0.08);border-radius:7px;margin-bottom:5px;border:1px solid rgba(255,107,0,0.3)">
-      <div style="font-size:12px;color:#fff">${t.cliente} · ${t.origen} → ${t.destino}${t.punto?` · <span style='font-size:10px;color:rgba(255,255,255,0.5)'>pto: $${t.punto.toLocaleString('es-CL')}</span>`:''}<span style="font-size:10px;color:#FF6B00;margin-left:6px">● pendiente</span></div>
+      <div style="font-size:12px;color:#fff">${t.nombre?t.nombre+' — ':''}${t.cliente} · ${t.origen} → ${t.destino}${t.punto?' · pto: $'+t.punto.toLocaleString('es-CL'):''}<span style="font-size:10px;color:#FF6B00;margin-left:6px">● pendiente</span></div>
       <div style="display:flex;align-items:center;gap:8px">
         <span style="font-size:13px;font-weight:800;color:#22c55e">$${t.valor.toLocaleString('es-CL')}</span>
         <button onclick="_setupTarifas.splice(${i},1);renderSetupListaTarifas()" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:#ef4444;border-radius:5px;padding:3px 8px;font-size:10px;cursor:pointer">✕</button>
@@ -4582,6 +4590,7 @@ async function setupGuardarTodo() {
     // Guardar tarifas pendientes
     for(const t of _setupTarifas) {
       const {error} = await supa.from('kaptura_tarifarios').insert({cliente:t.cliente, origen:t.origen, destino:t.destino, tarifa_neta:t.valor, valor_punto:t.punto||0, empresa:DB._empresa, activo:true});
+      // nombre descriptivo guardado en DB si columna existe
       if(error) throw new Error('Tarifa: '+error.message);
     }
     _setupTarifas = [];
