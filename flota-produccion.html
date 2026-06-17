@@ -1909,7 +1909,7 @@ async function init() {
       supa.from('kaptura_conductores').select('*').eq('activo',true).eq('empresa',emp).order('nombre'),
       supa.from('kaptura_clientes').select('*').eq('empresa',emp).order('nombre'),
       supa.from('kaptura_tarifarios').select('*').eq('empresa',emp),
-      supa.from('kaptura_config').select('*').eq('empresa',emp),
+      supa.from('kaptura_config').select('*'),
       supa.from('servicios_piloto').select('*').eq('empresa',emp).order('created_at',{ascending:false}).limit(500)
     ]);
     DB.flota       = f.data  || [];
@@ -1947,7 +1947,6 @@ async function init() {
     (cfg.data||[]).forEach(r => { DB.config[r.clave||r.nombre] = r.valor||r.value; });
     // Segundo paso: claves con sufijo de empresa → mapear también sin sufijo
     // Ej: "costo_fijo_mensual_flota_297221" → DB.config["costo_fijo_mensual"]
-    const emp = DB._empresa || '';
     if(emp) {
       const sufijo = '_' + emp;
       (cfg.data||[]).forEach(r => {
