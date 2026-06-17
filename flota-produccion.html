@@ -3710,7 +3710,31 @@ let _sessionUsuario = null;
 let _pinIngresado = '';
 
 async function iniciarLogin() {
-  // Mostrar PIN inmediatamente — no esperar Supabase
+  // Si viene desde PRODUCCION.html con sesión válida, ir directo al panel FLOTA
+  const saved = localStorage.getItem('kaptura_session');
+  console.log('SESION:', saved);
+  if(saved) {
+    try {
+      const sess = JSON.parse(saved);
+      console.log('ROL:', sess.rol, 'EMPRESA:', sess.empresa);
+      if(sess.pin && sess.empresa && ['coordinador','controller','administrador','conductor'].includes(sess.rol)) {
+        _sessionUsuario = sess;
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('pantalla-modulos').style.display = 'none';
+        document.getElementById('btn-cerrar-sesion').style.display = 'block';
+        const empNombre = sess.empresa === 'transportes_madrid' ? 'TRANSPORTES MADRID' : (sess.nombre || sess.empresa || 'KAPTURA FLOTA');
+        document.getElementById('hdr-empresa').textContent = empNombre;
+        // Ir directo al panel operativo FLOTA
+        document.getElementById('loading').style.display = 'flex';
+        document.getElementById('main').style.display = '';
+        document.getElementById('nav').style.display = '';
+        DB._empresa = sess.empresa;
+        init();
+        return;
+      }
+    } catch(e) {}
+  }
+  // Mostrar PIN
   document.getElementById('login-screen').style.display = 'block';
   document.getElementById('loading').style.display = 'none';
   document.getElementById('main').style.display = 'none';
