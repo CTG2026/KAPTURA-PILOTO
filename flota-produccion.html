@@ -616,7 +616,7 @@ body{font-family:'DM Sans',sans-serif;background:#0D0D0D;color:#fff;min-height:1
           <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">VALOR COMERCIAL</div>
           <input id="setup-nuevo-valor" type="text" placeholder="Ej: 45000000" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:8px 10px;font-size:13px;color:#fff;font-family:inherit">
         </div>
-        <button onclick="setupAgregarEquipo()" style="background:#FF6B00;border:none;border-radius:8px;padding:10px 14px;font-size:18px;font-weight:900;color:#000;cursor:pointer;align-self:flex-end">+</button>
+        <button onclick="setupListaAgregarEquipo()" style="background:#2A2A2A;border:1px solid #FF6B00;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:800;color:#FF6B00;cursor:pointer;align-self:flex-end;white-space:nowrap">+ AGREGAR</button>
       </div>
     </div>
 
@@ -633,7 +633,7 @@ body{font-family:'DM Sans',sans-serif;background:#0D0D0D;color:#fff;min-height:1
           <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">RUT</div>
           <input id="setup-nuevo-conductor-rut" type="text" placeholder="Ej: 12.345.678-9" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:8px 10px;font-size:13px;color:#fff;font-family:inherit">
         </div>
-        <button onclick="setupAgregarConductor()" style="background:#FF6B00;border:none;border-radius:8px;padding:10px 14px;font-size:18px;font-weight:900;color:#000;cursor:pointer;align-self:flex-end">+</button>
+        <button onclick="setupListaAgregarConductor()" style="background:#2A2A2A;border:1px solid #FF6B00;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:800;color:#FF6B00;cursor:pointer;align-self:flex-end;white-space:nowrap">+ AGREGAR</button>
       </div>
     </div>
 
@@ -696,7 +696,7 @@ body{font-family:'DM Sans',sans-serif;background:#0D0D0D;color:#fff;min-height:1
           <input id="setup-tar-origen" type="text" placeholder="Origen" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:8px;font-size:12px;color:#fff;font-family:inherit;text-transform:uppercase">
         </div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:6px;align-items:flex-end">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">
         <div>
           <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">DESTINO</div>
           <input id="setup-tar-destino" type="text" placeholder="Destino" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:8px;font-size:12px;color:#fff;font-family:inherit;text-transform:uppercase">
@@ -705,7 +705,13 @@ body{font-family:'DM Sans',sans-serif;background:#0D0D0D;color:#fff;min-height:1
           <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">TARIFA $</div>
           <input id="setup-tar-valor" type="text" placeholder="$0" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:8px;font-size:12px;color:#fff;font-family:inherit">
         </div>
-        <button onclick="setupAgregarTarifa()" style="background:#FF6B00;border:none;border-radius:8px;padding:10px 14px;font-size:18px;font-weight:900;color:#000;cursor:pointer;align-self:flex-end">+</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr auto;gap:6px;align-items:flex-end">
+        <div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">VALOR PUNTO ADICIONAL $</div>
+          <input id="setup-tar-punto" type="text" placeholder="$0 (opcional)" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:8px;font-size:12px;color:#fff;font-family:inherit">
+        </div>
+        <button onclick="setupListaAgregarTarifa()" style="background:#2A2A2A;border:1px solid #FF6B00;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:800;color:#FF6B00;cursor:pointer;align-self:flex-end;white-space:nowrap">+ AGREGAR</button>
       </div>
     </div>
 
@@ -4198,8 +4204,12 @@ async function cargarSetup() {
   // Cargar flota
   const {data: flota} = await supa.from('kaptura_flota').select('*').eq('empresa', emp).eq('activo', true);
   const listaF = document.getElementById('setup-lista-equipos');
+  DB.flota = flota || [];
+  _setupEquipos = [];
+  renderSetupListaEquipos();
+  const listaF = {innerHTML:''}; // dummy
   listaF.innerHTML = (flota||[]).length === 0
-    ? '<div style="font-size:12px;color:rgba(255,255,255,0.3);margin-bottom:8px">Sin equipos registrados</div>'
+    ? ''
     : (flota||[]).map(f => `
         <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:#0D0D0D;border-radius:7px;margin-bottom:6px;border:1px solid #2A2A2A">
           <div>
@@ -4212,9 +4222,12 @@ async function cargarSetup() {
 
   // Cargar conductores
   const {data: conds} = await supa.from('kaptura_conductores').select('*').eq('empresa', emp).eq('activo', true);
-  const listaC = document.getElementById('setup-lista-conductores');
+  DB.conductores = conds || [];
+  _setupConductores = [];
+  renderSetupListaConductores();
+  const listaC = {innerHTML:''};
   listaC.innerHTML = (conds||[]).length === 0
-    ? '<div style="font-size:12px;color:rgba(255,255,255,0.3);margin-bottom:8px">Sin conductores registrados</div>'
+    ? ''
     : (conds||[]).map(c => `
         <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:#0D0D0D;border-radius:7px;margin-bottom:6px;border:1px solid #2A2A2A">
           <div>
@@ -4240,9 +4253,12 @@ async function cargarSetup() {
 
   // Cargar tarifario
   const {data: tarifas} = await supa.from('kaptura_tarifarios').select('*').eq('empresa', emp);
-  const listaTar = document.getElementById('setup-lista-tarifario');
+  DB.tarifarios = tarifas || [];
+  _setupTarifas = [];
+  renderSetupListaTarifas();
+  const listaTar = {innerHTML:''};
   listaTar.innerHTML = (tarifas||[]).length === 0
-    ? '<div style="font-size:12px;color:rgba(255,255,255,0.3)">Sin tarifas registradas</div>'
+    ? ''
     : (tarifas||[]).map(t => `
         <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 10px;background:#0D0D0D;border-radius:7px;margin-bottom:5px;border:1px solid #2A2A2A">
           <div style="font-size:12px;color:#fff">${t.cliente||'—'} · ${t.origen||'—'} → ${t.destino||'—'}</div>
@@ -4315,7 +4331,9 @@ async function setupGuardarMant() {
 }
 
 async function setupAgregarEquipo() {
+  if(!DB._empresa && _sessionUsuario?.empresa) DB._empresa = _sessionUsuario.empresa;
   const emp     = DB._empresa;
+  if(!emp) { toast('Error: sesión sin empresa'); return; }
   const patente = document.getElementById('setup-nueva-patente').value.trim().toUpperCase();
   const tipo    = document.getElementById('setup-nuevo-tipo').value;
   const rend    = parseFloat(document.getElementById('setup-nuevo-rend').value) || null;
@@ -4338,7 +4356,9 @@ async function setupEliminarEquipo(id) {
 }
 
 async function setupAgregarConductor() {
+  if(!DB._empresa && _sessionUsuario?.empresa) DB._empresa = _sessionUsuario.empresa;
   const emp    = DB._empresa;
+  if(!emp) { toast('Error: sesión sin empresa'); return; }
   const nombre = document.getElementById('setup-nuevo-conductor').value.trim();
   const rut    = document.getElementById('setup-nuevo-conductor-rut').value.trim();
   if(!nombre) { toast('Ingresa el nombre'); return; }
@@ -4358,7 +4378,9 @@ async function setupEliminarConductor(id) {
 }
 
 async function setupAgregarCliente() {
+  if(!DB._empresa && _sessionUsuario?.empresa) DB._empresa = _sessionUsuario.empresa;
   const emp = DB._empresa;
+  if(!emp) { toast('Error: sesión sin empresa'); return; }
   const nombre   = document.getElementById('setup-fc-nombre').value.trim();
   const rut      = document.getElementById('setup-fc-rut').value.trim();
   const dir      = document.getElementById('setup-fc-direccion').value.trim();
@@ -4385,7 +4407,9 @@ async function setupEliminarCliente(id) {
 }
 
 async function setupAgregarTarifa() {
+  if(!DB._empresa && _sessionUsuario?.empresa) DB._empresa = _sessionUsuario.empresa;
   const emp     = DB._empresa;
+  if(!emp) { toast('Error: sesión sin empresa'); return; }
   const cliente = document.getElementById('setup-tar-cliente').value.trim();
   const origen  = document.getElementById('setup-tar-origen').value.trim().toUpperCase();
   const destino = document.getElementById('setup-tar-destino').value.trim().toUpperCase();
@@ -4403,6 +4427,109 @@ async function setupEliminarTarifa(id) {
   await supa.from('kaptura_tarifarios').delete().eq('id', id);
   toast('Tarifa eliminada');
   cargarSetup();
+}
+
+// ══ SETUP — LISTAS TEMPORALES EN MEMORIA ══
+let _setupEquipos    = []; // {patente, tipo, rend, valor} — nuevos a guardar
+let _setupConductores= []; // {nombre, rut} — nuevos a guardar
+let _setupTarifas    = []; // {cliente, origen, destino, valor} — nuevas a guardar
+
+function setupListaAgregarEquipo() {
+  const patente = document.getElementById('setup-nueva-patente').value.trim().toUpperCase();
+  const tipo    = document.getElementById('setup-nuevo-tipo').value;
+  const rend    = parseFloat(document.getElementById('setup-nuevo-rend').value) || null;
+  const valor   = document.getElementById('setup-nuevo-valor').value.trim();
+  if(!patente) { toast('Ingresa la patente'); return; }
+  // Evitar duplicados
+  if(_setupEquipos.find(e => e.patente === patente)) { toast('Esa patente ya está en la lista'); return; }
+  _setupEquipos.push({patente, tipo, rend, valor});
+  document.getElementById('setup-nueva-patente').value = '';
+  document.getElementById('setup-nuevo-rend').value    = '';
+  document.getElementById('setup-nuevo-valor').value   = '';
+  renderSetupListaEquipos();
+  toast('Equipo agregado a la lista — presiona GUARDAR para confirmar');
+}
+
+function renderSetupListaEquipos() {
+  const el = document.getElementById('setup-lista-equipos');
+  // Primero los ya guardados en Supabase (de cargarSetup)
+  const guardados = (DB.flota||[]).map(f => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:#0D0D0D;border-radius:7px;margin-bottom:5px;border:1px solid #2A2A2A">
+      <div><span style="font-size:13px;font-weight:800;color:#FF6B00">${f.patente}</span><span style="font-size:11px;color:rgba(255,255,255,0.5);margin-left:8px">${f.tipo||''}</span><span style="font-size:10px;color:rgba(255,255,255,0.3);margin-left:6px">✓ guardado</span></div>
+      <button onclick="setupEliminarEquipo('${f.id}')" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:#ef4444;border-radius:5px;padding:3px 8px;font-size:10px;cursor:pointer">✕</button>
+    </div>`).join('');
+  // Luego los nuevos en memoria
+  const nuevos = _setupEquipos.map((e,i) => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:rgba(255,107,0,0.08);border-radius:7px;margin-bottom:5px;border:1px solid rgba(255,107,0,0.3)">
+      <div><span style="font-size:13px;font-weight:800;color:#FF6B00">${e.patente}</span><span style="font-size:11px;color:rgba(255,255,255,0.5);margin-left:8px">${e.tipo||''}</span><span style="font-size:10px;color:#FF6B00;margin-left:6px">● pendiente</span></div>
+      <button onclick="_setupEquipos.splice(${i},1);renderSetupListaEquipos()" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:#ef4444;border-radius:5px;padding:3px 8px;font-size:10px;cursor:pointer">✕</button>
+    </div>`).join('');
+  el.innerHTML = guardados + nuevos || '<div style="font-size:12px;color:rgba(255,255,255,0.3);margin-bottom:8px">Sin equipos</div>';
+}
+
+function setupListaAgregarConductor() {
+  const nombre = document.getElementById('setup-nuevo-conductor').value.trim();
+  const rut    = document.getElementById('setup-nuevo-conductor-rut').value.trim();
+  if(!nombre) { toast('Ingresa el nombre del conductor'); return; }
+  if(_setupConductores.find(c => c.nombre === nombre)) { toast('Ese conductor ya está en la lista'); return; }
+  _setupConductores.push({nombre, rut});
+  document.getElementById('setup-nuevo-conductor').value     = '';
+  document.getElementById('setup-nuevo-conductor-rut').value = '';
+  renderSetupListaConductores();
+  toast('Conductor agregado a la lista — presiona GUARDAR para confirmar');
+}
+
+function renderSetupListaConductores() {
+  const el = document.getElementById('setup-lista-conductores');
+  const guardados = (DB.conductores||[]).map(c => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:#0D0D0D;border-radius:7px;margin-bottom:5px;border:1px solid #2A2A2A">
+      <div><span style="font-size:13px;font-weight:700;color:#fff">${c.nombre}</span>${c.rut?`<span style="font-size:11px;color:rgba(255,255,255,0.4);margin-left:8px">${c.rut}</span>`:''}<span style="font-size:10px;color:rgba(255,255,255,0.3);margin-left:6px">✓ guardado</span></div>
+      <button onclick="setupEliminarConductor('${c.id}')" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:#ef4444;border-radius:5px;padding:3px 8px;font-size:10px;cursor:pointer">✕</button>
+    </div>`).join('');
+  const nuevos = _setupConductores.map((c,i) => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:rgba(255,107,0,0.08);border-radius:7px;margin-bottom:5px;border:1px solid rgba(255,107,0,0.3)">
+      <div><span style="font-size:13px;font-weight:700;color:#fff">${c.nombre}</span>${c.rut?`<span style="font-size:11px;color:rgba(255,255,255,0.4);margin-left:8px">${c.rut}</span>`:''}<span style="font-size:10px;color:#FF6B00;margin-left:6px">● pendiente</span></div>
+      <button onclick="_setupConductores.splice(${i},1);renderSetupListaConductores()" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:#ef4444;border-radius:5px;padding:3px 8px;font-size:10px;cursor:pointer">✕</button>
+    </div>`).join('');
+  el.innerHTML = guardados + nuevos || '<div style="font-size:12px;color:rgba(255,255,255,0.3);margin-bottom:8px">Sin conductores</div>';
+}
+
+function setupListaAgregarTarifa() {
+  const cliente = document.getElementById('setup-tar-cliente').value.trim();
+  const origen  = document.getElementById('setup-tar-origen').value.trim().toUpperCase();
+  const destino = document.getElementById('setup-tar-destino').value.trim().toUpperCase();
+  const valor   = parseFloat(document.getElementById('setup-tar-valor').value.replace(/[^0-9]/g,'')) || 0;
+  const punto   = parseFloat(document.getElementById('setup-tar-punto').value.replace(/[^0-9]/g,'')) || 0;
+  if(!cliente || !origen || !destino || !valor) { toast('Completa cliente, origen, destino y tarifa'); return; }
+  _setupTarifas.push({cliente, origen, destino, valor, punto});
+  document.getElementById('setup-tar-cliente').value = '';
+  document.getElementById('setup-tar-origen').value  = '';
+  document.getElementById('setup-tar-destino').value = '';
+  document.getElementById('setup-tar-valor').value   = '';
+  document.getElementById('setup-tar-punto').value   = '';
+  renderSetupListaTarifas();
+  toast('Tarifa agregada a la lista — presiona GUARDAR para confirmar');
+}
+
+function renderSetupListaTarifas() {
+  const el = document.getElementById('setup-lista-tarifario');
+  const guardados = (DB.tarifarios||[]).map(t => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 10px;background:#0D0D0D;border-radius:7px;margin-bottom:5px;border:1px solid #2A2A2A">
+      <div style="font-size:12px;color:#fff">${t.cliente||'—'} · ${t.origen||'—'} → ${t.destino||'—'}<span style="font-size:10px;color:rgba(255,255,255,0.3);margin-left:6px">✓</span></div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:13px;font-weight:800;color:#22c55e">$${Number(t.tarifa_neta||0).toLocaleString('es-CL')}</span>
+        <button onclick="setupEliminarTarifa('${t.id}')" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:#ef4444;border-radius:5px;padding:3px 8px;font-size:10px;cursor:pointer">✕</button>
+      </div>
+    </div>`).join('');
+  const nuevos = _setupTarifas.map((t,i) => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 10px;background:rgba(255,107,0,0.08);border-radius:7px;margin-bottom:5px;border:1px solid rgba(255,107,0,0.3)">
+      <div style="font-size:12px;color:#fff">${t.cliente} · ${t.origen} → ${t.destino}${t.punto?` · <span style='font-size:10px;color:rgba(255,255,255,0.5)'>pto: $${t.punto.toLocaleString('es-CL')}</span>`:''}<span style="font-size:10px;color:#FF6B00;margin-left:6px">● pendiente</span></div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:13px;font-weight:800;color:#22c55e">$${t.valor.toLocaleString('es-CL')}</span>
+        <button onclick="_setupTarifas.splice(${i},1);renderSetupListaTarifas()" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:#ef4444;border-radius:5px;padding:3px 8px;font-size:10px;cursor:pointer">✕</button>
+      </div>
+    </div>`).join('');
+  el.innerHTML = guardados + nuevos || '<div style="font-size:12px;color:rgba(255,255,255,0.3)">Sin tarifas</div>';
 }
 
 function setupCFSumar() {
@@ -4440,6 +4567,24 @@ async function setupGuardarTodo() {
     await setupGuardarEmpresa();
     await setupGuardarCostos();
     await setupGuardarMant();
+    // Guardar equipos pendientes
+    for(const e of _setupEquipos) {
+      const {error} = await supa.from('kaptura_flota').insert({patente:e.patente, tipo:e.tipo, rendimiento_km_lt:e.rend, empresa:DB._empresa, activo:true});
+      if(error) throw new Error('Equipo '+e.patente+': '+error.message);
+    }
+    _setupEquipos = [];
+    // Guardar conductores pendientes
+    for(const c of _setupConductores) {
+      const {error} = await supa.from('kaptura_conductores').insert({nombre:c.nombre, rut:c.rut, empresa:DB._empresa, activo:true});
+      if(error) throw new Error('Conductor '+c.nombre+': '+error.message);
+    }
+    _setupConductores = [];
+    // Guardar tarifas pendientes
+    for(const t of _setupTarifas) {
+      const {error} = await supa.from('kaptura_tarifarios').insert({cliente:t.cliente, origen:t.origen, destino:t.destino, tarifa_neta:t.valor, valor_punto:t.punto||0, empresa:DB._empresa, activo:true});
+      if(error) throw new Error('Tarifa: '+error.message);
+    }
+    _setupTarifas = [];
     // Recargar DB para que los selects de asignar tengan los datos frescos
     const emp = DB._empresa;
     const [rf, rc, rcl, rt] = await Promise.all([
