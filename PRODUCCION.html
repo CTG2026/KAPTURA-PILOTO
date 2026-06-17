@@ -2221,6 +2221,18 @@ async function guardarServicioGPS() {
   toast('✓ ' + svId + ' guardado correctamente');
 }
 
+function adminEntrarComoFlota(empresa, nombre) {
+  localStorage.setItem('kaptura_session', JSON.stringify({
+    pin: '1313',
+    empresa: empresa,
+    nombre: nombre,
+    rol: 'coordinador',
+    modo: 'flota',
+    _admin_view: true
+  }));
+  window.location.href = 'flota-produccion.html';
+}
+
 </script>
 <!-- ═══ KOPILOTO FLOTANTE ═══ -->
 <button id="kopiloto-btn" onclick="kopilotoActivar()" style="position:fixed;bottom:24px;right:20px;width:60px;height:60px;border-radius:50%;border:none;background:#D4A827;color:#2E3A00;font-size:22px;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,0.4);z-index:999;display:flex;align-items:center;justify-content:center;transition:all 0.2s">
