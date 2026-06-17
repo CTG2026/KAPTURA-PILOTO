@@ -4204,7 +4204,7 @@ async function cargarSetup() {
         <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:#0D0D0D;border-radius:7px;margin-bottom:6px;border:1px solid #2A2A2A">
           <div>
             <span style="font-size:13px;font-weight:800;color:#FF6B00">${f.patente}</span>
-            <span style="font-size:11px;color:rgba(255,255,255,0.5);margin-left:8px">${f.tipo_equipo||''}</span>
+            <span style="font-size:11px;color:rgba(255,255,255,0.5);margin-left:8px">${f.tipo||''}</span>
             <span style="font-size:11px;color:rgba(255,255,255,0.4);margin-left:8px">${f.rendimiento_km_lt||'—'} km/lt</span>
           </div>
           <button onclick="setupEliminarEquipo('${f.id}')" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:#ef4444;border-radius:5px;padding:3px 8px;font-size:10px;font-weight:800;cursor:pointer">✕</button>
@@ -4321,7 +4321,7 @@ async function setupAgregarEquipo() {
   const rend    = parseFloat(document.getElementById('setup-nuevo-rend').value) || null;
   const valor   = document.getElementById('setup-nuevo-valor').value.trim();
   if(!patente) { toast('Ingresa la patente'); return; }
-  const {error} = await supa.from('kaptura_flota').insert({patente, tipo_equipo:tipo, rendimiento_km_lt:rend, empresa:emp, activo:true});
+  const {error} = await supa.from('kaptura_flota').insert({patente, tipo:tipo, rendimiento_km_lt:rend, empresa:emp, activo:true});
   if(error) { toast('Error: '+error.message); return; }
   document.getElementById('setup-nueva-patente').value = '';
   document.getElementById('setup-nuevo-rend').value = '';
