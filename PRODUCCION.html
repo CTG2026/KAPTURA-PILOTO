@@ -1661,7 +1661,7 @@ async function crearPinConfirmar() {
     });
     if(error) { errEl.textContent = 'Error: '+error.message; btn.textContent = 'CONTINUAR'; btn.disabled=false; return; }
     const sess = JSON.parse(localStorage.getItem('kaptura_session')||'{}');
-    sess.empresa = empresa; sess.pin = pin; sess.nombre = nombre; sess.modo = modo;
+    sess.empresa = empresa; sess.pin = pin; sess.nombre = nombre; sess.modo = modo; sess.rol = 'coordinador';
     localStorage.setItem('kaptura_session', JSON.stringify(sess));
     _sessionConductor = sess;
     window._flotaEmpresa = empresa;
