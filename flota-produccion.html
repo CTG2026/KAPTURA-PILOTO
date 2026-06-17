@@ -1032,7 +1032,7 @@ body{font-family:'DM Sans',sans-serif;background:#0D0D0D;color:#fff;min-height:1
           <div><label class="lbl">Fecha Inicio (asignación)</label><input class="inp" id="cos-fecha-inicio" type="date" readonly style=""></div>
           <div><label class="lbl">Fecha Término servicio</label><input class="inp" id="cos-fecha-termino" type="date"></div>
         </div>
-        <button class="btn btn-orange btn-sm btn-full" style="margin-top:8px" onclick="cargarGPS()">↺ Integrar Datos</button>
+        <button class="btn btn-navy btn-full" style="margin-top:8px;font-size:14px;font-weight:900;letter-spacing:0.1em;padding:12px;background:#FF6B00;color:#000;border:none" onclick="cargarGPS()">↺ INTEGRAR DATOS GPS</button>
       </div>
       <!-- Resumen puntos -->
       <div style="background:rgba(255,107,0,0.12);border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:11px;font-weight:700;color:#FF6B00;border:1px solid rgba(255,107,0,0.3)" id="cos-puntos-resumen">— puntos sin registrar</div>
@@ -3179,12 +3179,14 @@ async function cargarGPS() {
     // Detección TAG por corredor
     // Regla DEFINITIVA: si no hay trips con km > 0, no detectar corredor ni asignar TAG/Peajes
     const hayKmGPS = allEvtsSorted.filter(e => e.evento === 'trip' && (e.km_tramo||0) > 0).length > 0;
+    // Aunque no haya GPS, detectar corredor por origen/destino para asignar peajes
+    const forzarCorredor = !hayKmGPS;
 
     const detectadosTag = [];
     const corredoresDetectados = [];
 
-    if(hayKmGPS) {
-      // Solo detectar corredor si hay km GPS reales
+    if(hayKmGPS || forzarCorredor) {
+      // Detectar corredor por origen/destino (con o sin GPS)
       const puntoFinal = (s._puntos||puntosData||[]).find(p=>p.tipo==='final');
       const destinoSvc = (puntoFinal?.destino||s.destino||'').toUpperCase().trim();
       const origenSvc = (s?.origen||'').toUpperCase().trim();
