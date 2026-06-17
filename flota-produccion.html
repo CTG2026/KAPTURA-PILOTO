@@ -175,6 +175,7 @@ body{font-family:'DM Sans',sans-serif;background:#0D0D0D;color:#fff;min-height:1
   <button class="ntab" onclick="setTab('resultados',this)">Resultados</button>
   <button class="ntab" onclick="setTab('informes',this)">Informes</button>
   <button class="ntab" onclick="setTab('config',this)">Config</button>
+  <button class="ntab" id="tab-btn-setup" onclick="setTab('setup',this)" style="display:none">Setup</button>
 </nav>
 
 <!-- ═══ PANTALLA MÓDULOS ═══ -->
@@ -539,6 +540,228 @@ body{font-family:'DM Sans',sans-serif;background:#0D0D0D;color:#fff;min-height:1
 
       <div style="margin-top:12px;text-align:right"><button class="btn btn-navy" onclick="guardarConfig()">Guardar</button></div>
     </div>
+  </div>
+
+  <!-- TAB SETUP -->
+  <div id="tab-setup" style="display:none">
+    <div class="sec-ttl" style="margin-bottom:16px">Configuración Inicial</div>
+
+    <!-- 0. MODO DE GESTIÓN -->
+    <div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:12px;padding:14px;margin-bottom:12px">
+      <div style="font-size:11px;font-weight:700;color:#FF6B00;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px">0. Modo de gestión</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+        <div id="setup-modo-btn-flota" onclick="setupSeleccionarModo('flota')" style="background:#FF6B00;border:2px solid #FF6B00;border-radius:10px;padding:14px;text-align:center;cursor:pointer">
+          <div style="font-size:14px;font-weight:700;color:#000;margin-bottom:4px">Flota completa</div>
+          <div style="font-size:11px;color:rgba(0,0,0,0.6)">Costos compartidos</div>
+        </div>
+        <div id="setup-modo-btn-unidad" onclick="setupSeleccionarModo('unidad')" style="background:#1A1A1A;border:2px solid #2A2A2A;border-radius:10px;padding:14px;text-align:center;cursor:pointer">
+          <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:4px">Unidad de negocio</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.4)">Costos por equipo</div>
+        </div>
+      </div>
+      <input type="hidden" id="setup-modo-gestion" value="flota">
+    </div>
+
+    <!-- 1. DATOS DE LA EMPRESA -->
+    <div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:12px;padding:14px;margin-bottom:12px">
+      <div style="font-size:11px;font-weight:700;color:#FF6B00;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px">1. Datos de la empresa</div>
+      <div style="margin-bottom:8px">
+        <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">NOMBRE EMPRESA</div>
+        <input id="setup-nombre-empresa" type="text" placeholder="Ej: Transportes Madrid SpA" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:9px 12px;font-size:13px;color:#fff;font-family:inherit">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">RUT EMPRESA</div>
+          <input id="setup-rut" type="text" placeholder="Ej: 76.XXX.XXX-X" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:9px 12px;font-size:13px;color:#fff;font-family:inherit">
+        </div>
+        <div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">CIUDAD BASE</div>
+          <input id="setup-ciudad" type="text" placeholder="Ej: Santiago" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:9px 12px;font-size:13px;color:#fff;font-family:inherit">
+        </div>
+      </div>
+      <div style="text-align:right;margin-top:10px">
+        <button class="btn btn-navy" onclick="setupGuardarEmpresa()">Guardar empresa</button>
+      </div>
+    </div>
+
+    <!-- 2. FLOTA / EQUIPOS -->
+    <div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:12px;padding:14px;margin-bottom:12px">
+      <div style="font-size:11px;font-weight:700;color:#FF6B00;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px">2. Flota / Equipos</div>
+      <div id="setup-lista-equipos" style="margin-bottom:10px"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">
+        <div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">PATENTE</div>
+          <input id="setup-nueva-patente" type="text" placeholder="Ej: WY1742" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:8px 10px;font-size:13px;color:#fff;font-family:inherit;text-transform:uppercase">
+        </div>
+        <div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">TIPO</div>
+          <select id="setup-nuevo-tipo" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:8px;font-size:12px;color:#fff;font-family:inherit">
+            <option value="tracto_rampla">Tracto + Rampla</option>
+            <option value="tracto_frigorifico">Tracto + Frigorífico</option>
+            <option value="tracto_tolva">Tracto + Tolva</option>
+            <option value="tracto_caja_seca">Tracto + Caja seca</option>
+            <option value="camion_rampla">Camión con rampla</option>
+            <option value="camion_caja_seca">Camión caja seca</option>
+            <option value="camion_solo">Camión sin carro</option>
+            <option value="otro">Otro</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:6px;align-items:flex-end">
+        <div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">RENDIMIENTO km/lt</div>
+          <input id="setup-nuevo-rend" type="number" step="0.1" placeholder="Ej: 2.5" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:8px 10px;font-size:13px;color:#fff;font-family:inherit">
+        </div>
+        <div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">VALOR COMERCIAL</div>
+          <input id="setup-nuevo-valor" type="text" placeholder="Ej: 45000000" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:8px 10px;font-size:13px;color:#fff;font-family:inherit">
+        </div>
+        <button onclick="setupAgregarEquipo()" style="background:#FF6B00;border:none;border-radius:8px;padding:10px 14px;font-size:18px;font-weight:900;color:#000;cursor:pointer;align-self:flex-end">+</button>
+      </div>
+    </div>
+
+    <!-- 3. CONDUCTORES -->
+    <div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:12px;padding:14px;margin-bottom:12px">
+      <div style="font-size:11px;font-weight:700;color:#FF6B00;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px">3. Conductores</div>
+      <div id="setup-lista-conductores" style="margin-bottom:10px"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:6px;align-items:flex-end">
+        <div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">NOMBRE</div>
+          <input id="setup-nuevo-conductor" type="text" placeholder="Nombre completo" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:8px 10px;font-size:13px;color:#fff;font-family:inherit">
+        </div>
+        <div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">RUT</div>
+          <input id="setup-nuevo-conductor-rut" type="text" placeholder="Ej: 12.345.678-9" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:8px 10px;font-size:13px;color:#fff;font-family:inherit">
+        </div>
+        <button onclick="setupAgregarConductor()" style="background:#FF6B00;border:none;border-radius:8px;padding:10px 14px;font-size:18px;font-weight:900;color:#000;cursor:pointer;align-self:flex-end">+</button>
+      </div>
+    </div>
+
+    <!-- 4. CLIENTES -->
+    <div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:12px;padding:14px;margin-bottom:12px">
+      <div style="font-size:11px;font-weight:700;color:#FF6B00;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px">4. Clientes</div>
+      <div id="setup-lista-clientes" style="margin-bottom:10px"></div>
+      <button onclick="document.getElementById('setup-ficha-cliente').style.display=document.getElementById('setup-ficha-cliente').style.display==='none'?'block':'none'" style="width:100%;background:rgba(255,107,0,0.12);border:1px solid rgba(255,107,0,0.3);border-radius:8px;padding:12px;font-size:13px;font-weight:700;color:#FF6B00;cursor:pointer">+ Agregar cliente</button>
+      <div id="setup-ficha-cliente" style="display:none;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:10px;padding:14px;margin-top:8px">
+        <div style="font-size:11px;font-weight:700;color:#FF6B00;letter-spacing:0.08em;margin-bottom:12px">DATOS DEL CLIENTE</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+          <div>
+            <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">NOMBRE / RAZÓN SOCIAL</div>
+            <input id="setup-fc-nombre" type="text" placeholder="Ej: Agrícola del Sur" style="width:100%;background:#1A1A1A;border:1px solid #2A2A2A;border-radius:7px;padding:8px 10px;font-size:12px;color:#fff;font-family:inherit">
+          </div>
+          <div>
+            <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">RUT</div>
+            <input id="setup-fc-rut" type="text" placeholder="Ej: 76.XXX.XXX-X" style="width:100%;background:#1A1A1A;border:1px solid #2A2A2A;border-radius:7px;padding:8px 10px;font-size:12px;color:#fff;font-family:inherit">
+          </div>
+        </div>
+        <div style="margin-bottom:8px">
+          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">DIRECCIÓN</div>
+          <input id="setup-fc-direccion" type="text" placeholder="Ej: Av. Principal 1234" style="width:100%;background:#1A1A1A;border:1px solid #2A2A2A;border-radius:7px;padding:8px 10px;font-size:12px;color:#fff;font-family:inherit">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+          <div>
+            <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">CIUDAD</div>
+            <input id="setup-fc-ciudad" type="text" placeholder="Ej: Santiago" style="width:100%;background:#1A1A1A;border:1px solid #2A2A2A;border-radius:7px;padding:8px 10px;font-size:12px;color:#fff;font-family:inherit">
+          </div>
+          <div>
+            <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">TELÉFONO</div>
+            <input id="setup-fc-telefono" type="text" placeholder="+56 9 XXXX XXXX" style="width:100%;background:#1A1A1A;border:1px solid #2A2A2A;border-radius:7px;padding:8px 10px;font-size:12px;color:#fff;font-family:inherit">
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+          <div>
+            <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">EMAIL</div>
+            <input id="setup-fc-email" type="text" placeholder="contacto@empresa.cl" style="width:100%;background:#1A1A1A;border:1px solid #2A2A2A;border-radius:7px;padding:8px 10px;font-size:12px;color:#fff;font-family:inherit">
+          </div>
+          <div>
+            <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">CONTACTO</div>
+            <input id="setup-fc-contacto" type="text" placeholder="Nombre del contacto" style="width:100%;background:#1A1A1A;border:1px solid #2A2A2A;border-radius:7px;padding:8px 10px;font-size:12px;color:#fff;font-family:inherit">
+          </div>
+        </div>
+        <button onclick="setupAgregarCliente()" style="width:100%;background:#FF6B00;border:none;border-radius:8px;padding:12px;font-size:14px;font-weight:700;color:#000;cursor:pointer">GUARDAR CLIENTE</button>
+      </div>
+    </div>
+
+    <!-- 5. TARIFARIO -->
+    <div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:12px;padding:14px;margin-bottom:12px">
+      <div style="font-size:11px;font-weight:700;color:#FF6B00;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px">5. Tarifario</div>
+      <div id="setup-lista-tarifario" style="margin-bottom:10px"><div style="font-size:12px;color:rgba(255,255,255,0.3)">Sin tarifas registradas</div></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">
+        <div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">CLIENTE</div>
+          <input id="setup-tar-cliente" type="text" placeholder="Cliente" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:8px;font-size:12px;color:#fff;font-family:inherit">
+        </div>
+        <div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">ORIGEN</div>
+          <input id="setup-tar-origen" type="text" placeholder="Origen" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:8px;font-size:12px;color:#fff;font-family:inherit;text-transform:uppercase">
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:6px;align-items:flex-end">
+        <div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">DESTINO</div>
+          <input id="setup-tar-destino" type="text" placeholder="Destino" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:8px;font-size:12px;color:#fff;font-family:inherit;text-transform:uppercase">
+        </div>
+        <div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">TARIFA $</div>
+          <input id="setup-tar-valor" type="text" placeholder="$0" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:8px;font-size:12px;color:#fff;font-family:inherit">
+        </div>
+        <button onclick="setupAgregarTarifa()" style="background:#FF6B00;border:none;border-radius:8px;padding:10px 14px;font-size:18px;font-weight:900;color:#000;cursor:pointer;align-self:flex-end">+</button>
+      </div>
+    </div>
+
+    <!-- 6. COSTOS FIJOS -->
+    <div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:12px;padding:14px;margin-bottom:12px">
+      <div style="font-size:11px;font-weight:700;color:#FF6B00;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px">6. Costos fijos mensuales</div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:10px">Lo que pagas aunque los camiones no salgan.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+        <div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">TOTAL FIJOS/MES ($)</div>
+          <input id="setup-costo-fijo" type="text" placeholder="Ej: 3600000" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:9px 12px;font-size:13px;color:#fff;font-family:inherit">
+        </div>
+        <div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">DÍAS OPERATIVOS/MES</div>
+          <input id="setup-dias-op" type="number" placeholder="20" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:9px 12px;font-size:13px;color:#fff;font-family:inherit">
+        </div>
+        <div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">VIÁTICO/DÍA ($)</div>
+          <input id="setup-viatico" type="text" placeholder="Ej: 12000" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:9px 12px;font-size:13px;color:#fff;font-family:inherit">
+        </div>
+        <div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">FONDO CONTINGENCIA/MES ($)</div>
+          <input id="setup-fondo" type="text" placeholder="Ej: 150000" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:9px 12px;font-size:13px;color:#fff;font-family:inherit">
+        </div>
+      </div>
+      <div style="text-align:right">
+        <button class="btn btn-navy" onclick="setupGuardarCostos()">Guardar costos</button>
+      </div>
+    </div>
+
+    <!-- 7. MANTENCIÓN Y NEUMÁTICOS -->
+    <div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:12px;padding:14px;margin-bottom:12px">
+      <div style="font-size:11px;font-weight:700;color:#FF6B00;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px">7. Mantención y Neumáticos</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+        <div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">MANTENCIÓN CADA (km)</div>
+          <input id="setup-mant-km" type="number" placeholder="Ej: 20000" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:8px 10px;font-size:13px;color:#fff;font-family:inherit">
+        </div>
+        <div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">COSTO MANTENCIÓN ($)</div>
+          <input id="setup-mant-costo" type="text" placeholder="Ej: 350000" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:8px 10px;font-size:13px;color:#fff;font-family:inherit">
+        </div>
+        <div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">COSTO JUEGO NEUMÁTICOS ($)</div>
+          <input id="setup-neum-costo" type="text" placeholder="Ej: 2400000" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:8px 10px;font-size:13px;color:#fff;font-family:inherit">
+        </div>
+        <div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">VIDA ÚTIL NEUMÁTICOS (km)</div>
+          <input id="setup-neum-km" type="number" placeholder="Ej: 150000" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:8px 10px;font-size:13px;color:#fff;font-family:inherit">
+        </div>
+      </div>
+      <div style="text-align:right">
+        <button class="btn btn-navy" onclick="setupGuardarMant()">Guardar mantención</button>
+      </div>
+    </div>
+
   </div>
 </main>
 
@@ -3631,14 +3854,16 @@ async function recalcRendimientoCargas() {
 
 // ══ UTILS ══
 function setTab(nombre, btn) {
-  ['servicios','flota','clientes','gastos','resultados','config'].forEach(t => {
-    document.getElementById(`tab-${t}`).style.display = t===nombre ? 'block' : 'none';
+  ['servicios','flota','clientes','gastos','liquidaciones','resultados','informes','config','setup'].forEach(t => {
+    const el = document.getElementById(`tab-${t}`);
+    if(el) el.style.display = t===nombre ? 'block' : 'none';
   });
   document.querySelectorAll('.ntab').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   if(nombre==='gastos') cargarGastos();
   if(nombre==='resultados') renderResultados();
   if(nombre==='informes') renderInformes();
+  if(nombre==='setup') cargarSetup();
 }
 function resetFecha() {
   document.getElementById('filtro-fecha').value = '';
@@ -3729,6 +3954,9 @@ async function iniciarLogin() {
         document.getElementById('main').style.display = '';
         document.getElementById('nav').style.display = '';
         DB._empresa = sess.empresa;
+        if(['coordinador','controller','administrador'].includes(sess.rol)) {
+          document.getElementById('tab-btn-setup').style.display = '';
+        }
         init();
         return;
       }
@@ -3830,6 +4058,9 @@ function entrarModulo(modulo) {
     document.getElementById('main').style.display = '';
     document.getElementById('nav').style.display = '';
     DB._empresa = _sessionUsuario.empresa;
+    if(['coordinador','controller','administrador'].includes(_sessionUsuario.rol)) {
+      document.getElementById('tab-btn-setup').style.display = '';
+    }
     init();
   }
 }
@@ -3843,6 +4074,239 @@ function cerrarSesionKaptura() {
   document.getElementById('pin-error').textContent = '';
   document.getElementById('login-screen').style.display = 'block';
   document.getElementById('main').style.display = 'none';
+}
+
+
+// ══════════════════════════════════════════
+// TAB SETUP — Configuración inicial editable
+// ══════════════════════════════════════════
+
+async function cargarSetup() {
+  const emp = DB._empresa || _sessionUsuario?.empresa;
+  if(!emp) return;
+
+  // Cargar config desde kaptura_config
+  const {data: cfg} = await supa.from('kaptura_config').select('*').eq('empresa', emp);
+  const getCfg = (k) => { const r = (cfg||[]).find(x=>x.clave===k); return r ? r.valor : ''; };
+
+  document.getElementById('setup-nombre-empresa').value = getCfg('flota_nombre_'+emp) || '';
+  document.getElementById('setup-rut').value            = getCfg('flota_rut_'+emp) || '';
+  document.getElementById('setup-ciudad').value         = getCfg('flota_ciudad_'+emp) || '';
+  document.getElementById('setup-costo-fijo').value     = getCfg('costo_fijo_mensual_'+emp) || '';
+  document.getElementById('setup-dias-op').value        = getCfg('dias_operativos_'+emp) || '20';
+  document.getElementById('setup-viatico').value        = getCfg('viatico_dia_'+emp) || '';
+  document.getElementById('setup-fondo').value          = getCfg('fondo_contingencia_'+emp) || '';
+  document.getElementById('setup-mant-km').value        = getCfg('mant_km_'+emp) || '';
+  document.getElementById('setup-mant-costo').value     = getCfg('mant_costo_'+emp) || '';
+  document.getElementById('setup-neum-costo').value     = getCfg('neum_costo_'+emp) || '';
+  document.getElementById('setup-neum-km').value        = getCfg('neum_km_'+emp) || '';
+
+  const modo = getCfg('modo_gestion_'+emp) || 'flota';
+  setupSeleccionarModo(modo);
+
+  // Cargar flota
+  const {data: flota} = await supa.from('kaptura_flota').select('*').eq('empresa', emp).eq('activo', true);
+  const listaF = document.getElementById('setup-lista-equipos');
+  listaF.innerHTML = (flota||[]).length === 0
+    ? '<div style="font-size:12px;color:rgba(255,255,255,0.3);margin-bottom:8px">Sin equipos registrados</div>'
+    : (flota||[]).map(f => `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:#0D0D0D;border-radius:7px;margin-bottom:6px;border:1px solid #2A2A2A">
+          <div>
+            <span style="font-size:13px;font-weight:800;color:#FF6B00">${f.patente}</span>
+            <span style="font-size:11px;color:rgba(255,255,255,0.5);margin-left:8px">${f.tipo_equipo||''}</span>
+            <span style="font-size:11px;color:rgba(255,255,255,0.4);margin-left:8px">${f.rendimiento_km_lt||'—'} km/lt</span>
+          </div>
+          <button onclick="setupEliminarEquipo('${f.id}')" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:#ef4444;border-radius:5px;padding:3px 8px;font-size:10px;font-weight:800;cursor:pointer">✕</button>
+        </div>`).join('');
+
+  // Cargar conductores
+  const {data: conds} = await supa.from('kaptura_conductores').select('*').eq('empresa', emp).eq('activo', true);
+  const listaC = document.getElementById('setup-lista-conductores');
+  listaC.innerHTML = (conds||[]).length === 0
+    ? '<div style="font-size:12px;color:rgba(255,255,255,0.3);margin-bottom:8px">Sin conductores registrados</div>'
+    : (conds||[]).map(c => `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:#0D0D0D;border-radius:7px;margin-bottom:6px;border:1px solid #2A2A2A">
+          <div>
+            <span style="font-size:13px;font-weight:700;color:#fff">${c.nombre}</span>
+            ${c.rut ? `<span style="font-size:11px;color:rgba(255,255,255,0.4);margin-left:8px">${c.rut}</span>` : ''}
+          </div>
+          <button onclick="setupEliminarConductor('${c.id}')" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:#ef4444;border-radius:5px;padding:3px 8px;font-size:10px;font-weight:800;cursor:pointer">✕</button>
+        </div>`).join('');
+
+  // Cargar clientes
+  const {data: clientes} = await supa.from('kaptura_clientes').select('*').eq('empresa', emp);
+  const listaClientes = document.getElementById('setup-lista-clientes');
+  listaClientes.innerHTML = (clientes||[]).length === 0
+    ? '<div style="font-size:12px;color:rgba(255,255,255,0.3);margin-bottom:8px">Sin clientes registrados</div>'
+    : (clientes||[]).map(c => `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:#0D0D0D;border-radius:7px;margin-bottom:6px;border:1px solid #2A2A2A">
+          <div>
+            <span style="font-size:13px;font-weight:700;color:#fff">${c.nombre}</span>
+            ${c.ciudad ? `<span style="font-size:11px;color:rgba(255,255,255,0.4);margin-left:8px">${c.ciudad}</span>` : ''}
+          </div>
+          <button onclick="setupEliminarCliente('${c.id}')" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:#ef4444;border-radius:5px;padding:3px 8px;font-size:10px;font-weight:800;cursor:pointer">✕</button>
+        </div>`).join('');
+
+  // Cargar tarifario
+  const {data: tarifas} = await supa.from('kaptura_tarifarios').select('*').eq('empresa', emp);
+  const listaTar = document.getElementById('setup-lista-tarifario');
+  listaTar.innerHTML = (tarifas||[]).length === 0
+    ? '<div style="font-size:12px;color:rgba(255,255,255,0.3)">Sin tarifas registradas</div>'
+    : (tarifas||[]).map(t => `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 10px;background:#0D0D0D;border-radius:7px;margin-bottom:5px;border:1px solid #2A2A2A">
+          <div style="font-size:12px;color:#fff">${t.cliente||'—'} · ${t.origen||'—'} → ${t.destino||'—'}</div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:13px;font-weight:800;color:#22c55e">$${Number(t.tarifa_neta||0).toLocaleString('es-CL')}</span>
+            <button onclick="setupEliminarTarifa('${t.id}')" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:#ef4444;border-radius:5px;padding:3px 8px;font-size:10px;font-weight:800;cursor:pointer">✕</button>
+          </div>
+        </div>`).join('');
+}
+
+function setupSeleccionarModo(modo) {
+  document.getElementById('setup-modo-gestion').value = modo;
+  document.getElementById('setup-modo-btn-flota').style.background  = modo==='flota'   ? '#FF6B00' : '#1A1A1A';
+  document.getElementById('setup-modo-btn-flota').style.border      = modo==='flota'   ? '2px solid #FF6B00' : '2px solid #2A2A2A';
+  document.getElementById('setup-modo-btn-flota').querySelector('div').style.color = modo==='flota' ? '#000' : '#fff';
+  document.getElementById('setup-modo-btn-unidad').style.background = modo==='unidad'  ? '#FF6B00' : '#1A1A1A';
+  document.getElementById('setup-modo-btn-unidad').style.border     = modo==='unidad'  ? '2px solid #FF6B00' : '2px solid #2A2A2A';
+  document.getElementById('setup-modo-btn-unidad').querySelector('div').style.color = modo==='unidad' ? '#000' : '#fff';
+}
+
+async function setupGuardarEmpresa() {
+  const emp = DB._empresa;
+  const nombre = document.getElementById('setup-nombre-empresa').value.trim();
+  const rut    = document.getElementById('setup-rut').value.trim();
+  const ciudad = document.getElementById('setup-ciudad').value.trim();
+  const modo   = document.getElementById('setup-modo-gestion').value;
+  const rows = [
+    {clave:'flota_nombre_'+emp, valor:nombre, empresa:emp},
+    {clave:'flota_rut_'+emp,    valor:rut,    empresa:emp},
+    {clave:'flota_ciudad_'+emp, valor:ciudad, empresa:emp},
+    {clave:'modo_gestion_'+emp, valor:modo,   empresa:emp},
+  ];
+  for(const r of rows) {
+    await supa.from('kaptura_config').upsert(r, {onConflict:'clave,empresa'});
+  }
+  toast('✓ Empresa guardada');
+}
+
+async function setupGuardarCostos() {
+  const emp = DB._empresa;
+  const rows = [
+    {clave:'costo_fijo_mensual_'+emp, valor:document.getElementById('setup-costo-fijo').value, empresa:emp},
+    {clave:'dias_operativos_'+emp,    valor:document.getElementById('setup-dias-op').value,    empresa:emp},
+    {clave:'viatico_dia_'+emp,        valor:document.getElementById('setup-viatico').value,    empresa:emp},
+    {clave:'fondo_contingencia_'+emp, valor:document.getElementById('setup-fondo').value,      empresa:emp},
+  ];
+  for(const r of rows) {
+    await supa.from('kaptura_config').upsert(r, {onConflict:'clave,empresa'});
+  }
+  toast('✓ Costos guardados');
+}
+
+async function setupGuardarMant() {
+  const emp = DB._empresa;
+  const rows = [
+    {clave:'mant_km_'+emp,    valor:document.getElementById('setup-mant-km').value,    empresa:emp},
+    {clave:'mant_costo_'+emp, valor:document.getElementById('setup-mant-costo').value, empresa:emp},
+    {clave:'neum_costo_'+emp, valor:document.getElementById('setup-neum-costo').value, empresa:emp},
+    {clave:'neum_km_'+emp,    valor:document.getElementById('setup-neum-km').value,    empresa:emp},
+  ];
+  for(const r of rows) {
+    await supa.from('kaptura_config').upsert(r, {onConflict:'clave,empresa'});
+  }
+  toast('✓ Mantención guardada');
+}
+
+async function setupAgregarEquipo() {
+  const emp     = DB._empresa;
+  const patente = document.getElementById('setup-nueva-patente').value.trim().toUpperCase();
+  const tipo    = document.getElementById('setup-nuevo-tipo').value;
+  const rend    = parseFloat(document.getElementById('setup-nuevo-rend').value) || null;
+  const valor   = document.getElementById('setup-nuevo-valor').value.trim();
+  if(!patente) { toast('Ingresa la patente'); return; }
+  const {error} = await supa.from('kaptura_flota').insert({patente, tipo_equipo:tipo, rendimiento_km_lt:rend, empresa:emp, activo:true});
+  if(error) { toast('Error: '+error.message); return; }
+  document.getElementById('setup-nueva-patente').value = '';
+  document.getElementById('setup-nuevo-rend').value = '';
+  document.getElementById('setup-nuevo-valor').value = '';
+  toast('✓ Equipo agregado');
+  cargarSetup();
+}
+
+async function setupEliminarEquipo(id) {
+  if(!confirm('¿Eliminar este equipo?')) return;
+  await supa.from('kaptura_flota').update({activo:false}).eq('id', id);
+  toast('Equipo eliminado');
+  cargarSetup();
+}
+
+async function setupAgregarConductor() {
+  const emp    = DB._empresa;
+  const nombre = document.getElementById('setup-nuevo-conductor').value.trim();
+  const rut    = document.getElementById('setup-nuevo-conductor-rut').value.trim();
+  if(!nombre) { toast('Ingresa el nombre'); return; }
+  const {error} = await supa.from('kaptura_conductores').insert({nombre, rut, empresa:emp, activo:true});
+  if(error) { toast('Error: '+error.message); return; }
+  document.getElementById('setup-nuevo-conductor').value = '';
+  document.getElementById('setup-nuevo-conductor-rut').value = '';
+  toast('✓ Conductor agregado');
+  cargarSetup();
+}
+
+async function setupEliminarConductor(id) {
+  if(!confirm('¿Eliminar este conductor?')) return;
+  await supa.from('kaptura_conductores').update({activo:false}).eq('id', id);
+  toast('Conductor eliminado');
+  cargarSetup();
+}
+
+async function setupAgregarCliente() {
+  const emp = DB._empresa;
+  const nombre   = document.getElementById('setup-fc-nombre').value.trim();
+  const rut      = document.getElementById('setup-fc-rut').value.trim();
+  const dir      = document.getElementById('setup-fc-direccion').value.trim();
+  const ciudad   = document.getElementById('setup-fc-ciudad').value.trim();
+  const tel      = document.getElementById('setup-fc-telefono').value.trim();
+  const email    = document.getElementById('setup-fc-email').value.trim();
+  const contacto = document.getElementById('setup-fc-contacto').value.trim();
+  if(!nombre) { toast('Ingresa el nombre del cliente'); return; }
+  const {error} = await supa.from('kaptura_clientes').insert({nombre, rut, direccion:dir, ciudad, telefono:tel, email, contacto, empresa:emp});
+  if(error) { toast('Error: '+error.message); return; }
+  ['nombre','rut','direccion','ciudad','telefono','email','contacto'].forEach(f => {
+    const el = document.getElementById('setup-fc-'+f); if(el) el.value = '';
+  });
+  document.getElementById('setup-ficha-cliente').style.display = 'none';
+  toast('✓ Cliente guardado');
+  cargarSetup();
+}
+
+async function setupEliminarCliente(id) {
+  if(!confirm('¿Eliminar este cliente?')) return;
+  await supa.from('kaptura_clientes').delete().eq('id', id);
+  toast('Cliente eliminado');
+  cargarSetup();
+}
+
+async function setupAgregarTarifa() {
+  const emp     = DB._empresa;
+  const cliente = document.getElementById('setup-tar-cliente').value.trim();
+  const origen  = document.getElementById('setup-tar-origen').value.trim().toUpperCase();
+  const destino = document.getElementById('setup-tar-destino').value.trim().toUpperCase();
+  const valor   = parseFloat(document.getElementById('setup-tar-valor').value.replace(/[$.]/g,'').replace(',','.')) || 0;
+  if(!cliente || !origen || !destino || !valor) { toast('Completa todos los campos de tarifa'); return; }
+  const {error} = await supa.from('kaptura_tarifarios').insert({cliente, origen, destino, tarifa_neta:valor, empresa:emp, activo:true});
+  if(error) { toast('Error: '+error.message); return; }
+  ['cliente','origen','destino','valor'].forEach(f => { document.getElementById('setup-tar-'+f).value = ''; });
+  toast('✓ Tarifa guardada');
+  cargarSetup();
+}
+
+async function setupEliminarTarifa(id) {
+  if(!confirm('¿Eliminar esta tarifa?')) return;
+  await supa.from('kaptura_tarifarios').delete().eq('id', id);
+  toast('Tarifa eliminada');
+  cargarSetup();
 }
 
 iniciarLogin();
