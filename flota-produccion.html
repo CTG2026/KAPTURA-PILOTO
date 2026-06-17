@@ -2316,8 +2316,9 @@ function checkOtroCliente() {
     document.getElementById('asig-cliente').value === '__otro__' ? 'block' : 'none';
 }
 async function siguienteId() {
+  const emp = DB._empresa || _sessionUsuario?.empresa || 'global_solutions';
   const {data} = await supa.from('servicios_piloto').select('servicio_id')
-    .not('servicio_id','is',null).order('created_at',{ascending:false}).limit(200);
+    .eq('empresa', emp).not('servicio_id','is',null).order('created_at',{ascending:false}).limit(200);
   let max = 0;
   (data||[]).forEach(r => { const m=(r.servicio_id||'').match(/S-(\d+)/); if(m) max=Math.max(max,parseInt(m[1])); });
   return `S-${String(max+1).padStart(2,'0')}`;
@@ -2435,9 +2436,9 @@ function renderPuntos() {
 }
 
 function puntosHTML(p, pi) {
-  return `<div style="background:var(--g50);border-radius:10px;padding:12px;margin-bottom:10px;border:1px solid var(--g200)">
+  return `<div style="background:#1A1A1A;border-radius:10px;padding:12px;margin-bottom:10px;border:1px solid #2A2A2A">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-      <div style="font-family:'DM Sans',sans-serif;font-size:14px;font-weight:800;color:var(--blue)">
+      <div style="font-family:'DM Sans',sans-serif;font-size:14px;font-weight:800;color:#FF6B00">
         📍 PUNTO ${pi+1} ${p.capturada ? '<span style="color:var(--green)">✓</span>' : ''}
       </div>
       ${puntosData.length > 1 ? `<button class="btn btn-red btn-sm" onclick="eliminarPunto(${pi})">✕</button>` : ''}
@@ -2454,9 +2455,9 @@ function puntosHTML(p, pi) {
     </div>
     ${p.tipo ? `<div style="margin-bottom:10px">
       <label class="lbl">${p.tipo==='final'?'Tarifa del servicio':'Valor del punto'}
-        <span style="font-size:8px;font-weight:800;background:${p.valor?'#D1FAE5':'#FEF3C7'};color:${p.valor?'#065F46':'#92400E'};padding:1px 5px;border-radius:3px">${p.valor?'AUTO':'PENDIENTE'}</span>
+        <span style="font-size:8px;font-weight:800;background:${p.valor?'rgba(34,197,94,0.2)':'rgba(255,107,0,0.2)'};color:${p.valor?'#22c55e':'#FF6B00'};padding:1px 5px;border-radius:3px">${p.valor?'AUTO':'PENDIENTE'}</span>
       </label>
-      <input class="inp ${p.valor?'ok':'pend'}" style="${p.valor?'border-color:var(--green);background:#ECFDF5':'border-color:var(--orange)'}"
+      <input class="inp" style="${p.valor?'border-color:#22c55e':'border-color:#FF6B00'}"
         type="number" value="${p.valor||''}" placeholder="0" onchange="setValorManual(${pi},this.value)">
     </div>` : ''}
     <!-- Guías registradas -->
@@ -2464,19 +2465,19 @@ function puntosHTML(p, pi) {
       ${(p.guias||[]).map((g,gi) => `
         <div id="guia-card-${pi}-${gi}" style="margin-bottom:6px">
           <!-- Vista normal -->
-          <div id="guia-view-${pi}-${gi}" style="display:flex;align-items:center;gap:8px;background:#ECFDF5;border-radius:8px;padding:6px 10px;border:1px solid #6EE7B7">
+          <div id="guia-view-${pi}-${gi}" style="display:flex;align-items:center;gap:8px;background:rgba(34,197,94,0.1);border-radius:8px;padding:6px 10px;border:1px solid rgba(34,197,94,0.3)">
             ${g.img_url ? `<img src="${g.img_url}" style="width:48px;height:48px;object-fit:cover;border-radius:6px;cursor:pointer" onclick="window.open('${g.img_url}','_blank')">` : '<div style="width:48px;height:48px;background:#D1FAE5;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:18px">📄</div>'}
             <div style="flex:1">
-              <div style="font-size:11px;font-weight:800;color:#065F46">Guía N° ${g.num_guia}</div>
-              <div style="font-size:10px;color:#4E5A78">${g.fecha_guia||'—'}</div>
+              <div style="font-size:11px;font-weight:800;color:#22c55e">Guía N° ${g.num_guia}</div>
+              <div style="font-size:10px;color:rgba(255,255,255,0.5)">${g.fecha_guia||'—'}</div>
             </div>
             ${g.img_url ? `<button class="btn btn-outline btn-sm" onclick="window.open('${g.img_url}','_blank')">👁 Ver</button>` : ''}
             <button class="btn btn-sm" style="background:rgba(255,107,0,0.15);color:#FF6B00;padding:4px 8px;border:1px solid rgba(255,107,0,0.3)" onclick="editarGuia(${pi},${gi})">✏</button>
             <button class="btn btn-red btn-sm" onclick="eliminarGuia(${pi},${gi})">✕</button>
           </div>
           <!-- Modo edición (oculto por defecto) -->
-          <div id="guia-edit-${pi}-${gi}" style="display:none;background:#FFFBEB;border-radius:8px;padding:10px;border:1.5px solid var(--orange)">
-            <div style="font-size:9px;font-weight:800;letter-spacing:0.1em;color:#92400E;margin-bottom:8px">✏ EDITAR GUÍA</div>
+          <div id="guia-edit-${pi}-${gi}" style="display:none;background:rgba(255,107,0,0.1);border-radius:8px;padding:10px;border:1.5px solid #FF6B00">
+            <div style="font-size:9px;font-weight:800;letter-spacing:0.1em;color:#FF6B00;margin-bottom:8px">✏ EDITAR GUÍA</div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
               <div>
                 <label class="lbl">N° Guía</label>
@@ -2495,7 +2496,7 @@ function puntosHTML(p, pi) {
         </div>`).join('')}
     </div>
     <!-- Agregar guía -->
-    <div style="border:2px dashed var(--g200);border-radius:8px;padding:10px;text-align:center;cursor:pointer;background:${p.procesando?'#FFFBEB':'#fff'}"
+    <div style="border:2px dashed #2A2A2A;border-radius:8px;padding:10px;text-align:center;cursor:pointer;background:${p.procesando?'rgba(255,107,0,0.1)':'#1A1A1A'}"
       onclick="document.getElementById('foto-p${pi}-new').click()">
       <div style="font-size:18px">${p.procesando?'⏳':'📷'}</div>
       <div style="font-size:10px;font-weight:800;color:var(--navy);margin-top:2px">
@@ -2635,9 +2636,7 @@ async function guardarBorrador() {
   const {error} = await supa.from('servicios_piloto').update({
     estado:'borrador', destino, num_guia:nguia, tarifa_neta:tarifa,
     puntos_entrega:puntosData.length,
-    tipo_entrega: tipoEntrega,
-    observaciones_conductor: obsConduc,
-    notas:`_PUNTOS:${puntosJSON}`
+    notas:'Retorno: '+((s.notas?.match(/Retorno: (\w+)/)||[])[1]||'base')+'|_PUNTOS:'+puntosJSON
   }).eq('id',s.id);
   if(error) { toast('Error: '+error.message); return; }
   DB.servicios[svcActivoIdx] = {...s, estado:'borrador', destino, num_guia:nguia, tarifa_neta:tarifa, _puntos:puntosData, _fecha_termino:fechaTerm};
