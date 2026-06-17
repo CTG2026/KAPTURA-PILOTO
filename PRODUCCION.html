@@ -1067,12 +1067,8 @@ async function validarPinGo() {
       return;
     }
     if(usr.rol === 'admin_kaptura') { cargarPanelAdmin(); return; }
-    if(['coordinador','controller','administrador'].includes(usr.rol)) {
-      cargarConfigFlota(usr.empresa);
-      return;
-    }
-    if(usr.rol === 'conductor') {
-      cargarConfigFlota(usr.empresa);
+    if(['coordinador','controller','administrador','conductor'].includes(usr.rol)) {
+      window.location.href = 'flota-produccion.html';
       return;
     }
     showScreen('screen-modo');
@@ -3291,7 +3287,7 @@ async function flotaConfigurarCompleto() {
   if(!window._flotaEmpresa) { alert('Error: sesión expirada. Vuelve a ingresar.'); return; }
   await flotaGuardarCostos();
   // Redirigir al panel operativo FLOTA
-  window.location.href = 'FLOTA%20PRODUCCION';
+  window.location.href = 'flota-produccion.html';
 }
 
 async function flotaGuardarEmpresa() {
