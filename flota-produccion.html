@@ -4227,7 +4227,9 @@ function setupSeleccionarModo(modo) {
 }
 
 async function setupGuardarEmpresa() {
+  if(!DB._empresa && _sessionUsuario?.empresa) DB._empresa = _sessionUsuario.empresa;
   const emp = DB._empresa;
+  if(!emp) return;
   const nombre = document.getElementById('setup-nombre-empresa').value.trim();
   const rut    = document.getElementById('setup-rut').value.trim();
   const ciudad = document.getElementById('setup-ciudad').value.trim();
@@ -4238,13 +4240,12 @@ async function setupGuardarEmpresa() {
     {clave:'flota_ciudad_'+emp, valor:ciudad, empresa:emp},
     {clave:'modo_gestion_'+emp, valor:modo,   empresa:emp},
   ];
-  for(const r of rows) {
-    await supa.from('kaptura_config').upsert(r, {onConflict:'clave,empresa'});
-  }
-  toast('✓ Empresa guardada');
+  const {error} = await supa.from('kaptura_config').upsert(rows, {onConflict:'clave,empresa'});
+  if(error) throw new Error(error.message);
 }
 
 async function setupGuardarCostos() {
+  if(!DB._empresa && _sessionUsuario?.empresa) DB._empresa = _sessionUsuario.empresa;
   const emp = DB._empresa;
   if(!emp) return;
   const cf   = (document.getElementById('setup-costo-fijo').value||'0').replace(/[^0-9]/g,'');
@@ -4262,6 +4263,7 @@ async function setupGuardarCostos() {
 }
 
 async function setupGuardarMant() {
+  if(!DB._empresa && _sessionUsuario?.empresa) DB._empresa = _sessionUsuario.empresa;
   const emp = DB._empresa;
   const rows = [
     {clave:'mant_km_'+emp,    valor:document.getElementById('setup-mant-km').value,    empresa:emp},
@@ -4392,8 +4394,9 @@ function setupMayorSumar() {
 }
 
 async function setupGuardarTodo() {
+  if(!DB._empresa && _sessionUsuario?.empresa) DB._empresa = _sessionUsuario.empresa;
   const emp = DB._empresa;
-  if(!emp) { toast('Error: sesión sin empresa'); return; }
+  if(!emp) { alert('Error: sesión sin empresa. Sal y vuelve a entrar.'); return; }
   const btn = document.querySelector('#btn-setup-fixed button');
   if(btn) { btn.textContent = 'Guardando...'; btn.disabled = true; }
   try {
