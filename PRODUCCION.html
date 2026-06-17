@@ -3380,8 +3380,8 @@ async function flotaGuardarEmpresa() {
     {clave:'flota_nombre_'+window._flotaEmpresa, valor:nombre, empresa:window._flotaEmpresa},
     {clave:'flota_rut_'+window._flotaEmpresa, valor:rut, empresa:window._flotaEmpresa},
     {clave:'flota_ciudad_'+window._flotaEmpresa, valor:ciudad, empresa:window._flotaEmpresa}
-  ], {onConflict:'clave'});
-  if(error) { console.error('Error empresa:', error.message); return; }
+  ], {onConflict:'clave,empresa'});
+  if(error) { console.error('Error empresa:', error.message); throw new Error(error.message); }
 }
 
 async function flotaGuardarCostos() {
@@ -3390,26 +3390,19 @@ async function flotaGuardarCostos() {
     window._flotaEmpresa = sess.empresa;
   }
   if(!window._flotaEmpresa) { alert('Error: sesión expirada.'); return; }
-  const cf = parseInt(document.getElementById('flota-costo-fijo').value.replace(/[^0-9]/g,''))||0;
-  const dias = parseInt(document.getElementById('flota-dias-op').value)||20;
-  const viatico = parseInt(document.getElementById('flota-viatico').value.replace(/[^0-9]/g,''))||0;
-  // Intentar update primero, si no existe hacer insert
-  const {data: existing} = await supa.from('kaptura_config').select('empresa').eq('empresa', window._flotaEmpresa).single();
-  let error;
-  if(existing) {
-    const r = await supa.from('kaptura_config').update({
-      costo_fijo_dia: Math.round(cf / dias),
-    }).eq('empresa', window._flotaEmpresa);
-    error = r.error;
-  } else {
-    const r = await supa.from('kaptura_config').insert({
-      empresa: window._flotaEmpresa,
-      clave: 'config_'+window._flotaEmpresa,
-      costo_fijo_dia: Math.round(cf / dias),
-    });
-    error = r.error;
-  }
-  if(error) { console.error('Error costos:', error.message); return; }
+  const cf    = parseInt((document.getElementById('flota-costo-fijo')?.value||'0').replace(/[^0-9]/g,''))||0;
+  const dias  = parseInt(document.getElementById('flota-dias-op')?.value)||20;
+  const viatico = parseInt((document.getElementById('flota-viatico')?.value||'0').replace(/[^0-9]/g,''))||0;
+  const cfDia = Math.round(cf / dias);
+  const emp   = window._flotaEmpresa;
+  const rows  = [
+    {clave:'costo_fijo_mensual_'+emp, valor:String(cf),      empresa:emp},
+    {clave:'costo_fijo_dia_'+emp,     valor:String(cfDia),   empresa:emp},
+    {clave:'dias_operativos_'+emp,    valor:String(dias),    empresa:emp},
+    {clave:'viatico_dia_'+emp,        valor:String(viatico), empresa:emp},
+  ];
+  const {error} = await supa.from('kaptura_config').upsert(rows, {onConflict:'clave,empresa'});
+  if(error) { console.error('Error costos:', error.message); throw new Error(error.message); }
 }
 
 async function flotaAgregarTarifa() {
