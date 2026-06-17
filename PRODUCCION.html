@@ -3628,7 +3628,7 @@ async function flotaAgregarCliente() {
           <input id="flota-ciudad" type="text" placeholder="Ej: Santiago" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:9px 12px;font-size:13px;color:#fff;font-family:inherit">
         </div>
       </div>
-      <button onclick="flotaGuardarEmpresa()" style="width:100%;background:#FF6B00;border:none;border-radius:8px;padding:10px;font-size:14px;font-weight:700;color:#000;cursor:pointer">GUARDAR DATOS</button>
+
     </div>
 
     <!-- 2. FLOTA / EQUIPOS -->
@@ -3692,21 +3692,8 @@ async function flotaAgregarCliente() {
       <div style="font-size:11px;font-weight:700;color:#FF6B00;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px">4. Clientes</div>
       <div id="flota-lista-clientes" style="margin-bottom:10px"></div>
 
-      <!-- Agregar rápido -->
-      <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:6px;align-items:flex-end;margin-bottom:8px">
-        <div>
-          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">NOMBRE</div>
-          <input id="flota-nuevo-cliente" type="text" placeholder="Nombre del cliente" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:8px 10px;font-size:13px;color:#fff;font-family:inherit">
-        </div>
-        <div>
-          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">RUT</div>
-          <input id="flota-nuevo-cliente-rut" type="text" placeholder="Ej: 76.XXX.XXX-X" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:8px 10px;font-size:13px;color:#fff;font-family:inherit">
-        </div>
-        <button onclick="flotaAgregarCliente()" style="background:#FF6B00;border:none;border-radius:8px;padding:10px 14px;font-size:18px;font-weight:900;color:#000;cursor:pointer;align-self:flex-end">+</button>
-      </div>
-
-      <!-- Ficha completa -->
-      <button onclick="document.getElementById('flota-ficha-cliente').style.display=document.getElementById('flota-ficha-cliente').style.display==='none'?'block':'none'" style="width:100%;background:rgba(255,107,0,0.12);border:1px solid rgba(255,107,0,0.3);border-radius:8px;padding:9px;font-size:12px;font-weight:700;color:#FF6B00;cursor:pointer">+ Ficha completa del cliente</button>
+      <!-- Solo ficha completa -->
+      <button onclick="document.getElementById('flota-ficha-cliente').style.display=document.getElementById('flota-ficha-cliente').style.display==='none'?'block':'none'" style="width:100%;background:rgba(255,107,0,0.12);border:1px solid rgba(255,107,0,0.3);border-radius:8px;padding:12px;font-size:13px;font-weight:700;color:#FF6B00;cursor:pointer">+ Agregar cliente</button>
 
       <div id="flota-ficha-cliente" style="display:none;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:10px;padding:14px;margin-top:8px">
         <div style="font-size:11px;font-weight:700;color:#FF6B00;letter-spacing:0.08em;margin-bottom:12px">DATOS DEL CLIENTE</div>
@@ -3838,7 +3825,7 @@ async function flotaAgregarCliente() {
           <input id="flota-viatico" type="text" placeholder="Ej: 12000" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:8px 10px;font-size:13px;color:#fff;font-family:inherit">
         </div>
       </div>
-      <button onclick="flotaGuardarCostos()" style="width:100%;background:#FF6B00;border:none;border-radius:8px;padding:10px;font-size:14px;font-weight:700;color:#000;cursor:pointer;margin-top:10px">GUARDAR COSTOS FIJOS</button>
+
     </div>
 
     <!-- 7. MANTENCIÓN PREVENTIVA -->
@@ -3919,7 +3906,7 @@ async function flotaAgregarCliente() {
       </div>
       <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-bottom:4px">O ingresa el monto mensual directamente:</div>
       <input id="flota-fondo" type="text" placeholder="Ej: 150000" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:7px;padding:9px 12px;font-size:14px;color:#fff;font-family:inherit">
-      <button onclick="flotaGuardarContingencia()" style="width:100%;background:#FF6B00;border:none;border-radius:8px;padding:10px;font-size:14px;font-weight:700;color:#000;cursor:pointer;margin-top:10px">GUARDAR CONTINGENCIA</button>
+
     </div>
 
     <button onclick="flotaConfigurarCompleto()" style="width:100%;padding:18px;border-radius:12px;border:none;background:#FF6B00;font-size:20px;font-weight:900;color:#000;cursor:pointer;margin-top:4px">GUARDAR CONFIGURACIÓN COMPLETA ✓</button>
