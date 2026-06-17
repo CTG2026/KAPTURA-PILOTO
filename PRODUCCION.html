@@ -3313,9 +3313,63 @@ async function flotaConfigurarCompleto() {
     window._flotaEmpresa = sess.empresa;
   }
   if(!window._flotaEmpresa) { alert('Error: sesión expirada. Vuelve a ingresar.'); return; }
-  await flotaGuardarCostos();
-  // Redirigir al panel operativo FLOTA
-  window.location.href = 'flota-produccion.html';
+
+  const btn = document.querySelector('[onclick="flotaConfigurarCompleto()"]');
+  if(btn) { btn.textContent = 'Guardando...'; btn.disabled = true; }
+
+  try {
+    // 1. Guardar datos empresa
+    await flotaGuardarEmpresa();
+
+    // 2. Guardar costos
+    await flotaGuardarCostos();
+
+    // 3. Guardar modo de gestión
+    const modo = document.getElementById('flota-modo-gestion')?.value || 'flota';
+    await supa.from('kaptura_config').upsert(
+      [{clave:'modo_gestion_'+window._flotaEmpresa, valor:modo, empresa:window._flotaEmpresa}],
+      {onConflict:'clave,empresa'}
+    );
+
+    // 4. Guardar mantención
+    const mantKm = document.getElementById('flota-mant-km')?.value || '';
+    const mantCosto = document.getElementById('flota-mant-costo')?.value || '';
+    if(mantKm || mantCosto) {
+      await supa.from('kaptura_config').upsert([
+        {clave:'mant_km_'+window._flotaEmpresa, valor:mantKm, empresa:window._flotaEmpresa},
+        {clave:'mant_costo_'+window._flotaEmpresa, valor:mantCosto, empresa:window._flotaEmpresa}
+      ], {onConflict:'clave,empresa'});
+    }
+
+    // 5. Guardar neumáticos
+    const neumCosto = document.getElementById('flota-neum-costo')?.value || '';
+    const neumKm = document.getElementById('flota-neum-km')?.value || '';
+    if(neumCosto || neumKm) {
+      await supa.from('kaptura_config').upsert([
+        {clave:'neum_costo_'+window._flotaEmpresa, valor:neumCosto, empresa:window._flotaEmpresa},
+        {clave:'neum_km_'+window._flotaEmpresa, valor:neumKm, empresa:window._flotaEmpresa}
+      ], {onConflict:'clave,empresa'});
+    }
+
+    // 6. Guardar fondo contingencia
+    const fondo = parseInt((document.getElementById('flota-fondo')?.value||'0').replace(/[^0-9]/g,''))||0;
+    if(fondo > 0) {
+      await supa.from('kaptura_config').upsert(
+        [{clave:'fondo_contingencia_'+window._flotaEmpresa, valor:String(fondo), empresa:window._flotaEmpresa}],
+        {onConflict:'clave,empresa'}
+      );
+    }
+
+    // Listo — ir al panel
+    const sess = JSON.parse(localStorage.getItem('kaptura_session')||'{}');
+    sess.rol = 'coordinador';
+    localStorage.setItem('kaptura_session', JSON.stringify(sess));
+    window.location.href = 'flota-produccion.html';
+
+  } catch(e) {
+    alert('Error guardando: ' + e.message);
+    if(btn) { btn.textContent = 'GUARDAR CONFIGURACIÓN COMPLETA ✓'; btn.disabled = false; }
+  }
 }
 
 async function flotaGuardarEmpresa() {
@@ -3327,8 +3381,7 @@ async function flotaGuardarEmpresa() {
     {clave:'flota_rut_'+window._flotaEmpresa, valor:rut, empresa:window._flotaEmpresa},
     {clave:'flota_ciudad_'+window._flotaEmpresa, valor:ciudad, empresa:window._flotaEmpresa}
   ], {onConflict:'clave'});
-  if(error) { alert('Error: '+error.message); return; }
-  alert('Datos guardados.');
+  if(error) { console.error('Error empresa:', error.message); return; }
 }
 
 async function flotaGuardarCostos() {
@@ -3356,8 +3409,7 @@ async function flotaGuardarCostos() {
     });
     error = r.error;
   }
-  if(error) { alert('Error: '+error.message); return; }
-  alert('Configuración guardada correctamente.');
+  if(error) { console.error('Error costos:', error.message); return; }
 }
 
 async function flotaAgregarTarifa() {
