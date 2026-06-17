@@ -2916,10 +2916,11 @@ async function calcCostos() {
   const mantFinal    = parseFmt('cos-mant');
   const viatFinal    = parseFmt('cos-viatico');
 
-  // Auto-set comision when GPS loaded and tarifa>0
+  // Calcular comisión sobre ingreso total (tarifa + puntos intermedios)
   const comisionEl = document.getElementById('cos-comision');
-  if(tarifa > 0 && !comisionEl.dataset.manual && (comisionEl.value === '' || comisionEl.value === '0' || !comisionEl.value)) {
-    comisionEl.value = Math.round(tarifa * (parseFloat(c.comision_conductor||8)/100));
+  const ingresoParaComision = tarifa + valorPts;
+  if(ingresoParaComision > 0 && !comisionEl.dataset.manual) {
+    comisionEl.value = Math.round(ingresoParaComision * (parseFloat(c.comision_conductor||8)/100));
   }
   const comision = parseFmt('cos-comision');
 
@@ -3267,17 +3268,17 @@ async function cargarGPS() {
 
     const elTag = document.getElementById('cos-tag');
     if(elTag) {
-      elTag.value = hayKmGPS ? totalTag : 0;
-      document.getElementById('lbl-tag').textContent = (hayKmGPS && totalTag>0) ? 'AUTO ✓' : 'AUTO';
-      document.getElementById('lbl-tag').style.background = (hayKmGPS && totalTag>0) ? '#D1FAE5' : '#FEF3C7';
-      document.getElementById('lbl-tag').style.color = (hayKmGPS && totalTag>0) ? '#065F46' : '#92400E';
+      elTag.value = totalTag;
+      document.getElementById('lbl-tag').textContent = totalTag>0 ? 'AUTO ✓' : 'AUTO';
+      document.getElementById('lbl-tag').style.background = totalTag>0 ? 'rgba(34,197,94,0.2)' : 'rgba(255,107,0,0.2)';
+      document.getElementById('lbl-tag').style.color = totalTag>0 ? '#22c55e' : '#FF6B00';
     }
     const elPeajes = document.getElementById('cos-peajes');
     if(elPeajes) {
-      elPeajes.value = hayKmGPS ? totalPeajes : 0;
-      document.getElementById('lbl-peajes').textContent = (hayKmGPS && totalPeajes>0) ? 'AUTO ✓' : 'AUTO';
-      document.getElementById('lbl-peajes').style.background = (hayKmGPS && totalPeajes>0) ? '#D1FAE5' : '#FEF3C7';
-      document.getElementById('lbl-peajes').style.color = (hayKmGPS && totalPeajes>0) ? '#065F46' : '#92400E';
+      elPeajes.value = totalPeajes;
+      document.getElementById('lbl-peajes').textContent = totalPeajes>0 ? 'AUTO ✓' : 'AUTO';
+      document.getElementById('lbl-peajes').style.background = totalPeajes>0 ? 'rgba(34,197,94,0.2)' : 'rgba(255,107,0,0.2)';
+      document.getElementById('lbl-peajes').style.color = totalPeajes>0 ? '#22c55e' : '#FF6B00';
     }
     _integrando = false;
     calcCostos();
