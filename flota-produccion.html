@@ -1102,7 +1102,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
         </div>
         <div>
           <div style="font-size:9px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.45);margin-bottom:4px">Total Ingresos</div>
-          <div style="font-family:'DM Sans',sans-serif;font-size:26px;font-weight:900;line-height:1;color:#34D399" id="cos-ingreso">$—</div>
+          <div style="font-family:'DM Sans',sans-serif;font-size:26px;font-weight:900;line-height:1;color:#7EA87E" id="cos-ingreso">$—</div>
         </div>
       </div>
     </div>
@@ -2196,7 +2196,7 @@ function filaHTML(s,i) {
     <td>${s.origen||'—'}</td>
     <td style="font-weight:700">${destino}</td>
     <td style="font-size:12px;font-weight:700;color:var(--text)">${guia}</td>
-    <td style="font-weight:700;color:#065F46">${tarifa}</td>
+    <td style="font-weight:700;color:var(--green)">${tarifa}</td>
     <td style="text-align:center">${cantPtos}</td>
     <td style="color:rgba(255,255,255,0.7)">${totalPtos}</td>
     <td style="font-weight:700">${totalIng}</td>
@@ -2936,7 +2936,7 @@ async function calcCostos() {
   const pct    = tarifa ? Math.round(margen/tarifa*100) : 0;
   const mEl = document.getElementById('cos-margen');
   mEl.textContent = fmt(margen);
-  mEl.style.color = margen >= 0 ? '#34D399' : '#F87171';
+  mEl.style.color = margen >= 0 ? '#7EA87E' : '#B05A5A';
   document.getElementById('cos-margen-pct').textContent = `${pct}% sobre tarifa`;
 }
 
@@ -3548,7 +3548,7 @@ async function abrirInforme(i) {
               ${g.img_url ? `<a href="${g.img_url}" target="_blank" style="font-size:9px;font-weight:800;color:var(--gold);text-decoration:none;background:rgba(255,107,0,0.15);padding:1px 6px;border-radius:3px">👁 Ver</a>` : ''}
             </div>`).join('') : '—'}
         </td>
-        <td style="text-align:right;font-weight:700;color:#065F46">${fmt(p.valor||0)}</td>
+        <td style="text-align:right;font-weight:700;color:var(--green)">${fmt(p.valor||0)}</td>
       </tr>`;
     });
   } else {
@@ -3556,7 +3556,7 @@ async function abrirInforme(i) {
   }
   html += `<tr style="background:var(--bg)">
     <td colspan="4" style="text-align:right;font-weight:800;color:var(--text);padding:8px">TOTAL INGRESOS</td>
-    <td style="text-align:right;font-weight:800;color:#065F46;padding:8px">${fmt(ingreso)}</td>
+    <td style="text-align:right;font-weight:800;color:var(--gold);padding:8px">${fmt(ingreso)}</td>
   </tr></tbody></table></div>
 
   <div class="inf-section">⚙ Costos del Servicio</div>
@@ -3579,18 +3579,18 @@ async function abrirInforme(i) {
   });
   html += `</tbody></table></div>
 
-  <div style="background:var(--gold);color:var(--text);padding:12px 16px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;border-radius:0 0 8px 8px;margin-top:4px">
-    <div>
-      <div style="font-size:9px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.45);margin-bottom:4px">Total Ingresos</div>
-      <div style="font-family:'DM Sans',sans-serif;font-size:28px;font-weight:900;color:#34D399">${fmt(s.ingreso_total||s.tarifa_neta||0)}</div>
+  <div style="background:#111;border:1px solid var(--border);padding:12px 16px;display:grid;grid-template-columns:1fr 1fr;gap:10px;border-radius:8px;margin-top:8px">
+    <div style="border-bottom:1px solid var(--border);padding-bottom:10px;grid-column:1/-1;display:flex;justify-content:space-between;align-items:center">
+      <div style="font-size:9px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted)">Total Ingresos</div>
+      <div style="font-family:'DM Sans',sans-serif;font-size:22px;font-weight:900;color:var(--gold)">${fmt(s.ingreso_total||s.tarifa_neta||0)}</div>
     </div>
     <div>
-      <div style="font-size:9px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.45);margin-bottom:4px">Total Costos</div>
-      <div style="font-family:'DM Sans',sans-serif;font-size:28px;font-weight:900;color:#F87171">${fmt(s.total_costos||0)}</div>
+      <div style="font-size:9px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:4px">Total Costos</div>
+      <div style="font-family:'DM Sans',sans-serif;font-size:18px;font-weight:900;color:#B05A5A">${fmt(s.total_costos||0)}</div>
     </div>
     <div>
-      <div style="font-size:9px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.45);margin-bottom:4px">Margen Servicio</div>
-      <div style="font-family:'DM Sans',sans-serif;font-size:28px;font-weight:900;color:${(s.margen_servicio||s.margen||0)>=0?'#34D399':'#F87171'}">${fmt(s.margen_servicio||s.margen||0)}</div>
+      <div style="font-size:9px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:4px">Margen Servicio</div>
+      <div style="font-family:'DM Sans',sans-serif;font-size:18px;font-weight:900;color:${(s.margen_servicio||s.margen||0)>=0?'#7EA87E':'#B05A5A'}">${fmt(s.margen_servicio||s.margen||0)}</div>
     </div>
   </div>`;
 
