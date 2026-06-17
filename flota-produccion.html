@@ -1912,6 +1912,17 @@ async function init() {
     }
 
     renderTodo();
+
+    // Si coordinador sin equipos → redirigir a completar onboarding
+    if(DB.flota.length === 0 && _sessionUsuario && ['coordinador','administrador'].includes(_sessionUsuario.rol) && !_sessionUsuario._admin_view) {
+      toast('⚠ Debes completar la configuración inicial primero');
+      setTimeout(() => {
+        const sess = JSON.parse(localStorage.getItem('kaptura_session')||'{}');
+        sess._goto_setup = true;
+        localStorage.setItem('kaptura_session', JSON.stringify(sess));
+        window.location.href = 'PRODUCCION.html';
+      }, 1500);
+    }
   } catch(e) {
     toast('Error conectando: ' + e.message);
   } finally {
