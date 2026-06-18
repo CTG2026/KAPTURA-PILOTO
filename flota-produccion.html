@@ -100,7 +100,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .spin{width:32px;height:32px;border:2px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin 0.8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 /* Informe styles */
-.inf-hdr{background:var(--gold);color:var(--text);padding:12px 16px;display:flex;justify-content:space-between;align-items:center;border-radius:8px 8px 0 0}
+.inf-hdr{background:var(--surface);border:1px solid var(--border);border-bottom:2px solid var(--gold);color:var(--text);padding:12px 16px;display:flex;justify-content:space-between;align-items:center;border-radius:8px 8px 0 0}
 .inf-grid{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--border);border-top:none}
 .inf-cell{padding:8px 12px;border-right:1px solid #2A2A2A;border-bottom:1px solid var(--border);background:var(--surface)}
 .inf-cell:nth-child(even){border-right:none}
@@ -110,7 +110,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .inf-table{width:100%;border-collapse:collapse;font-size:11px;color:var(--text)}
 .inf-table th{background:var(--bg);color:rgba(255,255,255,0.6);padding:6px 8px;text-align:left;font-size:9px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase}
 .inf-table td{padding:5px 8px;border-bottom:1px solid var(--border);color:var(--text)}
-.inf-margen{background:var(--gold);color:var(--text);padding:12px 16px;display:grid;grid-template-columns:1fr 1fr;gap:12px;border-radius:0 0 8px 8px;margin-top:4px}
+.inf-margen{background:var(--surface);border:1px solid var(--border);color:var(--text);padding:12px 16px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;border-radius:8px;margin-top:8px}
 </style>
 </head>
 <body>
@@ -387,12 +387,120 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
   <!-- TAB LIQUIDACIONES -->
   <div id="tab-liquidaciones" style="display:none">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-      <div style="font-family:'DM Sans',sans-serif;font-size:20px;font-weight:900;letter-spacing:0.05em">LIQUIDACIONES</div>
+      <div class="sec-ttl">Liquidaciones</div>
+      <button class="btn btn-navy" onclick="abrirNuevaLiquidacion()">+ Nueva Liquidación</button>
     </div>
-    <div style="background:var(--surface);border-radius:12px;padding:40px;text-align:center;color:var(--muted)">
-      <div style="font-size:32px;margin-bottom:12px">🚧</div>
-      <div style="font-size:14px;font-weight:700">Módulo en construcción</div>
-      <div style="font-size:12px;margin-top:4px">Próximamente disponible</div>
+    <!-- Filtro estado -->
+    <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap">
+      <button class="btn btn-sm" id="liq-fil-todas" onclick="filtrarLiquidaciones('todas')" style="background:var(--gold);color:#000">Todas</button>
+      <button class="btn btn-sm btn-ghost" id="liq-fil-borrador" onclick="filtrarLiquidaciones('borrador')">Borrador</button>
+      <button class="btn btn-sm btn-ghost" id="liq-fil-emitida" onclick="filtrarLiquidaciones('emitida')">Emitidas</button>
+      <button class="btn btn-sm btn-ghost" id="liq-fil-por_cobrar" onclick="filtrarLiquidaciones('por_cobrar')">Por Cobrar</button>
+      <button class="btn btn-sm btn-ghost" id="liq-fil-cobrada" onclick="filtrarLiquidaciones('cobrada')">Cobradas</button>
+    </div>
+    <!-- Lista liquidaciones -->
+    <div id="liq-lista"><div class="empty">Sin liquidaciones — crea la primera con + Nueva Liquidación</div></div>
+  </div>
+
+  <!-- MODAL NUEVA LIQUIDACIÓN -->
+  <div id="modal-nueva-liq" class="overlay" style="display:none">
+    <div class="modal" style="max-width:700px">
+      <div class="modal-hdr">
+        <div>
+          <div class="modal-ttl">Nueva Liquidación</div>
+          <div class="modal-sub" id="liq-numero-preview">Selecciona un cliente para asignar número</div>
+        </div>
+        <button class="modal-cls" onclick="cerrar('modal-nueva-liq')">✕</button>
+      </div>
+      <div class="modal-body">
+        <!-- Paso 1: cliente -->
+        <div class="fld">
+          <div class="lbl">Cliente</div>
+          <select class="inp" id="liq-cliente" onchange="liqSeleccionarCliente()">
+            <option value="">Selecciona cliente...</option>
+          </select>
+        </div>
+        <div class="fld2">
+          <div class="fld">
+            <div class="lbl">Fecha Emisión</div>
+            <input class="inp" type="date" id="liq-fecha" value="">
+          </div>
+          <div class="fld">
+            <div class="lbl">Vencimiento</div>
+            <input class="inp" type="date" id="liq-vencimiento">
+          </div>
+        </div>
+        <!-- Servicios cerrados del cliente -->
+        <div id="liq-servicios-container" style="display:none">
+          <div class="section-ttl">Servicios cerrados disponibles</div>
+          <div id="liq-servicios-lista" style="margin-bottom:12px"></div>
+        </div>
+        <!-- Resumen -->
+        <div id="liq-resumen" style="display:none;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:12px">
+          <div class="section-ttl">Resumen Liquidación</div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+            <span style="color:var(--muted);font-size:12px">Servicios seleccionados</span>
+            <span id="liq-cant-svc" style="font-weight:700;color:var(--text)">0</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+            <span style="color:var(--muted);font-size:12px">Monto neto</span>
+            <span id="liq-monto-neto" style="font-weight:700;color:var(--text)">$0</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+            <span style="color:var(--muted);font-size:12px">IVA 19%</span>
+            <span id="liq-iva" style="font-weight:700;color:var(--text)">$0</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding-top:8px;border-top:1px solid var(--border)">
+            <span style="font-size:13px;font-weight:800;color:var(--gold)">TOTAL</span>
+            <span id="liq-total" style="font-size:18px;font-weight:900;color:var(--gold)">$0</span>
+          </div>
+        </div>
+        <!-- Factoring -->
+        <div id="liq-factoring-section" style="display:none">
+          <div class="section-ttl">Factoring (opcional)</div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+            <input type="checkbox" id="liq-usa-factoring" onchange="liqToggleFactoring()" style="width:18px;height:18px;accent-color:var(--gold)">
+            <label for="liq-usa-factoring" style="font-size:13px;color:var(--text);font-weight:600">Ceder a factoring</label>
+          </div>
+          <div id="liq-factoring-inputs" style="display:none">
+            <div class="fld2">
+              <div class="fld">
+                <div class="lbl">Comisión factoring (%)</div>
+                <input class="inp" type="number" id="liq-factoring-pct" value="3" step="0.1" onchange="liqCalcularFactoring()">
+              </div>
+              <div class="fld">
+                <div class="lbl">Costo factoring ($)</div>
+                <input class="inp" id="liq-factoring-costo" readonly>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Notas -->
+        <div class="fld">
+          <div class="lbl">Notas (opcional)</div>
+          <textarea class="inp" id="liq-notas" rows="2" placeholder="Observaciones..."></textarea>
+        </div>
+      </div>
+      <div class="modal-ftr">
+        <button class="btn btn-ghost" onclick="cerrar('modal-nueva-liq')">Cancelar</button>
+        <button class="btn btn-outline" onclick="guardarLiquidacion('borrador')">Guardar borrador</button>
+        <button class="btn btn-navy" onclick="guardarLiquidacion('emitida')">✓ Emitir Liquidación</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL VER LIQUIDACIÓN -->
+  <div id="modal-ver-liq" class="overlay" style="display:none">
+    <div class="modal" style="max-width:700px">
+      <div class="modal-hdr">
+        <div>
+          <div class="modal-ttl" id="ver-liq-numero">LIQ-001</div>
+          <div class="modal-sub" id="ver-liq-sub"></div>
+        </div>
+        <button class="modal-cls" onclick="cerrar('modal-ver-liq')">✕</button>
+      </div>
+      <div class="modal-body" id="ver-liq-body"></div>
+      <div class="modal-ftr" id="ver-liq-ftr"></div>
     </div>
   </div>
 
@@ -1280,19 +1388,19 @@ function renderDetalleTab() {
           <th style="padding:7px;text-align:left">Equipo</th>
           <th style="padding:7px;text-align:right">Litros</th>
           <th style="padding:7px;text-align:right">Bruto</th>
-          <th style="padding:7px;text-align:right;color:#059669">Neto (−20%)</th>
+          <th style="padding:7px;text-align:right;color:var(--green)">Neto (−20%)</th>
         </tr></thead><tbody>
         ${Object.entries(porEq).map(([pat,v])=>`<tr style="border-bottom:1px solid var(--g100)">
           <td style="padding:7px;font-weight:700">${pat}</td>
           <td style="padding:7px;text-align:right">${Math.round(v.litros*10)/10} lt</td>
           <td style="padding:7px;text-align:right">${fmt(v.bruto)}</td>
-          <td style="padding:7px;text-align:right;font-weight:700;color:#059669">${fmt(Math.round(v.bruto*0.8))}</td>
+          <td style="padding:7px;text-align:right;font-weight:700;color:var(--green)">${fmt(Math.round(v.bruto*0.8))}</td>
         </tr>`).join('')}
         <tr style="background:#E8EDF5;font-weight:700">
           <td style="padding:7px">TOTAL</td>
           <td style="padding:7px;text-align:right">${Math.round(Object.values(porEq).reduce((a,v)=>a+v.litros,0)*10)/10} lt</td>
           <td style="padding:7px;text-align:right">${fmt(Object.values(porEq).reduce((a,v)=>a+v.bruto,0))}</td>
-          <td style="padding:7px;text-align:right;color:#059669">${fmt(Math.round(Object.values(porEq).reduce((a,v)=>a+v.bruto,0)*0.8))}</td>
+          <td style="padding:7px;text-align:right;color:var(--green)">${fmt(Math.round(Object.values(porEq).reduce((a,v)=>a+v.bruto,0)*0.8))}</td>
         </tr></tbody>
       </table>
       <div style="font-size:11px;font-weight:800;letter-spacing:0.08em;color:var(--g400);margin-bottom:6px">DETALLE DE CARGAS</div>`;
@@ -1309,19 +1417,19 @@ function renderDetalleTab() {
           <th style="padding:7px;text-align:left">Equipo</th>
           <th style="padding:7px;text-align:right">Litros</th>
           <th style="padding:7px;text-align:right">Bruto</th>
-          <th style="padding:7px;text-align:right;color:#059669">Neto (−20%)</th>
+          <th style="padding:7px;text-align:right;color:var(--green)">Neto (−20%)</th>
         </tr></thead><tbody>
         ${porEqSorted.map(([pat,v])=>`<tr style="border-bottom:1px solid var(--g100)">
           <td style="padding:7px;font-weight:700">${pat}</td>
           <td style="padding:7px;text-align:right">${Math.round(v.litros*10)/10} lt</td>
           <td style="padding:7px;text-align:right">${fmt(v.bruto)}</td>
-          <td style="padding:7px;text-align:right;font-weight:700;color:#059669">${fmt(Math.round(v.bruto*0.8))}</td>
+          <td style="padding:7px;text-align:right;font-weight:700;color:var(--green)">${fmt(Math.round(v.bruto*0.8))}</td>
         </tr>`).join('')}
         <tr style="background:#E8EDF5;font-weight:700">
           <td style="padding:7px">TOTAL</td>
           <td style="padding:7px;text-align:right">${Math.round(porEqSorted.reduce((a,[,v])=>a+v.litros,0)*10)/10} lt</td>
           <td style="padding:7px;text-align:right">${fmt(porEqSorted.reduce((a,[,v])=>a+v.bruto,0))}</td>
-          <td style="padding:7px;text-align:right;color:#059669">${fmt(Math.round(porEqSorted.reduce((a,[,v])=>a+v.bruto,0)*0.8))}</td>
+          <td style="padding:7px;text-align:right;color:var(--green)">${fmt(Math.round(porEqSorted.reduce((a,[,v])=>a+v.bruto,0)*0.8))}</td>
         </tr></tbody>
       </table>`;
     thead.innerHTML = '';
@@ -1912,9 +2020,8 @@ let DB_tarifario = [];
 // ══ INIT ══
 async function init() {
   document.getElementById('filtro-fecha').value = '';
-  const empLabel = (DB._empresa||'global_solutions') === 'transportes_madrid' ? 'MADRID' : 'GLOBAL';
   document.getElementById('hdr-info').innerHTML =
-    `${hoy.getDate()} ${MESES[hoy.getMonth()]} ${hoy.getFullYear()} · v${KAPTURA_VERSION} · ${empLabel}`;
+    `${hoy.getDate()} ${MESES[hoy.getMonth()]} ${hoy.getFullYear()} · v${KAPTURA_VERSION}`;
   // Seleccionar mes en curso automáticamente
   const dashMes = document.getElementById('dash-mes');
   if(dashMes) dashMes.value = String(hoy.getMonth());
@@ -3521,8 +3628,8 @@ async function abrirInforme(i) {
       <div class="inf-cell"><div class="inf-lbl">Km Cargado</div><div class="inf-val">${s.km_carga_destino ? s.km_carga_destino+' km' : '—'}</div></div>
       <div class="inf-cell"><div class="inf-lbl">Rend. Teórico</div><div class="inf-val" id="inf-rend-teorico">—</div></div>
       <div class="inf-cell"><div class="inf-lbl">Rend. según cargas</div><div class="inf-val" id="inf-rend-cargas">—</div></div>
-      <div class="inf-cell"><div class="inf-lbl">Total Ingresos</div><div class="inf-val" style="font-weight:900;color:#059669">${fmt(s.ingreso_total||s.tarifa_neta||0)}</div></div>
-      <div class="inf-cell"><div class="inf-lbl">$/km Tarifa</div><div class="inf-val" style="font-weight:900;color:#059669">${s.km_total ? fmt(Math.round((s.ingreso_total||s.tarifa_neta||0)/s.km_total)) : '—'}</div></div>
+      <div class="inf-cell"><div class="inf-lbl">Total Ingresos</div><div class="inf-val" style="font-weight:900;color:var(--green)">${fmt(s.ingreso_total||s.tarifa_neta||0)}</div></div>
+      <div class="inf-cell"><div class="inf-lbl">$/km Tarifa</div><div class="inf-val" style="font-weight:900;color:var(--green)">${s.km_total ? fmt(Math.round((s.ingreso_total||s.tarifa_neta||0)/s.km_total)) : '—'}</div></div>
       <div class="inf-cell"><div class="inf-lbl">$/km Costo</div><div class="inf-val" style="font-weight:900;color:#DC2626">${s.km_total && s.total_costos ? fmt(Math.round(s.total_costos/s.km_total)) : '—'}</div></div>
     </div>
   </div>
@@ -3994,6 +4101,7 @@ function setTab(nombre, btn) {
   if(nombre==='resultados') renderResultados();
   if(nombre==='informes') renderInformes();
   if(nombre==='setup') cargarSetup();
+  if(nombre==='liquidaciones') cargarLiquidaciones();
   // Mostrar/ocultar botón fijo SETUP
   const btnFijo = document.getElementById('btn-setup-fixed');
   if(btnFijo) btnFijo.style.display = nombre==='setup' ? 'block' : 'none';
@@ -4618,6 +4726,289 @@ async function setupGuardarTodo() {
     if(btn) { btn.textContent = 'GUARDAR TODA LA CONFIGURACIÓN ✓'; btn.disabled = false; }
   }
 }
+
+// ══════════════════════════════════════
+// LIQUIDACIONES
+// ══════════════════════════════════════
+
+let _liqFiltro = 'todas';
+let _liqData = [];
+let _liqSvcsSeleccionados = [];
+let _liqClienteActual = '';
+
+async function cargarLiquidaciones() {
+  const emp = DB._empresa || _sessionUsuario?.empresa;
+  if(!emp) return;
+  const {data, error} = await supa.from('kaptura_liquidaciones')
+    .select('*').eq('empresa', emp).order('created_at', {ascending:false});
+  _liqData = data || [];
+  renderLiquidaciones();
+}
+
+function filtrarLiquidaciones(estado) {
+  _liqFiltro = estado;
+  document.querySelectorAll('[id^="liq-fil-"]').forEach(b => {
+    b.style.background = 'var(--surface2)';
+    b.style.color = 'var(--muted)';
+  });
+  const btn = document.getElementById('liq-fil-'+estado);
+  if(btn) { btn.style.background = 'var(--gold)'; btn.style.color = '#000'; }
+  renderLiquidaciones();
+}
+
+function renderLiquidaciones() {
+  const lista = document.getElementById('liq-lista');
+  const items = _liqFiltro === 'todas' ? _liqData : _liqData.filter(l => l.estado === _liqFiltro);
+  if(!items.length) {
+    lista.innerHTML = '<div class="empty">Sin liquidaciones en este estado</div>';
+    return;
+  }
+  const estadoColor = {
+    borrador: 'var(--muted)', emitida: 'var(--gold)',
+    factoring: '#a78bfa', por_cobrar: 'var(--green)', cobrada: 'var(--muted)'
+  };
+  lista.innerHTML = items.map(l => `
+    <div onclick="verLiquidacion('${l.id}')" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:8px;cursor:pointer;transition:border-color 0.15s" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border)'">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
+        <div>
+          <div style="font-size:14px;font-weight:900;color:var(--gold)">${l.numero}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">${l.cliente} · ${l.fecha_emision||''}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:16px;font-weight:900;color:var(--text)">$${Number(l.total||0).toLocaleString('es-CL')}</div>
+          <div style="font-size:9px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:${estadoColor[l.estado]||'var(--muted)'};margin-top:2px">${l.estado?.toUpperCase()}</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:12px;font-size:11px;color:var(--muted)">
+        <span>${(l.servicios_ids||[]).length} servicios</span>
+        <span>Neto: $${Number(l.monto_neto||0).toLocaleString('es-CL')}</span>
+        ${l.factoring ? '<span style="color:#a78bfa">● Factoring</span>' : ''}
+      </div>
+    </div>`).join('');
+}
+
+async function abrirNuevaLiquidacion() {
+  // Poblar select clientes
+  const sel = document.getElementById('liq-cliente');
+  const clientes = [...new Set(DB.clientes.map(c => c.nombre).filter(Boolean))].sort();
+  sel.innerHTML = '<option value="">Selecciona cliente...</option>' + clientes.map(c => `<option value="${c}">${c}</option>`).join('');
+  // Fecha hoy
+  const hoy = new Date().toISOString().split('T')[0];
+  document.getElementById('liq-fecha').value = hoy;
+  // Vencimiento 30 días
+  const v = new Date(); v.setDate(v.getDate()+30);
+  document.getElementById('liq-vencimiento').value = v.toISOString().split('T')[0];
+  _liqSvcsSeleccionados = [];
+  document.getElementById('liq-servicios-container').style.display = 'none';
+  document.getElementById('liq-resumen').style.display = 'none';
+  document.getElementById('liq-factoring-section').style.display = 'none';
+  document.getElementById('liq-numero-preview').textContent = 'Selecciona un cliente para asignar número';
+  document.getElementById('modal-nueva-liq').style.display = 'flex';
+}
+
+async function liqSeleccionarCliente() {
+  const cliente = document.getElementById('liq-cliente').value;
+  if(!cliente) return;
+  _liqClienteActual = cliente;
+  _liqSvcsSeleccionados = [];
+
+  // Generar número correlativo
+  const emp = DB._empresa || _sessionUsuario?.empresa;
+  const {data: existentes} = await supa.from('kaptura_liquidaciones')
+    .select('numero').eq('empresa', emp).eq('cliente', cliente).order('created_at', {ascending:false});
+  let nextNum = 1;
+  if(existentes && existentes.length > 0) {
+    const nums = existentes.map(l => parseInt((l.numero||'').match(/LIQ-(\d+)/)?.[1]||'0'));
+    nextNum = Math.max(...nums) + 1;
+  }
+  const numero = `LIQ-${String(nextNum).padStart(3,'0')} ${cliente.toUpperCase()}`;
+  document.getElementById('liq-numero-preview').textContent = numero;
+
+  // Cargar servicios cerrados de ese cliente
+  const svcs = DB.servicios.filter(s => 
+    s.estado === 'cerrado' && 
+    (s.cliente||'').toLowerCase() === cliente.toLowerCase()
+  );
+
+  const container = document.getElementById('liq-servicios-container');
+  const lista = document.getElementById('liq-servicios-lista');
+  
+  if(!svcs.length) {
+    lista.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:10px 0">No hay servicios cerrados para este cliente</div>';
+    container.style.display = 'block';
+    return;
+  }
+
+  lista.innerHTML = svcs.map(s => `
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;margin-bottom:5px">
+      <input type="checkbox" data-id="${s.id}" data-ingreso="${s.ingreso_total||s.tarifa_neta||0}" data-svcid="${s.servicio_id}" onchange="liqActualizarSeleccion()" style="width:16px;height:16px;accent-color:var(--gold)">
+      <div style="flex:1">
+        <div style="font-size:12px;font-weight:800;color:var(--gold)">${s.servicio_id}</div>
+        <div style="font-size:11px;color:var(--muted)">${s.fecha||''} · ${s.origen||''} → ${s.destino||''} · ${s.conductor||''}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:13px;font-weight:800;color:var(--text)">$${Number(s.ingreso_total||s.tarifa_neta||0).toLocaleString('es-CL')}</div>
+        <div style="font-size:10px;color:var(--muted)">${s.num_guia ? 'Guía: '+s.num_guia : 'Sin guía'}</div>
+      </div>
+    </div>`).join('');
+
+  container.style.display = 'block';
+  document.getElementById('liq-factoring-section').style.display = 'block';
+
+  // Verificar si cliente usa factoring
+  const clienteData = DB.clientes.find(c => c.nombre?.toLowerCase() === cliente.toLowerCase());
+  if(clienteData?.usa_factoring) {
+    document.getElementById('liq-usa-factoring').checked = true;
+    document.getElementById('liq-factoring-inputs').style.display = 'block';
+  }
+}
+
+function liqActualizarSeleccion() {
+  const checks = document.querySelectorAll('#liq-servicios-lista input[type=checkbox]:checked');
+  _liqSvcsSeleccionados = Array.from(checks).map(c => ({id: c.dataset.id, svcid: c.dataset.svcid, ingreso: parseInt(c.dataset.ingreso)||0}));
+  
+  const neto = _liqSvcsSeleccionados.reduce((a,s) => a + s.ingreso, 0);
+  const iva  = Math.round(neto * 0.19);
+  const total = neto + iva;
+
+  document.getElementById('liq-cant-svc').textContent = _liqSvcsSeleccionados.length;
+  document.getElementById('liq-monto-neto').textContent = '$'+neto.toLocaleString('es-CL');
+  document.getElementById('liq-iva').textContent = '$'+iva.toLocaleString('es-CL');
+  document.getElementById('liq-total').textContent = '$'+total.toLocaleString('es-CL');
+  document.getElementById('liq-resumen').style.display = _liqSvcsSeleccionados.length > 0 ? 'block' : 'none';
+  liqCalcularFactoring();
+}
+
+function liqToggleFactoring() {
+  const usa = document.getElementById('liq-usa-factoring').checked;
+  document.getElementById('liq-factoring-inputs').style.display = usa ? 'block' : 'none';
+  liqCalcularFactoring();
+}
+
+function liqCalcularFactoring() {
+  const usa = document.getElementById('liq-usa-factoring').checked;
+  if(!usa) return;
+  const neto = _liqSvcsSeleccionados.reduce((a,s) => a + s.ingreso, 0);
+  const total = Math.round(neto * 1.19);
+  const pct = parseFloat(document.getElementById('liq-factoring-pct').value)||3;
+  const costo = Math.round(total * pct / 100);
+  document.getElementById('liq-factoring-costo').value = '$'+costo.toLocaleString('es-CL');
+}
+
+async function guardarLiquidacion(estado) {
+  if(!_liqClienteActual) { toast('Selecciona un cliente'); return; }
+  if(_liqSvcsSeleccionados.length === 0) { toast('Selecciona al menos un servicio'); return; }
+  
+  const emp = DB._empresa || _sessionUsuario?.empresa;
+  const numero = document.getElementById('liq-numero-preview').textContent;
+  const neto = _liqSvcsSeleccionados.reduce((a,s) => a + s.ingreso, 0);
+  const iva  = Math.round(neto * 0.19);
+  const total = neto + iva;
+  const usaFactoring = document.getElementById('liq-usa-factoring').checked;
+  const factPct = parseFloat(document.getElementById('liq-factoring-pct').value)||0;
+  const factCosto = usaFactoring ? Math.round(total * factPct / 100) : 0;
+  const estadoFinal = usaFactoring && estado === 'emitida' ? 'factoring' : (estado === 'emitida' ? 'por_cobrar' : 'borrador');
+
+  const {error} = await supa.from('kaptura_liquidaciones').insert({
+    numero,
+    cliente: _liqClienteActual,
+    empresa: emp,
+    fecha_emision: document.getElementById('liq-fecha').value,
+    fecha_vencimiento: document.getElementById('liq-vencimiento').value,
+    servicios_ids: _liqSvcsSeleccionados.map(s => s.id),
+    monto_neto: neto,
+    iva,
+    total,
+    estado: estadoFinal,
+    factoring: usaFactoring,
+    factoring_pct: factPct,
+    factoring_costo: factCosto,
+    notas: document.getElementById('liq-notas').value
+  });
+
+  if(error) { toast('Error: '+error.message); return; }
+  toast('✓ Liquidación '+numero+' creada');
+  cerrar('modal-nueva-liq');
+  await cargarLiquidaciones();
+}
+
+async function verLiquidacion(id) {
+  const liq = _liqData.find(l => l.id === id);
+  if(!liq) return;
+  
+  // Cargar servicios incluidos
+  const svcs = DB.servicios.filter(s => (liq.servicios_ids||[]).includes(s.id));
+  
+  document.getElementById('ver-liq-numero').textContent = liq.numero;
+  document.getElementById('ver-liq-sub').textContent = liq.cliente+' · '+liq.fecha_emision;
+  
+  const estadoColor = {borrador:'var(--muted)',emitida:'var(--gold)',factoring:'#a78bfa',por_cobrar:'var(--green)',cobrada:'var(--muted)'};
+  
+  document.getElementById('ver-liq-body').innerHTML = `
+    <div style="background:var(--bg);border-radius:8px;padding:12px;margin-bottom:14px;border:1px solid var(--border)">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px">
+        <div><div style="color:var(--muted);font-size:9px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase">Estado</div><div style="font-weight:800;color:${estadoColor[liq.estado]||'var(--text)'};text-transform:uppercase">${liq.estado}</div></div>
+        <div><div style="color:var(--muted);font-size:9px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase">Vencimiento</div><div style="font-weight:700;color:var(--text)">${liq.fecha_vencimiento||'—'}</div></div>
+        <div><div style="color:var(--muted);font-size:9px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase">Monto Neto</div><div style="font-weight:700;color:var(--text)">$${Number(liq.monto_neto||0).toLocaleString('es-CL')}</div></div>
+        <div><div style="color:var(--muted);font-size:9px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase">IVA 19%</div><div style="font-weight:700;color:var(--text)">$${Number(liq.iva||0).toLocaleString('es-CL')}</div></div>
+      </div>
+      <div style="border-top:1px solid var(--border);margin-top:10px;padding-top:10px;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:13px;font-weight:800;color:var(--gold)">TOTAL</span>
+        <span style="font-size:22px;font-weight:900;color:var(--gold)">$${Number(liq.total||0).toLocaleString('es-CL')}</span>
+      </div>
+      ${liq.factoring ? `<div style="margin-top:8px;padding:8px;background:rgba(167,139,250,0.1);border-radius:6px;border:1px solid rgba(167,139,250,0.3);font-size:11px;color:#a78bfa">Factoring ${liq.factoring_pct}% — Costo: $${Number(liq.factoring_costo||0).toLocaleString('es-CL')}</div>` : ''}
+    </div>
+    <div style="font-size:10px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);margin-bottom:8px">SERVICIOS INCLUIDOS</div>
+    ${svcs.map(s => `
+      <div style="padding:8px 10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;margin-bottom:5px">
+        <div style="display:flex;justify-content:space-between">
+          <div><span style="font-weight:800;color:var(--gold)">${s.servicio_id}</span> <span style="font-size:11px;color:var(--muted)">${s.fecha||''} · ${s.origen||''} → ${s.destino||''}</span></div>
+          <span style="font-weight:800;color:var(--text)">$${Number(s.ingreso_total||s.tarifa_neta||0).toLocaleString('es-CL')}</span>
+        </div>
+        ${s.num_guia ? `<div style="font-size:10px;color:var(--muted);margin-top:3px">Guía: ${s.num_guia}</div>` : ''}
+      </div>`).join('')}
+    ${liq.pdf_sii_url ? `<div style="margin-top:10px"><a href="${liq.pdf_sii_url}" target="_blank" style="color:var(--gold);font-size:12px;font-weight:700">📄 Ver Factura SII adjunta</a></div>` : ''}`;
+
+  // Botones según estado
+  const btns = {
+    borrador: `<button class="btn btn-ghost" onclick="cerrar('modal-ver-liq')">Cerrar</button>
+      <button class="btn btn-outline" onclick="liqAdjuntarSII('${id}')">📎 Adjuntar Factura SII</button>
+      <button class="btn btn-navy" onclick="liqCambiarEstado('${id}','emitida')">Emitir →</button>`,
+    emitida: `<button class="btn btn-ghost" onclick="cerrar('modal-ver-liq')">Cerrar</button>
+      <button class="btn btn-outline" onclick="liqAdjuntarSII('${id}')">📎 Adjuntar Factura SII</button>
+      <button class="btn btn-navy" onclick="liqCambiarEstado('${id}','por_cobrar')">→ Por Cobrar</button>`,
+    factoring: `<button class="btn btn-ghost" onclick="cerrar('modal-ver-liq')">Cerrar</button>
+      <button class="btn btn-navy" onclick="liqCambiarEstado('${id}','cobrada')">✓ Marcar Cobrada</button>`,
+    por_cobrar: `<button class="btn btn-ghost" onclick="cerrar('modal-ver-liq')">Cerrar</button>
+      <button class="btn btn-outline" onclick="liqAdjuntarSII('${id}')">📎 Adjuntar Factura SII</button>
+      <button class="btn btn-navy" onclick="liqCambiarEstado('${id}','cobrada')">✓ Marcar Cobrada</button>`,
+    cobrada: `<button class="btn btn-ghost" onclick="cerrar('modal-ver-liq')">Cerrar</button>`
+  };
+  document.getElementById('ver-liq-ftr').innerHTML = btns[liq.estado] || btns.borrador;
+  document.getElementById('modal-ver-liq').style.display = 'flex';
+}
+
+async function liqCambiarEstado(id, nuevoEstado) {
+  const {error} = await supa.from('kaptura_liquidaciones').update({
+    estado: nuevoEstado,
+    ...(nuevoEstado === 'cobrada' ? {fecha_pago: new Date().toISOString().split('T')[0]} : {})
+  }).eq('id', id);
+  if(error) { toast('Error: '+error.message); return; }
+  toast('✓ Estado actualizado');
+  cerrar('modal-ver-liq');
+  await cargarLiquidaciones();
+}
+
+async function liqAdjuntarSII(id) {
+  const url = prompt('Pega la URL de la factura SII (PDF):');
+  if(!url) return;
+  const {error} = await supa.from('kaptura_liquidaciones').update({pdf_sii_url: url}).eq('id', id);
+  if(error) { toast('Error: '+error.message); return; }
+  toast('✓ Factura SII adjuntada');
+  await cargarLiquidaciones();
+  verLiquidacion(id);
+}
+
 
 iniciarLogin();
 </script>
