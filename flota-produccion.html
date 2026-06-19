@@ -2565,13 +2565,7 @@ function puntosHTML(p, pi) {
         value="${p.destino||''}" placeholder="Ciudad o lugar de entrega"
         id="dest-${pi}" onblur="setDestino(${pi},this.value)">
     </div>
-    ${p.tipo ? `<div style="margin-bottom:10px">
-      <label class="lbl">${p.tipo==='final'?'Tarifa del servicio':'Valor del punto'}
-        <span style="font-size:8px;font-weight:800;background:${p.valor?'rgba(34,197,94,0.2)':'rgba(255,107,0,0.2)'};color:${p.valor?'#22c55e':'var(--gold)'};padding:1px 5px;border-radius:3px">${p.valor?'AUTO':'PENDIENTE'}</span>
-      </label>
-      <input class="inp" style="${p.valor?'border-color:var(--green)':'border-color:var(--gold)'}"
-        type="number" value="${p.valor||''}" placeholder="0" onchange="setValorManual(${pi},this.value)">
-    </div>` : ''}
+    <!-- Tarifa oculta al conductor — visible solo para coordinador en modal costos -->
     <!-- Guías registradas -->
     <div id="guias-punto-${pi}">
       ${(p.guias||[]).map((g,gi) => `
