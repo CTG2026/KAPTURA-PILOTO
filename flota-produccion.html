@@ -2672,7 +2672,7 @@ function buscarValor(pi) {
   if(!svc) return;
   if(p.tipo === 'intermedio') {
     const match = DB.tarifarios.find(t => (t.cliente||'').toLowerCase().includes((svc.cliente||'').toLowerCase().split(' ')[0]));
-    if(match && match.valor_punto > 0) { puntosData[pi].valor = match.valor_punto; toast(`✓ Punto ${pi+1}: ${fmt(match.valor_punto)}`); renderPuntos(); }
+    if(match && match.valor_punto > 0) { puntosData[pi].valor = match.valor_punto; renderPuntos(); }
     return;
   }
   if(p.tipo === 'final' && p.destino) {
@@ -2683,8 +2683,7 @@ function buscarValor(pi) {
       return cli.includes((svc.cliente||'').toLowerCase().split(' ')[0]) &&
         (dest.includes(dl.split(',')[0].trim()) || dl.includes(dest.split(',')[0].trim()));
     });
-    if(match && match.tarifa_neta > 0) { puntosData[pi].valor = match.tarifa_neta; toast(`✓ Tarifa ${fmt(match.tarifa_neta)}`); renderPuntos(); }
-    else { toast(`⚠ Sin tarifa para "${p.destino}" — ingresa manual`); }
+    if(match && match.tarifa_neta > 0) { puntosData[pi].valor = match.tarifa_neta; renderPuntos(); }
   }
 }
 
