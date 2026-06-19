@@ -2696,7 +2696,12 @@ function buscarValor(pi) {
 
 async function procesarGuia(input, pi) {
   if(!input.files||!input.files[0]) return;
-  const CLAUDE_KEY = localStorage.getItem('kaptura_claude_key') || DB.config['claude_api_key'] || '';
+  let CLAUDE_KEY = localStorage.getItem('kaptura_claude_key') || DB.config['claude_api_key'] || '';
+  // Si no está en memoria, buscar directo en Supabase
+  if(!CLAUDE_KEY) {
+    const {data:cfgKey} = await supa.from('kaptura_config').select('valor').eq('clave','claude_api_key').single();
+    if(cfgKey?.valor) { CLAUDE_KEY = cfgKey.valor; localStorage.setItem('kaptura_claude_key', CLAUDE_KEY); DB.config['claude_api_key'] = CLAUDE_KEY; }
+  }
   if(!CLAUDE_KEY) { toast('⚠ Configura la API Key Claude en Config'); return; }
   const file = input.files[0];
   puntosData[pi].procesando = true; renderPuntos();
