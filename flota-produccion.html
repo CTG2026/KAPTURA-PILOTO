@@ -2615,8 +2615,16 @@ function puntosHTML(p, pi) {
         ${p.procesando?'Procesando...':'+ Agregar Guía'}
       </div>
     </div>
-    <input type="file" id="foto-p${pi}-new" accept="image/*" capture="environment"
-      style="display:none" onchange="procesarGuia(this,${pi})">
+    <div style="display:flex;gap:6px;margin-top:6px">
+      <label style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;background:rgba(201,168,76,0.1);border:1px dashed var(--gold);border-radius:8px;padding:10px 6px;cursor:pointer;font-size:10px;color:var(--gold);text-align:center">
+        📷<span>Tomar foto</span>
+        <input type="file" accept="image/*" capture="environment" style="display:none" onchange="procesarGuia(this,${pi})">
+      </label>
+      <label style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;background:rgba(201,168,76,0.1);border:1px dashed var(--gold);border-radius:8px;padding:10px 6px;cursor:pointer;font-size:10px;color:var(--gold);text-align:center">
+        🖼️<span>Adjuntar</span>
+        <input type="file" accept="image/*" style="display:none" onchange="procesarGuia(this,${pi})">
+      </label>
+    </div>
 
   </div>`;
 }
@@ -2688,68 +2696,95 @@ function buscarValor(pi) {
 
 async function procesarGuia(input, pi) {
   if(!input.files||!input.files[0]) return;
-  CLAUDE_KEY = localStorage.getItem('kaptura_claude_key') || '';
+  const CLAUDE_KEY = localStorage.getItem('kaptura_claude_key') || DB.config['claude_api_key'] || '';
   if(!CLAUDE_KEY) { toast('⚠ Configura la API Key Claude en Config'); return; }
   const file = input.files[0];
   puntosData[pi].procesando = true; renderPuntos();
   try {
-    // Comprimir imagen antes de enviar a API (móvil puede enviar fotos muy grandes)
-  const b64 = await new Promise((res,rej) => {
-    const img = new Image();
-    const url = URL.createObjectURL(file);
-    img.onload = () => {
-      URL.revokeObjectURL(url);
-      const MAX = 1200;
-      let w = img.width, h = img.height;
-      if(w > MAX || h > MAX) { if(w > h) { h = Math.round(h*MAX/w); w = MAX; } else { w = Math.round(w*MAX/h); h = MAX; } }
-      const canvas = document.createElement('canvas');
-      canvas.width = w; canvas.height = h;
-      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-      res(canvas.toDataURL('image/jpeg', 0.85).split(',')[1]);
-    };
-    img.onerror = rej;
-    img.src = url;
-  });
+    // Leer como base64 via FileReader
+    const dataUrl = await new Promise((res,rej) => {
+      const r = new FileReader();
+      r.onload = () => res(r.result);
+      r.onerror = rej;
+      r.readAsDataURL(file);
+    });
+    // Comprimir imagen
+    const b64 = await new Promise((res,rej) => {
+      const img = new Image();
+      img.onload = () => {
+        const MAX = 1024;
+        let w = img.width, h = img.height;
+        if(w > MAX || h > MAX) { if(w>h){h=Math.round(h*MAX/w);w=MAX;}else{w=Math.round(w*MAX/h);h=MAX;} }
+        const c = document.createElement('canvas');
+        c.width=w; c.height=h;
+        c.getContext('2d').drawImage(img,0,0,w,h);
+        res(c.toDataURL('image/jpeg',0.80).split(',')[1]);
+      };
+      img.onerror = rej;
+      img.src = dataUrl;
+    });
+
     let json = null, intentos = 0;
     while(intentos < 3 && !json?.num_guia) {
       intentos++;
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 30000);
-      const resp = await fetch('https://api.anthropic.com/v1/messages', {signal: controller.signal,
-        method:'POST', headers:{'Content-Type':'application/json','x-api-key':CLAUDE_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-        body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:400,messages:[{role:'user',content:[
-          {type:'image',source:{type:'base64',media_type:file.type,data:b64}},
-          {type:'text',text:`Lee esta guía de despacho chilena. Extrae en JSON: num_guia (solo dígitos sin espacios), fecha_emision (formato DD/MM/AAAA — el día es el número más pequeño, el mes es el número del medio entre 01 y 12, el año es 4 dígitos como 2026), cliente (compara con: ${DB.clientes.map(c=>c.nombre).join(', ')}). IMPORTANTE: en Chile las fechas se escriben DIA/MES/AÑO, nunca confundas día con mes. Solo JSON sin explicación: {"num_guia":"","fecha_emision":"","cliente":""}`}
-        ]}]})
+      const resp = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': CLAUDE_KEY,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true'
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-5',
+          max_tokens: 400,
+          messages: [{role:'user', content:[
+            {type:'image', source:{type:'base64', media_type:'image/jpeg', data:b64}},
+            {type:'text', text:`Lee esta guía de despacho chilena. Extrae en JSON: num_guia (solo dígitos sin espacios), fecha_emision (formato DD/MM/AAAA), cliente (compara con: ${DB.clientes.map(c=>c.nombre).join(', ')}). IMPORTANTE: en Chile las fechas se escriben DIA/MES/AÑO. Solo JSON sin explicación: {"num_guia":"","fecha_emision":"","cliente":""}`}
+          ]}]
+        })
       });
-      clearTimeout(timeout);
+      if(!resp.ok) {
+        const errData = await resp.json().catch(()=>({}));
+        throw new Error(errData.error?.message || 'HTTP '+resp.status);
+      }
       const data = await resp.json();
-      if(data.error) throw new Error(data.error.message);
       const txt = (data.content?.find(b=>b.type==='text')?.text)||'';
       try { json = JSON.parse(txt.replace(/```json|```/g,'').trim()); } catch(e){}
     }
+
     if(json?.num_guia) {
-      // Save image to Supabase Storage
+      // Subir imagen a Supabase Storage
       let imgUrl = null;
       try {
         const svc = DB.servicios[svcActivoIdx];
-        const ext = file.type.includes('png') ? 'png' : 'jpg';
-        const fileName = `guias/${svc.servicio_id}_punto${pi}_${json.num_guia}_${Date.now()}.${ext}`;
-        const {data:upData} = await supa.storage.from('kaptura-guias').upload(fileName, file, {upsert:true, contentType:file.type});
+        const fileName = `guias/${svc.servicio_id}_punto${pi}_${json.num_guia}_${Date.now()}.jpg`;
+        const blob = await fetch('data:image/jpeg;base64,'+b64).then(r=>r.blob());
+        const {data:upData} = await supa.storage.from('kaptura-guias').upload(fileName, blob, {upsert:true, contentType:'image/jpeg'});
         if(upData) {
           const {data:urlData} = supa.storage.from('kaptura-guias').getPublicUrl(fileName);
           imgUrl = urlData?.publicUrl || null;
         }
-      } catch(e) { console.warn('Storage upload failed:', e.message); toast('⚠ Foto no guardada en servidor: '+e.message); }
+      } catch(e) { console.warn('Storage upload failed:', e.message); }
       if(!puntosData[pi].guias) puntosData[pi].guias = [];
       puntosData[pi].guias.push({num_guia:json.num_guia, fecha_guia:json.fecha_emision||'', img_url:imgUrl});
-      puntosData[pi] = {...puntosData[pi], capturada:true, procesando:false,
-        num_guia:puntosData[pi].guias.map(g=>g.num_guia).join(',')};
+      puntosData[pi] = {...puntosData[pi], capturada:true, procesando:false, num_guia:puntosData[pi].guias.map(g=>g.num_guia).join(',')};
+      // Buscar tarifa automática del tarifario
+      const match = DB.tarifarios.find(t=>(t.cliente||'').toLowerCase().includes((DB.servicios[svcActivoIdx]?.cliente||'').toLowerCase().split(' ')[0]));
+      if(match && match.valor_punto > 0) { puntosData[pi].valor = match.valor_punto; toast(`✓ Guía ${json.num_guia} leída`); renderPuntos(); return; }
       toast(`✓ Guía ${json.num_guia} leída`);
-    } else { puntosData[pi].procesando = false; toast('⚠ No se pudo leer — ingresa manual'); }
-  } catch(e) { puntosData[pi].procesando = false; toast('Error: '+e.message); }
+    } else {
+      puntosData[pi].procesando = false;
+      toast('⚠ No se pudo leer — ingresa manual');
+    }
+  } catch(e) {
+    puntosData[pi].procesando = false;
+    toast('Error: '+e.message);
+    console.error('procesarGuia error:', e);
+  }
   renderPuntos();
 }
+
 
 async function guardarBorrador() {
   const s = DB.servicios[svcActivoIdx];
