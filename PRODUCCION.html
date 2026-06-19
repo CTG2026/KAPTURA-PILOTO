@@ -1100,7 +1100,11 @@ async function cargarPanelAdmin() {
   if(!lista) return;
   lista.innerHTML = '';
 
-  // Agrupar por empresa
+  // Separar empresas por modo
+  const flotaEmpresas = [];
+  const goEmpresas = [];
+  const proEmpresas = [];
+
   const empresas = {};
   (usuarios||[]).filter(u => u.rol !== 'admin_kaptura').forEach(u => {
     if(!empresas[u.empresa]) empresas[u.empresa] = {usuarios:[], go: null};
@@ -1110,43 +1114,90 @@ async function cargarPanelAdmin() {
     if(empresas[g.empresa]) empresas[g.empresa].go = g;
   });
 
-  if(Object.keys(empresas).length === 0) {
-    lista.innerHTML = '<div style="font-size:13px;color:rgba(255,255,255,0.4);text-align:center;padding:20px">No hay usuarios registrados.</div>';
-    return;
-  }
-
   Object.entries(empresas).forEach(([emp, data]) => {
     const roles = data.usuarios.map(u => u.rol);
-    let modo = 'GO';
-    let modoColor = '#FF6B00';
-    if(roles.includes('coordinador') || roles.includes('controller')) { modo = 'FLOTA'; modoColor = '#537A6E'; }
-    else if(roles.includes('pro')) { modo = 'PRO'; modoColor = '#D4A827'; }
-
     const goData = data.go;
     const nombre = goData?.nombre || data.usuarios[0]?.nombre || emp;
-    let estado = '';
-    if(modo === 'GO') {
-      estado = goData ? (goData.onboarding_completo ? '✅ Activo' : '⏳ Onboarding pendiente') : '— Sin perfil';
-    } else {
-      estado = '✅ ' + data.usuarios.length + ' usuario(s)';
-    }
-
     const pines = data.usuarios.map(u => u.pin).join(', ');
-
-    const btnVerPanel = modo === 'FLOTA'
-      ? '<div style="margin-top:10px"><button onclick="adminEntrarComoFlota(\''+emp+'\',\''+nombre+'\')" style="width:100%;background:#FF6B00;border:none;border-radius:8px;padding:10px;font-size:12px;font-weight:800;color:#000;cursor:pointer;letter-spacing:0.05em">▶ VER PANEL FLOTA</button></div>'
-      : '';
-    lista.innerHTML += '<div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:10px;padding:14px;margin-bottom:10px">'
-      + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'
-      + '<span style="font-size:15px;font-weight:700;color:#fff">' + nombre + '</span>'
-      + '<span style="font-size:11px;font-weight:700;background:rgba(255,255,255,0.1);padding:2px 8px;border-radius:4px;color:' + modoColor + '">' + modo + '</span>'
-      + '</div>'
-      + '<div style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:4px">Empresa: ' + emp + '</div>'
-      + '<div style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:4px">PINs: ' + pines + '</div>'
-      + '<div style="font-size:12px;color:rgba(255,255,255,0.6)">' + estado + '</div>'
-      + btnVerPanel
-      + '</div>';
+    if(roles.includes('coordinador') || roles.includes('controller')) flotaEmpresas.push({emp, nombre, pines, data});
+    else if(roles.includes('pro')) proEmpresas.push({emp, nombre, pines, data});
+    else goEmpresas.push({emp, nombre, pines, data, goData});
   });
+
+  // ── SECCIÓN GLOBAL SOLUTIONS ──
+  lista.innerHTML += `
+    <div style="margin-bottom:20px">
+      <div style="font-size:10px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.4);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #2A2A2A">🌐 Global Solutions</div>
+      <div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:10px;padding:14px">
+        <div style="font-size:15px;font-weight:700;color:#fff;margin-bottom:8px">GLOBAL SOLUTIONS SpA</div>
+        <button onclick="adminEntrarComoFlota('global_solutions','GLOBAL SOLUTIONS')" style="width:100%;background:#FF6B00;border:none;border-radius:8px;padding:10px;font-size:12px;font-weight:800;color:#000;cursor:pointer">▶ ENTRAR A GLOBAL SOLUTIONS</button>
+      </div>
+    </div>`;
+
+  // ── SECCIÓN FLOTA ──
+  if(flotaEmpresas.length > 0) {
+    lista.innerHTML += `<div style="font-size:10px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.4);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #2A2A2A">🚛 Kaptura Flota</div>`;
+    flotaEmpresas.forEach(({emp, nombre, pines}) => {
+      lista.innerHTML += `
+        <div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:10px;padding:14px;margin-bottom:8px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <span style="font-size:14px;font-weight:700;color:#fff">${nombre}</span>
+            <span style="font-size:10px;font-weight:800;background:rgba(255,255,255,0.08);padding:2px 8px;border-radius:4px;color:#537A6E">FLOTA</span>
+          </div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:8px">PIN: ${pines}</div>
+          <button onclick="adminEntrarComoFlota('${emp}','${nombre}')" style="width:100%;background:#FF6B00;border:none;border-radius:8px;padding:10px;font-size:12px;font-weight:800;color:#000;cursor:pointer">▶ VER PANEL FLOTA</button>
+        </div>`;
+    });
+  }
+
+  // ── SECCIÓN GO ──
+  if(goEmpresas.length > 0) {
+    lista.innerHTML += `<div style="font-size:10px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.4);margin:16px 0 10px;padding-bottom:6px;border-bottom:1px solid #2A2A2A">📡 Kaptura GO</div>`;
+    goEmpresas.forEach(({emp, nombre, pines, goData}) => {
+      const estado = goData ? (goData.onboarding_completo ? '✅ Activo' : '⏳ Onboarding pendiente') : '— Sin perfil';
+      lista.innerHTML += `
+        <div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:10px;padding:14px;margin-bottom:8px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <span style="font-size:14px;font-weight:700;color:#fff">${nombre}</span>
+            <span style="font-size:10px;font-weight:800;background:rgba(255,255,255,0.08);padding:2px 8px;border-radius:4px;color:#FF6B00">GO</span>
+          </div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:4px">PIN: ${pines}</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.5)">${estado}</div>
+        </div>`;
+    });
+  }
+
+  // ── SECCIÓN PRO ──
+  if(proEmpresas.length > 0) {
+    lista.innerHTML += `<div style="font-size:10px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.4);margin:16px 0 10px;padding-bottom:6px;border-bottom:1px solid #2A2A2A">📱 Kaptura PRO</div>`;
+    proEmpresas.forEach(({emp, nombre, pines}) => {
+      lista.innerHTML += `
+        <div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:10px;padding:14px;margin-bottom:8px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <span style="font-size:14px;font-weight:700;color:#fff">${nombre}</span>
+            <span style="font-size:10px;font-weight:800;background:rgba(255,255,255,0.08);padding:2px 8px;border-radius:4px;color:#D4A827">PRO</span>
+          </div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.4)">PIN: ${pines}</div>
+        </div>`;
+    });
+  }
+
+  // ── DEMO ──
+  lista.innerHTML += `
+    <div style="margin-top:16px">
+      <div style="font-size:10px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.4);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #2A2A2A">🎮 Demo</div>
+      <div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:10px;padding:14px">
+        <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:8px">Carlos Torres — Demo</div>
+        <button onclick="adminEntrarDemo()" style="width:100%;background:#2A2A2A;border:1px solid #FF6B00;border-radius:8px;padding:10px;font-size:12px;font-weight:800;color:#FF6B00;cursor:pointer">▶ ENTRAR A DEMO</button>
+      </div>
+    </div>`;
+}
+
+function adminEntrarDemo() {
+  localStorage.setItem('kaptura_session', JSON.stringify({
+    pin: '0000', empresa: 'nexus', nombre: 'Carlos Torres', rol: 'conductor', modo: 'demo'
+  }));
+  window.location.href = 'flota-produccion.html';
 }
 
 let _goDemoCrono = null;
