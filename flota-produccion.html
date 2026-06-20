@@ -682,7 +682,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
         <div style="font-size:10px;color:var(--muted);margin-bottom:4px">NOMBRE EMPRESA</div>
         <input id="setup-nombre-empresa" type="text" placeholder="Ej: Transportes Madrid SpA" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:9px 12px;font-size:13px;color:var(--text);font-family:inherit">
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
         <div>
           <div style="font-size:10px;color:var(--muted);margin-bottom:4px">RUT EMPRESA</div>
           <input id="setup-rut" type="text" placeholder="Ej: 76.XXX.XXX-X" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:9px 12px;font-size:13px;color:var(--text);font-family:inherit">
@@ -690,6 +690,16 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
         <div>
           <div style="font-size:10px;color:var(--muted);margin-bottom:4px">CIUDAD BASE</div>
           <input id="setup-ciudad" type="text" placeholder="Ej: Santiago" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:9px 12px;font-size:13px;color:var(--text);font-family:inherit">
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+        <div>
+          <div style="font-size:10px;color:var(--muted);margin-bottom:4px">EMAIL EMPRESA</div>
+          <input id="setup-email-empresa" type="email" placeholder="Ej: contacto@empresa.cl" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:9px 12px;font-size:13px;color:var(--text);font-family:inherit">
+        </div>
+        <div>
+          <div style="font-size:10px;color:var(--muted);margin-bottom:4px">TELÉFONO EMPRESA</div>
+          <input id="setup-tel-empresa" type="text" placeholder="Ej: +56 9 XXXX XXXX" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:9px 12px;font-size:13px;color:var(--text);font-family:inherit">
         </div>
       </div>
       <div style="text-align:right;margin-top:10px">
@@ -790,6 +800,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
             <div style="font-size:10px;color:var(--muted);margin-bottom:4px">CONTACTO</div>
             <input id="setup-fc-contacto" type="text" placeholder="Nombre del contacto" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:12px;color:var(--text);font-family:inherit">
           </div>
+        </div>
+        <div style="margin-bottom:12px">
+          <div style="font-size:10px;color:var(--muted);margin-bottom:4px">CARGO DEL CONTACTO</div>
+          <input id="setup-fc-cargo" type="text" placeholder="Ej: Jefe de bodega, Gerente de logística" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:12px;color:var(--text);font-family:inherit">
         </div>
         <button onclick="setupAgregarCliente()" style="width:100%;background:var(--gold);border:none;border-radius:8px;padding:12px;font-size:14px;font-weight:700;color:#000;cursor:pointer">GUARDAR CLIENTE</button>
       </div>
@@ -2364,9 +2378,14 @@ function poblarSelects() {
                  ...DB.conductores.filter(c=>c.nombre.toLowerCase().includes('tercero'))];
   document.getElementById('asig-conductor').innerHTML =
     conds.map(c => `<option value="${c.nombre}">${c.nombre}</option>`).join('');
-  document.getElementById('asig-cliente').innerHTML =
-    DB.clientes.map(c => `<option value="${c.nombre}">${c.nombre}</option>`).join('') +
-    '<option value="__otro__">+ Nuevo cliente...</option>';
+  if(!DB.clientes || DB.clientes.length === 0) {
+    document.getElementById('asig-cliente').innerHTML = '<option value="">⚠ Sin clientes — agrega en SETUP</option>';
+    toast('⚠ Debes agregar clientes en SETUP antes de asignar');
+  } else {
+    document.getElementById('asig-cliente').innerHTML =
+      DB.clientes.map(c => `<option value="${c.nombre}">${c.nombre}</option>`).join('') +
+      '<option value="__otro__">+ Nuevo cliente...</option>';
+  }
 }
 
 function poblarConfig() {
@@ -2448,6 +2467,10 @@ async function siguienteId() {
   return `S-${String(max+1).padStart(2,'0')}`;
 }
 async function guardarAsignacion() {
+  if(!DB.clientes || DB.clientes.length === 0) {
+    toast('⚠ Agrega clientes en SETUP antes de asignar un servicio');
+    return;
+  }
   const patente   = document.getElementById('asig-patente').value;
   const conductor = document.getElementById('asig-conductor').value;
   const clienteSel= document.getElementById('asig-cliente').value;
@@ -4393,9 +4416,13 @@ async function cargarSetup() {
   const getCfg = (k) => { const r = (cfg||[]).find(x=>x.clave===k); return r ? r.valor : ''; };
 
   document.getElementById('setup-nombre-empresa').value = getCfg('flota_nombre_'+emp) || '';
+  if(document.getElementById('setup-email-empresa')) document.getElementById('setup-email-empresa').value = getCfg('flota_email_'+emp) || '';
+  if(document.getElementById('setup-tel-empresa')) document.getElementById('setup-tel-empresa').value = getCfg('flota_tel_'+emp) || '';
   document.getElementById('setup-rut').value            = getCfg('flota_rut_'+emp) || '';
   document.getElementById('setup-ciudad').value         = getCfg('flota_ciudad_'+emp) || '';
   document.getElementById('setup-costo-fijo').value     = getCfg('costo_fijo_mensual_'+emp) || '';
+  if(document.getElementById('setup-comision-pct')) document.getElementById('setup-comision-pct').value = getCfg('comision_conductor_'+emp) || '';
+  if(document.getElementById('setup-sueldo-diario')) document.getElementById('setup-sueldo-diario').value = getCfg('sueldo_diario_'+emp) || '';
   document.getElementById('setup-dias-op').value        = getCfg('dias_operativos_'+emp) || '20';
   document.getElementById('setup-viatico').value        = getCfg('viatico_dia_'+emp) || '';
   document.getElementById('setup-fondo').value          = getCfg('fondo_contingencia_'+emp) || '';
@@ -4461,11 +4488,15 @@ async function setupGuardarEmpresa() {
   const nombre = document.getElementById('setup-nombre-empresa').value.trim();
   const rut    = document.getElementById('setup-rut').value.trim();
   const ciudad = document.getElementById('setup-ciudad').value.trim();
+  const emailEmp = document.getElementById('setup-email-empresa')?.value.trim()||'';
+  const telEmp   = document.getElementById('setup-tel-empresa')?.value.trim()||'';
   const modo   = document.getElementById('setup-modo-gestion').value;
   const rows = [
-    {clave:'flota_nombre_'+emp, valor:nombre, empresa:emp},
-    {clave:'flota_rut_'+emp,    valor:rut,    empresa:emp},
-    {clave:'flota_ciudad_'+emp, valor:ciudad, empresa:emp},
+    {clave:'flota_nombre_'+emp,  valor:nombre,    empresa:emp},
+    {clave:'flota_rut_'+emp,     valor:rut,       empresa:emp},
+    {clave:'flota_ciudad_'+emp,  valor:ciudad,    empresa:emp},
+    {clave:'flota_email_'+emp,   valor:emailEmp,  empresa:emp},
+    {clave:'flota_tel_'+emp,     valor:telEmp,    empresa:emp},
     {clave:'modo_gestion_'+emp, valor:modo,   empresa:emp},
   ];
   const {error} = await supa.from('kaptura_config').upsert(rows, {onConflict:'clave,empresa'});
@@ -4485,6 +4516,8 @@ async function setupGuardarCostos() {
     {clave:'dias_operativos_'+emp,    valor:dias,          empresa:emp},
     {clave:'viatico_dia_'+emp,        valor:(document.getElementById('setup-viatico').value||'0').replace(/[^0-9]/g,''), empresa:emp},
     {clave:'fondo_contingencia_'+emp, valor:(document.getElementById('setup-fondo').value||'0').replace(/[^0-9]/g,''),  empresa:emp},
+    {clave:'comision_conductor_'+emp, valor:(document.getElementById('setup-comision-pct')?.value||'8').replace(/[^0-9.]/g,''), empresa:emp},
+    {clave:'sueldo_diario_'+emp,      valor:(document.getElementById('setup-sueldo-diario')?.value||'0').replace(/[^0-9]/g,''), empresa:emp},
   ];
   const {error} = await supa.from('kaptura_config').upsert(rows, {onConflict:'clave,empresa'});
   if(error) throw new Error(error.message);
@@ -4564,6 +4597,7 @@ async function setupAgregarCliente() {
   const email    = document.getElementById('setup-fc-email').value.trim();
   const contacto = document.getElementById('setup-fc-contacto').value.trim();
   if(!nombre) { toast('Ingresa el nombre del cliente'); return; }
+  const cargo = document.getElementById('setup-fc-cargo')?.value.trim()||'';
   const {error} = await supa.from('kaptura_clientes').insert({nombre, rut, direccion:dir, ciudad, telefono:tel, email, contacto, empresa:emp});
   if(error) { toast('Error: '+error.message); return; }
   ['nombre','rut','direccion','ciudad','telefono','email','contacto'].forEach(f => {
