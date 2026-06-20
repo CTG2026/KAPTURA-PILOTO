@@ -1075,12 +1075,18 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       </div></div>
       <div class="fld2">
         <div class="fld"><label class="lbl">Fecha inicio</label><input class="inp" id="ini-fecha-inicio" type="date" readonly style=""></div>
-        <div class="fld"><label class="lbl">Hora inicio (producción)</label><input class="inp" id="ini-hora" type="time" disabled style="background:var(--g100);color:var(--g400);cursor:not-allowed"></div>
+        <div class="fld"><label class="lbl">Hora inicio</label><input class="inp" id="ini-hora" type="time"></div>
       </div>
       <div style="background:rgba(255,107,0,0.12);border-radius:8px;padding:10px 12px;font-size:11px;color:var(--gold);font-weight:700;border:1px solid rgba(255,107,0,0.3)">
         ℹ️ Al confirmar, el servicio cambia a EN PROCESO.
       </div>
     </div>
+      <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:12px">
+        <div style="font-size:9px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);margin-bottom:8px">Observaciones</div>
+        <div id="ini-obs-hilo" style="margin-bottom:8px"></div>
+        <textarea id="ini-obs-input" class="inp" rows="2" placeholder="Agregar observación..." style="margin-bottom:6px"></textarea>
+        <button class="btn btn-outline btn-sm btn-full" onclick="obsAgregarIniciar()">+ Agregar Observación</button>
+      </div>
     <div class="modal-ftr">
       <button class="btn btn-ghost" onclick="cerrar('modal-iniciar')">← Volver</button>
       <button class="btn btn-navy" onclick="confirmarInicio()">▶ Iniciar Servicio</button>
@@ -2524,6 +2530,8 @@ function iniciarSvc(i) {
   document.getElementById('ini-origen').textContent    = s.origen||'—';
   document.getElementById('ini-fecha-inicio').value    = s.fecha||hoyStr;
   document.getElementById('modal-iniciar').style.display = 'flex';
+  const sIni = DB.servicios[svcActivoIdx];
+  if(sIni) obsRenderHilo(document.getElementById('ini-obs-hilo'), obsParseHilo(sIni.notas||''));
 }
 async function confirmarInicio() {
   if(svcIniciarIdx < 0) return;
@@ -2962,6 +2970,8 @@ async function irACostos() {
   // Cargar tabla de puntos editable y hilo de observaciones
   cosPuntosDetalleRender();
   obsRenderHilo(document.getElementById('cos-obs-hilo'), obsParseHilo(s.notas||''));
+  // Calcular costos automáticamente al abrir
+  setTimeout(() => calcCostos(), 200);
   svcPatenteActiva = s.patente || '';
   document.getElementById('cos-fecha-inicio').value   = s.fecha || hoyStr;
   document.getElementById('cos-fecha-termino').value  = s._fecha_termino || (s.hora_termino ? s.hora_termino.substring(0,10) : s.fecha) || hoyStr;
@@ -3930,7 +3940,38 @@ function imprimirInforme() {
       .inf-margen{background:#1C2B4A;color:var(--text);padding:12px 16px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
       @media print{button{display:none}}
     </style>
-  </head><body>${body}</body></html>`);
+  </head><body>${body}
+<!-- MODAL EDITAR CLIENTE -->
+<div id="modal-editar-cliente" class="overlay" style="display:none">
+  <div class="modal" style="max-width:500px">
+    <div class="modal-hdr">
+      <div><div class="modal-ttl">Editar Cliente</div></div>
+      <button class="modal-cls" onclick="cerrar('modal-editar-cliente')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="edit-cli-rut-original">
+      <div class="fld2">
+        <div class="fld"><label class="lbl">Nombre</label><input class="inp" id="edit-cli-nombre" type="text" placeholder="Nombre empresa"></div>
+        <div class="fld"><label class="lbl">RUT</label><input class="inp" id="edit-cli-rut" type="text" placeholder="76.XXX.XXX-X"></div>
+      </div>
+      <div class="fld2">
+        <div class="fld"><label class="lbl">Ciudad</label><input class="inp" id="edit-cli-ciudad" type="text" placeholder="Ciudad"></div>
+        <div class="fld"><label class="lbl">Teléfono</label><input class="inp" id="edit-cli-telefono" type="text" placeholder="+56 9 XXXX XXXX"></div>
+      </div>
+      <div class="fld"><label class="lbl">Dirección</label><input class="inp" id="edit-cli-direccion" type="text" placeholder="Dirección"></div>
+      <div class="fld"><label class="lbl">Email</label><input class="inp" id="edit-cli-email" type="email" placeholder="correo@empresa.cl"></div>
+      <div class="fld2">
+        <div class="fld"><label class="lbl">Contacto</label><input class="inp" id="edit-cli-contacto" type="text" placeholder="Nombre contacto"></div>
+        <div class="fld"><label class="lbl">Cargo</label><input class="inp" id="edit-cli-cargo" type="text" placeholder="Cargo del contacto"></div>
+      </div>
+    </div>
+    <div class="modal-ftr">
+      <button class="btn btn-ghost" onclick="cerrar('modal-editar-cliente')">← Volver</button>
+      <button class="btn btn-navy" onclick="setupGuardarEdicionCliente()">✓ Guardar Cambios</button>
+    </div>
+  </div>
+</div>
+</body></html>`);
   win.document.close();
   setTimeout(() => win.print(), 500);
 }
@@ -4598,31 +4639,45 @@ async function setupEditarEquipo(patente) {
   }, 100);
 }
 
-// ── SETUP EDITAR CLIENTE ──
+// ── SETUP EDITAR CLIENTE — Modal separado ──
 async function setupEditarCliente(rut) {
-  // Buscar directo en Supabase para tener datos frescos
   const emp = DB._empresa || _sessionUsuario?.empresa;
   const {data:lista} = await supa.from('kaptura_clientes').select('*').eq('empresa', emp);
   const c = (lista||[]).find(x => x.rut === rut || x.nombre === rut);
   if(!c) { toast('No se encontró el cliente'); return; }
-  // Poblar formulario
+  // Poblar modal edición
   const set = (id, val) => { const el = document.getElementById(id); if(el) el.value = val||''; };
-  set('setup-fc-nombre',    c.nombre);
-  set('setup-fc-rut',       c.rut);
-  set('setup-fc-ciudad',    c.ciudad);
-  set('setup-fc-direccion', c.direccion);
-  set('setup-fc-telefono',  c.telefono);
-  set('setup-fc-email',     c.email);
-  set('setup-fc-contacto',  c.contacto);
-  set('setup-fc-cargo',     c.cargo_contacto);
-  // Cambiar botón a modo edición
-  const btn = document.querySelector('[onclick="setupAgregarCliente()"]');
-  if(btn) { btn.textContent = 'ACTUALIZAR CLIENTE'; btn.dataset.editRut = c.rut||c.nombre; }
-  toast('✏ Datos cargados — edita y presiona ACTUALIZAR CLIENTE');
-  setTimeout(() => {
-    const el = document.getElementById('setup-fc-nombre');
-    if(el) { el.scrollIntoView({behavior:'smooth', block:'center'}); el.focus(); }
-  }, 100);
+  set('edit-cli-nombre',    c.nombre);
+  set('edit-cli-rut',       c.rut);
+  set('edit-cli-ciudad',    c.ciudad);
+  set('edit-cli-direccion', c.direccion);
+  set('edit-cli-telefono',  c.telefono);
+  set('edit-cli-email',     c.email);
+  set('edit-cli-contacto',  c.contacto);
+  set('edit-cli-cargo',     c.cargo_contacto||'');
+  document.getElementById('edit-cli-rut-original').value = c.rut||c.nombre;
+  document.getElementById('modal-editar-cliente').style.display = 'flex';
+}
+
+async function setupGuardarEdicionCliente() {
+  const emp = DB._empresa || _sessionUsuario?.empresa;
+  const rutOriginal = document.getElementById('edit-cli-rut-original').value;
+  const nombre   = document.getElementById('edit-cli-nombre').value.trim();
+  const rut      = document.getElementById('edit-cli-rut').value.trim();
+  const ciudad   = document.getElementById('edit-cli-ciudad').value.trim();
+  const dir      = document.getElementById('edit-cli-direccion').value.trim();
+  const tel      = document.getElementById('edit-cli-telefono').value.trim();
+  const email    = document.getElementById('edit-cli-email').value.trim();
+  const contacto = document.getElementById('edit-cli-contacto').value.trim();
+  const cargo    = document.getElementById('edit-cli-cargo').value.trim();
+  if(!nombre) { toast('El nombre es obligatorio'); return; }
+  const {error} = await supa.from('kaptura_clientes')
+    .update({nombre, rut, ciudad, direccion:dir, telefono:tel, email, contacto, cargo_contacto:cargo})
+    .eq('empresa', emp).eq('rut', rutOriginal);
+  if(error) { toast('Error: '+error.message); return; }
+  toast('✓ Cliente actualizado');
+  cerrar('modal-editar-cliente');
+  cargarSetup();
 }
 
 async function setupEliminarEquipo(id) {
@@ -4658,25 +4713,7 @@ async function setupAgregarCliente() {
   if(!DB._empresa && _sessionUsuario?.empresa) DB._empresa = _sessionUsuario.empresa;
   const emp = DB._empresa;
   if(!emp) { toast('Error: sesión sin empresa'); return; }
-  const btn = document.querySelector('[onclick="setupAgregarCliente()"]');
-  const editRut = btn?.dataset?.editRut;
-  if(editRut) {
-    const nombre   = document.getElementById('setup-fc-nombre').value.trim();
-    const rut      = document.getElementById('setup-fc-rut').value.trim();
-    const ciudad   = document.getElementById('setup-fc-ciudad').value.trim();
-    const dir      = document.getElementById('setup-fc-direccion').value.trim();
-    const tel      = document.getElementById('setup-fc-telefono').value.trim();
-    const email    = document.getElementById('setup-fc-email').value.trim();
-    const contacto = document.getElementById('setup-fc-contacto').value.trim();
-    const cargo    = document.getElementById('setup-fc-cargo')?.value.trim()||'';
-    const {error}  = await supa.from('kaptura_clientes').update({nombre,rut,ciudad,direccion:dir,telefono:tel,email,contacto,cargo_contacto:cargo}).eq('empresa',emp).eq('rut',editRut);
-    if(error) { toast('Error: '+error.message); return; }
-    delete btn.dataset.editRut;
-    btn.textContent = 'GUARDAR CLIENTE';
-    toast('✓ Cliente actualizado');
-    cargarSetup();
-    return;
-  }
+
   const nombre   = document.getElementById('setup-fc-nombre').value.trim();
   const rut      = document.getElementById('setup-fc-rut').value.trim();
   const dir      = document.getElementById('setup-fc-direccion').value.trim();
@@ -5213,6 +5250,22 @@ async function liqAdjuntarSII(id) {
 }
 
 
+// ── Agregar observación desde modal INICIAR ──
+async function obsAgregarIniciar() {
+  const txt = document.getElementById('ini-obs-input')?.value?.trim();
+  if(!txt) { toast('Escribe una observación'); return; }
+  const s = DB.servicios[svcActivoIdx];
+  if(!s) return;
+  const hilo = obsParseHilo(s.notas||'');
+  const nuevaObs = {rol:'coordinador', fase:'inicio', texto:txt, ts:new Date().toISOString(), num: hilo.length+1};
+  const notasNew = obsAgregarAlNotas(s.notas||'', nuevaObs);
+  await supa.from('servicios_piloto').update({notas:notasNew}).eq('id',s.id);
+  s.notas = notasNew;
+  document.getElementById('ini-obs-input').value = '';
+  obsRenderHilo(document.getElementById('ini-obs-hilo'), obsParseHilo(notasNew));
+  toast('✓ Observación agregada');
+}
+
 // ── Agregar observación desde modal ASIGNAR ──
 async function obsAgregarAsignar() {
   const txt = document.getElementById('asig-obs-input')?.value?.trim();
@@ -5347,5 +5400,36 @@ function cosEditarPuntoValor(pi, val) {
 
 iniciarLogin();
 </script>
+
+<!-- MODAL EDITAR CLIENTE -->
+<div id="modal-editar-cliente" class="overlay" style="display:none">
+  <div class="modal" style="max-width:500px">
+    <div class="modal-hdr">
+      <div><div class="modal-ttl">Editar Cliente</div></div>
+      <button class="modal-cls" onclick="cerrar('modal-editar-cliente')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="edit-cli-rut-original">
+      <div class="fld2">
+        <div class="fld"><label class="lbl">Nombre</label><input class="inp" id="edit-cli-nombre" type="text" placeholder="Nombre empresa"></div>
+        <div class="fld"><label class="lbl">RUT</label><input class="inp" id="edit-cli-rut" type="text" placeholder="76.XXX.XXX-X"></div>
+      </div>
+      <div class="fld2">
+        <div class="fld"><label class="lbl">Ciudad</label><input class="inp" id="edit-cli-ciudad" type="text" placeholder="Ciudad"></div>
+        <div class="fld"><label class="lbl">Teléfono</label><input class="inp" id="edit-cli-telefono" type="text" placeholder="+56 9 XXXX XXXX"></div>
+      </div>
+      <div class="fld"><label class="lbl">Dirección</label><input class="inp" id="edit-cli-direccion" type="text" placeholder="Dirección"></div>
+      <div class="fld"><label class="lbl">Email</label><input class="inp" id="edit-cli-email" type="email" placeholder="correo@empresa.cl"></div>
+      <div class="fld2">
+        <div class="fld"><label class="lbl">Contacto</label><input class="inp" id="edit-cli-contacto" type="text" placeholder="Nombre contacto"></div>
+        <div class="fld"><label class="lbl">Cargo</label><input class="inp" id="edit-cli-cargo" type="text" placeholder="Cargo del contacto"></div>
+      </div>
+    </div>
+    <div class="modal-ftr">
+      <button class="btn btn-ghost" onclick="cerrar('modal-editar-cliente')">← Volver</button>
+      <button class="btn btn-navy" onclick="setupGuardarEdicionCliente()">✓ Guardar Cambios</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
