@@ -4472,7 +4472,10 @@ async function cargarSetup() {
             <span style="font-size:13px;font-weight:700;color:var(--text)">${c.nombre}</span>
             ${c.ciudad ? `<span style="font-size:11px;color:var(--muted);margin-left:8px">${c.ciudad}</span>` : ''}
           </div>
-          <button onclick="setupEliminarCliente('${c.id}')" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:var(--danger);border-radius:5px;padding:3px 8px;font-size:10px;font-weight:800;cursor:pointer">✕</button>
+          <div style="display:flex;gap:5px">
+            <button data-cid="${c.id}" onclick="setupEditarCliente(this.dataset.cid)" style="background:rgba(201,168,76,0.15);border:1px solid rgba(201,168,76,0.3);color:var(--gold);border-radius:5px;padding:3px 8px;font-size:10px;cursor:pointer">✏</button>
+            <button onclick="setupEliminarCliente('${c.id}')" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:var(--danger);border-radius:5px;padding:3px 8px;font-size:10px;font-weight:800;cursor:pointer">✕</button>
+          </div>
         </div>`).join('');
 
   // Cargar tarifario
@@ -4572,6 +4575,55 @@ async function setupAgregarEquipo() {
   cargarSetup();
 }
 
+// ── SETUP EDITAR EQUIPO ──
+function setupEditarEquipo(patente) {
+  const f = DB.flota.find(x => x.patente === patente);
+  if(!f) return;
+  // Poblar campos del formulario con datos existentes
+  document.getElementById('setup-nueva-patente').value = f.patente;
+  document.getElementById('setup-nuevo-tipo').value    = f.tipo || 'tracto_rampla';
+  document.getElementById('setup-nuevo-rend').value   = f.rendimiento_km_lt || '';
+  document.getElementById('setup-nuevo-valor').value  = f.valor_camion || '';
+  // Marcar como edición
+  document.getElementById('setup-nueva-patente').dataset.editPatente = f.patente;
+  toast('✏ Edita los datos y presiona GUARDAR TODA LA CONFIGURACIÓN');
+  document.getElementById('setup-nueva-patente').scrollIntoView({behavior:'smooth'});
+}
+
+// ── SETUP EDITAR CLIENTE ──
+function setupEditarCliente(id) {
+  const c = DB.clientes?.find(x => x.id === id) || (async () => {
+    const {data} = await supa.from('kaptura_clientes').select('*').eq('id',id).single();
+    return data;
+  })();
+  if(!c || c instanceof Promise) {
+    // Cargar desde Supabase
+    supa.from('kaptura_clientes').select('*').eq('id',id).single().then(({data:cl}) => {
+      if(!cl) return;
+      _poblarFormCliente(cl);
+    });
+    return;
+  }
+  _poblarFormCliente(c);
+}
+
+function _poblarFormCliente(c) {
+  const set = (id, val) => { const el = document.getElementById(id); if(el) el.value = val||''; };
+  set('setup-fc-nombre',    c.nombre);
+  set('setup-fc-rut',       c.rut);
+  set('setup-fc-ciudad',    c.ciudad);
+  set('setup-fc-direccion', c.direccion);
+  set('setup-fc-telefono',  c.telefono);
+  set('setup-fc-email',     c.email);
+  set('setup-fc-contacto',  c.contacto);
+  set('setup-fc-cargo',     c.cargo_contacto);
+  // Guardar ID para update
+  const btn = document.querySelector('[onclick="setupAgregarCliente()"]');
+  if(btn) { btn.textContent = 'ACTUALIZAR CLIENTE'; btn.dataset.editId = c.id; }
+  toast('✏ Edita los datos y presiona ACTUALIZAR CLIENTE');
+  document.getElementById('setup-fc-nombre')?.scrollIntoView({behavior:'smooth'});
+}
+
 async function setupEliminarEquipo(id) {
   if(!confirm('¿Eliminar este equipo?')) return;
   await supa.from('kaptura_flota').update({activo:false}).eq('id', id);
@@ -4605,6 +4657,26 @@ async function setupAgregarCliente() {
   if(!DB._empresa && _sessionUsuario?.empresa) DB._empresa = _sessionUsuario.empresa;
   const emp = DB._empresa;
   if(!emp) { toast('Error: sesión sin empresa'); return; }
+  const btn = document.querySelector('[onclick="setupAgregarCliente()"]');
+  const editId = btn?.dataset?.editId;
+  if(editId) {
+    // Modo edición — UPDATE
+    const nombre   = document.getElementById('setup-fc-nombre').value.trim();
+    const rut      = document.getElementById('setup-fc-rut').value.trim();
+    const ciudad   = document.getElementById('setup-fc-ciudad').value.trim();
+    const dir      = document.getElementById('setup-fc-direccion').value.trim();
+    const tel      = document.getElementById('setup-fc-telefono').value.trim();
+    const email    = document.getElementById('setup-fc-email').value.trim();
+    const contacto = document.getElementById('setup-fc-contacto').value.trim();
+    const cargo    = document.getElementById('setup-fc-cargo')?.value.trim()||'';
+    const {error} = await supa.from('kaptura_clientes').update({nombre,rut,ciudad,direccion:dir,telefono:tel,email,contacto,cargo_contacto:cargo}).eq('id',editId);
+    if(error) { toast('Error: '+error.message); return; }
+    delete btn.dataset.editId;
+    btn.textContent = 'GUARDAR CLIENTE';
+    toast('✓ Cliente actualizado');
+    cargarSetup();
+    return;
+  }
   const nombre   = document.getElementById('setup-fc-nombre').value.trim();
   const rut      = document.getElementById('setup-fc-rut').value.trim();
   const dir      = document.getElementById('setup-fc-direccion').value.trim();
@@ -4680,8 +4752,11 @@ function renderSetupListaEquipos() {
   // Primero los ya guardados en Supabase (de cargarSetup)
   const guardados = (DB.flota||[]).map(f => `
     <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:var(--bg);border-radius:7px;margin-bottom:5px;border:1px solid var(--border)">
-      <div><span style="font-size:13px;font-weight:800;color:var(--gold)">${f.patente}</span><span style="font-size:11px;color:var(--muted);margin-left:8px">${f.tipo||''}</span><span style="font-size:10px;color:var(--muted);margin-left:6px">✓ guardado</span></div>
-      <button onclick="setupEliminarEquipo('${f.id}')" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:var(--danger);border-radius:5px;padding:3px 8px;font-size:10px;cursor:pointer">✕</button>
+      <div><span style="font-size:13px;font-weight:800;color:var(--gold)">${f.patente}</span><span style="font-size:11px;color:var(--muted);margin-left:8px">${f.tipo||''}</span><span style="font-size:10px;color:var(--muted);margin-left:6px">${f.rendimiento_km_lt ? f.rendimiento_km_lt+' km/lt' : ''}</span></div>
+      <div style="display:flex;gap:5px">
+        <button data-pat="${f.patente}" onclick="setupEditarEquipo(this.dataset.pat)" style="background:rgba(201,168,76,0.15);border:1px solid rgba(201,168,76,0.3);color:var(--gold);border-radius:5px;padding:3px 8px;font-size:10px;cursor:pointer">✏</button>
+        <button onclick="setupEliminarEquipo('${f.id}')" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:var(--danger);border-radius:5px;padding:3px 8px;font-size:10px;cursor:pointer">✕</button>
+      </div>
     </div>`).join('');
   // Luego los nuevos en memoria
   const nuevos = _setupEquipos.map((e,i) => `
