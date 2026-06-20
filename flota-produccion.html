@@ -1022,7 +1022,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       </div>
     </div>
     <div class="modal-ftr">
-      <button class="btn btn-outline" onclick="cerrar('modal-asignar')">Cancelar</button>
+      <button class="btn btn-ghost" onclick="cerrar('modal-asignar')">← Volver</button>
       <button class="btn btn-navy" onclick="guardarAsignacion()">Asignar →</button>
     </div>
   </div>
@@ -1051,7 +1051,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       </div>
     </div>
     <div class="modal-ftr">
-      <button class="btn btn-outline" onclick="cerrar('modal-iniciar')">Cancelar</button>
+      <button class="btn btn-ghost" onclick="cerrar('modal-iniciar')">← Volver</button>
       <button class="btn btn-navy" onclick="confirmarInicio()">▶ Iniciar Servicio</button>
     </div>
   </div>
@@ -1094,7 +1094,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
         <textarea class="inp" id="reg-observacion" rows="2" placeholder="Ej: Cliente no encontrado, puerta cerrada..."></textarea>
       </div>
     <div class="modal-ftr">
-      <button class="btn btn-outline" onclick="cerrar('modal-registrar')">Cancelar</button>
+      <button class="btn btn-ghost" onclick="cerrar('modal-registrar')">← Volver</button>
       <button class="btn btn-orange" onclick="guardarBorrador()">Borrador</button>
       <button class="btn btn-navy" onclick="confirmarEjecucion()">✓ Confirmar Ejecución</button>
     </div>
@@ -1123,7 +1123,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       </div>
     </div>
     <div class="modal-ftr">
-      <button class="btn btn-outline" onclick="cerrar('modal-confirmar-ejec')">Cancelar</button>
+      <button class="btn btn-ghost" onclick="cerrar('modal-confirmar-ejec')">← Volver</button>
       <button class="btn btn-navy" onclick="guardarEjecucion()">✓ Confirmar Ejecución</button>
     </div>
   </div>
@@ -1220,7 +1220,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
         <textarea class="inp" id="cos-observacion" rows="2" placeholder="Observaciones de liquidación, notas internas..."></textarea>
       </div>
     <div class="modal-ftr">
-      <button class="btn btn-outline" onclick="cerrar('modal-costos')">Cancelar</button>
+      <button class="btn btn-ghost" onclick="cerrar('modal-costos')">← Volver</button>
       <button class="btn btn-orange" onclick="guardarCostosBorrador()">Borrador</button>
       <button class="btn btn-navy" onclick="cerrarServicio()">🔒 Cerrar Servicio</button>
     </div>
@@ -2256,10 +2256,14 @@ function cardHTML(s,i) {
   return `<div class="svc-card">
     <div class="svc-top">
       <div>
-        <div class="svc-id" ${s.estado==='cerrado'?`onclick="editarServicioCerrado(${i})" title="Editar servicio" style="cursor:pointer;text-decoration:underline dotted"`:''}>${s.servicio_id||'—'}</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="svc-id" ${s.estado==='cerrado'?`onclick="editarServicioCerrado(${i})" title="Editar servicio" style="cursor:pointer;text-decoration:underline dotted"`:''}>${s.servicio_id||'—'}</div>
+          <div style="font-size:10px;color:var(--muted);font-weight:600">${s.fecha||s.created_at?.split('T')[0]||'—'}</div>
+        </div>
         <div class="svc-pat">${s.patente||'—'}</div>
         <div class="svc-line">${s.conductor||'—'}</div>
         <div class="svc-line" style="color:var(--g400)">${s.cliente||'—'} · ${s.origen||'—'}</div>
+        ${(()=>{const gs=(s._puntos||[]).flatMap(p=>(p.guias||[]).map(g=>g.num_guia)).filter(Boolean);return gs.length?`<div style="font-size:10px;color:var(--gold);margin-top:2px;font-weight:700">📄 ${gs.join(' · ')}</div>`:s.num_guia?`<div style="font-size:10px;color:var(--gold);margin-top:2px;font-weight:700">📄 ${s.num_guia}</div>`:''})()}
       </div>
       ${pillHTML(s.estado)}
     </div>
