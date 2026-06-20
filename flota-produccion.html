@@ -702,6 +702,16 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
           <input id="setup-tel-empresa" type="text" placeholder="Ej: +56 9 XXXX XXXX" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:9px 12px;font-size:13px;color:var(--text);font-family:inherit">
         </div>
       </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;margin-top:8px">
+        <div>
+          <div style="font-size:10px;color:var(--muted);margin-bottom:4px">NOMBRE CONTACTO</div>
+          <input id="setup-contacto-empresa" type="text" placeholder="Ej: Juan Pérez" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:9px 12px;font-size:13px;color:var(--text);font-family:inherit">
+        </div>
+        <div>
+          <div style="font-size:10px;color:var(--muted);margin-bottom:4px">CARGO CONTACTO</div>
+          <input id="setup-cargo-empresa" type="text" placeholder="Ej: Gerente" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:9px 12px;font-size:13px;color:var(--text);font-family:inherit">
+        </div>
+      </div>
       <div style="text-align:right;margin-top:10px">
         <button class="btn btn-navy" onclick="setupGuardarEmpresa()">Guardar empresa</button>
       </div>
@@ -4418,6 +4428,8 @@ async function cargarSetup() {
   document.getElementById('setup-nombre-empresa').value = getCfg('flota_nombre_'+emp) || '';
   if(document.getElementById('setup-email-empresa')) document.getElementById('setup-email-empresa').value = getCfg('flota_email_'+emp) || '';
   if(document.getElementById('setup-tel-empresa')) document.getElementById('setup-tel-empresa').value = getCfg('flota_tel_'+emp) || '';
+  if(document.getElementById('setup-contacto-empresa')) document.getElementById('setup-contacto-empresa').value = getCfg('flota_contacto_'+emp) || '';
+  if(document.getElementById('setup-cargo-empresa')) document.getElementById('setup-cargo-empresa').value = getCfg('flota_cargo_'+emp) || '';
   document.getElementById('setup-rut').value            = getCfg('flota_rut_'+emp) || '';
   document.getElementById('setup-ciudad').value         = getCfg('flota_ciudad_'+emp) || '';
   document.getElementById('setup-costo-fijo').value     = getCfg('costo_fijo_mensual_'+emp) || '';
@@ -4488,15 +4500,19 @@ async function setupGuardarEmpresa() {
   const nombre = document.getElementById('setup-nombre-empresa').value.trim();
   const rut    = document.getElementById('setup-rut').value.trim();
   const ciudad = document.getElementById('setup-ciudad').value.trim();
-  const emailEmp = document.getElementById('setup-email-empresa')?.value.trim()||'';
-  const telEmp   = document.getElementById('setup-tel-empresa')?.value.trim()||'';
+  const emailEmp    = document.getElementById('setup-email-empresa')?.value.trim()||'';
+  const telEmp      = document.getElementById('setup-tel-empresa')?.value.trim()||'';
+  const contactoEmp = document.getElementById('setup-contacto-empresa')?.value.trim()||'';
+  const cargoEmp    = document.getElementById('setup-cargo-empresa')?.value.trim()||'';
   const modo   = document.getElementById('setup-modo-gestion').value;
   const rows = [
     {clave:'flota_nombre_'+emp,  valor:nombre,    empresa:emp},
     {clave:'flota_rut_'+emp,     valor:rut,       empresa:emp},
     {clave:'flota_ciudad_'+emp,  valor:ciudad,    empresa:emp},
-    {clave:'flota_email_'+emp,   valor:emailEmp,  empresa:emp},
-    {clave:'flota_tel_'+emp,     valor:telEmp,    empresa:emp},
+    {clave:'flota_email_'+emp,      valor:emailEmp,    empresa:emp},
+    {clave:'flota_tel_'+emp,        valor:telEmp,      empresa:emp},
+    {clave:'flota_contacto_'+emp,   valor:contactoEmp, empresa:emp},
+    {clave:'flota_cargo_'+emp,      valor:cargoEmp,    empresa:emp},
     {clave:'modo_gestion_'+emp, valor:modo,   empresa:emp},
   ];
   const {error} = await supa.from('kaptura_config').upsert(rows, {onConflict:'clave,empresa'});
@@ -4598,7 +4614,7 @@ async function setupAgregarCliente() {
   const contacto = document.getElementById('setup-fc-contacto').value.trim();
   if(!nombre) { toast('Ingresa el nombre del cliente'); return; }
   const cargo = document.getElementById('setup-fc-cargo')?.value.trim()||'';
-  const {error} = await supa.from('kaptura_clientes').insert({nombre, rut, direccion:dir, ciudad, telefono:tel, email, contacto, empresa:emp});
+  const {error} = await supa.from('kaptura_clientes').insert({nombre, rut, direccion:dir, ciudad, telefono:tel, email, contacto, cargo_contacto:cargo, empresa:emp});
   if(error) { toast('Error: '+error.message); return; }
   ['nombre','rut','direccion','ciudad','telefono','email','contacto'].forEach(f => {
     const el = document.getElementById('setup-fc-'+f); if(el) el.value = '';
