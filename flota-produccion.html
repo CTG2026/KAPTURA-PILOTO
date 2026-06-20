@@ -1021,6 +1021,13 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
         <div style="font-size:10px;color:var(--muted);margin-top:4px" id="asig-punto-inicio-hint"></div>
       </div>
     </div>
+
+      <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px">
+        <div style="font-size:9px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);margin-bottom:8px">Observaciones</div>
+        <div id="asig-obs-hilo" style="margin-bottom:8px"></div>
+        <textarea id="asig-obs-input" class="inp" rows="2" placeholder="Agregar observación..." style="margin-bottom:6px"></textarea>
+        <button class="btn btn-outline btn-sm btn-full" onclick="obsAgregarAsignar()">+ Agregar Observación</button>
+      </div>
     <div class="modal-ftr">
       <button class="btn btn-ghost" onclick="cerrar('modal-asignar')">← Volver</button>
       <button class="btn btn-navy" onclick="guardarAsignacion()">Asignar →</button>
@@ -1090,11 +1097,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
         </select>
       </div>
       <!-- Hilo de observaciones -->
-      <div id="reg-obs-hilo" style="margin-bottom:10px"></div>
-      <div class="fld" id="wrap-obs-conductor">
-        <label class="lbl">Agregar observación</label>
-        <textarea class="inp" id="reg-observacion" rows="2" placeholder="Ej: Cliente no encontrado, carga demoró 1 hora..."></textarea>
-      </div>
+      <div id="reg-obs-hilo" style="margin-bottom:8px"></div>
+        <textarea id="reg-observacion" class="inp" rows="2" placeholder="Agregar observación..." style="margin-bottom:6px"></textarea>
+        <button class="btn btn-outline btn-sm btn-full" onclick="obsAgregarRegistrar()">+ Agregar Observación</button>
     <div class="modal-ftr">
       <button class="btn btn-ghost" onclick="cerrar('modal-registrar')">← Volver</button>
       <button class="btn btn-orange" onclick="guardarBorrador()">Borrador</button>
@@ -1219,11 +1224,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       <div class="section-ttl">📦 Puntos y Tarifas</div>
       <div id="cos-puntos-detalle" style="margin-bottom:14px"></div>
       <div class="section-ttl">💬 Hilo de Observaciones</div>
-      <div id="cos-obs-hilo" style="margin-bottom:10px"></div>
-      <div class="fld">
-        <label class="lbl">Agregar observación (coordinador)</label>
-        <textarea class="inp" id="cos-observacion" rows="2" placeholder="Observaciones de liquidación, notas internas..."></textarea>
-      </div>
+      <div id="cos-obs-hilo" style="margin-bottom:8px"></div>
+        <textarea id="cos-observacion" class="inp" rows="2" placeholder="Agregar observación..." style="margin-bottom:6px"></textarea>
+        <button class="btn btn-outline btn-sm btn-full" onclick="obsAgregarCierre()">+ Agregar Observación</button>
     <div class="modal-ftr">
       <button class="btn btn-ghost" onclick="cerrar('modal-costos')">← Volver</button>
       <button class="btn btn-orange" onclick="guardarCostosBorrador()">Borrador</button>
@@ -5068,6 +5071,54 @@ async function liqAdjuntarSII(id) {
   verLiquidacion(id);
 }
 
+
+// ── Agregar observación desde modal ASIGNAR ──
+async function obsAgregarAsignar() {
+  const txt = document.getElementById('asig-obs-input')?.value?.trim();
+  if(!txt) { toast('Escribe una observación'); return; }
+  const s = DB.servicios[svcActivoIdx];
+  if(!s) return;
+  const hilo = obsParseHilo(s.notas||'');
+  const nuevaObs = {rol:'coordinador', fase:'asignación', texto:txt, ts:new Date().toISOString(), num: hilo.length+1};
+  const notasNew = obsAgregarAlNotas(s.notas||'', nuevaObs);
+  await supa.from('servicios_piloto').update({notas:notasNew}).eq('id',s.id);
+  s.notas = notasNew;
+  document.getElementById('asig-obs-input').value = '';
+  obsRenderHilo(document.getElementById('asig-obs-hilo'), obsParseHilo(notasNew));
+  toast('✓ Observación agregada');
+}
+
+// ── Agregar observación desde modal REGISTRAR (conductor) ──
+async function obsAgregarRegistrar() {
+  const txt = document.getElementById('reg-observacion')?.value?.trim();
+  if(!txt) { toast('Escribe una observación'); return; }
+  const s = DB.servicios[svcActivoIdx];
+  if(!s) return;
+  const hilo = obsParseHilo(s.notas||'');
+  const nuevaObs = {rol:'conductor', fase:'ejecución', texto:txt, ts:new Date().toISOString(), num: hilo.length+1};
+  const notasNew = obsAgregarAlNotas(s.notas||'', nuevaObs);
+  await supa.from('servicios_piloto').update({notas:notasNew}).eq('id',s.id);
+  s.notas = notasNew;
+  document.getElementById('reg-observacion').value = '';
+  obsRenderHilo(document.getElementById('reg-obs-hilo'), obsParseHilo(notasNew));
+  toast('✓ Observación agregada');
+}
+
+// ── Agregar observación desde modal COSTOS/CIERRE (coordinador) ──
+async function obsAgregarCierre() {
+  const txt = document.getElementById('cos-observacion')?.value?.trim();
+  if(!txt) { toast('Escribe una observación'); return; }
+  const s = DB.servicios[svcActivoIdx];
+  if(!s) return;
+  const hilo = obsParseHilo(s.notas||'');
+  const nuevaObs = {rol:'coordinador', fase:'cierre', texto:txt, ts:new Date().toISOString(), num: hilo.length+1};
+  const notasNew = obsAgregarAlNotas(s.notas||'', nuevaObs);
+  await supa.from('servicios_piloto').update({notas:notasNew}).eq('id',s.id);
+  s.notas = notasNew;
+  document.getElementById('cos-observacion').value = '';
+  obsRenderHilo(document.getElementById('cos-obs-hilo'), obsParseHilo(notasNew));
+  toast('✓ Observación agregada');
+}
 
 // ══════════════════════════════════════
 // HILO DE OBSERVACIONES
