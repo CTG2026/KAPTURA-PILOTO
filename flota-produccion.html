@@ -4463,20 +4463,22 @@ async function cargarSetup() {
 
   // Cargar clientes
   const {data: clientes} = await supa.from('kaptura_clientes').select('*').eq('empresa', emp);
+  DB.clientes = clientes || [];
   const listaClientes = document.getElementById('setup-lista-clientes');
-  listaClientes.innerHTML = (clientes||[]).length === 0
-    ? '<div style="font-size:12px;color:var(--muted);margin-bottom:8px">Sin clientes registrados</div>'
-    : (clientes||[]).map(c => `
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:var(--bg);border-radius:7px;margin-bottom:6px;border:1px solid var(--border)">
-          <div>
-            <span style="font-size:13px;font-weight:700;color:var(--text)">${c.nombre}</span>
-            ${c.ciudad ? `<span style="font-size:11px;color:var(--muted);margin-left:8px">${c.ciudad}</span>` : ''}
-          </div>
-          <div style="display:flex;gap:5px">
-            <button data-rut="${c.rut||c.nombre}" onclick="setupEditarCliente(this.dataset.rut)" style="background:rgba(201,168,76,0.15);border:1px solid rgba(201,168,76,0.3);color:var(--gold);border-radius:5px;padding:3px 8px;font-size:10px;cursor:pointer;font-weight:700">✏ Editar</button>
-            <button onclick="setupEliminarCliente('${c.rut||c.nombre}')" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:var(--danger);border-radius:5px;padding:3px 8px;font-size:10px;font-weight:700;cursor:pointer">✕</button>
-          </div>
-        </div>`).join('');
+  if(!clientes || clientes.length === 0) {
+    listaClientes.innerHTML = '<div style="font-size:12px;color:var(--muted);margin-bottom:8px">Sin clientes registrados</div>';
+  } else {
+    listaClientes.innerHTML = clientes.map(function(c) {
+      const ciudad = c.ciudad ? '<span style="font-size:11px;color:rgba(245,240,232,0.4);margin-left:8px">'+c.ciudad+'</span>' : '';
+      const rut = c.rut || c.nombre;
+      return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:var(--bg);border-radius:7px;margin-bottom:6px;border:1px solid var(--border)">'
+        + '<div><span style="font-size:13px;font-weight:700;color:var(--text)">'+c.nombre+'</span>'+ciudad+'</div>'
+        + '<div style="display:flex;gap:5px">'
+        + '<button data-rut="'+rut+'" onclick="setupEditarCliente(this.dataset.rut)" style="background:rgba(201,168,76,0.15);border:1px solid rgba(201,168,76,0.3);color:var(--gold);border-radius:5px;padding:3px 8px;font-size:10px;cursor:pointer;font-weight:700">✏ Editar</button>'
+        + '<button data-rut="'+rut+'" onclick="setupEliminarCliente(this.dataset.rut)" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:var(--danger);border-radius:5px;padding:3px 8px;font-size:10px;font-weight:700;cursor:pointer">✕</button>'
+        + '</div></div>';
+    }).join('');
+  }
 
   // Cargar tarifario
   const {data: tarifas} = await supa.from('kaptura_tarifarios').select('*').eq('empresa', emp);
