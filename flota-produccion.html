@@ -1039,7 +1039,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       <div class="fld">
         <label class="lbl">Punto de Inicio del Equipo</label>
         <select class="inp" id="asig-punto-inicio">
-          <option value="base">🏠 Sale desde Base (Coltauco)</option>
+          <option value="base">🏠 Sale desde Base</option>
           <option value="destino_anterior">📍 Sale desde destino del servicio anterior</option>
         </select>
         <div style="font-size:10px;color:var(--muted);margin-top:4px" id="asig-punto-inicio-hint"></div>
@@ -4801,7 +4801,11 @@ async function setupGuardarTodo() {
     await setupGuardarMant();
     // Guardar equipos pendientes
     for(const e of _setupEquipos) {
-      const {error} = await supa.from('kaptura_flota').insert({patente:e.patente, tipo:e.tipo, rendimiento_km_lt:e.rend, empresa:DB._empresa, activo:true});
+      // Intentar insertar — si ya existe, actualizar tipo y rendimiento
+      const {error} = await supa.from('kaptura_flota').upsert(
+        {patente:e.patente, tipo:e.tipo, rendimiento_km_lt:e.rend||null, empresa:DB._empresa, activo:true},
+        {onConflict:'patente'}
+      );
       if(error) throw new Error('Equipo '+e.patente+': '+error.message);
     }
     _setupEquipos = [];
