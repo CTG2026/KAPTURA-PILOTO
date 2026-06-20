@@ -2991,19 +2991,24 @@ async function irACostos() {
   const dias = s.dias_servicio || 1;
   const c = DB.config;
   document.getElementById('cos-dias').value     = dias;
-  // Costo fijo/día = costo_fijo_mensual ÷ días_operativos_mes
-  const cfMensual = parseInt(c.costo_fijo_mensual||c.costo_fijo_mes||c.costo_fijo||0);
-  const diasOpMes = parseInt(c.dias_operativos||c.dias_op||c.dias_operativos_mes||20);
-  const cfDia     = cfMensual > 1000 ? Math.round(cfMensual / diasOpMes) : parseInt(c.costo_fijo_dia||44000);
-  // Mantención = km_servicio × (mant_costo ÷ mant_km) — se recalcula en calcCostos() cuando hay km GPS
-  // Por ahora mostrar 0 hasta tener km reales del servicio
-  const mantCostoUnit = parseInt(c.mant_costo||c.mantencion||0);
-  const mantKmUnit    = parseInt(c.mant_km||c.mant_cada_km||20000);
-  const mantDia       = 0; // Se calcula en calcCostos() con km reales
-  document.getElementById('cos-conductor').value= fmt(dias * parseInt(c.sueldo_conductor||c.sueldo_diario||33000));
-  document.getElementById('cos-cf').value       = fmt(dias * cfDia);
-  document.getElementById('cos-mant').value     = fmt(0); // Se actualiza con km GPS
-  document.getElementById('cos-viatico').value  = fmt(dias * parseInt(c.viatico||c.viatico_dia||12000));
+  // Usar valores EXACTOS de DB.config — si es "0" usar 0, nunca defaults hardcodeados
+  const getCfgNum = (keys) => {
+    for(const k of keys) {
+      const v = c[k];
+      if(v !== undefined && v !== null && v !== '') return parseInt(v)||0;
+    }
+    return 0;
+  };
+  const cfMensual = getCfgNum(['costo_fijo_mensual','costo_fijo_mes','costo_fijo']);
+  const diasOpMes = getCfgNum(['dias_operativos','dias_op']) || 20;
+  const cfDia     = getCfgNum(['costo_fijo_dia']) || (cfMensual > 0 ? Math.round(cfMensual / diasOpMes) : 0);
+  // Mantención: km × (mant_costo ÷ mant_km) — se calcula en calcCostos() con km reales, aquí = 0
+  const sueldoDiario = getCfgNum(['sueldo_diario','sueldo_conductor']) || 33000;
+  const viaticoDia   = getCfgNum(['viatico_dia','viatico']);
+  document.getElementById('cos-conductor').value = fmt(dias * sueldoDiario);
+  document.getElementById('cos-cf').value        = fmt(dias * cfDia);
+  document.getElementById('cos-mant').value      = fmt(0);
+  document.getElementById('cos-viatico').value   = fmt(dias * viaticoDia);
 
   // Show ingreso from puntos
   const final = puntos.find(p=>p.tipo==='final');
@@ -4837,7 +4842,7 @@ function renderSetupListaConductores() {
   el.innerHTML = html || '<div style="font-size:12px;color:var(--muted);margin-bottom:8px">Sin conductores</div>';
 }
 
-function setupListaAgregarTarifa() {
+async function setupListaAgregarTarifa() {
   const cliente = document.getElementById('setup-tar-cliente').value.trim();
   const origen  = document.getElementById('setup-tar-origen').value.trim().toUpperCase();
   const destino = document.getElementById('setup-tar-destino').value.trim().toUpperCase();
