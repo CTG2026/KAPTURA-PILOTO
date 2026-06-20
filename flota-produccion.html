@@ -1190,6 +1190,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
         <div class="fld"><label class="lbl">Km GPS <span id="lbl-km" style="font-size:8px;font-weight:800;background:rgba(255,107,0,0.2);color:var(--gold);padding:1px 5px;border-radius:3px">PENDIENTE</span></label><input class="inp" id="cos-km" type="number" placeholder="0" oninput="calcCostos();recalcRendimientoCargas()"></div>
         <div class="fld"><label class="lbl">Litros teórico <span style="font-size:8px;font-weight:800;background:var(--gold);color:var(--text);padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-litros" style=""></div>
+        <div class="fld"><label class="lbl">Km Teórico Ida <span style="font-size:8px;font-weight:800;background:rgba(255,255,255,0.15);color:var(--text);padding:1px 5px;border-radius:3px">MANUAL</span></label><input class="inp" id="cos-km-teo-ida" type="number" placeholder="0" oninput="calcKmTeorico()"></div>
+        <div class="fld"><label class="lbl">Km Teórico Vuelta <span style="font-size:8px;font-weight:800;background:rgba(255,255,255,0.15);color:var(--text);padding:1px 5px;border-radius:3px">MANUAL</span></label><input class="inp" id="cos-km-teo-vta" type="number" placeholder="0" oninput="calcKmTeorico()"></div>
         <div class="fld"><label class="lbl">Estación de servicio <span style="font-size:8px;font-weight:800;background:rgba(34,197,94,0.2);color:var(--green);padding:1px 5px;border-radius:3px" id="lbl-litros-real">—</span></label>
           <input class="inp" id="cos-litros-real" readonly style="color:#000;background:var(--green)">
           <div id="cos-rendimiento-cargas" style="font-size:10px;font-weight:700;color:var(--gold);margin-top:4px;display:none">
@@ -3053,7 +3055,10 @@ async function calcCostos() {
     : parseFloat(flotaEquipo?.rendimiento_km_lt || c.rendimiento||c.rendimiento_km_lt||2.5);
   // Precio combustible: manual o automático (Copec día servicio - 20% IVA)
   let prec = parseFloat(c.precio_litro||c.precio_combustible||1300);
-  const lts = km ? Math.round(km/rend*10)/10 : 0;
+  const kmTeoIda0 = parseFloat(document.getElementById('cos-km-teo-ida')?.value)||0;
+  const kmTeoVta0 = parseFloat(document.getElementById('cos-km-teo-vta')?.value)||0;
+  const kmParaComb = km > 0 ? km : (kmTeoIda0 + kmTeoVta0);
+  const lts = kmParaComb > 0 && rend > 0 ? Math.round(kmParaComb/rend*10)/10 : 0;
   if((c.modo_combustible||'manual') === 'automatico' && svcPatenteActiva) {
     const fechaIniSvc = DB.servicios[svcActivoIdx]?.fecha||'';
     if(fechaIniSvc) {
@@ -3077,9 +3082,12 @@ async function calcCostos() {
 
   const tag     = parseFloat(document.getElementById('cos-tag')?.value)||0;
   const peajes  = tag + (parseFloat(document.getElementById('cos-peajes').value)||0);
-  const condVal = dias * parseInt(c.sueldo_conductor||c.costo_conductor_dia||33000);
+  // Usar valores exactos de DB.config sin defaults hardcodeados
+  const getCN = (keys) => { for(const k of keys){ const v=c[k]; if(v!==undefined&&v!==null&&v!=='') return parseInt(v)||0; } return 0; };
+  const sueldoDia = getCN(['sueldo_diario','sueldo_conductor']) || 33000;
+  const condVal = dias * sueldoDia;
   // Costo fijo: manual o automático
-  let cfDia = parseInt(c.costo_fijo||c.costo_fijo_dia||44000);
+  let cfDia = getCN(['costo_fijo_dia']) || (getCN(['costo_fijo_mensual','costo_fijo_mes']) > 0 ? Math.round(getCN(['costo_fijo_mensual','costo_fijo_mes']) / (getCN(['dias_operativos','dias_op'])||20)) : 0);
   let cf = dias * cfDia; // default manual
   if((c.modo_costo_fijo||'manual') === 'automatico') {
     const svcActual = DB.servicios[svcActivoIdx];
@@ -3111,8 +3119,17 @@ async function calcCostos() {
       cf += cfEseDia;
     }
   }
-  const mant    = dias * parseInt(c.mantencion||c.costo_mantencion||25000);
-  const viat    = dias * parseInt(c.viatico||c.costo_viatico||12000);
+  // Mantención = km × (mant_costo ÷ mant_km) usando km GPS o km teórico
+  const mantCostoC = getCN(['mant_costo','mantencion']);
+  const mantKmC    = getCN(['mant_km','mant_cada_km']) || 20000;
+  const kmTeoIda   = parseFloat(document.getElementById('cos-km-teo-ida')?.value)||0;
+  const kmTeoVta   = parseFloat(document.getElementById('cos-km-teo-vta')?.value)||0;
+  const kmParaMant = km > 0 ? km : (kmTeoIda + kmTeoVta);
+  const mantAuto   = kmParaMant > 0 && mantCostoC > 0 ? Math.round(kmParaMant * mantCostoC / mantKmC) : 0;
+  const mantManual = document.getElementById('cos-mant')?.dataset?.manual === '1';
+  const mant       = mantManual ? (parseFloat((document.getElementById('cos-mant')?.value||'').replace(/[.$]/g,'').replace(/\./g,''))||0) : mantAuto;
+  if(!mantManual) document.getElementById('cos-mant').value = fmt(mant);
+  const viat    = dias * (getCN(['viatico_dia','viatico']) || 0);
   const plazoSel = document.getElementById('cos-plazo')?.value || '0';
   const manualEl = document.getElementById('cos-plazo-manual');
   if(plazoSel === 'manual') {
@@ -3163,6 +3180,20 @@ async function calcCostos() {
   mEl.textContent = fmt(margen);
   mEl.style.color = margen >= 0 ? '#7EA87E' : '#B05A5A';
   document.getElementById('cos-margen-pct').textContent = `${pct}% sobre tarifa`;
+}
+
+// Calcular con km teórico cuando no hay GPS
+function calcKmTeorico() {
+  const ida = parseFloat(document.getElementById('cos-km-teo-ida')?.value)||0;
+  const vta = parseFloat(document.getElementById('cos-km-teo-vta')?.value)||0;
+  // Actualizar km vacíos y cargados
+  if(ida > 0) {
+    const kmVacioEl = document.getElementById('cos-km-vacio-ida');
+    if(kmVacioEl && !kmVacioEl.dataset.manual) kmVacioEl.value = vta;
+    const kmCargEl = document.getElementById('cos-km-cargado');
+    if(kmCargEl && !kmCargEl.dataset.manual) kmCargEl.value = ida;
+  }
+  calcCostos();
 }
 
 function calcRetorno() {
