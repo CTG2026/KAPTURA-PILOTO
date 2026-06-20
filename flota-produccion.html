@@ -4576,34 +4576,34 @@ async function setupAgregarEquipo() {
 }
 
 // ── SETUP EDITAR EQUIPO ──
-function setupEditarEquipo(patente) {
-  const f = DB.flota.find(x => x.patente === patente);
-  if(!f) return;
-  // Poblar campos del formulario con datos existentes
+async function setupEditarEquipo(patente) {
+  // Buscar en DB.flota o directo en Supabase
+  let f = (DB.flota||[]).find(x => x.patente === patente);
+  if(!f) {
+    const {data} = await supa.from('kaptura_flota').select('*').eq('patente', patente).single();
+    f = data;
+  }
+  if(!f) { toast('No se encontró el equipo'); return; }
   document.getElementById('setup-nueva-patente').value = f.patente;
   document.getElementById('setup-nuevo-tipo').value    = f.tipo || 'tracto_rampla';
-  document.getElementById('setup-nuevo-rend').value   = f.rendimiento_km_lt || '';
-  document.getElementById('setup-nuevo-valor').value  = f.valor_camion || '';
-  // Marcar como edición
+  document.getElementById('setup-nuevo-rend').value    = f.rendimiento_km_lt || '';
+  document.getElementById('setup-nuevo-valor').value   = f.valor_camion || '';
   document.getElementById('setup-nueva-patente').dataset.editPatente = f.patente;
-  toast('✏ Edita los datos y presiona GUARDAR TODA LA CONFIGURACIÓN');
-  document.getElementById('setup-nueva-patente').scrollIntoView({behavior:'smooth'});
+  toast('✏ Datos del equipo cargados — edita y presiona GUARDAR TODA LA CONFIGURACIÓN');
+  setTimeout(() => {
+    const el = document.getElementById('setup-nueva-patente');
+    if(el) { el.scrollIntoView({behavior:'smooth', block:'center'}); el.focus(); }
+  }, 100);
 }
 
 // ── SETUP EDITAR CLIENTE ──
-function setupEditarCliente(rut) {
-  // Buscar en memoria por rut o nombre
-  const c = DB.clientes?.find(x => (x.rut||x.nombre) === rut);
-  if(c) { _poblarFormCliente(c); return; }
-  // Si no está en memoria, buscar en Supabase
-  supa.from('kaptura_clientes').select('*').eq('empresa', DB._empresa||'').then(({data:lista}) => {
-    const cl = (lista||[]).find(x => (x.rut||x.nombre) === rut);
-    if(cl) _poblarFormCliente(cl);
-    else toast('No se encontró el cliente');
-  });
-}
-
-function _poblarFormCliente(c) {
+async function setupEditarCliente(rut) {
+  // Buscar directo en Supabase para tener datos frescos
+  const emp = DB._empresa || _sessionUsuario?.empresa;
+  const {data:lista} = await supa.from('kaptura_clientes').select('*').eq('empresa', emp);
+  const c = (lista||[]).find(x => x.rut === rut || x.nombre === rut);
+  if(!c) { toast('No se encontró el cliente'); return; }
+  // Poblar formulario
   const set = (id, val) => { const el = document.getElementById(id); if(el) el.value = val||''; };
   set('setup-fc-nombre',    c.nombre);
   set('setup-fc-rut',       c.rut);
@@ -4613,11 +4613,14 @@ function _poblarFormCliente(c) {
   set('setup-fc-email',     c.email);
   set('setup-fc-contacto',  c.contacto);
   set('setup-fc-cargo',     c.cargo_contacto);
-  // Guardar ID para update
+  // Cambiar botón a modo edición
   const btn = document.querySelector('[onclick="setupAgregarCliente()"]');
   if(btn) { btn.textContent = 'ACTUALIZAR CLIENTE'; btn.dataset.editRut = c.rut||c.nombre; }
-  toast('✏ Edita los datos y presiona ACTUALIZAR CLIENTE');
-  document.getElementById('setup-fc-nombre')?.scrollIntoView({behavior:'smooth'});
+  toast('✏ Datos cargados — edita y presiona ACTUALIZAR CLIENTE');
+  setTimeout(() => {
+    const el = document.getElementById('setup-fc-nombre');
+    if(el) { el.scrollIntoView({behavior:'smooth', block:'center'}); el.focus(); }
+  }, 100);
 }
 
 async function setupEliminarEquipo(id) {
@@ -4872,7 +4875,6 @@ async function setupGuardarTodo() {
     await setupGuardarMant();
     // Guardar equipos pendientes
     for(const e of _setupEquipos) {
-      // Intentar insertar — si ya existe, actualizar tipo y rendimiento
       const {error} = await supa.from('kaptura_flota').upsert(
         {patente:e.patente, tipo:e.tipo, rendimiento_km_lt:e.rend||null, empresa:DB._empresa, activo:true},
         {onConflict:'patente'}
@@ -4880,6 +4882,18 @@ async function setupGuardarTodo() {
       if(error) throw new Error('Equipo '+e.patente+': '+error.message);
     }
     _setupEquipos = [];
+    // Si había equipo en modo edición, actualizar también
+    const editPat = document.getElementById('setup-nueva-patente')?.dataset?.editPatente;
+    if(editPat) {
+      const tipo  = document.getElementById('setup-nuevo-tipo')?.value;
+      const rend  = parseFloat(document.getElementById('setup-nuevo-rend')?.value)||null;
+      const valor = parseInt((document.getElementById('setup-nuevo-valor')?.value||'').replace(/[^0-9]/g,''))||null;
+      await supa.from('kaptura_flota').update({tipo, rendimiento_km_lt:rend, valor_camion:valor}).eq('patente',editPat);
+      delete document.getElementById('setup-nueva-patente').dataset.editPatente;
+      document.getElementById('setup-nueva-patente').value = '';
+      document.getElementById('setup-nuevo-rend').value    = '';
+      document.getElementById('setup-nuevo-valor').value   = '';
+    }
     // Guardar conductores pendientes
     for(const c of _setupConductores) {
       const {error} = await supa.from('kaptura_conductores').insert({nombre:c.nombre, rut:c.rut, empresa:DB._empresa, activo:true});
