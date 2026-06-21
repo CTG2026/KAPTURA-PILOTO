@@ -815,6 +815,13 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
           <div style="font-size:10px;color:var(--muted);margin-bottom:4px">CARGO DEL CONTACTO</div>
           <input id="setup-fc-cargo" type="text" placeholder="Ej: Jefe de bodega, Gerente de logística" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:12px;color:var(--text);font-family:inherit">
         </div>
+        <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:12px">
+          <div style="font-size:10px;font-weight:800;color:var(--gold);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px">Comisión Corretaje</div>
+          <div>
+            <div style="font-size:10px;color:var(--muted);margin-bottom:4px">COMISIÓN CORRETAJE (%) — se calcula sobre tarifa + IVA</div>
+            <input id="setup-fc-comision-gen" type="number" step="0.5" placeholder="Ej: 5" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:12px;color:var(--text);font-family:inherit">
+          </div>
+        </div>
         <button onclick="setupAgregarCliente()" style="width:100%;background:var(--gold);border:none;border-radius:8px;padding:12px;font-size:14px;font-weight:700;color:#000;cursor:pointer">GUARDAR CLIENTE</button>
       </div>
     </div>
@@ -3199,8 +3206,8 @@ async function calcCostos() {
   const clienteSvc = DB.servicios[svcActivoIdx]?.cliente||'';
   const cliData    = DB.clientes?.find(c2 => (c2.nombre||'').toLowerCase() === clienteSvc.toLowerCase());
   const comGenPct  = parseFloat(cliData?.comision_generador_pct||cliData?.comision_generador||0);
-  const comGenBase = cliData?.comision_generador_base||'neta';
-  const baseCalc   = comGenBase === 'iva' ? ingreso * 1.19 : ingreso;
+  // Comisión corretaje siempre sobre tarifa + IVA
+  const baseCalc = ingreso * 1.19;
   const comGenAuto = comGenPct > 0 ? Math.round(baseCalc * comGenPct / 100) : 0;
   const comGenEl   = document.getElementById('cos-comision-gen');
   const otrosEl    = document.getElementById('cos-otros');
@@ -4034,6 +4041,10 @@ function imprimirInforme() {
         <div class="fld"><label class="lbl">Contacto</label><input class="inp" id="edit-cli-contacto" type="text" placeholder="Nombre contacto"></div>
         <div class="fld"><label class="lbl">Cargo</label><input class="inp" id="edit-cli-cargo" type="text" placeholder="Cargo del contacto"></div>
       </div>
+      <div class="fld">
+        <label class="lbl">Comisión Corretaje (%) — sobre tarifa + IVA</label>
+        <input class="inp" id="edit-cli-comision-gen" type="number" step="0.5" placeholder="Ej: 5">
+      </div>
     </div>
     <div class="modal-ftr">
       <button class="btn btn-ghost" onclick="cerrar('modal-editar-cliente')">← Volver</button>
@@ -4725,6 +4736,7 @@ async function setupEditarCliente(rut) {
   set('edit-cli-email',     c.email);
   set('edit-cli-contacto',  c.contacto);
   set('edit-cli-cargo',     c.cargo_contacto||'');
+  set('edit-cli-comision-gen', c.comision_generador_pct||c.comision_generador||'');
   document.getElementById('edit-cli-rut-original').value = c.rut||c.nombre;
   document.getElementById('modal-editar-cliente').style.display = 'flex';
 }
@@ -4741,8 +4753,9 @@ async function setupGuardarEdicionCliente() {
   const contacto = document.getElementById('edit-cli-contacto').value.trim();
   const cargo    = document.getElementById('edit-cli-cargo').value.trim();
   if(!nombre) { toast('El nombre es obligatorio'); return; }
+  const comGenPct = parseFloat(document.getElementById('edit-cli-comision-gen')?.value)||0;
   const {error} = await supa.from('kaptura_clientes')
-    .update({nombre, rut, ciudad, direccion:dir, telefono:tel, email, contacto, cargo_contacto:cargo})
+    .update({nombre, rut, ciudad, direccion:dir, telefono:tel, email, contacto, cargo_contacto:cargo, comision_generador_pct:comGenPct, comision_generador_base:'iva'})
     .eq('empresa', emp).eq('rut', rutOriginal);
   if(error) { toast('Error: '+error.message); return; }
   toast('✓ Cliente actualizado');
@@ -5493,6 +5506,10 @@ iniciarLogin();
       <div class="fld2">
         <div class="fld"><label class="lbl">Contacto</label><input class="inp" id="edit-cli-contacto" type="text" placeholder="Nombre contacto"></div>
         <div class="fld"><label class="lbl">Cargo</label><input class="inp" id="edit-cli-cargo" type="text" placeholder="Cargo del contacto"></div>
+      </div>
+      <div class="fld">
+        <label class="lbl">Comisión Corretaje (%) — sobre tarifa + IVA</label>
+        <input class="inp" id="edit-cli-comision-gen" type="number" step="0.5" placeholder="Ej: 5">
       </div>
     </div>
     <div class="modal-ftr">
