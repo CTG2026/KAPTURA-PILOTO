@@ -1049,8 +1049,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       <div class="fld">
         <label class="lbl">Tipo de Operación</label>
         <select class="inp" id="asig-tipo-operacion">
-          <option value="con_carro">🚛 Con carro (rendimiento según flota)</option>
-          <option value="sin_carro">🚚 Sin carro (3.5 km/lt)</option>
+          <option value="">Selecciona equipo...</option>
         </select>
       </div>
       <div class="fld">
@@ -2495,6 +2494,24 @@ async function abrirAsignar() {
   }
   document.getElementById('wrap-origen-custom').style.display = 'none';
   document.getElementById('wrap-cliente-custom').style.display = 'none';
+  // Poblar tipo operacion desde equipos en SETUP
+  const selTipoOp = document.getElementById('asig-tipo-operacion');
+  if(selTipoOp) {
+    selTipoOp.innerHTML = '<option value="">Selecciona equipo...</option>';
+    (DB.flota||[]).filter(f=>f.activo!==false).forEach(function(f) {
+      const tipoLabel = (f.tipo||'').replace(/_/g,' ');
+      const opt = document.createElement('option');
+      opt.value = f.patente+'|'+(f.tipo||'con_carro');
+      opt.textContent = f.patente + (tipoLabel ? ' - '+tipoLabel : '');
+      selTipoOp.appendChild(opt);
+    });
+    const optSin = document.createElement('option');
+    optSin.value = 'sin_carro';
+    optSin.textContent = 'Sin carro';
+    selTipoOp.appendChild(optSin);
+  }
+  const sAsig = DB.servicios[svcActivoIdx];
+  if(sAsig) obsRenderHilo(document.getElementById('asig-obs-hilo'), obsParseHilo(sAsig.notas||''));
   document.getElementById('modal-asignar').style.display = 'flex';
 }
 function checkOtroOrigen() {
@@ -2532,7 +2549,13 @@ async function guardarAsignacion() {
     DB.clientes.push({nombre:clienteNew});
   }
   const puntoInicio   = document.getElementById('asig-punto-inicio').value;
-  const tipoOperacion = document.getElementById('asig-tipo-operacion').value;
+  const tipoRaw = document.getElementById('asig-tipo-operacion').value;
+  const tipoOperacion = tipoRaw.includes('|') ? tipoRaw.split('|')[1] : tipoRaw;
+  // Si el tipo incluye patente, usarla como patente del servicio
+  if(tipoRaw.includes('|') && !patente) {
+    const patenteFromTipo = tipoRaw.split('|')[0];
+    document.getElementById('asig-patente').value = patenteFromTipo;
+  }
   const svId = await siguienteId();
   const nuevo = { servicio_id:svId, patente, conductor, cliente, origen, fecha, estado:'asignado', margen_servicio:0, puntos_entrega:0, punto_inicio:puntoInicio, tipo_operacion:tipoOperacion, empresa: DB._empresa||'global_solutions' };
   const {data:inserted, error} = await supa.from('servicios_piloto').insert(nuevo).select();
