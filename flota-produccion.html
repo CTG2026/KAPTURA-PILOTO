@@ -2340,6 +2340,7 @@ function cardHTML(s,i) {
       ${s.estado==='asignado' ? `<button class="btn btn-navy btn-sm" onclick="iniciarSvc(${i})">▶ Iniciar</button>` : ''}
       ${['en_proceso','registrando'].includes(s.estado) ? `<button class="btn btn-purple btn-sm" onclick="verServicio(${i})">📋 Registrar</button>` : ''}
       ${['borrador','ejecutado'].includes(s.estado) ? `<button class="btn btn-purple btn-sm" onclick="verServicio(${i})">📋 Registrar</button><button class="btn btn-green btn-sm" onclick="abrirCierre(${i})">🔒 Cierre</button>` : ''}
+      ${s.estado==='cerrado' ? `<button class="btn btn-sm" style="background:rgba(201,168,76,0.15);color:var(--gold);border:1px solid rgba(201,168,76,0.3)" onclick="editarServicioCerrado(${i})">✏ Editar</button>` : ''}
       ${['confirmado','cerrado','borrador'].includes(s.estado) ? `<button class="btn btn-outline btn-sm" onclick="abrirInforme(${i})">📄 Informe</button>` : ''}
       ${(s._puntos||[]).some(p=>(p.guias||[]).length>0||p.num_guia) ? `<button class="btn btn-outline btn-sm" onclick="verGuias(${i})">🖼 Guías</button>` : ''}
       <button class="btn btn-red btn-sm" onclick="eliminarSvc(${i})">✕</button>
@@ -2387,6 +2388,7 @@ function filaHTML(s,i) {
       ${s.estado==='asignado' ? `<button class="btn btn-navy btn-sm" onclick="iniciarSvc(${i})">▶ Iniciar</button>` : ''}
       ${['en_proceso','registrando'].includes(s.estado) ? `<button class="btn btn-purple btn-sm" onclick="verServicio(${i})">📋 Registrar</button>` : ''}
       ${['borrador','ejecutado'].includes(s.estado) ? `<button class="btn btn-purple btn-sm" onclick="verServicio(${i})">📋 Registrar</button><button class="btn btn-green btn-sm" onclick="abrirCierre(${i})">🔒 Cierre</button>` : ''}
+      ${s.estado==='cerrado' ? `<button class="btn btn-sm" style="background:rgba(201,168,76,0.15);color:var(--gold);border:1px solid rgba(201,168,76,0.3)" onclick="editarServicioCerrado(${i})">✏ Editar</button>` : ''}
       ${['confirmado','cerrado','borrador'].includes(s.estado) ? `<button class="btn btn-outline btn-sm" onclick="abrirInforme(${i})">📄 Informe</button>` : ''}
       ${(s._puntos||[]).some(p=>(p.guias||[]).length>0||p.num_guia) ? `<button class="btn btn-outline btn-sm" onclick="verGuias(${i})">🖼 Guías</button>` : ''}
       <button class="btn btn-red btn-sm" onclick="eliminarSvc(${i})">✕</button>
@@ -3884,15 +3886,22 @@ async function abrirInforme(i) {
   <div style="overflow-x:auto;margin-bottom:16px">
   <table class="inf-table"><tbody>`;
 
+  // Calcular comisión corretaje para el informe
+  const cliInf     = DB.clientes?.find(c2 => (c2.nombre||'').toLowerCase() === (s.cliente||'').toLowerCase());
+  const comGenPctI = parseFloat(cliInf?.comision_generador_pct||cliInf?.comision_generador||0);
+  const comGenValI = comGenPctI > 0 ? Math.round((s.ingreso_total||s.tarifa_neta||0) * 1.19 * comGenPctI / 100) : 0;
+  const comisConduI = s.costo_comision || (s.ingreso_total ? Math.round((s.ingreso_total||0)*(parseFloat(DB.config.comision_conductor||DB.config['comision_conductor']||8)/100)) : null);
+
   const costoItems = [
-    ['Combustible',        s.costo_combustible || null],
-    ['TAG/Peajes',        s.costo_peajes || s.peajes_tag || null],
-    ['Costo Conductor',    s.costo_conductor || null],
-    ['Comisión Conductor', s.costo_comision || (s.tarifa_neta ? Math.round((s.tarifa_neta||0)*((parseFloat(DB.config.comision_conductor||8))/100)) : null)],
-    ['Costo Fijo',         s.costo_fijo_dia || null],
-    ['Mantención',         s.mantencion_prorrateada || s.costo_mantencion || (s.dias_servicio ? s.dias_servicio * parseInt(DB.config.mantencion||25000) : null)],
-    ['Viático',            s.costo_viaticos || null],
-    ['Factoring',          s.factoring > 0 ? s.factoring : null],
+    ['Combustible',         s.costo_combustible || null],
+    ['Peajes',              s.costo_peajes || s.peajes_tag || null],
+    ['Costo Conductor',     s.costo_conductor || null],
+    ['Comisión Conductor',  comisConduI],
+    ['Costo Fijo',          s.costo_fijo_dia || null],
+    ['Mantención',          s.costo_mantencion || s.mantencion_prorrateada || null],
+    ['Viático',             s.costo_viaticos || null],
+    ['Corretaje/Generador', comGenValI > 0 ? comGenValI : null],
+    ['Factoring',           s.factoring > 0 ? s.factoring : null],
   ];
   costoItems.forEach(([label, val]) => {
     if(!val && val !== 0) return;
