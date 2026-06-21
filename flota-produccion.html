@@ -19,7 +19,7 @@
   --white:#283432;
   --sh:0 1px 6px rgba(0,0,0,0.4);--shl:0 8px 40px rgba(0,0,0,0.6);
 }
-body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;text-transform:uppercase}
 .hdr{background:var(--surface);border-bottom:1px solid var(--border);padding:0 16px;display:flex;align-items:center;justify-content:space-between;height:52px;box-shadow:var(--sh);position:sticky;top:0;z-index:100}
 .logo{font-family:'DM Sans',sans-serif;font-size:22px;font-weight:900;color:var(--gold);letter-spacing:0.05em}
 .hdr-info{font-size:11px;color:var(--muted);font-weight:700;text-align:right;line-height:1.4}
@@ -85,9 +85,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .fld{display:flex;flex-direction:column;margin-bottom:10px}
 .fld2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
 .lbl{font-size:9px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
-.inp{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;padding:8px 10px;border:none;border-radius:6px;color:#000;background:var(--gold);outline:none;width:100%}
+.inp{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;padding:8px 10px;border:none;border-radius:6px;color:#000;background:var(--gold);outline:none;width:100%;text-transform:uppercase}
 .inp:focus{outline:2px solid var(--text);outline-offset:2px}
-.inp::placeholder{color:rgba(0,0,0,0.4)}.inp.pend{background:var(--gold);outline:2px solid var(--text)}.inp.ok{background:var(--green)}
+.inp::placeholder{color:rgba(0,0,0,0.4)}
+textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2px solid var(--text)}.inp.ok{background:var(--green)}
 .info-box{background:var(--bg);border-radius:8px;padding:10px 12px;margin-bottom:14px;border:1px solid var(--border)}
 .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:11px}
 .info-item .lbl2{color:var(--muted);font-weight:700;font-size:9px;text-transform:uppercase;letter-spacing:0.1em}
