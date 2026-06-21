@@ -3893,19 +3893,20 @@ async function abrirInforme(i) {
   const comisConduI = s.costo_comision || (s.ingreso_total ? Math.round((s.ingreso_total||0)*(parseFloat(DB.config.comision_conductor||DB.config['comision_conductor']||8)/100)) : null);
 
   const costoItems = [
-    ['Combustible',         s.costo_combustible || null],
-    ['Peajes',              s.costo_peajes || s.peajes_tag || null],
-    ['Costo Conductor',     s.costo_conductor || null],
-    ['Comisión Conductor',  comisConduI],
-    ['Costo Fijo',          s.costo_fijo_dia || null],
-    ['Mantención',          s.costo_mantencion || s.mantencion_prorrateada || null],
-    ['Viático',             s.costo_viaticos || null],
-    ['Corretaje/Generador', comGenValI > 0 ? comGenValI : null],
-    ['Factoring',           s.factoring > 0 ? s.factoring : null],
+    ['Combustible',         s.costo_combustible || 0],
+    ['Peajes',              s.costo_peajes || s.peajes_tag || 0],
+    ['Costo Conductor',     s.costo_conductor || 0],
+    ['Comisión Conductor',  comisConduI || 0],
+    ['Costo Fijo',          s.costo_fijo_dia || 0],
+    ['Mantención',          s.costo_mantencion || s.mantencion_prorrateada || 0],
+    ['Viático',             s.costo_viaticos || 0],
+    ['Corretaje/Generador', comGenValI || 0],
+    ['Factoring',           s.factoring || 0],
   ];
   costoItems.forEach(([label, val]) => {
-    if(!val && val !== 0) return;
-    html += `<tr><td style="color:rgba(255,255,255,0.7);padding:6px 8px">${label}</td><td style="text-align:right;font-weight:700;color:rgba(255,255,255,0.7);padding:6px 8px">${fmt(val)}</td></tr>`;
+    const v = val || 0;
+    const color = v > 0 ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.3)';
+    html += '<tr><td style="color:rgba(255,255,255,0.7);padding:6px 8px">'+label+'</td><td style="text-align:right;font-weight:700;color:'+color+';padding:6px 8px">'+fmt(v)+'</td></tr>';
   });
   html += `</tbody></table></div>
 
