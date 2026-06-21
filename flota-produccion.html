@@ -1231,6 +1231,18 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
         <div class="fld"><label class="lbl">Mantención <span style="font-size:8px;font-weight:800;background:var(--gold);color:var(--text);padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-mant" oninput="this.dataset.manual='1';calcCostos()" style=""></div>
         <div class="fld"><label class="lbl">Viático <span style="font-size:8px;font-weight:800;background:var(--gold);color:var(--text);padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-viatico" oninput="this.dataset.manual='1';calcCostos()" style=""></div>
       </div>
+      <!-- F OTROS COSTOS -->
+      <div class="section-ttl">💼 F — Otros Costos</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+        <div class="fld">
+          <label class="lbl">Corretaje/Generador <span style="font-size:8px;font-weight:800;background:var(--gold);color:#000;padding:1px 5px;border-radius:3px">AUTO</span></label>
+          <input class="inp" id="cos-comision-gen" type="number" placeholder="0" oninput="this.dataset.manual='1';calcCostos()">
+        </div>
+        <div class="fld">
+          <label class="lbl">Otros Costos</label>
+          <input class="inp" id="cos-otros" type="number" placeholder="0" oninput="calcCostos()">
+        </div>
+      </div>
       <!-- E FINANCIERO -->
       <div class="section-ttl">💳 E — Financiero</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
@@ -3183,7 +3195,19 @@ async function calcCostos() {
   document.getElementById('cos-factoring').value = fmt(factoring);
   document.getElementById('cos-ingreso').textContent = fmt(ingreso);
 
-  const costos = comb + peajes + condValFinal + comision + cfFinal + mantFinal + viatFinal + factoring;
+  // Comisión corretaje/generador — automática desde cliente
+  const clienteSvc = DB.servicios[svcActivoIdx]?.cliente||'';
+  const cliData    = DB.clientes?.find(c2 => (c2.nombre||'').toLowerCase() === clienteSvc.toLowerCase());
+  const comGenPct  = parseFloat(cliData?.comision_generador_pct||cliData?.comision_generador||0);
+  const comGenBase = cliData?.comision_generador_base||'neta';
+  const baseCalc   = comGenBase === 'iva' ? ingreso * 1.19 : ingreso;
+  const comGenAuto = comGenPct > 0 ? Math.round(baseCalc * comGenPct / 100) : 0;
+  const comGenEl   = document.getElementById('cos-comision-gen');
+  const otrosEl    = document.getElementById('cos-otros');
+  if(comGenEl && !comGenEl.dataset.manual) comGenEl.value = comGenAuto > 0 ? comGenAuto : '';
+  const comGenFinal = parseFloat((comGenEl?.value||'').replace(/[.$]/g,'').replace(/\./g,''))||0;
+  const otrosFinal  = parseFloat((otrosEl?.value||'').replace(/[.$]/g,'').replace(/\./g,''))||0;
+  const costos = comb + peajes + condValFinal + comision + cfFinal + mantFinal + viatFinal + factoring + comGenFinal + otrosFinal;
   const margen = ingreso - costos;
   const pct    = tarifa ? Math.round(margen/tarifa*100) : 0;
   const mEl = document.getElementById('cos-margen');
@@ -4624,7 +4648,7 @@ async function setupGuardarCostos() {
     {clave:'dias_operativos_'+emp,    valor:dias,          empresa:emp},
     {clave:'viatico_dia_'+emp,        valor:(document.getElementById('setup-viatico').value||'0').replace(/[^0-9]/g,''), empresa:emp},
     {clave:'fondo_contingencia_'+emp, valor:(document.getElementById('setup-fondo').value||'0').replace(/[^0-9]/g,''),  empresa:emp},
-    {clave:'comision_conductor_'+emp, valor:(document.getElementById('setup-comision-pct')?.value||'8').replace(/[^0-9.]/g,''), empresa:emp},
+    {clave:'comision_conductor_'+emp, valor:(document.getElementById('setup-comision-pct')?.value||'').replace(/[^0-9.]/g,''), empresa:emp},
     {clave:'sueldo_diario_'+emp,      valor:(document.getElementById('setup-sueldo-diario')?.value||'0').replace(/[^0-9]/g,''), empresa:emp},
   ];
   const {error} = await supa.from('kaptura_config').upsert(rows, {onConflict:'clave,empresa'});
