@@ -2684,7 +2684,27 @@ function verServicio(i) { abrirRegistrar(i); }
 function abrirRegistrar(i) {
   const s = DB.servicios[i];
   svcActivoIdx = i;
-  puntosData = s._puntos && s._puntos.length > 0 ? [...s._puntos] : [{tipo:null,destino:'',valor:null,num_guia:'',capturada:false,procesando:false}];
+  // Cargar puntos: primero desde notas (_puntos), si vacío usar puntos_asignados del coordinador
+  if(s._puntos && s._puntos.length > 0) {
+    puntosData = [...s._puntos];
+  } else if(s.puntos_asignados) {
+    try {
+      const asig = JSON.parse(s.puntos_asignados);
+      if(asig && asig.length > 0) {
+        puntosData = asig.map(p => ({
+          tipo: p.num === asig.length ? 'final' : 'intermedio',
+          destino: (p.nombre||'').toUpperCase(),
+          valor: null, num_guia: '', guias: [], capturada: false, procesando: false
+        }));
+      } else {
+        puntosData = [{tipo:null,destino:'',valor:null,num_guia:'',capturada:false,procesando:false}];
+      }
+    } catch(e) {
+      puntosData = [{tipo:null,destino:'',valor:null,num_guia:'',capturada:false,procesando:false}];
+    }
+  } else {
+    puntosData = [{tipo:null,destino:'',valor:null,num_guia:'',capturada:false,procesando:false}];
+  }
   document.getElementById('reg-id').textContent           = s.servicio_id||'—';
   document.getElementById('reg-sub').textContent          = `${s.patente} · ${s.conductor} · ${s.cliente}`;
   document.getElementById('reg-cliente-info').textContent = s.cliente||'—';
