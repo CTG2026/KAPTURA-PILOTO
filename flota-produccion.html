@@ -2385,7 +2385,7 @@ function filaHTML(s,i) {
   const costos    = s.total_costos ? fmt(s.total_costos) : '—';
   const margenVal = s.margen_servicio||s.margen||0;
   const margen    = margenVal ? fmt(margenVal) : '—';
-  const mColor    = margenVal >= 0 ? '#7EA87E' : '#B05A5A';
+  const mColor    = margenVal >= 0 ? 'var(--green)' : 'var(--danger)';
   return `<tr>
     <td style="font-family:'DM Sans',sans-serif;font-weight:800;color:var(--navy);${s.estado==='cerrado'?'cursor:pointer;text-decoration:underline dotted':''}" ${s.estado==='cerrado'?`onclick="editarServicioCerrado(${i})" title="Editar servicio"`:''}>${s.servicio_id||'—'}</td>
     <td>${s.fecha||'—'}</td>
