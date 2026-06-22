@@ -1200,7 +1200,7 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
 <div class="overlay" id="modal-costos" style="display:none">
   <div class="modal" style="max-width:700px">
     <div class="modal-hdr">
-      <div><div class="modal-ttl">Costos — <span id="cos-id"></span></div><div class="modal-sub" id="cos-sub"></div></div>
+      <div><div class="modal-ttl">Costos — <span id="cos-id"></span></div><div class="modal-sub" id="cos-sub"></div><div style="font-size:10px;color:var(--muted);margin-top:2px" id="cos-info"></div></div>
       <button class="modal-cls" onclick="cerrar('modal-costos')">✕</button>
     </div>
     <div class="modal-body">
@@ -3114,6 +3114,10 @@ async function irACostos() {
 
   document.getElementById('cos-id').textContent  = s.servicio_id||'—';
   document.getElementById('cos-sub').textContent = `${s.patente} · ${s.conductor} · ${s.cliente}`;
+  const pFinalCos = (s._puntos||[]).find(p=>p.tipo==='final');
+  const destinoCos = pFinalCos?.destino || s.destino || '—';
+  const cosInfoEl = document.getElementById('cos-info');
+  if(cosInfoEl) cosInfoEl.textContent = `${s.fecha||'—'} · ${s.origen||'—'} → ${destinoCos}`;
   // Cargar tabla de puntos editable y hilo de observaciones
   cosPuntosDetalleRender();
   obsRenderHilo(document.getElementById('cos-obs-hilo'), obsParseHilo(s.notas||''));
