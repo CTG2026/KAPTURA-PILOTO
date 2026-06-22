@@ -3971,7 +3971,7 @@ async function abrirInforme(i) {
 
   const costoItems = [
     ['Combustible',         s.costo_combustible || 0],
-    ['Peajes',              s.costo_peajes || s.peajes_tag || 0],
+    ['Peajes',              (s.costo_peajes||0) + (s.peajes_tag||0) > 0 ? (s.costo_peajes||0) || (s.peajes_tag||0) : 0],
     ['Costo Conductor',     s.costo_conductor || 0],
     ['Comisión Conductor',  comisConduI || 0],
     ['Costo Fijo',          s.costo_fijo_dia || 0],
@@ -4994,6 +4994,20 @@ async function setupAgregarTarifa() {
   cargarSetup();
 }
 
+async function setupEditarTarifa(id) {
+  const t = (DB.tarifarios||[]).find(x => x.id === id);
+  if(!t) { toast('No se encontró la tarifa'); return; }
+  document.getElementById('setup-tar-cliente').value = t.cliente||'';
+  document.getElementById('setup-tar-origen').value  = (t.origen||'').toUpperCase();
+  document.getElementById('setup-tar-destino').value = (t.destino||'').toUpperCase();
+  document.getElementById('setup-tar-valor').value   = t.tarifa_neta||'';
+  if(document.getElementById('setup-tar-punto')) document.getElementById('setup-tar-punto').value = t.valor_punto||'';
+  if(document.getElementById('setup-tar-nombre')) document.getElementById('setup-tar-nombre').value = t.descripcion||'';
+  document.getElementById('setup-tar-cliente').dataset.editId = id;
+  toast('✏ Edita y presiona + AGREGAR para guardar');
+  setTimeout(() => document.getElementById('setup-tar-cliente').scrollIntoView({behavior:'smooth', block:'center'}), 100);
+}
+
 async function setupEliminarTarifa(id) {
   if(!confirm('¿Eliminar esta tarifa?')) return;
   await supa.from('kaptura_tarifarios').delete().eq('id', id);
@@ -5100,6 +5114,7 @@ function renderSetupListaTarifas() {
       <div style="font-size:12px;color:var(--text)">${t.cliente||'—'} · ${t.origen||'—'} → ${t.destino||'—'}<span style="font-size:10px;color:var(--muted);margin-left:6px">✓</span></div>
       <div style="display:flex;align-items:center;gap:8px">
         <span style="font-size:13px;font-weight:800;color:var(--green)">$${Number(t.tarifa_neta||0).toLocaleString('es-CL')}</span>
+        <button data-tid="${t.id}" onclick="setupEditarTarifa(this.dataset.tid)" style="background:rgba(201,168,76,0.15);border:1px solid rgba(201,168,76,0.3);color:var(--gold);border-radius:5px;padding:3px 8px;font-size:10px;cursor:pointer;font-weight:700">✏</button>
         <button onclick="setupEliminarTarifa('${t.id}')" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:var(--danger);border-radius:5px;padding:3px 8px;font-size:10px;cursor:pointer">✕</button>
       </div>
     </div>`).join('');
