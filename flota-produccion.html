@@ -74,7 +74,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 }
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(4px);z-index:200;display:flex;align-items:flex-end;justify-content:center}
 @media(min-width:640px){.overlay{align-items:center;padding:20px}}
-.modal{background:var(--surface);border-radius:16px 16px 0 0;width:100%;max-height:95vh;overflow-y:auto;box-shadow:var(--shl);border:1px solid var(--border)}
+.modal{background:var(--surface);border-radius:16px 16px 0 0;width:100%;max-height:92vh;overflow-y:auto;box-shadow:var(--shl);border:1px solid var(--border);margin-top:auto}
 @media(min-width:640px){.modal{border-radius:16px;max-width:620px}}
 .modal-hdr{padding:14px 16px 12px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;position:sticky;top:0;background:var(--surface);z-index:1}
 .modal-ttl{font-family:'DM Sans',sans-serif;font-size:17px;font-weight:900;text-transform:uppercase;letter-spacing:0.05em;color:var(--gold)}
@@ -1135,6 +1135,7 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
         <div class="info-item"><div class="lbl2">PATENTE</div><div class="val" id="reg-patente-info">—</div></div>
         <div class="info-item"><div class="lbl2">FECHA INICIO</div><div class="val" id="reg-fecha-inicio-info">—</div></div>
         <div class="info-item"><div class="lbl2">ORIGEN</div><div class="val" id="reg-origen-info">—</div></div>
+        <div class="info-item"><div class="lbl2">DESTINO</div><div class="val" id="reg-destino-info">—</div></div>
         <div class="info-item"><div class="lbl2">CONDUCTOR</div><div class="val" id="reg-conductor-info">—</div></div>
       </div>
       <div style="margin-top:8px">
@@ -2687,6 +2688,9 @@ function abrirRegistrar(i) {
   document.getElementById('reg-patente-info').textContent = s.patente||'—';
   document.getElementById('reg-fecha-inicio-info').textContent = s.fecha||'—';
   document.getElementById('reg-origen-info').textContent  = s.origen||'—';
+  const pFinalReg = (s._puntos||[]).find(p=>p.tipo==='final');
+  const elDestReg = document.getElementById('reg-destino-info');
+  if(elDestReg) elDestReg.textContent = pFinalReg?.destino || s.destino || '—';
   document.getElementById('reg-conductor-info').textContent = s.conductor||'—';
   document.getElementById('reg-fecha-termino').value      = s._fecha_termino || s.fecha || hoyStr;
   const tipoEl = document.getElementById('reg-tipo-entrega');
