@@ -248,11 +248,11 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
       <div class="kpi"><div class="kpi-lbl">Servicios Hoy</div><div class="kpi-val" id="k-hoy">—</div><div class="kpi-sub" id="k-hoy-sub">—</div></div>
       <div class="kpi orange"><div class="kpi-lbl">Ejecutados Hoy</div><div class="kpi-val orange" id="k-ejec-hoy">—</div><div class="kpi-sub" id="k-ejec-mes">— este mes</div></div>
       <div class="kpi"><div class="kpi-lbl">Servicios Mes</div><div class="kpi-val" id="k-svcs-mes">—</div><div class="kpi-sub" id="k-svcs-mes-sub">acumulados</div></div>
-      <div class="kpi orange"><div class="kpi-lbl">Por Confirmar</div><div class="kpi-val orange" id="k-pend">—</div><div class="kpi-sub">borradores</div></div>
-      <div class="kpi green"><div class="kpi-lbl">Ingreso Mes</div><div class="kpi-val green" id="k-ingreso">—</div><div class="kpi-sub" id="k-ingreso-sub">—</div></div>
-      <div class="kpi red"><div class="kpi-lbl">Costos Mes</div><div class="kpi-val red" id="k-costos">—</div><div class="kpi-sub" id="k-costos-sub">—</div></div>
-      <div class="kpi green"><div class="kpi-lbl">Margen Teórico</div><div class="kpi-val green" id="k-margen">—</div><div class="kpi-sub" id="k-margen-sub">—</div></div>
-      <div class="kpi"><div class="kpi-lbl">Margen Prom.</div><div class="kpi-val" id="k-prom">—</div><div class="kpi-sub">por servicio</div></div>
+      <div class="kpi orange" id="kpi-por-confirmar"><div class="kpi-lbl">Por Confirmar</div><div class="kpi-val orange" id="k-pend">—</div><div class="kpi-sub">borradores</div></div>
+      <div class="kpi green" id="kpi-ingreso-mes"><div class="kpi-lbl">Ingreso Mes</div><div class="kpi-val green" id="k-ingreso">—</div><div class="kpi-sub" id="k-ingreso-sub">—</div></div>
+      <div class="kpi red" id="kpi-costos-mes"><div class="kpi-lbl">Costos Mes</div><div class="kpi-val red" id="k-costos">—</div><div class="kpi-sub" id="k-costos-sub">—</div></div>
+      <div class="kpi green" id="kpi-margen-teo"><div class="kpi-lbl">Margen Teórico</div><div class="kpi-val green" id="k-margen">—</div><div class="kpi-sub" id="k-margen-sub">—</div></div>
+      <div class="kpi" id="kpi-margen-prom"><div class="kpi-lbl">Margen Prom.</div><div class="kpi-val" id="k-prom">—</div><div class="kpi-sub">por servicio</div></div>
       <div class="kpi" id="k-margen-real-kpi"><div class="kpi-lbl">Margen Real</div><div class="kpi-val" id="k-margen-real">—</div><div class="kpi-sub" id="k-margen-real-sub">con costos reales</div></div>
     </div>
     <div class="filtro">
@@ -4536,6 +4536,11 @@ async function iniciarLogin() {
           // Ocultar botón + ASIGNAR y KPIs de gestión
           const btnAsig = document.getElementById('btn-asignar-nuevo');
           if(btnAsig) btnAsig.style.display = 'none';
+          // Ocultar KPIs que no corresponden al conductor
+          ['kpi-por-confirmar','kpi-ingreso-mes','kpi-costos-mes',
+           'kpi-margen-teo','kpi-margen-prom','k-margen-real-kpi'].forEach(id => {
+            const el = document.getElementById(id); if(el) el.style.display = 'none';
+          });
         }
         init();
         return;
