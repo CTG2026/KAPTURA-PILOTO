@@ -2465,7 +2465,9 @@ function poblarConfig() {
   const radioComb = document.getElementById(radioCombId);
   if(radioComb) { radioComb.checked = true; radioComb.dispatchEvent(new Event('change')); }
   document.getElementById('cfg-rend').value    = c.rendimiento||c.rendimiento_km_lt||2.5;
-  document.getElementById('cfg-cf').value      = c.costo_fijo||c.costo_fijo_dia||44000;
+  // Calcular y mostrar costo fijo dia: si hay valor diario directo usarlo, sino mensual/dias
+  const _cfDiaCfg = parseInt(c.costo_fijo_dia||0) || (parseInt(c.costo_fijo_mensual||0) > 0 ? Math.round(parseInt(c.costo_fijo_mensual)/parseInt(c.dias_operativos_mes||20)) : parseInt(c.costo_fijo||0) || 0);
+  document.getElementById('cfg-cf').value = _cfDiaCfg || '';
   if(document.getElementById('cfg-cf-mensual')) document.getElementById('cfg-cf-mensual').value = c.costo_fijo_mensual||3600000;
   if(document.getElementById('cfg-cf-dias-mes')) document.getElementById('cfg-cf-dias-mes').value = c.dias_operativos_mes||20;
   const modoGuardado = c.modo_costo_fijo||'manual';
@@ -3122,8 +3124,9 @@ async function irACostos() {
     }
     return 0;
   };
-  const cfMensual = getCfgNum(['costo_fijo_mensual','costo_fijo_mes','costo_fijo']);
+  const cfMensual = getCfgNum(['costo_fijo_mensual','costo_fijo_mes']);
   const diasOpMes = getCfgNum(['dias_operativos','dias_op']) || 20;
+  // cfDia: usar valor diario guardado explícitamente, o calcular desde mensual
   const cfDia     = getCfgNum(['costo_fijo_dia']) || (cfMensual > 0 ? Math.round(cfMensual / diasOpMes) : 0);
   // Mantención: km × (mant_costo ÷ mant_km) — se calcula en calcCostos() con km reales, aquí = 0
   const sueldoDiario = getCfgNum(['sueldo_diario','sueldo_conductor']) || 33000;
@@ -3208,7 +3211,8 @@ async function calcCostos() {
   const sueldoDia = getCN(['sueldo_diario','sueldo_conductor']) || 33000;
   const condVal = dias * sueldoDia;
   // Costo fijo: manual o automático
-  let cfDia = getCN(['costo_fijo_dia']) || (getCN(['costo_fijo_mensual','costo_fijo_mes']) > 0 ? Math.round(getCN(['costo_fijo_mensual','costo_fijo_mes']) / (getCN(['dias_operativos','dias_op'])||20)) : 0);
+  const cfMensualCC = getCN(['costo_fijo_mensual','costo_fijo_mes']);
+  let cfDia = getCN(['costo_fijo_dia']) || (cfMensualCC > 0 ? Math.round(cfMensualCC / (getCN(['dias_operativos','dias_op'])||20)) : 0);
   let cf = dias * cfDia; // default manual
   if((c.modo_costo_fijo||'manual') === 'automatico') {
     const svcActual = DB.servicios[svcActivoIdx];
@@ -4198,7 +4202,7 @@ async function guardarConfig() {
     {clave:'prorrateo_equipos', val:document.getElementById('cfg-prorrateo')?.value||'6'},
     {clave:'equipos_inversion', val:document.getElementById('cfg-equipos-inversion')?.value||''},
     {clave:'rendimiento',     val:document.getElementById('cfg-rend').value},
-    {clave:'costo_fijo',      val:document.getElementById('cfg-cf').value},
+    {clave:'costo_fijo_dia',   val:document.getElementById('cfg-cf').value},
     {clave:'modo_costo_fijo',  val:document.querySelector('input[name="modo-cf"]:checked')?.value||'manual'},
     {clave:'costo_fijo_mensual', val:document.getElementById('cfg-cf-mensual')?.value||''},
     {clave:'dias_operativos_mes', val:document.getElementById('cfg-cf-dias-mes')?.value||'20'},
