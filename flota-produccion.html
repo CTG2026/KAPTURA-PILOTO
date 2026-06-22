@@ -173,14 +173,14 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
 </header>
 
 <nav class="nav" id="nav" style="display:none">
-  <button class="ntab active" onclick="setTab('servicios',this)">Servicios</button>
-  <button class="ntab" onclick="setTab('liquidaciones',this)">Liquidaciones</button>
-  <button class="ntab" onclick="setTab('flota',this)">Flota</button>
-  <button class="ntab" onclick="setTab('clientes',this)">Clientes</button>
-  <button class="ntab" onclick="setTab('gastos',this)">Costos</button>
-  <button class="ntab" onclick="setTab('resultados',this)">Resultados</button>
-  <button class="ntab" onclick="setTab('informes',this)">Informes</button>
-  <button class="ntab" onclick="setTab('config',this)">Config</button>
+  <button class="ntab active" id="tab-btn-servicios" onclick="setTab('servicios',this)">Servicios</button>
+  <button class="ntab" id="tab-btn-liquidaciones" onclick="setTab('liquidaciones',this)">Liquidaciones</button>
+  <button class="ntab" id="tab-btn-flota" onclick="setTab('flota',this)">Flota</button>
+  <button class="ntab" id="tab-btn-clientes" onclick="setTab('clientes',this)">Clientes</button>
+  <button class="ntab" id="tab-btn-gastos" onclick="setTab('gastos',this)">Costos</button>
+  <button class="ntab" id="tab-btn-resultados" onclick="setTab('resultados',this)">Resultados</button>
+  <button class="ntab" id="tab-btn-informes" onclick="setTab('informes',this)">Informes</button>
+  <button class="ntab" id="tab-btn-config" onclick="setTab('config',this)">Config</button>
   <button class="ntab" id="tab-btn-setup" onclick="setTab('setup',this)" style="display:none">Setup</button>
 </nav>
 
@@ -261,7 +261,7 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
     </div>
     <div class="sec-hdr">
       <div class="sec-ttl">Servicios</div>
-      <button class="btn btn-navy" onclick="abrirAsignar()">+ Asignar</button>
+      <button class="btn btn-navy" id="btn-asignar-nuevo" onclick="abrirAsignar()">+ Asignar</button>
     </div>
     <div class="svc-list" id="cards-mobile"></div>
     <div class="desk-tbl">
@@ -4533,6 +4533,9 @@ async function iniciarLogin() {
             const el = document.getElementById(id);
             if(el) el.style.display = 'none';
           });
+          // Ocultar botón + ASIGNAR y KPIs de gestión
+          const btnAsig = document.getElementById('btn-asignar-nuevo');
+          if(btnAsig) btnAsig.style.display = 'none';
         }
         init();
         return;
@@ -4598,10 +4601,18 @@ function aplicarAccesoKaptura() {
   document.getElementById('mod-empresa-label').textContent = empNombre;
   // Aplicar bloqueo según rol
   const esConductor = _sessionUsuario.rol === 'conductor';
+  if(esConductor) {
+    ['tab-btn-liquidaciones','tab-btn-flota','tab-btn-clientes','tab-btn-gastos',
+     'tab-btn-resultados','tab-btn-informes','tab-btn-config'].forEach(id => {
+      const el = document.getElementById(id); if(el) el.style.display = 'none';
+    });
+    const btnAsig = document.getElementById('btn-asignar-nuevo');
+    if(btnAsig) btnAsig.style.display = 'none';
+  }
   const modFlota = document.getElementById('mod-flota');
   const modFlotaBadge = document.getElementById('mod-flota-badge');
   if(esConductor) {
-    modFlota.style.opacity = '0.5';
+    if(modFlota) modFlota.style.opacity = '0.5';
     modFlota.style.cursor = 'not-allowed';
     modFlotaBadge.textContent = '🔒 BLOQUEADO';
     modFlotaBadge.style.background = '#2A2A2A';
