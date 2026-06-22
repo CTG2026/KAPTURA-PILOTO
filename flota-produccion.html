@@ -1047,6 +1047,7 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
         <div class="fld"><label class="lbl">Fecha del Servicio</label><input class="inp" id="asig-fecha" type="date"></div>
       </div>
       <div class="fld" id="wrap-origen-custom" style="display:none"><label class="lbl">Especifica el origen</label><input class="inp" id="asig-origen-custom" placeholder="Ciudad de origen"></div>
+      <div class="fld"><label class="lbl">Destino Principal</label><input class="inp" id="asig-destino" type="text" placeholder="Ciudad de destino"></div>
       <div class="fld">
         <label class="lbl">Tipo de Operación</label>
         <select class="inp" id="asig-tipo-operacion">
@@ -4224,15 +4225,18 @@ function editarFaseCerrado(fase) {
   DB.servicios[i] = {...s, _estadoOriginal: estadoOriginal, estado: 'ejecutado'};
   if(fase === 'asignar') {
     svcActivoIdx = i;
-    // Poblar modal asignar con datos actuales
-    const sv = DB.servicios[i];
-    document.getElementById('asig-patente').value   = sv.patente||'';
-    document.getElementById('asig-conductor').value = sv.conductor||'';
-    document.getElementById('asig-cliente').value   = sv.cliente||'';
-    document.getElementById('asig-origen').value    = sv.origen||'';
-    document.getElementById('asig-fecha').value     = sv.fecha||hoyStr;
-    document.getElementById('asig-destino').value   = sv.destino||'';
-    document.getElementById('modal-asignar').style.display = 'flex';
+    // Usar la función completa que puebla todos los selects
+    abrirAsignar(i);
+    // Sobrescribir con datos del servicio existente
+    setTimeout(() => {
+      const sv = DB.servicios[i];
+      document.getElementById('asig-patente').value   = sv.patente||'';
+      document.getElementById('asig-conductor').value = sv.conductor||'';
+      document.getElementById('asig-cliente').value   = sv.cliente||'';
+      document.getElementById('asig-origen').value    = sv.origen||'';
+      document.getElementById('asig-fecha').value     = sv.fecha||hoyStr;
+      document.getElementById('asig-destino').value   = sv.destino||'';
+    }, 100);
   } else if(fase === 'registrar') {
     verServicio(i);
   } else if(fase === 'cierre') {
@@ -5507,17 +5511,41 @@ function obsParseHilo(notas) {
   return [];
 }
 
+async function obsEliminar(idx) {
+  const s = DB.servicios[svcActivoIdx];
+  if(!s) return;
+  const hilo = obsParseHilo(s.notas||'');
+  hilo.splice(parseInt(idx), 1);
+  hilo.forEach((o, i) => o.num = i + 1);
+  const hiloStr = JSON.stringify(hilo);
+  let notasNew = s.notas||'';
+  if(notasNew.includes('|_OBS:')) {
+    notasNew = notasNew.replace(/\|_OBS:.*?(?=\||$)/s, '|_OBS:'+hiloStr);
+  }
+  await supa.from('servicios_piloto').update({notas:notasNew}).eq('id',s.id);
+  s.notas = notasNew;
+  // Re-renderizar todos los hilos visibles
+  ['asig-obs-hilo','ini-obs-hilo','reg-obs-hilo','cos-obs-hilo'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el && el.children.length > 0) obsRenderHilo(el, obsParseHilo(notasNew));
+  });
+  toast('Observación eliminada');
+}
+
 function obsRenderHilo(hiloEl, obs) {
   if(!hiloEl) return;
   if(!obs || obs.length === 0) {
     hiloEl.innerHTML = '<div style="font-size:11px;color:var(--muted);padding:8px 0">Sin observaciones aún.</div>';
     return;
   }
-  hiloEl.innerHTML = obs.map(o => `
+  hiloEl.innerHTML = obs.map((o,idx) => `
     <div style="background:${o.rol==='coordinador'?'rgba(201,168,76,0.08)':'rgba(255,255,255,0.04)'};border:1px solid var(--border);border-left:3px solid ${o.rol==='coordinador'?'var(--gold)':'var(--green)'};border-radius:6px;padding:8px 10px;margin-bottom:6px">
-      <div style="display:flex;justify-content:space-between;margin-bottom:4px">
-        <span style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;color:${o.rol==='coordinador'?'var(--gold)':'var(--green)'}">${o.rol==='coordinador'?'📋 Coordinador':'🚛 Conductor'} · ${o.fase||''}</span>
-        <span style="font-size:9px;color:var(--muted)">${o.ts?new Date(o.ts).toLocaleString('es-CL',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):''}</span>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <span style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;color:${o.rol==='coordinador'?'var(--gold)':'var(--green)'}">#${o.num||idx+1} · ${o.rol==='coordinador'?'Coordinador':'Conductor'} · ${o.fase||''}</span>
+        <div style="display:flex;align-items:center;gap:6px">
+          <span style="font-size:9px;color:var(--muted)">${o.ts?new Date(o.ts).toLocaleString('es-CL',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):''}</span>
+          <button data-idx="${idx}" onclick="obsEliminar(this.dataset.idx)" style="background:rgba(239,68,68,0.2);border:1px solid rgba(239,68,68,0.3);color:var(--danger);border-radius:4px;padding:1px 6px;cursor:pointer;font-size:10px">✕</button>
+        </div>
       </div>
       <div style="font-size:12px;color:var(--text)">${o.texto}</div>
     </div>`).join('');
