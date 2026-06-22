@@ -2116,7 +2116,13 @@ async function init() {
     DB.conductores = c.data  || [];
     DB.clientes    = cl.data || [];
     DB.tarifarios  = t.data  || [];
-    DB.servicios = (s.data || []).map(svc => {
+    let _rawServicios = (s.data || []);
+    // Si es conductor, filtrar solo sus servicios asignados
+    if(_sessionUsuario?.rol === 'conductor') {
+      const nomCond = (_sessionUsuario.nombre||_sessionUsuario.conductor_nombre||'').trim().toUpperCase();
+      _rawServicios = _rawServicios.filter(sv => (sv.conductor||'').trim().toUpperCase() === nomCond);
+    }
+    DB.servicios = _rawServicios.map(svc => {
       const notas = svc.notas || '';
       const marker = notas.includes('|_PUNTOS:') ? '|_PUNTOS:' : notas.includes('_PUNTOS:') ? '_PUNTOS:' : null;
       if(marker) {
@@ -4519,6 +4525,14 @@ async function iniciarLogin() {
         DB._empresa = sess.empresa;
         if(['coordinador','controller','administrador'].includes(sess.rol)) {
           document.getElementById('tab-btn-setup').style.display = '';
+        }
+        if(sess.rol === 'conductor') {
+          // Ocultar tabs que no corresponden al conductor
+          ['tab-btn-liquidaciones','tab-btn-flota','tab-btn-clientes','tab-btn-gastos',
+           'tab-btn-resultados','tab-btn-informes','tab-btn-config'].forEach(id => {
+            const el = document.getElementById(id);
+            if(el) el.style.display = 'none';
+          });
         }
         init();
         return;
