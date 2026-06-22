@@ -1249,6 +1249,7 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
         <div class="fld"><label class="lbl">Costo fijo/día <span style="font-size:8px;font-weight:800;background:var(--gold);color:var(--text);padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-cf" oninput="this.dataset.manual='1';calcCostos()" style=""></div>
         <div class="fld"><label class="lbl">Mantención <span style="font-size:8px;font-weight:800;background:var(--gold);color:var(--text);padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-mant" oninput="this.dataset.manual='1';calcCostos()" style=""></div>
         <div class="fld"><label class="lbl">Viático <span style="font-size:8px;font-weight:800;background:var(--gold);color:var(--text);padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-viatico" oninput="this.dataset.manual='1';calcCostos()" style=""></div>
+        <div class="fld"><label class="lbl">Reserva Contingencia <span style="font-size:8px;font-weight:800;background:var(--gold);color:var(--text);padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-contingencia" oninput="this.dataset.manual='1';calcCostos()" style=""></div>
       </div>
       <!-- F OTROS COSTOS -->
       <div class="section-ttl">💼 F — Otros Costos</div>
@@ -3135,6 +3136,9 @@ async function irACostos() {
   document.getElementById('cos-cf').value        = fmt(dias * cfDia);
   document.getElementById('cos-mant').value      = fmt(0);
   document.getElementById('cos-viatico').value   = fmt(dias * viaticoDia);
+  const contingenciaMes = getCfgNum(['fondo_contingencia','contingencia']);
+  const reservaContingencia = contingenciaMes > 0 ? Math.round(contingenciaMes / diasOpMes) : 0;
+  document.getElementById('cos-contingencia').value = fmt(reservaContingencia);
 
   // Show ingreso from puntos
   const final = puntos.find(p=>p.tipo==='final');
@@ -3310,7 +3314,8 @@ async function calcCostos() {
   if(comGenEl && !comGenEl.dataset.manual) comGenEl.value = comGenAuto > 0 ? comGenAuto : '';
   const comGenFinal = parseFloat((comGenEl?.value||'').replace(/[.$]/g,'').replace(/\./g,''))||0;
   const otrosFinal  = parseFloat((otrosEl?.value||'').replace(/[.$]/g,'').replace(/\./g,''))||0;
-  const costos = comb + _peajesCalc + condValFinal + comision + cfFinal + mantFinal + viatFinal + factoring + comGenFinal + otrosFinal;
+  const contFinal = parseFloat((document.getElementById('cos-contingencia')?.value||'').replace(/\./g,'').replace(/[$]/g,''))||0;
+  const costos = comb + _peajesCalc + condValFinal + comision + cfFinal + mantFinal + viatFinal + factoring + comGenFinal + otrosFinal + contFinal;
   const margen = ingreso - costos;
   const pct    = tarifa ? Math.round(margen/tarifa*100) : 0;
   const mEl = document.getElementById('cos-margen');
@@ -3810,6 +3815,7 @@ async function guardarCostosBorrador() {
     destino: destinoFinal,
     tarifa_neta:tarifa||null, ingreso_total:ingreso||null, dias_servicio:dias, costo_combustible:comb,
     costo_conductor:condVal, costo_viaticos:viat, costo_fijo_dia:cf,
+    costo_contingencia:parseFloat((document.getElementById('cos-contingencia')?.value||'').replace(/\./g,'').replace(/[$]/g,''))||0,
     costo_mantencion:mant, factoring:fact, total_costos:costos,
     margen_servicio:margen, margen:margen,
     km_base_carga:kmVacioIda, km_carga_destino:kmCargado, km_retorno:kmRetorno,
@@ -3821,6 +3827,7 @@ async function guardarCostosBorrador() {
     fecha_termino: fechaTerm||null,
     peajes_tag:tag, costo_peajes:_peajesCalc, dias_servicio:dias,
     costo_conductor:condVal, costo_viaticos:viat, costo_fijo_dia:cf,
+    costo_contingencia:parseFloat((document.getElementById('cos-contingencia')?.value||'').replace(/\./g,'').replace(/[$]/g,''))||0,
     costo_mantencion:mant, factoring:fact,
     km_base_carga:kmVacioIda, km_carga_destino:kmCargado, km_retorno:kmRetorno,
     margen_servicio:margen, margen,
@@ -3969,6 +3976,7 @@ async function abrirInforme(i) {
     ['Comisión Conductor',  comisConduI || 0],
     ['Costo Fijo',          s.costo_fijo_dia || 0],
     ['Mantención',          s.costo_mantencion || s.mantencion_prorrateada || 0],
+    ['Reserva Contingencia', s.costo_contingencia || 0],
     ['Viático',             s.costo_viaticos || 0],
     ['Corretaje/Generador', comGenValI || 0],
     ['Factoring',           s.factoring || 0],
