@@ -2611,7 +2611,8 @@ async function guardarAsignacion() {
   const puntosAsigStr = puntosAsig.length > 0 ? JSON.stringify(puntosAsig) : null;
   const horaInicio  = document.getElementById('asig-hora-inicio').value || null;
   const horaLlegada = document.getElementById('asig-hora-llegada').value || null;
-  const nuevo = { servicio_id:svId, patente, conductor, cliente, origen, fecha, estado:'asignado', margen_servicio:0, puntos_entrega:puntosAsig.length, punto_inicio:puntoInicio, tipo_operacion:tipoOperacion, empresa: DB._empresa||'global_solutions', puntos_asignados: puntosAsigStr, hora_inicio_asignada: horaInicio, hora_llegada_estimada: horaLlegada };
+  const destino = document.getElementById('asig-destino').value.trim();
+  const nuevo = { servicio_id:svId, patente, conductor, cliente, origen, destino: destino||null, fecha, estado:'asignado', margen_servicio:0, puntos_entrega:puntosAsig.length, punto_inicio:puntoInicio, tipo_operacion:tipoOperacion, empresa: DB._empresa||'global_solutions', puntos_asignados: puntosAsigStr, hora_inicio_asignada: horaInicio, hora_llegada_estimada: horaLlegada };
   const {data:inserted, error} = await supa.from('servicios_piloto').insert(nuevo).select();
   if(error) { toast('Error: '+error.message); return; }
   let svcInsertado = inserted?.[0];
@@ -2638,12 +2639,22 @@ function iniciarSvc(i) {
   document.getElementById('ini-origen').textContent    = s.origen||'—';
   document.getElementById('ini-fecha-inicio').value    = s.fecha||hoyStr;
   // Destino y hora asignada
+  // Destino: desde s.destino o último punto asignado
   const elDestIni = document.getElementById('ini-destino');
-  if(elDestIni) elDestIni.textContent = s.destino || '—';
+  if(elDestIni) {
+    let destinoMostrar = s.destino || '';
+    if(!destinoMostrar && s.puntos_asignados) {
+      try {
+        const pts = JSON.parse(s.puntos_asignados);
+        if(pts.length > 0) destinoMostrar = pts[pts.length-1].nombre||'';
+      } catch(e) {}
+    }
+    elDestIni.textContent = destinoMostrar || '—';
+  }
   const elHoraAsig = document.getElementById('ini-hora-asignada');
   if(elHoraAsig) elHoraAsig.textContent = s.hora_inicio_asignada || '—';
-  // Precargar hora en campo editable si hay hora asignada
-  if(s.hora_inicio_asignada) document.getElementById('ini-hora').value = s.hora_inicio_asignada;
+  // NO precargar hora en campo editable — el conductor ingresa su hora real de salida
+  document.getElementById('ini-hora').value = '';
   // Mostrar puntos asignados por coordinador
   const elPuntosIni = document.getElementById('ini-puntos-asignados');
   if(elPuntosIni) {
