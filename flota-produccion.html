@@ -1052,6 +1052,12 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
         <div class="fld"><label class="lbl">Hora Llegada Estimada</label><input class="inp" id="asig-hora-llegada" type="time"></div>
       </div>
       <div class="fld"><label class="lbl">Destino Principal</label><input class="inp" id="asig-destino" type="text" placeholder="Ciudad de destino"></div>
+      <!-- Puntos de entrega -->
+      <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px">
+        <div style="font-size:9px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);margin-bottom:8px">Puntos de Entrega</div>
+        <div id="asig-puntos-lista"></div>
+        <button class="btn btn-outline btn-sm btn-full" onclick="asigAgregarPunto()" id="asig-btn-agregar-punto">+ Guardar Punto</button>
+      </div>
       <div class="fld">
         <label class="lbl">Tipo de Operación</label>
         <select class="inp" id="asig-tipo-operacion">
@@ -1066,12 +1072,7 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
         </select>
         <div style="font-size:10px;color:var(--muted);margin-top:4px" id="asig-punto-inicio-hint"></div>
       </div>
-      <!-- Puntos de entrega -->
-      <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px">
-        <div style="font-size:9px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);margin-bottom:8px">Puntos de Entrega</div>
-        <div id="asig-puntos-lista"></div>
-        <button class="btn btn-outline btn-sm btn-full" onclick="asigAgregarPunto()" id="asig-btn-agregar-punto">+ Agregar Punto</button>
-      </div>
+
     </div>
 
       <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px">
