@@ -3774,8 +3774,9 @@ async function guardarCostosBorrador() {
   const kmTeoVta = pN('cos-km-teo-vta');
   const kmEfectivo = km > 0 ? km : (kmTeoIda + kmTeoVta);
 
-  let tag    = kmEfectivo > 0 ? pN('cos-tag') : 0;
-  let peajes = kmEfectivo > 0 ? tag + pN('cos-peajes') : 0;
+  // Peajes y TAG se leen siempre desde el campo — son independientes del km
+  let tag    = pN('cos-tag');
+  let peajes = tag + pN('cos-peajes');
 
   // Leer puntos desde memoria o Supabase
   let puntos = s._puntos || puntosData || [];
@@ -3813,9 +3814,8 @@ async function guardarCostosBorrador() {
   const kmCargado  = parseFloat(document.getElementById('cos-km-cargado')?.value)||0;
   const kmRetorno  = parseFloat(document.getElementById('cos-km-retorno')?.value)||0;
 
-  // Regla: si km_total = 0, no guardar TAG/Peajes ni corredor
-  if(km === 0) {
-    peajes = 0; tag = 0;
+  // Si km=0 y no hay km teórico, limpiar corredor (pero mantener peajes manuales)
+  if(km === 0 && kmEfectivo === 0) {
     _lastDetectadosTag = [];
     _lastCorredorNombre = '';
   }
