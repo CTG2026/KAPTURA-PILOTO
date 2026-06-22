@@ -1227,7 +1227,8 @@ async function _cargarPanelAdminLegacy() {
   Object.entries(empresas).forEach(([emp, data]) => {
     const roles = data.usuarios.map(u => u.rol);
     const goData = data.go;
-    const nombre = goData?.nombre || data.usuarios[0]?.nombre || emp;
+    const coordUser = data.usuarios.find(u => u.rol === 'coordinador' || u.rol === 'controller') || data.usuarios[0];
+    const nombre = goData?.nombre || coordUser?.nombre || emp;
     const pines = data.usuarios.map(u => u.pin).join(', ');
     if(roles.includes('coordinador') || roles.includes('controller')) flotaEmpresas.push({emp, nombre, pines, data});
     else if(roles.includes('pro')) proEmpresas.push({emp, nombre, pines, data});
