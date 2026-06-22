@@ -1096,7 +1096,11 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
         <div class="info-item"><div class="lbl2">PATENTE</div><div class="val" id="ini-patente">—</div></div>
         <div class="info-item"><div class="lbl2">CONDUCTOR</div><div class="val" id="ini-conductor">—</div></div>
         <div class="info-item"><div class="lbl2">ORIGEN</div><div class="val" id="ini-origen">—</div></div>
+        <div class="info-item"><div class="lbl2">DESTINO</div><div class="val" id="ini-destino">—</div></div>
+        <div class="info-item"><div class="lbl2">HORA ASIGNADA</div><div class="val" id="ini-hora-asignada">—</div></div>
       </div></div>
+      <!-- Puntos asignados por coordinador -->
+      <div id="ini-puntos-asignados" style="margin-bottom:10px"></div>
       <div class="fld2">
         <div class="fld"><label class="lbl">Fecha inicio</label><input class="inp" id="ini-fecha-inicio" type="date" readonly style=""></div>
         <div class="fld"><label class="lbl">Hora inicio</label><input class="inp" id="ini-hora" type="time"></div>
@@ -2633,6 +2637,26 @@ function iniciarSvc(i) {
   document.getElementById('ini-conductor').textContent = s.conductor||'—';
   document.getElementById('ini-origen').textContent    = s.origen||'—';
   document.getElementById('ini-fecha-inicio').value    = s.fecha||hoyStr;
+  // Destino y hora asignada
+  const elDestIni = document.getElementById('ini-destino');
+  if(elDestIni) elDestIni.textContent = s.destino || '—';
+  const elHoraAsig = document.getElementById('ini-hora-asignada');
+  if(elHoraAsig) elHoraAsig.textContent = s.hora_inicio_asignada || '—';
+  // Precargar hora en campo editable si hay hora asignada
+  if(s.hora_inicio_asignada) document.getElementById('ini-hora').value = s.hora_inicio_asignada;
+  // Mostrar puntos asignados por coordinador
+  const elPuntosIni = document.getElementById('ini-puntos-asignados');
+  if(elPuntosIni) {
+    try {
+      const pts = s.puntos_asignados ? JSON.parse(s.puntos_asignados) : [];
+      if(pts.length > 0) {
+        elPuntosIni.innerHTML = '<div style="font-size:9px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold);margin-bottom:6px">Puntos de Entrega</div>'
+          + pts.map(p => '<div style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:6px 10px;margin-bottom:4px;font-size:12px;font-weight:700">P'+p.num+' — '+p.nombre+'</div>').join('');
+      } else {
+        elPuntosIni.innerHTML = '';
+      }
+    } catch(e) { elPuntosIni.innerHTML = ''; }
+  }
   document.getElementById('modal-iniciar').style.display = 'flex';
   const sIni = DB.servicios[svcActivoIdx];
   if(sIni) obsRenderHilo(document.getElementById('ini-obs-hilo'), obsParseHilo(sIni.notas||''));
