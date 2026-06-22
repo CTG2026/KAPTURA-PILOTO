@@ -1025,7 +1025,7 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
     </div>
     <div class="modal-body">
       <div class="fld2">
-        <div class="fld"><label class="lbl">Equipo (Patente)</label><select class="inp" id="asig-patente"></select></div>
+        <div class="fld"><label class="lbl">Patente y Equipo</label><select class="inp" id="asig-patente"></select></div>
         <div class="fld"><label class="lbl">Conductor</label><select class="inp" id="asig-conductor"></select></div>
       </div>
       <div class="fld"><label class="lbl">Cliente</label><select class="inp" id="asig-cliente" onchange="checkOtroCliente()"></select></div>
@@ -1058,12 +1058,7 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
         <div id="asig-puntos-lista"></div>
         <button class="btn btn-outline btn-sm btn-full" onclick="asigAgregarPunto()" id="asig-btn-agregar-punto">+ Guardar Punto</button>
       </div>
-      <div class="fld">
-        <label class="lbl">Tipo de Operación</label>
-        <select class="inp" id="asig-tipo-operacion">
-          <option value="">Selecciona equipo...</option>
-        </select>
-      </div>
+
       <div class="fld">
         <label class="lbl">Punto de Inicio del Equipo</label>
         <select class="inp" id="asig-punto-inicio">
@@ -2441,7 +2436,10 @@ function renderClientes() {
 
 function poblarSelects() {
   document.getElementById('asig-patente').innerHTML =
-    DB.flota.map(f => `<option value="${f.patente}">${f.patente}</option>`).join('');
+    DB.flota.filter(f=>f.activo!==false).map(f => {
+      const tipo = (f.tipo||'').replace(/_/g,' ');
+      return `<option value="${f.patente}">${f.patente}${tipo ? ' — '+tipo : ''}</option>`;
+    }).join('');
   // Conductores: Tercero al final
   const conds = [...DB.conductores.filter(c=>!c.nombre.toLowerCase().includes('tercero')),
                  ...DB.conductores.filter(c=>c.nombre.toLowerCase().includes('tercero'))];
@@ -2520,21 +2518,7 @@ async function abrirAsignar() {
   document.getElementById('wrap-origen-custom').style.display = 'none';
   document.getElementById('wrap-cliente-custom').style.display = 'none';
   // Poblar tipo operacion desde equipos en SETUP
-  const selTipoOp = document.getElementById('asig-tipo-operacion');
-  if(selTipoOp) {
-    selTipoOp.innerHTML = '<option value="">Selecciona equipo...</option>';
-    (DB.flota||[]).filter(f=>f.activo!==false).forEach(function(f) {
-      const tipoLabel = (f.tipo||'').replace(/_/g,' ');
-      const opt = document.createElement('option');
-      opt.value = f.patente+'|'+(f.tipo||'con_carro');
-      opt.textContent = f.patente + (tipoLabel ? ' - '+tipoLabel : '');
-      selTipoOp.appendChild(opt);
-    });
-    const optSin = document.createElement('option');
-    optSin.value = 'sin_carro';
-    optSin.textContent = 'Sin carro';
-    selTipoOp.appendChild(optSin);
-  }
+
   // Limpiar campos al abrir
   const obsInputAsig = document.getElementById('asig-obs-input');
   if(obsInputAsig) obsInputAsig.value = '';
@@ -2614,13 +2598,9 @@ async function guardarAsignacion() {
     DB.clientes.push({nombre:clienteNew});
   }
   const puntoInicio   = document.getElementById('asig-punto-inicio').value;
-  const tipoRaw = document.getElementById('asig-tipo-operacion').value;
-  const tipoOperacion = tipoRaw.includes('|') ? tipoRaw.split('|')[1] : tipoRaw;
-  // Si el tipo incluye patente, usarla como patente del servicio
-  if(tipoRaw.includes('|') && !patente) {
-    const patenteFromTipo = tipoRaw.split('|')[0];
-    document.getElementById('asig-patente').value = patenteFromTipo;
-  }
+  // Obtener tipo desde el equipo seleccionado en DB.flota
+  const equipoSel = DB.flota.find(f => f.patente === patente);
+  const tipoOperacion = equipoSel?.tipo || 'con_carro';
   const svId = await siguienteId();
   // Guardar puntos de asignación
   const puntosAsig = _asigPuntos.filter(p=>p.nombre).map(p=>({num:p.num, nombre:p.nombre, tipo:'entrega'}));
