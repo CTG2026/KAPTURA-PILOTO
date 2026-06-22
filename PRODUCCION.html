@@ -1175,7 +1175,8 @@ async function adminIrA(modo) {
   const items=[];
   Object.entries(empresas).forEach(([emp,data])=>{
     const roles=data.usuarios.map(u=>u.rol);
-    const nombre=data.go?.nombre||data.usuarios[0]?.nombre||emp;
+    const coordUser=data.usuarios.find(u=>u.rol==='coordinador'||u.rol==='controller')||data.usuarios[0];
+    const nombre=data.go?.nombre||coordUser?.nombre||emp;
     if(modo==='flota' && (roles.includes('coordinador')||roles.includes('controller'))) items.push({emp,nombre,data});
     else if(modo==='go' && !roles.includes('coordinador')&&!roles.includes('pro')&&emp!=='nexus') items.push({emp,nombre,data,go:data.go});
     else if(modo==='pro' && roles.includes('pro')) items.push({emp,nombre,data});
