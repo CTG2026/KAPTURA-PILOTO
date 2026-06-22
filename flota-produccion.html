@@ -2985,7 +2985,8 @@ async function guardarBorrador() {
     puntos_entrega:puntosData.length,
     notas:'Retorno: '+((s.notas?.match(/Retorno: (\w+)/)||[])[1]||'base')+'|_PUNTOS:'+puntosJSON
   }).eq('id',s.id);
-  if(error) { toast('Error: '+error.message); return; }
+  if(error) { toast('Error: '+error.message); console.error('Supabase error:', JSON.stringify(error)); return; }
+  console.log('Update OK — guardando en memoria');
   DB.servicios[svcActivoIdx] = {...s, estado:'borrador', destino, num_guia:nguia, tarifa_neta:tarifa, ingreso_total:ingreso, _puntos:puntosData, _fecha_termino:fechaTerm};
   cerrar('modal-registrar'); renderServicios(); renderKPIs();
   toast(`✓ Borrador guardado — ${s.servicio_id}`);
@@ -3737,56 +3738,55 @@ async function cargarGPS() {
 async function guardarCostosBorrador() {
   const s = DB.servicios[svcActivoIdx];
   if(!s?.id) { toast('Error: sin ID'); return; }
-  const km     = parseFloat(document.getElementById('cos-km').value)||0;
-  const parseNum = v => parseFloat((v||'').toString().replace(/[$\.]/g,'').replace(/,/g,'.'))||0;
-  // Regla: si km = 0, no guardar TAG ni Peajes
-  let tag    = km > 0 ? parseNum(document.getElementById('cos-tag')?.value) : 0;
-  let peajes = km > 0 ? tag + parseNum(document.getElementById('cos-peajes')?.value) : 0;
-  const dias   = parseFloat(document.getElementById('cos-dias').value)||1;
+
+  // Leer TODOS los valores directamente desde los campos del formulario
+  const pN = id => {
+    const v = document.getElementById(id)?.value||'';
+    return parseFloat(v.replace(/\./g,'').replace(/[$,]/g,''))||0;
+  };
+
+  const km        = pN('cos-km');
+  const dias      = parseFloat(document.getElementById('cos-dias').value)||1;
   const fechaTerm = document.getElementById('cos-fecha-termino').value;
-  // Leer puntos frescos desde Supabase si no están en memoria
+
+  // Usar km teórico si no hay GPS
+  const kmTeoIda = pN('cos-km-teo-ida');
+  const kmTeoVta = pN('cos-km-teo-vta');
+  const kmEfectivo = km > 0 ? km : (kmTeoIda + kmTeoVta);
+
+  let tag    = kmEfectivo > 0 ? pN('cos-tag') : 0;
+  let peajes = kmEfectivo > 0 ? tag + pN('cos-peajes') : 0;
+
+  // Leer puntos desde memoria o Supabase
   let puntos = s._puntos || puntosData || [];
-  console.log('guardar - puntos en memoria:', puntos.length, JSON.stringify(puntos));
   if(puntos.length === 0) {
     const {data:svFresh} = await supa.from('servicios_piloto').select('notas,tarifa_neta,ingreso_total').eq('id',s.id).single();
-    console.log('guardar - notas desde Supabase:', svFresh?.notas?.substring(0,100));
     if(svFresh?.notas) {
       const marker = svFresh.notas.includes('|_PUNTOS:') ? '|_PUNTOS:' : svFresh.notas.includes('_PUNTOS:') ? '_PUNTOS:' : null;
-      if(marker) { try { puntos = JSON.parse(svFresh.notas.split(marker)[1]); console.log('guardar - puntos cargados:', puntos.length); } catch(e) { console.log('guardar - error parse:', e.message); } }
+      if(marker) { try { puntos = JSON.parse(svFresh.notas.split(marker)[1]); } catch(e) {} }
     }
   }
-  const final  = puntos.find(p=>p.tipo==='final');
-  const ints   = puntos.filter(p=>p.tipo==='intermedio');
-  const tarifa = final?.valor || s.tarifa_neta || 0;
+  const final    = puntos.find(p=>p.tipo==='final');
+  const ints     = puntos.filter(p=>p.tipo==='intermedio');
+  const tarifa   = final?.valor || s.tarifa_neta || 0;
   const valorPts = ints.reduce((a,p)=>a+(p.valor||0),0);
-  console.log('guardar - tarifa:', tarifa, 'valorPts:', valorPts, 'final:', JSON.stringify(final));
-  const c = DB.config;
-  // Usar rendimiento específico del equipo si existe, sino el global
-  const _flota2 = DB.flota.find(f => f.patente === svcPatenteActiva);
-  const rend = parseFloat(_flota2?.rendimiento_km_lt || c.rendimiento||2.5);
-  // Leer combustible desde el campo del formulario (ya calculado por calcCostos con precio Copec si aplica)
-  const combField = document.getElementById('cos-comb')?.value?.replace(/[.$]/g,'').replace(/\./g,'').replace(/,/g,'.') || '';
-  // Si km=0, combustible y mantención son 0 — no se puede calcular sin distancia
-  const comb = km > 0 ? (combField ? Math.round(parseFloat(combField)) : Math.round((km/rend)*(parseFloat(c.precio_litro||1300)))) : 0;
-  const condVal = parseFloat(document.getElementById('cos-conductor')?.value?.replace(/[.$]/g,'').replace(/\./g,''))||dias*parseInt(c.sueldo_conductor||33000);
-  const comision = parseFloat(document.getElementById('cos-comision').value)||0;
-  const cf   = parseFloat((document.getElementById('cos-cf')?.value||'').replace(/\./g,'').replace(/[$]/g,''))||0;
-  // Mantención = km × (mant_costo ÷ mant_km)
-  const mantCostoC  = parseInt(c.mant_costo||c.mantencion||0);
-  const mantKmC     = parseInt(c.mant_km||c.mant_cada_km||20000);
-  const mantAutoC   = km > 0 && mantCostoC > 0 && mantKmC > 0 ? Math.round(km * mantCostoC / mantKmC) : 0;
-  const mantManual  = document.getElementById('cos-mant')?.dataset?.manual === '1';
-  const mantRaw     = parseFloat((document.getElementById('cos-mant')?.value||'').replace(/[.$]/g,'').replace(/\./g,''))||0;
-  // Si km=0, mantención = 0 siempre (no se puede calcular sin km)
-  const mant = km > 0 ? (mantManual ? mantRaw : mantAutoC) : 0;
-  if(!mantManual) document.getElementById('cos-mant').value = fmt(mant);
-  const viat = parseFloat((document.getElementById('cos-viatico')?.value||'').replace(/\./g,'').replace(/[$]/g,''))||0;
+  const ingreso  = tarifa + valorPts;
+
+  // Leer costos directo desde campos — lo que ve el coordinador es lo que se guarda
+  const comb     = kmEfectivo > 0 ? pN('cos-comb') : 0;
+  const condVal  = pN('cos-conductor');
+  const comision = pN('cos-comision');
+  const cf       = pN('cos-cf');
+  const mant     = kmEfectivo > 0 ? pN('cos-mant') : 0;
+  const viat     = pN('cos-viatico');
+  const cont     = pN('cos-contingencia');
+  const corretaje = pN('cos-comision-gen');
+  const otros    = pN('cos-otros');
   const plazoSelG = document.getElementById('cos-plazo')?.value||'0';
-  const plazo = plazoSelG === 'manual' ? (parseFloat(document.getElementById('cos-plazo-manual')?.value)||0) : (parseFloat(plazoSelG)||0);
-  const fact  = plazo > 0 ? Math.round(tarifa*1.19*plazo/100) : 0;
-  const ingreso = tarifa + valorPts;
-  const costos  = comb+peajes+condVal+comision+cf+mant+viat+fact;
-  const margen  = ingreso - costos;
+  const plazo    = plazoSelG === 'manual' ? pN('cos-plazo-manual') : (parseFloat(plazoSelG)||0);
+  const fact     = plazo > 0 ? Math.round(tarifa*1.19*plazo/100) : 0;
+  const costos   = comb+peajes+condVal+comision+cf+mant+viat+cont+corretaje+otros+fact;
+  const margen   = ingreso - costos;
   const puntosJSON = JSON.stringify(puntos.map(p=>({tipo:p.tipo,destino:p.destino,valor:p.valor||0,num_guia:p.num_guia||'',guias:p.guias||[]})));
 
   const kmVacioIda = parseFloat(document.getElementById('cos-km-vacio-ida')?.value)||0;
@@ -3817,23 +3817,24 @@ async function guardarCostosBorrador() {
     destino: destinoFinal,
     tarifa_neta:tarifa||null, ingreso_total:ingreso||null, dias_servicio:dias, costo_combustible:comb,
     costo_conductor:condVal, costo_viaticos:viat, costo_fijo_dia:cf,
-    costo_contingencia:parseFloat((document.getElementById('cos-contingencia')?.value||'').replace(/\./g,'').replace(/[$]/g,''))||0,
+    costo_contingencia:cont,
     costo_comision_conductor:comision,
-    costo_corretaje:parseFloat((document.getElementById('cos-comision-gen')?.value||'').replace(/\./g,'').replace(/[$]/g,''))||0,
+    costo_corretaje:corretaje,
     costo_mantencion:mant, factoring:fact, total_costos:costos,
     margen_servicio:margen, margen:margen,
     km_base_carga:kmVacioIda, km_carga_destino:kmCargado, km_retorno:kmRetorno,
     notas: notasFinales
   }).eq('id',s.id);
-  if(error) { toast('Error: '+error.message); return; }
+  if(error) { toast('Error: '+error.message); console.error('Supabase error:', JSON.stringify(error)); return; }
+  console.log('Update OK — guardando en memoria');
   DB.servicios[svcActivoIdx] = {...s, estado:'borrador', km_total:km, tarifa_neta:tarifa,
     ingreso_total:ingreso, total_costos:costos, costo_combustible:comb,
     fecha_termino: fechaTerm||null,
     peajes_tag:tag, costo_peajes:peajes, dias_servicio:dias,
     costo_conductor:condVal, costo_viaticos:viat, costo_fijo_dia:cf,
-    costo_contingencia:parseFloat((document.getElementById('cos-contingencia')?.value||'').replace(/\./g,'').replace(/[$]/g,''))||0,
+    costo_contingencia:cont,
     costo_comision_conductor:comision,
-    costo_corretaje:parseFloat((document.getElementById('cos-comision-gen')?.value||'').replace(/\./g,'').replace(/[$]/g,''))||0,
+    costo_corretaje:corretaje,
     costo_mantencion:mant, factoring:fact,
     km_base_carga:kmVacioIda, km_carga_destino:kmCargado, km_retorno:kmRetorno,
     margen_servicio:margen, margen,
