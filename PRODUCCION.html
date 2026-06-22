@@ -1085,11 +1085,67 @@ async function validarPinGo() {
     }
     showScreen('screen-modo');
   } else {
+    // Verificar si es PIN de onboarding conductor de alguna empresa
+    const {data: pinCfg} = await supa.from('kaptura_config')
+      .select('empresa, valor').eq('clave', 'pin_onboarding_conductor');
+    const match = (pinCfg||[]).find(r => r.valor === _goPinIngresado);
+    if(match) {
+      window._onboardingConductorEmpresa = match.empresa;
+      document.getElementById('onb-cond-nombre').value = '';
+      document.getElementById('onb-cond-rut').value = '';
+      document.getElementById('onb-cond-licencia').value = '';
+      document.getElementById('onb-cond-pin').value = '';
+      document.getElementById('onb-cond-pin2').value = '';
+      document.getElementById('onb-cond-error').textContent = '';
+      showScreen('screen-onboarding-conductor');
+      return;
+    }
     const err = document.getElementById('go-pin-error');
     if(err) err.textContent = 'PIN incorrecto. Intenta de nuevo.';
     _goPinIngresado = '';
     actualizarDotsGo();
   }
+}
+
+async function confirmarOnboardingConductor() {
+  const nombre   = document.getElementById('onb-cond-nombre').value.trim().toUpperCase();
+  const rut      = document.getElementById('onb-cond-rut').value.trim();
+  const licencia = document.getElementById('onb-cond-licencia').value.trim();
+  const pin      = document.getElementById('onb-cond-pin').value.trim();
+  const pin2     = document.getElementById('onb-cond-pin2').value.trim();
+  const errEl    = document.getElementById('onb-cond-error');
+  const empresa  = window._onboardingConductorEmpresa;
+
+  if(!nombre)   { errEl.textContent = 'Ingresa tu nombre.'; return; }
+  if(!rut)      { errEl.textContent = 'Ingresa tu RUT.'; return; }
+  if(!licencia) { errEl.textContent = 'Ingresa tu número de licencia.'; return; }
+  if(!pin || pin.length !== 4 || isNaN(pin)) { errEl.textContent = 'PIN debe tener 4 dígitos.'; return; }
+  if(pin !== pin2) { errEl.textContent = 'Los PINs no coinciden.'; return; }
+  if(pin === '1234' || pin === '2345') { errEl.textContent = 'No puedes usar ese PIN.'; return; }
+
+  // Verificar PIN no en uso
+  const {data:existe} = await supa.from('kaptura_usuarios').select('pin').eq('pin', pin).single();
+  if(existe) { errEl.textContent = 'PIN en uso. Elige otro.'; return; }
+
+  const btn = document.getElementById('onb-cond-btn');
+  btn.textContent = 'Creando...'; btn.disabled = true;
+
+  // Insertar en kaptura_usuarios
+  const {error: e1} = await supa.from('kaptura_usuarios').insert({
+    pin, rol: 'conductor', empresa, nombre, activo: true, conductor_nombre: nombre
+  });
+  if(e1) { errEl.textContent = 'Error: '+e1.message; btn.textContent = 'CONFIRMAR'; btn.disabled=false; return; }
+
+  // Insertar en kaptura_conductores
+  await supa.from('kaptura_conductores').insert({
+    nombre, rut, empresa, activo: true, num_licencia: licencia
+  });
+
+  // Crear sesión y redirigir
+  localStorage.setItem('kaptura_session', JSON.stringify({
+    pin, empresa, rol: 'conductor', nombre, conductor_nombre: nombre
+  }));
+  window.location.href = 'flota-produccion.html';
 }
 
 async function cargarPanelAdmin() {
@@ -4193,5 +4249,46 @@ async function flotaAgregarCliente() {
   </div>
 </div>
 
+
+<!-- PANTALLA ONBOARDING CONDUCTOR -->
+<div class="screen" id="screen-onboarding-conductor" style="background:#0D0D0D;padding:0;min-height:100vh">
+  <div style="background:rgba(0,0,0,0.4);padding:14px 16px;border-bottom:1px solid #2A2A2A;display:flex;justify-content:space-between;align-items:center">
+    <div>
+      <div style="font-family:'DM Sans',sans-serif;font-size:18px;font-weight:900;color:#FF6B00">KAPTURA</div>
+      <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.5);letter-spacing:0.2em">REGISTRO CONDUCTOR</div>
+    </div>
+    <button onclick="showScreen('screen-pin-go');_goPinIngresado='';actualizarDotsGo();" style="background:transparent;border:1px solid #2A2A2A;border-radius:8px;padding:6px 12px;font-size:11px;color:rgba(255,255,255,0.5);cursor:pointer">← Volver</button>
+  </div>
+  <div style="padding:20px">
+    <div style="font-family:'DM Sans',sans-serif;font-size:24px;font-weight:900;color:#fff;margin-bottom:6px">Crea tu acceso</div>
+    <div style="font-size:13px;color:rgba(255,255,255,0.4);margin-bottom:24px">Ingresa tus datos y crea tu PIN personal.</div>
+
+    <div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:12px;margin-bottom:16px">
+      <div>
+        <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.5);text-transform:uppercase;margin-bottom:6px">Nombre completo</div>
+        <input id="onb-cond-nombre" type="text" placeholder="Tu nombre completo" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:8px;padding:10px 12px;font-size:14px;color:#fff;font-family:'DM Sans',sans-serif;text-transform:uppercase">
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.5);text-transform:uppercase;margin-bottom:6px">RUT</div>
+        <input id="onb-cond-rut" type="text" placeholder="12.345.678-9" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:8px;padding:10px 12px;font-size:14px;color:#fff;font-family:'DM Sans',sans-serif">
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.5);text-transform:uppercase;margin-bottom:6px">N° Licencia de Conducir</div>
+        <input id="onb-cond-licencia" type="text" placeholder="Número de licencia" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:8px;padding:10px 12px;font-size:14px;color:#fff;font-family:'DM Sans',sans-serif">
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.5);text-transform:uppercase;margin-bottom:6px">Crear PIN (4 dígitos)</div>
+        <input id="onb-cond-pin" type="number" placeholder="####" maxlength="4" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:8px;padding:10px 12px;font-size:20px;color:#FF6B00;font-family:'DM Sans',sans-serif;font-weight:900;letter-spacing:0.3em;text-align:center">
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.5);text-transform:uppercase;margin-bottom:6px">Confirmar PIN</div>
+        <input id="onb-cond-pin2" type="number" placeholder="####" maxlength="4" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:8px;padding:10px 12px;font-size:20px;color:#FF6B00;font-family:'DM Sans',sans-serif;font-weight:900;letter-spacing:0.3em;text-align:center">
+      </div>
+    </div>
+
+    <div id="onb-cond-error" style="color:#E05555;font-size:13px;margin-bottom:12px;min-height:18px"></div>
+    <button id="onb-cond-btn" onclick="confirmarOnboardingConductor()" style="width:100%;background:#FF6B00;border:none;border-radius:10px;padding:14px;font-family:'DM Sans',sans-serif;font-size:16px;font-weight:900;color:#000;cursor:pointer;letter-spacing:0.06em">CONFIRMAR</button>
+  </div>
+</div>
 </body>
 </html>
