@@ -3766,7 +3766,8 @@ async function guardarCostosBorrador() {
   const rend = parseFloat(_flota2?.rendimiento_km_lt || c.rendimiento||2.5);
   // Leer combustible desde el campo del formulario (ya calculado por calcCostos con precio Copec si aplica)
   const combField = document.getElementById('cos-comb')?.value?.replace(/[.$]/g,'').replace(/\./g,'').replace(/,/g,'.') || '';
-  const comb = combField ? Math.round(parseFloat(combField)) : (km ? Math.round((km/rend)*(parseFloat(c.precio_litro||1300))) : 0);
+  // Si km=0, combustible y mantención son 0 — no se puede calcular sin distancia
+  const comb = km > 0 ? (combField ? Math.round(parseFloat(combField)) : Math.round((km/rend)*(parseFloat(c.precio_litro||1300)))) : 0;
   const condVal = parseFloat(document.getElementById('cos-conductor')?.value?.replace(/[.$]/g,'').replace(/\./g,''))||dias*parseInt(c.sueldo_conductor||33000);
   const comision = parseFloat(document.getElementById('cos-comision').value)||0;
   const cf   = parseFloat((document.getElementById('cos-cf')?.value||'').replace(/\./g,'').replace(/[$]/g,''))||0;
@@ -3776,8 +3777,9 @@ async function guardarCostosBorrador() {
   const mantAutoC   = km > 0 && mantCostoC > 0 && mantKmC > 0 ? Math.round(km * mantCostoC / mantKmC) : 0;
   const mantManual  = document.getElementById('cos-mant')?.dataset?.manual === '1';
   const mantRaw     = parseFloat((document.getElementById('cos-mant')?.value||'').replace(/[.$]/g,'').replace(/\./g,''))||0;
-  const mant        = mantManual ? mantRaw : (km > 0 ? mantAutoC : mantRaw);
-  if(!mantManual && km > 0) document.getElementById('cos-mant').value = fmt(mantAutoC);
+  // Si km=0, mantención = 0 siempre (no se puede calcular sin km)
+  const mant = km > 0 ? (mantManual ? mantRaw : mantAutoC) : 0;
+  if(!mantManual) document.getElementById('cos-mant').value = fmt(mant);
   const viat = parseFloat((document.getElementById('cos-viatico')?.value||'').replace(/\./g,'').replace(/[$]/g,''))||0;
   const plazoSelG = document.getElementById('cos-plazo')?.value||'0';
   const plazo = plazoSelG === 'manual' ? (parseFloat(document.getElementById('cos-plazo-manual')?.value)||0) : (parseFloat(plazoSelG)||0);
