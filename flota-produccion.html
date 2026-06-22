@@ -3769,7 +3769,7 @@ async function guardarCostosBorrador() {
   const comb = combField ? Math.round(parseFloat(combField)) : (km ? Math.round((km/rend)*(parseFloat(c.precio_litro||1300))) : 0);
   const condVal = parseFloat(document.getElementById('cos-conductor')?.value?.replace(/[.$]/g,'').replace(/\./g,''))||dias*parseInt(c.sueldo_conductor||33000);
   const comision = parseFloat(document.getElementById('cos-comision').value)||0;
-  const cf   = parseFloat(document.getElementById('cos-cf')?.value?.replace(/[.$]/g,'').replace(/\./g,''))||dias*parseInt(c.costo_fijo||44000);
+  const cf   = parseFloat((document.getElementById('cos-cf')?.value||'').replace(/\./g,'').replace(/[$]/g,''))||0;
   // Mantención = km × (mant_costo ÷ mant_km)
   const mantCostoC  = parseInt(c.mant_costo||c.mantencion||0);
   const mantKmC     = parseInt(c.mant_km||c.mant_cada_km||20000);
@@ -3778,12 +3778,12 @@ async function guardarCostosBorrador() {
   const mantRaw     = parseFloat((document.getElementById('cos-mant')?.value||'').replace(/[.$]/g,'').replace(/\./g,''))||0;
   const mant        = mantManual ? mantRaw : (km > 0 ? mantAutoC : mantRaw);
   if(!mantManual && km > 0) document.getElementById('cos-mant').value = fmt(mantAutoC);
-  const viat = parseFloat(document.getElementById('cos-viatico')?.value?.replace(/[.$]/g,'').replace(/\./g,''))||dias*parseInt(c.viatico||12000);
+  const viat = parseFloat((document.getElementById('cos-viatico')?.value||'').replace(/\./g,'').replace(/[$]/g,''))||0;
   const plazoSelG = document.getElementById('cos-plazo')?.value||'0';
   const plazo = plazoSelG === 'manual' ? (parseFloat(document.getElementById('cos-plazo-manual')?.value)||0) : (parseFloat(plazoSelG)||0);
   const fact  = plazo > 0 ? Math.round(tarifa*1.19*plazo/100) : 0;
   const ingreso = tarifa + valorPts;
-  const costos  = comb+_peajesCalc+condVal+comision+cf+mant+viat+fact;
+  const costos  = comb+peajes+condVal+comision+cf+mant+viat+fact;
   const margen  = ingreso - costos;
   const puntosJSON = JSON.stringify(puntos.map(p=>({tipo:p.tipo,destino:p.destino,valor:p.valor||0,num_guia:p.num_guia||'',guias:p.guias||[]})));
 
@@ -3810,7 +3810,7 @@ async function guardarCostosBorrador() {
 
   const destinoFinal = final?.destino || null;
   const {error} = await supa.from('servicios_piloto').update({
-    estado:'borrador', km_total:km, costo_peajes:_peajesCalc, peajes_tag:tag,
+    estado:'borrador', km_total:km, costo_peajes:peajes, peajes_tag:tag,
     fecha_termino: fechaTerm||null,
     destino: destinoFinal,
     tarifa_neta:tarifa||null, ingreso_total:ingreso||null, dias_servicio:dias, costo_combustible:comb,
@@ -3825,7 +3825,7 @@ async function guardarCostosBorrador() {
   DB.servicios[svcActivoIdx] = {...s, estado:'borrador', km_total:km, tarifa_neta:tarifa,
     ingreso_total:ingreso, total_costos:costos, costo_combustible:comb,
     fecha_termino: fechaTerm||null,
-    peajes_tag:tag, costo_peajes:_peajesCalc, dias_servicio:dias,
+    peajes_tag:tag, costo_peajes:peajes, dias_servicio:dias,
     costo_conductor:condVal, costo_viaticos:viat, costo_fijo_dia:cf,
     costo_contingencia:parseFloat((document.getElementById('cos-contingencia')?.value||'').replace(/\./g,'').replace(/[$]/g,''))||0,
     costo_mantencion:mant, factoring:fact,
