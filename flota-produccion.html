@@ -2309,10 +2309,14 @@ function renderServicios() {
   const mes = parseInt(document.getElementById('dash-mes')?.value ?? hoy.getMonth());
   const anioStr = String(hoy.getFullYear());
   const mesStr = String(mes+1).padStart(2,'0');
-  const svcs = (fecha
-    ? DB.servicios.filter(s => (s.fecha||'').startsWith(fecha))
-    : DB.servicios.filter(s => (s.fecha||'').startsWith(`${anioStr}-${mesStr}`))
-  ).sort((a,b) => (b.fecha||'') > (a.fecha||'') ? 1 : (b.fecha||'') < (a.fecha||'') ? -1 :
+  const esConductorRender = _sessionUsuario?.rol === 'conductor';
+  const svcs = (esConductorRender
+    // Conductor ve todos sus servicios asignados/en proceso sin filtro de fecha
+    ? DB.servicios.filter(s => ['asignado','en_proceso','ejecutado','borrador'].includes(s.estado))
+    : fecha
+      ? DB.servicios.filter(s => (s.fecha||'').startsWith(fecha))
+      : DB.servicios.filter(s => (s.fecha||'').startsWith(`${anioStr}-${mesStr}`))
+  ).sort((a,b) => (a.fecha||'') > (b.fecha||'') ? 1 : (a.fecha||'') < (b.fecha||'') ? -1 :
     (b.created_at||'') > (a.created_at||'') ? 1 : -1);
   const empty = document.getElementById('empty-svc');
   if(!svcs.length) {
