@@ -164,7 +164,7 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
 <header class="hdr">
   <div style="display:flex;flex-direction:column">
     <div class="logo">KAPTURA</div>
-    <div id="hdr-empresa" style="font-size:11px;font-weight:800;color:var(--gold);letter-spacing:0.05em;margin-top:1px"></div>
+    <div id="hdr-empresa" style="font-size:11px;font-weight:800;color:var(--gold);letter-spacing:0.05em;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:55vw"></div>
   </div>
   <div style="display:flex;align-items:center;gap:12px">
     <div class="hdr-info" id="hdr-info"></div>
@@ -2236,14 +2236,34 @@ function renderKPIs() {
     return f.getMonth()===mes && ['ejecutado','borrador','confirmado','cerrado'].includes(s.estado);
   }).length;
 
-  document.getElementById('k-hoy').textContent = svcsHoy.length;
-  document.getElementById('k-hoy-sub').textContent = svcsHoy.filter(s=>['en_proceso','registrando'].includes(s.estado)).length + ' en proceso';
-  document.getElementById('k-ejec-hoy').textContent = ejHoy;
-  document.getElementById('k-ejec-mes').textContent = ejMes + ' este mes';
-  document.getElementById('k-pend').textContent = borradores.length;
-  const svcsMes = DB.servicios.filter(s => (s.fecha||'').startsWith(`${hoy.getFullYear()}-${String(mes+1).padStart(2,'0')}`));
-  document.getElementById('k-svcs-mes').textContent = svcsMes.length;
-  document.getElementById('k-svcs-mes-sub').textContent = `acumulados ${MESES[mes]}`;
+  const esConductorKpi = _sessionUsuario?.rol === 'conductor';
+  if(esConductorKpi) {
+    const mesStr2 = String(mes+1).padStart(2,'0');
+    const mesPrefix = `${hoy.getFullYear()}-${mesStr2}`;
+    const svcsMesCond = DB.servicios.filter(s => (s.fecha||'').startsWith(mesPrefix));
+    const asignados  = svcsMesCond.filter(s => s.estado === 'asignado').length;
+    const enProceso  = svcsMesCond.filter(s => s.estado === 'en_proceso').length;
+    const ejecutados = svcsMesCond.filter(s => ['ejecutado','borrador','cerrado'].includes(s.estado)).length;
+    // Cambiar labels
+    document.querySelector('#k-hoy')?.closest('.kpi')?.querySelector('.kpi-lbl') && (document.querySelector('#k-hoy').closest('.kpi').querySelector('.kpi-lbl').textContent = 'Servicios Asignados');
+    document.querySelector('#k-ejec-hoy')?.closest('.kpi')?.querySelector('.kpi-lbl') && (document.querySelector('#k-ejec-hoy').closest('.kpi').querySelector('.kpi-lbl').textContent = 'En Proceso');
+    document.querySelector('#k-svcs-mes')?.closest('.kpi')?.querySelector('.kpi-lbl') && (document.querySelector('#k-svcs-mes').closest('.kpi').querySelector('.kpi-lbl').textContent = 'Ejecutados');
+    document.getElementById('k-hoy').textContent      = asignados;
+    document.getElementById('k-hoy-sub').textContent  = MESES[mes];
+    document.getElementById('k-ejec-hoy').textContent = enProceso;
+    document.getElementById('k-ejec-mes').textContent = MESES[mes];
+    document.getElementById('k-svcs-mes').textContent = ejecutados;
+    document.getElementById('k-svcs-mes-sub').textContent = MESES[mes];
+  } else {
+    document.getElementById('k-hoy').textContent = svcsHoy.length;
+    document.getElementById('k-hoy-sub').textContent = svcsHoy.filter(s=>['en_proceso','registrando'].includes(s.estado)).length + ' en proceso';
+    document.getElementById('k-ejec-hoy').textContent = ejHoy;
+    document.getElementById('k-ejec-mes').textContent = ejMes + ' este mes';
+    document.getElementById('k-pend').textContent = borradores.length;
+    const svcsMes = DB.servicios.filter(s => (s.fecha||'').startsWith(`${hoy.getFullYear()}-${String(mes+1).padStart(2,'0')}`));
+    document.getElementById('k-svcs-mes').textContent = svcsMes.length;
+    document.getElementById('k-svcs-mes-sub').textContent = `acumulados ${MESES[mes]}`;
+  }
   document.getElementById('k-ingreso').textContent = fmt(ingresoTotal);
   document.getElementById('k-ingreso-sub').textContent = `${conf.length} servicios · ${MESES[mes]}`;
   document.getElementById('k-costos').textContent = fmt(costosTotal);
@@ -2316,7 +2336,7 @@ function renderServicios() {
     : fecha
       ? DB.servicios.filter(s => (s.fecha||'').startsWith(fecha))
       : DB.servicios.filter(s => (s.fecha||'').startsWith(`${anioStr}-${mesStr}`))
-  ).sort((a,b) => (a.fecha||'') > (b.fecha||'') ? 1 : (a.fecha||'') < (b.fecha||'') ? -1 :
+  ).sort((a,b) => (b.fecha||'') > (a.fecha||'') ? 1 : (b.fecha||'') < (a.fecha||'') ? -1 :
     (b.created_at||'') > (a.created_at||'') ? 1 : -1);
   const empty = document.getElementById('empty-svc');
   if(!svcs.length) {
@@ -4609,11 +4629,16 @@ async function iniciarLogin() {
           // Ocultar botón + ASIGNAR y KPIs de gestión
           const btnAsig = document.getElementById('btn-asignar-nuevo');
           if(btnAsig) btnAsig.style.display = 'none';
-          // Ocultar KPIs que no corresponden al conductor
+          // Ocultar KPIs y controles que no corresponden al conductor
           ['kpi-por-confirmar','kpi-ingreso-mes','kpi-costos-mes',
            'kpi-margen-teo','kpi-margen-prom','k-margen-real-kpi'].forEach(id => {
             const el = document.getElementById(id); if(el) el.style.display = 'none';
           });
+          // Ocultar filtro fecha y selector mes
+          const filtroFecha = document.querySelector('.filtro');
+          if(filtroFecha) filtroFecha.style.display = 'none';
+          const dasMes = document.getElementById('dash-mes');
+          if(dasMes) dasMes.closest('select') && (dasMes.style.display = 'none');
         }
         init();
         return;
