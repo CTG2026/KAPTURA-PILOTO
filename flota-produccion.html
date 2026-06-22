@@ -74,7 +74,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 }
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(4px);z-index:200;display:flex;align-items:flex-end;justify-content:center}
 @media(min-width:640px){.overlay{align-items:center;padding:20px}}
-.modal{background:var(--surface);border-radius:16px 16px 0 0;width:100%;max-height:95vh;overflow-y:auto;box-shadow:var(--shl);border:1px solid var(--border)}
+.modal{background:var(--surface);border-radius:16px 16px 0 0;width:100%;max-height:92vh;overflow-y:auto;box-shadow:var(--shl);border:1px solid var(--border);margin-top:auto}
 @media(min-width:640px){.modal{border-radius:16px;max-width:620px}}
 .modal-hdr{padding:14px 16px 12px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;position:sticky;top:0;background:var(--surface);z-index:1}
 .modal-ttl{font-family:'DM Sans',sans-serif;font-size:17px;font-weight:900;text-transform:uppercase;letter-spacing:0.05em;color:var(--gold)}
@@ -173,14 +173,14 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
 </header>
 
 <nav class="nav" id="nav" style="display:none">
-  <button class="ntab active" onclick="setTab('servicios',this)">Servicios</button>
-  <button class="ntab" onclick="setTab('liquidaciones',this)">Liquidaciones</button>
-  <button class="ntab" onclick="setTab('flota',this)">Flota</button>
-  <button class="ntab" onclick="setTab('clientes',this)">Clientes</button>
-  <button class="ntab" onclick="setTab('gastos',this)">Costos</button>
-  <button class="ntab" onclick="setTab('resultados',this)">Resultados</button>
-  <button class="ntab" onclick="setTab('informes',this)">Informes</button>
-  <button class="ntab" onclick="setTab('config',this)">Config</button>
+  <button class="ntab active" id="tab-btn-servicios" onclick="setTab('servicios',this)">Servicios</button>
+  <button class="ntab" id="tab-btn-liquidaciones" onclick="setTab('liquidaciones',this)">Liquidaciones</button>
+  <button class="ntab" id="tab-btn-flota" onclick="setTab('flota',this)">Flota</button>
+  <button class="ntab" id="tab-btn-clientes" onclick="setTab('clientes',this)">Clientes</button>
+  <button class="ntab" id="tab-btn-gastos" onclick="setTab('gastos',this)">Costos</button>
+  <button class="ntab" id="tab-btn-resultados" onclick="setTab('resultados',this)">Resultados</button>
+  <button class="ntab" id="tab-btn-informes" onclick="setTab('informes',this)">Informes</button>
+  <button class="ntab" id="tab-btn-config" onclick="setTab('config',this)">Config</button>
   <button class="ntab" id="tab-btn-setup" onclick="setTab('setup',this)" style="display:none">Setup</button>
 </nav>
 
@@ -248,11 +248,11 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
       <div class="kpi"><div class="kpi-lbl">Servicios Hoy</div><div class="kpi-val" id="k-hoy">—</div><div class="kpi-sub" id="k-hoy-sub">—</div></div>
       <div class="kpi orange"><div class="kpi-lbl">Ejecutados Hoy</div><div class="kpi-val orange" id="k-ejec-hoy">—</div><div class="kpi-sub" id="k-ejec-mes">— este mes</div></div>
       <div class="kpi"><div class="kpi-lbl">Servicios Mes</div><div class="kpi-val" id="k-svcs-mes">—</div><div class="kpi-sub" id="k-svcs-mes-sub">acumulados</div></div>
-      <div class="kpi orange"><div class="kpi-lbl">Por Confirmar</div><div class="kpi-val orange" id="k-pend">—</div><div class="kpi-sub">borradores</div></div>
-      <div class="kpi green"><div class="kpi-lbl">Ingreso Mes</div><div class="kpi-val green" id="k-ingreso">—</div><div class="kpi-sub" id="k-ingreso-sub">—</div></div>
-      <div class="kpi red"><div class="kpi-lbl">Costos Mes</div><div class="kpi-val red" id="k-costos">—</div><div class="kpi-sub" id="k-costos-sub">—</div></div>
-      <div class="kpi green"><div class="kpi-lbl">Margen Teórico</div><div class="kpi-val green" id="k-margen">—</div><div class="kpi-sub" id="k-margen-sub">—</div></div>
-      <div class="kpi"><div class="kpi-lbl">Margen Prom.</div><div class="kpi-val" id="k-prom">—</div><div class="kpi-sub">por servicio</div></div>
+      <div class="kpi orange" id="kpi-por-confirmar"><div class="kpi-lbl">Por Confirmar</div><div class="kpi-val orange" id="k-pend">—</div><div class="kpi-sub">borradores</div></div>
+      <div class="kpi green" id="kpi-ingreso-mes"><div class="kpi-lbl">Ingreso Mes</div><div class="kpi-val green" id="k-ingreso">—</div><div class="kpi-sub" id="k-ingreso-sub">—</div></div>
+      <div class="kpi red" id="kpi-costos-mes"><div class="kpi-lbl">Costos Mes</div><div class="kpi-val red" id="k-costos">—</div><div class="kpi-sub" id="k-costos-sub">—</div></div>
+      <div class="kpi green" id="kpi-margen-teo"><div class="kpi-lbl">Margen Teórico</div><div class="kpi-val green" id="k-margen">—</div><div class="kpi-sub" id="k-margen-sub">—</div></div>
+      <div class="kpi" id="kpi-margen-prom"><div class="kpi-lbl">Margen Prom.</div><div class="kpi-val" id="k-prom">—</div><div class="kpi-sub">por servicio</div></div>
       <div class="kpi" id="k-margen-real-kpi"><div class="kpi-lbl">Margen Real</div><div class="kpi-val" id="k-margen-real">—</div><div class="kpi-sub" id="k-margen-real-sub">con costos reales</div></div>
     </div>
     <div class="filtro">
@@ -261,7 +261,7 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
     </div>
     <div class="sec-hdr">
       <div class="sec-ttl">Servicios</div>
-      <button class="btn btn-navy" onclick="abrirAsignar()">+ Asignar</button>
+      <button class="btn btn-navy" id="btn-asignar-nuevo" onclick="abrirAsignar()">+ Asignar</button>
     </div>
     <div class="svc-list" id="cards-mobile"></div>
     <div class="desk-tbl">
@@ -1047,6 +1047,10 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
         <div class="fld"><label class="lbl">Fecha del Servicio</label><input class="inp" id="asig-fecha" type="date"></div>
       </div>
       <div class="fld" id="wrap-origen-custom" style="display:none"><label class="lbl">Especifica el origen</label><input class="inp" id="asig-origen-custom" placeholder="Ciudad de origen"></div>
+      <div class="fld2">
+        <div class="fld"><label class="lbl">Hora Inicio</label><input class="inp" id="asig-hora-inicio" type="time"></div>
+        <div class="fld"><label class="lbl">Hora Llegada Estimada</label><input class="inp" id="asig-hora-llegada" type="time"></div>
+      </div>
       <div class="fld"><label class="lbl">Destino Principal</label><input class="inp" id="asig-destino" type="text" placeholder="Ciudad de destino"></div>
       <div class="fld">
         <label class="lbl">Tipo de Operación</label>
@@ -1131,6 +1135,7 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
         <div class="info-item"><div class="lbl2">PATENTE</div><div class="val" id="reg-patente-info">—</div></div>
         <div class="info-item"><div class="lbl2">FECHA INICIO</div><div class="val" id="reg-fecha-inicio-info">—</div></div>
         <div class="info-item"><div class="lbl2">ORIGEN</div><div class="val" id="reg-origen-info">—</div></div>
+        <div class="info-item"><div class="lbl2">DESTINO</div><div class="val" id="reg-destino-info">—</div></div>
         <div class="info-item"><div class="lbl2">CONDUCTOR</div><div class="val" id="reg-conductor-info">—</div></div>
       </div>
       <div style="margin-top:8px">
@@ -2116,7 +2121,13 @@ async function init() {
     DB.conductores = c.data  || [];
     DB.clientes    = cl.data || [];
     DB.tarifarios  = t.data  || [];
-    DB.servicios = (s.data || []).map(svc => {
+    let _rawServicios = (s.data || []);
+    // Si es conductor, filtrar solo sus servicios asignados
+    if(_sessionUsuario?.rol === 'conductor') {
+      const nomCond = (_sessionUsuario.nombre||_sessionUsuario.conductor_nombre||'').trim().toUpperCase();
+      _rawServicios = _rawServicios.filter(sv => (sv.conductor||'').trim().toUpperCase() === nomCond);
+    }
+    DB.servicios = _rawServicios.map(svc => {
       const notas = svc.notas || '';
       const marker = notas.includes('|_PUNTOS:') ? '|_PUNTOS:' : notas.includes('_PUNTOS:') ? '_PUNTOS:' : null;
       if(marker) {
@@ -2346,7 +2357,7 @@ function cardHTML(s,i) {
     <div class="svc-body"><div class="svc-acts">
       ${s.estado==='asignado' ? `<button class="btn btn-navy btn-sm" onclick="iniciarSvc(${i})">▶ Iniciar</button>` : ''}
       ${['en_proceso','registrando'].includes(s.estado) ? `<button class="btn btn-purple btn-sm" onclick="verServicio(${i})">📋 Registrar</button>` : ''}
-      ${['borrador','ejecutado'].includes(s.estado) ? `<button class="btn btn-purple btn-sm" onclick="verServicio(${i})">📋 Registrar</button><button class="btn btn-green btn-sm" onclick="abrirCierre(${i})">🔒 Cierre</button>` : ''}
+      ${['borrador','ejecutado'].includes(s.estado) ? `<button class="btn btn-purple btn-sm" onclick="verServicio(${i})">📋 Registrar</button>${_sessionUsuario?.rol !== 'conductor' ? `<button class="btn btn-green btn-sm" onclick="abrirCierre(${i})">🔒 Cierre</button>` : ''}` : ''}
       ${s.estado==='cerrado' ? `<button class="btn btn-sm" style="background:rgba(201,168,76,0.15);color:var(--gold);border:1px solid rgba(201,168,76,0.3)" onclick="editarServicioCerrado(${i})">✏ Editar</button>` : ''}
       ${['confirmado','cerrado','borrador'].includes(s.estado) ? `<button class="btn btn-outline btn-sm" onclick="abrirInforme(${i})">📄 Informe</button>` : ''}
       ${(s._puntos||[]).some(p=>(p.guias||[]).length>0||p.num_guia) ? `<button class="btn btn-outline btn-sm" onclick="verGuias(${i})">🖼 Guías</button>` : ''}
@@ -2394,7 +2405,7 @@ function filaHTML(s,i) {
     <td><div style="display:flex;gap:4px;flex-wrap:wrap">
       ${s.estado==='asignado' ? `<button class="btn btn-navy btn-sm" onclick="iniciarSvc(${i})">▶ Iniciar</button>` : ''}
       ${['en_proceso','registrando'].includes(s.estado) ? `<button class="btn btn-purple btn-sm" onclick="verServicio(${i})">📋 Registrar</button>` : ''}
-      ${['borrador','ejecutado'].includes(s.estado) ? `<button class="btn btn-purple btn-sm" onclick="verServicio(${i})">📋 Registrar</button><button class="btn btn-green btn-sm" onclick="abrirCierre(${i})">🔒 Cierre</button>` : ''}
+      ${['borrador','ejecutado'].includes(s.estado) ? `<button class="btn btn-purple btn-sm" onclick="verServicio(${i})">📋 Registrar</button>${_sessionUsuario?.rol !== 'conductor' ? `<button class="btn btn-green btn-sm" onclick="abrirCierre(${i})">🔒 Cierre</button>` : ''}` : ''}
       ${s.estado==='cerrado' ? `<button class="btn btn-sm" style="background:rgba(201,168,76,0.15);color:var(--gold);border:1px solid rgba(201,168,76,0.3)" onclick="editarServicioCerrado(${i})">✏ Editar</button>` : ''}
       ${['confirmado','cerrado','borrador'].includes(s.estado) ? `<button class="btn btn-outline btn-sm" onclick="abrirInforme(${i})">📄 Informe</button>` : ''}
       ${(s._puntos||[]).some(p=>(p.guias||[]).length>0||p.num_guia) ? `<button class="btn btn-outline btn-sm" onclick="verGuias(${i})">🖼 Guías</button>` : ''}
@@ -2454,7 +2465,9 @@ function poblarConfig() {
   const radioComb = document.getElementById(radioCombId);
   if(radioComb) { radioComb.checked = true; radioComb.dispatchEvent(new Event('change')); }
   document.getElementById('cfg-rend').value    = c.rendimiento||c.rendimiento_km_lt||2.5;
-  document.getElementById('cfg-cf').value      = c.costo_fijo||c.costo_fijo_dia||44000;
+  // Calcular y mostrar costo fijo dia: si hay valor diario directo usarlo, sino mensual/dias
+  const _cfDiaCfg = parseInt(c.costo_fijo_dia||0) || (parseInt(c.costo_fijo_mensual||0) > 0 ? Math.round(parseInt(c.costo_fijo_mensual)/parseInt(c.dias_operativos_mes||20)) : parseInt(c.costo_fijo||0) || 0);
+  document.getElementById('cfg-cf').value = _cfDiaCfg || '';
   if(document.getElementById('cfg-cf-mensual')) document.getElementById('cfg-cf-mensual').value = c.costo_fijo_mensual||3600000;
   if(document.getElementById('cfg-cf-dias-mes')) document.getElementById('cfg-cf-dias-mes').value = c.dias_operativos_mes||20;
   const modoGuardado = c.modo_costo_fijo||'manual';
@@ -2610,7 +2623,9 @@ async function guardarAsignacion() {
   // Guardar puntos de asignación
   const puntosAsig = _asigPuntos.filter(p=>p.nombre).map(p=>({num:p.num, nombre:p.nombre, tipo:'entrega'}));
   const puntosAsigStr = puntosAsig.length > 0 ? JSON.stringify(puntosAsig) : null;
-  const nuevo = { servicio_id:svId, patente, conductor, cliente, origen, fecha, estado:'asignado', margen_servicio:0, puntos_entrega:puntosAsig.length, punto_inicio:puntoInicio, tipo_operacion:tipoOperacion, empresa: DB._empresa||'global_solutions', puntos_asignados: puntosAsigStr };
+  const horaInicio  = document.getElementById('asig-hora-inicio').value || null;
+  const horaLlegada = document.getElementById('asig-hora-llegada').value || null;
+  const nuevo = { servicio_id:svId, patente, conductor, cliente, origen, fecha, estado:'asignado', margen_servicio:0, puntos_entrega:puntosAsig.length, punto_inicio:puntoInicio, tipo_operacion:tipoOperacion, empresa: DB._empresa||'global_solutions', puntos_asignados: puntosAsigStr, hora_inicio_asignada: horaInicio, hora_llegada_estimada: horaLlegada };
   const {data:inserted, error} = await supa.from('servicios_piloto').insert(nuevo).select();
   if(error) { toast('Error: '+error.message); return; }
   let svcInsertado = inserted?.[0];
@@ -2675,6 +2690,9 @@ function abrirRegistrar(i) {
   document.getElementById('reg-patente-info').textContent = s.patente||'—';
   document.getElementById('reg-fecha-inicio-info').textContent = s.fecha||'—';
   document.getElementById('reg-origen-info').textContent  = s.origen||'—';
+  const pFinalReg = (s._puntos||[]).find(p=>p.tipo==='final');
+  const elDestReg = document.getElementById('reg-destino-info');
+  if(elDestReg) elDestReg.textContent = pFinalReg?.destino || s.destino || '—';
   document.getElementById('reg-conductor-info').textContent = s.conductor||'—';
   document.getElementById('reg-fecha-termino').value      = s._fecha_termino || s.fecha || hoyStr;
   const tipoEl = document.getElementById('reg-tipo-entrega');
@@ -3106,8 +3124,9 @@ async function irACostos() {
     }
     return 0;
   };
-  const cfMensual = getCfgNum(['costo_fijo_mensual','costo_fijo_mes','costo_fijo']);
+  const cfMensual = getCfgNum(['costo_fijo_mensual','costo_fijo_mes']);
   const diasOpMes = getCfgNum(['dias_operativos','dias_op']) || 20;
+  // cfDia: usar valor diario guardado explícitamente, o calcular desde mensual
   const cfDia     = getCfgNum(['costo_fijo_dia']) || (cfMensual > 0 ? Math.round(cfMensual / diasOpMes) : 0);
   // Mantención: km × (mant_costo ÷ mant_km) — se calcula en calcCostos() con km reales, aquí = 0
   const sueldoDiario = getCfgNum(['sueldo_diario','sueldo_conductor']) || 33000;
@@ -3185,14 +3204,15 @@ async function calcCostos() {
   document.getElementById('cos-litros').value = lts ? `${lts} lt` : '';
   document.getElementById('cos-comb').value   = lts ? fmt(comb) : '';
 
-  const tag     = parseFloat(document.getElementById('cos-tag')?.value)||0;
-  const peajes  = tag + (parseFloat(document.getElementById('cos-peajes').value)||0);
+  const _tagCalc = parseFloat(document.getElementById('cos-tag')?.value)||0;
+  const _peajesCalc = _tagCalc + (parseFloat(document.getElementById('cos-peajes').value)||0);
   // Usar valores exactos de DB.config sin defaults hardcodeados
   const getCN = (keys) => { for(const k of keys){ const v=c[k]; if(v!==undefined&&v!==null&&v!=='') return parseInt(v)||0; } return 0; };
   const sueldoDia = getCN(['sueldo_diario','sueldo_conductor']) || 33000;
   const condVal = dias * sueldoDia;
   // Costo fijo: manual o automático
-  let cfDia = getCN(['costo_fijo_dia']) || (getCN(['costo_fijo_mensual','costo_fijo_mes']) > 0 ? Math.round(getCN(['costo_fijo_mensual','costo_fijo_mes']) / (getCN(['dias_operativos','dias_op'])||20)) : 0);
+  const cfMensualCC = getCN(['costo_fijo_mensual','costo_fijo_mes']);
+  let cfDia = getCN(['costo_fijo_dia']) || (cfMensualCC > 0 ? Math.round(cfMensualCC / (getCN(['dias_operativos','dias_op'])||20)) : 0);
   let cf = dias * cfDia; // default manual
   if((c.modo_costo_fijo||'manual') === 'automatico') {
     const svcActual = DB.servicios[svcActivoIdx];
@@ -3290,7 +3310,7 @@ async function calcCostos() {
   if(comGenEl && !comGenEl.dataset.manual) comGenEl.value = comGenAuto > 0 ? comGenAuto : '';
   const comGenFinal = parseFloat((comGenEl?.value||'').replace(/[.$]/g,'').replace(/\./g,''))||0;
   const otrosFinal  = parseFloat((otrosEl?.value||'').replace(/[.$]/g,'').replace(/\./g,''))||0;
-  const costos = comb + peajes + condValFinal + comision + cfFinal + mantFinal + viatFinal + factoring + comGenFinal + otrosFinal;
+  const costos = comb + _peajesCalc + condValFinal + comision + cfFinal + mantFinal + viatFinal + factoring + comGenFinal + otrosFinal;
   const margen = ingreso - costos;
   const pct    = tarifa ? Math.round(margen/tarifa*100) : 0;
   const mEl = document.getElementById('cos-margen');
@@ -3758,7 +3778,7 @@ async function guardarCostosBorrador() {
   const plazo = plazoSelG === 'manual' ? (parseFloat(document.getElementById('cos-plazo-manual')?.value)||0) : (parseFloat(plazoSelG)||0);
   const fact  = plazo > 0 ? Math.round(tarifa*1.19*plazo/100) : 0;
   const ingreso = tarifa + valorPts;
-  const costos  = comb+peajes+condVal+comision+cf+mant+viat+fact;
+  const costos  = comb+_peajesCalc+condVal+comision+cf+mant+viat+fact;
   const margen  = ingreso - costos;
   const puntosJSON = JSON.stringify(puntos.map(p=>({tipo:p.tipo,destino:p.destino,valor:p.valor||0,num_guia:p.num_guia||'',guias:p.guias||[]})));
 
@@ -3785,7 +3805,7 @@ async function guardarCostosBorrador() {
 
   const destinoFinal = final?.destino || null;
   const {error} = await supa.from('servicios_piloto').update({
-    estado:'borrador', km_total:km, costo_peajes:peajes, peajes_tag:tag,
+    estado:'borrador', km_total:km, costo_peajes:_peajesCalc, peajes_tag:tag,
     fecha_termino: fechaTerm||null,
     destino: destinoFinal,
     tarifa_neta:tarifa||null, ingreso_total:ingreso||null, dias_servicio:dias, costo_combustible:comb,
@@ -3799,7 +3819,7 @@ async function guardarCostosBorrador() {
   DB.servicios[svcActivoIdx] = {...s, estado:'borrador', km_total:km, tarifa_neta:tarifa,
     ingreso_total:ingreso, total_costos:costos, costo_combustible:comb,
     fecha_termino: fechaTerm||null,
-    peajes_tag:tag, costo_peajes:peajes, dias_servicio:dias,
+    peajes_tag:tag, costo_peajes:_peajesCalc, dias_servicio:dias,
     costo_conductor:condVal, costo_viaticos:viat, costo_fijo_dia:cf,
     costo_mantencion:mant, factoring:fact,
     km_base_carga:kmVacioIda, km_carga_destino:kmCargado, km_retorno:kmRetorno,
@@ -4182,7 +4202,7 @@ async function guardarConfig() {
     {clave:'prorrateo_equipos', val:document.getElementById('cfg-prorrateo')?.value||'6'},
     {clave:'equipos_inversion', val:document.getElementById('cfg-equipos-inversion')?.value||''},
     {clave:'rendimiento',     val:document.getElementById('cfg-rend').value},
-    {clave:'costo_fijo',      val:document.getElementById('cfg-cf').value},
+    {clave:'costo_fijo_dia',   val:document.getElementById('cfg-cf').value},
     {clave:'modo_costo_fijo',  val:document.querySelector('input[name="modo-cf"]:checked')?.value||'manual'},
     {clave:'costo_fijo_mensual', val:document.getElementById('cfg-cf-mensual')?.value||''},
     {clave:'dias_operativos_mes', val:document.getElementById('cfg-cf-dias-mes')?.value||'20'},
@@ -4520,6 +4540,22 @@ async function iniciarLogin() {
         if(['coordinador','controller','administrador'].includes(sess.rol)) {
           document.getElementById('tab-btn-setup').style.display = '';
         }
+        if(sess.rol === 'conductor') {
+          // Ocultar tabs que no corresponden al conductor
+          ['tab-btn-liquidaciones','tab-btn-flota','tab-btn-clientes','tab-btn-gastos',
+           'tab-btn-resultados','tab-btn-informes','tab-btn-config'].forEach(id => {
+            const el = document.getElementById(id);
+            if(el) el.style.display = 'none';
+          });
+          // Ocultar botón + ASIGNAR y KPIs de gestión
+          const btnAsig = document.getElementById('btn-asignar-nuevo');
+          if(btnAsig) btnAsig.style.display = 'none';
+          // Ocultar KPIs que no corresponden al conductor
+          ['kpi-por-confirmar','kpi-ingreso-mes','kpi-costos-mes',
+           'kpi-margen-teo','kpi-margen-prom','k-margen-real-kpi'].forEach(id => {
+            const el = document.getElementById(id); if(el) el.style.display = 'none';
+          });
+        }
         init();
         return;
       }
@@ -4584,10 +4620,18 @@ function aplicarAccesoKaptura() {
   document.getElementById('mod-empresa-label').textContent = empNombre;
   // Aplicar bloqueo según rol
   const esConductor = _sessionUsuario.rol === 'conductor';
+  if(esConductor) {
+    ['tab-btn-liquidaciones','tab-btn-flota','tab-btn-clientes','tab-btn-gastos',
+     'tab-btn-resultados','tab-btn-informes','tab-btn-config'].forEach(id => {
+      const el = document.getElementById(id); if(el) el.style.display = 'none';
+    });
+    const btnAsig = document.getElementById('btn-asignar-nuevo');
+    if(btnAsig) btnAsig.style.display = 'none';
+  }
   const modFlota = document.getElementById('mod-flota');
   const modFlotaBadge = document.getElementById('mod-flota-badge');
   if(esConductor) {
-    modFlota.style.opacity = '0.5';
+    if(modFlota) modFlota.style.opacity = '0.5';
     modFlota.style.cursor = 'not-allowed';
     modFlotaBadge.textContent = '🔒 BLOQUEADO';
     modFlotaBadge.style.background = '#2A2A2A';
