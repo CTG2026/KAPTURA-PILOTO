@@ -1061,13 +1061,19 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
         </select>
         <div style="font-size:10px;color:var(--muted);margin-top:4px" id="asig-punto-inicio-hint"></div>
       </div>
+      <!-- Puntos de entrega -->
+      <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px">
+        <div style="font-size:9px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);margin-bottom:8px">Puntos de Entrega</div>
+        <div id="asig-puntos-lista"></div>
+        <button class="btn btn-outline btn-sm btn-full" onclick="asigAgregarPunto()" id="asig-btn-agregar-punto">+ Agregar Punto</button>
+      </div>
     </div>
 
       <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px">
         <div style="font-size:9px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);margin-bottom:8px">Observaciones</div>
         <div id="asig-obs-hilo" style="margin-bottom:8px"></div>
         <textarea id="asig-obs-input" class="inp" rows="2" placeholder="Agregar observación..." style="margin-bottom:6px"></textarea>
-        <button class="btn btn-outline btn-sm btn-full" onclick="obsAgregarAsignar()">+ Agregar Observación</button>
+        <button class="btn btn-outline btn-sm btn-full" onclick="obsAgregarAsignar()">💾 Guardar Observación</button>
       </div>
     <div class="modal-ftr">
       <button class="btn btn-ghost" onclick="cerrar('modal-asignar')">← Volver</button>
@@ -1102,7 +1108,7 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
         <div style="font-size:9px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);margin-bottom:8px">Observaciones</div>
         <div id="ini-obs-hilo" style="margin-bottom:8px"></div>
         <textarea id="ini-obs-input" class="inp" rows="2" placeholder="Agregar observación..." style="margin-bottom:6px"></textarea>
-        <button class="btn btn-outline btn-sm btn-full" onclick="obsAgregarIniciar()">+ Agregar Observación</button>
+        <button class="btn btn-outline btn-sm btn-full" onclick="obsAgregarIniciar()">💾 Guardar Observación</button>
       </div>
     <div class="modal-ftr">
       <button class="btn btn-ghost" onclick="cerrar('modal-iniciar')">← Volver</button>
@@ -1146,7 +1152,7 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
       <!-- Hilo de observaciones -->
       <div id="reg-obs-hilo" style="margin-bottom:8px"></div>
         <textarea id="reg-observacion" class="inp" rows="2" placeholder="Agregar observación..." style="margin-bottom:6px"></textarea>
-        <button class="btn btn-outline btn-sm btn-full" onclick="obsAgregarRegistrar()">+ Agregar Observación</button>
+        <button class="btn btn-outline btn-sm btn-full" onclick="obsAgregarRegistrar()">💾 Guardar Observación</button>
     <div class="modal-ftr">
       <button class="btn btn-ghost" onclick="cerrar('modal-registrar')">← Volver</button>
       <button class="btn btn-orange" onclick="guardarBorrador()">Borrador</button>
@@ -1287,7 +1293,7 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
       <div class="section-ttl">💬 Hilo de Observaciones</div>
       <div id="cos-obs-hilo" style="margin-bottom:8px"></div>
         <textarea id="cos-observacion" class="inp" rows="2" placeholder="Agregar observación..." style="margin-bottom:6px"></textarea>
-        <button class="btn btn-outline btn-sm btn-full" onclick="obsAgregarCierre()">+ Agregar Observación</button>
+        <button class="btn btn-outline btn-sm btn-full" onclick="obsAgregarCierre()">💾 Guardar Observación</button>
     <div class="modal-ftr">
       <button class="btn btn-ghost" onclick="cerrar('modal-costos')">← Volver</button>
       <button class="btn btn-orange" onclick="guardarCostosBorrador()">Borrador</button>
@@ -2513,6 +2519,11 @@ async function abrirAsignar() {
     optSin.textContent = 'Sin carro';
     selTipoOp.appendChild(optSin);
   }
+  // Limpiar campos al abrir
+  const obsInputAsig = document.getElementById('asig-obs-input');
+  if(obsInputAsig) obsInputAsig.value = '';
+  asigLimpiarPuntos();
+  // Hilo observaciones
   const sAsig = DB.servicios[svcActivoIdx];
   if(sAsig) obsRenderHilo(document.getElementById('asig-obs-hilo'), obsParseHilo(sAsig.notas||''));
   document.getElementById('modal-asignar').style.display = 'flex';
@@ -2533,6 +2544,41 @@ async function siguienteId() {
   (data||[]).forEach(r => { const m=(r.servicio_id||'').match(/S-(\d+)/); if(m) max=Math.max(max,parseInt(m[1])); });
   return `S-${String(max+1).padStart(2,'0')}`;
 }
+// ── PUNTOS DE ENTREGA EN ASIGNAR ──
+let _asigPuntos = [];
+
+function asigAgregarPunto() {
+  if(_asigPuntos.length >= 6) { toast('Máximo 6 puntos'); return; }
+  _asigPuntos.push({num: _asigPuntos.length + 1, nombre: ''});
+  asigRenderPuntos();
+}
+
+function asigEliminarPunto(idx) {
+  _asigPuntos.splice(idx, 1);
+  _asigPuntos.forEach((p, i) => p.num = i + 1);
+  asigRenderPuntos();
+}
+
+function asigRenderPuntos() {
+  const lista = document.getElementById('asig-puntos-lista');
+  const btn   = document.getElementById('asig-btn-agregar-punto');
+  if(!lista) return;
+  lista.innerHTML = _asigPuntos.map((p, i) => `
+    <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px">
+      <div style="font-size:10px;font-weight:800;color:var(--gold);min-width:20px">P${p.num}</div>
+      <input class="inp" style="flex:1" type="text" placeholder="Destino punto ${p.num}"
+        value="${p.nombre}" onchange="_asigPuntos[${i}].nombre=this.value.toUpperCase()">
+      <button onclick="asigEliminarPunto(${i})" style="background:rgba(239,68,68,0.2);border:1px solid rgba(239,68,68,0.4);color:var(--danger);border-radius:5px;padding:4px 8px;cursor:pointer;font-size:11px">✕</button>
+    </div>`).join('');
+  if(btn) btn.style.display = _asigPuntos.length >= 6 ? 'none' : '';
+}
+
+function asigLimpiarPuntos() {
+  _asigPuntos = [];
+  asigRenderPuntos();
+}
+
+
 async function guardarAsignacion() {
   if(!DB.clientes || DB.clientes.length === 0) {
     toast('⚠ Agrega clientes en SETUP antes de asignar un servicio');
@@ -2560,7 +2606,10 @@ async function guardarAsignacion() {
     document.getElementById('asig-patente').value = patenteFromTipo;
   }
   const svId = await siguienteId();
-  const nuevo = { servicio_id:svId, patente, conductor, cliente, origen, fecha, estado:'asignado', margen_servicio:0, puntos_entrega:0, punto_inicio:puntoInicio, tipo_operacion:tipoOperacion, empresa: DB._empresa||'global_solutions' };
+  // Guardar puntos de asignación
+  const puntosAsig = _asigPuntos.filter(p=>p.nombre).map(p=>({num:p.num, nombre:p.nombre, tipo:'entrega'}));
+  const puntosAsigStr = puntosAsig.length > 0 ? JSON.stringify(puntosAsig) : null;
+  const nuevo = { servicio_id:svId, patente, conductor, cliente, origen, fecha, estado:'asignado', margen_servicio:0, puntos_entrega:puntosAsig.length, punto_inicio:puntoInicio, tipo_operacion:tipoOperacion, empresa: DB._empresa||'global_solutions', puntos_asignados: puntosAsigStr };
   const {data:inserted, error} = await supa.from('servicios_piloto').insert(nuevo).select();
   if(error) { toast('Error: '+error.message); return; }
   let svcInsertado = inserted?.[0];
