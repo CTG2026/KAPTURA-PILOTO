@@ -1047,6 +1047,10 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
         <div class="fld"><label class="lbl">Fecha del Servicio</label><input class="inp" id="asig-fecha" type="date"></div>
       </div>
       <div class="fld" id="wrap-origen-custom" style="display:none"><label class="lbl">Especifica el origen</label><input class="inp" id="asig-origen-custom" placeholder="Ciudad de origen"></div>
+      <div class="fld2">
+        <div class="fld"><label class="lbl">Hora Inicio</label><input class="inp" id="asig-hora-inicio" type="time"></div>
+        <div class="fld"><label class="lbl">Hora Llegada Estimada</label><input class="inp" id="asig-hora-llegada" type="time"></div>
+      </div>
       <div class="fld"><label class="lbl">Destino Principal</label><input class="inp" id="asig-destino" type="text" placeholder="Ciudad de destino"></div>
       <div class="fld">
         <label class="lbl">Tipo de Operación</label>
@@ -2616,7 +2620,9 @@ async function guardarAsignacion() {
   // Guardar puntos de asignación
   const puntosAsig = _asigPuntos.filter(p=>p.nombre).map(p=>({num:p.num, nombre:p.nombre, tipo:'entrega'}));
   const puntosAsigStr = puntosAsig.length > 0 ? JSON.stringify(puntosAsig) : null;
-  const nuevo = { servicio_id:svId, patente, conductor, cliente, origen, fecha, estado:'asignado', margen_servicio:0, puntos_entrega:puntosAsig.length, punto_inicio:puntoInicio, tipo_operacion:tipoOperacion, empresa: DB._empresa||'global_solutions', puntos_asignados: puntosAsigStr };
+  const horaInicio  = document.getElementById('asig-hora-inicio').value || null;
+  const horaLlegada = document.getElementById('asig-hora-llegada').value || null;
+  const nuevo = { servicio_id:svId, patente, conductor, cliente, origen, fecha, estado:'asignado', margen_servicio:0, puntos_entrega:puntosAsig.length, punto_inicio:puntoInicio, tipo_operacion:tipoOperacion, empresa: DB._empresa||'global_solutions', puntos_asignados: puntosAsigStr, hora_inicio_asignada: horaInicio, hora_llegada_estimada: horaLlegada };
   const {data:inserted, error} = await supa.from('servicios_piloto').insert(nuevo).select();
   if(error) { toast('Error: '+error.message); return; }
   let svcInsertado = inserted?.[0];
