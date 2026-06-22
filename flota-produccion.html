@@ -4986,9 +4986,11 @@ async function setupAgregarConductor() {
   cargarSetup();
 }
 
-async function setupEliminarConductor(id) {
-  if(!confirm('¿Eliminar este conductor?')) return;
-  await supa.from('kaptura_conductores').update({activo:false}).eq('id', id);
+async function setupEliminarConductor(nombre) {
+  if(!confirm('¿Eliminar a '+nombre+'?')) return;
+  const emp = DB._empresa || _sessionUsuario?.empresa;
+  const {error} = await supa.from('kaptura_conductores').update({activo:false}).eq('nombre', nombre).eq('empresa', emp);
+  if(error) { toast('Error: '+error.message); return; }
   toast('Conductor eliminado');
   cargarSetup();
 }
@@ -5122,7 +5124,7 @@ function renderSetupListaConductores() {
     const rut = c.rut ? '<span style="font-size:11px;color:var(--muted);margin-left:8px">'+c.rut+'</span>' : '';
     html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:var(--bg);border-radius:7px;margin-bottom:5px;border:1px solid var(--border)">'
       + '<div><span style="font-size:13px;font-weight:700;color:var(--text)">'+c.nombre+'</span>'+rut+'<span style="font-size:10px;color:var(--muted);margin-left:6px">✓</span></div>'
-      + '<button data-cid="'+c.id+'" onclick="setupEliminarConductor(this.dataset.cid)" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:var(--danger);border-radius:5px;padding:3px 8px;font-size:10px;cursor:pointer">✕</button>'
+      + '<button data-cid="'+c.nombre+'" onclick="setupEliminarConductor(this.dataset.cid)" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:var(--danger);border-radius:5px;padding:3px 8px;font-size:10px;cursor:pointer">✕</button>'
       + '</div>';
   });
   _setupConductores.forEach(function(c,i) {
