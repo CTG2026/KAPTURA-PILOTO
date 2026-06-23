@@ -3961,7 +3961,11 @@ function renderDocumentos() {
     }
     html += "<div style=\"display:grid;grid-template-columns:1fr 1fr auto;gap:6px;align-items:flex-end\">";
     html += "<div><div style=\"font-size:9px;color:var(--muted);margin-bottom:3px\">FECHA VENC.</div><input type=\"date\" id=\"df-"+t.id+"\" value=\""+(doc&&doc.fecha_vencimiento?doc.fecha_vencimiento:"")+"\" style=\"width:100%;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:6px 8px;font-size:11px;color:var(--text);font-family:inherit\"></div>";
-    html += "<div><div style=\"font-size:9px;color:var(--muted);margin-bottom:3px\">ADJUNTAR</div><input type=\"file\" id=\"ff-"+t.id+"\" accept=\"image/*,.pdf\" capture=\"environment\" style=\"width:100%;font-size:10px;color:var(--text)\"></div>";
+    if(doc && doc.url) {
+      html += "<div><div style=\"font-size:9px;color:var(--muted);margin-bottom:3px\">ADJUNTAR</div><div style=\"font-size:11px;color:var(--green);font-weight:700;padding:6px 0\">✓ Documento adjuntado</div></div>";
+    } else {
+      html += "<div><div style=\"font-size:9px;color:var(--muted);margin-bottom:3px\">ADJUNTAR</div><input type=\"file\" id=\"ff-"+t.id+"\" accept=\"image/*,.pdf\" capture=\"environment\" style=\"width:100%;font-size:10px;color:var(--text)\"></div>";
+    }
     html += "<button data-tid=\""+t.id+"\" onclick=\"subirDoc(this.dataset.tid)\" style=\"background:var(--gold);border:none;border-radius:7px;padding:8px 12px;font-size:11px;font-weight:800;color:#000;cursor:pointer\">💾</button></div></div>";
   });
   document.getElementById("docs-body").innerHTML = html;
@@ -5211,7 +5215,7 @@ function renderSetupListaEquipos() {
     <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:var(--bg);border-radius:7px;margin-bottom:5px;border:1px solid var(--border)">
       <div><span style="font-size:13px;font-weight:800;color:var(--gold)">${f.patente}</span><span style="font-size:11px;color:var(--muted);margin-left:8px">${f.tipo||''}</span><span style="font-size:10px;color:var(--muted);margin-left:6px">${f.rendimiento_km_lt ? f.rendimiento_km_lt+' km/lt' : ''}</span></div>
       <div style="display:flex;gap:5px">
-        <button data-pat="${f.patente}" data-tipo="equipo" onclick="abrirDocs(this.dataset.tipo,this.dataset.pat)" style="background:rgba(76,175,122,0.15);border:1px solid rgba(76,175,122,0.3);color:var(--green);border-radius:5px;padding:3px 8px;font-size:10px;cursor:pointer;font-weight:700">📎 Docs</button>
+        <button data-pat="${f.patente}" data-tipo="equipo" onclick="abrirDocs(this.dataset.tipo,this.dataset.pat)" style="background:rgba(76,175,122,0.15);border:1px solid rgba(76,175,122,0.3);color:var(--green);border-radius:5px;padding:3px 8px;font-size:10px;cursor:pointer;font-weight:700">📎 Documentos</button>
         <button data-pat="${f.patente}" onclick="setupEditarEquipo(this.dataset.pat)" style="background:rgba(201,168,76,0.15);border:1px solid rgba(201,168,76,0.3);color:var(--gold);border-radius:5px;padding:3px 8px;font-size:10px;cursor:pointer;font-weight:700">✏ Editar</button>
         <button onclick="setupEliminarEquipo('${f.id}')" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:var(--danger);border-radius:5px;padding:3px 8px;font-size:10px;cursor:pointer;font-weight:700">✕</button>
       </div>
@@ -5244,7 +5248,7 @@ function renderSetupListaConductores() {
     const rut = c.rut ? '<span style="font-size:11px;color:var(--muted);margin-left:8px">'+c.rut+'</span>' : '';
     html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:var(--bg);border-radius:7px;margin-bottom:5px;border:1px solid var(--border)">'
       + '<div><span style="font-size:13px;font-weight:700;color:var(--text)">'+c.nombre+'</span>'+rut+'<span style="font-size:10px;color:var(--muted);margin-left:6px">✓</span></div>'
-      + '<button data-cnom="'+c.nombre+'" data-tipo="conductor" onclick="abrirDocs(this.dataset.tipo,this.dataset.cnom)" style="background:rgba(76,175,122,0.15);border:1px solid rgba(76,175,122,0.3);color:var(--green);border-radius:5px;padding:3px 8px;font-size:10px;cursor:pointer;font-weight:700">📎 Docs</button>'
+      + '<button data-cnom="'+c.nombre+'" data-tipo="conductor" onclick="abrirDocs(this.dataset.tipo,this.dataset.cnom)" style="background:rgba(76,175,122,0.15);border:1px solid rgba(76,175,122,0.3);color:var(--green);border-radius:5px;padding:3px 8px;font-size:10px;cursor:pointer;font-weight:700">📎 Documentos</button>'
       + '<button data-cid="'+c.nombre+'" onclick="setupEliminarConductor(this.dataset.cid)" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:var(--danger);border-radius:5px;padding:3px 8px;font-size:10px;cursor:pointer">✕</button>'
       + '</div>';
   });
