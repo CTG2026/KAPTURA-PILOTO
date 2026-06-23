@@ -3922,6 +3922,84 @@ async function cerrarServicio() {
 }
 
 
+// DOCUMENTOS SETUP
+var TIPOS_EQUIPO = [{id:"permiso_circ",lbl:"Permiso Circulacion"},{id:"rev_tecnica",lbl:"Revision Tecnica"},{id:"soap",lbl:"SOAP"},{id:"resol_san",lbl:"Resolucion Sanitaria"},{id:"seguro",lbl:"Seguro"},{id:"otro",lbl:"Otro"}];
+var TIPOS_CONDUCTOR = [{id:"licencia",lbl:"Licencia de Conducir"},{id:"contrato",lbl:"Contrato"},{id:"otro",lbl:"Otro"}];
+var _docsCtx = {tipo:null, entId:null};
+
+function semaforo(f) {
+  if(!f) return "";
+  var dias = Math.round((new Date(f)-new Date())/864e5);
+  if(dias < 0) return "<span style=\"color:#B05A5A;font-weight:800\">🔴 VENCIDO</span>";
+  if(dias <= 30) return "<span style=\"color:#C9A84C;font-weight:800\">🟡 VENCE EN "+dias+" DIAS</span>";
+  return "<span style=\"color:#7EA87E;font-weight:800\">🟢 VIGENTE</span>";
+}
+
+function abrirDocs(tipo, entId) {
+  _docsCtx = {tipo:tipo, entId:entId};
+  document.getElementById("docs-titulo").textContent = tipo === "equipo" ? "EQUIPO" : "CONDUCTOR";
+  document.getElementById("docs-sub").textContent = entId;
+  renderDocumentos();
+  document.getElementById("modal-docs").style.display = "flex";
+}
+
+function renderDocumentos() {
+  var tipos = _docsCtx.tipo === "equipo" ? TIPOS_EQUIPO : TIPOS_CONDUCTOR;
+  var docsEnt = (DB.documentos||[]).filter(function(d){ return d.tipo_entidad===_docsCtx.tipo && d.entidad_id===_docsCtx.entId; });
+  var html = "";
+  tipos.forEach(function(t) {
+    var doc = docsEnt.find(function(d){ return d.tipo_doc===t.id; });
+    var sem = doc ? semaforo(doc.fecha_vencimiento) : "<span style=\"color:var(--muted);font-size:10px\">Sin documento</span>";
+    html += "<div style=\"background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px\">";
+    html += "<div style=\"display:flex;justify-content:space-between;align-items:center;margin-bottom:8px\">";
+    html += "<div style=\"font-size:12px;font-weight:800;color:var(--text)\">"+t.lbl+"</div><div style=\"font-size:11px\">"+sem+"</div></div>";
+    if(doc && doc.url) {
+      html += "<div style=\"margin-bottom:8px;display:flex;gap:10px;align-items:center\">";
+      html += "<a href=\""+doc.url+"\" target=\"_blank\" style=\"font-size:11px;color:var(--gold);font-weight:700\">👁 Ver</a>";
+      html += "<span style=\"font-size:10px;color:var(--muted)\">"+(doc.fecha_vencimiento||"")+"</span>";
+      html += "<button data-did=\""+doc.id+"\" onclick=\"eliminarDocItem(this.dataset.did)\" style=\"background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:var(--danger);border-radius:4px;padding:2px 7px;font-size:9px;cursor:pointer\">✕</button></div>";
+    }
+    html += "<div style=\"display:grid;grid-template-columns:1fr 1fr auto;gap:6px;align-items:flex-end\">";
+    html += "<div><div style=\"font-size:9px;color:var(--muted);margin-bottom:3px\">FECHA VENC.</div><input type=\"date\" id=\"df-"+t.id+"\" value=\""+(doc&&doc.fecha_vencimiento?doc.fecha_vencimiento:"")+"\" style=\"width:100%;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:6px 8px;font-size:11px;color:var(--text);font-family:inherit\"></div>";
+    html += "<div><div style=\"font-size:9px;color:var(--muted);margin-bottom:3px\">ADJUNTAR</div><input type=\"file\" id=\"ff-"+t.id+"\" accept=\"image/*,.pdf\" capture=\"environment\" style=\"width:100%;font-size:10px;color:var(--text)\"></div>";
+    html += "<button data-tid=\""+t.id+"\" onclick=\"subirDoc(this.dataset.tid)\" style=\"background:var(--gold);border:none;border-radius:7px;padding:8px 12px;font-size:11px;font-weight:800;color:#000;cursor:pointer\">💾</button></div></div>";
+  });
+  document.getElementById("docs-body").innerHTML = html;
+}
+
+async function subirDoc(tipoDoc) {
+  var tipo = _docsCtx.tipo, entId = _docsCtx.entId;
+  var emp = DB._empresa || _sessionUsuario && _sessionUsuario.empresa;
+  var fecha = document.getElementById("df-"+tipoDoc) && document.getElementById("df-"+tipoDoc).value || null;
+  var fileEl = document.getElementById("ff-"+tipoDoc);
+  var file = fileEl && fileEl.files && fileEl.files[0];
+  if(!file && !fecha) { toast("Ingresa fecha o adjunta archivo"); return; }
+  var url = "";
+  if(file) {
+    var ext = file.name.split(".").pop();
+    var path = emp+"/"+tipo+"/"+entId.replace(/ /g,"_")+"_"+tipoDoc+"_"+Date.now()+"."+ext;
+    var up = await supa.storage.from("kaptura-guias").upload(path, file, {upsert:true});
+    if(up.error) { toast("Error: "+up.error.message); return; }
+    url = supa.storage.from("kaptura-guias").getPublicUrl(path).data.publicUrl;
+  }
+  var docExist = (DB.documentos||[]).find(function(d){ return d.tipo_entidad===tipo && d.entidad_id===entId && d.tipo_doc===tipoDoc; });
+  if(docExist) await supa.from("kaptura_documentos").update({activo:false}).eq("id", docExist.id);
+  var ins = await supa.from("kaptura_documentos").insert({empresa:emp, tipo_entidad:tipo, entidad_id:entId, tipo_doc:tipoDoc, fecha_vencimiento:fecha||null, url:url||null, activo:true}).select().single();
+  if(ins.error) { toast("Error: "+ins.error.message); return; }
+  DB.documentos = (DB.documentos||[]).filter(function(d){ return !(d.tipo_entidad===tipo && d.entidad_id===entId && d.tipo_doc===tipoDoc); });
+  if(ins.data) DB.documentos.push(ins.data);
+  toast("✓ Documento guardado");
+  renderDocumentos();
+}
+
+async function eliminarDocItem(docId) {
+  if(!confirm("Eliminar este documento?")) return;
+  await supa.from("kaptura_documentos").update({activo:false}).eq("id", docId);
+  DB.documentos = (DB.documentos||[]).filter(function(d){ return d.id !== docId; });
+  toast("Documento eliminado");
+  renderDocumentos();
+}
+
 // ══ INFORME ══
 async function abrirInforme(i) {
   const s = DB.servicios[i];
@@ -4250,6 +4328,9 @@ function imprimirInforme() {
     </div>
   </div>
 </div>
+
+<!-- MODAL DOCS -->
+<div class="overlay" id="modal-docs" style="display:none"><div class="modal"><div class="modal-hdr"><div><div class="modal-ttl">📎 Docs — <span id="docs-titulo"></span></div><div class="modal-sub" id="docs-sub"></div></div><button class="modal-cls" onclick="cerrar('modal-docs')">✕</button></div><div class="modal-body" id="docs-body"></div></div></div>
 </body></html>`);
   win.document.close();
   setTimeout(() => win.print(), 500);
@@ -4815,6 +4896,8 @@ async function cargarSetup() {
 
   // Cargar conductores
   const {data: conds} = await supa.from('kaptura_conductores').select('*').eq('empresa', emp).eq('activo', true);
+  const {data: docs_} = await supa.from('kaptura_documentos').select('*').eq('empresa', emp).eq('activo', true);
+  DB.documentos = docs_ || [];
   DB.conductores = conds || [];
   _setupConductores = [];
   renderSetupListaConductores();
@@ -5128,6 +5211,7 @@ function renderSetupListaEquipos() {
     <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:var(--bg);border-radius:7px;margin-bottom:5px;border:1px solid var(--border)">
       <div><span style="font-size:13px;font-weight:800;color:var(--gold)">${f.patente}</span><span style="font-size:11px;color:var(--muted);margin-left:8px">${f.tipo||''}</span><span style="font-size:10px;color:var(--muted);margin-left:6px">${f.rendimiento_km_lt ? f.rendimiento_km_lt+' km/lt' : ''}</span></div>
       <div style="display:flex;gap:5px">
+        <button data-pat="${f.patente}" data-tipo="equipo" onclick="abrirDocs(this.dataset.tipo,this.dataset.pat)" style="background:rgba(76,175,122,0.15);border:1px solid rgba(76,175,122,0.3);color:var(--green);border-radius:5px;padding:3px 8px;font-size:10px;cursor:pointer;font-weight:700">📎 Docs</button>
         <button data-pat="${f.patente}" onclick="setupEditarEquipo(this.dataset.pat)" style="background:rgba(201,168,76,0.15);border:1px solid rgba(201,168,76,0.3);color:var(--gold);border-radius:5px;padding:3px 8px;font-size:10px;cursor:pointer;font-weight:700">✏ Editar</button>
         <button onclick="setupEliminarEquipo('${f.id}')" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:var(--danger);border-radius:5px;padding:3px 8px;font-size:10px;cursor:pointer;font-weight:700">✕</button>
       </div>
@@ -5160,6 +5244,7 @@ function renderSetupListaConductores() {
     const rut = c.rut ? '<span style="font-size:11px;color:var(--muted);margin-left:8px">'+c.rut+'</span>' : '';
     html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:var(--bg);border-radius:7px;margin-bottom:5px;border:1px solid var(--border)">'
       + '<div><span style="font-size:13px;font-weight:700;color:var(--text)">'+c.nombre+'</span>'+rut+'<span style="font-size:10px;color:var(--muted);margin-left:6px">✓</span></div>'
+      + '<button data-cnom="'+c.nombre+'" data-tipo="conductor" onclick="abrirDocs(this.dataset.tipo,this.dataset.cnom)" style="background:rgba(76,175,122,0.15);border:1px solid rgba(76,175,122,0.3);color:var(--green);border-radius:5px;padding:3px 8px;font-size:10px;cursor:pointer;font-weight:700">📎 Docs</button>'
       + '<button data-cid="'+c.nombre+'" onclick="setupEliminarConductor(this.dataset.cid)" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:var(--danger);border-radius:5px;padding:3px 8px;font-size:10px;cursor:pointer">✕</button>'
       + '</div>';
   });
@@ -5342,7 +5427,10 @@ async function eliminarLiquidacion(id, e) {
   // Admin kaptura puede en cualquier empresa
   // Coordinador Madrid: solo PIN 1996
   // Coordinador Global: solo PIN 0101
-  // Cualquier usuario autenticado puede eliminar liquidaciones
+  const puedeEliminar = rol === 'admin_kaptura' || 
+    (rol === 'coordinador' && pin === '1996' && emp === 'flota_297221') ||
+    (rol === 'coordinador' && pin === '0101' && emp === 'global_solutions');
+  if(!puedeEliminar) { toast('Sin permiso para eliminar liquidaciones'); return; }
   if(!confirm('¿Eliminar esta liquidación? Esta acción no se puede deshacer.')) return;
   const {error} = await supa.from('kaptura_liquidaciones').delete().eq('id', id);
   if(error) { toast('Error: '+error.message); return; }
@@ -5380,7 +5468,7 @@ function renderLiquidaciones() {
           <span>Neto: $${Number(l.monto_neto||0).toLocaleString('es-CL')}</span>
           ${l.factoring ? '<span style="color:#a78bfa">● Factoring</span>' : ''}
         </div>
-        ${(()=>{const r=_sessionUsuario?.rol,p=_sessionUsuario?.pin,em=_sessionUsuario?.empresa;const ok=true;return ok?`<button onclick="eliminarLiquidacion('${l.id}',event)" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:var(--danger);border-radius:5px;padding:3px 10px;font-size:10px;cursor:pointer;font-weight:700">✕ Eliminar</button>`:'';})()}
+        ${(()=>{const r=_sessionUsuario?.rol,p=_sessionUsuario?.pin,em=_sessionUsuario?.empresa;const ok=r==='admin_kaptura'||(r==='coordinador'&&p==='1996'&&em==='flota_297221')||(r==='coordinador'&&p==='0101'&&em==='global_solutions');return ok?`<button onclick="eliminarLiquidacion('${l.id}',event)" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:var(--danger);border-radius:5px;padding:3px 10px;font-size:10px;cursor:pointer;font-weight:700">✕ Eliminar</button>`:'';})()}
       </div>
     </div>`).join('');
 }
@@ -5817,5 +5905,8 @@ iniciarLogin();
     </div>
   </div>
 </div>
+
+<!-- MODAL DOCS -->
+<div class="overlay" id="modal-docs" style="display:none"><div class="modal"><div class="modal-hdr"><div><div class="modal-ttl">📎 Docs — <span id="docs-titulo"></span></div><div class="modal-sub" id="docs-sub"></div></div><button class="modal-cls" onclick="cerrar('modal-docs')">✕</button></div><div class="modal-body" id="docs-body"></div></div></div>
 </body>
 </html>
