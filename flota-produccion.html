@@ -4053,10 +4053,65 @@ function abrirEvaluacion(clienteNombre) {
 
 function calcEvaluacion() {
   const pN = function(id) { return parseFloat(document.getElementById(id)?.value||'0')||0; };
+  const c      = DB.config;
   const tarifa = pN('eval-tarifa');
+  const dias   = pN('eval-dias') || 1;
+  const tarifaIva = tarifa * 1.19;
+
+  // Sueldo conductor × días (automático)
+  const sueldoDia = parseInt(c.sueldo_diario||33000);
+  const condEl = document.getElementById('eval-conductor');
+  if(condEl && !condEl.dataset.manual) condEl.value = sueldoDia * dias;
+
+  // Comisión conductor — % desde config sobre tarifa neta
+  const comPct = parseFloat(c.comision_conductor||10);
+  const comEl  = document.getElementById('eval-comision');
+  if(comEl && !comEl.dataset.manual && tarifa > 0) comEl.value = Math.round(tarifa * comPct / 100);
+
+  // Costo fijo × días
+  const cfDia = parseInt(c.costo_fijo_dia||0) || (parseInt(c.costo_fijo_mensual||0) > 0 ? Math.round(parseInt(c.costo_fijo_mensual)/(parseInt(c.dias_operativos||20))) : 0);
+  const cfEl  = document.getElementById('eval-cf');
+  if(cfEl && !cfEl.dataset.manual) cfEl.value = cfDia * dias;
+
+  // Viático × días
+  const viaticoDia = parseInt(c.viatico_dia||c.viatico||0);
+  const viatEl = document.getElementById('eval-viatico');
+  if(viatEl && !viatEl.dataset.manual) viatEl.value = viaticoDia * dias;
+
+  // Combustible desde km
+  const kmIda = pN('eval-km-ida');
+  const kmVta = pN('eval-km-vta');
+  const kmTotal = kmIda + kmVta;
+  const combEl = document.getElementById('eval-comb');
+  if(kmTotal > 0 && combEl && !combEl.dataset.manual) {
+    const rend   = parseFloat(c.rendimiento||2.5);
+    const precio = parseInt(c.precio_litro||1300);
+    combEl.value = Math.round((kmTotal/rend)*precio);
+  }
+  // Mantención desde km
+  const mantEl = document.getElementById('eval-mant');
+  if(kmTotal > 0 && mantEl && !mantEl.dataset.manual) {
+    const mantCosto = parseInt(c.mant_costo||0);
+    const mantKm    = parseInt(c.mant_km||20000);
+    if(mantCosto > 0 && mantKm > 0) mantEl.value = Math.round(kmTotal * mantCosto / mantKm);
+  }
+
+  // Corretaje % sobre tarifa + IVA
+  const corretajePct = pN('eval-corretaje-pct');
+  const corretajeVal = corretajePct > 0 ? Math.round(tarifaIva * corretajePct / 100) : 0;
+  const corrEl = document.getElementById('eval-corretaje');
+  if(corrEl) corrEl.value = corretajeVal || '';
+
+  // Factoring % sobre tarifa + IVA
+  const factoringPct = pN('eval-factoring-pct');
+  const factoringVal = factoringPct > 0 ? Math.round(tarifaIva * factoringPct / 100) : 0;
+  const factEl = document.getElementById('eval-factoring');
+  if(factEl) factEl.value = factoringVal || '';
+
+  // Total costos
   const costos = pN('eval-comb') + pN('eval-peajes') + pN('eval-conductor') + pN('eval-comision') +
                  pN('eval-cf') + pN('eval-mant') + pN('eval-viatico') + pN('eval-contingencia') +
-                 pN('eval-corretaje') + pN('eval-otros');
+                 corretajeVal + factoringVal + pN('eval-otros');
   const margen = tarifa - costos;
   const pct    = tarifa > 0 ? Math.round((margen/tarifa)*100) : 0;
   const color  = margen >= 0 ? 'var(--green)' : '#B05A5A';
@@ -4066,22 +4121,6 @@ function calcEvaluacion() {
   document.getElementById('eval-r-margen').style.color  = color;
   document.getElementById('eval-r-pct').textContent     = pct + '%';
   document.getElementById('eval-r-pct').style.color     = color;
-  // Recalcular combustible si hay km
-  const kmIda = pN('eval-km-ida');
-  const kmVta = pN('eval-km-vta');
-  const kmTotal = kmIda + kmVta;
-  const c = DB.config;
-  if(kmTotal > 0 && !document.getElementById('eval-comb').dataset.manual) {
-    const rend  = parseFloat(c.rendimiento||2.5);
-    const precio = parseInt(c.precio_litro||1300);
-    document.getElementById('eval-comb').value = Math.round((kmTotal/rend)*precio);
-    const mantCosto = parseInt(c.mant_costo||0);
-    const mantKm    = parseInt(c.mant_km||20000);
-    if(mantCosto > 0 && mantKm > 0 && !document.getElementById('eval-mant').dataset.manual) {
-      document.getElementById('eval-mant').value = Math.round(kmTotal * mantCosto / mantKm);
-    }
-    calcEvaluacion(); // recalcular con nuevos valores
-  }
 }
 
 async function guardarEvaluacion() {
@@ -4092,9 +4131,11 @@ async function guardarEvaluacion() {
   if(!tramo) { toast('Ingresa el tramo'); return; }
   if(!tarifa) { toast('Ingresa la tarifa'); return; }
   const emp    = DB._empresa || _sessionUsuario?.empresa;
+  const corretajeG = pN('eval-corretaje');
+  const factoringG  = pN('eval-factoring');
   const costos = pN('eval-comb') + pN('eval-peajes') + pN('eval-conductor') + pN('eval-comision') +
                  pN('eval-cf') + pN('eval-mant') + pN('eval-viatico') + pN('eval-contingencia') +
-                 pN('eval-corretaje') + pN('eval-otros');
+                 corretajeG + factoringG + pN('eval-otros');
   const margen    = tarifa - costos;
   const margenPct = tarifa > 0 ? Math.round((margen/tarifa)*100) : 0;
   const detalle   = {
@@ -4495,20 +4536,40 @@ function imprimirInforme() {
           <div class="fld"><label class="lbl">Peajes</label><input class="inp" id="eval-peajes" type="number" placeholder="0" oninput="calcEvaluacion()"></div>
         </div>
         <div class="fld2">
-          <div class="fld"><label class="lbl">Costo Conductor</label><input class="inp" id="eval-conductor" type="number" placeholder="0" oninput="calcEvaluacion()"></div>
-          <div class="fld"><label class="lbl">Comisión Conductor</label><input class="inp" id="eval-comision" type="number" placeholder="0" oninput="calcEvaluacion()"></div>
+          <div class="fld"><label class="lbl">Costo Conductor</label><input class="inp" id="eval-conductor" type="number" placeholder="0" oninput="this.dataset.manual='1';calcEvaluacion()"></div>
+          <div class="fld"><label class="lbl">Comisión Conductor</label><input class="inp" id="eval-comision" type="number" placeholder="0" oninput="this.dataset.manual='1';calcEvaluacion()"></div>
         </div>
         <div class="fld2">
-          <div class="fld"><label class="lbl">Costo Fijo/Día</label><input class="inp" id="eval-cf" type="number" placeholder="0" oninput="calcEvaluacion()"></div>
+          <div class="fld"><label class="lbl">Costo Fijo/Día</label><input class="inp" id="eval-cf" type="number" placeholder="0" oninput="this.dataset.manual='1';calcEvaluacion()"></div>
           <div class="fld"><label class="lbl">Mantención</label><input class="inp" id="eval-mant" type="number" placeholder="0" oninput="this.dataset.manual='1';calcEvaluacion()"></div>
         </div>
         <div class="fld2">
-          <div class="fld"><label class="lbl">Viático</label><input class="inp" id="eval-viatico" type="number" placeholder="0" oninput="calcEvaluacion()"></div>
+          <div class="fld"><label class="lbl">Viático</label><input class="inp" id="eval-viatico" type="number" placeholder="0" oninput="this.dataset.manual='1';calcEvaluacion()"></div>
           <div class="fld"><label class="lbl">Contingencia</label><input class="inp" id="eval-contingencia" type="number" placeholder="0" oninput="calcEvaluacion()"></div>
         </div>
         <div class="fld2">
-          <div class="fld"><label class="lbl">Corretaje/Generador</label><input class="inp" id="eval-corretaje" type="number" placeholder="0" oninput="calcEvaluacion()"></div>
-          <div class="fld"><label class="lbl">Otros</label><input class="inp" id="eval-otros" type="number" placeholder="0" oninput="calcEvaluacion()"></div>
+          <div class="fld">
+            <label class="lbl">Corretaje % <span style="font-size:9px;color:var(--muted)">(sobre tarifa+IVA)</span></label>
+            <input class="inp" id="eval-corretaje-pct" type="number" step="0.5" placeholder="Ej: 5" oninput="calcEvaluacion()">
+          </div>
+          <div class="fld">
+            <label class="lbl">Corretaje $</label>
+            <input class="inp" id="eval-corretaje" type="number" placeholder="0" readonly style="opacity:0.7">
+          </div>
+        </div>
+        <div class="fld2">
+          <div class="fld">
+            <label class="lbl">Factoring % <span style="font-size:9px;color:var(--muted)">(sobre tarifa+IVA)</span></label>
+            <input class="inp" id="eval-factoring-pct" type="number" step="0.5" placeholder="Ej: 1.5" oninput="calcEvaluacion()">
+          </div>
+          <div class="fld">
+            <label class="lbl">Factoring $</label>
+            <input class="inp" id="eval-factoring" type="number" placeholder="0" readonly style="opacity:0.7">
+          </div>
+        </div>
+        <div class="fld">
+          <label class="lbl">Otros</label>
+          <input class="inp" id="eval-otros" type="number" placeholder="0" oninput="calcEvaluacion()">
         </div>
       </div>
       <!-- Resultado -->
@@ -6160,20 +6221,40 @@ iniciarLogin();
           <div class="fld"><label class="lbl">Peajes</label><input class="inp" id="eval-peajes" type="number" placeholder="0" oninput="calcEvaluacion()"></div>
         </div>
         <div class="fld2">
-          <div class="fld"><label class="lbl">Costo Conductor</label><input class="inp" id="eval-conductor" type="number" placeholder="0" oninput="calcEvaluacion()"></div>
-          <div class="fld"><label class="lbl">Comisión Conductor</label><input class="inp" id="eval-comision" type="number" placeholder="0" oninput="calcEvaluacion()"></div>
+          <div class="fld"><label class="lbl">Costo Conductor</label><input class="inp" id="eval-conductor" type="number" placeholder="0" oninput="this.dataset.manual='1';calcEvaluacion()"></div>
+          <div class="fld"><label class="lbl">Comisión Conductor</label><input class="inp" id="eval-comision" type="number" placeholder="0" oninput="this.dataset.manual='1';calcEvaluacion()"></div>
         </div>
         <div class="fld2">
-          <div class="fld"><label class="lbl">Costo Fijo/Día</label><input class="inp" id="eval-cf" type="number" placeholder="0" oninput="calcEvaluacion()"></div>
+          <div class="fld"><label class="lbl">Costo Fijo/Día</label><input class="inp" id="eval-cf" type="number" placeholder="0" oninput="this.dataset.manual='1';calcEvaluacion()"></div>
           <div class="fld"><label class="lbl">Mantención</label><input class="inp" id="eval-mant" type="number" placeholder="0" oninput="this.dataset.manual='1';calcEvaluacion()"></div>
         </div>
         <div class="fld2">
-          <div class="fld"><label class="lbl">Viático</label><input class="inp" id="eval-viatico" type="number" placeholder="0" oninput="calcEvaluacion()"></div>
+          <div class="fld"><label class="lbl">Viático</label><input class="inp" id="eval-viatico" type="number" placeholder="0" oninput="this.dataset.manual='1';calcEvaluacion()"></div>
           <div class="fld"><label class="lbl">Contingencia</label><input class="inp" id="eval-contingencia" type="number" placeholder="0" oninput="calcEvaluacion()"></div>
         </div>
         <div class="fld2">
-          <div class="fld"><label class="lbl">Corretaje/Generador</label><input class="inp" id="eval-corretaje" type="number" placeholder="0" oninput="calcEvaluacion()"></div>
-          <div class="fld"><label class="lbl">Otros</label><input class="inp" id="eval-otros" type="number" placeholder="0" oninput="calcEvaluacion()"></div>
+          <div class="fld">
+            <label class="lbl">Corretaje % <span style="font-size:9px;color:var(--muted)">(sobre tarifa+IVA)</span></label>
+            <input class="inp" id="eval-corretaje-pct" type="number" step="0.5" placeholder="Ej: 5" oninput="calcEvaluacion()">
+          </div>
+          <div class="fld">
+            <label class="lbl">Corretaje $</label>
+            <input class="inp" id="eval-corretaje" type="number" placeholder="0" readonly style="opacity:0.7">
+          </div>
+        </div>
+        <div class="fld2">
+          <div class="fld">
+            <label class="lbl">Factoring % <span style="font-size:9px;color:var(--muted)">(sobre tarifa+IVA)</span></label>
+            <input class="inp" id="eval-factoring-pct" type="number" step="0.5" placeholder="Ej: 1.5" oninput="calcEvaluacion()">
+          </div>
+          <div class="fld">
+            <label class="lbl">Factoring $</label>
+            <input class="inp" id="eval-factoring" type="number" placeholder="0" readonly style="opacity:0.7">
+          </div>
+        </div>
+        <div class="fld">
+          <label class="lbl">Otros</label>
+          <input class="inp" id="eval-otros" type="number" placeholder="0" oninput="calcEvaluacion()">
         </div>
       </div>
       <!-- Resultado -->
