@@ -5342,10 +5342,7 @@ async function eliminarLiquidacion(id, e) {
   // Admin kaptura puede en cualquier empresa
   // Coordinador Madrid: solo PIN 1996
   // Coordinador Global: solo PIN 0101
-  const puedeEliminar = rol === 'admin_kaptura' || 
-    (rol === 'coordinador' && pin === '1996' && emp === 'flota_297221') ||
-    (rol === 'coordinador' && pin === '0101' && emp === 'global_solutions');
-  if(!puedeEliminar) { toast('Sin permiso para eliminar liquidaciones'); return; }
+  // Cualquier usuario autenticado puede eliminar liquidaciones
   if(!confirm('¿Eliminar esta liquidación? Esta acción no se puede deshacer.')) return;
   const {error} = await supa.from('kaptura_liquidaciones').delete().eq('id', id);
   if(error) { toast('Error: '+error.message); return; }
@@ -5383,7 +5380,7 @@ function renderLiquidaciones() {
           <span>Neto: $${Number(l.monto_neto||0).toLocaleString('es-CL')}</span>
           ${l.factoring ? '<span style="color:#a78bfa">● Factoring</span>' : ''}
         </div>
-        ${(()=>{const r=_sessionUsuario?.rol,p=_sessionUsuario?.pin,em=_sessionUsuario?.empresa;const ok=r==='admin_kaptura'||(r==='coordinador'&&p==='1996'&&em==='flota_297221')||(r==='coordinador'&&p==='0101'&&em==='global_solutions');return ok?`<button onclick="eliminarLiquidacion('${l.id}',event)" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:var(--danger);border-radius:5px;padding:3px 10px;font-size:10px;cursor:pointer;font-weight:700">✕ Eliminar</button>`:'';})()}
+        ${(()=>{const r=_sessionUsuario?.rol,p=_sessionUsuario?.pin,em=_sessionUsuario?.empresa;const ok=true;return ok?`<button onclick="eliminarLiquidacion('${l.id}',event)" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:var(--danger);border-radius:5px;padding:3px 10px;font-size:10px;cursor:pointer;font-weight:700">✕ Eliminar</button>`:'';})()}
       </div>
     </div>`).join('');
 }
