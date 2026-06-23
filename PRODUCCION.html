@@ -1100,11 +1100,53 @@ async function validarPinGo() {
       showScreen('screen-onboarding-conductor');
       return;
     }
+    // Verificar si es PIN de onboarding despachador
+    const {data: pinDesp} = await supa.from('kaptura_config')
+      .select('empresa, valor').eq('clave', 'pin_onboarding_despachador');
+    const matchDesp = (pinDesp||[]).find(r => r.valor === _goPinIngresado);
+    if(matchDesp) {
+      window._onboardingDespachadorEmpresa = matchDesp.empresa;
+      document.getElementById('onb-desp-nombre').value = '';
+      document.getElementById('onb-desp-pin').value = '';
+      document.getElementById('onb-desp-pin2').value = '';
+      document.getElementById('onb-desp-error').textContent = '';
+      showScreen('screen-onboarding-despachador');
+      return;
+    }
     const err = document.getElementById('go-pin-error');
     if(err) err.textContent = 'PIN incorrecto. Intenta de nuevo.';
     _goPinIngresado = '';
     actualizarDotsGo();
   }
+}
+
+async function confirmarOnboardingDespachador() {
+  const nombre  = document.getElementById('onb-desp-nombre').value.trim().toUpperCase();
+  const pin     = document.getElementById('onb-desp-pin').value.trim();
+  const pin2    = document.getElementById('onb-desp-pin2').value.trim();
+  const errEl   = document.getElementById('onb-desp-error');
+  const empresa = window._onboardingDespachadorEmpresa;
+
+  if(!nombre) { errEl.textContent = 'Ingresa tu nombre.'; return; }
+  if(!pin || pin.length !== 4 || isNaN(pin)) { errEl.textContent = 'PIN debe tener 4 dígitos.'; return; }
+  if(pin !== pin2) { errEl.textContent = 'Los PINs no coinciden.'; return; }
+  if(pin === '0003' || pin === '1234' || pin === '2345') { errEl.textContent = 'No puedes usar ese PIN.'; return; }
+
+  const {data:existe} = await supa.from('kaptura_usuarios').select('pin').eq('pin', pin).single();
+  if(existe) { errEl.textContent = 'PIN en uso. Elige otro.'; return; }
+
+  const btn = document.getElementById('onb-desp-btn');
+  btn.textContent = 'Creando...'; btn.disabled = true;
+
+  const {error} = await supa.from('kaptura_usuarios').insert({
+    pin, rol: 'despachador', empresa, nombre, activo: true
+  });
+  if(error) { errEl.textContent = 'Error: '+error.message; btn.textContent = 'CONFIRMAR'; btn.disabled=false; return; }
+
+  localStorage.setItem('kaptura_session', JSON.stringify({
+    pin, empresa, rol: 'despachador', nombre
+  }));
+  window.location.href = 'flota-produccion.html';
 }
 
 async function confirmarOnboardingConductor() {
@@ -4290,6 +4332,37 @@ async function flotaAgregarCliente() {
 
     <div id="onb-cond-error" style="color:#E05555;font-size:13px;margin-bottom:12px;min-height:18px"></div>
     <button id="onb-cond-btn" onclick="confirmarOnboardingConductor()" style="width:100%;background:#FF6B00;border:none;border-radius:10px;padding:14px;font-family:'DM Sans',sans-serif;font-size:16px;font-weight:900;color:#000;cursor:pointer;letter-spacing:0.06em">CONFIRMAR</button>
+  </div>
+</div>
+
+<!-- PANTALLA ONBOARDING DESPACHADOR -->
+<div class="screen" id="screen-onboarding-despachador" style="background:#0D0D0D;padding:0;min-height:100vh">
+  <div style="background:rgba(0,0,0,0.4);padding:14px 16px;border-bottom:1px solid #2A2A2A;display:flex;justify-content:space-between;align-items:center">
+    <div>
+      <div style="font-family:'DM Sans',sans-serif;font-size:18px;font-weight:900;color:#FF6B00">KAPTURA</div>
+      <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.5);letter-spacing:0.2em">REGISTRO DESPACHADOR</div>
+    </div>
+    <button onclick="showScreen('screen-pin-go');_goPinIngresado='';actualizarDotsGo();" style="background:transparent;border:1px solid #2A2A2A;border-radius:8px;padding:6px 12px;font-size:11px;color:rgba(255,255,255,0.5);cursor:pointer">← Volver</button>
+  </div>
+  <div style="padding:20px">
+    <div style="font-family:'DM Sans',sans-serif;font-size:24px;font-weight:900;color:#fff;margin-bottom:6px">Crea tu acceso</div>
+    <div style="font-size:13px;color:rgba(255,255,255,0.4);margin-bottom:24px">Ingresa tu nombre y crea tu PIN personal.</div>
+    <div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:12px;margin-bottom:16px">
+      <div>
+        <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.5);text-transform:uppercase;margin-bottom:6px">Nombre completo</div>
+        <input id="onb-desp-nombre" type="text" placeholder="Tu nombre completo" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:8px;padding:10px 12px;font-size:14px;color:#fff;font-family:'DM Sans',sans-serif;text-transform:uppercase">
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.5);text-transform:uppercase;margin-bottom:6px">Crear PIN (4 dígitos)</div>
+        <input id="onb-desp-pin" type="number" placeholder="####" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:8px;padding:10px 12px;font-size:20px;color:#FF6B00;font-family:'DM Sans',sans-serif;font-weight:900;letter-spacing:0.3em;text-align:center">
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.5);text-transform:uppercase;margin-bottom:6px">Confirmar PIN</div>
+        <input id="onb-desp-pin2" type="number" placeholder="####" style="width:100%;background:#0D0D0D;border:1px solid #2A2A2A;border-radius:8px;padding:10px 12px;font-size:20px;color:#FF6B00;font-family:'DM Sans',sans-serif;font-weight:900;letter-spacing:0.3em;text-align:center">
+      </div>
+    </div>
+    <div id="onb-desp-error" style="color:#E05555;font-size:13px;margin-bottom:12px;min-height:18px"></div>
+    <button id="onb-desp-btn" onclick="confirmarOnboardingDespachador()" style="width:100%;background:#FF6B00;border:none;border-radius:10px;padding:14px;font-family:'DM Sans',sans-serif;font-size:16px;font-weight:900;color:#000;cursor:pointer;letter-spacing:0.06em">CONFIRMAR</button>
   </div>
 </div>
 </body>
