@@ -3939,6 +3939,17 @@ function semaforo(f) {
   return "<span style=\"color:#7EA87E;font-weight:800\">🟢 VIGENTE</span>";
 }
 
+function docBtnStyle(tipo, id) {
+  var docs = (DB.documentos||[]).filter(function(d){ return d.tipo_entidad===tipo && d.entidad_id===id; });
+  var hoy  = new Date();
+  var venc = docs.some(function(d){ return d.fecha_vencimiento && new Date(d.fecha_vencimiento) < hoy; });
+  var prox = docs.some(function(d){ return d.fecha_vencimiento && Math.round((new Date(d.fecha_vencimiento)-hoy)/864e5) <= 30; });
+  var bg  = (!docs.length||venc) ? 'rgba(239,68,68,0.15)' : prox ? 'rgba(201,168,76,0.15)' : 'rgba(76,175,122,0.15)';
+  var br  = (!docs.length||venc) ? 'rgba(239,68,68,0.3)'  : prox ? 'rgba(201,168,76,0.3)'  : 'rgba(76,175,122,0.3)';
+  var col = (!docs.length||venc) ? 'var(--danger)'        : prox ? 'var(--gold)'            : 'var(--green)';
+  return 'background:'+bg+';border:1px solid '+br+';color:'+col+';border-radius:5px;padding:3px 8px;font-size:10px;cursor:pointer;font-weight:700';
+}
+
 function abrirDocs(tipo, entId) {
   _docsCtx = {tipo:tipo, entId:entId};
   document.getElementById("docs-titulo").textContent = tipo === "equipo" ? "EQUIPO" : "CONDUCTOR";
@@ -5219,7 +5230,7 @@ function renderSetupListaEquipos() {
     <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:var(--bg);border-radius:7px;margin-bottom:5px;border:1px solid var(--border)">
       <div><span style="font-size:13px;font-weight:800;color:var(--gold)">${f.patente}</span><span style="font-size:11px;color:var(--muted);margin-left:8px">${f.tipo||''}</span><span style="font-size:10px;color:var(--muted);margin-left:6px">${f.rendimiento_km_lt ? f.rendimiento_km_lt+' km/lt' : ''}</span></div>
       <div style="display:flex;gap:5px">
-        <button data-pat="${f.patente}" data-tipo="equipo" onclick="abrirDocs(this.dataset.tipo,this.dataset.pat)" style="background:${(function(pat){var docs=(DB.documentos||[]).filter(function(d){return d.tipo_entidad==='equipo'&&d.entidad_id===pat;});if(!docs.length)return 'rgba(239,68,68,0.15)';var hoy=new Date();var venc=docs.some(function(d){return d.fecha_vencimiento&&new Date(d.fecha_vencimiento)<hoy;});var prox=docs.some(function(d){return d.fecha_vencimiento&&Math.round((new Date(d.fecha_vencimiento)-hoy)/864e5)<=30;});return venc?'rgba(239,68,68,0.15)':prox?'rgba(201,168,76,0.15)':'rgba(76,175,122,0.15)';})(f.patente)};border:1px solid ${(function(pat){var docs=(DB.documentos||[]).filter(function(d){return d.tipo_entidad==='equipo'&&d.entidad_id===pat;});if(!docs.length)return 'rgba(239,68,68,0.3)';var hoy=new Date();var venc=docs.some(function(d){return d.fecha_vencimiento&&new Date(d.fecha_vencimiento)<hoy;});var prox=docs.some(function(d){return d.fecha_vencimiento&&Math.round((new Date(d.fecha_vencimiento)-hoy)/864e5)<=30;});return venc?'rgba(239,68,68,0.3)':prox?'rgba(201,168,76,0.3)':'rgba(76,175,122,0.3)';})(f.patente)};color:${(function(pat){var docs=(DB.documentos||[]).filter(function(d){return d.tipo_entidad==='equipo'&&d.entidad_id===pat;});if(!docs.length)return 'var(--danger)';var hoy=new Date();var venc=docs.some(function(d){return d.fecha_vencimiento&&new Date(d.fecha_vencimiento)<hoy;});var prox=docs.some(function(d){return d.fecha_vencimiento&&Math.round((new Date(d.fecha_vencimiento)-hoy)/864e5)<=30;});return venc?'var(--danger)':prox?'var(--gold)':'var(--green)';})(f.patente)};border-radius:5px;padding:3px 8px;font-size:10px;cursor:pointer;font-weight:700">📎 Documentos</button>
+        <button data-pat="${f.patente}" data-tipo="equipo" onclick="abrirDocs(this.dataset.tipo,this.dataset.pat)" style="${docBtnStyle('equipo',f.patente)}">📎 Documentos</button>
         <button data-pat="${f.patente}" onclick="setupEditarEquipo(this.dataset.pat)" style="background:rgba(201,168,76,0.15);border:1px solid rgba(201,168,76,0.3);color:var(--gold);border-radius:5px;padding:3px 8px;font-size:10px;cursor:pointer;font-weight:700">✏ Editar</button>
         <button onclick="setupEliminarEquipo('${f.id}')" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:var(--danger);border-radius:5px;padding:3px 8px;font-size:10px;cursor:pointer;font-weight:700">✕</button>
       </div>
@@ -5252,7 +5263,7 @@ function renderSetupListaConductores() {
     const rut = c.rut ? '<span style="font-size:11px;color:var(--muted);margin-left:8px">'+c.rut+'</span>' : '';
     html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:var(--bg);border-radius:7px;margin-bottom:5px;border:1px solid var(--border)">'
       + '<div><span style="font-size:13px;font-weight:700;color:var(--text)">'+c.nombre+'</span>'+rut+'<span style="font-size:10px;color:var(--muted);margin-left:6px">✓</span></div>'
-      + (function(nom){var docs=(DB.documentos||[]).filter(function(d){return d.tipo_entidad==='conductor'&&d.entidad_id===nom;});var hoy=new Date();var venc=docs.some(function(d){return d.fecha_vencimiento&&new Date(d.fecha_vencimiento)<hoy;});var prox=docs.some(function(d){return d.fecha_vencimiento&&Math.round((new Date(d.fecha_vencimiento)-hoy)/864e5)<=30;});var bg=!docs.length||venc?'rgba(239,68,68,0.15)':prox?'rgba(201,168,76,0.15)':'rgba(76,175,122,0.15)';var br=!docs.length||venc?'rgba(239,68,68,0.3)':prox?'rgba(201,168,76,0.3)':'rgba(76,175,122,0.3)';var col=!docs.length||venc?'var(--danger)':prox?'var(--gold)':'var(--green)';return '<button data-cnom="'+nom+'" data-tipo="conductor" onclick="abrirDocs(this.dataset.tipo,this.dataset.cnom)" style="background:'+bg+';border:1px solid '+br+';color:'+col+';border-radius:5px;padding:3px 8px;font-size:10px;cursor:pointer;font-weight:700">📎 Documentos</button>';})(c.nombre)
+      + '<button data-cnom="'+c.nombre+'" data-tipo="conductor" onclick="abrirDocs(this.dataset.tipo,this.dataset.cnom)" style="'+docBtnStyle('conductor',c.nombre)+'">📎 Documentos</button>'
       + '<button data-cid="'+c.nombre+'" onclick="setupEliminarConductor(this.dataset.cid)" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:var(--danger);border-radius:5px;padding:3px 8px;font-size:10px;cursor:pointer">✕</button>'
       + '</div>';
   });
