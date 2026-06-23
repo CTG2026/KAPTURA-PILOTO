@@ -290,7 +290,10 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
 
   <!-- TAB CLIENTES -->
   <div id="tab-clientes" style="display:none">
-    <div class="sec-ttl" style="margin-bottom:12px">Clientes</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div class="sec-ttl">Clientes</div>
+      <button class="btn btn-navy" onclick="abrirEvaluacion(null)">📊 Nueva Evaluación</button>
+    </div>
     <div id="lista-clientes"></div>
   </div>
 
@@ -2458,7 +2461,8 @@ function renderClientes() {
   document.getElementById('lista-clientes').innerHTML =
     DB.clientes.map(c => {
       const tarifas = DB.tarifarios.filter(t => t.cliente===c.nombre).length;
-      return `<div class="svc-card"><div class="svc-top"><div><div class="svc-pat">${c.nombre}</div><div class="svc-line">${c.condicion_pago||'30 días'}</div><div class="svc-line" style="color:var(--g400)">${tarifas} tarifas</div></div></div></div>`;
+      const evals = DB.evaluaciones ? DB.evaluaciones.filter(e => e.cliente===c.nombre).length : 0;
+      return `<div class="svc-card"><div class="svc-top"><div><div class="svc-pat">${c.nombre}</div><div class="svc-line">${c.condicion_pago||'30 días'}</div><div class="svc-line" style="color:var(--g400)">${tarifas} tarifas · ${evals} evaluaciones</div></div><button onclick="abrirEvaluacion('${c.nombre}')" style="background:rgba(201,168,76,0.15);border:1px solid rgba(201,168,76,0.3);color:var(--gold);border-radius:7px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer">📊 Evaluar</button></div></div>`;
     }).join('') || '<div class="empty">Sin datos</div>';
 }
 
@@ -4015,6 +4019,123 @@ async function eliminarDocItem(docId) {
   renderDocumentos();
 }
 
+// ══ CALCULADORA / EVALUACIÓN DE SERVICIOS ══
+function abrirEvaluacion(clienteNombre) {
+  const c = DB.config;
+  const dias = 1;
+  document.getElementById('eval-cliente').value = clienteNombre || '';
+  document.getElementById('eval-tramo').value   = '';
+  document.getElementById('eval-km-ida').value  = '';
+  document.getElementById('eval-km-vta').value  = '';
+  document.getElementById('eval-tarifa').value  = '';
+  document.getElementById('eval-dias').value    = dias;
+  // Precargar costos desde config
+  const sueldoDia = parseInt(c.sueldo_diario||c.sueldo_conductor||33000);
+  const viaticoDia = parseInt(c.viatico_dia||c.viatico||0);
+  const cfDia = parseInt(c.costo_fijo_dia||0) || (parseInt(c.costo_fijo_mensual||0) > 0 ? Math.round(parseInt(c.costo_fijo_mensual)/parseInt(c.dias_operativos||20)) : 0);
+  const contingencia = parseInt(c.fondo_contingencia||0) > 0 ? Math.round(parseInt(c.fondo_contingencia)/(parseInt(c.dias_operativos||20))) : 0;
+  document.getElementById('eval-conductor').value   = sueldoDia * dias;
+  document.getElementById('eval-comision').value    = '';
+  document.getElementById('eval-cf').value          = cfDia * dias;
+  document.getElementById('eval-mant').value        = '';
+  document.getElementById('eval-viatico').value     = viaticoDia * dias;
+  document.getElementById('eval-contingencia').value = contingencia;
+  document.getElementById('eval-comb').value        = '';
+  document.getElementById('eval-peajes').value      = '';
+  document.getElementById('eval-corretaje').value   = '';
+  document.getElementById('eval-otros').value       = '';
+  document.getElementById('eval-sub').textContent   = clienteNombre ? clienteNombre : 'Cliente spot / nuevo';
+  // Mostrar historial
+  renderEvalHistorial(clienteNombre);
+  calcEvaluacion();
+  document.getElementById('modal-evaluacion').style.display = 'flex';
+}
+
+function calcEvaluacion() {
+  const pN = function(id) { return parseFloat(document.getElementById(id)?.value||'0')||0; };
+  const tarifa = pN('eval-tarifa');
+  const costos = pN('eval-comb') + pN('eval-peajes') + pN('eval-conductor') + pN('eval-comision') +
+                 pN('eval-cf') + pN('eval-mant') + pN('eval-viatico') + pN('eval-contingencia') +
+                 pN('eval-corretaje') + pN('eval-otros');
+  const margen = tarifa - costos;
+  const pct    = tarifa > 0 ? Math.round((margen/tarifa)*100) : 0;
+  const color  = margen >= 0 ? 'var(--green)' : '#B05A5A';
+  document.getElementById('eval-r-ingreso').textContent = fmt(tarifa);
+  document.getElementById('eval-r-costos').textContent  = fmt(costos);
+  document.getElementById('eval-r-margen').textContent  = fmt(margen);
+  document.getElementById('eval-r-margen').style.color  = color;
+  document.getElementById('eval-r-pct').textContent     = pct + '%';
+  document.getElementById('eval-r-pct').style.color     = color;
+  // Recalcular combustible si hay km
+  const kmIda = pN('eval-km-ida');
+  const kmVta = pN('eval-km-vta');
+  const kmTotal = kmIda + kmVta;
+  const c = DB.config;
+  if(kmTotal > 0 && !document.getElementById('eval-comb').dataset.manual) {
+    const rend  = parseFloat(c.rendimiento||2.5);
+    const precio = parseInt(c.precio_litro||1300);
+    document.getElementById('eval-comb').value = Math.round((kmTotal/rend)*precio);
+    const mantCosto = parseInt(c.mant_costo||0);
+    const mantKm    = parseInt(c.mant_km||20000);
+    if(mantCosto > 0 && mantKm > 0 && !document.getElementById('eval-mant').dataset.manual) {
+      document.getElementById('eval-mant').value = Math.round(kmTotal * mantCosto / mantKm);
+    }
+    calcEvaluacion(); // recalcular con nuevos valores
+  }
+}
+
+async function guardarEvaluacion() {
+  const pN = function(id) { return parseFloat(document.getElementById(id)?.value||'0')||0; };
+  const cliente = document.getElementById('eval-cliente').value.trim();
+  const tramo   = document.getElementById('eval-tramo').value.trim();
+  const tarifa  = pN('eval-tarifa');
+  if(!tramo) { toast('Ingresa el tramo'); return; }
+  if(!tarifa) { toast('Ingresa la tarifa'); return; }
+  const emp    = DB._empresa || _sessionUsuario?.empresa;
+  const costos = pN('eval-comb') + pN('eval-peajes') + pN('eval-conductor') + pN('eval-comision') +
+                 pN('eval-cf') + pN('eval-mant') + pN('eval-viatico') + pN('eval-contingencia') +
+                 pN('eval-corretaje') + pN('eval-otros');
+  const margen    = tarifa - costos;
+  const margenPct = tarifa > 0 ? Math.round((margen/tarifa)*100) : 0;
+  const detalle   = {
+    km_ida:pN('eval-km-ida'), km_vuelta:pN('eval-km-vta'), dias:pN('eval-dias'),
+    comb:pN('eval-comb'), peajes:pN('eval-peajes'), conductor:pN('eval-conductor'),
+    comision:pN('eval-comision'), cf:pN('eval-cf'), mant:pN('eval-mant'),
+    viatico:pN('eval-viatico'), contingencia:pN('eval-contingencia'),
+    corretaje:pN('eval-corretaje'), otros:pN('eval-otros')
+  };
+  const {data:nd, error} = await supa.from('kaptura_evaluaciones').insert({
+    empresa:emp, cliente:cliente||null, tramo, tarifa_neta:tarifa,
+    total_costos:costos, margen, margen_pct:margenPct,
+    km_ida:detalle.km_ida, km_vuelta:detalle.km_vuelta, detalle
+  }).select().single();
+  if(error) { toast('Error: '+error.message); return; }
+  if(!DB.evaluaciones) DB.evaluaciones = [];
+  DB.evaluaciones.unshift(nd);
+  toast('✓ Evaluación guardada');
+  renderEvalHistorial(cliente);
+  renderClientes();
+}
+
+function renderEvalHistorial(clienteNombre) {
+  const el = document.getElementById('eval-historial');
+  if(!el) return;
+  const evals = (DB.evaluaciones||[]).filter(function(e){
+    return clienteNombre ? e.cliente === clienteNombre : true;
+  }).slice(0, 10);
+  if(!evals.length) { el.innerHTML = '<div style="font-size:12px;color:var(--muted)">Sin evaluaciones guardadas</div>'; return; }
+  el.innerHTML = evals.map(function(e) {
+    const color = e.margen >= 0 ? 'var(--green)' : '#B05A5A';
+    return '<div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:6px">'
+      + '<div style="display:flex;justify-content:space-between;align-items:center">'
+      + '<div><div style="font-size:12px;font-weight:800;color:var(--text)">'+(e.tramo||'—')+'</div>'
+      + '<div style="font-size:10px;color:var(--muted)">'+(e.cliente||'Cliente spot')+' · '+e.fecha+'</div></div>'
+      + '<div style="text-align:right"><div style="font-size:14px;font-weight:900;color:'+color+'">'+fmt(e.margen)+'</div>'
+      + '<div style="font-size:10px;color:var(--muted)">'+e.margen_pct+'% · '+fmt(e.tarifa_neta)+'</div></div>'
+      + '</div></div>';
+  }).join('');
+}
+
 // ══ INFORME ══
 async function abrirInforme(i) {
   const s = DB.servicios[i];
@@ -4346,6 +4467,79 @@ function imprimirInforme() {
 
 <!-- MODAL DOCS -->
 <div class="overlay" id="modal-docs" style="display:none"><div class="modal"><div class="modal-hdr"><div><div class="modal-ttl">📎 Docs — <span id="docs-titulo"></span></div><div class="modal-sub" id="docs-sub"></div></div><button class="modal-cls" onclick="cerrar('modal-docs')">✕</button></div><div class="modal-body" id="docs-body"></div></div></div>
+
+<!-- MODAL EVALUACIÓN -->
+<div class="overlay" id="modal-evaluacion" style="display:none">
+  <div class="modal" style="max-height:95vh;overflow-y:auto">
+    <div class="modal-hdr">
+      <div><div class="modal-ttl">📊 Evaluación de Servicio</div><div class="modal-sub" id="eval-sub"></div></div>
+      <button class="modal-cls" onclick="cerrar('modal-evaluacion')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="fld2">
+        <div class="fld"><label class="lbl">Cliente</label><input class="inp" id="eval-cliente" type="text" placeholder="Nombre del cliente"></div>
+        <div class="fld"><label class="lbl">Tramo</label><input class="inp" id="eval-tramo" type="text" placeholder="Ej: Chillan / Los Angeles"></div>
+      </div>
+      <div class="fld2">
+        <div class="fld"><label class="lbl">KM Ida</label><input class="inp" id="eval-km-ida" type="number" placeholder="0" oninput="calcEvaluacion()"></div>
+        <div class="fld"><label class="lbl">KM Vuelta</label><input class="inp" id="eval-km-vta" type="number" placeholder="0" oninput="calcEvaluacion()"></div>
+      </div>
+      <div class="fld2">
+        <div class="fld"><label class="lbl">Tarifa Neta Propuesta</label><input class="inp" id="eval-tarifa" type="number" placeholder="0" oninput="calcEvaluacion()"></div>
+        <div class="fld"><label class="lbl">Días Servicio</label><input class="inp" id="eval-dias" type="number" value="1" oninput="calcEvaluacion()"></div>
+      </div>
+      <div class="section-ttl" style="margin-top:12px">⚙ Costos Estimados</div>
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:12px">
+        <div class="fld2">
+          <div class="fld"><label class="lbl">Combustible</label><input class="inp" id="eval-comb" type="number" placeholder="0" oninput="this.dataset.manual='1';calcEvaluacion()"></div>
+          <div class="fld"><label class="lbl">Peajes</label><input class="inp" id="eval-peajes" type="number" placeholder="0" oninput="calcEvaluacion()"></div>
+        </div>
+        <div class="fld2">
+          <div class="fld"><label class="lbl">Costo Conductor</label><input class="inp" id="eval-conductor" type="number" placeholder="0" oninput="calcEvaluacion()"></div>
+          <div class="fld"><label class="lbl">Comisión Conductor</label><input class="inp" id="eval-comision" type="number" placeholder="0" oninput="calcEvaluacion()"></div>
+        </div>
+        <div class="fld2">
+          <div class="fld"><label class="lbl">Costo Fijo/Día</label><input class="inp" id="eval-cf" type="number" placeholder="0" oninput="calcEvaluacion()"></div>
+          <div class="fld"><label class="lbl">Mantención</label><input class="inp" id="eval-mant" type="number" placeholder="0" oninput="this.dataset.manual='1';calcEvaluacion()"></div>
+        </div>
+        <div class="fld2">
+          <div class="fld"><label class="lbl">Viático</label><input class="inp" id="eval-viatico" type="number" placeholder="0" oninput="calcEvaluacion()"></div>
+          <div class="fld"><label class="lbl">Contingencia</label><input class="inp" id="eval-contingencia" type="number" placeholder="0" oninput="calcEvaluacion()"></div>
+        </div>
+        <div class="fld2">
+          <div class="fld"><label class="lbl">Corretaje/Generador</label><input class="inp" id="eval-corretaje" type="number" placeholder="0" oninput="calcEvaluacion()"></div>
+          <div class="fld"><label class="lbl">Otros</label><input class="inp" id="eval-otros" type="number" placeholder="0" oninput="calcEvaluacion()"></div>
+        </div>
+      </div>
+      <!-- Resultado -->
+      <div id="eval-resultado" style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">
+          <div style="font-size:11px;font-weight:800;color:var(--muted)">TOTAL INGRESOS</div>
+          <div id="eval-r-ingreso" style="font-size:18px;font-weight:900;color:var(--gold)">$0</div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">
+          <div style="font-size:11px;font-weight:800;color:var(--muted)">TOTAL COSTOS</div>
+          <div id="eval-r-costos" style="font-size:18px;font-weight:900;color:#B05A5A">$0</div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">
+          <div style="font-size:11px;font-weight:800;color:var(--muted)">MARGEN</div>
+          <div id="eval-r-margen" style="font-size:22px;font-weight:900;color:var(--green)">$0</div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0">
+          <div style="font-size:11px;font-weight:800;color:var(--muted)">% SOBRE TARIFA</div>
+          <div id="eval-r-pct" style="font-size:18px;font-weight:900;color:var(--text)">0%</div>
+        </div>
+      </div>
+      <!-- Historial -->
+      <div class="section-ttl">📋 Evaluaciones Guardadas</div>
+      <div id="eval-historial" style="margin-bottom:12px"></div>
+    </div>
+    <div class="modal-ftr">
+      <button class="btn btn-ghost" onclick="cerrar('modal-evaluacion')">← Volver</button>
+      <button class="btn btn-navy" onclick="guardarEvaluacion()">💾 Guardar Evaluación</button>
+    </div>
+  </div>
+</div>
 </body></html>`);
   win.document.close();
   setTimeout(() => win.print(), 500);
@@ -4913,6 +5107,8 @@ async function cargarSetup() {
   const {data: conds} = await supa.from('kaptura_conductores').select('*').eq('empresa', emp).eq('activo', true);
   const {data: docs_} = await supa.from('kaptura_documentos').select('*').eq('empresa', emp).eq('activo', true);
   DB.documentos = docs_ || [];
+  const {data: evals_} = await supa.from('kaptura_evaluaciones').select('*').eq('empresa', emp).order('created_at', {ascending:false});
+  DB.evaluaciones = evals_ || [];
   DB.conductores = conds || [];
   _setupConductores = [];
   renderSetupListaConductores();
@@ -5936,5 +6132,78 @@ iniciarLogin();
 
 <!-- MODAL DOCS -->
 <div class="overlay" id="modal-docs" style="display:none"><div class="modal"><div class="modal-hdr"><div><div class="modal-ttl">📎 Docs — <span id="docs-titulo"></span></div><div class="modal-sub" id="docs-sub"></div></div><button class="modal-cls" onclick="cerrar('modal-docs')">✕</button></div><div class="modal-body" id="docs-body"></div></div></div>
+
+<!-- MODAL EVALUACIÓN -->
+<div class="overlay" id="modal-evaluacion" style="display:none">
+  <div class="modal" style="max-height:95vh;overflow-y:auto">
+    <div class="modal-hdr">
+      <div><div class="modal-ttl">📊 Evaluación de Servicio</div><div class="modal-sub" id="eval-sub"></div></div>
+      <button class="modal-cls" onclick="cerrar('modal-evaluacion')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="fld2">
+        <div class="fld"><label class="lbl">Cliente</label><input class="inp" id="eval-cliente" type="text" placeholder="Nombre del cliente"></div>
+        <div class="fld"><label class="lbl">Tramo</label><input class="inp" id="eval-tramo" type="text" placeholder="Ej: Chillan / Los Angeles"></div>
+      </div>
+      <div class="fld2">
+        <div class="fld"><label class="lbl">KM Ida</label><input class="inp" id="eval-km-ida" type="number" placeholder="0" oninput="calcEvaluacion()"></div>
+        <div class="fld"><label class="lbl">KM Vuelta</label><input class="inp" id="eval-km-vta" type="number" placeholder="0" oninput="calcEvaluacion()"></div>
+      </div>
+      <div class="fld2">
+        <div class="fld"><label class="lbl">Tarifa Neta Propuesta</label><input class="inp" id="eval-tarifa" type="number" placeholder="0" oninput="calcEvaluacion()"></div>
+        <div class="fld"><label class="lbl">Días Servicio</label><input class="inp" id="eval-dias" type="number" value="1" oninput="calcEvaluacion()"></div>
+      </div>
+      <div class="section-ttl" style="margin-top:12px">⚙ Costos Estimados</div>
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:12px">
+        <div class="fld2">
+          <div class="fld"><label class="lbl">Combustible</label><input class="inp" id="eval-comb" type="number" placeholder="0" oninput="this.dataset.manual='1';calcEvaluacion()"></div>
+          <div class="fld"><label class="lbl">Peajes</label><input class="inp" id="eval-peajes" type="number" placeholder="0" oninput="calcEvaluacion()"></div>
+        </div>
+        <div class="fld2">
+          <div class="fld"><label class="lbl">Costo Conductor</label><input class="inp" id="eval-conductor" type="number" placeholder="0" oninput="calcEvaluacion()"></div>
+          <div class="fld"><label class="lbl">Comisión Conductor</label><input class="inp" id="eval-comision" type="number" placeholder="0" oninput="calcEvaluacion()"></div>
+        </div>
+        <div class="fld2">
+          <div class="fld"><label class="lbl">Costo Fijo/Día</label><input class="inp" id="eval-cf" type="number" placeholder="0" oninput="calcEvaluacion()"></div>
+          <div class="fld"><label class="lbl">Mantención</label><input class="inp" id="eval-mant" type="number" placeholder="0" oninput="this.dataset.manual='1';calcEvaluacion()"></div>
+        </div>
+        <div class="fld2">
+          <div class="fld"><label class="lbl">Viático</label><input class="inp" id="eval-viatico" type="number" placeholder="0" oninput="calcEvaluacion()"></div>
+          <div class="fld"><label class="lbl">Contingencia</label><input class="inp" id="eval-contingencia" type="number" placeholder="0" oninput="calcEvaluacion()"></div>
+        </div>
+        <div class="fld2">
+          <div class="fld"><label class="lbl">Corretaje/Generador</label><input class="inp" id="eval-corretaje" type="number" placeholder="0" oninput="calcEvaluacion()"></div>
+          <div class="fld"><label class="lbl">Otros</label><input class="inp" id="eval-otros" type="number" placeholder="0" oninput="calcEvaluacion()"></div>
+        </div>
+      </div>
+      <!-- Resultado -->
+      <div id="eval-resultado" style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">
+          <div style="font-size:11px;font-weight:800;color:var(--muted)">TOTAL INGRESOS</div>
+          <div id="eval-r-ingreso" style="font-size:18px;font-weight:900;color:var(--gold)">$0</div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">
+          <div style="font-size:11px;font-weight:800;color:var(--muted)">TOTAL COSTOS</div>
+          <div id="eval-r-costos" style="font-size:18px;font-weight:900;color:#B05A5A">$0</div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">
+          <div style="font-size:11px;font-weight:800;color:var(--muted)">MARGEN</div>
+          <div id="eval-r-margen" style="font-size:22px;font-weight:900;color:var(--green)">$0</div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0">
+          <div style="font-size:11px;font-weight:800;color:var(--muted)">% SOBRE TARIFA</div>
+          <div id="eval-r-pct" style="font-size:18px;font-weight:900;color:var(--text)">0%</div>
+        </div>
+      </div>
+      <!-- Historial -->
+      <div class="section-ttl">📋 Evaluaciones Guardadas</div>
+      <div id="eval-historial" style="margin-bottom:12px"></div>
+    </div>
+    <div class="modal-ftr">
+      <button class="btn btn-ghost" onclick="cerrar('modal-evaluacion')">← Volver</button>
+      <button class="btn btn-navy" onclick="guardarEvaluacion()">💾 Guardar Evaluación</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
