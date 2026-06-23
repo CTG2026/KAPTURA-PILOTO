@@ -4606,7 +4606,7 @@ async function iniciarLogin() {
   if(saved) {
     try {
       const sess = JSON.parse(saved);
-      if(sess.pin && sess.empresa && (['coordinador','controller','administrador','conductor'].includes(sess.rol) || sess.modo === 'flota' || sess.modo === 'demo')) {
+      if(sess.pin && sess.empresa && (['coordinador','controller','administrador','conductor','despachador'].includes(sess.rol) || sess.modo === 'flota' || sess.modo === 'demo')) {
         _sessionUsuario = sess;
         document.getElementById('login-screen').style.display = 'none';
         document.getElementById('pantalla-modulos').style.display = 'none';
@@ -4618,6 +4618,13 @@ async function iniciarLogin() {
         DB._empresa = sess.empresa;
         if(['coordinador','controller','administrador'].includes(sess.rol)) {
           document.getElementById('tab-btn-setup').style.display = '';
+        }
+        if(sess.rol === 'despachador') {
+          // Despachador: solo ve servicios + botón asignar
+          ['tab-btn-liquidaciones','tab-btn-flota','tab-btn-clientes','tab-btn-gastos',
+           'tab-btn-resultados','tab-btn-informes','tab-btn-config','tab-btn-setup'].forEach(id => {
+            const el = document.getElementById(id); if(el) el.style.display = 'none';
+          });
         }
         if(sess.rol === 'conductor') {
           // Ocultar tabs que no corresponden al conductor
