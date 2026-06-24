@@ -1057,7 +1057,15 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
         <div class="fld"><label class="lbl">Hora Inicio</label><input class="inp" id="asig-hora-inicio" type="time"></div>
         <div class="fld"><label class="lbl">Hora Llegada Estimada</label><input class="inp" id="asig-hora-llegada" type="time"></div>
       </div>
-      <div class="fld"><label class="lbl">Destino Principal</label><input class="inp" id="asig-destino" type="text" placeholder="Ciudad de destino"></div>
+      <div class="fld"><label class="lbl">Destino Principal</label>
+        <select class="inp" id="asig-destino" onchange="checkAsigDestino()">
+          <option value="">Selecciona destino...</option>
+        </select>
+      </div>
+      <div class="fld" id="wrap-asig-destino-custom" style="display:none">
+        <label class="lbl">Especifica el destino</label>
+        <input class="inp" id="asig-destino-custom" placeholder="Destino específico">
+      </div>
       <!-- Puntos de entrega -->
       <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px">
         <div style="font-size:9px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);margin-bottom:8px">Puntos de Entrega</div>
@@ -2568,11 +2576,26 @@ async function abrirAsignar() {
   const obsInputAsig = document.getElementById('asig-obs-input');
   if(obsInputAsig) obsInputAsig.value = '';
   asigLimpiarPuntos();
+  // Poblar select destino desde tarifario
+  const selDest = document.getElementById('asig-destino');
+  if(selDest) {
+    const destinos = [...new Set((DB.tarifarios||[]).map(function(t){ return t.destino; }).filter(Boolean))].sort();
+    selDest.innerHTML = '<option value="">Selecciona destino...</option>'
+      + destinos.map(function(d){ return '<option value="'+d+'">'+d+'</option>'; }).join('')
+      + '<option value="__otro__">✏ Otro destino...</option>';
+  }
+  document.getElementById('wrap-asig-destino-custom').style.display = 'none';
   // Hilo observaciones
   const sAsig = DB.servicios[svcActivoIdx];
   if(sAsig) obsRenderHilo(document.getElementById('asig-obs-hilo'), obsParseHilo(sAsig.notas||''));
   document.getElementById('modal-asignar').style.display = 'flex';
 }
+function checkAsigDestino() {
+  const val = document.getElementById('asig-destino').value;
+  const wrap = document.getElementById('wrap-asig-destino-custom');
+  if(wrap) wrap.style.display = val === '__otro__' ? '' : 'none';
+}
+
 function checkOtroOrigen() {
   document.getElementById('wrap-origen-custom').style.display =
     document.getElementById('asig-origen').value === 'otro' ? 'block' : 'none';
@@ -2652,7 +2675,8 @@ async function guardarAsignacion() {
   const puntosAsigStr = puntosAsig.length > 0 ? JSON.stringify(puntosAsig) : null;
   const horaInicio  = document.getElementById('asig-hora-inicio').value || null;
   const horaLlegada = document.getElementById('asig-hora-llegada').value || null;
-  const destino = document.getElementById('asig-destino').value.trim();
+  const destinoRaw = document.getElementById('asig-destino').value.trim();
+  const destino = destinoRaw === '__otro__' ? (document.getElementById('asig-destino-custom')?.value.trim()||'') : destinoRaw;
   const nuevo = { servicio_id:svId, patente, conductor, cliente, origen, destino: destino||null, fecha, estado:'asignado', margen_servicio:0, puntos_entrega:puntosAsig.length, punto_inicio:puntoInicio, tipo_operacion:tipoOperacion, empresa: DB._empresa||'global_solutions', puntos_asignados: puntosAsigStr, hora_inicio_asignada: horaInicio, hora_llegada_estimada: horaLlegada };
   const {data:inserted, error} = await supa.from('servicios_piloto').insert(nuevo).select();
   if(error) { toast('Error: '+error.message); return; }
@@ -4796,7 +4820,20 @@ function editarFaseCerrado(fase) {
       document.getElementById('asig-cliente').value   = sv.cliente||'';
       document.getElementById('asig-origen').value    = sv.origen||'';
       document.getElementById('asig-fecha').value     = sv.fecha||hoyStr;
-      document.getElementById('asig-destino').value   = sv.destino||'';
+      // Poblar select destino y seleccionar el guardado
+      const selDestEdit = document.getElementById('asig-destino');
+      if(selDestEdit) {
+        var found = false;
+        for(var i=0; i<selDestEdit.options.length; i++) {
+          if(selDestEdit.options[i].value === (sv.destino||'')) { selDestEdit.selectedIndex = i; found = true; break; }
+        }
+        if(!found && sv.destino) {
+          selDestEdit.value = '__otro__';
+          document.getElementById('wrap-asig-destino-custom').style.display = '';
+          var custEl = document.getElementById('asig-destino-custom');
+          if(custEl) custEl.value = sv.destino;
+        }
+      }
     }, 100);
   } else if(fase === 'registrar') {
     verServicio(i);
