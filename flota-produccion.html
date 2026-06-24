@@ -735,7 +735,7 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
         </div>
         <div>
           <div style="font-size:10px;color:var(--muted);margin-bottom:4px">TIPO</div>
-          <select id="setup-nuevo-tipo" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px;font-size:12px;color:var(--text);font-family:inherit">
+          <select id="setup-nuevo-tipo" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px;font-size:12px;color:var(--text);font-family:inherit;text-transform:uppercase">
             <option value="tracto_rampla">Tracto + Rampla</option>
             <option value="tracto_frigorifico">Tracto + Frigorífico</option>
             <option value="tracto_tolva">Tracto + Tolva</option>
@@ -750,11 +750,11 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
       <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:6px;align-items:flex-end">
         <div>
           <div style="font-size:10px;color:var(--muted);margin-bottom:4px">RENDIMIENTO km/lt</div>
-          <input id="setup-nuevo-rend" type="number" step="0.1" placeholder="Ej: 2.5" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:13px;color:var(--text);font-family:inherit">
+          <input id="setup-nuevo-rend" type="number" step="0.1" placeholder="Ej: 2.5" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:13px;color:var(--text);font-family:inherit;text-transform:uppercase">
         </div>
         <div>
           <div style="font-size:10px;color:var(--muted);margin-bottom:4px">VALOR COMERCIAL</div>
-          <input id="setup-nuevo-valor" type="text" placeholder="Ej: 45000000" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:13px;color:var(--text);font-family:inherit">
+          <input id="setup-nuevo-valor" type="text" placeholder="Ej: 45000000" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:13px;color:var(--text);font-family:inherit;text-transform:uppercase">
         </div>
         <button onclick="setupListaAgregarEquipo()" style="background:var(--surface2);border:1px solid var(--gold);border-radius:8px;padding:10px 14px;font-size:12px;font-weight:800;color:var(--gold);cursor:pointer;align-self:flex-end;white-space:nowrap">+ AGREGAR</button>
       </div>
@@ -767,11 +767,11 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
       <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:6px;align-items:flex-end">
         <div>
           <div style="font-size:10px;color:var(--muted);margin-bottom:4px">NOMBRE</div>
-          <input id="setup-nuevo-conductor" type="text" placeholder="Nombre completo" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:13px;color:var(--text);font-family:inherit">
+          <input id="setup-nuevo-conductor" type="text" placeholder="Nombre completo" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:13px;color:var(--text);font-family:inherit;text-transform:uppercase">
         </div>
         <div>
           <div style="font-size:10px;color:var(--muted);margin-bottom:4px">RUT</div>
-          <input id="setup-nuevo-conductor-rut" type="text" placeholder="Ej: 12.345.678-9" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:13px;color:var(--text);font-family:inherit">
+          <input id="setup-nuevo-conductor-rut" type="text" placeholder="Ej: 12.345.678-9" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:13px;color:var(--text);font-family:inherit;text-transform:uppercase">
         </div>
         <button onclick="setupListaAgregarConductor()" style="background:var(--surface2);border:1px solid var(--gold);border-radius:8px;padding:10px 14px;font-size:12px;font-weight:800;color:var(--gold);cursor:pointer;align-self:flex-end;white-space:nowrap">+ AGREGAR</button>
       </div>
@@ -787,46 +787,46 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
           <div>
             <div style="font-size:10px;color:var(--muted);margin-bottom:4px">NOMBRE / RAZÓN SOCIAL</div>
-            <input id="setup-fc-nombre" type="text" placeholder="Ej: Agrícola del Sur" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:12px;color:var(--text);font-family:inherit">
+            <input id="setup-fc-nombre" type="text" placeholder="Ej: Agrícola del Sur" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:12px;color:var(--text);font-family:inherit;text-transform:uppercase">
           </div>
           <div>
             <div style="font-size:10px;color:var(--muted);margin-bottom:4px">RUT</div>
-            <input id="setup-fc-rut" type="text" placeholder="Ej: 76.XXX.XXX-X" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:12px;color:var(--text);font-family:inherit">
+            <input id="setup-fc-rut" type="text" placeholder="Ej: 76.XXX.XXX-X" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:12px;color:var(--text);font-family:inherit;text-transform:uppercase">
           </div>
         </div>
         <div style="margin-bottom:8px">
           <div style="font-size:10px;color:var(--muted);margin-bottom:4px">DIRECCIÓN</div>
-          <input id="setup-fc-direccion" type="text" placeholder="Ej: Av. Principal 1234" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:12px;color:var(--text);font-family:inherit">
+          <input id="setup-fc-direccion" type="text" placeholder="Ej: Av. Principal 1234" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:12px;color:var(--text);font-family:inherit;text-transform:uppercase">
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
           <div>
             <div style="font-size:10px;color:var(--muted);margin-bottom:4px">CIUDAD</div>
-            <input id="setup-fc-ciudad" type="text" placeholder="Ej: Santiago" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:12px;color:var(--text);font-family:inherit">
+            <input id="setup-fc-ciudad" type="text" placeholder="Ej: Santiago" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:12px;color:var(--text);font-family:inherit;text-transform:uppercase">
           </div>
           <div>
             <div style="font-size:10px;color:var(--muted);margin-bottom:4px">TELÉFONO</div>
-            <input id="setup-fc-telefono" type="text" placeholder="+56 9 XXXX XXXX" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:12px;color:var(--text);font-family:inherit">
+            <input id="setup-fc-telefono" type="text" placeholder="+56 9 XXXX XXXX" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:12px;color:var(--text);font-family:inherit;text-transform:uppercase">
           </div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
           <div>
             <div style="font-size:10px;color:var(--muted);margin-bottom:4px">EMAIL</div>
-            <input id="setup-fc-email" type="text" placeholder="contacto@empresa.cl" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:12px;color:var(--text);font-family:inherit">
+            <input id="setup-fc-email" type="text" placeholder="contacto@empresa.cl" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:12px;color:var(--text);font-family:inherit;text-transform:uppercase">
           </div>
           <div>
             <div style="font-size:10px;color:var(--muted);margin-bottom:4px">CONTACTO</div>
-            <input id="setup-fc-contacto" type="text" placeholder="Nombre del contacto" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:12px;color:var(--text);font-family:inherit">
+            <input id="setup-fc-contacto" type="text" placeholder="Nombre del contacto" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:12px;color:var(--text);font-family:inherit;text-transform:uppercase">
           </div>
         </div>
         <div style="margin-bottom:12px">
           <div style="font-size:10px;color:var(--muted);margin-bottom:4px">CARGO DEL CONTACTO</div>
-          <input id="setup-fc-cargo" type="text" placeholder="Ej: Jefe de bodega, Gerente de logística" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:12px;color:var(--text);font-family:inherit">
+          <input id="setup-fc-cargo" type="text" placeholder="Ej: Jefe de bodega, Gerente de logística" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:12px;color:var(--text);font-family:inherit;text-transform:uppercase">
         </div>
         <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:12px">
           <div style="font-size:10px;font-weight:800;color:var(--gold);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px">Comisión Corretaje</div>
           <div>
             <div style="font-size:10px;color:var(--muted);margin-bottom:4px">COMISIÓN CORRETAJE (%) — se calcula sobre tarifa + IVA</div>
-            <input id="setup-fc-comision-gen" type="number" step="0.5" placeholder="Ej: 5" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:12px;color:var(--text);font-family:inherit">
+            <input id="setup-fc-comision-gen" type="number" step="0.5" placeholder="Ej: 5" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:12px;color:var(--text);font-family:inherit;text-transform:uppercase">
           </div>
         </div>
         <button onclick="setupAgregarCliente()" style="width:100%;background:var(--gold);border:none;border-radius:8px;padding:12px;font-size:14px;font-weight:700;color:#000;cursor:pointer">GUARDAR CLIENTE</button>
@@ -840,7 +840,9 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">
         <div>
           <div style="font-size:10px;color:var(--muted);margin-bottom:4px">CLIENTE</div>
-          <input id="setup-tar-cliente" type="text" placeholder="Cliente" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px;font-size:12px;color:var(--text);font-family:inherit">
+          <select id="setup-tar-cliente" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px;font-size:12px;color:var(--text);font-family:inherit;text-transform:uppercase">
+            <option value="">Selecciona cliente...</option>
+          </select>
         </div>
         <div>
           <div style="font-size:10px;color:var(--muted);margin-bottom:4px">ORIGEN</div>
@@ -854,17 +856,17 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
         </div>
         <div>
           <div style="font-size:10px;color:var(--muted);margin-bottom:4px">TARIFA $</div>
-          <input id="setup-tar-valor" type="text" placeholder="$0" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px;font-size:12px;color:var(--text);font-family:inherit">
+          <input id="setup-tar-valor" type="text" placeholder="$0" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px;font-size:12px;color:var(--text);font-family:inherit;text-transform:uppercase">
         </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">
         <div>
           <div style="font-size:10px;color:var(--muted);margin-bottom:4px">VALOR PUNTO ADICIONAL $</div>
-          <input id="setup-tar-punto" type="text" placeholder="$0 (opcional)" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px;font-size:12px;color:var(--text);font-family:inherit">
+          <input id="setup-tar-punto" type="text" placeholder="$0 (opcional)" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px;font-size:12px;color:var(--text);font-family:inherit;text-transform:uppercase">
         </div>
         <div>
           <div style="font-size:10px;color:var(--muted);margin-bottom:4px">NOMBRE / DESCRIPCIÓN</div>
-          <input id="setup-tar-nombre" type="text" placeholder="Ej: Pallet completo, Media carga..." style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px;font-size:12px;color:var(--text);font-family:inherit">
+          <input id="setup-tar-nombre" type="text" placeholder="Ej: Pallet completo, Media carga..." style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px;font-size:12px;color:var(--text);font-family:inherit;text-transform:uppercase">
         </div>
       </div>
       <div style="text-align:right">
@@ -902,21 +904,21 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
         <div>
           <div style="font-size:10px;color:var(--muted);margin-bottom:4px">DÍAS OPERATIVOS/MES</div>
-          <input id="setup-dias-op" type="number" placeholder="20" value="20" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:13px;color:var(--text);font-family:inherit">
+          <input id="setup-dias-op" type="number" placeholder="20" value="20" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:13px;color:var(--text);font-family:inherit;text-transform:uppercase">
         </div>
         <div>
           <div style="font-size:10px;color:var(--muted);margin-bottom:4px">VIÁTICO/DÍA ($)</div>
-          <input id="setup-viatico" type="text" placeholder="Ej: 12000" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:13px;color:var(--text);font-family:inherit">
+          <input id="setup-viatico" type="text" placeholder="Ej: 12000" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:13px;color:var(--text);font-family:inherit;text-transform:uppercase">
         </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
         <div>
           <div style="font-size:10px;color:var(--muted);margin-bottom:4px">COMISIÓN CONDUCTOR (%)</div>
-          <input id="setup-comision-pct" type="number" step="0.5" placeholder="Ej: 10" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:13px;color:var(--text);font-family:inherit">
+          <input id="setup-comision-pct" type="number" step="0.5" placeholder="Ej: 10" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:13px;color:var(--text);font-family:inherit;text-transform:uppercase">
         </div>
         <div>
           <div style="font-size:10px;color:var(--muted);margin-bottom:4px">SUELDO DIARIO ($)</div>
-          <input id="setup-sueldo-diario" type="text" placeholder="Ej: 33000" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:13px;color:var(--text);font-family:inherit">
+          <input id="setup-sueldo-diario" type="text" placeholder="Ej: 33000" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:13px;color:var(--text);font-family:inherit;text-transform:uppercase">
         </div>
       </div>
     </div>
@@ -949,19 +951,19 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
         <div>
           <div style="font-size:10px;color:var(--muted);margin-bottom:4px">MANTENCIÓN CADA (km)</div>
-          <input id="setup-mant-km" type="number" placeholder="Ej: 20000" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:13px;color:var(--text);font-family:inherit">
+          <input id="setup-mant-km" type="number" placeholder="Ej: 20000" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:13px;color:var(--text);font-family:inherit;text-transform:uppercase">
         </div>
         <div>
           <div style="font-size:10px;color:var(--muted);margin-bottom:4px">COSTO MANTENCIÓN ($)</div>
-          <input id="setup-mant-costo" type="text" placeholder="Ej: 350000" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:13px;color:var(--text);font-family:inherit">
+          <input id="setup-mant-costo" type="text" placeholder="Ej: 350000" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:13px;color:var(--text);font-family:inherit;text-transform:uppercase">
         </div>
         <div>
           <div style="font-size:10px;color:var(--muted);margin-bottom:4px">COSTO JUEGO NEUMÁTICOS ($)</div>
-          <input id="setup-neum-costo" type="text" placeholder="Ej: 2400000" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:13px;color:var(--text);font-family:inherit">
+          <input id="setup-neum-costo" type="text" placeholder="Ej: 2400000" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:13px;color:var(--text);font-family:inherit;text-transform:uppercase">
         </div>
         <div>
           <div style="font-size:10px;color:var(--muted);margin-bottom:4px">VIDA ÚTIL NEUMÁTICOS (km)</div>
-          <input id="setup-neum-km" type="number" placeholder="Ej: 150000" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:13px;color:var(--text);font-family:inherit">
+          <input id="setup-neum-km" type="number" placeholder="Ej: 150000" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:13px;color:var(--text);font-family:inherit;text-transform:uppercase">
         </div>
       </div>
       <div style="text-align:right">
@@ -2653,7 +2655,7 @@ async function guardarAsignacion() {
     return;
   }
   const patente   = document.getElementById('asig-patente').value;
-  const conductor = document.getElementById('asig-conductor').value;
+  const conductor = (document.getElementById('asig-conductor').value||'').toUpperCase();
   const clienteSel= document.getElementById('asig-cliente').value;
   const clienteNew= document.getElementById('asig-cliente-custom').value.trim();
   const cliente   = clienteSel === '__otro__' ? clienteNew : clienteSel;
@@ -5346,6 +5348,14 @@ async function cargarSetup() {
   const {data: tarifas} = await supa.from('kaptura_tarifarios').select('*').eq('empresa', emp);
   DB.tarifarios = tarifas || [];
   _setupTarifas = [];
+  // Poblar select cliente del tarifario
+  const selTarCli = document.getElementById('setup-tar-cliente');
+  if(selTarCli) {
+    const editId = selTarCli.dataset.editId;
+    selTarCli.innerHTML = '<option value="">Selecciona cliente...</option>'
+      + (DB.clientes||[]).map(function(c){ return '<option value="'+c.nombre+'">'+c.nombre+'</option>'; }).join('');
+    if(editId) selTarCli.dataset.editId = editId;
+  }
   renderSetupListaTarifas();
 
 }
@@ -5514,7 +5524,7 @@ async function setupAgregarConductor() {
   if(!DB._empresa && _sessionUsuario?.empresa) DB._empresa = _sessionUsuario.empresa;
   const emp    = DB._empresa;
   if(!emp) { toast('Error: sesión sin empresa'); return; }
-  const nombre = document.getElementById('setup-nuevo-conductor').value.trim();
+  const nombre = document.getElementById('setup-nuevo-conductor').value.trim().toUpperCase();
   const rut    = document.getElementById('setup-nuevo-conductor-rut').value.trim();
   if(!nombre) { toast('Ingresa el nombre'); return; }
   const {error} = await supa.from('kaptura_conductores').insert({nombre, rut, empresa:emp, activo:true});
@@ -5646,7 +5656,7 @@ function renderSetupListaEquipos() {
 }
 
 function setupListaAgregarConductor() {
-  const nombre = document.getElementById('setup-nuevo-conductor').value.trim();
+  const nombre = document.getElementById('setup-nuevo-conductor').value.trim().toUpperCase();
   const rut    = document.getElementById('setup-nuevo-conductor-rut').value.trim();
   if(!nombre) { toast('Ingresa el nombre del conductor'); return; }
   if(_setupConductores.find(c => c.nombre === nombre)) { toast('Ese conductor ya está en la lista'); return; }
