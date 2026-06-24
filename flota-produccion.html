@@ -3271,7 +3271,9 @@ async function irACostos() {
   const sueldoDiario = getCfgNum(['sueldo_diario','sueldo_conductor']) || 33000;
   const viaticoDia   = getCfgNum(['viatico_dia','viatico']);
   document.getElementById('cos-conductor').value = fmt(dias * sueldoDiario);
-  document.getElementById('cos-cf').value        = fmt(dias * cfDia);
+  // Costo fijo prorrateo: cfDia × días ÷ equipos en servicio ese día
+  const equiposIni = parseInt(document.getElementById('cos-equipos')?.value)||1;
+  document.getElementById('cos-cf').value = fmt(equiposIni > 0 ? Math.round(dias * cfDia / equiposIni) : dias * cfDia);
   document.getElementById('cos-mant').value      = fmt(0);
   document.getElementById('cos-viatico').value   = fmt(dias * viaticoDia);
   const contingenciaMes = getCfgNum(['fondo_contingencia','contingencia']);
