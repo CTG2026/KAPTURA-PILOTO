@@ -4550,6 +4550,8 @@ async function abrirInforme(i) {
       const KM_PORTICO = 3; // trips > 3km pueden tener pórtico
 
       for(const e of eventos) {
+        // Ocultar eventos de notificación — no son relevantes para el informe
+        if((e.evento||'').toLowerCase().includes('notif')) continue;
         const hora = (e.datetime_evento||'').split('T')[1]?.substring(0,5)||'—';
         const tipo = e.evento==='trip' ? '🚗 trip' : '⏸ '+e.evento;
         const addr = (e.address||'').split(',')[0];
