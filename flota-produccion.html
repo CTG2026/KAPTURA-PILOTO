@@ -3641,7 +3641,9 @@ async function cargarGPS() {
     // Si es primer servicio → usar todos los trips (sin filtro firstLongTrip)
     // Si no → filtrar por firstLongTrip para ignorar movimientos locales pre-viaje
     let firstLongTrip = null;
-    if(!esPrimerServicio && !esSalidaDesdeDestAnt) {
+    const empActual = DB._empresa || _sessionUsuario?.empresa || '';
+    const esMadrid  = empActual === 'flota_297221';
+    if(!esPrimerServicio && !esSalidaDesdeDestAnt && !esMadrid) {
       // Buscar primer trip largo desde la BASE (Coltauco) primero
       const baseKws = ['coltauco','quillaiquén','quillayquén','ruta h-30'];
       const firstTripBase = tripsRaw.find(t => t.km_tramo > 10 && baseKws.some(k=>t.address.toLowerCase().includes(k)));
@@ -3655,6 +3657,7 @@ async function cargarGPS() {
         inicioViaje = firstLongTrip ? firstLongTrip.datetime_evento : null;
       }
     }
+    // Madrid: usar todos los trips del día completo sin filtro
     console.log('firstLongTrip:', firstLongTrip?.datetime_evento||'none', firstLongTrip?.km_tramo||0, 'km', esPrimerServicio?'[PRIMER SERVICIO - todos los trips]':'');
 
     const trips = tripsRaw.filter(t => !inicioViaje || t.datetime_evento >= inicioViaje);
@@ -3701,7 +3704,10 @@ async function cargarGPS() {
     }
 
     // Km vacíos = total - cargados
-    const kmVacioIda = Math.max(0, Math.round(kmTotal) - Math.round(kmCargado));
+    const kmVacioIda = esMadrid
+      ? Math.round(kmTotal / 2)
+      : Math.max(0, Math.round(kmTotal) - Math.round(kmCargado));
+    if(esMadrid) kmCargado = kmTotal / 2;
     const kmRetorno  = 0; // simplified: not shown separately
     console.log('Km tramos — Vacío:', kmVacioIda, '| Cargado:', Math.round(kmCargado), '| Total:', Math.round(kmTotal));
 
