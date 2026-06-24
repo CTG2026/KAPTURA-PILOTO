@@ -1224,6 +1224,7 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
         <div style="font-size:9px;font-weight:800;color:#92400E;letter-spacing:0.1em;margin-bottom:6px">RANGO GPS — FECHA INICIO → FECHA TÉRMINO</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
           <div><label class="lbl">Fecha Inicio (asignación)</label><input class="inp" id="cos-fecha-inicio" type="date" readonly style=""></div>
+          <div><label class="lbl">Equipos en servicio ese día</label><input class="inp" id="cos-equipos" type="number" value="1" min="1" oninput="calcCostoFijoEquipos();calcCostos()"></div>
           <div><label class="lbl">Fecha Término servicio</label><input class="inp" id="cos-fecha-termino" type="date"></div>
         </div>
         <button class="btn btn-navy btn-full" style="margin-top:8px;font-size:14px;font-weight:900;letter-spacing:0.1em;padding:12px;background:var(--gold);color:#000;border:none" onclick="cargarGPS()">↺ INTEGRAR DATOS GPS</button>
@@ -1262,7 +1263,6 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
         <div class="fld"><label class="lbl">Costo conductor <span style="font-size:8px;font-weight:800;background:var(--gold);color:var(--text);padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-conductor" oninput="this.dataset.manual='1';calcCostos()" style=""></div>
         <div class="fld"><label class="lbl">Comisión conductor <span style="font-size:8px;font-weight:800;background:var(--gold);color:var(--text);padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-comision" type="number" placeholder="0" oninput="this.dataset.manual='1';calcCostos()"></div>
-        <div class="fld"><label class="lbl">Equipos en servicio ese día</label><input class="inp" id="cos-equipos" type="number" value="1" min="1" oninput="calcCostoFijoEquipos();calcCostos()"></div>
         <div class="fld"><label class="lbl">Costo fijo/día <span style="font-size:8px;font-weight:800;background:var(--gold);color:var(--text);padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-cf" oninput="this.dataset.manual='1';calcCostos()" style=""></div>
         <div class="fld"><label class="lbl">Mantención <span style="font-size:8px;font-weight:800;background:var(--gold);color:var(--text);padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-mant" oninput="this.dataset.manual='1';calcCostos()" style=""></div>
         <div class="fld"><label class="lbl">Viático <span style="font-size:8px;font-weight:800;background:var(--gold);color:var(--text);padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-viatico" oninput="this.dataset.manual='1';calcCostos()" style=""></div>
@@ -4008,7 +4008,23 @@ async function cerrarServicio() {
   await guardarCostosBorrador();
   const s = DB.servicios[svcActivoIdx];
   if(!s?.id) return;
-  if(!confirm(`¿Cerrar definitivamente el servicio ${s.servicio_id}? Esta acción es inamovible.`)) return;
+  // Validar campos importantes antes de cerrar
+  const alertas = [];
+  if(!document.getElementById('cos-km').value || document.getElementById('cos-km').value === '0')
+    alertas.push('• KM GPS vacío — considere ingresar KM TEÓRICO');
+  if(!document.getElementById('cos-peajes').value || document.getElementById('cos-peajes').value === '0')
+    alertas.push('• Peajes en $0 — ¿es correcto?');
+  if(!document.getElementById('cos-cf').value || document.getElementById('cos-cf').value === '0')
+    alertas.push('• Costo Fijo en $0');
+  if(!document.getElementById('cos-viatico').value || document.getElementById('cos-viatico').value === '0')
+    alertas.push('• Viático en $0');
+  const pFinal = (DB.servicios[svcActivoIdx]._puntos||[]).find(p=>p.tipo==='final');
+  if(!pFinal?.valor || pFinal.valor === 0)
+    alertas.push('• Tarifa del servicio en $0');
+  let msg = alertas.length > 0
+    ? 'Antes de cerrar, revisa estos campos:\n\n' + alertas.join('\n') + '\n\n¿Cerrar definitivamente el servicio ' + s.servicio_id + '?'
+    : '¿Cerrar definitivamente el servicio ' + s.servicio_id + '? Esta acción es inamovible.';
+  if(!confirm(msg)) return;
   const {error} = await supa.from('servicios_piloto').update({estado:'cerrado'}).eq('id',s.id);
   if(error) { toast('Error: '+error.message); return; }
   DB.servicios[svcActivoIdx].estado = 'cerrado';
