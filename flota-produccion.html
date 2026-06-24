@@ -1262,6 +1262,7 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
         <div class="fld"><label class="lbl">Costo conductor <span style="font-size:8px;font-weight:800;background:var(--gold);color:var(--text);padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-conductor" oninput="this.dataset.manual='1';calcCostos()" style=""></div>
         <div class="fld"><label class="lbl">Comisión conductor <span style="font-size:8px;font-weight:800;background:var(--gold);color:var(--text);padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-comision" type="number" placeholder="0" oninput="this.dataset.manual='1';calcCostos()"></div>
+        <div class="fld"><label class="lbl">Equipos en servicio ese día</label><input class="inp" id="cos-equipos" type="number" value="1" min="1" oninput="calcCostoFijoEquipos();calcCostos()"></div>
         <div class="fld"><label class="lbl">Costo fijo/día <span style="font-size:8px;font-weight:800;background:var(--gold);color:var(--text);padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-cf" oninput="this.dataset.manual='1';calcCostos()" style=""></div>
         <div class="fld"><label class="lbl">Mantención <span style="font-size:8px;font-weight:800;background:var(--gold);color:var(--text);padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-mant" oninput="this.dataset.manual='1';calcCostos()" style=""></div>
         <div class="fld"><label class="lbl">Viático <span style="font-size:8px;font-weight:800;background:var(--gold);color:var(--text);padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-viatico" oninput="this.dataset.manual='1';calcCostos()" style=""></div>
@@ -3249,6 +3250,7 @@ async function irACostos() {
   const dias = s.dias_servicio || 1;
   const c = DB.config;
   document.getElementById('cos-dias').value     = dias;
+  if(document.getElementById('cos-equipos')) document.getElementById('cos-equipos').value = 1;
   // Usar valores EXACTOS de DB.config — si es "0" usar 0, nunca defaults hardcodeados
   const getCfgNum = (keys) => {
     for(const k of keys) {
