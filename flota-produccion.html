@@ -3904,10 +3904,12 @@ async function cargarGPS() {
 
     if(!hayGPS) toast('✓ Estación de servicio integrada — GPS no disponible para este período');
     // Resetear flags manuales al reintegrar
-    ['cos-conductor','cos-cf','cos-mant','cos-viatico','cos-comision'].forEach(id=>{
+    ['cos-conductor','cos-mant','cos-viatico','cos-comision'].forEach(id=>{
       const el = document.getElementById(id);
       if(el) delete el.dataset.manual;
     });
+    // Reaplicar prorrateo costo fijo después de integrar GPS
+    calcCostoFijoEquipos();
   } catch(e) { toast('Error GPS: '+e.message); console.error(e); }
   } finally { _cargandoGPS = false; }
 }
