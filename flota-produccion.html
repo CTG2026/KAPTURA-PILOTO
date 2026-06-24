@@ -292,7 +292,10 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
   <div id="tab-clientes" style="display:none">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
       <div class="sec-ttl">Clientes</div>
-      <button class="btn btn-navy" onclick="abrirEvaluacion(null)">📊 Nueva Evaluación</button>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-navy" onclick="abrirEvaluacion(null)">📊 Nueva Evaluación</button>
+        <button class="btn" onclick="verTodasEvaluaciones()" style="background:rgba(201,168,76,0.15);border:1px solid rgba(201,168,76,0.3);color:var(--gold)">📋 Ver Evaluaciones</button>
+      </div>
     </div>
     <div id="lista-clientes"></div>
   </div>
@@ -4020,6 +4023,23 @@ async function eliminarDocItem(docId) {
 }
 
 // ══ CALCULADORA / EVALUACIÓN DE SERVICIOS ══
+function verTodasEvaluaciones() {
+  const emp = DB._empresa || _sessionUsuario?.empresa;
+  // Recargar evaluaciones desde Supabase y mostrar todas
+  supa.from('kaptura_evaluaciones').select('*').eq('empresa', emp).order('created_at', {ascending:false}).then(function(res) {
+    DB.evaluaciones = res.data || [];
+    // Abrir modal evaluacion en modo historial
+    document.getElementById('eval-sub').textContent = 'Todas las evaluaciones';
+    document.getElementById('eval-cliente').value = '';
+    renderEvalHistorial(null);
+    // Limpiar campos formulario
+    ['eval-tramo','eval-km-ida','eval-km-vta','eval-tarifa','eval-corretaje-pct','eval-factoring-pct','eval-otros'].forEach(function(id){
+      var el = document.getElementById(id); if(el) el.value = '';
+    });
+    document.getElementById('modal-evaluacion').style.display = 'flex';
+  });
+}
+
 function abrirEvaluacion(clienteNombre) {
   const c = DB.config;
   const dias = 1;
