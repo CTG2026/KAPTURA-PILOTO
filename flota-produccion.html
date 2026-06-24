@@ -3318,7 +3318,7 @@ function calcCostoFijoEquipos() {
   var cfDia   = parseInt(c.costo_fijo_dia||0) || (cfMens > 0 ? Math.round(cfMens/diasOp) : 0);
   var cfProrr = cfDia > 0 ? Math.round((cfDia * dias) / equipos) : 0;
   var cfEl    = document.getElementById('cos-cf');
-  if(cfEl) { delete cfEl.dataset.manual; cfEl.value = cfProrr; }
+  if(cfEl) { cfEl.dataset.manual = '1'; cfEl.value = cfProrr; }
 }
 
 async function calcCostos() {
