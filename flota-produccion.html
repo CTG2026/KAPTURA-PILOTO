@@ -1052,21 +1052,21 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
           <option value="Rancagua">Rancagua</option><option value="Santiago">Santiago</option>
           <option value="San Antonio">San Antonio</option><option value="otro">Otro...</option>
         </select></div>
-        <div class="fld"><label class="lbl">Fecha del Servicio</label><input class="inp" id="asig-fecha" type="date"></div>
+        <div class="fld"><label class="lbl">Destino Principal</label>
+          <select class="inp" id="asig-destino" onchange="checkAsigDestino()">
+            <option value="">Selecciona cliente primero...</option>
+          </select>
+        </div>
       </div>
       <div class="fld" id="wrap-origen-custom" style="display:none"><label class="lbl">Especifica el origen</label><input class="inp" id="asig-origen-custom" placeholder="Ciudad de origen"></div>
-      <div class="fld2">
-        <div class="fld"><label class="lbl">Hora Inicio</label><input class="inp" id="asig-hora-inicio" type="time"></div>
-        <div class="fld"><label class="lbl">Hora Llegada Estimada</label><input class="inp" id="asig-hora-llegada" type="time"></div>
-      </div>
-      <div class="fld"><label class="lbl">Destino Principal</label>
-        <select class="inp" id="asig-destino" onchange="checkAsigDestino()">
-          <option value="">Selecciona destino...</option>
-        </select>
-      </div>
       <div class="fld" id="wrap-asig-destino-custom" style="display:none">
         <label class="lbl">Especifica el destino</label>
         <input class="inp" id="asig-destino-custom" placeholder="Destino específico">
+      </div>
+      <div class="fld"><label class="lbl">Fecha del Servicio</label><input class="inp" id="asig-fecha" type="date"></div>
+      <div class="fld2">
+        <div class="fld"><label class="lbl">Hora Inicio</label><input class="inp" id="asig-hora-inicio" type="time"></div>
+        <div class="fld"><label class="lbl">Hora Llegada Estimada</label><input class="inp" id="asig-hora-llegada" type="time"></div>
       </div>
       <!-- Puntos de entrega -->
       <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px">
@@ -2603,8 +2603,23 @@ function checkOtroOrigen() {
     document.getElementById('asig-origen').value === 'otro' ? 'block' : 'none';
 }
 function checkOtroCliente() {
+  const clienteVal = document.getElementById('asig-cliente').value;
   document.getElementById('wrap-cliente-custom').style.display =
-    document.getElementById('asig-cliente').value === '__otro__' ? 'block' : 'none';
+    clienteVal === '__otro__' ? 'block' : 'none';
+  // Filtrar destinos por cliente seleccionado
+  const selDest = document.getElementById('asig-destino');
+  if(selDest && clienteVal && clienteVal !== '__otro__') {
+    const destinos = (DB.tarifarios||[])
+      .filter(function(t){ return (t.cliente||'').toUpperCase() === clienteVal.toUpperCase(); })
+      .map(function(t){ return t.destino; })
+      .filter(Boolean);
+    selDest.innerHTML = '<option value="">Selecciona destino...</option>'
+      + [...new Set(destinos)].sort().map(function(d){ return '<option value="'+d+'">'+d+'</option>'; }).join('')
+      + '<option value="__otro__">✏ Otro destino...</option>';
+    document.getElementById('wrap-asig-destino-custom').style.display = 'none';
+  } else if(!clienteVal || clienteVal === '__otro__') {
+    if(selDest) selDest.innerHTML = '<option value="">Selecciona cliente primero...</option>';
+  }
 }
 async function siguienteId() {
   const emp = DB._empresa || _sessionUsuario?.empresa || 'global_solutions';
