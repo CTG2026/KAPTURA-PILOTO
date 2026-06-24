@@ -2578,17 +2578,10 @@ async function abrirAsignar() {
   const obsInputAsig = document.getElementById('asig-obs-input');
   if(obsInputAsig) obsInputAsig.value = '';
   asigLimpiarPuntos();
-  // Poblar select destino desde tarifario
+  // Dejar destino vacío — se puebla cuando se selecciona el cliente
   const selDest = document.getElementById('asig-destino');
-  if(selDest) {
-    const destinos = [...new Set((DB.tarifarios||[]).map(function(t){ return t.destino; }).filter(Boolean))].sort();
-    selDest.innerHTML = '<option value="">Selecciona destino...</option>'
-      + destinos.map(function(d){ return '<option value="'+d+'">'+d+'</option>'; }).join('')
-      + '<option value="__otro__">✏ Otro destino...</option>';
-  }
+  if(selDest) selDest.innerHTML = '<option value="">Selecciona cliente primero...</option>';
   document.getElementById('wrap-asig-destino-custom').style.display = 'none';
-  // Hilo observaciones
-  const sAsig = DB.servicios[svcActivoIdx];
   if(sAsig) obsRenderHilo(document.getElementById('asig-obs-hilo'), obsParseHilo(sAsig.notas||''));
   document.getElementById('modal-asignar').style.display = 'flex';
 }
