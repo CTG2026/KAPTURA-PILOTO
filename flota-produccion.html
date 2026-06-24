@@ -402,6 +402,9 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
       <button class="btn btn-sm" id="liq-fil-todas" onclick="filtrarLiquidaciones('todas')" style="background:var(--gold);color:#000">Todas</button>
       <button class="btn btn-sm btn-ghost" id="liq-fil-borrador" onclick="filtrarLiquidaciones('borrador')">Borrador</button>
       <button class="btn btn-sm btn-ghost" id="liq-fil-emitida" onclick="filtrarLiquidaciones('emitida')">Emitidas</button>
+      <button class="btn btn-sm btn-ghost" id="liq-fil-emitida" onclick="filtrarLiquidaciones('emitida')">Emitidas</button>
+      <button class="btn btn-sm btn-ghost" id="liq-fil-enviada" onclick="filtrarLiquidaciones('enviada')">Enviadas</button>
+      <button class="btn btn-sm btn-ghost" id="liq-fil-en_cobro" onclick="filtrarLiquidaciones('en_cobro')">En Cobro</button>
       <button class="btn btn-sm btn-ghost" id="liq-fil-por_cobrar" onclick="filtrarLiquidaciones('por_cobrar')">Por Cobrar</button>
       <button class="btn btn-sm btn-ghost" id="liq-fil-cobrada" onclick="filtrarLiquidaciones('cobrada')">Cobradas</button>
     </div>
@@ -431,6 +434,8 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
           <div class="fld">
             <div class="lbl">Fecha Emisión</div>
             <input class="inp" type="date" id="liq-fecha" value="">
+            <div id="liq-condiciones-cliente" style="display:none;font-size:10px;font-weight:700;color:var(--gold);margin-top:4px;padding:4px 8px;background:rgba(201,168,76,0.1);border-radius:5px"></div>
+            <div id="liq-req-aprobacion" style="display:none;font-size:10px;font-weight:700;color:#C9A84C;margin-top:4px;padding:4px 8px;background:rgba(201,168,76,0.15);border-radius:5px;border:1px solid rgba(201,168,76,0.3)"></div>
           </div>
           <div class="fld">
             <div class="lbl">Vencimiento</div>
@@ -4703,6 +4708,48 @@ function imprimirInforme() {
         <label class="lbl">Comisión Corretaje (%) — sobre tarifa + IVA</label>
         <input class="inp" id="edit-cli-comision-gen" type="number" step="0.5" placeholder="Ej: 5">
       </div>
+      <div class="section-ttl" style="margin-top:12px">💳 Condiciones Comerciales</div>
+      <div class="fld2">
+        <div class="fld"><label class="lbl">Modalidad de Pago</label>
+          <select class="inp" id="edit-cli-modalidad-pago">
+            <option value="">Selecciona...</option>
+            <option value="30 días">30 días</option>
+            <option value="60 días">60 días</option>
+            <option value="90 días">90 días</option>
+            <option value="Contra entrega">Contra entrega</option>
+            <option value="Anticipado">Anticipado</option>
+            <option value="Otro">Otro</option>
+          </select>
+        </div>
+        <div class="fld"><label class="lbl">Forma de Pago</label>
+          <select class="inp" id="edit-cli-forma-pago">
+            <option value="">Selecciona...</option>
+            <option value="Transferencia">Transferencia</option>
+            <option value="Cheque">Cheque</option>
+            <option value="Efectivo">Efectivo</option>
+            <option value="Otro">Otro</option>
+          </select>
+        </div>
+      </div>
+      <div class="fld2">
+        <div class="fld"><label class="lbl">Día de Corte</label>
+          <select class="inp" id="edit-cli-dia-corte">
+            <option value="">Selecciona...</option>
+            <option value="Último día del mes">Último día del mes</option>
+            <option value="Día 15">Día 15</option>
+            <option value="Día 10">Día 10</option>
+            <option value="Día 25">Día 25</option>
+            <option value="Por servicio">Por servicio</option>
+          </select>
+        </div>
+        <div class="fld" style="display:flex;align-items:center;gap:10px;padding-top:20px">
+          <input type="checkbox" id="edit-cli-requiere-aprobacion" style="width:18px;height:18px;accent-color:var(--gold)">
+          <label style="font-size:11px;font-weight:700;color:var(--text)">Requiere aprobación liquidación</label>
+        </div>
+      </div>
+      <div class="fld"><label class="lbl">Observaciones Condiciones</label>
+        <textarea class="inp" id="edit-cli-obs-pago" rows="2" placeholder="Ej: Se liquida al último día del mes, requiere aprobación del jefe de logística"></textarea>
+      </div>
     </div>
     <div class="modal-ftr">
       <button class="btn btn-ghost" onclick="cerrar('modal-editar-cliente')">← Volver</button>
@@ -5569,6 +5616,11 @@ async function setupEditarCliente(rut) {
   set('edit-cli-contacto',  c.contacto);
   set('edit-cli-cargo',     c.cargo_contacto||'');
   set('edit-cli-comision-gen', c.comision_generador_pct||c.comision_generador||'');
+  document.getElementById('edit-cli-modalidad-pago').value = c.modalidad_pago||'';
+  document.getElementById('edit-cli-forma-pago').value     = c.forma_pago||'';
+  document.getElementById('edit-cli-dia-corte').value      = c.dia_corte||'';
+  document.getElementById('edit-cli-requiere-aprobacion').checked = c.requiere_aprobacion||false;
+  document.getElementById('edit-cli-obs-pago').value       = c.observaciones_pago||'';
   document.getElementById('edit-cli-rut-original').value = c.rut||c.nombre;
   document.getElementById('modal-editar-cliente').style.display = 'flex';
 }
@@ -5587,7 +5639,15 @@ async function setupGuardarEdicionCliente() {
   if(!nombre) { toast('El nombre es obligatorio'); return; }
   const comGenPct = parseFloat(document.getElementById('edit-cli-comision-gen')?.value)||0;
   const {error} = await supa.from('kaptura_clientes')
-    .update({nombre, rut, ciudad, direccion:dir, telefono:tel, email, contacto, cargo_contacto:cargo, comision_generador_pct:comGenPct, comision_generador_base:'iva'})
+    .update({
+      nombre, rut, ciudad, direccion:dir, telefono:tel, email, contacto, cargo_contacto:cargo,
+      comision_generador_pct:comGenPct, comision_generador_base:'iva',
+      modalidad_pago: document.getElementById('edit-cli-modalidad-pago').value||null,
+      forma_pago:     document.getElementById('edit-cli-forma-pago').value||null,
+      dia_corte:      document.getElementById('edit-cli-dia-corte').value||null,
+      requiere_aprobacion: document.getElementById('edit-cli-requiere-aprobacion').checked,
+      observaciones_pago: document.getElementById('edit-cli-obs-pago').value.trim()||null
+    })
     .eq('empresa', emp).eq('rut', rutOriginal);
   if(error) { toast('Error: '+error.message); return; }
   toast('✓ Cliente actualizado');
@@ -5953,36 +6013,64 @@ async function eliminarLiquidacion(id, e) {
 
 function renderLiquidaciones() {
   const lista = document.getElementById('liq-lista');
+  const hoy = new Date(); hoy.setHours(0,0,0,0);
   const items = _liqFiltro === 'todas' ? _liqData : _liqData.filter(l => l.estado === _liqFiltro);
   if(!items.length) {
     lista.innerHTML = '<div class="empty">Sin liquidaciones en este estado</div>';
     return;
   }
-  const estadoColor = {
-    borrador: 'var(--muted)', emitida: 'var(--gold)',
-    factoring: '#a78bfa', por_cobrar: 'var(--green)', cobrada: 'var(--muted)'
-  };
-  lista.innerHTML = items.map(l => `
-    <div onclick="verLiquidacion('${l.id}')" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:8px;cursor:pointer;transition:border-color 0.15s" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border)'">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
-        <div>
-          <div style="font-size:14px;font-weight:900;color:var(--gold)">${l.numero}</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:2px">${l.cliente} · ${l.fecha_emision||''}</div>
-        </div>
-        <div style="text-align:right">
-          <div style="font-size:16px;font-weight:900;color:var(--text)">$${Number(l.total||0).toLocaleString('es-CL')}</div>
-          <div style="font-size:9px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:${estadoColor[l.estado]||'var(--muted)'};margin-top:2px">${l.estado?.toUpperCase()}</div>
-        </div>
+  lista.innerHTML = items.map(l => {
+    // Calcular semáforo de vencimiento
+    const cobrada = ['cobrada','factoring'].includes(l.estado);
+    let lineColor = '#2E3D3B'; // default borde
+    let badgeTxt = (l.estado||'').replace('_',' ').toUpperCase();
+    let badgeBg  = 'rgba(245,240,232,0.1)';
+    let badgeCol = 'var(--muted)';
+    let vencTxt  = '';
+    let vencCol  = 'var(--muted)';
+    let vencLbl  = l.fecha_vencimiento ? ('Vence el') : '';
+    let vencFmt  = l.fecha_vencimiento ? l.fecha_vencimiento.split('-').reverse().join('/') : '—';
+
+    if(cobrada) {
+      lineColor = '#3B6D11'; badgeTxt = 'PAGADA'; badgeBg = 'rgba(59,109,17,0.2)'; badgeCol = '#7EA87E';
+      vencLbl = 'Pagada el'; vencFmt = l.fecha_pago ? l.fecha_pago.split('-').reverse().join('/') : '—';
+      vencCol = '#7EA87E';
+    } else if(l.fecha_vencimiento) {
+      const venc = new Date(l.fecha_vencimiento); venc.setHours(0,0,0,0);
+      const dias = Math.round((venc - hoy) / 864e5);
+      if(dias < 0) {
+        lineColor = '#E24B4A'; badgeTxt = 'VENCIDA HACE '+(Math.abs(dias))+' DÍAS';
+        badgeBg = 'rgba(226,75,74,0.2)'; badgeCol = '#E24B4A';
+        vencLbl = 'Venció el'; vencCol = '#E24B4A';
+      } else if(dias <= 7) {
+        lineColor = '#EF9F27'; badgeTxt = 'VENCE EN '+dias+' DÍAS';
+        badgeBg = 'rgba(239,159,39,0.2)'; badgeCol = '#EF9F27';
+        vencCol = '#EF9F27';
+      } else if(dias <= 30) {
+        lineColor = '#BA7517'; badgeTxt = 'VENCE EN '+dias+' DÍAS';
+        badgeBg = 'rgba(186,117,23,0.2)'; badgeCol = '#BA7517';
+        vencCol = '#BA7517';
+      } else {
+        lineColor = '#639922'; badgeTxt = 'AL DÍA · '+dias+' DÍAS';
+        badgeBg = 'rgba(99,153,34,0.2)'; badgeCol = '#639922';
+        vencCol = '#7EA87E';
+      }
+    }
+    const btnElim = (()=>{const r=_sessionUsuario?.rol,p=_sessionUsuario?.pin,em=_sessionUsuario?.empresa;const ok=r==='admin_kaptura'||(r==='coordinador'&&p==='1996'&&em==='flota_297221')||(r==='coordinador'&&p==='0101'&&em==='global_solutions');return ok?`<button onclick="eliminarLiquidacion('${l.id}',event)" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:var(--danger);border-radius:5px;padding:3px 10px;font-size:10px;cursor:pointer;font-weight:700">✕ Eliminar</button>`:'';})();
+    return `<div onclick="verLiquidacion('${l.id}')" style="background:var(--surface);border:1px solid var(--border);border-left:6px solid ${lineColor};border-radius:10px;padding:12px 14px;margin-bottom:8px;cursor:pointer;display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center">
+      <div>
+        <div style="font-size:13px;font-weight:900;color:var(--gold)">${l.numero}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px">${l.cliente} · ${(l.servicios_ids||[]).length} servicios${l.factoring?'· Factoring':''}</div>
+        <span style="font-size:9px;font-weight:800;letter-spacing:0.08em;padding:2px 8px;border-radius:4px;display:inline-block;margin-top:5px;background:${badgeBg};color:${badgeCol}">${badgeTxt}</span>
       </div>
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <div style="display:flex;gap:12px;font-size:11px;color:var(--muted)">
-          <span>${(l.servicios_ids||[]).length} servicios</span>
-          <span>Neto: $${Number(l.monto_neto||0).toLocaleString('es-CL')}</span>
-          ${l.factoring ? '<span style="color:#a78bfa">● Factoring</span>' : ''}
-        </div>
-        ${(()=>{const r=_sessionUsuario?.rol,p=_sessionUsuario?.pin,em=_sessionUsuario?.empresa;const ok=r==='admin_kaptura'||(r==='coordinador'&&p==='1996'&&em==='flota_297221')||(r==='coordinador'&&p==='0101'&&em==='global_solutions');return ok?`<button onclick="eliminarLiquidacion('${l.id}',event)" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:var(--danger);border-radius:5px;padding:3px 10px;font-size:10px;cursor:pointer;font-weight:700">✕ Eliminar</button>`:'';})()}
+      <div style="text-align:right">
+        <div style="font-size:16px;font-weight:900;color:var(--text)">$${Number(l.total||0).toLocaleString('es-CL')}</div>
+        <div style="font-size:9px;font-weight:700;letter-spacing:0.08em;color:var(--muted);margin-top:4px;text-transform:uppercase">${vencLbl}</div>
+        <div style="font-size:13px;font-weight:800;color:${vencCol}">${vencFmt}</div>
+        <div style="margin-top:6px">${btnElim}</div>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 async function abrirNuevaLiquidacion() {
@@ -6020,6 +6108,39 @@ async function liqSeleccionarCliente() {
     nextNum = Math.max(...nums) + 1;
   }
   const numero = `LIQ-${String(nextNum).padStart(3,'0')} ${cliente.toUpperCase()}`;
+  // Cargar condiciones comerciales del cliente
+  const cliData = DB.clientes.find(c => c.nombre === cliente);
+  if(cliData) {
+    // Calcular vencimiento desde modalidad_pago
+    const modalidad = cliData.modalidad_pago || '';
+    const diasMatch = modalidad.match(/(\d+)/);
+    if(diasMatch) {
+      // Modalidad con días explícitos — calcular vencimiento
+      const diasPago = parseInt(diasMatch[1]);
+      const vCliente = new Date(); vCliente.setDate(vCliente.getDate() + diasPago);
+      document.getElementById('liq-vencimiento').value = vCliente.toISOString().split('T')[0];
+    } else if(modalidad === 'Contra entrega' || modalidad === 'Anticipado') {
+      // Pago inmediato — vencimiento = hoy
+      document.getElementById('liq-vencimiento').value = new Date().toISOString().split('T')[0];
+    }
+    // Si no hay modalidad definida — dejar el campo como estaba (default 30 días)
+    // Mostrar recordatorio si requiere aprobación
+    const reqAprobEl = document.getElementById('liq-req-aprobacion');
+    if(reqAprobEl) {
+      reqAprobEl.style.display = cliData.requiere_aprobacion ? 'block' : 'none';
+      reqAprobEl.textContent = '⚠️ Este cliente requiere aprobación de la liquidación antes de facturar';
+    }
+    // Mostrar condiciones en el modal
+    const condEl = document.getElementById('liq-condiciones-cliente');
+    if(condEl) {
+      const parts = [];
+      if(cliData.modalidad_pago) parts.push(cliData.modalidad_pago);
+      if(cliData.forma_pago) parts.push(cliData.forma_pago);
+      if(cliData.dia_corte) parts.push('Corte: '+cliData.dia_corte);
+      condEl.textContent = parts.join(' · ');
+      condEl.style.display = parts.length ? 'block' : 'none';
+    }
+  }
   document.getElementById('liq-numero-preview').textContent = numero;
 
   // Cargar servicios cerrados de ese cliente
@@ -6170,16 +6291,27 @@ async function verLiquidacion(id) {
   // Botones según estado
   const btns = {
     borrador: `<button class="btn btn-ghost" onclick="cerrar('modal-ver-liq')">Cerrar</button>
-      <button class="btn btn-outline" onclick="liqAdjuntarSII('${id}')">📎 Adjuntar Factura SII</button>
+      <button class="btn btn-outline" onclick="liqAdjuntarSII('${id}')">📎 Adjuntar Factura</button>
       <button class="btn btn-navy" onclick="liqCambiarEstado('${id}','emitida')">Emitir →</button>`,
     emitida: `<button class="btn btn-ghost" onclick="cerrar('modal-ver-liq')">Cerrar</button>
+      <button class="btn btn-outline" onclick="liqAdjuntarSII('${id}')">📎 Adjuntar Factura</button>
+      <button class="btn btn-navy" onclick="liqCambiarEstado('${id}','enviada')">📤 Enviada al Cliente</button>`,
+    enviada: `<button class="btn btn-ghost" onclick="cerrar('modal-ver-liq')">Cerrar</button>
+      <button class="btn btn-outline" onclick="liqCambiarEstado('${id}','aprobada')">✓ Aprobada por Cliente</button>
+      <button class="btn btn-navy" onclick="liqCambiarEstado('${id}','facturada')">🧾 Saltar a Facturada</button>`,
+    aprobada: `<button class="btn btn-ghost" onclick="cerrar('modal-ver-liq')">Cerrar</button>
       <button class="btn btn-outline" onclick="liqAdjuntarSII('${id}')">📎 Adjuntar Factura SII</button>
-      <button class="btn btn-navy" onclick="liqCambiarEstado('${id}','por_cobrar')">→ Por Cobrar</button>`,
+      <button class="btn btn-navy" onclick="liqRegistrarFactura('${id}')">🧾 Registrar Factura</button>`,
+    facturada: `<button class="btn btn-ghost" onclick="cerrar('modal-ver-liq')">Cerrar</button>
+      <button class="btn btn-outline" onclick="liqAdjuntarSII('${id}')">📎 Adjuntar Factura SII</button>
+      <button class="btn btn-navy" onclick="liqCambiarEstado('${id}','en_cobro')">💰 En Cobro</button>`,
+    en_cobro: `<button class="btn btn-ghost" onclick="cerrar('modal-ver-liq')">Cerrar</button>
+      <button class="btn btn-navy" onclick="liqRegistrarPago('${id}')">✓ Registrar Pago</button>`,
     factoring: `<button class="btn btn-ghost" onclick="cerrar('modal-ver-liq')">Cerrar</button>
       <button class="btn btn-navy" onclick="liqCambiarEstado('${id}','cobrada')">✓ Marcar Cobrada</button>`,
     por_cobrar: `<button class="btn btn-ghost" onclick="cerrar('modal-ver-liq')">Cerrar</button>
       <button class="btn btn-outline" onclick="liqAdjuntarSII('${id}')">📎 Adjuntar Factura SII</button>
-      <button class="btn btn-navy" onclick="liqCambiarEstado('${id}','cobrada')">✓ Marcar Cobrada</button>`,
+      <button class="btn btn-navy" onclick="liqCambiarEstado('${id}','en_cobro')">💰 En Cobro</button>`,
     cobrada: `<button class="btn btn-ghost" onclick="cerrar('modal-ver-liq')">Cerrar</button>`
   };
   document.getElementById('ver-liq-ftr').innerHTML = btns[liq.estado] || btns.borrador;
@@ -6187,12 +6319,46 @@ async function verLiquidacion(id) {
 }
 
 async function liqCambiarEstado(id, nuevoEstado) {
+  const hoy = new Date().toISOString().split('T')[0];
+  const extra = {};
+  if(nuevoEstado === 'enviada')   extra.fecha_envio       = hoy;
+  if(nuevoEstado === 'aprobada')  extra.fecha_aprobacion  = hoy;
+  if(nuevoEstado === 'facturada') extra.fecha_factura     = hoy;
+  if(nuevoEstado === 'cobrada')   extra.fecha_pago        = hoy;
+  const {error} = await supa.from('kaptura_liquidaciones').update({estado: nuevoEstado, ...extra}).eq('id', id);
+  if(error) { toast('Error: '+error.message); return; }
+  toast('✓ Estado: '+nuevoEstado.replace('_',' ').toUpperCase());
+  cerrar('modal-ver-liq');
+  await cargarLiquidaciones();
+}
+
+async function liqRegistrarFactura(id) {
+  const numFact = prompt('N° de Factura SII:');
+  if(!numFact) return;
+  const hoy = new Date().toISOString().split('T')[0];
   const {error} = await supa.from('kaptura_liquidaciones').update({
-    estado: nuevoEstado,
-    ...(nuevoEstado === 'cobrada' ? {fecha_pago: new Date().toISOString().split('T')[0]} : {})
+    estado:'facturada', num_factura:numFact, fecha_factura:hoy
   }).eq('id', id);
   if(error) { toast('Error: '+error.message); return; }
-  toast('✓ Estado actualizado');
+  toast('✓ Factura N°'+numFact+' registrada');
+  cerrar('modal-ver-liq');
+  await cargarLiquidaciones();
+}
+
+async function liqRegistrarPago(id) {
+  // Obtener forma de pago del cliente desde la liquidación
+  const liq = _liqData.find(l => l.id === id);
+  const cliData = liq ? DB.clientes.find(c => c.nombre === liq.cliente) : null;
+  const formaSugerida = cliData?.forma_pago || '';
+  const forma = prompt('Forma de pago:' + (formaSugerida ? ' ('+formaSugerida+')' : ''), formaSugerida);
+  if(forma === null) return;
+  const obs = prompt('Observaciones (opcional):') || '';
+  const hoy = new Date().toISOString().split('T')[0];
+  const {error} = await supa.from('kaptura_liquidaciones').update({
+    estado:'cobrada', fecha_pago:hoy, forma_pago_real:forma||formaSugerida, obs_pago:obs
+  }).eq('id', id);
+  if(error) { toast('Error: '+error.message); return; }
+  toast('✓ Pago registrado');
   cerrar('modal-ver-liq');
   await cargarLiquidaciones();
 }
@@ -6213,9 +6379,45 @@ async function liqAdjuntarSII(id) {
     const url = supa.storage.from('kaptura-guias').getPublicUrl(path).data.publicUrl;
     const {error} = await supa.from('kaptura_liquidaciones').update({pdf_sii_url: url}).eq('id', id);
     if(error) { toast('Error: '+error.message); return; }
-    toast('✓ Factura adjuntada');
-    await cargarLiquidaciones();
-    verLiquidacion(id);
+    toast('✓ Factura adjuntada — leyendo datos...');
+    // Intentar leer N° factura con Claude Vision
+    try {
+      const reader = new FileReader();
+      reader.onload = async function(ev) {
+        const b64 = ev.target.result.split(',')[1];
+        const mtype = file.type === 'application/pdf' ? 'application/pdf' : 'image/jpeg';
+        const resp = await fetch('https://api.anthropic.com/v1/messages', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({
+            model:'claude-haiku-4-5-20251001', max_tokens:200,
+            messages:[{role:'user', content:[
+              {type: mtype==='application/pdf'?'document':'image', source:{type:'base64',media_type:mtype,data:b64}},
+              {type:'text', text:'Lee esta factura y extrae SOLO: numero de folio/factura y fecha de emision. Responde SOLO en JSON: {"num_factura":"XXX","fecha_factura":"YYYY-MM-DD"}'}
+            ]}]
+          })
+        });
+        const data = await resp.json();
+        const txt = (data.content||[]).find(c=>c.type==='text')?.text||'';
+        try {
+          const parsed = JSON.parse(txt.replace(/```json|```/g,'').trim());
+          if(parsed.num_factura) {
+            await supa.from('kaptura_liquidaciones').update({
+              num_factura: parsed.num_factura,
+              fecha_factura: parsed.fecha_factura || null,
+              estado: 'facturada'
+            }).eq('id', id);
+            toast('✓ Factura N°'+parsed.num_factura+' detectada automáticamente');
+          }
+        } catch(e) { toast('✓ Factura adjuntada (lectura manual requerida)'); }
+        await cargarLiquidaciones();
+        verLiquidacion(id);
+      };
+      reader.readAsDataURL(file);
+    } catch(e) {
+      await cargarLiquidaciones();
+      verLiquidacion(id);
+    }
   };
   input.click();
 }
@@ -6422,6 +6624,48 @@ iniciarLogin();
       <div class="fld">
         <label class="lbl">Comisión Corretaje (%) — sobre tarifa + IVA</label>
         <input class="inp" id="edit-cli-comision-gen" type="number" step="0.5" placeholder="Ej: 5">
+      </div>
+      <div class="section-ttl" style="margin-top:12px">💳 Condiciones Comerciales</div>
+      <div class="fld2">
+        <div class="fld"><label class="lbl">Modalidad de Pago</label>
+          <select class="inp" id="edit-cli-modalidad-pago">
+            <option value="">Selecciona...</option>
+            <option value="30 días">30 días</option>
+            <option value="60 días">60 días</option>
+            <option value="90 días">90 días</option>
+            <option value="Contra entrega">Contra entrega</option>
+            <option value="Anticipado">Anticipado</option>
+            <option value="Otro">Otro</option>
+          </select>
+        </div>
+        <div class="fld"><label class="lbl">Forma de Pago</label>
+          <select class="inp" id="edit-cli-forma-pago">
+            <option value="">Selecciona...</option>
+            <option value="Transferencia">Transferencia</option>
+            <option value="Cheque">Cheque</option>
+            <option value="Efectivo">Efectivo</option>
+            <option value="Otro">Otro</option>
+          </select>
+        </div>
+      </div>
+      <div class="fld2">
+        <div class="fld"><label class="lbl">Día de Corte</label>
+          <select class="inp" id="edit-cli-dia-corte">
+            <option value="">Selecciona...</option>
+            <option value="Último día del mes">Último día del mes</option>
+            <option value="Día 15">Día 15</option>
+            <option value="Día 10">Día 10</option>
+            <option value="Día 25">Día 25</option>
+            <option value="Por servicio">Por servicio</option>
+          </select>
+        </div>
+        <div class="fld" style="display:flex;align-items:center;gap:10px;padding-top:20px">
+          <input type="checkbox" id="edit-cli-requiere-aprobacion" style="width:18px;height:18px;accent-color:var(--gold)">
+          <label style="font-size:11px;font-weight:700;color:var(--text)">Requiere aprobación liquidación</label>
+        </div>
+      </div>
+      <div class="fld"><label class="lbl">Observaciones Condiciones</label>
+        <textarea class="inp" id="edit-cli-obs-pago" rows="2" placeholder="Ej: Se liquida al último día del mes, requiere aprobación del jefe de logística"></textarea>
       </div>
     </div>
     <div class="modal-ftr">
