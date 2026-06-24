@@ -3251,6 +3251,10 @@ async function irACostos() {
   const c = DB.config;
   document.getElementById('cos-dias').value     = dias;
   if(document.getElementById('cos-equipos')) document.getElementById('cos-equipos').value = 1;
+  // Limpiar dataset.manual para que se carguen los valores automáticos
+  ['cos-cf','cos-viatico','cos-conductor','cos-mant','cos-contingencia'].forEach(function(id){
+    var el = document.getElementById(id); if(el) delete el.dataset.manual;
+  });
   // Usar valores EXACTOS de DB.config — si es "0" usar 0, nunca defaults hardcodeados
   const getCfgNum = (keys) => {
     for(const k of keys) {
@@ -3304,6 +3308,19 @@ function abrirCierre(i) {
 }
 
 let _integrando = false;
+
+function calcCostoFijoEquipos() {
+  var equipos = parseInt(document.getElementById('cos-equipos')?.value)||1;
+  var c       = DB.config;
+  var dias    = parseFloat(document.getElementById('cos-dias')?.value)||1;
+  var cfMens  = parseInt(c.costo_fijo_mensual||c.costo_fijo_mes||0);
+  var diasOp  = parseInt(c.dias_operativos||20);
+  var cfDia   = parseInt(c.costo_fijo_dia||0) || (cfMens > 0 ? Math.round(cfMens/diasOp) : 0);
+  var cfProrr = cfDia > 0 ? Math.round((cfDia * dias) / equipos) : 0;
+  var cfEl    = document.getElementById('cos-cf');
+  if(cfEl) { delete cfEl.dataset.manual; cfEl.value = fmt(cfProrr); }
+}
+
 async function calcCostos() {
   if(_integrando) return;
   const c    = DB.config;
@@ -4357,10 +4374,11 @@ async function abrirInforme(i) {
       sv.patente===s.patente && sv.estado==='cerrado' && sv.km_total > 0 && (sv.fecha||'') >= fechaInicioKapInf
     ).reduce((a,sv)=>a+(sv.km_total||0),0);
     const rendReal = (totalLtInf > 0 && kmSvcsInf > 0) ? Math.round(kmSvcsInf/totalLtInf*10)/10 : null;
-    const elTeo = document.getElementById('inf-rend-teorico');
     const elReal = document.getElementById('inf-rend-cargas');
-    if(elTeo) elTeo.textContent = rendTeorico + ' km/lt';
     if(elReal) elReal.textContent = rendReal ? rendReal + ' km/lt' : '—';
+    // Rendimiento teórico ya está en el HTML — actualizar si el elemento existe
+    const elTeo = document.getElementById('inf-rend-teorico');
+    if(elTeo && elTeo.textContent === '—') elTeo.textContent = rendTeorico + ' km/lt';
   });
 
   let html = `
@@ -4387,7 +4405,7 @@ async function abrirInforme(i) {
       <div class="inf-cell"><div class="inf-lbl">KM GPS</div><div class="inf-val">${s.km_total ? s.km_total+' km' : '—'}</div></div>
       <div class="inf-cell"><div class="inf-lbl">Km Vacíos</div><div class="inf-val">${s.km_base_carga ? s.km_base_carga+' km' : '—'}</div></div>
       <div class="inf-cell"><div class="inf-lbl">Km Cargado</div><div class="inf-val">${s.km_carga_destino ? s.km_carga_destino+' km' : '—'}</div></div>
-      <div class="inf-cell"><div class="inf-lbl">Rend. Teórico</div><div class="inf-val" id="inf-rend-teorico">—</div></div>
+      <div class="inf-cell"><div class="inf-lbl">Rend. Teórico</div><div class="inf-val" id="inf-rend-teorico">${rendTeorico ? rendTeorico + " km/lt" : "—"}</div></div>
       <div class="inf-cell"><div class="inf-lbl">Rend. según cargas</div><div class="inf-val" id="inf-rend-cargas">—</div></div>
       <div class="inf-cell"><div class="inf-lbl">Total Ingresos</div><div class="inf-val" style="font-weight:900;color:var(--green)">${fmt(s.ingreso_total||s.tarifa_neta||0)}</div></div>
       <div class="inf-cell"><div class="inf-lbl">$/km Tarifa</div><div class="inf-val" style="font-weight:900;color:var(--green)">${s.km_total ? fmt(Math.round((s.ingreso_total||s.tarifa_neta||0)/s.km_total)) : '—'}</div></div>
