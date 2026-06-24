@@ -1269,6 +1269,16 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
           <input class="inp" id="cos-otros" type="number" placeholder="0" oninput="calcCostos()">
         </div>
       </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+        <div class="fld">
+          <label class="lbl">Cargo Adicional $</label>
+          <input class="inp" id="cos-adicional" type="number" placeholder="0" oninput="calcCostos()">
+        </div>
+        <div class="fld">
+          <label class="lbl">Concepto Adicional</label>
+          <input class="inp" id="cos-adicional-obs" type="text" placeholder="Ej: Espera en planta">
+        </div>
+      </div>
       <!-- E FINANCIERO -->
       <div class="section-ttl">💳 E — Financiero</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
@@ -2810,9 +2820,13 @@ function puntosHTML(p, pi) {
     </div>
     <div style="margin-bottom:8px">
       <label class="lbl">Destino del Punto</label>
-      <input class="inp ${p.destino?'':'pend'}" style="${p.destino?'':'border-color:var(--orange)'}"
-        value="${p.destino||''}" placeholder="Ciudad o lugar de entrega"
-        id="dest-${pi}" onblur="setDestino(${pi},this.value)">
+      <select class="inp ${p.destino?'':'pend'}" style="${p.destino?'':'border-color:var(--orange)'}"
+        id="dest-${pi}" onchange="setDestinoSelect(${pi},this.value)">
+        <option value="">Selecciona destino...</option>
+        ${[...new Set((DB.tarifarios||[]).map(t=>t.destino).filter(Boolean))].sort().map(d=>`<option value="${d}" ${p.destino===d?'selected':''}>${d}</option>`).join('')}
+        <option value="__otro__" ${p.destino&&![...(DB.tarifarios||[]).map(t=>t.destino)].includes(p.destino)?'selected':''}>✏ Otro destino...</option>
+      </select>
+      ${p.destino && ![...(DB.tarifarios||[]).map(t=>t.destino)].includes(p.destino) ? `<input class="inp" style="margin-top:4px" value="${p.destino}" placeholder="Escribe el destino" id="dest-manual-${pi}" onblur="setDestino(${pi},this.value)">` : ''}
     </div>
     <!-- Tarifa oculta al conductor — visible solo para coordinador en modal costos -->
     <!-- Guías registradas -->
@@ -2914,6 +2928,17 @@ function setDestino(pi, val) {
   if(puntosData[pi].tipo === 'final' && val.trim()) buscarValor(pi);
 }
 function setValorManual(pi, val) { puntosData[pi].valor = parseFloat(val)||null; renderPuntos(); }
+
+function setDestinoSelect(pi, val) {
+  if(val === '__otro__') {
+    // Mostrar input manual
+    puntosData[pi].destino = '';
+    renderPuntos();
+    setTimeout(function(){ var el = document.getElementById('dest-manual-'+pi); if(el) el.focus(); }, 100);
+    return;
+  }
+  setDestino(pi, val);
+}
 
 function buscarValor(pi) {
   const p = puntosData[pi];
@@ -3387,7 +3412,8 @@ async function calcCostos() {
   const comGenFinal = parseFloat((comGenEl?.value||'').replace(/[.$]/g,'').replace(/\./g,''))||0;
   const otrosFinal  = parseFloat((otrosEl?.value||'').replace(/[.$]/g,'').replace(/\./g,''))||0;
   const contFinal = parseFloat((document.getElementById('cos-contingencia')?.value||'').replace(/\./g,'').replace(/[$]/g,''))||0;
-  const costos = comb + _peajesCalc + condValFinal + comision + cfFinal + mantFinal + viatFinal + factoring + comGenFinal + otrosFinal + contFinal;
+  const adicionalFinal = parseFloat((document.getElementById('cos-adicional')?.value||'').replace(/\./g,'').replace(/[$]/g,''))||0;
+  const costos = comb + _peajesCalc + condValFinal + comision + cfFinal + mantFinal + viatFinal + factoring + comGenFinal + otrosFinal + contFinal + adicionalFinal;
   const margen = ingreso - costos;
   const pct    = tarifa ? Math.round(margen/tarifa*100) : 0;
   const mEl = document.getElementById('cos-margen');
@@ -3891,6 +3917,8 @@ async function guardarCostosBorrador() {
     costo_contingencia:cont,
     costo_comision_conductor:comision,
     costo_corretaje:corretaje,
+    costo_adicional:parseFloat((document.getElementById('cos-adicional')?.value||'').replace(/\./g,'').replace(/[$]/g,''))||0,
+    costo_adicional_obs:document.getElementById('cos-adicional-obs')?.value||null,
     costo_mantencion:mant, factoring:fact, total_costos:costos,
     margen_servicio:margen, margen:margen,
     km_base_carga:kmVacioIda, km_carga_destino:kmCargado, km_retorno:kmRetorno,
