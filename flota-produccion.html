@@ -3255,6 +3255,16 @@ async function irACostos() {
   ['cos-cf','cos-viatico','cos-conductor','cos-mant','cos-contingencia'].forEach(function(id){
     var el = document.getElementById(id); if(el) delete el.dataset.manual;
   });
+  // Marcar campos vacíos con color de alerta (se actualiza después de calcCostos)
+  setTimeout(function(){
+    ['cos-cf','cos-viatico','cos-conductor','cos-mant','cos-contingencia','cos-peajes','cos-tag'].forEach(function(id){
+      var el = document.getElementById(id);
+      if(el) {
+        var val = parseFloat((el.value||'').replace(/\./g,'').replace(/[$]/g,''))||0;
+        el.style.border = val === 0 ? '2px solid rgba(255,107,0,0.8)' : '';
+      }
+    });
+  }, 300);
   // Usar valores EXACTOS de DB.config — si es "0" usar 0, nunca defaults hardcodeados
   const getCfgNum = (keys) => {
     for(const k of keys) {
@@ -3475,6 +3485,14 @@ async function calcCostos() {
   const mEl = document.getElementById('cos-margen');
   mEl.textContent = fmt(margen);
   mEl.style.color = margen >= 0 ? '#7EA87E' : '#B05A5A';
+  // Actualizar color de alerta en campos
+  ['cos-cf','cos-viatico','cos-conductor','cos-mant','cos-contingencia','cos-peajes'].forEach(function(id){
+    var el = document.getElementById(id);
+    if(el) {
+      var val = parseFloat((el.value||'').replace(/\./g,'').replace(/[$]/g,''))||0;
+      el.style.border = val === 0 ? '2px solid rgba(255,107,0,0.8)' : '';
+    }
+  });
   document.getElementById('cos-margen-pct').textContent = `${pct}% sobre tarifa`;
 }
 
@@ -4636,19 +4654,24 @@ function imprimirInforme() {
   win.document.write(`<html><head><title>Informe Kaptura</title>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
-      body{font-family:'Barlow',sans-serif;font-size:11px;padding:20px;color:rgba(255,255,255,0.7)}
+      :root{--gold:#C9A84C;--green:#7EA87E;--danger:#B05A5A;--text:#F5F0E8;--bg:#1A2120;--surface:#212B2A;--border:#2E3D3B;--muted:rgba(245,240,232,0.4)}
+      *{box-sizing:border-box}
+      body{font-family:'DM Sans',sans-serif;font-size:12px;padding:24px;background:#fff;color:#1A1A2E}
       table{width:100%;border-collapse:collapse}
-      th{background:var(--gold);color:var(--text);padding:6px 8px;text-align:left;font-size:9px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase}
-      td{padding:5px 8px;border-bottom:1px solid #EEF1F6;color:rgba(255,255,255,0.7)}
-      .inf-hdr{background:#1C2B4A;color:var(--text);padding:12px 16px;display:flex;justify-content:space-between;align-items:center}
-      .inf-grid{display:grid;grid-template-columns:1fr 1fr;border:1px solid #DDE2EC;border-top:none}
-      .inf-cell{padding:8px 12px;border-right:1px solid #DDE2EC;border-bottom:1px solid #DDE2EC}
+      th{background:#1A2120;color:#C9A84C;padding:7px 10px;text-align:left;font-size:9px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase}
+      td{padding:6px 10px;border-bottom:1px solid #E5E7EB;color:#374151;font-size:11px}
+      .inf-hdr{background:#1A2120;color:#F5F0E8;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;border-radius:8px 8px 0 0}
+      .inf-grid{display:grid;grid-template-columns:1fr 1fr;border:1px solid #E5E7EB;border-top:none}
+      .inf-cell{padding:8px 12px;border-right:1px solid #E5E7EB;border-bottom:1px solid #E5E7EB}
       .inf-cell:nth-child(even){border-right:none}
-      .inf-lbl{font-size:9px;font-weight:800;color:#4E5A78;letter-spacing:0.1em;text-transform:uppercase}
-      .inf-val{font-weight:700;color:var(--text);margin-top:2px}
-      .inf-section{font-size:12px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);padding:10px 0 5px;border-bottom:2px solid var(--gold);margin:14px 0 8px}
-      .inf-margen{background:#1C2B4A;color:var(--text);padding:12px 16px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
-      @media print{button{display:none}}
+      .inf-lbl{font-size:9px;font-weight:800;color:#6B7280;letter-spacing:0.1em;text-transform:uppercase}
+      .inf-val{font-weight:700;color:#111827;margin-top:2px;font-size:12px}
+      .inf-section{font-size:11px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:#C9A84C;padding:10px 0 5px;border-bottom:2px solid #C9A84C;margin:14px 0 8px}
+      .inf-table{width:100%;border-collapse:collapse;font-size:11px}
+      .inf-table th{background:#212B2A;color:#C9A84C;padding:6px 8px;font-size:9px}
+      .inf-table td{padding:5px 8px;border-bottom:1px solid #E5E7EB;color:#374151}
+      .green{color:#16a34a;font-weight:900} .red{color:#dc2626;font-weight:900} .gold{color:#C9A84C;font-weight:900}
+      @media print{button{display:none}body{padding:10px}}
     </style>
   </head><body>${body}
 <!-- MODAL EDITAR CLIENTE -->
