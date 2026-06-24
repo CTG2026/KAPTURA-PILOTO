@@ -3261,7 +3261,7 @@ async function irACostos() {
       var el = document.getElementById(id);
       if(el) {
         var val = parseFloat((el.value||'').replace(/\./g,'').replace(/[$]/g,''))||0;
-        el.style.border = val === 0 ? '2px solid rgba(255,107,0,0.8)' : '';
+        el.style.background = val === 0 ? 'rgba(255,107,0,0.25)' : '';
       }
     });
   }, 300);
@@ -3490,7 +3490,7 @@ async function calcCostos() {
     var el = document.getElementById(id);
     if(el) {
       var val = parseFloat((el.value||'').replace(/\./g,'').replace(/[$]/g,''))||0;
-      el.style.border = val === 0 ? '2px solid rgba(255,107,0,0.8)' : '';
+      el.style.background = val === 0 ? 'rgba(255,107,0,0.25)' : '';
     }
   });
   document.getElementById('cos-margen-pct').textContent = `${pct}% sobre tarifa`;
@@ -5472,7 +5472,10 @@ async function setupGuardarEmpresa() {
     {clave:'modo_gestion_'+emp, valor:modo,   empresa:emp},
   ];
   const {error} = await supa.from('kaptura_config').upsert(rows, {onConflict:'clave,empresa'});
-  if(error) throw new Error(error.message);
+  if(error) { toast('Error guardando empresa: '+error.message); return; }
+  // Actualizar DB.config local
+  rows.forEach(r => { DB.config[r.clave] = r.valor; const base = r.clave.replace('_'+emp,''); DB.config[base] = r.valor; });
+  toast('✓ Datos empresa guardados');
 }
 
 async function setupGuardarCostos() {
