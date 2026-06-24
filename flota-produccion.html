@@ -2925,7 +2925,8 @@ function setTipo(pi, tipo) {
 }
 function setDestino(pi, val) {
   puntosData[pi].destino = val.trim();
-  if(puntosData[pi].tipo === 'final' && val.trim()) buscarValor(pi);
+  buscarValor(pi);
+  renderPuntos();
 }
 function setValorManual(pi, val) { puntosData[pi].valor = parseFloat(val)||null; renderPuntos(); }
 
