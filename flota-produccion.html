@@ -4158,6 +4158,55 @@ async function guardarEvaluacion() {
   renderClientes();
 }
 
+function verEvaluacion(evalId) {
+  const e = (DB.evaluaciones||[]).find(function(x){ return x.id === evalId; });
+  if(!e) { toast('No se encontró la evaluación'); return; }
+  const d = e.detalle || {};
+  const emp = DB.config.flota_nombre || _sessionUsuario?.nombre || '';
+  document.getElementById('ver-eval-num').textContent = 'EVAL · ' + e.tramo + ' · ' + e.fecha;
+  const color = e.margen >= 0 ? '#7EA87E' : '#B05A5A';
+  const costos = [
+    ['Combustible',               d.comb||0],
+    ['Peajes',                    d.peajes||0],
+    ['Costo Conductor',           d.conductor||0],
+    ['Comisión Conductor',        d.comision||0],
+    ['Costo Fijo/Día',            d.cf||0],
+    ['Mantención',                d.mant||0],
+    ['Viático',                   d.viatico||0],
+    ['Reserva Contingencia',      d.contingencia||0],
+    ['Corretaje/Generador',       d.corretaje||0],
+    ['Factoring',                 d.factoring||0],
+    ['Otros',                     d.otros||0],
+  ].filter(function(r){ return r[1] > 0; });
+
+  const html = '<div style="padding:4px">'
+    + '<div style="background:#212B2A;border:1px solid #2E3D3B;border-radius:10px;padding:16px 20px;margin-bottom:12px">'
+    + '<div style="font-size:9px;font-weight:800;letter-spacing:0.15em;color:#C9A84C;text-transform:uppercase;margin-bottom:12px;border-bottom:1px solid #2E3D3B;padding-bottom:8px">Información del Servicio</div>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'
+    + '<div style="background:#1A2120;border-radius:7px;padding:10px 12px"><div style="font-size:9px;font-weight:700;color:rgba(245,240,232,0.4);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:3px">Cliente</div><div style="font-size:13px;font-weight:800;color:#C9A84C">'+(e.cliente||'Cliente spot')+'</div></div>'
+    + '<div style="background:#1A2120;border-radius:7px;padding:10px 12px"><div style="font-size:9px;font-weight:700;color:rgba(245,240,232,0.4);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:3px">Tramo</div><div style="font-size:13px;font-weight:800;color:#F5F0E8">'+(e.tramo||'—')+'</div></div>'
+    + '<div style="background:#1A2120;border-radius:7px;padding:10px 12px"><div style="font-size:9px;font-weight:700;color:rgba(245,240,232,0.4);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:3px">KM Total</div><div style="font-size:13px;font-weight:800;color:#F5F0E8">'+((d.km_ida||0)+(d.km_vuelta||0))+' km</div></div>'
+    + '<div style="background:#1A2120;border-radius:7px;padding:10px 12px"><div style="font-size:9px;font-weight:700;color:rgba(245,240,232,0.4);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:3px">Fecha</div><div style="font-size:13px;font-weight:800;color:#F5F0E8">'+(e.fecha||'—')+'</div></div>'
+    + '</div></div>'
+    + '<div style="background:#212B2A;border:1px solid #2E3D3B;border-radius:10px;padding:16px 20px;margin-bottom:12px">'
+    + '<div style="font-size:9px;font-weight:800;letter-spacing:0.15em;color:#C9A84C;text-transform:uppercase;margin-bottom:10px;border-bottom:1px solid #2E3D3B;padding-bottom:8px">Estructura de Costos</div>'
+    + '<table style="width:100%;border-collapse:collapse">'
+    + costos.map(function(r){ return '<tr style="border-bottom:1px solid #2E3D3B"><td style="padding:7px 4px;font-size:12px;color:rgba(245,240,232,0.5)">'+r[0]+'</td><td style="padding:7px 4px;font-size:12px;font-weight:700;color:#F5F0E8;text-align:right">'+fmt(r[1])+'</td></tr>'; }).join('')
+    + '<tr style="border-top:2px solid #C9A84C"><td style="padding:10px 4px;font-size:13px;font-weight:800;color:#F5F0E8">Total Costos</td><td style="padding:10px 4px;font-size:15px;font-weight:900;color:#B05A5A;text-align:right">'+fmt(e.total_costos)+'</td></tr>'
+    + '</table></div>'
+    + '<div style="border:1px solid #2E3D3B;border-radius:10px;overflow:hidden">'
+    + '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid #2E3D3B;background:#212B2A"><div style="font-size:10px;font-weight:800;letter-spacing:0.12em;color:rgba(245,240,232,0.5);text-transform:uppercase">Tarifa Neta</div><div style="font-size:20px;font-weight:900;color:#C9A84C">'+fmt(e.tarifa_neta)+'</div></div>'
+    + '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid #2E3D3B;background:#212B2A"><div style="font-size:10px;font-weight:800;letter-spacing:0.12em;color:rgba(245,240,232,0.5);text-transform:uppercase">Total Costos</div><div style="font-size:20px;font-weight:900;color:#B05A5A">'+fmt(e.total_costos)+'</div></div>'
+    + '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid #2E3D3B;background:#212B2A"><div style="font-size:10px;font-weight:800;letter-spacing:0.12em;color:rgba(245,240,232,0.5);text-transform:uppercase">Margen</div><div style="font-size:22px;font-weight:900;color:'+color+'">'+fmt(e.margen)+'</div></div>'
+    + '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:#212B2A"><div style="font-size:10px;font-weight:800;letter-spacing:0.12em;color:rgba(245,240,232,0.5);text-transform:uppercase">% Sobre Tarifa</div><div style="font-size:20px;font-weight:900;color:'+color+'">'+e.margen_pct+'%</div></div>'
+    + '</div>'
+    + '<div style="text-align:center;font-size:10px;color:rgba(245,240,232,0.3);margin-top:16px;padding-top:12px;border-top:1px solid #2E3D3B">KAPTURA FLOTA · Evaluación generada el '+e.fecha+' · Uso interno</div>'
+    + '</div>';
+
+  document.getElementById('ver-eval-body').innerHTML = html;
+  document.getElementById('modal-ver-eval').style.display = 'flex';
+}
+
 function renderEvalHistorial(clienteNombre) {
   const el = document.getElementById('eval-historial');
   if(!el) return;
@@ -4171,9 +4220,11 @@ function renderEvalHistorial(clienteNombre) {
       + '<div style="display:flex;justify-content:space-between;align-items:center">'
       + '<div><div style="font-size:12px;font-weight:800;color:var(--text)">'+(e.tramo||'—')+'</div>'
       + '<div style="font-size:10px;color:var(--muted)">'+(e.cliente||'Cliente spot')+' · '+e.fecha+'</div></div>'
+      + '<div style="display:flex;align-items:center;gap:10px">'
       + '<div style="text-align:right"><div style="font-size:14px;font-weight:900;color:'+color+'">'+fmt(e.margen)+'</div>'
       + '<div style="font-size:10px;color:var(--muted)">'+e.margen_pct+'% · '+fmt(e.tarifa_neta)+'</div></div>'
-      + '</div></div>';
+      + '<button data-eid="'+e.id+'" onclick="verEvaluacion(this.dataset.eid)" style="background:rgba(201,168,76,0.15);border:1px solid rgba(201,168,76,0.3);color:var(--gold);border-radius:7px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer">👁 Ver</button>'
+      + '</div></div></div>';
   }).join('');
 }
 
@@ -4599,6 +4650,17 @@ function imprimirInforme() {
       <button class="btn btn-ghost" onclick="cerrar('modal-evaluacion')">← Volver</button>
       <button class="btn btn-navy" onclick="guardarEvaluacion()">💾 Guardar Evaluación</button>
     </div>
+  </div>
+</div>
+
+<!-- MODAL VER EVALUACIÓN -->
+<div class="overlay" id="modal-ver-eval" style="display:none">
+  <div class="modal" style="max-height:95vh;overflow-y:auto;background:#1A2120;border:1px solid #2E3D3B">
+    <div class="modal-hdr" style="background:#212B2A;border-bottom:1px solid #2E3D3B">
+      <div><div class="modal-ttl" style="color:#C9A84C">KAPTURA — Evaluación de Servicio</div><div class="modal-sub" id="ver-eval-num" style="color:rgba(245,240,232,0.5)"></div></div>
+      <button class="modal-cls" onclick="cerrar('modal-ver-eval')">✕</button>
+    </div>
+    <div class="modal-body" id="ver-eval-body"></div>
   </div>
 </div>
 </body></html>`);
@@ -6284,6 +6346,17 @@ iniciarLogin();
       <button class="btn btn-ghost" onclick="cerrar('modal-evaluacion')">← Volver</button>
       <button class="btn btn-navy" onclick="guardarEvaluacion()">💾 Guardar Evaluación</button>
     </div>
+  </div>
+</div>
+
+<!-- MODAL VER EVALUACIÓN -->
+<div class="overlay" id="modal-ver-eval" style="display:none">
+  <div class="modal" style="max-height:95vh;overflow-y:auto;background:#1A2120;border:1px solid #2E3D3B">
+    <div class="modal-hdr" style="background:#212B2A;border-bottom:1px solid #2E3D3B">
+      <div><div class="modal-ttl" style="color:#C9A84C">KAPTURA — Evaluación de Servicio</div><div class="modal-sub" id="ver-eval-num" style="color:rgba(245,240,232,0.5)"></div></div>
+      <button class="modal-cls" onclick="cerrar('modal-ver-eval')">✕</button>
+    </div>
+    <div class="modal-body" id="ver-eval-body"></div>
   </div>
 </div>
 </body>
