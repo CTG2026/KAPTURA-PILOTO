@@ -54,6 +54,64 @@ tbody tr:hover{background:var(--surface2)}
 .dot-proc{background:var(--green)}
 .dot-cerr{background:var(--muted)}
 .dot-borr{background:var(--blue)}
+
+/* AGENDA */
+.ag-header-bar{background:#1B2E35;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;border-radius:10px;margin-bottom:14px}
+.ag-header-title{font-size:11px;font-weight:800;color:#C9A84C;letter-spacing:0.15em}
+.ag-header-date{font-size:11px;color:rgba(255,255,255,0.6)}
+.ag-btn-new{background:transparent;border:1.5px solid #fff;border-radius:6px;padding:6px 14px;font-size:11px;color:#fff;cursor:pointer;font-weight:700;letter-spacing:0.06em}
+.ag-sec{font-size:9px;font-weight:800;letter-spacing:0.18em;color:var(--muted);text-transform:uppercase;margin:14px 0 8px;padding-left:2px}
+.ag-card{background:var(--surface);border:1px solid var(--border);border-left:5px solid transparent;border-radius:10px;margin-bottom:8px;overflow:hidden;cursor:pointer}
+.ag-card.vencida{border-left-color:#E24B4A}
+.ag-card.urgente{border-left-color:#EF9F27}
+.ag-card.proximo{border-left-color:#BA7517}
+.ag-card.ok{border-left-color:#639922}
+.ag-card.sin-fecha{border-left-color:var(--gold)}
+.ag-card.resuelta{border-left-color:var(--border);opacity:0.5}
+.ag-card-hdr{padding:12px 14px;display:flex;justify-content:space-between;align-items:flex-start}
+.ag-card-title{font-size:13px;font-weight:800;color:var(--text);margin-bottom:7px}
+.ag-card-title.done{text-decoration:line-through;color:var(--muted)}
+.ag-tags{display:flex;gap:5px;flex-wrap:wrap}
+.ag-tag{font-size:9px;padding:2px 7px;border-radius:4px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase}
+.ag-t-alerta{background:rgba(226,75,74,0.2);color:#E24B4A}
+.ag-t-pri{background:rgba(245,240,232,0.1);color:var(--muted)}
+.ag-t-urg{background:rgba(245,240,232,0.1);color:var(--muted)}
+.ag-t-auto{background:rgba(127,119,221,0.2);color:#AFA9EC}
+.ag-t-proc{background:rgba(55,138,221,0.2);color:#85B7EB}
+.ag-t-ok{background:rgba(99,153,34,0.2);color:#97C459}
+.ag-meta-right{text-align:right;white-space:nowrap;padding-left:10px;flex-shrink:0}
+.ag-vdate{font-size:11px;color:var(--muted)}
+.ag-vdate.r{color:#E24B4A;font-weight:800}
+.ag-vdate.a{color:#EF9F27;font-weight:800}
+.ag-body{border-top:1px solid var(--border);padding:12px 14px;background:var(--bg);display:none}
+.ag-body.open{display:block}
+.ag-log-title{font-size:9px;font-weight:800;letter-spacing:0.15em;color:var(--muted);margin-bottom:10px}
+.ag-entry{display:flex;gap:10px;margin-bottom:8px;align-items:flex-start}
+.ag-dot{width:7px;height:7px;border-radius:50%;background:#E24B4A;margin-top:4px;flex-shrink:0}
+.ag-dot.g{background:var(--border)}
+.ag-entry-txt{font-size:12px;color:var(--text);line-height:1.5;flex:1}
+.ag-entry-date{font-size:10px;color:var(--muted);white-space:nowrap;padding-left:8px;padding-top:2px}
+.ag-add{display:flex;gap:8px;margin-top:12px}
+.ag-add input{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:7px 11px;font-size:12px;color:var(--text);font-family:'DM Sans',sans-serif}
+.ag-add input::placeholder{color:var(--muted)}
+.ag-add button{background:#1B2E35;border:none;border-radius:7px;padding:7px 14px;font-size:11px;color:#fff;cursor:pointer;font-weight:700;letter-spacing:0.04em;white-space:nowrap}
+.ag-footer{border-top:1px solid var(--border);padding:10px 14px;display:flex;justify-content:space-between;align-items:center;background:var(--surface)}
+.ag-f-btn{font-size:11px;padding:5px 11px;border-radius:6px;border:1px solid var(--border);background:transparent;cursor:pointer;color:var(--text);font-weight:700;letter-spacing:0.04em}
+.ag-f-ok{background:rgba(99,153,34,0.2);border-color:#639922;color:#97C459}
+.ag-f-del{color:#E24B4A;border-color:transparent}
+/* MODAL NUEVA TAREA */
+.ag-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;z-index:999}
+.ag-overlay.open{display:flex}
+.ag-modal{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;width:90%;max-width:480px}
+.ag-modal-title{font-size:14px;font-weight:900;color:var(--text);margin-bottom:16px}
+.ag-field{margin-bottom:12px}
+.ag-field label{font-size:9px;font-weight:800;letter-spacing:0.15em;color:var(--muted);display:block;margin-bottom:5px}
+.ag-field input,.ag-field select,.ag-field textarea{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px 11px;font-size:12px;color:var(--text);font-family:'DM Sans',sans-serif}
+.ag-field textarea{resize:vertical;min-height:80px}
+.ag-modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+.ag-modal-footer button{padding:8px 16px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;border:none;letter-spacing:0.05em}
+.ag-modal-cancel{background:var(--bg);color:var(--muted)}
+.ag-modal-save{background:#1B2E35;color:#fff}
 </style>
 </head>
 <body>
@@ -72,6 +130,7 @@ tbody tr:hover{background:var(--surface2)}
 <div class="tabs">
   <div class="tab active" onclick="setTab('torre',this)">🗼 Torre de Control</div>
   <div class="tab" onclick="setTab('comisiones',this)">💰 Comisiones</div>
+  <div class="tab" onclick="setTab('agenda',this)">📋 Agenda</div>
 </div>
 
 <!-- TAB TORRE DE CONTROL -->
@@ -138,6 +197,49 @@ tbody tr:hover{background:var(--surface2)}
       <tbody id="com-tabla"></tbody>
       <tfoot><tr class="tot-row" id="com-totales"></tr></tfoot>
     </table>
+  </div>
+</div>
+
+<!-- TAB AGENDA -->
+<div class="tab-content" id="tab-agenda">
+  <div class="ag-header-bar">
+    <div>
+      <div class="ag-header-title">AGENDA EJECUTIVA</div>
+      <div class="ag-header-date" id="ag-fecha-hoy"></div>
+    </div>
+    <button class="ag-btn-new" onclick="abrirNuevaTarea()">+ Nueva tarea</button>
+  </div>
+  <div id="ag-lista"><div class="empty">Cargando agenda...</div></div>
+</div>
+
+<!-- MODAL NUEVA/EDITAR TAREA -->
+<div class="ag-overlay" id="ag-overlay">
+  <div class="ag-modal">
+    <div class="ag-modal-title" id="ag-modal-title">Nueva tarea</div>
+    <input type="hidden" id="ag-edit-id">
+    <div class="ag-field"><label>Título</label><input id="ag-titulo" type="text" placeholder="Describe la tarea..."></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="ag-field"><label>Prioridad</label>
+        <select id="ag-prioridad">
+          <option value="alta">Alta</option>
+          <option value="media" selected>Media</option>
+          <option value="baja">Baja</option>
+        </select>
+      </div>
+      <div class="ag-field"><label>Urgencia</label>
+        <select id="ag-urgencia">
+          <option value="alta">Alta</option>
+          <option value="media" selected>Media</option>
+          <option value="baja">Baja</option>
+        </select>
+      </div>
+    </div>
+    <div class="ag-field"><label>Fecha límite (opcional)</label><input id="ag-fecha-limite" type="date"></div>
+    <div class="ag-field"><label>Nota inicial</label><textarea id="ag-nota-inicial" placeholder="Contexto, detalles..."></textarea></div>
+    <div class="ag-modal-footer">
+      <button class="ag-modal-cancel" onclick="cerrarModalTarea()">Cancelar</button>
+      <button class="ag-modal-save" onclick="guardarTarea()">Guardar</button>
+    </div>
   </div>
 </div>
 
@@ -208,6 +310,7 @@ async function init() {
 
   renderTorre();
   renderComisiones();
+  cargarAgenda();
 }
 
 function getFilSvcs(filEmp, filMes) {
@@ -314,6 +417,173 @@ function renderComisiones() {
   document.getElementById('c-count').textContent     = svcs.length;
   document.getElementById('c-cerrados').textContent  = fmt(cerradosCom);
   document.getElementById('c-pendientes').textContent= fmt(pendCom);
+}
+
+// ══ AGENDA ══
+let _agenda = [];
+let _agEditId = null;
+
+const hoyStr2 = new Date().toLocaleDateString('es-CL',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).toUpperCase();
+
+function agSemaforo(fechaLim) {
+  if(!fechaLim) return {cls:'sin-fecha', label:'', vdate:'Sin fecha límite', vcls:''};
+  const hoy = new Date(); hoy.setHours(0,0,0,0);
+  const fl = new Date(fechaLim); fl.setHours(0,0,0,0);
+  const dias = Math.round((fl-hoy)/864e5);
+  if(dias < 0) return {cls:'vencida', label:'VENCIDA HACE '+(Math.abs(dias))+' DÍAS', vdate:'Venció el '+fechaLim.split('-').reverse().join('/'), vcls:'r'};
+  if(dias <= 7) return {cls:'urgente', label:'VENCE EN '+dias+' DÍAS', vdate:'Vence el '+fechaLim.split('-').reverse().join('/'), vcls:'a'};
+  if(dias <= 30) return {cls:'proximo', label:'VENCE EN '+dias+' DÍAS', vdate:'Vence el '+fechaLim.split('-').reverse().join('/'), vcls:'a'};
+  return {cls:'ok', label:'', vdate:'Vence el '+fechaLim.split('-').reverse().join('/'), vcls:''};
+}
+
+async function cargarAgenda() {
+  const el = document.getElementById('ag-fecha-hoy');
+  if(el) el.textContent = hoyStr2;
+  const {data} = await supa.from('kaptura_agenda').select('*').eq('usuario','1313').order('created_at',{ascending:false});
+  _agenda = data || [];
+  renderAgenda();
+}
+
+function renderAgenda() {
+  const lista = document.getElementById('ag-lista');
+  if(!lista) return;
+  const pendientes = _agenda.filter(function(t){ return t.estado !== 'resuelto'; });
+  const resueltas  = _agenda.filter(function(t){ return t.estado === 'resuelto'; });
+
+  // Ordenar por semáforo
+  const orden = {vencida:0, urgente:1, proximo:2, sin_fecha:3, ok:4};
+  pendientes.sort(function(a,b){
+    const sa = agSemaforo(a.fecha_limite);
+    const sb = agSemaforo(b.fecha_limite);
+    return (orden[sa.cls.replace('-','_')]||5) - (orden[sb.cls.replace('-','_')]||5);
+  });
+
+  if(!_agenda.length) { lista.innerHTML = '<div class="empty">Sin tareas — crea la primera con + Nueva tarea</div>'; return; }
+
+  function renderTarea(t) {
+    const sem = agSemaforo(t.fecha_limite);
+    const notas = t.notas ? JSON.parse(t.notas) : [];
+    const priBadge = {alta:'<span class="ag-tag ag-t-alerta">P. ALTA</span>',media:'<span class="ag-tag ag-t-pri">P. MEDIA</span>',baja:'<span class="ag-tag ag-t-pri">P. BAJA</span>'};
+    const urgBadge = {alta:'<span class="ag-tag ag-t-alerta">U. ALTA</span>',media:'<span class="ag-tag ag-t-urg">U. MEDIA</span>',baja:'<span class="ag-tag ag-t-urg">U. BAJA</span>'};
+    const autoBadge = t.origen !== 'manual' ? '<span class="ag-tag ag-t-auto">SISTEMA</span>' : '';
+    const estadoBadge = t.estado === 'en_proceso' ? '<span class="ag-tag ag-t-proc">EN PROCESO</span>' : (t.estado === 'resuelto' ? '<span class="ag-tag ag-t-ok">RESUELTA</span>' : '');
+    const semBadge = sem.label ? '<span class="ag-tag ag-t-alerta">'+sem.label+'</span>' : '';
+    const notasHTML = notas.map(function(n){
+      return '<div class="ag-entry"><div class="ag-dot '+(n.sistema?'':'g')+'"></div><div class="ag-entry-txt">'+n.texto+'</div><div class="ag-entry-date">'+n.fecha+'</div></div>';
+    }).join('');
+    return '<div class="ag-card '+(t.estado==='resuelto'?'resuelta':sem.cls)+'" id="agcard-'+t.id+'">'
+      +'<div class="ag-card-hdr" onclick="toggleAg(''+t.id+'')">'
+      +'<div style="flex:1"><div class="ag-card-title'+(t.estado==='resuelto'?' done':'')+'">' +t.titulo+'</div>'
+      +'<div class="ag-tags">'+semBadge+(priBadge[t.prioridad]||'')+(urgBadge[t.urgencia]||'')+autoBadge+estadoBadge+'</div></div>'
+      +'<div class="ag-meta-right"><div class="ag-vdate '+sem.vcls+'">'+sem.vdate+'</div></div></div>'
+      +'<div class="ag-body" id="agbody-'+t.id+'">'
+      +'<div class="ag-log-title">BITÁCORA</div>'
+      +notasHTML
+      +'<div class="ag-add"><input type="text" id="agnota-'+t.id+'" placeholder="Agregar entrada a la bitácora..."><button onclick="agregarNota(''+t.id+'')">Guardar</button></div>'
+      +'<div class="ag-footer"><div style="display:flex;gap:6px">'
+      +(t.estado!=='resuelto'?'<button class="ag-f-btn ag-f-ok" onclick="resolverTarea(''+t.id+'')">✓ Resuelta</button>':'')
+      +'<button class="ag-f-btn" onclick="editarTarea(''+t.id+'')">✏ Editar</button></div>'
+      +'<button class="ag-f-btn ag-f-del" onclick="eliminarTarea(''+t.id+'')">Eliminar</button></div>'
+      +'</div></div>';
+  }
+
+  let html = '';
+  if(pendientes.length) html += pendientes.map(renderTarea).join('');
+  if(resueltas.length) html += '<div class="ag-sec">Resueltas</div>'+resueltas.slice(0,5).map(renderTarea).join('');
+  lista.innerHTML = html;
+}
+
+function toggleAg(id) {
+  const body = document.getElementById('agbody-'+id);
+  if(body) body.classList.toggle('open');
+}
+
+function abrirNuevaTarea() {
+  _agEditId = null;
+  document.getElementById('ag-modal-title').textContent = 'Nueva tarea';
+  document.getElementById('ag-titulo').value = '';
+  document.getElementById('ag-prioridad').value = 'media';
+  document.getElementById('ag-urgencia').value = 'media';
+  document.getElementById('ag-fecha-limite').value = '';
+  document.getElementById('ag-nota-inicial').value = '';
+  document.getElementById('ag-edit-id').value = '';
+  document.getElementById('ag-overlay').classList.add('open');
+}
+
+function editarTarea(id) {
+  const t = _agenda.find(function(x){ return x.id===id; });
+  if(!t) return;
+  _agEditId = id;
+  document.getElementById('ag-modal-title').textContent = 'Editar tarea';
+  document.getElementById('ag-titulo').value = t.titulo||'';
+  document.getElementById('ag-prioridad').value = t.prioridad||'media';
+  document.getElementById('ag-urgencia').value = t.urgencia||'media';
+  document.getElementById('ag-fecha-limite').value = t.fecha_limite||'';
+  document.getElementById('ag-nota-inicial').value = '';
+  document.getElementById('ag-edit-id').value = id;
+  document.getElementById('ag-overlay').classList.add('open');
+}
+
+function cerrarModalTarea() {
+  document.getElementById('ag-overlay').classList.remove('open');
+}
+
+async function guardarTarea() {
+  const titulo = document.getElementById('ag-titulo').value.trim();
+  if(!titulo) { alert('Ingresa el título'); return; }
+  const pri  = document.getElementById('ag-prioridad').value;
+  const urg  = document.getElementById('ag-urgencia').value;
+  const fl   = document.getElementById('ag-fecha-limite').value || null;
+  const nota = document.getElementById('ag-nota-inicial').value.trim();
+  const hoy  = new Date().toLocaleDateString('es-CL',{day:'2-digit',month:'2-digit'});
+  const editId = document.getElementById('ag-edit-id').value;
+
+  if(editId) {
+    const t = _agenda.find(function(x){ return x.id===editId; });
+    const {error} = await supa.from('kaptura_agenda').update({titulo, prioridad:pri, urgencia:urg, fecha_limite:fl, updated_at:new Date().toISOString()}).eq('id',editId);
+    if(error) { alert('Error: '+error.message); return; }
+    if(t) { t.titulo=titulo; t.prioridad=pri; t.urgencia=urg; t.fecha_limite=fl; }
+  } else {
+    const notas = nota ? JSON.stringify([{texto:nota, fecha:hoy, sistema:false}]) : JSON.stringify([]);
+    const {data:nd, error} = await supa.from('kaptura_agenda').insert({usuario:'1313', titulo, prioridad:pri, urgencia:urg, fecha_limite:fl, estado:'pendiente', origen:'manual', notas}).select().single();
+    if(error) { alert('Error: '+error.message); return; }
+    if(nd) _agenda.unshift(nd);
+  }
+  cerrarModalTarea();
+  renderAgenda();
+}
+
+async function agregarNota(id) {
+  const input = document.getElementById('agnota-'+id);
+  const texto = input?.value.trim();
+  if(!texto) return;
+  const t = _agenda.find(function(x){ return x.id===id; });
+  if(!t) return;
+  const notas = t.notas ? JSON.parse(t.notas) : [];
+  const hoy = new Date().toLocaleDateString('es-CL',{day:'2-digit',month:'2-digit'});
+  notas.push({texto, fecha:hoy, sistema:false});
+  const {error} = await supa.from('kaptura_agenda').update({notas:JSON.stringify(notas), updated_at:new Date().toISOString()}).eq('id',id);
+  if(error) { alert('Error: '+error.message); return; }
+  t.notas = JSON.stringify(notas);
+  input.value = '';
+  renderAgenda();
+  setTimeout(function(){ var b=document.getElementById('agbody-'+id); if(b) b.classList.add('open'); },50);
+}
+
+async function resolverTarea(id) {
+  const {error} = await supa.from('kaptura_agenda').update({estado:'resuelto', updated_at:new Date().toISOString()}).eq('id',id);
+  if(error) { alert('Error: '+error.message); return; }
+  const t = _agenda.find(function(x){ return x.id===id; });
+  if(t) t.estado = 'resuelto';
+  renderAgenda();
+}
+
+async function eliminarTarea(id) {
+  if(!confirm('¿Eliminar esta tarea?')) return;
+  const {error} = await supa.from('kaptura_agenda').delete().eq('id',id);
+  if(error) { alert('Error: '+error.message); return; }
+  _agenda = _agenda.filter(function(x){ return x.id!==id; });
+  renderAgenda();
 }
 
 init();
