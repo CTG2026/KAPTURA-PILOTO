@@ -872,6 +872,16 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
           <div style="font-size:10px;color:var(--muted);margin-bottom:4px">NOMBRE / DESCRIPCIÓN</div>
           <input id="setup-tar-nombre" type="text" placeholder="Ej: Pallet completo, Media carga..." style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px;font-size:12px;color:var(--text);font-family:inherit;text-transform:uppercase">
         </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+          <div>
+            <div style="font-size:10px;color:var(--muted);margin-bottom:4px">KM IDA (TEÓRICO)</div>
+            <input id="setup-tar-km-ida" type="number" placeholder="0" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px;font-size:12px;color:var(--text);font-family:inherit">
+          </div>
+          <div>
+            <div style="font-size:10px;color:var(--muted);margin-bottom:4px">KM VUELTA (TEÓRICO)</div>
+            <input id="setup-tar-km-vta" type="number" placeholder="0" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px;font-size:12px;color:var(--text);font-family:inherit">
+          </div>
+        </div>
       </div>
       <div style="text-align:right">
         <button onclick="setupListaAgregarTarifa()" style="background:var(--surface2);border:1px solid var(--gold);border-radius:8px;padding:10px 14px;font-size:12px;font-weight:800;color:var(--gold);cursor:pointer;white-space:nowrap">+ AGREGAR</button>
@@ -3283,6 +3293,20 @@ async function irACostos() {
   const diasOpMes = getCfgNum(['dias_operativos','dias_op']) || 20;
   // cfDia: usar valor diario guardado explícitamente, o calcular desde mensual
   const cfDia     = cfMensual > 0 ? Math.round(cfMensual / diasOpMes) : getCfgNum(['costo_fijo_dia']);
+  // Precargar KM teórico desde tarifario si no hay GPS aún
+  const svcForKm = DB.servicios[svcActivoIdx];
+  if(svcForKm && !svcForKm.km_total) {
+    const tarMatch = (DB.tarifarios||[]).find(function(t){
+      return (t.cliente||'').toUpperCase()===(svcForKm.cliente||'').toUpperCase() &&
+             (t.destino||'').toUpperCase()===(svcForKm.destino||'').toUpperCase();
+    });
+    if(tarMatch && (tarMatch.km_ida || tarMatch.km_vuelta)) {
+      const teoIda = document.getElementById('cos-km-teo-ida');
+      const teoVta = document.getElementById('cos-km-teo-vta');
+      if(teoIda && !teoIda.value) teoIda.value = tarMatch.km_ida||0;
+      if(teoVta && !teoVta.value) teoVta.value = tarMatch.km_vuelta||0;
+    }
+  }
   // Mantención: km × (mant_costo ÷ mant_km) — se calcula en calcCostos() con km reales, aquí = 0
   const sueldoDiario = getCfgNum(['sueldo_diario','sueldo_conductor']) || 33000;
   const viaticoDia   = getCfgNum(['viatico_dia','viatico']);
@@ -5734,7 +5758,9 @@ async function setupAgregarTarifa() {
   const destino = document.getElementById('setup-tar-destino').value.trim().toUpperCase();
   const valor   = parseFloat(document.getElementById('setup-tar-valor').value.replace(/[$.]/g,'').replace(',','.')) || 0;
   if(!cliente || !origen || !destino || !valor) { toast('Completa todos los campos de tarifa'); return; }
-  const {error} = await supa.from('kaptura_tarifarios').insert({cliente, origen, destino, tarifa_neta:valor, empresa:emp, activo:true});
+  const kmIda = parseFloat(document.getElementById('setup-tar-km-ida')?.value)||0;
+  const kmVta = parseFloat(document.getElementById('setup-tar-km-vta')?.value)||0;
+  const {error} = await supa.from('kaptura_tarifarios').insert({cliente, origen, destino, tarifa_neta:valor, empresa:emp, activo:true, km_ida:kmIda||null, km_vuelta:kmVta||null});
   if(error) { toast('Error: '+error.message); return; }
   ['cliente','origen','destino','valor'].forEach(f => { document.getElementById('setup-tar-'+f).value = ''; });
   toast('✓ Tarifa guardada');
@@ -5860,7 +5886,7 @@ function renderSetupListaTarifas() {
   const el = document.getElementById('setup-lista-tarifario');
   const guardados = (DB.tarifarios||[]).map(t => `
     <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 10px;background:var(--bg);border-radius:7px;margin-bottom:5px;border:1px solid var(--border)">
-      <div style="font-size:12px;color:var(--text)">${t.cliente||'—'} · ${t.origen||'—'} → ${t.destino||'—'}<span style="font-size:10px;color:var(--muted);margin-left:6px">✓</span></div>
+      <div style="font-size:12px;color:var(--text)">${t.cliente||'—'} · ${t.origen||'—'} → ${t.destino||'—'}<span style="font-size:10px;color:var(--muted);margin-left:6px">✓</span>${t.km_ida||t.km_vuelta?`<span style="font-size:10px;color:var(--muted);margin-left:6px">${(t.km_ida||0)+(t.km_vuelta||0)} km</span>`:''}</div>
       <div style="display:flex;align-items:center;gap:8px">
         <span style="font-size:13px;font-weight:800;color:var(--green)">$${Number(t.tarifa_neta||0).toLocaleString('es-CL')}</span>
         <button data-tid="${t.id}" onclick="setupEditarTarifa(this.dataset.tid)" style="background:rgba(201,168,76,0.15);border:1px solid rgba(201,168,76,0.3);color:var(--gold);border-radius:5px;padding:3px 8px;font-size:10px;cursor:pointer;font-weight:700">✏</button>
