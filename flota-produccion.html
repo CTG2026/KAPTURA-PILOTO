@@ -893,10 +893,15 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
         </div>
       </div>
       <div style="text-align:right">
-        <button onclick="setupListaAgregarTarifa()" style="background:var(--surface2);border:1px solid var(--gold);border-radius:8px;padding:10px 14px;font-size:12px;font-weight:800;color:var(--gold);cursor:pointer;white-space:nowrap">+ AGREGAR</button>
+        <div style="display:flex;gap:8px">
+          <button onclick="setupListaAgregarTarifa()" style="background:var(--surface2);border:1px solid var(--gold);border-radius:8px;padding:10px 14px;font-size:12px;font-weight:800;color:var(--gold);cursor:pointer;white-space:nowrap">+ AGREGAR</button>
+          <button id="btn-guardar-tarifa" onclick="setupGuardarEdicionTarifa()" style="display:none;background:var(--gold);border:none;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:800;color:#000;cursor:pointer;white-space:nowrap">💾 GUARDAR</button>
+          <button id="btn-cancelar-tarifa" onclick="setupCancelarEdicionTarifa()" style="display:none;background:transparent;border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:12px;font-weight:800;color:var(--muted);cursor:pointer;white-space:nowrap">✕ Cancelar</button>
+        </div>
       </div>
     </div>
 
+    <div id="setup-costos-extra">
     <!-- 6. COSTOS FIJOS -->
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px">
       <div style="font-size:11px;font-weight:700;color:var(--gold);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px">6. Costos fijos mensuales</div>
@@ -994,6 +999,7 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
       </div>
     </div>
 
+    </div><!-- /setup-costos-extra -->
     <div style="height:80px"></div>
   </div>
 </main>
@@ -5303,6 +5309,9 @@ async function iniciarLogin() {
           // Forzar tab servicios activo y ocultar todos los demás contenidos
           const btnSvc = document.getElementById('tab-btn-servicios');
           if(btnSvc) setTab('servicios', btnSvc);
+          // Ocultar contenido de setup que está fuera del div tab-setup
+          const setupExtra = document.getElementById('setup-costos-extra');
+          if(setupExtra) setupExtra.style.display = 'none';
           // Ocultar botón + ASIGNAR y KPIs de gestión
           const btnAsig = document.getElementById('btn-asignar-nuevo');
           if(btnAsig) btnAsig.style.display = 'none';
@@ -5787,11 +5796,55 @@ async function setupEditarTarifa(id) {
   document.getElementById('setup-tar-origen').value  = (t.origen||'').toUpperCase();
   document.getElementById('setup-tar-destino').value = (t.destino||'').toUpperCase();
   document.getElementById('setup-tar-valor').value   = t.tarifa_neta||'';
-  if(document.getElementById('setup-tar-punto')) document.getElementById('setup-tar-punto').value = t.valor_punto||'';
-  if(document.getElementById('setup-tar-nombre')) document.getElementById('setup-tar-nombre').value = t.descripcion||'';
+  if(document.getElementById('setup-tar-punto'))   document.getElementById('setup-tar-punto').value   = t.valor_punto||'';
+  if(document.getElementById('setup-tar-nombre'))  document.getElementById('setup-tar-nombre').value  = t.descripcion||'';
+  if(document.getElementById('setup-tar-km-ida'))  document.getElementById('setup-tar-km-ida').value  = t.km_ida||'';
+  if(document.getElementById('setup-tar-km-vta'))  document.getElementById('setup-tar-km-vta').value  = t.km_vuelta||'';
+  if(document.getElementById('setup-tar-peajes'))  document.getElementById('setup-tar-peajes').value  = t.peajes_habituales||'';
   document.getElementById('setup-tar-cliente').dataset.editId = id;
-  toast('✏ Edita y presiona + AGREGAR para guardar');
+  // Mostrar botón guardar y ocultar agregar
+  document.getElementById('btn-guardar-tarifa').style.display  = '';
+  document.getElementById('btn-cancelar-tarifa').style.display = '';
+  toast('✏ Edita los datos y presiona 💾 GUARDAR');
   setTimeout(() => document.getElementById('setup-tar-cliente').scrollIntoView({behavior:'smooth', block:'center'}), 100);
+}
+
+function setupCancelarEdicionTarifa() {
+  document.getElementById('setup-tar-cliente').dataset.editId = '';
+  document.getElementById('setup-tar-cliente').value  = '';
+  document.getElementById('setup-tar-origen').value   = '';
+  document.getElementById('setup-tar-destino').value  = '';
+  document.getElementById('setup-tar-valor').value    = '';
+  if(document.getElementById('setup-tar-punto'))   document.getElementById('setup-tar-punto').value   = '';
+  if(document.getElementById('setup-tar-nombre'))  document.getElementById('setup-tar-nombre').value  = '';
+  if(document.getElementById('setup-tar-km-ida'))  document.getElementById('setup-tar-km-ida').value  = '';
+  if(document.getElementById('setup-tar-km-vta'))  document.getElementById('setup-tar-km-vta').value  = '';
+  if(document.getElementById('setup-tar-peajes'))  document.getElementById('setup-tar-peajes').value  = '';
+  document.getElementById('btn-guardar-tarifa').style.display  = 'none';
+  document.getElementById('btn-cancelar-tarifa').style.display = 'none';
+}
+
+async function setupGuardarEdicionTarifa() {
+  const id  = document.getElementById('setup-tar-cliente').dataset.editId;
+  if(!id) { toast('Sin tarifa seleccionada'); return; }
+  const cliente = document.getElementById('setup-tar-cliente').value;
+  const origen  = document.getElementById('setup-tar-origen').value.trim().toUpperCase();
+  const destino = document.getElementById('setup-tar-destino').value.trim().toUpperCase();
+  const valor   = parseInt((document.getElementById('setup-tar-valor').value||'0').replace(/[^0-9]/g,''))||0;
+  const punto   = parseInt((document.getElementById('setup-tar-punto')?.value||'0').replace(/[^0-9]/g,''))||0;
+  const nombre  = document.getElementById('setup-tar-nombre')?.value.trim().toUpperCase()||null;
+  const kmIda   = parseFloat(document.getElementById('setup-tar-km-ida')?.value)||null;
+  const kmVta   = parseFloat(document.getElementById('setup-tar-km-vta')?.value)||null;
+  const peajes  = parseFloat(document.getElementById('setup-tar-peajes')?.value)||null;
+  if(!cliente||!origen||!destino||!valor) { toast('Completa cliente, origen, destino y tarifa'); return; }
+  const {error} = await supa.from('kaptura_tarifarios').update({
+    cliente, origen, destino, tarifa_neta:valor, valor_punto:punto, descripcion:nombre,
+    km_ida:kmIda, km_vuelta:kmVta, peajes_habituales:peajes
+  }).eq('id', id);
+  if(error) { toast('Error: '+error.message); return; }
+  toast('✓ Tarifa actualizada');
+  setupCancelarEdicionTarifa();
+  cargarSetup();
 }
 
 async function setupEliminarTarifa(id) {
