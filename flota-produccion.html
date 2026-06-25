@@ -2414,7 +2414,7 @@ function cardHTML(s,i) {
     <div class="svc-body"><div class="svc-acts">
       ${s.estado==='asignado' ? `<button class="btn btn-navy btn-sm" onclick="iniciarSvc(${i})">▶ Iniciar</button>` : ''}
       ${['en_proceso','registrando'].includes(s.estado) ? `<button class="btn btn-purple btn-sm" onclick="verServicio(${i})">📋 Registrar</button>` : ''}
-      ${['borrador','ejecutado'].includes(s.estado) ? `<button class="btn btn-purple btn-sm" onclick="verServicio(${i})">📋 Registrar</button>${_sessionUsuario?.rol !== 'conductor' ? `<button class="btn btn-green btn-sm" onclick="abrirCierre(${i})">🔒 Cierre</button>` : ''}` : ''}
+      ${s.estado === 'borrador' ? `<button class="btn btn-purple btn-sm" onclick="verServicio(${i})">📋 Registrar</button>${_sessionUsuario?.rol !== 'conductor' ? `<button class="btn btn-green btn-sm" onclick="abrirCierre(${i})">🔒 Cierre</button>` : ''}` : (s.estado === 'ejecutado' && _sessionUsuario?.rol !== 'conductor') ? `<button class="btn btn-green btn-sm" onclick="abrirCierre(${i})">🔒 Cierre</button>` : ''}
       ${s.estado==='cerrado' ? `<button class="btn btn-sm" style="background:rgba(201,168,76,0.15);color:var(--gold);border:1px solid rgba(201,168,76,0.3)" onclick="editarServicioCerrado(${i})">✏ Editar</button>` : ''}
       ${['confirmado','cerrado','borrador'].includes(s.estado) ? `<button class="btn btn-outline btn-sm" onclick="abrirInforme(${i})">📄 Informe</button>` : ''}
       ${(s._puntos||[]).some(p=>(p.guias||[]).length>0||p.num_guia) ? `<button class="btn btn-outline btn-sm" onclick="verGuias(${i})">🖼 Guías</button>` : ''}
@@ -2462,7 +2462,7 @@ function filaHTML(s,i) {
     <td><div style="display:flex;gap:4px;flex-wrap:wrap">
       ${s.estado==='asignado' ? `<button class="btn btn-navy btn-sm" onclick="iniciarSvc(${i})">▶ Iniciar</button>` : ''}
       ${['en_proceso','registrando'].includes(s.estado) ? `<button class="btn btn-purple btn-sm" onclick="verServicio(${i})">📋 Registrar</button>` : ''}
-      ${['borrador','ejecutado'].includes(s.estado) ? `<button class="btn btn-purple btn-sm" onclick="verServicio(${i})">📋 Registrar</button>${_sessionUsuario?.rol !== 'conductor' ? `<button class="btn btn-green btn-sm" onclick="abrirCierre(${i})">🔒 Cierre</button>` : ''}` : ''}
+      ${s.estado === 'borrador' ? `<button class="btn btn-purple btn-sm" onclick="verServicio(${i})">📋 Registrar</button>${_sessionUsuario?.rol !== 'conductor' ? `<button class="btn btn-green btn-sm" onclick="abrirCierre(${i})">🔒 Cierre</button>` : ''}` : (s.estado === 'ejecutado' && _sessionUsuario?.rol !== 'conductor') ? `<button class="btn btn-green btn-sm" onclick="abrirCierre(${i})">🔒 Cierre</button>` : ''}
       ${s.estado==='cerrado' ? `<button class="btn btn-sm" style="background:rgba(201,168,76,0.15);color:var(--gold);border:1px solid rgba(201,168,76,0.3)" onclick="editarServicioCerrado(${i})">✏ Editar</button>` : ''}
       ${['confirmado','cerrado','borrador'].includes(s.estado) ? `<button class="btn btn-outline btn-sm" onclick="abrirInforme(${i})">📄 Informe</button>` : ''}
       ${(s._puntos||[]).some(p=>(p.guias||[]).length>0||p.num_guia) ? `<button class="btn btn-outline btn-sm" onclick="verGuias(${i})">🖼 Guías</button>` : ''}
@@ -3385,10 +3385,14 @@ async function calcCostos() {
   const getCN = (keys) => { for(const k of keys){ const v=c[k]; if(v!==undefined&&v!==null&&v!=='') return parseInt(v)||0; } return 0; };
   const sueldoDia = getCN(['sueldo_diario','sueldo_conductor']) || 33000;
   const condVal = dias * sueldoDia;
-  // Costo fijo: manual o automático
-  const cfMensualCC = getCN(['costo_fijo_mensual','costo_fijo_mes']);
-  let cfDia = getCN(['costo_fijo_dia']) || (cfMensualCC > 0 ? Math.round(cfMensualCC / (getCN(['dias_operativos','dias_op'])||20)) : 0);
-  let cf = dias * cfDia; // default manual
+  // Costo fijo: calcular desde mensual ÷ dias operativos ÷ equipos en servicio
+  const cfMensualCC   = getCN(['costo_fijo_mensual','costo_fijo_mes']);
+  const diasOpCC      = getCN(['dias_operativos','dias_op']) || 20;
+  const equiposCC     = parseInt(document.getElementById('cos-equipos')?.value)||1;
+  // cfDia: preferir cálculo desde mensual; solo usar costo_fijo_dia si mensual=0
+  const cfDiaBase     = cfMensualCC > 0 ? Math.round(cfMensualCC / diasOpCC) : getCN(['costo_fijo_dia']);
+  const cfDia         = cfDiaBase;
+  let cf = cfDiaBase > 0 ? Math.round((dias * cfDiaBase) / equiposCC) : 0; // prorrateo por equipos
   if((c.modo_costo_fijo||'manual') === 'automatico') {
     const svcActual = DB.servicios[svcActivoIdx];
     const fechaIni  = svcActual?.fecha||'';
