@@ -2196,14 +2196,15 @@ async function init() {
         const clave = r.clave || r.nombre || '';
         if(clave.endsWith(sufijo)) {
           const claveBase = clave.slice(0, -sufijo.length);
-          // Solo sobreescribe si no existe ya una clave simple con ese nombre
-          // Las del SETUP tienen prioridad sobre defaults
-          DB.config[claveBase] = r.valor || r.value;
+          // Las claves de empresa SIEMPRE ganan sobre las globales, aunque sean "0"
+          const valEmp = (r.valor !== undefined && r.valor !== null) ? r.valor : (r.value || '');
+          DB.config[claveBase] = valEmp;
         }
       });
       // Mapeos específicos que el sistema usa con nombres distintos
       if(DB.config['costo_fijo_mensual']) DB.config['costo_fijo_mes'] = DB.config['costo_fijo_mensual'];
-      if(DB.config['viatico_dia'])        DB.config['viatico']        = DB.config['viatico_dia'];
+      // viatico: copiar siempre desde viatico_dia aunque sea 0
+      DB.config['viatico'] = DB.config['viatico_dia'] !== undefined ? DB.config['viatico_dia'] : DB.config['viatico'];
       if(DB.config['mant_km'])            DB.config['mant_cada_km']   = DB.config['mant_km'];
       if(DB.config['mant_costo'])         DB.config['mantencion']     = DB.config['mant_costo'];
       if(DB.config['neum_costo'])         DB.config['neumaticos']     = DB.config['neum_costo'];
@@ -3281,7 +3282,7 @@ async function irACostos() {
   const cfMensual = getCfgNum(['costo_fijo_mensual','costo_fijo_mes']);
   const diasOpMes = getCfgNum(['dias_operativos','dias_op']) || 20;
   // cfDia: usar valor diario guardado explícitamente, o calcular desde mensual
-  const cfDia     = getCfgNum(['costo_fijo_dia']) || (cfMensual > 0 ? Math.round(cfMensual / diasOpMes) : 0);
+  const cfDia     = cfMensual > 0 ? Math.round(cfMensual / diasOpMes) : getCfgNum(['costo_fijo_dia']);
   // Mantención: km × (mant_costo ÷ mant_km) — se calcula en calcCostos() con km reales, aquí = 0
   const sueldoDiario = getCfgNum(['sueldo_diario','sueldo_conductor']) || 33000;
   const viaticoDia   = getCfgNum(['viatico_dia','viatico']);
@@ -3332,7 +3333,9 @@ function calcCostoFijoEquipos() {
   var dias    = parseFloat(document.getElementById('cos-dias')?.value)||1;
   var cfMens  = parseInt(c.costo_fijo_mensual||c.costo_fijo_mes||0);
   var diasOp  = parseInt(c.dias_operativos||20);
-  var cfDia   = parseInt(c.costo_fijo_dia||0) || (cfMens > 0 ? Math.round(cfMens/diasOp) : 0);
+  // Si hay costo mensual, calcular diario desde mensual ÷ días operativos
+  // Si no hay mensual, usar costo_fijo_dia directamente (pero solo si es razonable)
+  var cfDia   = cfMens > 0 ? Math.round(cfMens/diasOp) : parseInt(c.costo_fijo_dia||0);
   var cfProrr = cfDia > 0 ? Math.round((cfDia * dias) / equipos) : 0;
   var cfEl    = document.getElementById('cos-cf');
   if(cfEl) { cfEl.dataset.manual = '1'; cfEl.value = cfProrr; }
