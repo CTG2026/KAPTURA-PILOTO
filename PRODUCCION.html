@@ -1278,6 +1278,17 @@ async function _cargarPanelAdminLegacy() {
     else goEmpresas.push({emp, nombre, pines, data, goData});
   });
 
+  // ── SECCIÓN GL NEXUS ──
+  lista.innerHTML += `
+    <div style="margin-bottom:20px">
+      <div style="font-size:10px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.4);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #2A2A2A">⬡ GL NEXUS</div>
+      <div style="background:#0D1A1A;border:1px solid #C9A84C;border-radius:10px;padding:14px">
+        <div style="font-size:15px;font-weight:800;color:#C9A84C;margin-bottom:4px">GL NEXUS</div>
+        <div style="font-size:11px;color:rgba(245,240,232,0.4);margin-bottom:10px">Torre de Control · Comisiones · Red de Flotas</div>
+        <button onclick="window.location.href='flota-nexus.html'" style="width:100%;background:#C9A84C;border:none;border-radius:8px;padding:10px;font-size:12px;font-weight:800;color:#000;cursor:pointer">▶ ENTRAR A GL NEXUS</button>
+      </div>
+    </div>`;
+
   // ── SECCIÓN GLOBAL SOLUTIONS ──
   lista.innerHTML += `
     <div style="margin-bottom:20px">
