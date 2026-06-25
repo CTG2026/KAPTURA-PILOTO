@@ -5300,6 +5300,9 @@ async function iniciarLogin() {
             const el = document.getElementById(id);
             if(el) el.style.display = 'none';
           });
+          // Forzar tab servicios activo y ocultar todos los demás contenidos
+          const btnSvc = document.getElementById('tab-btn-servicios');
+          if(btnSvc) setTab('servicios', btnSvc);
           // Ocultar botón + ASIGNAR y KPIs de gestión
           const btnAsig = document.getElementById('btn-asignar-nuevo');
           if(btnAsig) btnAsig.style.display = 'none';
