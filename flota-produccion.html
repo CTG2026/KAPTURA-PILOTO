@@ -5296,7 +5296,7 @@ async function iniciarLogin() {
         if(sess.rol === 'conductor') {
           // Ocultar tabs que no corresponden al conductor
           ['tab-btn-liquidaciones','tab-btn-flota','tab-btn-clientes','tab-btn-gastos',
-           'tab-btn-resultados','tab-btn-informes','tab-btn-config'].forEach(id => {
+           'tab-btn-resultados','tab-btn-informes','tab-btn-config','tab-btn-setup'].forEach(id => {
             const el = document.getElementById(id);
             if(el) el.style.display = 'none';
           });
