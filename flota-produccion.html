@@ -872,12 +872,21 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
           <div style="font-size:10px;color:var(--muted);margin-bottom:4px">NOMBRE / DESCRIPCIÓN</div>
           <input id="setup-tar-nombre" type="text" placeholder="Ej: Pallet completo, Media carga..." style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px;font-size:12px;color:var(--text);font-family:inherit;text-transform:uppercase">
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
-          <div>
-            <div style="font-size:10px;color:var(--muted);margin-bottom:4px">KM IDA (TEÓRICO)</div>
-            <input id="setup-tar-km-ida" type="number" placeholder="0" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px;font-size:12px;color:var(--text);font-family:inherit">
-          </div>
-          <div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:6px">
+        <div>
+          <div style="font-size:10px;color:var(--muted);margin-bottom:4px">KM IDA (TEÓRICO)</div>
+          <input id="setup-tar-km-ida" type="number" placeholder="0" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px;font-size:12px;color:var(--text);font-family:inherit">
+        </div>
+        <div>
+          <div style="font-size:10px;color:var(--muted);margin-bottom:4px">KM VUELTA (TEÓRICO)</div>
+          <input id="setup-tar-km-vta" type="number" placeholder="0" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px;font-size:12px;color:var(--text);font-family:inherit">
+        </div>
+        <div>
+          <div style="font-size:10px;color:var(--muted);margin-bottom:4px">PEAJES HABITUALES $</div>
+          <input id="setup-tar-peajes" type="number" placeholder="0" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px;font-size:12px;color:var(--text);font-family:inherit">
+        </div>
+        <div style="display:none">
             <div style="font-size:10px;color:var(--muted);margin-bottom:4px">KM VUELTA (TEÓRICO)</div>
             <input id="setup-tar-km-vta" type="number" placeholder="0" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px;font-size:12px;color:var(--text);font-family:inherit">
           </div>
@@ -5760,7 +5769,8 @@ async function setupAgregarTarifa() {
   if(!cliente || !origen || !destino || !valor) { toast('Completa todos los campos de tarifa'); return; }
   const kmIda = parseFloat(document.getElementById('setup-tar-km-ida')?.value)||0;
   const kmVta = parseFloat(document.getElementById('setup-tar-km-vta')?.value)||0;
-  const {error} = await supa.from('kaptura_tarifarios').insert({cliente, origen, destino, tarifa_neta:valor, empresa:emp, activo:true, km_ida:kmIda||null, km_vuelta:kmVta||null});
+  const peajesHab = parseFloat(document.getElementById('setup-tar-peajes')?.value)||0;
+  const {error} = await supa.from('kaptura_tarifarios').insert({cliente, origen, destino, tarifa_neta:valor, empresa:emp, activo:true, km_ida:kmIda||null, km_vuelta:kmVta||null, peajes_habituales:peajesHab||null});
   if(error) { toast('Error: '+error.message); return; }
   ['cliente','origen','destino','valor'].forEach(f => { document.getElementById('setup-tar-'+f).value = ''; });
   toast('✓ Tarifa guardada');
