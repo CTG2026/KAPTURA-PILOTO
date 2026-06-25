@@ -2587,7 +2587,8 @@ async function abrirAsignar() {
   const selDest = document.getElementById('asig-destino');
   if(selDest) selDest.innerHTML = '<option value="">Selecciona cliente primero...</option>';
   document.getElementById('wrap-asig-destino-custom').style.display = 'none';
-  if(sAsig) obsRenderHilo(document.getElementById('asig-obs-hilo'), obsParseHilo(sAsig.notas||''));
+  const sAsig2 = DB.servicios[svcActivoIdx];
+  if(sAsig2) obsRenderHilo(document.getElementById('asig-obs-hilo'), obsParseHilo(sAsig2.notas||''));
   document.getElementById('modal-asignar').style.display = 'flex';
 }
 function checkAsigDestino() {
