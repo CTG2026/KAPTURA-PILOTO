@@ -18,13 +18,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .hdr-logo{font-size:18px;font-weight:900;color:var(--gold);letter-spacing:0.1em}
 .hdr-sub{font-size:9px;color:var(--muted);font-weight:700;letter-spacing:0.2em;margin-top:1px}
 .btn{border:none;border-radius:8px;padding:8px 14px;font-size:11px;font-weight:800;cursor:pointer;font-family:'DM Sans',sans-serif;letter-spacing:0.05em;text-transform:uppercase}
-.btn-gold{background:var(--gold);color:#000}
 .btn-ghost{background:transparent;border:1px solid var(--border);color:var(--muted)}
 .tabs{display:flex;gap:2px;background:var(--surface);border-bottom:1px solid var(--border);padding:0 16px}
 .tab{padding:12px 16px;font-size:11px;font-weight:800;letter-spacing:0.1em;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent}
 .tab.active{color:var(--gold);border-bottom-color:var(--gold)}
-.tab-content{display:none;padding:16px}
-.tab-content.active{display:block}
+.pane{display:none;padding:16px}
+.pane.active{display:block}
 .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:18px}
 .kpi{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px}
 .kpi-lbl{font-size:9px;font-weight:800;color:var(--muted);letter-spacing:0.15em;margin-bottom:6px}
@@ -48,70 +47,67 @@ tbody tr:hover{background:var(--surface2)}
 .torre-emp{font-size:9px;font-weight:800;letter-spacing:0.12em;color:var(--muted);margin-bottom:3px}
 .torre-svc{font-size:13px;font-weight:800;color:var(--gold)}
 .torre-det{font-size:11px;color:var(--muted);margin-top:2px}
-.torre-estado{text-align:right}
 .dot{width:10px;height:10px;border-radius:50%}
 .dot-asig{background:var(--gold)}
 .dot-proc{background:var(--green)}
 .dot-cerr{background:var(--muted)}
 .dot-borr{background:var(--blue)}
-
 /* AGENDA */
-.ag-header-bar{background:#1B2E35;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;border-radius:10px;margin-bottom:14px}
-.ag-header-title{font-size:11px;font-weight:800;color:#C9A84C;letter-spacing:0.15em}
-.ag-header-date{font-size:11px;color:rgba(255,255,255,0.6)}
+.ag-hdr{background:#1B2E35;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;border-radius:10px;margin-bottom:14px}
+.ag-hdr-title{font-size:11px;font-weight:800;color:var(--gold);letter-spacing:0.15em}
+.ag-hdr-date{font-size:11px;color:rgba(255,255,255,0.6)}
 .ag-btn-new{background:transparent;border:1.5px solid #fff;border-radius:6px;padding:6px 14px;font-size:11px;color:#fff;cursor:pointer;font-weight:700;letter-spacing:0.06em}
-.ag-sec{font-size:9px;font-weight:800;letter-spacing:0.18em;color:var(--muted);text-transform:uppercase;margin:14px 0 8px;padding-left:2px}
-.ag-card{background:var(--surface);border:1px solid var(--border);border-left:5px solid transparent;border-radius:10px;margin-bottom:8px;overflow:hidden;cursor:pointer}
+.ag-card{background:var(--surface);border:1px solid var(--border);border-left:5px solid var(--border);border-radius:10px;margin-bottom:8px;overflow:hidden}
 .ag-card.vencida{border-left-color:#E24B4A}
 .ag-card.urgente{border-left-color:#EF9F27}
 .ag-card.proximo{border-left-color:#BA7517}
 .ag-card.ok{border-left-color:#639922}
-.ag-card.sin-fecha{border-left-color:var(--gold)}
+.ag-card.sf{border-left-color:var(--gold)}
 .ag-card.resuelta{border-left-color:var(--border);opacity:0.5}
-.ag-card-hdr{padding:12px 14px;display:flex;justify-content:space-between;align-items:flex-start}
-.ag-card-title{font-size:13px;font-weight:800;color:var(--text);margin-bottom:7px}
-.ag-card-title.done{text-decoration:line-through;color:var(--muted)}
+.ag-card-hdr{padding:12px 14px;display:flex;justify-content:space-between;align-items:flex-start;cursor:pointer}
+.ag-card-hdr:hover{background:var(--surface2)}
+.ag-title{font-size:13px;font-weight:800;color:var(--text);margin-bottom:7px}
+.ag-title.done{text-decoration:line-through;color:var(--muted)}
 .ag-tags{display:flex;gap:5px;flex-wrap:wrap}
 .ag-tag{font-size:9px;padding:2px 7px;border-radius:4px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase}
-.ag-t-alerta{background:rgba(226,75,74,0.2);color:#E24B4A}
-.ag-t-pri{background:rgba(245,240,232,0.1);color:var(--muted)}
-.ag-t-urg{background:rgba(245,240,232,0.1);color:var(--muted)}
-.ag-t-auto{background:rgba(127,119,221,0.2);color:#AFA9EC}
-.ag-t-proc{background:rgba(55,138,221,0.2);color:#85B7EB}
-.ag-t-ok{background:rgba(99,153,34,0.2);color:#97C459}
-.ag-meta-right{text-align:right;white-space:nowrap;padding-left:10px;flex-shrink:0}
-.ag-vdate{font-size:11px;color:var(--muted)}
+.t-venc{background:rgba(226,75,74,0.2);color:#E24B4A}
+.t-neutral{background:rgba(245,240,232,0.1);color:var(--muted)}
+.t-auto{background:rgba(127,119,221,0.2);color:#AFA9EC}
+.t-proc{background:rgba(55,138,221,0.2);color:#85B7EB}
+.t-ok{background:rgba(99,153,34,0.2);color:#97C459}
+.ag-vdate{font-size:11px;color:var(--muted);white-space:nowrap;padding-left:10px;flex-shrink:0}
 .ag-vdate.r{color:#E24B4A;font-weight:800}
 .ag-vdate.a{color:#EF9F27;font-weight:800}
-.ag-body{border-top:1px solid var(--border);padding:12px 14px;background:var(--bg);display:none}
+.ag-body{border-top:1px solid var(--border);padding:12px 14px;display:none;background:var(--bg)}
 .ag-body.open{display:block}
-.ag-log-title{font-size:9px;font-weight:800;letter-spacing:0.15em;color:var(--muted);margin-bottom:10px}
+.ag-log-lbl{font-size:9px;font-weight:800;letter-spacing:0.15em;color:var(--muted);margin-bottom:10px}
 .ag-entry{display:flex;gap:10px;margin-bottom:8px;align-items:flex-start}
 .ag-dot{width:7px;height:7px;border-radius:50%;background:#E24B4A;margin-top:4px;flex-shrink:0}
 .ag-dot.g{background:var(--border)}
 .ag-entry-txt{font-size:12px;color:var(--text);line-height:1.5;flex:1}
 .ag-entry-date{font-size:10px;color:var(--muted);white-space:nowrap;padding-left:8px;padding-top:2px}
 .ag-add{display:flex;gap:8px;margin-top:12px}
-.ag-add input{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:7px 11px;font-size:12px;color:var(--text);font-family:'DM Sans',sans-serif}
+.ag-add input{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:7px 11px;font-size:12px;color:var(--text);font-family:'DM Sans',sans-serif;text-transform:none}
 .ag-add input::placeholder{color:var(--muted)}
-.ag-add button{background:#1B2E35;border:none;border-radius:7px;padding:7px 14px;font-size:11px;color:#fff;cursor:pointer;font-weight:700;letter-spacing:0.04em;white-space:nowrap}
-.ag-footer{border-top:1px solid var(--border);padding:10px 14px;display:flex;justify-content:space-between;align-items:center;background:var(--surface)}
+.ag-add button{background:#1B2E35;border:none;border-radius:7px;padding:7px 14px;font-size:11px;color:#fff;cursor:pointer;font-weight:700;white-space:nowrap}
+.ag-footer{border-top:1px solid var(--border);padding:10px 14px;display:flex;justify-content:space-between;align-items:center}
 .ag-f-btn{font-size:11px;padding:5px 11px;border-radius:6px;border:1px solid var(--border);background:transparent;cursor:pointer;color:var(--text);font-weight:700;letter-spacing:0.04em}
 .ag-f-ok{background:rgba(99,153,34,0.2);border-color:#639922;color:#97C459}
 .ag-f-del{color:#E24B4A;border-color:transparent}
-/* MODAL NUEVA TAREA */
-.ag-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);display:none;align-items:flex-start;justify-content:center;padding-top:60px;z-index:999}
-.ag-overlay.open{display:flex}
-.ag-modal{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;width:90%;max-width:480px}
+/* MODAL */
+.ag-modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:999;align-items:center;justify-content:center}
+.ag-modal-bg.open{display:flex}
+.ag-modal{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;width:90%;max-width:460px;max-height:90vh;overflow-y:auto}
 .ag-modal-title{font-size:14px;font-weight:900;color:var(--text);margin-bottom:16px}
 .ag-field{margin-bottom:12px}
-.ag-field label{font-size:9px;font-weight:800;letter-spacing:0.15em;color:var(--muted);display:block;margin-bottom:5px}
-.ag-field input,.ag-field select,.ag-field textarea{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px 11px;font-size:12px;color:var(--text);font-family:'DM Sans',sans-serif}
-.ag-field textarea{resize:vertical;min-height:80px}
-.ag-modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
-.ag-modal-footer button{padding:8px 16px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;border:none;letter-spacing:0.05em}
-.ag-modal-cancel{background:var(--bg);color:var(--muted)}
-.ag-modal-save{background:#1B2E35;color:#fff}
+.ag-field label{font-size:9px;font-weight:800;letter-spacing:0.15em;color:var(--muted);display:block;margin-bottom:5px;text-transform:uppercase}
+.ag-field input,.ag-field select,.ag-field textarea{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px 11px;font-size:12px;color:var(--text);font-family:'DM Sans',sans-serif;text-transform:uppercase}
+.ag-field textarea{resize:vertical;min-height:70px;text-transform:none}
+.ag-modal-ftr{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+.ag-modal-ftr button{padding:8px 16px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;border:none;letter-spacing:0.05em;text-transform:uppercase}
+.ag-cancel{background:var(--bg);color:var(--muted)}
+.ag-save{background:#1B2E35;color:#fff}
+.ag-sec{font-size:9px;font-weight:800;letter-spacing:0.18em;color:var(--muted);margin:14px 0 8px;padding-left:2px;text-transform:uppercase}
 </style>
 </head>
 <body>
@@ -128,117 +124,88 @@ tbody tr:hover{background:var(--surface2)}
 </div>
 
 <div class="tabs">
-  <div class="tab active" onclick="setTab('torre',this)">🗼 Torre de Control</div>
-  <div class="tab" onclick="setTab('comisiones',this)">💰 Comisiones</div>
-  <div class="tab" onclick="setTab('agenda',this)">📋 Agenda</div>
+  <div class="tab active" id="tab-btn-torre" onclick="setTab('torre',this)">🗼 Torre de Control</div>
+  <div class="tab" id="tab-btn-comisiones" onclick="setTab('comisiones',this)">💰 Comisiones</div>
+  <div class="tab" id="tab-btn-agenda" onclick="setTab('agenda',this)">📋 Agenda</div>
 </div>
 
-<!-- TAB TORRE DE CONTROL -->
-<div class="tab-content active" id="tab-torre">
+<!-- TORRE -->
+<div class="pane active" id="pane-torre">
   <div class="kpi-grid">
     <div class="kpi"><div class="kpi-lbl">Servicios Activos</div><div class="kpi-val" id="t-activos">—</div><div class="kpi-sub">En proceso hoy</div></div>
     <div class="kpi"><div class="kpi-lbl">Asignados</div><div class="kpi-val" id="t-asignados">—</div><div class="kpi-sub">Pendientes de inicio</div></div>
-    <div class="kpi"><div class="kpi-lbl">Cerrados Mes</div><div class="kpi-val" id="t-cerrados">—</div><div class="kpi-sub" id="t-cerrados-sub">Este mes</div></div>
-    <div class="kpi"><div class="kpi-lbl">Ingresos Mes</div><div class="kpi-val" id="t-ingresos">—</div><div class="kpi-sub">Tarifa neta acumulada</div></div>
+    <div class="kpi"><div class="kpi-lbl">Cerrados Mes</div><div class="kpi-val" id="t-cerrados">—</div><div class="kpi-sub">Este mes</div></div>
+    <div class="kpi"><div class="kpi-lbl">Ingresos Mes</div><div class="kpi-val" id="t-ingresos">—</div><div class="kpi-sub">Tarifa acumulada</div></div>
   </div>
-
   <div class="filtros">
-    <select id="torre-fil-empresa" onchange="renderTorre()">
-      <option value="todas">Todas las empresas</option>
-    </select>
-    <select id="torre-fil-estado" onchange="renderTorre()">
+    <select id="torre-emp" onchange="renderTorre()"><option value="todas">Todas las empresas</option></select>
+    <select id="torre-estado" onchange="renderTorre()">
       <option value="todos">Todos los estados</option>
       <option value="asignado">Asignados</option>
       <option value="en_proceso">En Proceso</option>
       <option value="ejecutado">Ejecutados</option>
       <option value="cerrado">Cerrados</option>
     </select>
-    <input type="month" id="torre-fil-mes" onchange="renderTorre()">
+    <input type="month" id="torre-mes" onchange="renderTorre()">
   </div>
-
   <div class="sec-ttl">Servicios</div>
   <div id="torre-lista"><div class="empty">Cargando...</div></div>
 </div>
 
-<!-- TAB COMISIONES -->
-<div class="tab-content" id="tab-comisiones">
+<!-- COMISIONES -->
+<div class="pane" id="pane-comisiones">
   <div class="kpi-grid">
     <div class="kpi"><div class="kpi-lbl">Comisión Total Mes</div><div class="kpi-val" id="c-total">—</div><div class="kpi-sub">5% sobre tarifa+IVA</div></div>
-    <div class="kpi"><div class="kpi-lbl">Servicios con Corretaje</div><div class="kpi-val" id="c-count">—</div><div class="kpi-sub">Con comisión asignada</div></div>
+    <div class="kpi"><div class="kpi-lbl">Servicios</div><div class="kpi-val" id="c-count">—</div><div class="kpi-sub">Con tarifa asignada</div></div>
     <div class="kpi"><div class="kpi-lbl">Cerrados</div><div class="kpi-val" id="c-cerrados">—</div><div class="kpi-sub">Comisión consolidada</div></div>
     <div class="kpi"><div class="kpi-lbl">Pendientes</div><div class="kpi-val" id="c-pendientes">—</div><div class="kpi-sub">En proceso o asignados</div></div>
   </div>
-
   <div class="filtros">
-    <select id="com-fil-empresa" onchange="renderComisiones()">
-      <option value="todas">Todas las empresas</option>
-    </select>
-    <select id="com-fil-cliente" onchange="renderComisiones()">
-      <option value="todos">Todos los clientes</option>
-    </select>
-    <input type="month" id="com-fil-mes" onchange="renderComisiones()">
+    <select id="com-emp" onchange="renderComisiones()"><option value="todas">Todas las empresas</option></select>
+    <select id="com-cli" onchange="renderComisiones()"><option value="todos">Todos los clientes</option></select>
+    <input type="month" id="com-mes" onchange="renderComisiones()">
   </div>
-
   <div class="sec-ttl">Detalle Comisiones</div>
   <div style="overflow-x:auto">
     <table>
-      <thead>
-        <tr>
-          <th>Servicio</th>
-          <th>Empresa</th>
-          <th>Cliente</th>
-          <th>Fecha</th>
-          <th>Estado</th>
-          <th style="text-align:right">Tarifa Neta</th>
-          <th style="text-align:right">Tarifa+IVA</th>
-          <th style="text-align:right">Comisión 5%</th>
-        </tr>
-      </thead>
+      <thead><tr><th>Servicio</th><th>Empresa</th><th>Cliente</th><th>Fecha</th><th>Estado</th><th style="text-align:right">Tarifa Neta</th><th style="text-align:right">Tarifa+IVA</th><th style="text-align:right">Comisión 5%</th></tr></thead>
       <tbody id="com-tabla"></tbody>
       <tfoot><tr class="tot-row" id="com-totales"></tr></tfoot>
     </table>
   </div>
 </div>
 
-<!-- TAB AGENDA -->
-<div class="tab-content" id="tab-agenda">
-  <div class="ag-header-bar">
+<!-- AGENDA -->
+<div class="pane" id="pane-agenda">
+  <div class="ag-hdr">
     <div>
-      <div class="ag-header-title">AGENDA EJECUTIVA</div>
-      <div class="ag-header-date" id="ag-fecha-hoy"></div>
+      <div class="ag-hdr-title">Agenda Ejecutiva</div>
+      <div class="ag-hdr-date" id="ag-fecha-hoy"></div>
     </div>
-    <button class="ag-btn-new" onclick="abrirNuevaTarea()">+ Nueva tarea</button>
+    <button class="ag-btn-new" onclick="abrirModalTarea()">+ Nueva tarea</button>
   </div>
   <div id="ag-lista"><div class="empty">Cargando agenda...</div></div>
 </div>
 
-<!-- MODAL NUEVA/EDITAR TAREA -->
-<div class="ag-overlay" id="ag-overlay">
+<!-- MODAL TAREA -->
+<div class="ag-modal-bg" id="ag-modal-bg">
   <div class="ag-modal">
-    <div class="ag-modal-title" id="ag-modal-title">Nueva tarea</div>
+    <div class="ag-modal-title" id="ag-modal-titulo">Nueva tarea</div>
     <input type="hidden" id="ag-edit-id">
     <div class="ag-field"><label>Título</label><input id="ag-titulo" type="text" placeholder="Describe la tarea..."></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
       <div class="ag-field"><label>Prioridad</label>
-        <select id="ag-prioridad">
-          <option value="alta">Alta</option>
-          <option value="media" selected>Media</option>
-          <option value="baja">Baja</option>
-        </select>
+        <select id="ag-prioridad"><option value="alta">Alta</option><option value="media" selected>Media</option><option value="baja">Baja</option></select>
       </div>
       <div class="ag-field"><label>Urgencia</label>
-        <select id="ag-urgencia">
-          <option value="alta">Alta</option>
-          <option value="media" selected>Media</option>
-          <option value="baja">Baja</option>
-        </select>
+        <select id="ag-urgencia"><option value="alta">Alta</option><option value="media" selected>Media</option><option value="baja">Baja</option></select>
       </div>
     </div>
-    <div class="ag-field"><label>Fecha límite (opcional)</label><input id="ag-fecha-limite" type="date"></div>
-    <div class="ag-field"><label>Nota inicial</label><textarea id="ag-nota-inicial" placeholder="Contexto, detalles..."></textarea></div>
-    <div class="ag-modal-footer">
-      <button class="ag-modal-cancel" onclick="cerrarModalTarea()">Cancelar</button>
-      <button class="ag-modal-save" onclick="guardarTarea()">Guardar</button>
+    <div class="ag-field"><label>Fecha límite (opcional)</label><input id="ag-fecha-lim" type="date"></div>
+    <div class="ag-field"><label>Nota inicial</label><textarea id="ag-nota-ini" placeholder="Contexto o detalle..."></textarea></div>
+    <div class="ag-modal-ftr">
+      <button class="ag-cancel" onclick="cerrarModalTarea()">Cancelar</button>
+      <button class="ag-save" onclick="guardarTarea()">Guardar</button>
     </div>
   </div>
 </div>
@@ -248,21 +215,20 @@ const SUPA_URL = 'https://aqunzrukuruwzwywnurq.supabase.co';
 const SUPA_KEY = 'sb_publishable_70t9UxFlcqYDj7AMybsrHg__IMGNA8C';
 const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
-let _servicios = [];
-let _empresas  = [];
-
-const EMPRESAS_NEXUS = ['flota_297221','global_solutions'];
-const EMPRESA_LABEL  = {'flota_297221':'MADRID','global_solutions':'GLOBAL SOLUTIONS'};
-
+const EMPRESAS = ['flota_297221','global_solutions'];
+const EMP_LBL  = {'flota_297221':'MADRID','global_solutions':'GLOBAL SOLUTIONS'};
 const fmt = v => '$'+Math.round(v||0).toLocaleString('es-CL');
 const hoy = new Date();
 const mesActual = hoy.getFullYear()+'-'+String(hoy.getMonth()+1).padStart(2,'0');
 
+let _servicios = [];
+let _agenda    = [];
+
 function setTab(tab, el) {
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.pane').forEach(p=>p.classList.remove('active'));
   el.classList.add('active');
-  document.getElementById('tab-'+tab).classList.add('active');
+  document.getElementById('pane-'+tab).classList.add('active');
 }
 
 function salir() {
@@ -271,318 +237,210 @@ function salir() {
 }
 
 async function init() {
-  // Verificar sesión
   const sess = JSON.parse(localStorage.getItem('kaptura_session')||'{}');
   if(sess.pin !== '1313') { window.location.href = 'PRODUCCION.html'; return; }
-
-  // Fecha
   document.getElementById('hdr-fecha').textContent = hoy.toLocaleDateString('es-CL',{weekday:'short',day:'numeric',month:'short',year:'numeric'}).toUpperCase();
+  document.getElementById('torre-mes').value = mesActual;
+  document.getElementById('com-mes').value   = mesActual;
+  const hoyStr = hoy.toLocaleDateString('es-CL',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).toUpperCase();
+  document.getElementById('ag-fecha-hoy').textContent = hoyStr;
 
-  // Setear mes actual en filtros
-  document.getElementById('torre-fil-mes').value  = mesActual;
-  document.getElementById('com-fil-mes').value    = mesActual;
+  const resultados = await Promise.all(EMPRESAS.map(emp=>supa.from('servicios_piloto').select('*').eq('empresa',emp).order('fecha',{ascending:false}).limit(300)));
+  _servicios = resultados.flatMap((r,i)=>(r.data||[]).map(s=>({...s,_emp:EMPRESAS[i]})));
 
-  // Cargar servicios de todas las empresas
-  const promesas = EMPRESAS_NEXUS.map(emp =>
-    supa.from('servicios_piloto').select('*').eq('empresa',emp).order('fecha',{ascending:false}).limit(300)
-  );
-  const resultados = await Promise.all(promesas);
-  _servicios = resultados.flatMap((r,i) => (r.data||[]).map(s=>({...s,_emp:EMPRESAS_NEXUS[i]})));
-
-  // Poblar filtros empresa
-  ['torre-fil-empresa','com-fil-empresa'].forEach(id => {
-    const sel = document.getElementById(id);
-    EMPRESAS_NEXUS.forEach(e => {
-      const opt = document.createElement('option');
-      opt.value = e; opt.textContent = EMPRESA_LABEL[e]||e;
-      sel.appendChild(opt);
-    });
+  ['torre-emp','com-emp'].forEach(id=>{
+    const sel=document.getElementById(id);
+    EMPRESAS.forEach(e=>{const o=document.createElement('option');o.value=e;o.textContent=EMP_LBL[e];sel.appendChild(o);});
   });
-
-  // Poblar filtro clientes en comisiones
-  const clientes = [...new Set(_servicios.map(s=>s.cliente).filter(Boolean))].sort();
-  const selCli = document.getElementById('com-fil-cliente');
-  clientes.forEach(c => {
-    const opt = document.createElement('option');
-    opt.value = c; opt.textContent = c;
-    selCli.appendChild(opt);
-  });
+  const clis=[...new Set(_servicios.map(s=>s.cliente).filter(Boolean))].sort();
+  const selCli=document.getElementById('com-cli');
+  clis.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;selCli.appendChild(o);});
 
   renderTorre();
   renderComisiones();
-  cargarAgenda();
+  await cargarAgenda();
 }
 
-function getFilSvcs(filEmp, filMes) {
-  return _servicios.filter(s => {
-    if(filEmp !== 'todas' && s._emp !== filEmp) return false;
-    if(filMes && !(s.fecha||'').startsWith(filMes)) return false;
+function getSvcs(emp,mes){
+  return _servicios.filter(s=>{
+    if(emp!=='todas'&&s._emp!==emp) return false;
+    if(mes&&!(s.fecha||'').startsWith(mes)) return false;
     return true;
   });
 }
 
-function renderTorre() {
-  const filEmp    = document.getElementById('torre-fil-empresa').value;
-  const filEstado = document.getElementById('torre-fil-estado').value;
-  const filMes    = document.getElementById('torre-fil-mes').value;
-
-  const svcs = getFilSvcs(filEmp, filMes);
-  const activos   = _servicios.filter(s=>s.estado==='en_proceso').length;
-  const asignados = _servicios.filter(s=>s.estado==='asignado').length;
-  const cerrados  = svcs.filter(s=>s.estado==='cerrado').length;
-  const ingresos  = svcs.filter(s=>s.estado==='cerrado').reduce((a,s)=>a+(s.ingreso_total||s.tarifa_neta||0),0);
-
-  document.getElementById('t-activos').textContent   = activos;
-  document.getElementById('t-asignados').textContent = asignados;
-  document.getElementById('t-cerrados').textContent  = cerrados;
-  document.getElementById('t-ingresos').textContent  = fmt(ingresos);
-
-  const filtrados = svcs.filter(s => filEstado==='todos' || s.estado===filEstado);
-  const lista = document.getElementById('torre-lista');
-
-  if(!filtrados.length) { lista.innerHTML = '<div class="empty">Sin servicios en este período</div>'; return; }
-
-  const badgeMap = {
-    asignado:'<span class="badge badge-asig">ASIGNADO</span>',
-    en_proceso:'<span class="badge badge-proc">EN PROCESO</span>',
-    cerrado:'<span class="badge badge-cerr">CERRADO</span>',
-    ejecutado:'<span class="badge badge-borr">EJECUTADO</span>',
-    borrador:'<span class="badge badge-borr">BORRADOR</span>',
-  };
-  const dotMap = {asignado:'dot-asig',en_proceso:'dot-proc',cerrado:'dot-cerr',ejecutado:'dot-borr',borrador:'dot-borr'};
-
-  lista.innerHTML = filtrados.map(s => `
-    <div class="torre-card">
-      <div class="dot ${dotMap[s.estado]||'dot-cerr'}"></div>
-      <div>
-        <div class="torre-emp">${EMPRESA_LABEL[s._emp]||s._emp}</div>
-        <div class="torre-svc">${s.servicio_id||'—'} <span style="font-size:10px;color:var(--muted);font-weight:700">${s.fecha||''}</span></div>
-        <div class="torre-det">${s.patente||'—'} · ${s.conductor||'—'} · ${s.cliente||'—'}</div>
-        <div class="torre-det">${s.origen||'—'} → ${s.destino||'—'}</div>
-      </div>
-      <div class="torre-estado">
-        ${badgeMap[s.estado]||''}
-        <div style="font-size:12px;font-weight:800;color:var(--gold);margin-top:6px">${s.ingreso_total||s.tarifa_neta?fmt(s.ingreso_total||s.tarifa_neta):''}</div>
-      </div>
-    </div>`).join('');
+function renderTorre(){
+  const emp=document.getElementById('torre-emp').value;
+  const est=document.getElementById('torre-estado').value;
+  const mes=document.getElementById('torre-mes').value;
+  const svcs=getSvcs(emp,mes);
+  document.getElementById('t-activos').textContent   = _servicios.filter(s=>s.estado==='en_proceso').length;
+  document.getElementById('t-asignados').textContent = _servicios.filter(s=>s.estado==='asignado').length;
+  document.getElementById('t-cerrados').textContent  = svcs.filter(s=>s.estado==='cerrado').length;
+  document.getElementById('t-ingresos').textContent  = fmt(svcs.filter(s=>s.estado==='cerrado').reduce((a,s)=>a+(s.ingreso_total||s.tarifa_neta||0),0));
+  const fil=svcs.filter(s=>est==='todos'||s.estado===est);
+  const lista=document.getElementById('torre-lista');
+  if(!fil.length){lista.innerHTML='<div class="empty">Sin servicios en este período</div>';return;}
+  const bMap={asignado:'<span class="badge badge-asig">ASIGNADO</span>',en_proceso:'<span class="badge badge-proc">EN PROCESO</span>',cerrado:'<span class="badge badge-cerr">CERRADO</span>',ejecutado:'<span class="badge badge-borr">EJECUTADO</span>',borrador:'<span class="badge badge-borr">BORRADOR</span>'};
+  const dMap={asignado:'dot-asig',en_proceso:'dot-proc',cerrado:'dot-cerr',ejecutado:'dot-borr',borrador:'dot-borr'};
+  lista.innerHTML=fil.map(s=>`<div class="torre-card"><div class="dot ${dMap[s.estado]||'dot-cerr'}"></div><div><div class="torre-emp">${EMP_LBL[s._emp]||s._emp}</div><div class="torre-svc">${s.servicio_id||'—'} <span style="font-size:10px;color:var(--muted)">${s.fecha||''}</span></div><div class="torre-det">${s.patente||'—'} · ${s.conductor||'—'} · ${s.cliente||'—'}</div><div class="torre-det">${s.origen||'—'} → ${s.destino||'—'}</div></div><div style="text-align:right">${bMap[s.estado]||''}<div style="font-size:12px;font-weight:800;color:var(--gold);margin-top:6px">${s.ingreso_total||s.tarifa_neta?fmt(s.ingreso_total||s.tarifa_neta):''}</div></div></div>`).join('');
 }
 
-function renderComisiones() {
-  const filEmp = document.getElementById('com-fil-empresa').value;
-  const filCli = document.getElementById('com-fil-cliente').value;
-  const filMes = document.getElementById('com-fil-mes').value;
-
-  let svcs = getFilSvcs(filEmp, filMes);
-  if(filCli !== 'todos') svcs = svcs.filter(s=>s.cliente===filCli);
-  // Solo servicios con tarifa
-  svcs = svcs.filter(s=>s.tarifa_neta||s.ingreso_total);
-
-  const badgeMap = {
-    asignado:'<span class="badge badge-asig">ASIGNADO</span>',
-    en_proceso:'<span class="badge badge-proc">EN PROCESO</span>',
-    cerrado:'<span class="badge badge-cerr">CERRADO</span>',
-    ejecutado:'<span class="badge badge-borr">EJECUTADO</span>',
-    borrador:'<span class="badge badge-borr">BORRADOR</span>',
-  };
-
-  let totalNeta=0, totalIva=0, totalCom=0;
-  let cerradosCom=0, pendCom=0;
-
-  const filas = svcs.map(s=>{
-    const neta = s.tarifa_neta||s.ingreso_total||0;
-    const iva  = Math.round(neta*1.19);
-    const com  = Math.round(iva*0.05);
-    totalNeta += neta; totalIva += iva; totalCom += com;
-    if(s.estado==='cerrado') cerradosCom+=com; else pendCom+=com;
-    return `<tr>
-      <td style="font-weight:800;color:var(--gold)">${s.servicio_id||'—'}</td>
-      <td style="color:var(--muted)">${EMPRESA_LABEL[s._emp]||s._emp}</td>
-      <td>${s.cliente||'—'}</td>
-      <td style="color:var(--muted)">${s.fecha||'—'}</td>
-      <td>${badgeMap[s.estado]||''}</td>
-      <td style="text-align:right">${fmt(neta)}</td>
-      <td style="text-align:right">${fmt(iva)}</td>
-      <td style="text-align:right;color:var(--green);font-weight:800">${fmt(com)}</td>
-    </tr>`;
+function renderComisiones(){
+  const emp=document.getElementById('com-emp').value;
+  const cli=document.getElementById('com-cli').value;
+  const mes=document.getElementById('com-mes').value;
+  let svcs=getSvcs(emp,mes);
+  if(cli!=='todos') svcs=svcs.filter(s=>s.cliente===cli);
+  svcs=svcs.filter(s=>s.tarifa_neta||s.ingreso_total);
+  const bMap={asignado:'<span class="badge badge-asig">ASIGNADO</span>',en_proceso:'<span class="badge badge-proc">EN PROCESO</span>',cerrado:'<span class="badge badge-cerr">CERRADO</span>',ejecutado:'<span class="badge badge-borr">EJECUTADO</span>',borrador:'<span class="badge badge-borr">BORRADOR</span>'};
+  let tN=0,tI=0,tC=0,cerr=0,pend=0;
+  const filas=svcs.map(s=>{
+    const n=s.tarifa_neta||s.ingreso_total||0;
+    const iv=Math.round(n*1.19);
+    const co=Math.round(iv*0.05);
+    tN+=n;tI+=iv;tC+=co;
+    if(s.estado==='cerrado') cerr+=co; else pend+=co;
+    return `<tr><td style="font-weight:800;color:var(--gold)">${s.servicio_id||'—'}</td><td style="color:var(--muted)">${EMP_LBL[s._emp]||s._emp}</td><td>${s.cliente||'—'}</td><td style="color:var(--muted)">${s.fecha||'—'}</td><td>${bMap[s.estado]||''}</td><td style="text-align:right">${fmt(n)}</td><td style="text-align:right">${fmt(iv)}</td><td style="text-align:right;color:var(--green);font-weight:800">${fmt(co)}</td></tr>`;
   }).join('');
-
-  document.getElementById('com-tabla').innerHTML = filas || '<tr><td colspan="8" class="empty">Sin servicios en este período</td></tr>';
-  document.getElementById('com-totales').innerHTML = `
-    <td colspan="5" style="text-align:right;padding:10px">TOTALES</td>
-    <td style="text-align:right;padding:10px">${fmt(totalNeta)}</td>
-    <td style="text-align:right;padding:10px">${fmt(totalIva)}</td>
-    <td style="text-align:right;padding:10px;color:var(--green)">${fmt(totalCom)}</td>`;
-
-  document.getElementById('c-total').textContent     = fmt(totalCom);
-  document.getElementById('c-count').textContent     = svcs.length;
-  document.getElementById('c-cerrados').textContent  = fmt(cerradosCom);
-  document.getElementById('c-pendientes').textContent= fmt(pendCom);
+  document.getElementById('com-tabla').innerHTML=filas||'<tr><td colspan="8" class="empty">Sin servicios en este período</td></tr>';
+  document.getElementById('com-totales').innerHTML=`<td colspan="5" style="text-align:right;padding:10px">TOTALES</td><td style="text-align:right;padding:10px">${fmt(tN)}</td><td style="text-align:right;padding:10px">${fmt(tI)}</td><td style="text-align:right;padding:10px;color:var(--green)">${fmt(tC)}</td>`;
+  document.getElementById('c-total').textContent=fmt(tC);
+  document.getElementById('c-count').textContent=svcs.length;
+  document.getElementById('c-cerrados').textContent=fmt(cerr);
+  document.getElementById('c-pendientes').textContent=fmt(pend);
 }
 
 // ══ AGENDA ══
-let _agenda = [];
-let _agEditId = null;
-
-const hoyStr2 = new Date().toLocaleDateString('es-CL',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).toUpperCase();
-
-function agSemaforo(fechaLim) {
-  if(!fechaLim) return {cls:'sin-fecha', label:'', vdate:'Sin fecha límite', vcls:''};
-  const hoy = new Date(); hoy.setHours(0,0,0,0);
-  const fl = new Date(fechaLim); fl.setHours(0,0,0,0);
-  const dias = Math.round((fl-hoy)/864e5);
-  if(dias < 0) return {cls:'vencida', label:'VENCIDA HACE '+(Math.abs(dias))+' DÍAS', vdate:'Venció el '+fechaLim.split('-').reverse().join('/'), vcls:'r'};
-  if(dias <= 7) return {cls:'urgente', label:'VENCE EN '+dias+' DÍAS', vdate:'Vence el '+fechaLim.split('-').reverse().join('/'), vcls:'a'};
-  if(dias <= 30) return {cls:'proximo', label:'VENCE EN '+dias+' DÍAS', vdate:'Vence el '+fechaLim.split('-').reverse().join('/'), vcls:'a'};
-  return {cls:'ok', label:'', vdate:'Vence el '+fechaLim.split('-').reverse().join('/'), vcls:''};
+function agSem(fl){
+  if(!fl) return {cls:'sf',lbl:'',vdate:'Sin fecha límite',vcls:''};
+  const h=new Date();h.setHours(0,0,0,0);
+  const f=new Date(fl);f.setHours(0,0,0,0);
+  const d=Math.round((f-h)/864e5);
+  if(d<0)  return {cls:'vencida',lbl:'VENCIDA HACE '+Math.abs(d)+' DÍAS',vdate:'Venció el '+fl.split('-').reverse().join('/'),vcls:'r'};
+  if(d<=7) return {cls:'urgente',lbl:'VENCE EN '+d+' DÍAS',vdate:'Vence el '+fl.split('-').reverse().join('/'),vcls:'a'};
+  if(d<=30)return {cls:'proximo',lbl:'VENCE EN '+d+' DÍAS',vdate:'Vence el '+fl.split('-').reverse().join('/'),vcls:'a'};
+  return {cls:'ok',lbl:'',vdate:'Vence el '+fl.split('-').reverse().join('/'),vcls:''};
 }
 
-async function cargarAgenda() {
-  const el = document.getElementById('ag-fecha-hoy');
-  if(el) el.textContent = hoyStr2;
-  const {data} = await supa.from('kaptura_agenda').select('*').eq('usuario','1313').order('created_at',{ascending:false});
-  _agenda = data || [];
+async function cargarAgenda(){
+  const {data}=await supa.from('kaptura_agenda').select('*').eq('usuario','1313').order('created_at',{ascending:false});
+  _agenda=data||[];
   renderAgenda();
 }
 
-function renderAgenda() {
-  const lista = document.getElementById('ag-lista');
+function renderAgenda(){
+  const lista=document.getElementById('ag-lista');
   if(!lista) return;
-  const pendientes = _agenda.filter(function(t){ return t.estado !== 'resuelto'; });
-  const resueltas  = _agenda.filter(function(t){ return t.estado === 'resuelto'; });
+  if(!_agenda.length){lista.innerHTML='<div class="empty">Sin tareas — crea la primera con + Nueva tarea</div>';return;}
+  const pend=_agenda.filter(t=>t.estado!=='resuelto');
+  const done=_agenda.filter(t=>t.estado==='resuelto');
+  const orden={vencida:0,urgente:1,proximo:2,ok:3,sf:4};
+  pend.sort((a,b)=>(orden[agSem(a.fecha_limite).cls]||5)-(orden[agSem(b.fecha_limite).cls]||5));
 
-  // Ordenar por semáforo
-  const orden = {vencida:0, urgente:1, proximo:2, sin_fecha:3, ok:4};
-  pendientes.sort(function(a,b){
-    const sa = agSemaforo(a.fecha_limite);
-    const sb = agSemaforo(b.fecha_limite);
-    return (orden[sa.cls.replace('-','_')]||5) - (orden[sb.cls.replace('-','_')]||5);
-  });
-
-  if(!_agenda.length) { lista.innerHTML = '<div class="empty">Sin tareas — crea la primera con + Nueva tarea</div>'; return; }
-
-  function renderTarea(t) {
-    const sem = agSemaforo(t.fecha_limite);
-    const notas = t.notas ? JSON.parse(t.notas) : [];
-    const priBadge = {alta:'<span class="ag-tag ag-t-alerta">P. ALTA</span>',media:'<span class="ag-tag ag-t-pri">P. MEDIA</span>',baja:'<span class="ag-tag ag-t-pri">P. BAJA</span>'};
-    const urgBadge = {alta:'<span class="ag-tag ag-t-alerta">U. ALTA</span>',media:'<span class="ag-tag ag-t-urg">U. MEDIA</span>',baja:'<span class="ag-tag ag-t-urg">U. BAJA</span>'};
-    const autoBadge = t.origen !== 'manual' ? '<span class="ag-tag ag-t-auto">SISTEMA</span>' : '';
-    const estadoBadge = t.estado === 'en_proceso' ? '<span class="ag-tag ag-t-proc">EN PROCESO</span>' : (t.estado === 'resuelto' ? '<span class="ag-tag ag-t-ok">RESUELTA</span>' : '');
-    const semBadge = sem.label ? '<span class="ag-tag ag-t-alerta">'+sem.label+'</span>' : '';
-    const notasHTML = notas.map(function(n){
-      return '<div class="ag-entry"><div class="ag-dot '+(n.sistema?'':'g')+'"></div><div class="ag-entry-txt">'+n.texto+'</div><div class="ag-entry-date">'+n.fecha+'</div></div>';
-    }).join('');
-    return '<div class="ag-card '+(t.estado==='resuelto'?'resuelta':sem.cls)+'" id="agcard-'+t.id+'">'
-      +'<div class="ag-card-hdr" onclick="toggleAg(''+t.id+'')">'
-      +'<div style="flex:1"><div class="ag-card-title'+(t.estado==='resuelto'?' done':'')+'">' +t.titulo+'</div>'
-      +'<div class="ag-tags">'+semBadge+(priBadge[t.prioridad]||'')+(urgBadge[t.urgencia]||'')+autoBadge+estadoBadge+'</div></div>'
-      +'<div class="ag-meta-right"><div class="ag-vdate '+sem.vcls+'">'+sem.vdate+'</div></div></div>'
-      +'<div class="ag-body" id="agbody-'+t.id+'">'
-      +'<div class="ag-log-title">BITÁCORA</div>'
-      +notasHTML
-      +'<div class="ag-add"><input type="text" id="agnota-'+t.id+'" placeholder="Agregar entrada a la bitácora..."><button onclick="agregarNota(''+t.id+'')">Guardar</button></div>'
+  function card(t){
+    const sem=agSem(t.fecha_limite);
+    const notas=t.notas?JSON.parse(t.notas):[];
+    const pBadge={alta:'<span class="ag-tag t-venc">P. ALTA</span>',media:'<span class="ag-tag t-neutral">P. MEDIA</span>',baja:'<span class="ag-tag t-neutral">P. BAJA</span>'};
+    const uBadge={alta:'<span class="ag-tag t-venc">U. ALTA</span>',media:'<span class="ag-tag t-neutral">U. MEDIA</span>',baja:'<span class="ag-tag t-neutral">U. BAJA</span>'};
+    const autoBadge=t.origen!=='manual'?'<span class="ag-tag t-auto">SISTEMA</span>':'';
+    const estBadge=t.estado==='en_proceso'?'<span class="ag-tag t-proc">EN PROCESO</span>':(t.estado==='resuelto'?'<span class="ag-tag t-ok">RESUELTA</span>':'');
+    const semBadge=sem.lbl?'<span class="ag-tag t-venc">'+sem.lbl+'</span>':'';
+    const notasHTML=notas.map(n=>'<div class="ag-entry"><div class="ag-dot '+(n.sistema?'':'g')+'"></div><div class="ag-entry-txt">'+n.texto+'</div><div class="ag-entry-date">'+n.fecha+'</div></div>').join('');
+    return '<div class="ag-card '+(t.estado==='resuelto'?'resuelta':sem.cls)+'" id="agc-'+t.id+'">'
+      +'<div class="ag-card-hdr" onclick="toggleCard(\''+t.id+'\')">'
+      +'<div style="flex:1"><div class="ag-title'+(t.estado==='resuelto'?' done':'')+'">' +t.titulo+'</div>'
+      +'<div class="ag-tags">'+semBadge+(pBadge[t.prioridad]||'')+(uBadge[t.urgencia]||'')+autoBadge+estBadge+'</div></div>'
+      +'<div class="ag-vdate '+sem.vcls+'">'+sem.vdate+'</div></div>'
+      +'<div class="ag-body" id="agb-'+t.id+'">'
+      +'<div class="ag-log-lbl">BITÁCORA</div>'+notasHTML
+      +'<div class="ag-add"><input id="agn-'+t.id+'" type="text" placeholder="Agregar entrada..."><button onclick="agregarNota(\''+t.id+'\')">Guardar</button></div>'
       +'<div class="ag-footer"><div style="display:flex;gap:6px">'
-      +(t.estado!=='resuelto'?'<button class="ag-f-btn ag-f-ok" onclick="resolverTarea(''+t.id+'')">✓ Resuelta</button>':'')
-      +'<button class="ag-f-btn" onclick="editarTarea(''+t.id+'')">✏ Editar</button></div>'
-      +'<button class="ag-f-btn ag-f-del" onclick="eliminarTarea(''+t.id+'')">Eliminar</button></div>'
+      +(t.estado!=='resuelto'?'<button class="ag-f-btn ag-f-ok" onclick="resolverTarea(\''+t.id+'\')">✓ Resuelta</button>':'')
+      +'<button class="ag-f-btn" onclick="editarTarea(\''+t.id+'\')">✏ Editar</button></div>'
+      +'<button class="ag-f-btn ag-f-del" onclick="eliminarTarea(\''+t.id+'\')">Eliminar</button></div>'
       +'</div></div>';
   }
 
-  let html = '';
-  if(pendientes.length) html += pendientes.map(renderTarea).join('');
-  if(resueltas.length) html += '<div class="ag-sec">Resueltas</div>'+resueltas.slice(0,5).map(renderTarea).join('');
-  lista.innerHTML = html;
+  let html=pend.map(card).join('');
+  if(done.length) html+='<div class="ag-sec">Resueltas</div>'+done.slice(0,5).map(card).join('');
+  lista.innerHTML=html;
 }
 
-function toggleAg(id) {
-  const body = document.getElementById('agbody-'+id);
-  if(body) body.classList.toggle('open');
+function toggleCard(id){document.getElementById('agb-'+id)?.classList.toggle('open');}
+
+function abrirModalTarea(){
+  document.getElementById('ag-modal-titulo').textContent='Nueva tarea';
+  document.getElementById('ag-edit-id').value='';
+  document.getElementById('ag-titulo').value='';
+  document.getElementById('ag-prioridad').value='media';
+  document.getElementById('ag-urgencia').value='media';
+  document.getElementById('ag-fecha-lim').value='';
+  document.getElementById('ag-nota-ini').value='';
+  document.getElementById('ag-modal-bg').classList.add('open');
 }
 
-function abrirNuevaTarea() {
-  _agEditId = null;
-  document.getElementById('ag-modal-title').textContent = 'Nueva tarea';
-  document.getElementById('ag-titulo').value = '';
-  document.getElementById('ag-prioridad').value = 'media';
-  document.getElementById('ag-urgencia').value = 'media';
-  document.getElementById('ag-fecha-limite').value = '';
-  document.getElementById('ag-nota-inicial').value = '';
-  document.getElementById('ag-edit-id').value = '';
-  document.getElementById('ag-overlay').classList.add('open');
+function editarTarea(id){
+  const t=_agenda.find(x=>x.id===id);if(!t) return;
+  document.getElementById('ag-modal-titulo').textContent='Editar tarea';
+  document.getElementById('ag-edit-id').value=id;
+  document.getElementById('ag-titulo').value=t.titulo||'';
+  document.getElementById('ag-prioridad').value=t.prioridad||'media';
+  document.getElementById('ag-urgencia').value=t.urgencia||'media';
+  document.getElementById('ag-fecha-lim').value=t.fecha_limite||'';
+  document.getElementById('ag-nota-ini').value='';
+  document.getElementById('ag-modal-bg').classList.add('open');
 }
 
-function editarTarea(id) {
-  const t = _agenda.find(function(x){ return x.id===id; });
-  if(!t) return;
-  _agEditId = id;
-  document.getElementById('ag-modal-title').textContent = 'Editar tarea';
-  document.getElementById('ag-titulo').value = t.titulo||'';
-  document.getElementById('ag-prioridad').value = t.prioridad||'media';
-  document.getElementById('ag-urgencia').value = t.urgencia||'media';
-  document.getElementById('ag-fecha-limite').value = t.fecha_limite||'';
-  document.getElementById('ag-nota-inicial').value = '';
-  document.getElementById('ag-edit-id').value = id;
-  document.getElementById('ag-overlay').classList.add('open');
-}
+function cerrarModalTarea(){document.getElementById('ag-modal-bg').classList.remove('open');}
 
-function cerrarModalTarea() {
-  document.getElementById('ag-overlay').classList.remove('open');
-}
+async function guardarTarea(){
+  const titulo=document.getElementById('ag-titulo').value.trim();
+  if(!titulo){alert('Ingresa el título');return;}
+  const pri=document.getElementById('ag-prioridad').value;
+  const urg=document.getElementById('ag-urgencia').value;
+  const fl=document.getElementById('ag-fecha-lim').value||null;
+  const nota=document.getElementById('ag-nota-ini').value.trim();
+  const editId=document.getElementById('ag-edit-id').value;
+  const hoyFmt=new Date().toLocaleDateString('es-CL',{day:'2-digit',month:'2-digit'});
 
-async function guardarTarea() {
-  const titulo = document.getElementById('ag-titulo').value.trim();
-  if(!titulo) { alert('Ingresa el título'); return; }
-  const pri  = document.getElementById('ag-prioridad').value;
-  const urg  = document.getElementById('ag-urgencia').value;
-  const fl   = document.getElementById('ag-fecha-limite').value || null;
-  const nota = document.getElementById('ag-nota-inicial').value.trim();
-  const hoy  = new Date().toLocaleDateString('es-CL',{day:'2-digit',month:'2-digit'});
-  const editId = document.getElementById('ag-edit-id').value;
-
-  if(editId) {
-    const t = _agenda.find(function(x){ return x.id===editId; });
-    const {error} = await supa.from('kaptura_agenda').update({titulo, prioridad:pri, urgencia:urg, fecha_limite:fl, updated_at:new Date().toISOString()}).eq('id',editId);
-    if(error) { alert('Error: '+error.message); return; }
-    if(t) { t.titulo=titulo; t.prioridad=pri; t.urgencia=urg; t.fecha_limite=fl; }
+  if(editId){
+    await supa.from('kaptura_agenda').update({titulo,prioridad:pri,urgencia:urg,fecha_limite:fl,updated_at:new Date().toISOString()}).eq('id',editId);
+    const t=_agenda.find(x=>x.id===editId);
+    if(t){t.titulo=titulo;t.prioridad=pri;t.urgencia=urg;t.fecha_limite=fl;}
   } else {
-    const notas = nota ? JSON.stringify([{texto:nota, fecha:hoy, sistema:false}]) : JSON.stringify([]);
-    const {data:nd, error} = await supa.from('kaptura_agenda').insert({usuario:'1313', titulo, prioridad:pri, urgencia:urg, fecha_limite:fl, estado:'pendiente', origen:'manual', notas}).select().single();
-    if(error) { alert('Error: '+error.message); return; }
+    const notas=nota?JSON.stringify([{texto:nota,fecha:hoyFmt,sistema:false}]):JSON.stringify([]);
+    const {data:nd}=await supa.from('kaptura_agenda').insert({usuario:'1313',titulo,prioridad:pri,urgencia:urg,fecha_limite:fl,estado:'pendiente',origen:'manual',notas}).select().single();
     if(nd) _agenda.unshift(nd);
   }
   cerrarModalTarea();
   renderAgenda();
 }
 
-async function agregarNota(id) {
-  const input = document.getElementById('agnota-'+id);
-  const texto = input?.value.trim();
-  if(!texto) return;
-  const t = _agenda.find(function(x){ return x.id===id; });
-  if(!t) return;
-  const notas = t.notas ? JSON.parse(t.notas) : [];
-  const hoy = new Date().toLocaleDateString('es-CL',{day:'2-digit',month:'2-digit'});
-  notas.push({texto, fecha:hoy, sistema:false});
-  const {error} = await supa.from('kaptura_agenda').update({notas:JSON.stringify(notas), updated_at:new Date().toISOString()}).eq('id',id);
-  if(error) { alert('Error: '+error.message); return; }
-  t.notas = JSON.stringify(notas);
-  input.value = '';
+async function agregarNota(id){
+  const input=document.getElementById('agn-'+id);
+  const texto=input?.value.trim();if(!texto) return;
+  const t=_agenda.find(x=>x.id===id);if(!t) return;
+  const notas=t.notas?JSON.parse(t.notas):[];
+  const hoyFmt=new Date().toLocaleDateString('es-CL',{day:'2-digit',month:'2-digit'});
+  notas.push({texto,fecha:hoyFmt,sistema:false});
+  await supa.from('kaptura_agenda').update({notas:JSON.stringify(notas),updated_at:new Date().toISOString()}).eq('id',id);
+  t.notas=JSON.stringify(notas);
+  input.value='';
   renderAgenda();
-  setTimeout(function(){ var b=document.getElementById('agbody-'+id); if(b) b.classList.add('open'); },50);
+  setTimeout(()=>{document.getElementById('agb-'+id)?.classList.add('open');},50);
 }
 
-async function resolverTarea(id) {
-  const {error} = await supa.from('kaptura_agenda').update({estado:'resuelto', updated_at:new Date().toISOString()}).eq('id',id);
-  if(error) { alert('Error: '+error.message); return; }
-  const t = _agenda.find(function(x){ return x.id===id; });
-  if(t) t.estado = 'resuelto';
+async function resolverTarea(id){
+  await supa.from('kaptura_agenda').update({estado:'resuelto',updated_at:new Date().toISOString()}).eq('id',id);
+  const t=_agenda.find(x=>x.id===id);if(t) t.estado='resuelto';
   renderAgenda();
 }
 
-async function eliminarTarea(id) {
+async function eliminarTarea(id){
   if(!confirm('¿Eliminar esta tarea?')) return;
-  const {error} = await supa.from('kaptura_agenda').delete().eq('id',id);
-  if(error) { alert('Error: '+error.message); return; }
-  _agenda = _agenda.filter(function(x){ return x.id!==id; });
+  await supa.from('kaptura_agenda').delete().eq('id',id);
+  _agenda=_agenda.filter(x=>x.id!==id);
   renderAgenda();
 }
 
