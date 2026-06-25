@@ -873,35 +873,11 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
           <input id="setup-tar-nombre" type="text" placeholder="Ej: Pallet completo, Media carga..." style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px;font-size:12px;color:var(--text);font-family:inherit;text-transform:uppercase">
         </div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:6px">
-        <div>
-          <div style="font-size:10px;color:var(--muted);margin-bottom:4px">KM IDA (TEÓRICO)</div>
-          <input id="setup-tar-km-ida" type="number" placeholder="0" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px;font-size:12px;color:var(--text);font-family:inherit">
-        </div>
-        <div>
-          <div style="font-size:10px;color:var(--muted);margin-bottom:4px">KM VUELTA (TEÓRICO)</div>
-          <input id="setup-tar-km-vta" type="number" placeholder="0" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px;font-size:12px;color:var(--text);font-family:inherit">
-        </div>
-        <div>
-          <div style="font-size:10px;color:var(--muted);margin-bottom:4px">PEAJES HABITUALES $</div>
-          <input id="setup-tar-peajes" type="number" placeholder="0" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px;font-size:12px;color:var(--text);font-family:inherit">
-        </div>
-        <div style="display:none">
-            <div style="font-size:10px;color:var(--muted);margin-bottom:4px">KM VUELTA (TEÓRICO)</div>
-            <input id="setup-tar-km-vta" type="number" placeholder="0" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px;font-size:12px;color:var(--text);font-family:inherit">
-          </div>
-        </div>
-      </div>
       <div style="text-align:right">
-        <div style="display:flex;gap:8px">
-          <button onclick="setupListaAgregarTarifa()" style="background:var(--surface2);border:1px solid var(--gold);border-radius:8px;padding:10px 14px;font-size:12px;font-weight:800;color:var(--gold);cursor:pointer;white-space:nowrap">+ AGREGAR</button>
-          <button id="btn-guardar-tarifa" onclick="setupGuardarEdicionTarifa()" style="display:none;background:var(--gold);border:none;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:800;color:#000;cursor:pointer;white-space:nowrap">💾 GUARDAR</button>
-          <button id="btn-cancelar-tarifa" onclick="setupCancelarEdicionTarifa()" style="display:none;background:transparent;border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:12px;font-weight:800;color:var(--muted);cursor:pointer;white-space:nowrap">✕ Cancelar</button>
-        </div>
+        <button onclick="setupListaAgregarTarifa()" style="background:var(--surface2);border:1px solid var(--gold);border-radius:8px;padding:10px 14px;font-size:12px;font-weight:800;color:var(--gold);cursor:pointer;white-space:nowrap">+ AGREGAR</button>
       </div>
     </div>
 
-    <div id="setup-costos-extra">
     <!-- 6. COSTOS FIJOS -->
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px">
       <div style="font-size:11px;font-weight:700;color:var(--gold);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px">6. Costos fijos mensuales</div>
@@ -999,7 +975,6 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
       </div>
     </div>
 
-    </div><!-- /setup-costos-extra -->
     <div style="height:80px"></div>
   </div>
 </main>
@@ -3308,20 +3283,6 @@ async function irACostos() {
   const diasOpMes = getCfgNum(['dias_operativos','dias_op']) || 20;
   // cfDia: usar valor diario guardado explícitamente, o calcular desde mensual
   const cfDia     = cfMensual > 0 ? Math.round(cfMensual / diasOpMes) : getCfgNum(['costo_fijo_dia']);
-  // Precargar KM teórico desde tarifario si no hay GPS aún
-  const svcForKm = DB.servicios[svcActivoIdx];
-  if(svcForKm && !svcForKm.km_total) {
-    const tarMatch = (DB.tarifarios||[]).find(function(t){
-      return (t.cliente||'').toUpperCase()===(svcForKm.cliente||'').toUpperCase() &&
-             (t.destino||'').toUpperCase()===(svcForKm.destino||'').toUpperCase();
-    });
-    if(tarMatch && (tarMatch.km_ida || tarMatch.km_vuelta)) {
-      const teoIda = document.getElementById('cos-km-teo-ida');
-      const teoVta = document.getElementById('cos-km-teo-vta');
-      if(teoIda && !teoIda.value) teoIda.value = tarMatch.km_ida||0;
-      if(teoVta && !teoVta.value) teoVta.value = tarMatch.km_vuelta||0;
-    }
-  }
   // Mantención: km × (mant_costo ÷ mant_km) — se calcula en calcCostos() con km reales, aquí = 0
   const sueldoDiario = getCfgNum(['sueldo_diario','sueldo_conductor']) || 33000;
   const viaticoDia   = getCfgNum(['viatico_dia','viatico']);
@@ -5302,16 +5263,10 @@ async function iniciarLogin() {
         if(sess.rol === 'conductor') {
           // Ocultar tabs que no corresponden al conductor
           ['tab-btn-liquidaciones','tab-btn-flota','tab-btn-clientes','tab-btn-gastos',
-           'tab-btn-resultados','tab-btn-informes','tab-btn-config','tab-btn-setup'].forEach(id => {
+           'tab-btn-resultados','tab-btn-informes','tab-btn-config'].forEach(id => {
             const el = document.getElementById(id);
             if(el) el.style.display = 'none';
           });
-          // Forzar tab servicios activo y ocultar todos los demás contenidos
-          const btnSvc = document.getElementById('tab-btn-servicios');
-          if(btnSvc) setTab('servicios', btnSvc);
-          // Ocultar contenido de setup que está fuera del div tab-setup
-          const setupExtra = document.getElementById('setup-costos-extra');
-          if(setupExtra) setupExtra.style.display = 'none';
           // Ocultar botón + ASIGNAR y KPIs de gestión
           const btnAsig = document.getElementById('btn-asignar-nuevo');
           if(btnAsig) btnAsig.style.display = 'none';
@@ -5779,10 +5734,7 @@ async function setupAgregarTarifa() {
   const destino = document.getElementById('setup-tar-destino').value.trim().toUpperCase();
   const valor   = parseFloat(document.getElementById('setup-tar-valor').value.replace(/[$.]/g,'').replace(',','.')) || 0;
   if(!cliente || !origen || !destino || !valor) { toast('Completa todos los campos de tarifa'); return; }
-  const kmIda = parseFloat(document.getElementById('setup-tar-km-ida')?.value)||0;
-  const kmVta = parseFloat(document.getElementById('setup-tar-km-vta')?.value)||0;
-  const peajesHab = parseFloat(document.getElementById('setup-tar-peajes')?.value)||0;
-  const {error} = await supa.from('kaptura_tarifarios').insert({cliente, origen, destino, tarifa_neta:valor, empresa:emp, activo:true, km_ida:kmIda||null, km_vuelta:kmVta||null, peajes_habituales:peajesHab||null});
+  const {error} = await supa.from('kaptura_tarifarios').insert({cliente, origen, destino, tarifa_neta:valor, empresa:emp, activo:true});
   if(error) { toast('Error: '+error.message); return; }
   ['cliente','origen','destino','valor'].forEach(f => { document.getElementById('setup-tar-'+f).value = ''; });
   toast('✓ Tarifa guardada');
@@ -5796,55 +5748,11 @@ async function setupEditarTarifa(id) {
   document.getElementById('setup-tar-origen').value  = (t.origen||'').toUpperCase();
   document.getElementById('setup-tar-destino').value = (t.destino||'').toUpperCase();
   document.getElementById('setup-tar-valor').value   = t.tarifa_neta||'';
-  if(document.getElementById('setup-tar-punto'))   document.getElementById('setup-tar-punto').value   = t.valor_punto||'';
-  if(document.getElementById('setup-tar-nombre'))  document.getElementById('setup-tar-nombre').value  = t.descripcion||'';
-  if(document.getElementById('setup-tar-km-ida'))  document.getElementById('setup-tar-km-ida').value  = t.km_ida||'';
-  if(document.getElementById('setup-tar-km-vta'))  document.getElementById('setup-tar-km-vta').value  = t.km_vuelta||'';
-  if(document.getElementById('setup-tar-peajes'))  document.getElementById('setup-tar-peajes').value  = t.peajes_habituales||'';
+  if(document.getElementById('setup-tar-punto')) document.getElementById('setup-tar-punto').value = t.valor_punto||'';
+  if(document.getElementById('setup-tar-nombre')) document.getElementById('setup-tar-nombre').value = t.descripcion||'';
   document.getElementById('setup-tar-cliente').dataset.editId = id;
-  // Mostrar botón guardar y ocultar agregar
-  document.getElementById('btn-guardar-tarifa').style.display  = '';
-  document.getElementById('btn-cancelar-tarifa').style.display = '';
-  toast('✏ Edita los datos y presiona 💾 GUARDAR');
+  toast('✏ Edita y presiona + AGREGAR para guardar');
   setTimeout(() => document.getElementById('setup-tar-cliente').scrollIntoView({behavior:'smooth', block:'center'}), 100);
-}
-
-function setupCancelarEdicionTarifa() {
-  document.getElementById('setup-tar-cliente').dataset.editId = '';
-  document.getElementById('setup-tar-cliente').value  = '';
-  document.getElementById('setup-tar-origen').value   = '';
-  document.getElementById('setup-tar-destino').value  = '';
-  document.getElementById('setup-tar-valor').value    = '';
-  if(document.getElementById('setup-tar-punto'))   document.getElementById('setup-tar-punto').value   = '';
-  if(document.getElementById('setup-tar-nombre'))  document.getElementById('setup-tar-nombre').value  = '';
-  if(document.getElementById('setup-tar-km-ida'))  document.getElementById('setup-tar-km-ida').value  = '';
-  if(document.getElementById('setup-tar-km-vta'))  document.getElementById('setup-tar-km-vta').value  = '';
-  if(document.getElementById('setup-tar-peajes'))  document.getElementById('setup-tar-peajes').value  = '';
-  document.getElementById('btn-guardar-tarifa').style.display  = 'none';
-  document.getElementById('btn-cancelar-tarifa').style.display = 'none';
-}
-
-async function setupGuardarEdicionTarifa() {
-  const id  = document.getElementById('setup-tar-cliente').dataset.editId;
-  if(!id) { toast('Sin tarifa seleccionada'); return; }
-  const cliente = document.getElementById('setup-tar-cliente').value;
-  const origen  = document.getElementById('setup-tar-origen').value.trim().toUpperCase();
-  const destino = document.getElementById('setup-tar-destino').value.trim().toUpperCase();
-  const valor   = parseInt((document.getElementById('setup-tar-valor').value||'0').replace(/[^0-9]/g,''))||0;
-  const punto   = parseInt((document.getElementById('setup-tar-punto')?.value||'0').replace(/[^0-9]/g,''))||0;
-  const nombre  = document.getElementById('setup-tar-nombre')?.value.trim().toUpperCase()||null;
-  const kmIda   = parseFloat(document.getElementById('setup-tar-km-ida')?.value)||null;
-  const kmVta   = parseFloat(document.getElementById('setup-tar-km-vta')?.value)||null;
-  const peajes  = parseFloat(document.getElementById('setup-tar-peajes')?.value)||null;
-  if(!cliente||!origen||!destino||!valor) { toast('Completa cliente, origen, destino y tarifa'); return; }
-  const {error} = await supa.from('kaptura_tarifarios').update({
-    cliente, origen, destino, tarifa_neta:valor, valor_punto:punto, descripcion:nombre,
-    km_ida:kmIda, km_vuelta:kmVta, peajes_habituales:peajes
-  }).eq('id', id);
-  if(error) { toast('Error: '+error.message); return; }
-  toast('✓ Tarifa actualizada');
-  setupCancelarEdicionTarifa();
-  cargarSetup();
 }
 
 async function setupEliminarTarifa(id) {
@@ -5952,7 +5860,7 @@ function renderSetupListaTarifas() {
   const el = document.getElementById('setup-lista-tarifario');
   const guardados = (DB.tarifarios||[]).map(t => `
     <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 10px;background:var(--bg);border-radius:7px;margin-bottom:5px;border:1px solid var(--border)">
-      <div style="font-size:12px;color:var(--text)">${t.cliente||'—'} · ${t.origen||'—'} → ${t.destino||'—'}<span style="font-size:10px;color:var(--muted);margin-left:6px">✓</span>${t.km_ida||t.km_vuelta?`<span style="font-size:10px;color:var(--muted);margin-left:6px">${(t.km_ida||0)+(t.km_vuelta||0)} km</span>`:''}</div>
+      <div style="font-size:12px;color:var(--text)">${t.cliente||'—'} · ${t.origen||'—'} → ${t.destino||'—'}<span style="font-size:10px;color:var(--muted);margin-left:6px">✓</span></div>
       <div style="display:flex;align-items:center;gap:8px">
         <span style="font-size:13px;font-weight:800;color:var(--green)">$${Number(t.tarifa_neta||0).toLocaleString('es-CL')}</span>
         <button data-tid="${t.id}" onclick="setupEditarTarifa(this.dataset.tid)" style="background:rgba(201,168,76,0.15);border:1px solid rgba(201,168,76,0.3);color:var(--gold);border-radius:5px;padding:3px 8px;font-size:10px;cursor:pointer;font-weight:700">✏</button>
