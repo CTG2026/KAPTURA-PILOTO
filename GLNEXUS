@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GL NEXUS · KAPTURA</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --bg:#0D1A1A;--surface:#121F1F;--surface2:#172626;--border:#1E3030;
+  --text:#F5F0E8;--muted:rgba(245,240,232,0.45);--gold:#C9A84C;
+  --green:#4CAF7A;--danger:#B05A5A;--blue:#4A90D9;
+}
+*{box-sizing:border-box;margin:0;padding:0;text-transform:uppercase}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.hdr{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 16px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100}
+.hdr-logo{font-size:18px;font-weight:900;color:var(--gold);letter-spacing:0.1em}
+.hdr-sub{font-size:9px;color:var(--muted);font-weight:700;letter-spacing:0.2em;margin-top:1px}
+.btn{border:none;border-radius:8px;padding:8px 14px;font-size:11px;font-weight:800;cursor:pointer;font-family:'DM Sans',sans-serif;letter-spacing:0.05em;text-transform:uppercase}
+.btn-gold{background:var(--gold);color:#000}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--muted)}
+.tabs{display:flex;gap:2px;background:var(--surface);border-bottom:1px solid var(--border);padding:0 16px}
+.tab{padding:12px 16px;font-size:11px;font-weight:800;letter-spacing:0.1em;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent}
+.tab.active{color:var(--gold);border-bottom-color:var(--gold)}
+.tab-content{display:none;padding:16px}
+.tab-content.active{display:block}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:18px}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px}
+.kpi-lbl{font-size:9px;font-weight:800;color:var(--muted);letter-spacing:0.15em;margin-bottom:6px}
+.kpi-val{font-size:22px;font-weight:900;color:var(--text)}
+.kpi-sub{font-size:10px;color:var(--muted);margin-top:3px}
+.sec-ttl{font-size:9px;font-weight:800;letter-spacing:0.18em;color:var(--gold);border-bottom:1px solid var(--border);padding-bottom:8px;margin-bottom:12px}
+.filtros{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center}
+.filtros select,.filtros input{background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:7px 10px;font-size:11px;color:var(--text);font-family:'DM Sans',sans-serif;text-transform:uppercase}
+table{width:100%;border-collapse:collapse}
+thead th{font-size:9px;font-weight:800;letter-spacing:0.12em;color:var(--muted);padding:8px 10px;border-bottom:1px solid var(--border);text-align:left}
+tbody td{padding:10px;border-bottom:1px solid var(--border);font-size:12px;color:var(--text)}
+tbody tr:hover{background:var(--surface2)}
+.badge{font-size:9px;font-weight:800;padding:2px 8px;border-radius:4px;letter-spacing:0.06em}
+.badge-asig{background:rgba(201,168,76,0.2);color:var(--gold)}
+.badge-proc{background:rgba(76,175,122,0.2);color:var(--green)}
+.badge-cerr{background:rgba(245,240,232,0.1);color:var(--muted)}
+.badge-borr{background:rgba(74,144,217,0.2);color:var(--blue)}
+.tot-row td{font-weight:800;color:var(--gold);border-top:2px solid var(--border);border-bottom:none;font-size:13px}
+.empty{text-align:center;padding:40px;color:var(--muted);font-size:13px}
+.torre-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:8px;display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center}
+.torre-emp{font-size:9px;font-weight:800;letter-spacing:0.12em;color:var(--muted);margin-bottom:3px}
+.torre-svc{font-size:13px;font-weight:800;color:var(--gold)}
+.torre-det{font-size:11px;color:var(--muted);margin-top:2px}
+.torre-estado{text-align:right}
+.dot{width:10px;height:10px;border-radius:50%}
+.dot-asig{background:var(--gold)}
+.dot-proc{background:var(--green)}
+.dot-cerr{background:var(--muted)}
+.dot-borr{background:var(--blue)}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div>
+    <div class="hdr-logo">⬡ GL NEXUS</div>
+    <div class="hdr-sub">Torre de Control · Red de Flotas</div>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center">
+    <div id="hdr-fecha" style="font-size:10px;color:var(--muted)"></div>
+    <button class="btn btn-ghost" onclick="salir()">⏏ Salir</button>
+  </div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="setTab('torre',this)">🗼 Torre de Control</div>
+  <div class="tab" onclick="setTab('comisiones',this)">💰 Comisiones</div>
+</div>
+
+<!-- TAB TORRE DE CONTROL -->
+<div class="tab-content active" id="tab-torre">
+  <div class="kpi-grid">
+    <div class="kpi"><div class="kpi-lbl">Servicios Activos</div><div class="kpi-val" id="t-activos">—</div><div class="kpi-sub">En proceso hoy</div></div>
+    <div class="kpi"><div class="kpi-lbl">Asignados</div><div class="kpi-val" id="t-asignados">—</div><div class="kpi-sub">Pendientes de inicio</div></div>
+    <div class="kpi"><div class="kpi-lbl">Cerrados Mes</div><div class="kpi-val" id="t-cerrados">—</div><div class="kpi-sub" id="t-cerrados-sub">Este mes</div></div>
+    <div class="kpi"><div class="kpi-lbl">Ingresos Mes</div><div class="kpi-val" id="t-ingresos">—</div><div class="kpi-sub">Tarifa neta acumulada</div></div>
+  </div>
+
+  <div class="filtros">
+    <select id="torre-fil-empresa" onchange="renderTorre()">
+      <option value="todas">Todas las empresas</option>
+    </select>
+    <select id="torre-fil-estado" onchange="renderTorre()">
+      <option value="todos">Todos los estados</option>
+      <option value="asignado">Asignados</option>
+      <option value="en_proceso">En Proceso</option>
+      <option value="ejecutado">Ejecutados</option>
+      <option value="cerrado">Cerrados</option>
+    </select>
+    <input type="month" id="torre-fil-mes" onchange="renderTorre()">
+  </div>
+
+  <div class="sec-ttl">Servicios</div>
+  <div id="torre-lista"><div class="empty">Cargando...</div></div>
+</div>
+
+<!-- TAB COMISIONES -->
+<div class="tab-content" id="tab-comisiones">
+  <div class="kpi-grid">
+    <div class="kpi"><div class="kpi-lbl">Comisión Total Mes</div><div class="kpi-val" id="c-total">—</div><div class="kpi-sub">5% sobre tarifa+IVA</div></div>
+    <div class="kpi"><div class="kpi-lbl">Servicios con Corretaje</div><div class="kpi-val" id="c-count">—</div><div class="kpi-sub">Con comisión asignada</div></div>
+    <div class="kpi"><div class="kpi-lbl">Cerrados</div><div class="kpi-val" id="c-cerrados">—</div><div class="kpi-sub">Comisión consolidada</div></div>
+    <div class="kpi"><div class="kpi-lbl">Pendientes</div><div class="kpi-val" id="c-pendientes">—</div><div class="kpi-sub">En proceso o asignados</div></div>
+  </div>
+
+  <div class="filtros">
+    <select id="com-fil-empresa" onchange="renderComisiones()">
+      <option value="todas">Todas las empresas</option>
+    </select>
+    <select id="com-fil-cliente" onchange="renderComisiones()">
+      <option value="todos">Todos los clientes</option>
+    </select>
+    <input type="month" id="com-fil-mes" onchange="renderComisiones()">
+  </div>
+
+  <div class="sec-ttl">Detalle Comisiones</div>
+  <div style="overflow-x:auto">
+    <table>
+      <thead>
+        <tr>
+          <th>Servicio</th>
+          <th>Empresa</th>
+          <th>Cliente</th>
+          <th>Fecha</th>
+          <th>Estado</th>
+          <th style="text-align:right">Tarifa Neta</th>
+          <th style="text-align:right">Tarifa+IVA</th>
+          <th style="text-align:right">Comisión 5%</th>
+        </tr>
+      </thead>
+      <tbody id="com-tabla"></tbody>
+      <tfoot><tr class="tot-row" id="com-totales"></tr></tfoot>
+    </table>
+  </div>
+</div>
+
+<script>
+const SUPA_URL = 'https://aqunzrukuruwzwywnurq.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFxdW56cnVrdXJ1d3p3eXdudXJxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTYzMTk2MDAsImV4cCI6MjAzMTg5NTYwMH0.wt0hU5V8OBC7p5GiCmv2HMIZBY9jkjPMXBcYQ59Vvsk';
+const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
+
+let _servicios = [];
+let _empresas  = [];
+
+const EMPRESAS_NEXUS = ['flota_297221','global_solutions'];
+const EMPRESA_LABEL  = {'flota_297221':'MADRID','global_solutions':'GLOBAL SOLUTIONS'};
+
+const fmt = v => '$'+Math.round(v||0).toLocaleString('es-CL');
+const hoy = new Date();
+const mesActual = hoy.getFullYear()+'-'+String(hoy.getMonth()+1).padStart(2,'0');
+
+function setTab(tab, el) {
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tab-'+tab).classList.add('active');
+}
+
+function salir() {
+  localStorage.removeItem('kaptura_session');
+  window.location.href = 'PRODUCCION.html';
+}
+
+async function init() {
+  // Verificar sesión
+  const sess = JSON.parse(localStorage.getItem('kaptura_session')||'{}');
+  if(sess.pin !== '1313') { window.location.href = 'PRODUCCION.html'; return; }
+
+  // Fecha
+  document.getElementById('hdr-fecha').textContent = hoy.toLocaleDateString('es-CL',{weekday:'short',day:'numeric',month:'short',year:'numeric'}).toUpperCase();
+
+  // Setear mes actual en filtros
+  document.getElementById('torre-fil-mes').value  = mesActual;
+  document.getElementById('com-fil-mes').value    = mesActual;
+
+  // Cargar servicios de todas las empresas
+  const promesas = EMPRESAS_NEXUS.map(emp =>
+    supa.from('servicios_piloto').select('*').eq('empresa',emp).order('fecha',{ascending:false}).limit(300)
+  );
+  const resultados = await Promise.all(promesas);
+  _servicios = resultados.flatMap((r,i) => (r.data||[]).map(s=>({...s,_emp:EMPRESAS_NEXUS[i]})));
+
+  // Poblar filtros empresa
+  ['torre-fil-empresa','com-fil-empresa'].forEach(id => {
+    const sel = document.getElementById(id);
+    EMPRESAS_NEXUS.forEach(e => {
+      const opt = document.createElement('option');
+      opt.value = e; opt.textContent = EMPRESA_LABEL[e]||e;
+      sel.appendChild(opt);
+    });
+  });
+
+  // Poblar filtro clientes en comisiones
+  const clientes = [...new Set(_servicios.map(s=>s.cliente).filter(Boolean))].sort();
+  const selCli = document.getElementById('com-fil-cliente');
+  clientes.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c; opt.textContent = c;
+    selCli.appendChild(opt);
+  });
+
+  renderTorre();
+  renderComisiones();
+}
+
+function getFilSvcs(filEmp, filMes) {
+  return _servicios.filter(s => {
+    if(filEmp !== 'todas' && s._emp !== filEmp) return false;
+    if(filMes && !(s.fecha||'').startsWith(filMes)) return false;
+    return true;
+  });
+}
+
+function renderTorre() {
+  const filEmp    = document.getElementById('torre-fil-empresa').value;
+  const filEstado = document.getElementById('torre-fil-estado').value;
+  const filMes    = document.getElementById('torre-fil-mes').value;
+
+  const svcs = getFilSvcs(filEmp, filMes);
+  const activos   = _servicios.filter(s=>s.estado==='en_proceso').length;
+  const asignados = _servicios.filter(s=>s.estado==='asignado').length;
+  const cerrados  = svcs.filter(s=>s.estado==='cerrado').length;
+  const ingresos  = svcs.filter(s=>s.estado==='cerrado').reduce((a,s)=>a+(s.ingreso_total||s.tarifa_neta||0),0);
+
+  document.getElementById('t-activos').textContent   = activos;
+  document.getElementById('t-asignados').textContent = asignados;
+  document.getElementById('t-cerrados').textContent  = cerrados;
+  document.getElementById('t-ingresos').textContent  = fmt(ingresos);
+
+  const filtrados = svcs.filter(s => filEstado==='todos' || s.estado===filEstado);
+  const lista = document.getElementById('torre-lista');
+
+  if(!filtrados.length) { lista.innerHTML = '<div class="empty">Sin servicios en este período</div>'; return; }
+
+  const badgeMap = {
+    asignado:'<span class="badge badge-asig">ASIGNADO</span>',
+    en_proceso:'<span class="badge badge-proc">EN PROCESO</span>',
+    cerrado:'<span class="badge badge-cerr">CERRADO</span>',
+    ejecutado:'<span class="badge badge-borr">EJECUTADO</span>',
+    borrador:'<span class="badge badge-borr">BORRADOR</span>',
+  };
+  const dotMap = {asignado:'dot-asig',en_proceso:'dot-proc',cerrado:'dot-cerr',ejecutado:'dot-borr',borrador:'dot-borr'};
+
+  lista.innerHTML = filtrados.map(s => `
+    <div class="torre-card">
+      <div class="dot ${dotMap[s.estado]||'dot-cerr'}"></div>
+      <div>
+        <div class="torre-emp">${EMPRESA_LABEL[s._emp]||s._emp}</div>
+        <div class="torre-svc">${s.servicio_id||'—'} <span style="font-size:10px;color:var(--muted);font-weight:700">${s.fecha||''}</span></div>
+        <div class="torre-det">${s.patente||'—'} · ${s.conductor||'—'} · ${s.cliente||'—'}</div>
+        <div class="torre-det">${s.origen||'—'} → ${s.destino||'—'}</div>
+      </div>
+      <div class="torre-estado">
+        ${badgeMap[s.estado]||''}
+        <div style="font-size:12px;font-weight:800;color:var(--gold);margin-top:6px">${s.ingreso_total||s.tarifa_neta?fmt(s.ingreso_total||s.tarifa_neta):''}</div>
+      </div>
+    </div>`).join('');
+}
+
+function renderComisiones() {
+  const filEmp = document.getElementById('com-fil-empresa').value;
+  const filCli = document.getElementById('com-fil-cliente').value;
+  const filMes = document.getElementById('com-fil-mes').value;
+
+  let svcs = getFilSvcs(filEmp, filMes);
+  if(filCli !== 'todos') svcs = svcs.filter(s=>s.cliente===filCli);
+  // Solo servicios con tarifa
+  svcs = svcs.filter(s=>s.tarifa_neta||s.ingreso_total);
+
+  const badgeMap = {
+    asignado:'<span class="badge badge-asig">ASIGNADO</span>',
+    en_proceso:'<span class="badge badge-proc">EN PROCESO</span>',
+    cerrado:'<span class="badge badge-cerr">CERRADO</span>',
+    ejecutado:'<span class="badge badge-borr">EJECUTADO</span>',
+    borrador:'<span class="badge badge-borr">BORRADOR</span>',
+  };
+
+  let totalNeta=0, totalIva=0, totalCom=0;
+  let cerradosCom=0, pendCom=0;
+
+  const filas = svcs.map(s=>{
+    const neta = s.tarifa_neta||s.ingreso_total||0;
+    const iva  = Math.round(neta*1.19);
+    const com  = Math.round(iva*0.05);
+    totalNeta += neta; totalIva += iva; totalCom += com;
+    if(s.estado==='cerrado') cerradosCom+=com; else pendCom+=com;
+    return `<tr>
+      <td style="font-weight:800;color:var(--gold)">${s.servicio_id||'—'}</td>
+      <td style="color:var(--muted)">${EMPRESA_LABEL[s._emp]||s._emp}</td>
+      <td>${s.cliente||'—'}</td>
+      <td style="color:var(--muted)">${s.fecha||'—'}</td>
+      <td>${badgeMap[s.estado]||''}</td>
+      <td style="text-align:right">${fmt(neta)}</td>
+      <td style="text-align:right">${fmt(iva)}</td>
+      <td style="text-align:right;color:var(--green);font-weight:800">${fmt(com)}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('com-tabla').innerHTML = filas || '<tr><td colspan="8" class="empty">Sin servicios en este período</td></tr>';
+  document.getElementById('com-totales').innerHTML = `
+    <td colspan="5" style="text-align:right;padding:10px">TOTALES</td>
+    <td style="text-align:right;padding:10px">${fmt(totalNeta)}</td>
+    <td style="text-align:right;padding:10px">${fmt(totalIva)}</td>
+    <td style="text-align:right;padding:10px;color:var(--green)">${fmt(totalCom)}</td>`;
+
+  document.getElementById('c-total').textContent     = fmt(totalCom);
+  document.getElementById('c-count').textContent     = svcs.length;
+  document.getElementById('c-cerrados').textContent  = fmt(cerradosCom);
+  document.getElementById('c-pendientes').textContent= fmt(pendCom);
+}
+
+init();
+</script>
+</body>
+</html>
