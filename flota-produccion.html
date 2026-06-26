@@ -4342,9 +4342,10 @@ function docBtnStyle(tipo, id) {
 
 function abrirDocs(tipo, entId) {
   _docsCtx = {tipo:tipo, entId:entId};
-  var titulo = tipo === "equipo" ? "EQUIPO" : tipo === "conductor" ? "CONDUCTOR" : "EMPRESA";
-  document.getElementById("docs-titulo").textContent = titulo;
-  document.getElementById("docs-sub").textContent = entId;
+  var label = tipo === "equipo" ? "DOCUMENTOS EQUIPOS" : tipo === "conductor" ? "DOCUMENTOS CONDUCTORES" : "DOCUMENTOS EMPRESA";
+  var sub   = tipo === "equipo" ? "PATENTE "+entId.toUpperCase() : entId.toUpperCase();
+  document.getElementById("docs-titulo").textContent = label;
+  document.getElementById("docs-sub").textContent = sub;
   renderDocumentos();
   document.getElementById("modal-docs").style.display = "flex";
 }
@@ -5053,7 +5054,7 @@ function imprimirInforme() {
 </div>
 
 <!-- MODAL DOCS -->
-<div class="overlay" id="modal-docs" style="display:none"><div class="modal"><div class="modal-hdr"><div><div class="modal-ttl">📎 Docs — <span id="docs-titulo"></span></div><div class="modal-sub" id="docs-sub"></div></div><button class="modal-cls" onclick="cerrar('modal-docs')">✕</button></div><div class="modal-body" id="docs-body"></div></div></div>
+<div class="overlay" id="modal-docs" style="display:none"><div class="modal"><div class="modal-hdr"><div><div class="modal-ttl" id="docs-titulo" style="font-size:15px;font-weight:900;text-transform:uppercase;letter-spacing:0.05em"></div><div class="modal-sub" id="docs-sub" style="font-size:15px;font-weight:900;text-transform:uppercase;letter-spacing:0.05em;color:var(--text);margin-top:2px"></div></div><button class="modal-cls" onclick="cerrar('modal-docs')">✕</button></div><div class="modal-body" id="docs-body"></div></div></div>
 
 <!-- MODAL EVALUACIÓN -->
 <div class="overlay" id="modal-evaluacion" style="display:none">
@@ -7419,7 +7420,7 @@ iniciarLogin();
 </div>
 
 <!-- MODAL DOCS -->
-<div class="overlay" id="modal-docs" style="display:none"><div class="modal"><div class="modal-hdr"><div><div class="modal-ttl">📎 Docs — <span id="docs-titulo"></span></div><div class="modal-sub" id="docs-sub"></div></div><button class="modal-cls" onclick="cerrar('modal-docs')">✕</button></div><div class="modal-body" id="docs-body"></div></div></div>
+<div class="overlay" id="modal-docs" style="display:none"><div class="modal"><div class="modal-hdr"><div><div class="modal-ttl" id="docs-titulo" style="font-size:15px;font-weight:900;text-transform:uppercase;letter-spacing:0.05em"></div><div class="modal-sub" id="docs-sub" style="font-size:15px;font-weight:900;text-transform:uppercase;letter-spacing:0.05em;color:var(--text);margin-top:2px"></div></div><button class="modal-cls" onclick="cerrar('modal-docs')">✕</button></div><div class="modal-body" id="docs-body"></div></div></div>
 
 <!-- MODAL EVALUACIÓN -->
 <div class="overlay" id="modal-evaluacion" style="display:none">
