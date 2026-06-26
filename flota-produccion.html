@@ -426,6 +426,17 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
       <button class="btn btn-sm btn-ghost" id="liq-fil-por_cobrar" onclick="filtrarLiquidaciones('por_cobrar')">Por Cobrar</button>
       <button class="btn btn-sm btn-ghost" id="liq-fil-cobrada" onclick="filtrarLiquidaciones('cobrada')">Cobradas</button>
     </div>
+    <!-- Filtros vencimiento + cliente -->
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;align-items:center">
+      <button class="pill-filtro" id="liq-venc-vencida"  onclick="toggleLiqVenc('vencida')" >🔴 Vencida</button>
+      <button class="pill-filtro" id="liq-venc-urgente"  onclick="toggleLiqVenc('urgente')" >🟠 ≤7 días</button>
+      <button class="pill-filtro" id="liq-venc-proximo"  onclick="toggleLiqVenc('proximo')" >🟡 ≤30 días</button>
+      <button class="pill-filtro" id="liq-venc-ok"       onclick="toggleLiqVenc('ok')"      >🟢 Al día</button>
+      <select id="liq-fil-cliente" onchange="filtrarLiqCliente(this.value)" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:12px;color:var(--text);font-family:inherit">
+        <option value="">Todos los clientes</option>
+      </select>
+      <button class="btn btn-sm btn-ghost" onclick="resetLiqFiltros()" style="font-size:11px">✕ Limpiar</button>
+    </div>
     <!-- Lista liquidaciones -->
     <div id="liq-lista"><div class="empty">Sin liquidaciones — crea la primera con + Nueva Liquidación</div></div>
   </div>
@@ -6110,6 +6121,8 @@ async function setupGuardarTodo() {
 // ══════════════════════════════════════
 
 let _liqFiltro = 'todas';
+let _liqFiltroVenc = '';
+let _liqFiltroCliente = '';
 let _liqData = [];
 let _liqSvcsSeleccionados = [];
 let _liqClienteActual = '';
@@ -6132,6 +6145,53 @@ function filtrarLiquidaciones(estado) {
   const btn = document.getElementById('liq-fil-'+estado);
   if(btn) { btn.style.background = 'var(--gold)'; btn.style.color = '#000'; }
   renderLiquidaciones();
+}
+
+function toggleLiqVenc(tipo) {
+  _liqFiltroVenc = _liqFiltroVenc === tipo ? '' : tipo;
+  ['vencida','urgente','proximo','ok'].forEach(t => {
+    const b = document.getElementById('liq-venc-'+t);
+    if(b) b.classList.toggle('activo', _liqFiltroVenc === t);
+  });
+  renderLiquidaciones();
+}
+
+function filtrarLiqCliente(val) {
+  _liqFiltroCliente = val;
+  renderLiquidaciones();
+}
+
+function resetLiqFiltros() {
+  _liqFiltro = 'todas';
+  _liqFiltroVenc = '';
+  _liqFiltroCliente = '';
+  document.querySelectorAll('[id^="liq-fil-"]').forEach(b => { b.style.background='var(--surface2)'; b.style.color='var(--muted)'; });
+  const btnTodas = document.getElementById('liq-fil-todas');
+  if(btnTodas) { btnTodas.style.background='var(--gold)'; btnTodas.style.color='#000'; }
+  ['vencida','urgente','proximo','ok'].forEach(t => { const b=document.getElementById('liq-venc-'+t); if(b) b.classList.remove('activo'); });
+  const selCli = document.getElementById('liq-fil-cliente');
+  if(selCli) selCli.value = '';
+  renderLiquidaciones();
+}
+
+function poblarSelectClienteLiq() {
+  const sel = document.getElementById('liq-fil-cliente');
+  if(!sel) return;
+  const actual = sel.value;
+  const clientes = [...new Set((_liqData||[]).map(l=>l.cliente).filter(Boolean))].sort();
+  sel.innerHTML = '<option value="">Todos los clientes</option>' + clientes.map(c=>`<option value="${c}">${c}</option>`).join('');
+  sel.value = actual;
+}
+
+function _liqSemaforo(l, hoy) {
+  if(!l.fecha_vencimiento) return 'sf';
+  if(['cobrada','factoring'].includes(l.estado)) return 'ok';
+  const venc = new Date(l.fecha_vencimiento); venc.setHours(0,0,0,0);
+  const dias = Math.round((venc - hoy) / 864e5);
+  if(dias < 0) return 'vencida';
+  if(dias <= 7) return 'urgente';
+  if(dias <= 30) return 'proximo';
+  return 'ok';
 }
 
 async function eliminarLiquidacion(id, e) {
@@ -6158,9 +6218,12 @@ async function eliminarLiquidacion(id, e) {
 function renderLiquidaciones() {
   const lista = document.getElementById('liq-lista');
   const hoy = new Date(); hoy.setHours(0,0,0,0);
-  const items = _liqFiltro === 'todas' ? _liqData : _liqData.filter(l => l.estado === _liqFiltro);
+  poblarSelectClienteLiq();
+  let items = _liqFiltro === 'todas' ? _liqData : _liqData.filter(l => l.estado === _liqFiltro);
+  if(_liqFiltroVenc)    items = items.filter(l => _liqSemaforo(l, hoy) === _liqFiltroVenc);
+  if(_liqFiltroCliente) items = items.filter(l => l.cliente === _liqFiltroCliente);
   if(!items.length) {
-    lista.innerHTML = '<div class="empty">Sin liquidaciones en este estado</div>';
+    lista.innerHTML = '<div class="empty">Sin liquidaciones para los filtros seleccionados</div>';
     return;
   }
   lista.innerHTML = items.map(l => {
@@ -6441,10 +6504,13 @@ async function verLiquidacion(id) {
     </div>` : ''}`;
 
   // Botones según estado
+  const puedeElim = (()=>{const r=_sessionUsuario?.rol,p=_sessionUsuario?.pin,em=_sessionUsuario?.empresa;return r==='admin_kaptura'||(r==='coordinador'&&p==='1996'&&em==='flota_297221')||(r==='coordinador'&&p==='0101'&&em==='global_solutions');})();
+  const btnElimModal = puedeElim ? `<button class="btn" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:var(--danger)" onclick="eliminarLiquidacion('${id}',event);cerrar('modal-ver-liq')">✕ Eliminar</button>` : '';
   const btnEditar = `<button class="btn btn-outline" onclick="editarLiquidacion('${id}')">✏ Editar</button>`;
   const btns = {
     borrador: `<button class="btn btn-ghost" onclick="cerrar('modal-ver-liq')">Cerrar</button>
       ${btnEditar}
+      ${btnElimModal}
       <button class="btn btn-outline" onclick="liqAdjuntarSII('${id}')">📎 Adjuntar Factura</button>
       <button class="btn btn-navy" onclick="liqCambiarEstado('${id}','emitida')">Emitir →</button>`,
     emitida: `<button class="btn btn-ghost" onclick="cerrar('modal-ver-liq')">Cerrar</button>
@@ -6474,7 +6540,8 @@ async function verLiquidacion(id) {
       <button class="btn btn-outline" onclick="liqAdjuntarSII('${id}')">📎 Adjuntar Factura SII</button>
       <button class="btn btn-navy" onclick="liqCambiarEstado('${id}','en_cobro')">💰 En Cobro</button>`,
     cobrada: `<button class="btn btn-ghost" onclick="cerrar('modal-ver-liq')">Cerrar</button>
-      ${btnEditar}`
+      ${btnEditar}
+      ${btnElimModal}`
   };
   document.getElementById('ver-liq-ftr').innerHTML = btns[liq.estado] || btns.borrador;
   document.getElementById('modal-ver-liq').style.display = 'flex';
