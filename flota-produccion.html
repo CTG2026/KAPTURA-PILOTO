@@ -5764,7 +5764,7 @@ async function setupEditarTarifa(id) {
   document.getElementById('setup-tar-destino').value    = (t.destino||'').toUpperCase();
   document.getElementById('setup-tar-valor').value      = t.tarifa_neta||'';
   if(document.getElementById('setup-tar-punto')) document.getElementById('setup-tar-punto').value = t.valor_punto||'';
-  if(document.getElementById('setup-tar-nombre')) document.getElementById('setup-tar-nombre').value = t.descripcion||'';
+  if(document.getElementById('setup-tar-nombre')) document.getElementById('setup-tar-nombre').value = '';
   document.getElementById('setup-tar-km-ida').value     = t.km_ida||'';
   document.getElementById('setup-tar-km-vuelta').value  = t.km_vuelta||'';
   document.getElementById('setup-tar-tag').value        = t.peajes_habituales||'';
@@ -5791,7 +5791,7 @@ async function setupGuardarTarifaEditada() {
   const tagTeor = parseFloat(document.getElementById('setup-tar-tag').value) || 0;
   if(!cliente || !origen || !destino || !valor) { toast('Completa cliente, origen, destino y tarifa'); return; }
   const {error} = await supa.from('kaptura_tarifarios').update({
-    cliente, origen, destino, tarifa_neta:valor, valor_punto:punto, descripcion:nombre,
+    cliente, origen, destino, tarifa_neta:valor, valor_punto:punto,
     km_ida:kmIda, km_vuelta:kmVuelta, peajes_habituales:tagTeor, empresa:emp
   }).eq('id', id);
   if(error) { toast('Error: '+error.message); return; }
@@ -6000,8 +6000,7 @@ async function setupGuardarTodo() {
     _setupConductores = [];
     // Guardar tarifas pendientes
     for(const t of _setupTarifas) {
-      const {error} = await supa.from('kaptura_tarifarios').insert({cliente:t.cliente, origen:t.origen, destino:t.destino, tarifa_neta:t.valor, valor_punto:t.punto||0, empresa:DB._empresa, activo:true});
-      // nombre descriptivo guardado en DB si columna existe
+      const {error} = await supa.from('kaptura_tarifarios').insert({cliente:t.cliente, origen:t.origen, destino:t.destino, tarifa_neta:t.valor, valor_punto:t.punto||0, km_ida:t.kmIda||0, km_vuelta:t.kmVuelta||0, peajes_habituales:t.tagTeor||0, empresa:DB._empresa, activo:true});
       if(error) throw new Error('Tarifa: '+error.message);
     }
     _setupTarifas = [];
