@@ -878,6 +878,13 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
       </div>
     </div>
 
+    <!-- 1B. DOCUMENTOS EMPRESA -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px">
+      <div style="font-size:11px;font-weight:700;color:var(--gold);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px">📎 Documentos Empresa</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:12px">Documentos legales y tributarios de la empresa.</div>
+      <button onclick="abrirDocs('empresa', DB._empresa)" style="width:100%;background:var(--surface2);border:1px solid var(--gold);border-radius:8px;padding:12px;font-size:13px;font-weight:700;color:var(--gold);cursor:pointer">📁 Ver / Gestionar Documentos Empresa</button>
+    </div>
+
     <!-- 2. FLOTA / EQUIPOS -->
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px">
       <div style="font-size:11px;font-weight:700;color:var(--gold);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px">2. Flota / Equipos</div>
@@ -1140,12 +1147,6 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
       </div>
     </div>
 
-    <!-- 📎 DOCUMENTOS EMPRESA -->
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px">
-      <div style="font-size:11px;font-weight:700;color:var(--gold);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px">📎 Documentos Empresa</div>
-      <div style="font-size:11px;color:var(--muted);margin-bottom:12px">Documentos legales y tributarios de la empresa.</div>
-      <button onclick="abrirDocs('empresa', DB._empresa)" style="width:100%;background:var(--surface2);border:1px solid var(--gold);border-radius:8px;padding:12px;font-size:13px;font-weight:700;color:var(--gold);cursor:pointer">📁 Ver / Gestionar Documentos Empresa</button>
-    </div>
 
     <!-- 🔗 PORTAL DOCUMENTOS -->
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px">
@@ -4300,20 +4301,12 @@ var TIPOS_EMPRESA = {
   legal: [
     {id:"constitucion",lbl:"Constitución de Sociedad"},
     {id:"cert_vigencia",lbl:"Certificado de Vigencia"},
-    {id:"empresa_legal_1",lbl:"Documento Legal 1"},
-    {id:"empresa_legal_2",lbl:"Documento Legal 2"},
-    {id:"empresa_legal_3",lbl:"Documento Legal 3"},
-    {id:"empresa_legal_4",lbl:"Documento Legal 4"},
-    {id:"empresa_legal_5",lbl:"Documento Legal 5"}
+    {id:"empresa_legal_1",lbl:"Otro Documento Legal"}
   ],
   tributario: [
     {id:"carpeta_trib",lbl:"Carpeta Tributaria"},
     {id:"cert_tributario",lbl:"Certificados Tributarios"},
-    {id:"empresa_trib_1",lbl:"Documento Tributario 1"},
-    {id:"empresa_trib_2",lbl:"Documento Tributario 2"},
-    {id:"empresa_trib_3",lbl:"Documento Tributario 3"},
-    {id:"empresa_trib_4",lbl:"Documento Tributario 4"},
-    {id:"empresa_trib_5",lbl:"Documento Tributario 5"}
+    {id:"empresa_trib_1",lbl:"Otro Documento Tributario"}
   ]
 };
 var _docsCtx = {tipo:null, entId:null};
