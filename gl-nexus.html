@@ -387,7 +387,12 @@ function renderAgenda(){
     ? []    // filtro excluye resueltos
     : base.filter(t=>t.estado==='resuelto');
   const orden={vencida:0,urgente:1,proximo:2,ok:3,sf:4};
-  pend.sort((a,b)=>(orden[agSem(a.fecha_limite).cls]||5)-(orden[agSem(b.fecha_limite).cls]||5));
+  const ordUrgencia={alta:0,media:1,baja:2};
+  pend.sort((a,b)=>{
+    const uA=ordUrgencia[a.urgencia]??1, uB=ordUrgencia[b.urgencia]??1;
+    if(uA!==uB) return uA-uB;
+    return (orden[agSem(a.fecha_limite).cls]||5)-(orden[agSem(b.fecha_limite).cls]||5);
+  });
 
   function card(t){
     const sem=agSem(t.fecha_limite);
