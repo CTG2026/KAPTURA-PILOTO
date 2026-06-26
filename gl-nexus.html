@@ -64,6 +64,12 @@ tbody tr:hover{background:var(--surface2)}
 .ag-card.ok{border-left-color:#639922}
 .ag-card.sf{border-left-color:var(--gold)}
 .ag-card.resuelta{border-left-color:var(--border);opacity:0.5}
+.ag-filtros{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;padding:10px 12px;background:#1B2E35;border-radius:8px}
+.ag-pill{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);border-radius:20px;padding:4px 11px;font-size:10px;font-weight:800;color:rgba(255,255,255,0.5);cursor:pointer;font-family:inherit;letter-spacing:0.05em;text-transform:uppercase;transition:all 0.15s}
+.ag-pill.activo{background:rgba(201,168,76,0.2);border-color:var(--gold);color:var(--gold)}
+.ag-pill-sep{width:1px;background:rgba(255,255,255,0.1);margin:0 4px;align-self:stretch}
+.ag-pill-reset{background:transparent;border:none;font-size:10px;font-weight:700;color:rgba(255,255,255,0.3);cursor:pointer;font-family:inherit;padding:4px 8px;letter-spacing:0.05em;text-transform:uppercase}
+.ag-pill-reset:hover{color:rgba(255,255,255,0.6)}
 .ag-card-hdr{padding:12px 14px;display:flex;justify-content:space-between;align-items:flex-start;cursor:pointer}
 .ag-card-hdr:hover{background:var(--surface2)}
 .ag-title{font-size:13px;font-weight:800;color:var(--text);margin-bottom:7px}
@@ -184,6 +190,20 @@ tbody tr:hover{background:var(--surface2)}
     </div>
     <button class="ag-btn-new" onclick="abrirModalTarea()">+ Nueva tarea</button>
   </div>
+  <div class="ag-filtros">
+    <button class="ag-pill" data-grp="estado" data-val="pendiente" onclick="toggleAgPill(this)">Pendiente</button>
+    <button class="ag-pill" data-grp="estado" data-val="en_proceso" onclick="toggleAgPill(this)">En Proceso</button>
+    <button class="ag-pill" data-grp="estado" data-val="resuelto" onclick="toggleAgPill(this)">Resuelto</button>
+    <div class="ag-pill-sep"></div>
+    <button class="ag-pill" data-grp="urgencia" data-val="alta" onclick="toggleAgPill(this)">U. Alta</button>
+    <button class="ag-pill" data-grp="urgencia" data-val="media" onclick="toggleAgPill(this)">U. Media</button>
+    <button class="ag-pill" data-grp="urgencia" data-val="baja" onclick="toggleAgPill(this)">U. Baja</button>
+    <div class="ag-pill-sep"></div>
+    <button class="ag-pill" data-grp="prioridad" data-val="alta" onclick="toggleAgPill(this)">P. Alta</button>
+    <button class="ag-pill" data-grp="prioridad" data-val="media" onclick="toggleAgPill(this)">P. Media</button>
+    <button class="ag-pill" data-grp="prioridad" data-val="baja" onclick="toggleAgPill(this)">P. Baja</button>
+    <button class="ag-pill-reset" onclick="resetAgFiltros()">✕ Limpiar</button>
+  </div>
   <div id="ag-lista"><div class="empty">Cargando agenda...</div></div>
 </div>
 
@@ -223,6 +243,21 @@ const mesActual = hoy.getFullYear()+'-'+String(hoy.getMonth()+1).padStart(2,'0')
 
 let _servicios = [];
 let _agenda    = [];
+let _agFiltros = {estado: new Set(), urgencia: new Set(), prioridad: new Set()};
+
+function toggleAgPill(btn) {
+  const grp = btn.dataset.grp;
+  const val = btn.dataset.val;
+  if(_agFiltros[grp].has(val)) { _agFiltros[grp].delete(val); btn.classList.remove('activo'); }
+  else { _agFiltros[grp].add(val); btn.classList.add('activo'); }
+  renderAgenda();
+}
+
+function resetAgFiltros() {
+  _agFiltros = {estado: new Set(), urgencia: new Set(), prioridad: new Set()};
+  document.querySelectorAll('.ag-pill').forEach(b => b.classList.remove('activo'));
+  renderAgenda();
+}
 
 function setTab(tab, el) {
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
@@ -333,8 +368,24 @@ function renderAgenda(){
   const lista=document.getElementById('ag-lista');
   if(!lista) return;
   if(!_agenda.length){lista.innerHTML='<div class="empty">Sin tareas — crea la primera con + Nueva tarea</div>';return;}
-  const pend=_agenda.filter(t=>t.estado!=='resuelto');
-  const done=_agenda.filter(t=>t.estado==='resuelto');
+
+  // Aplicar filtros activos
+  const hayFiltros = _agFiltros.estado.size>0 || _agFiltros.urgencia.size>0 || _agFiltros.prioridad.size>0;
+  let base = hayFiltros ? _agenda.filter(t => {
+    if(_agFiltros.estado.size>0 && !_agFiltros.estado.has(t.estado)) return false;
+    if(_agFiltros.urgencia.size>0 && !_agFiltros.urgencia.has(t.urgencia)) return false;
+    if(_agFiltros.prioridad.size>0 && !_agFiltros.prioridad.has(t.prioridad)) return false;
+    return true;
+  }) : _agenda;
+
+  if(!base.length){lista.innerHTML='<div class="empty">Sin tareas para los filtros seleccionados</div>';return;}
+
+  const pend = hayFiltros && _agFiltros.estado.has('resuelto') && _agFiltros.estado.size===1
+    ? base  // solo resueltos
+    : base.filter(t=>t.estado!=='resuelto');
+  const done = hayFiltros && _agFiltros.estado.size>0 && !_agFiltros.estado.has('resuelto')
+    ? []    // filtro excluye resueltos
+    : base.filter(t=>t.estado==='resuelto');
   const orden={vencida:0,urgente:1,proximo:2,ok:3,sf:4};
   pend.sort((a,b)=>(orden[agSem(a.fecha_limite).cls]||5)-(orden[agSem(b.fecha_limite).cls]||5));
 
