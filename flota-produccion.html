@@ -1140,6 +1140,26 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
       </div>
     </div>
 
+    <!-- 📎 DOCUMENTOS EMPRESA -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px">
+      <div style="font-size:11px;font-weight:700;color:var(--gold);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px">📎 Documentos Empresa</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:12px">Documentos legales y tributarios de la empresa.</div>
+      <button onclick="abrirDocs('empresa', DB._empresa)" style="width:100%;background:var(--surface2);border:1px solid var(--gold);border-radius:8px;padding:12px;font-size:13px;font-weight:700;color:var(--gold);cursor:pointer">📁 Ver / Gestionar Documentos Empresa</button>
+    </div>
+
+    <!-- 🔗 PORTAL DOCUMENTOS -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px">
+      <div style="font-size:11px;font-weight:700;color:var(--gold);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px">🔗 Portal Documentos — Compartir con Clientes</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:12px">Genera un link público para que tus clientes vean los documentos vigentes de tu empresa, equipos y conductores.</div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <button onclick="generarLinkDocs()" style="background:var(--gold);border:none;border-radius:8px;padding:10px 16px;font-size:12px;font-weight:800;color:#000;cursor:pointer">🔗 Generar Link</button>
+        <div id="docs-link-container" style="display:none;flex:1;min-width:200px">
+          <input id="docs-link-input" readonly style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:11px;color:var(--text);font-family:inherit">
+        </div>
+        <button id="docs-link-copiar" onclick="copiarLinkDocs()" style="display:none;background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:8px 12px;font-size:12px;font-weight:700;color:var(--text);cursor:pointer">📋 Copiar</button>
+      </div>
+    </div>
+
     <div style="height:80px"></div>
   </div>
 </main>
@@ -4252,6 +4272,26 @@ async function cerrarServicio() {
 // DOCUMENTOS SETUP
 var TIPOS_EQUIPO = [{id:"permiso_circ",lbl:"Permiso Circulacion"},{id:"rev_tecnica",lbl:"Revision Tecnica"},{id:"soap",lbl:"SOAP"},{id:"resol_san",lbl:"Resolucion Sanitaria"},{id:"seguro",lbl:"Seguro"},{id:"otro",lbl:"Otro"}];
 var TIPOS_CONDUCTOR = [{id:"licencia",lbl:"Licencia de Conducir"},{id:"contrato",lbl:"Contrato"},{id:"otro",lbl:"Otro"}];
+var TIPOS_EMPRESA = {
+  legal: [
+    {id:"constitucion",lbl:"Constitución de Sociedad"},
+    {id:"cert_vigencia",lbl:"Certificado de Vigencia"},
+    {id:"empresa_legal_1",lbl:"Documento Legal 1"},
+    {id:"empresa_legal_2",lbl:"Documento Legal 2"},
+    {id:"empresa_legal_3",lbl:"Documento Legal 3"},
+    {id:"empresa_legal_4",lbl:"Documento Legal 4"},
+    {id:"empresa_legal_5",lbl:"Documento Legal 5"}
+  ],
+  tributario: [
+    {id:"carpeta_trib",lbl:"Carpeta Tributaria"},
+    {id:"cert_tributario",lbl:"Certificados Tributarios"},
+    {id:"empresa_trib_1",lbl:"Documento Tributario 1"},
+    {id:"empresa_trib_2",lbl:"Documento Tributario 2"},
+    {id:"empresa_trib_3",lbl:"Documento Tributario 3"},
+    {id:"empresa_trib_4",lbl:"Documento Tributario 4"},
+    {id:"empresa_trib_5",lbl:"Documento Tributario 5"}
+  ]
+};
 var _docsCtx = {tipo:null, entId:null};
 
 function semaforo(f) {
@@ -4275,37 +4315,51 @@ function docBtnStyle(tipo, id) {
 
 function abrirDocs(tipo, entId) {
   _docsCtx = {tipo:tipo, entId:entId};
-  document.getElementById("docs-titulo").textContent = tipo === "equipo" ? "EQUIPO" : "CONDUCTOR";
+  var titulo = tipo === "equipo" ? "EQUIPO" : tipo === "conductor" ? "CONDUCTOR" : "EMPRESA";
+  document.getElementById("docs-titulo").textContent = titulo;
   document.getElementById("docs-sub").textContent = entId;
   renderDocumentos();
   document.getElementById("modal-docs").style.display = "flex";
 }
 
-function renderDocumentos() {
-  var tipos = _docsCtx.tipo === "equipo" ? TIPOS_EQUIPO : TIPOS_CONDUCTOR;
-  var docsEnt = (DB.documentos||[]).filter(function(d){ return d.tipo_entidad===_docsCtx.tipo && d.entidad_id===_docsCtx.entId; });
+function _renderSeccionDocs(tipos, docsEnt) {
   var html = "";
   tipos.forEach(function(t) {
     var doc = docsEnt.find(function(d){ return d.tipo_doc===t.id; });
-    var sem = doc ? semaforo(doc.fecha_vencimiento) : "<span style=\"color:var(--muted);font-size:10px\">Sin documento</span>";
-    html += "<div style=\"background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px\">";
-    html += "<div style=\"display:flex;justify-content:space-between;align-items:center;margin-bottom:8px\">";
-    html += "<div style=\"font-size:12px;font-weight:800;color:var(--text)\">"+t.lbl+"</div><div style=\"font-size:11px\">"+sem+"</div></div>";
+    var sem = doc ? semaforo(doc.fecha_vencimiento) : '<span style="color:var(--muted);font-size:10px">Sin documento</span>';
+    html += '<div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px">';
+    html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">';
+    html += '<div style="font-size:12px;font-weight:800;color:var(--text)">'+t.lbl+'</div><div style="font-size:11px">'+sem+'</div></div>';
     if(doc && doc.url) {
-      html += "<div style=\"margin-bottom:8px;display:flex;gap:10px;align-items:center\">";
-      html += "<a href=\""+doc.url+"\" target=\"_blank\" style=\"font-size:11px;color:var(--gold);font-weight:700\">👁 Ver</a>";
-      html += "<span style=\"font-size:10px;color:var(--muted)\">"+(doc.fecha_vencimiento||"")+"</span>";
-      html += "<button data-did=\""+doc.id+"\" onclick=\"eliminarDocItem(this.dataset.did)\" style=\"background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:var(--danger);border-radius:4px;padding:2px 7px;font-size:9px;cursor:pointer\">✕</button></div>";
+      html += '<div style="margin-bottom:8px;display:flex;gap:10px;align-items:center">';
+      html += '<a href="'+doc.url+'" target="_blank" style="font-size:11px;color:var(--gold);font-weight:700">👁 Ver</a>';
+      html += '<span style="font-size:10px;color:var(--muted)">'+(doc.fecha_vencimiento||'')+'</span>';
+      html += '<button data-did="'+doc.id+'" onclick="eliminarDocItem(this.dataset.did)" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:var(--danger);border-radius:4px;padding:2px 7px;font-size:9px;cursor:pointer">✕</button></div>';
     }
-    html += "<div style=\"display:grid;grid-template-columns:1fr 1fr auto;gap:6px;align-items:flex-end\">";
-    html += "<div><div style=\"font-size:9px;color:var(--muted);margin-bottom:3px\">FECHA VENC.</div><input type=\"date\" id=\"df-"+t.id+"\" value=\""+(doc&&doc.fecha_vencimiento?doc.fecha_vencimiento:"")+"\" style=\"width:100%;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:6px 8px;font-size:11px;color:var(--text);font-family:inherit\"></div>";
+    html += '<div style="display:grid;grid-template-columns:1fr 1fr auto;gap:6px;align-items:flex-end">';
+    html += '<div><div style="font-size:9px;color:var(--muted);margin-bottom:3px">FECHA VENC.</div><input type="date" id="df-'+t.id+'" value="'+(doc&&doc.fecha_vencimiento?doc.fecha_vencimiento:'')+'" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:6px 8px;font-size:11px;color:var(--text);font-family:inherit"></div>';
     if(doc && doc.url) {
-      html += "<div><div style=\"font-size:9px;color:var(--muted);margin-bottom:3px\">ADJUNTAR</div><div style=\"font-size:11px;color:var(--green);font-weight:700;padding:6px 0\">✓ Documento adjuntado</div></div>";
+      html += '<div><div style="font-size:9px;color:var(--muted);margin-bottom:3px">ADJUNTAR</div><div style="font-size:11px;color:var(--green);font-weight:700;padding:6px 0">✓ Documento adjuntado</div></div>';
     } else {
-      html += "<div><div style=\"font-size:9px;color:var(--muted);margin-bottom:3px\">ADJUNTAR</div><input type=\"file\" id=\"ff-"+t.id+"\" accept=\"image/*,.pdf\" capture=\"environment\" style=\"width:100%;font-size:10px;color:var(--text)\"></div>";
+      html += '<div><div style="font-size:9px;color:var(--muted);margin-bottom:3px">ADJUNTAR</div><input type="file" id="ff-'+t.id+'" accept="image/*,.pdf" style="width:100%;font-size:10px;color:var(--text)"></div>';
     }
-    html += "<button data-tid=\""+t.id+"\" onclick=\"subirDoc(this.dataset.tid)\" style=\"background:var(--gold);border:none;border-radius:7px;padding:8px 12px;font-size:11px;font-weight:800;color:#000;cursor:pointer\">💾</button></div></div>";
+    html += '<button data-tid="'+t.id+'" onclick="subirDoc(this.dataset.tid)" style="background:var(--gold);border:none;border-radius:7px;padding:8px 12px;font-size:11px;font-weight:800;color:#000;cursor:pointer">💾</button></div></div>';
   });
+  return html;
+}
+
+function renderDocumentos() {
+  var docsEnt = (DB.documentos||[]).filter(function(d){ return d.tipo_entidad===_docsCtx.tipo && d.entidad_id===_docsCtx.entId; });
+  var html = "";
+  if(_docsCtx.tipo === "empresa") {
+    html += '<div style="font-size:10px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border)">⚖ LEGAL</div>';
+    html += _renderSeccionDocs(TIPOS_EMPRESA.legal, docsEnt);
+    html += '<div style="font-size:10px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);margin:16px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border)">🧾 TRIBUTARIO</div>';
+    html += _renderSeccionDocs(TIPOS_EMPRESA.tributario, docsEnt);
+  } else {
+    var tipos = _docsCtx.tipo === "equipo" ? TIPOS_EQUIPO : TIPOS_CONDUCTOR;
+    html = _renderSeccionDocs(tipos, docsEnt);
+  }
   document.getElementById("docs-body").innerHTML = html;
 }
 
@@ -5727,6 +5781,32 @@ function setupSeleccionarModo(modo) {
   document.getElementById('setup-modo-btn-unidad').style.background = modo==='unidad'  ? 'var(--gold)' : '#1A1A1A';
   document.getElementById('setup-modo-btn-unidad').style.border     = modo==='unidad'  ? '2px solid var(--gold)' : '2px solid #2A2A2A';
   document.getElementById('setup-modo-btn-unidad').querySelector('div').style.color = modo==='unidad' ? '#000' : '#fff';
+}
+
+async function generarLinkDocs() {
+  const emp = DB._empresa || _sessionUsuario?.empresa;
+  if(!emp) { toast('Sin empresa activa'); return; }
+  // Generar token aleatorio
+  const token = Math.random().toString(36).substring(2,10).toUpperCase() + Date.now().toString(36).toUpperCase();
+  const clave = 'token_docs_' + emp;
+  const {error} = await supa.from('kaptura_config').upsert({clave, valor:token, empresa:emp}, {onConflict:'clave,empresa'});
+  if(error) { toast('Error generando token: '+error.message); return; }
+  const link = 'https://ctg2026.github.io/KAPTURA-PILOTO/docs.html?token='+token+'&empresa='+emp;
+  document.getElementById('docs-link-input').value = link;
+  document.getElementById('docs-link-container').style.display = 'flex';
+  document.getElementById('docs-link-copiar').style.display = 'inline-block';
+  toast('✓ Link generado');
+}
+
+async function copiarLinkDocs() {
+  const link = document.getElementById('docs-link-input').value;
+  try {
+    await navigator.clipboard.writeText(link);
+    toast('✓ Link copiado al portapapeles');
+  } catch(e) {
+    document.getElementById('docs-link-input').select();
+    toast('Selecciona y copia manualmente');
+  }
 }
 
 async function setupGuardarEmpresa() {
