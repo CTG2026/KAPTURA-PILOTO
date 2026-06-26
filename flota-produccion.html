@@ -4330,7 +4330,8 @@ function semaforo(f) {
 }
 
 function docBtnStyle(tipo, id) {
-  var docs = (DB.documentos||[]).filter(function(d){ return d.tipo_entidad===tipo && d.entidad_id===id; });
+  // Ignorar tipo "otro" — es opcional, no afecta el semáforo
+  var docs = (DB.documentos||[]).filter(function(d){ return d.tipo_entidad===tipo && d.entidad_id===id && d.tipo_doc !== 'otro'; });
   var hoy  = new Date();
   var venc = docs.some(function(d){ return d.fecha_vencimiento && new Date(d.fecha_vencimiento) < hoy; });
   var prox = docs.some(function(d){ return d.fecha_vencimiento && Math.round((new Date(d.fecha_vencimiento)-hoy)/864e5) <= 30; });
