@@ -41,6 +41,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .sec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:8px}
 .sec-ttl{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold)}
 .filtro{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.pill-filtro{background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;color:var(--muted);cursor:pointer;font-family:inherit;transition:all 0.15s}
+.pill-filtro.activo{background:rgba(201,168,76,0.2);border-color:var(--gold);color:var(--gold)}
+#filtro-sin-guia.activo{background:rgba(239,68,68,0.15);border-color:#ef4444;color:#ef4444}
 .filtro input{font-family:'DM Sans',sans-serif;font-size:12px;padding:6px 10px;border:1px solid var(--border);border-radius:6px;outline:none;background:var(--surface2);color:var(--text)}
 .btn{font-family:'DM Sans',sans-serif;font-size:11px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;padding:8px 14px;border-radius:6px;cursor:pointer;border:none;transition:all 0.15s;white-space:nowrap;display:inline-flex;align-items:center;gap:5px}
 .btn-navy{background:var(--gold);color:#000}.btn-navy:active{opacity:0.85}
@@ -255,9 +258,25 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
       <div class="kpi" id="kpi-margen-prom"><div class="kpi-lbl">Margen Prom.</div><div class="kpi-val" id="k-prom">—</div><div class="kpi-sub">por servicio</div></div>
       <div class="kpi" id="k-margen-real-kpi"><div class="kpi-lbl">Margen Real</div><div class="kpi-val" id="k-margen-real">—</div><div class="kpi-sub" id="k-margen-real-sub">con costos reales</div></div>
     </div>
-    <div class="filtro">
-      <input type="date" id="filtro-fecha" onchange="renderServicios()">
-      <button class="btn btn-outline btn-sm" onclick="resetFecha()">Todos</button>
+    <div class="filtro" style="flex-direction:column;align-items:stretch;gap:8px">
+      <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+        <input type="date" id="filtro-fecha" onchange="renderServicios()" style="flex:0 0 auto">
+        <select id="filtro-patente" onchange="renderServicios()" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--text);font-family:inherit">
+          <option value="">Todos los equipos</option>
+        </select>
+        <select id="filtro-conductor" onchange="renderServicios()" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--text);font-family:inherit">
+          <option value="">Todos los conductores</option>
+        </select>
+        <button id="filtro-sin-guia" onclick="toggleFiltroSinGuia()" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:6px 12px;font-size:12px;color:var(--muted);font-family:inherit;cursor:pointer;white-space:nowrap;font-weight:700">📄 Sin Guía</button>
+        <button class="btn btn-outline btn-sm" onclick="resetFiltros()">✕ Limpiar</button>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px" id="filtro-estados">
+        <button class="pill-filtro" data-estado="asignado" onclick="toggleFiltroEstado(this)">Asignado</button>
+        <button class="pill-filtro" data-estado="en_proceso" onclick="toggleFiltroEstado(this)">En Proceso</button>
+        <button class="pill-filtro" data-estado="ejecutado" onclick="toggleFiltroEstado(this)">Ejecutado</button>
+        <button class="pill-filtro" data-estado="borrador" onclick="toggleFiltroEstado(this)">Borrador</button>
+        <button class="pill-filtro" data-estado="cerrado" onclick="toggleFiltroEstado(this)">Cerrado</button>
+      </div>
     </div>
     <div class="sec-hdr">
       <div class="sec-ttl">Servicios</div>
@@ -2256,6 +2275,7 @@ async function init() {
 // ══ RENDER ══
 function renderTodo() {
   renderKPIs();
+  poblarSelectsFiltro();
   renderServicios();
   renderFlota();
   renderClientes();
@@ -2372,19 +2392,35 @@ async function calcMargenReal(mes, conf, ingresoTotal) {
 }
 
 function renderServicios() {
-  const fecha = document.getElementById('filtro-fecha').value;
-  const mes = parseInt(document.getElementById('dash-mes')?.value ?? hoy.getMonth());
-  const anioStr = String(hoy.getFullYear());
-  const mesStr = String(mes+1).padStart(2,'0');
+  const fecha     = document.getElementById('filtro-fecha')?.value || '';
+  const patente   = document.getElementById('filtro-patente')?.value || '';
+  const conductor = document.getElementById('filtro-conductor')?.value || '';
+  const mes       = parseInt(document.getElementById('dash-mes')?.value ?? hoy.getMonth());
+  const anioStr   = String(hoy.getFullYear());
+  const mesStr    = String(mes+1).padStart(2,'0');
   const esConductorRender = _sessionUsuario?.rol === 'conductor';
-  const svcs = (esConductorRender
-    // Conductor ve todos sus servicios asignados/en proceso sin filtro de fecha
+
+  // Base: conductor ve solo sus activos; coordinador filtra por fecha/mes
+  let svcs = esConductorRender
     ? DB.servicios.filter(s => ['asignado','en_proceso','ejecutado','borrador'].includes(s.estado))
     : fecha
       ? DB.servicios.filter(s => (s.fecha||'').startsWith(fecha))
-      : DB.servicios.filter(s => (s.fecha||'').startsWith(`${anioStr}-${mesStr}`))
-  ).sort((a,b) => (b.fecha||'') > (a.fecha||'') ? 1 : (b.fecha||'') < (a.fecha||'') ? -1 :
+      : DB.servicios.filter(s => (s.fecha||'').startsWith(`${anioStr}-${mesStr}`));
+
+  // Filtros adicionales solo para coordinador
+  if(!esConductorRender) {
+    if(patente)   svcs = svcs.filter(s => s.patente === patente);
+    if(conductor) svcs = svcs.filter(s => (s.conductor||'') === conductor);
+    if(_filtroEstados && _filtroEstados.size > 0) svcs = svcs.filter(s => _filtroEstados.has(s.estado));
+    if(_filtroSinGuia) svcs = svcs.filter(s => {
+      const guiasPuntos = (s._puntos||[]).flatMap(p=>(p.guias||[]).map(g=>g.num_guia)).filter(Boolean);
+      return !s.num_guia && guiasPuntos.length === 0;
+    });
+  }
+
+  svcs = svcs.sort((a,b) => (b.fecha||'') > (a.fecha||'') ? 1 : (b.fecha||'') < (a.fecha||'') ? -1 :
     (b.created_at||'') > (a.created_at||'') ? 1 : -1);
+
   const empty = document.getElementById('empty-svc');
   if(!svcs.length) {
     document.getElementById('cards-mobile').innerHTML = '';
@@ -5181,9 +5217,53 @@ function setTab(nombre, btn) {
   const btnFijo = document.getElementById('btn-setup-fixed');
   if(btnFijo) btnFijo.style.display = nombre==='setup' ? 'block' : 'none';
 }
+let _filtroSinGuia = false;
+let _filtroEstados = new Set();
+
+function toggleFiltroEstado(btn) {
+  const est = btn.dataset.estado;
+  if(_filtroEstados.has(est)) { _filtroEstados.delete(est); btn.classList.remove('activo'); }
+  else { _filtroEstados.add(est); btn.classList.add('activo'); }
+  renderServicios();
+}
+
+function toggleFiltroSinGuia() {
+  _filtroSinGuia = !_filtroSinGuia;
+  const btn = document.getElementById('filtro-sin-guia');
+  if(_filtroSinGuia) btn.classList.add('activo'); else btn.classList.remove('activo');
+  renderServicios();
+}
+
+function resetFiltros() {
+  document.getElementById('filtro-fecha').value = '';
+  document.getElementById('filtro-patente').value = '';
+  document.getElementById('filtro-conductor').value = '';
+  _filtroSinGuia = false;
+  _filtroEstados = new Set();
+  document.getElementById('filtro-sin-guia').classList.remove('activo');
+  document.querySelectorAll('.pill-filtro').forEach(b => b.classList.remove('activo'));
+  renderServicios();
+}
+
 function resetFecha() {
   document.getElementById('filtro-fecha').value = '';
   renderServicios();
+}
+
+function poblarSelectsFiltro() {
+  const patSel = document.getElementById('filtro-patente');
+  const condSel = document.getElementById('filtro-conductor');
+  if(!patSel || !condSel) return;
+  const patActual = patSel.value;
+  const condActual = condSel.value;
+  // Patentes únicas desde flota activa
+  const patentes = [...new Set((DB.flota||[]).filter(f=>f.activo!==false).map(f=>f.patente))].sort();
+  patSel.innerHTML = '<option value="">Todos los equipos</option>' + patentes.map(p=>`<option value="${p}">${p}</option>`).join('');
+  patSel.value = patActual;
+  // Conductores únicos desde servicios
+  const conductores = [...new Set((DB.servicios||[]).map(s=>s.conductor).filter(Boolean))].sort();
+  condSel.innerHTML = '<option value="">Todos los conductores</option>' + conductores.map(c=>`<option value="${c}">${c}</option>`).join('');
+  condSel.value = condActual;
 }
 function cerrar(id) { document.getElementById(id).style.display = 'none'; }
 function fmt(n) {
