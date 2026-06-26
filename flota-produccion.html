@@ -267,6 +267,9 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
         <select id="filtro-conductor" onchange="renderServicios()" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--text);font-family:inherit">
           <option value="">Todos los conductores</option>
         </select>
+        <select id="filtro-cliente" onchange="renderServicios()" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--text);font-family:inherit">
+          <option value="">Todos los clientes</option>
+        </select>
         <button id="filtro-sin-guia" onclick="toggleFiltroSinGuia()" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:6px 12px;font-size:12px;color:var(--muted);font-family:inherit;cursor:pointer;white-space:nowrap;font-weight:700">📄 Sin Guía</button>
         <button class="btn btn-outline btn-sm" onclick="resetFiltros()">✕ Limpiar</button>
       </div>
@@ -2592,6 +2595,8 @@ function renderServicios() {
   if(!esConductorRender) {
     if(patente)   svcs = svcs.filter(s => s.patente === patente);
     if(conductor) svcs = svcs.filter(s => (s.conductor||'') === conductor);
+    const cliente = document.getElementById('filtro-cliente')?.value||'';
+    if(cliente)   svcs = svcs.filter(s => (s.cliente||'') === cliente);
     if(_filtroEstados && _filtroEstados.size > 0) svcs = svcs.filter(s => _filtroEstados.has(s.estado));
     if(_filtroSinGuia) svcs = svcs.filter(s => {
       const guiasPuntos = (s._puntos||[]).flatMap(p=>(p.guias||[]).map(g=>g.num_guia)).filter(Boolean);
@@ -5445,6 +5450,7 @@ function resetFiltros() {
   document.getElementById('filtro-fecha').value = '';
   document.getElementById('filtro-patente').value = '';
   document.getElementById('filtro-conductor').value = '';
+  const cliSel = document.getElementById('filtro-cliente'); if(cliSel) cliSel.value = '';
   _filtroSinGuia = false;
   _filtroEstados = new Set();
   document.getElementById('filtro-sin-guia').classList.remove('activo');
@@ -5471,6 +5477,14 @@ function poblarSelectsFiltro() {
   const conductores = [...new Set((DB.servicios||[]).map(s=>s.conductor).filter(Boolean))].sort();
   condSel.innerHTML = '<option value="">Todos los conductores</option>' + conductores.map(c=>`<option value="${c}">${c}</option>`).join('');
   condSel.value = condActual;
+  // Clientes únicos desde servicios
+  const cliSel = document.getElementById('filtro-cliente');
+  if(cliSel) {
+    const cliActual = cliSel.value;
+    const clientes = [...new Set((DB.servicios||[]).map(s=>s.cliente).filter(Boolean))].sort();
+    cliSel.innerHTML = '<option value="">Todos los clientes</option>' + clientes.map(c=>`<option value="${c}">${c}</option>`).join('');
+    cliSel.value = cliActual;
+  }
 }
 function cerrar(id) { document.getElementById(id).style.display = 'none'; }
 function fmt(n) {
