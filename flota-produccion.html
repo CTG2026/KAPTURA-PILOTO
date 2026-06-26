@@ -4352,24 +4352,29 @@ function abrirDocs(tipo, entId) {
 function _renderSeccionDocs(tipos, docsEnt) {
   var html = "";
   tipos.forEach(function(t) {
-    var doc = docsEnt.find(function(d){ return d.tipo_doc===t.id; });
-    var sem = doc ? semaforo(doc.fecha_vencimiento) : '<span style="color:var(--muted);font-size:10px">Sin documento</span>';
+    var docs = docsEnt.filter(function(d){ return d.tipo_doc===t.id && d.activo!==false; });
+    var docConFecha = docs.find(function(d){ return d.fecha_vencimiento; });
+    var sem = docConFecha ? semaforo(docConFecha.fecha_vencimiento) : docs.length ? '<span style="color:var(--muted);font-size:10px">Sin fecha</span>' : '<span style="color:var(--muted);font-size:10px">Sin documento</span>';
     html += '<div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px">';
     html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">';
     html += '<div style="font-size:12px;font-weight:800;color:var(--text)">'+t.lbl+'</div><div style="font-size:11px">'+sem+'</div></div>';
-    if(doc && doc.url) {
-      html += '<div style="margin-bottom:8px;display:flex;gap:10px;align-items:center">';
-      html += '<a href="'+doc.url+'" target="_blank" style="font-size:11px;color:var(--gold);font-weight:700">👁 Ver</a>';
-      html += '<span style="font-size:10px;color:var(--muted)">'+(doc.fecha_vencimiento||'')+'</span>';
-      html += '<button data-did="'+doc.id+'" onclick="eliminarDocItem(this.dataset.did)" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:var(--danger);border-radius:4px;padding:2px 7px;font-size:9px;cursor:pointer">✕</button></div>';
+    // Mostrar todos los archivos adjuntos
+    if(docs.length) {
+      html += '<div style="margin-bottom:8px">';
+      docs.forEach(function(doc, i) {
+        if(doc.url) {
+          html += '<div style="display:flex;gap:8px;align-items:center;margin-bottom:4px">';
+          html += '<a href="'+doc.url+'" target="_blank" style="font-size:11px;color:var(--gold);font-weight:700">👁 Ver '+(docs.length>1?'('+(i+1)+')':'')+'</a>';
+          html += '<button data-did="'+doc.id+'" onclick="eliminarDocItem(this.dataset.did)" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:var(--danger);border-radius:4px;padding:2px 7px;font-size:9px;cursor:pointer">✕</button>';
+          html += '</div>';
+        }
+      });
+      html += '</div>';
     }
+    // Fecha vencimiento + input agregar + botón guardar
     html += '<div style="display:grid;grid-template-columns:1fr 1fr auto;gap:6px;align-items:flex-end">';
-    html += '<div><div style="font-size:9px;color:var(--muted);margin-bottom:3px">FECHA VENC.</div><input type="date" id="df-'+t.id+'" value="'+(doc&&doc.fecha_vencimiento?doc.fecha_vencimiento:'')+'" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:6px 8px;font-size:11px;color:var(--text);font-family:inherit"></div>';
-    if(doc && doc.url) {
-      html += '<div><div style="font-size:9px;color:var(--muted);margin-bottom:3px">ADJUNTAR</div><div style="font-size:11px;color:var(--green);font-weight:700;padding:6px 0">✓ Documento adjuntado</div></div>';
-    } else {
-      html += '<div><div style="font-size:9px;color:var(--muted);margin-bottom:3px">ADJUNTAR</div><input type="file" id="ff-'+t.id+'" accept="image/*,.pdf" style="width:100%;font-size:10px;color:var(--text)"></div>';
-    }
+    html += '<div><div style="font-size:9px;color:var(--muted);margin-bottom:3px">FECHA VENC.</div><input type="date" id="df-'+t.id+'" value="'+(docConFecha&&docConFecha.fecha_vencimiento?docConFecha.fecha_vencimiento:'')+'" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:6px 8px;font-size:11px;color:var(--text);font-family:inherit"></div>';
+    html += '<div><div style="font-size:9px;color:var(--muted);margin-bottom:3px">ADJUNTAR '+(docs.length?'('+docs.length+' adj.)':'')+'</div><input type="file" id="ff-'+t.id+'" accept="image/*,.pdf" multiple style="width:100%;font-size:10px;color:var(--text)"></div>';
     html += '<button data-tid="'+t.id+'" onclick="subirDoc(this.dataset.tid)" style="background:var(--gold);border:none;border-radius:7px;padding:8px 12px;font-size:11px;font-weight:800;color:#000;cursor:pointer">💾</button></div></div>';
   });
   return html;
@@ -4396,23 +4401,41 @@ async function subirDoc(tipoDoc) {
   var fecha = document.getElementById("df-"+tipoDoc) && document.getElementById("df-"+tipoDoc).value || null;
   var fileEl = document.getElementById("ff-"+tipoDoc);
   var file = fileEl && fileEl.files && fileEl.files[0];
-  if(!file && !fecha) { toast("Ingresa fecha o adjunta archivo"); return; }
-  var url = "";
-  if(file) {
+  var fileEl = document.getElementById("ff-"+tipoDoc);
+  var files = fileEl && fileEl.files ? Array.from(fileEl.files) : [];
+  if(!files.length && !fecha) { toast("Ingresa fecha o adjunta archivo"); return; }
+
+  // Actualizar fecha en registros existentes si se ingresó una
+  if(fecha) {
+    var docsExist = (DB.documentos||[]).filter(function(d){ return d.tipo_entidad===tipo && d.entidad_id===entId && d.tipo_doc===tipoDoc; });
+    for(var i=0; i<docsExist.length; i++) {
+      await supa.from("kaptura_documentos").update({fecha_vencimiento:fecha}).eq("id", docsExist[i].id);
+      docsExist[i].fecha_vencimiento = fecha;
+    }
+    // Si no hay docs previos ni archivos nuevos, crear uno solo con fecha
+    if(!docsExist.length && !files.length) {
+      var ins0 = await supa.from("kaptura_documentos").insert({empresa:emp, tipo_entidad:tipo, entidad_id:entId, tipo_doc:tipoDoc, fecha_vencimiento:fecha, url:null, activo:true}).select().single();
+      if(ins0.data) DB.documentos.push(ins0.data);
+      toast("✓ Fecha guardada");
+      renderDocumentos();
+      return;
+    }
+  }
+
+  // Subir cada archivo por separado
+  for(var fi=0; fi<files.length; fi++) {
+    var file = files[fi];
     var ext = file.name.split(".").pop();
     var safeId = entId.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-zA-Z0-9_\-]/g,"_");
-    var path = emp+"/"+tipo+"/"+safeId+"_"+tipoDoc+"_"+Date.now()+"."+ext;
+    var path = emp+"/"+tipo+"/"+safeId+"_"+tipoDoc+"_"+Date.now()+"_"+fi+"."+ext;
     var up = await supa.storage.from("kaptura-guias").upload(path, file, {upsert:true});
-    if(up.error) { toast("Error: "+up.error.message); return; }
-    url = supa.storage.from("kaptura-guias").getPublicUrl(path).data.publicUrl;
+    if(up.error) { toast("Error archivo "+(fi+1)+": "+up.error.message); continue; }
+    var url = supa.storage.from("kaptura-guias").getPublicUrl(path).data.publicUrl;
+    var ins = await supa.from("kaptura_documentos").insert({empresa:emp, tipo_entidad:tipo, entidad_id:entId, tipo_doc:tipoDoc, fecha_vencimiento:fecha||null, url:url, activo:true}).select().single();
+    if(ins.error) { toast("Error: "+ins.error.message); continue; }
+    if(ins.data) DB.documentos.push(ins.data);
   }
-  var docExist = (DB.documentos||[]).find(function(d){ return d.tipo_entidad===tipo && d.entidad_id===entId && d.tipo_doc===tipoDoc; });
-  if(docExist) await supa.from("kaptura_documentos").update({activo:false}).eq("id", docExist.id);
-  var ins = await supa.from("kaptura_documentos").insert({empresa:emp, tipo_entidad:tipo, entidad_id:entId, tipo_doc:tipoDoc, fecha_vencimiento:fecha||null, url:url||null, activo:true}).select().single();
-  if(ins.error) { toast("Error: "+ins.error.message); return; }
-  DB.documentos = (DB.documentos||[]).filter(function(d){ return !(d.tipo_entidad===tipo && d.entidad_id===entId && d.tipo_doc===tipoDoc); });
-  if(ins.data) DB.documentos.push(ins.data);
-  toast("✓ Documento guardado");
+  toast("✓ "+(files.length>1?files.length+" archivos guardados":"Documento guardado"));
   renderDocumentos();
 }
 
