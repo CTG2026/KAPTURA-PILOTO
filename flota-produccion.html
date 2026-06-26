@@ -6430,7 +6430,15 @@ async function verLiquidacion(id) {
         </div>
         ${s.num_guia ? `<div style="font-size:10px;color:var(--muted);margin-top:3px">Guía: ${s.num_guia}</div>` : ''}
       </div>`).join('')}
-    ${liq.pdf_sii_url ? `<div style="margin-top:10px"><a href="${liq.pdf_sii_url}" target="_blank" style="color:var(--gold);font-size:12px;font-weight:700">📄 Ver Factura SII adjunta</a></div>` : ''}`;
+    ${(liq.num_factura || liq.pdf_sii_url) ? `
+    <div style="margin-top:12px;background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.3);border-radius:10px;padding:12px 14px">
+      <div style="font-size:9px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);margin-bottom:8px">FACTURA SII</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px">
+        <div><div style="color:var(--muted);font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:0.1em">N° Factura</div><div style="font-weight:800;color:var(--text)">${liq.num_factura || '—'}</div></div>
+        <div><div style="color:var(--muted);font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:0.1em">Fecha Emisión</div><div style="font-weight:700;color:var(--text)">${liq.fecha_factura || '—'}</div></div>
+      </div>
+      ${liq.pdf_sii_url ? `<div style="margin-top:10px"><a href="${liq.pdf_sii_url}" target="_blank" style="color:var(--gold);font-size:12px;font-weight:700">📄 Ver documento adjunto</a></div>` : ''}
+    </div>` : ''}`;
 
   // Botones según estado
   const btns = {
@@ -6507,63 +6515,90 @@ async function liqRegistrarPago(id) {
   await cargarLiquidaciones();
 }
 
-async function liqAdjuntarSII(id) {
-  const input = document.createElement('input');
-  input.type = 'file';
-  input.accept = 'image/*,.pdf';
-  input.capture = 'environment';
-  input.onchange = async function() {
-    const file = input.files[0];
-    if(!file) return;
-    const emp  = DB._empresa || _sessionUsuario?.empresa;
-    const ext  = file.name.split('.').pop();
-    const path = emp+'/facturas/LIQ_'+id+'_'+Date.now()+'.'+ext;
-    const {error: upErr} = await supa.storage.from('kaptura-guias').upload(path, file, {upsert:true});
-    if(upErr) { toast('Error subiendo archivo: '+upErr.message); return; }
-    const url = supa.storage.from('kaptura-guias').getPublicUrl(path).data.publicUrl;
-    const {error} = await supa.from('kaptura_liquidaciones').update({pdf_sii_url: url}).eq('id', id);
-    if(error) { toast('Error: '+error.message); return; }
-    toast('✓ Factura adjuntada — leyendo datos...');
-    // Intentar leer N° factura con Claude Vision
-    try {
-      const reader = new FileReader();
-      reader.onload = async function(ev) {
-        const b64 = ev.target.result.split(',')[1];
-        const mtype = file.type === 'application/pdf' ? 'application/pdf' : 'image/jpeg';
-        const resp = await fetch('https://api.anthropic.com/v1/messages', {
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({
-            model:'claude-haiku-4-5-20251001', max_tokens:200,
-            messages:[{role:'user', content:[
-              {type: mtype==='application/pdf'?'document':'image', source:{type:'base64',media_type:mtype,data:b64}},
-              {type:'text', text:'Lee esta factura y extrae SOLO: numero de folio/factura y fecha de emision. Responde SOLO en JSON: {"num_factura":"XXX","fecha_factura":"YYYY-MM-DD"}'}
-            ]}]
-          })
-        });
-        const data = await resp.json();
-        const txt = (data.content||[]).find(c=>c.type==='text')?.text||'';
-        try {
-          const parsed = JSON.parse(txt.replace(/```json|```/g,'').trim());
-          if(parsed.num_factura) {
-            await supa.from('kaptura_liquidaciones').update({
-              num_factura: parsed.num_factura,
-              fecha_factura: parsed.fecha_factura || null,
-              estado: 'facturada'
-            }).eq('id', id);
-            toast('✓ Factura N°'+parsed.num_factura+' detectada automáticamente');
-          }
-        } catch(e) { toast('✓ Factura adjuntada (lectura manual requerida)'); }
-        await cargarLiquidaciones();
-        verLiquidacion(id);
-      };
-      reader.readAsDataURL(file);
-    } catch(e) {
+async function _liqProcesarArchivo(id, file) {
+  if(!file) return;
+  const emp  = DB._empresa || _sessionUsuario?.empresa;
+  const ext  = file.name ? file.name.split('.').pop() : 'jpg';
+  const path = emp+'/facturas/LIQ_'+id+'_'+Date.now()+'.'+ext;
+  const {error: upErr} = await supa.storage.from('kaptura-guias').upload(path, file, {upsert:true});
+  if(upErr) { toast('Error subiendo archivo: '+upErr.message); return; }
+  const url = supa.storage.from('kaptura-guias').getPublicUrl(path).data.publicUrl;
+  const {error} = await supa.from('kaptura_liquidaciones').update({pdf_sii_url: url}).eq('id', id);
+  if(error) { toast('Error: '+error.message); return; }
+  toast('✓ Archivo adjuntado — leyendo datos con IA...');
+  try {
+    const reader = new FileReader();
+    reader.onload = async function(ev) {
+      const b64 = ev.target.result.split(',')[1];
+      const mtype = file.type === 'application/pdf' ? 'application/pdf' : 'image/jpeg';
+      const resp = await fetch('https://api.anthropic.com/v1/messages', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({
+          model:'claude-haiku-4-5-20251001', max_tokens:200,
+          messages:[{role:'user', content:[
+            {type: mtype==='application/pdf'?'document':'image', source:{type:'base64',media_type:mtype,data:b64}},
+            {type:'text', text:'Lee esta factura y extrae SOLO: numero de folio/factura y fecha de emision. Responde SOLO en JSON: {"num_factura":"XXX","fecha_factura":"YYYY-MM-DD"}'}
+          ]}]
+        })
+      });
+      const data = await resp.json();
+      const txt = (data.content||[]).find(c=>c.type==='text')?.text||'';
+      try {
+        const parsed = JSON.parse(txt.replace(/```json|```/g,'').trim());
+        if(parsed.num_factura) {
+          await supa.from('kaptura_liquidaciones').update({
+            num_factura: parsed.num_factura,
+            fecha_factura: parsed.fecha_factura || null,
+            estado: 'facturada'
+          }).eq('id', id);
+          toast('✓ Factura N°'+parsed.num_factura+' · '+parsed.fecha_factura+' detectada automáticamente');
+        } else {
+          toast('✓ Adjuntada — N° factura no detectado, ingresa manualmente');
+        }
+      } catch(e) { toast('✓ Factura adjuntada (lectura manual requerida)'); }
       await cargarLiquidaciones();
       verLiquidacion(id);
-    }
+    };
+    reader.readAsDataURL(file);
+  } catch(e) {
+    await cargarLiquidaciones();
+    verLiquidacion(id);
+  }
+}
+
+async function liqAdjuntarSII(id) {
+  // Modal con 3 opciones
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;display:flex;align-items:flex-end;justify-content:center';
+  overlay.innerHTML = `
+    <div style="background:var(--surface);border-radius:16px 16px 0 0;padding:24px 20px;width:100%;max-width:480px">
+      <div style="font-size:13px;font-weight:800;color:var(--gold);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:16px;text-align:center">📎 Adjuntar Factura</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <button id="liq-btn-archivo" style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:14px;font-size:13px;font-weight:700;color:var(--text);cursor:pointer;font-family:inherit;text-align:left">📁 Adjuntar archivo <span style="font-size:11px;color:var(--muted);font-weight:400;display:block;margin-top:2px">PDF o imagen desde tu dispositivo</span></button>
+        <button id="liq-btn-foto" style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:14px;font-size:13px;font-weight:700;color:var(--text);cursor:pointer;font-family:inherit;text-align:left">🖼 Pegar / subir foto <span style="font-size:11px;color:var(--muted);font-weight:400;display:block;margin-top:2px">Selecciona imagen desde galería</span></button>
+        <button id="liq-btn-camara" style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:14px;font-size:13px;font-weight:700;color:var(--text);cursor:pointer;font-family:inherit;text-align:left">📷 Tomar foto <span style="font-size:11px;color:var(--muted);font-weight:400;display:block;margin-top:2px">Abre la cámara del dispositivo</span></button>
+        <button id="liq-btn-cancelar" style="background:transparent;border:none;padding:10px;font-size:12px;color:var(--muted);cursor:pointer;font-family:inherit;font-weight:700">Cancelar</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+
+  const cerrarModal = () => document.body.removeChild(overlay);
+
+  const crearInput = (accept, capture) => {
+    const inp = document.createElement('input');
+    inp.type = 'file';
+    inp.accept = accept;
+    if(capture) inp.capture = capture;
+    inp.onchange = async () => { cerrarModal(); await _liqProcesarArchivo(id, inp.files[0]); };
+    return inp;
   };
-  input.click();
+
+  overlay.querySelector('#liq-btn-archivo').onclick  = () => { cerrarModal(); crearInput('image/*,application/pdf', null).click(); };
+  overlay.querySelector('#liq-btn-foto').onclick     = () => { cerrarModal(); crearInput('image/*', null).click(); };
+  overlay.querySelector('#liq-btn-camara').onclick   = () => { cerrarModal(); crearInput('image/*', 'environment').click(); };
+  overlay.querySelector('#liq-btn-cancelar').onclick = () => cerrarModal();
+  overlay.onclick = (e) => { if(e.target === overlay) cerrarModal(); };
 }
 
 
