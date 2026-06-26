@@ -1164,6 +1164,30 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
   </div>
 </main>
 
+<!-- TAB CLIENTE -->
+<div id="tab-cliente" style="display:none;padding:16px;max-width:600px;margin:0 auto">
+  <div style="text-align:center;margin-bottom:24px">
+    <div style="font-size:20px;font-weight:900;color:var(--gold);letter-spacing:0.05em">KAPTURA</div>
+    <div id="cli-empresa-nombre" style="font-size:13px;color:var(--muted);margin-top:4px"></div>
+  </div>
+  <div style="font-size:10px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);margin-bottom:12px">Documentos disponibles</div>
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px">
+    <div style="font-size:12px;font-weight:800;color:var(--text);margin-bottom:10px">🏢 Empresa</div>
+    <button onclick="abrirDocs('empresa', DB._empresa)" style="width:100%;background:var(--surface2);border:1px solid var(--gold);border-radius:8px;padding:10px;font-size:12px;font-weight:700;color:var(--gold);cursor:pointer">📎 Ver Documentos Empresa</button>
+  </div>
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px">
+    <div style="font-size:12px;font-weight:800;color:var(--text);margin-bottom:10px">🚛 Equipos</div>
+    <div id="cli-equipos-lista"></div>
+  </div>
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px">
+    <div style="font-size:12px;font-weight:800;color:var(--text);margin-bottom:10px">👤 Conductores</div>
+    <div id="cli-conductores-lista"></div>
+  </div>
+  <div style="text-align:center;margin-top:20px">
+    <button onclick="cerrarSesionKaptura()" style="background:transparent;border:1px solid var(--border);border-radius:8px;padding:8px 20px;font-size:11px;color:var(--muted);cursor:pointer;font-family:inherit">⏏ Salir</button>
+  </div>
+</div>
+
 <!-- BOTÓN FIJO SETUP -->
 <div id="btn-setup-fixed" style="display:none;position:fixed;bottom:0;left:0;right:0;padding:12px 16px;background:var(--bg);border-top:2px solid var(--gold);z-index:999">
   <button onclick="setupGuardarTodo()" style="width:100%;padding:16px;border-radius:12px;border:none;background:var(--gold);font-size:16px;font-weight:900;color:#000;cursor:pointer">GUARDAR TODA LA CONFIGURACIÓN ✓</button>
@@ -5520,7 +5544,7 @@ async function iniciarLogin() {
   if(saved) {
     try {
       const sess = JSON.parse(saved);
-      if(sess.pin && sess.empresa && (['coordinador','controller','administrador','conductor','despachador','admin_kaptura'].includes(sess.rol) || sess.modo === 'flota' || sess.modo === 'demo')) {
+      if(sess.pin && sess.empresa && (['coordinador','controller','administrador','conductor','despachador','admin_kaptura','cliente'].includes(sess.rol) || sess.modo === 'flota' || sess.modo === 'demo')) {
         _sessionUsuario = sess;
         document.getElementById('login-screen').style.display = 'none';
         document.getElementById('pantalla-modulos').style.display = 'none';
@@ -5625,6 +5649,7 @@ function aplicarAccesoKaptura() {
   document.getElementById('mod-empresa-label').textContent = empNombre;
   // Aplicar bloqueo según rol
   const esConductor = _sessionUsuario.rol === 'conductor';
+  const esCliente   = _sessionUsuario.rol === 'cliente';
   if(esConductor) {
     ['tab-btn-liquidaciones','tab-btn-flota','tab-btn-clientes','tab-btn-gastos',
      'tab-btn-resultados','tab-btn-informes','tab-btn-config'].forEach(id => {
@@ -5632,6 +5657,10 @@ function aplicarAccesoKaptura() {
     });
     const btnAsig = document.getElementById('btn-asignar-nuevo');
     if(btnAsig) btnAsig.style.display = 'none';
+  }
+  if(esCliente) {
+    const nav = document.getElementById('nav');
+    if(nav) nav.style.display = 'none';
   }
   const modFlota = document.getElementById('mod-flota');
   const modFlotaBadge = document.getElementById('mod-flota-badge');
@@ -5653,6 +5682,20 @@ function aplicarAccesoKaptura() {
 
 function entrarModulo(modulo) {
   const esConductor = _sessionUsuario?.rol === 'conductor';
+  const esCliente   = _sessionUsuario?.rol === 'cliente';
+  if(modulo === 'flota' && esConductor) {
+    alert('🔒 Este módulo requiere plan KAPTURA FLOTA');
+    return;
+  }
+  if(esCliente) {
+    document.getElementById('pantalla-modulos').style.display = 'none';
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('main').style.display = '';
+    document.getElementById('nav').style.display = 'none';
+    DB._empresa = _sessionUsuario.empresa;
+    renderVistaCliente();
+    return;
+  }
   if(modulo === 'flota' && esConductor) {
     alert('🔒 Este módulo requiere plan KAPTURA FLOTA');
     return;
@@ -5673,6 +5716,29 @@ function entrarModulo(modulo) {
     init();
   }
 }
+
+async function renderVistaCliente() {
+  const emp = DB._empresa || _sessionUsuario?.empresa;
+  document.querySelectorAll('#main > [id^="tab-"]').forEach(el => el.style.display = 'none');
+  document.getElementById('tab-cliente').style.display = 'block';
+  const empNombre = emp === 'flota_297221' ? 'TRANSPORTE MADRID GAETE SPA' : emp;
+  document.getElementById('cli-empresa-nombre').textContent = empNombre;
+  const [fRes, cRes, dRes] = await Promise.all([
+    supa.from('kaptura_flota').select('patente,tipo').eq('empresa', emp).eq('activo', true),
+    supa.from('kaptura_usuarios').select('nombre').eq('empresa', emp).eq('rol', 'conductor'),
+    supa.from('kaptura_documentos').select('*').eq('empresa', emp).eq('activo', true)
+  ]);
+  DB.documentos = dRes.data || [];
+  const flota = fRes.data || [];
+  const conductores = cRes.data || [];
+  document.getElementById('cli-equipos-lista').innerHTML = flota.length
+    ? flota.map(f => `<button onclick="abrirDocs('equipo','${f.patente}')" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px;font-size:12px;font-weight:700;color:var(--text);cursor:pointer;margin-bottom:6px;display:block;text-align:left">🚛 ${f.patente} <span style="font-size:10px;color:var(--muted);font-weight:400">${f.tipo||''}</span></button>`).join('')
+    : '<div style="font-size:11px;color:var(--muted)">Sin equipos</div>';
+  document.getElementById('cli-conductores-lista').innerHTML = conductores.length
+    ? conductores.map(c => `<button onclick="abrirDocs('conductor','${c.nombre}')" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px;font-size:12px;font-weight:700;color:var(--text);cursor:pointer;margin-bottom:6px;display:block;text-align:left">👤 ${c.nombre}</button>`).join('')
+    : '<div style="font-size:11px;color:var(--muted)">Sin conductores</div>';
+}
+
 
 function cerrarSesionKaptura() {
   if(!confirm('¿Cerrar sesión?')) return;
