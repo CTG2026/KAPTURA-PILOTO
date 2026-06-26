@@ -92,9 +92,9 @@ tbody tr:hover{background:var(--surface2)}
 .ag-dot.g{background:var(--border)}
 .ag-entry-txt{font-size:12px;color:var(--text);line-height:1.5;flex:1}
 .ag-entry-date{font-size:10px;color:var(--muted);white-space:nowrap;padding-left:8px;padding-top:2px}
-.ag-add{display:flex;gap:8px;margin-top:12px}
-.ag-add input{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:7px 11px;font-size:12px;color:var(--text);font-family:'DM Sans',sans-serif;text-transform:none}
-.ag-add input::placeholder{color:var(--muted)}
+.ag-add{display:flex;gap:8px;margin-top:12px;align-items:flex-end}
+.ag-add textarea{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:7px 11px;font-size:12px;color:var(--text);font-family:'DM Sans',sans-serif;text-transform:none;resize:none;min-height:34px;max-height:120px;overflow-y:auto;line-height:1.5}
+.ag-add textarea::placeholder{color:var(--muted)}
 .ag-add button{background:#1B2E35;border:none;border-radius:7px;padding:7px 14px;font-size:11px;color:#fff;cursor:pointer;font-weight:700;white-space:nowrap}
 .ag-footer{border-top:1px solid var(--border);padding:10px 14px;display:flex;justify-content:space-between;align-items:center}
 .ag-f-btn{font-size:11px;padding:5px 11px;border-radius:6px;border:1px solid var(--border);background:transparent;cursor:pointer;color:var(--text);font-weight:700;letter-spacing:0.04em}
@@ -220,6 +220,9 @@ tbody tr:hover{background:var(--surface2)}
       <div class="ag-field"><label>Urgencia</label>
         <select id="ag-urgencia"><option value="alta">Alta</option><option value="media" selected>Media</option><option value="baja">Baja</option></select>
       </div>
+    </div>
+    <div class="ag-field"><label>Estado</label>
+      <select id="ag-estado"><option value="pendiente">Pendiente</option><option value="en_proceso">En Proceso</option><option value="resuelto">Resuelto</option></select>
     </div>
     <div class="ag-field"><label>Fecha límite (opcional)</label><input id="ag-fecha-lim" type="date"></div>
     <div class="ag-field"><label>Nota inicial</label><textarea id="ag-nota-ini" placeholder="Contexto o detalle..."></textarea></div>
@@ -410,7 +413,7 @@ function renderAgenda(){
       +'<div class="ag-vdate '+sem.vcls+'">'+sem.vdate+'</div></div>'
       +'<div class="ag-body" id="agb-'+t.id+'">'
       +'<div class="ag-log-lbl">BITÁCORA</div>'+notasHTML
-      +'<div class="ag-add"><input id="agn-'+t.id+'" type="text" placeholder="Agregar entrada..."><button onclick="agregarNota(\''+t.id+'\')">Guardar</button></div>'
+      +'<div class="ag-add"><textarea id="agn-'+t.id+'" placeholder="Agregar entrada... (Enter = nueva línea, Ctrl+Enter = guardar)" rows="1" onkeydown="agNotaKeydown(event,\''+t.id+'\')"></textarea><button onclick="agregarNota(\''+t.id+'\')">Guardar</button></div>'
       +'<div class="ag-footer"><div style="display:flex;gap:6px">'
       +(t.estado!=='resuelto'?'<button class="ag-f-btn ag-f-ok" onclick="resolverTarea(\''+t.id+'\')">✓ Resuelta</button>':'')
       +'<button class="ag-f-btn" onclick="editarTarea(\''+t.id+'\')">✏ Editar</button></div>'
@@ -429,6 +432,7 @@ function abrirModalTarea(){
   document.getElementById('ag-modal-titulo').textContent='Nueva tarea';
   document.getElementById('ag-edit-id').value='';
   document.getElementById('ag-titulo').value='';
+  document.getElementById('ag-estado').value='pendiente';
   document.getElementById('ag-prioridad').value='media';
   document.getElementById('ag-urgencia').value='media';
   document.getElementById('ag-fecha-lim').value='';
@@ -441,6 +445,7 @@ function editarTarea(id){
   document.getElementById('ag-modal-titulo').textContent='Editar tarea';
   document.getElementById('ag-edit-id').value=id;
   document.getElementById('ag-titulo').value=t.titulo||'';
+  document.getElementById('ag-estado').value=t.estado||'pendiente';
   document.getElementById('ag-prioridad').value=t.prioridad||'media';
   document.getElementById('ag-urgencia').value=t.urgencia||'media';
   document.getElementById('ag-fecha-lim').value=t.fecha_limite||'';
@@ -461,9 +466,10 @@ async function guardarTarea(){
   const hoyFmt=new Date().toLocaleDateString('es-CL',{day:'2-digit',month:'2-digit'});
 
   if(editId){
-    await supa.from('kaptura_agenda').update({titulo,prioridad:pri,urgencia:urg,fecha_limite:fl,updated_at:new Date().toISOString()}).eq('id',editId);
+    const est=document.getElementById('ag-estado').value;
+    await supa.from('kaptura_agenda').update({titulo,prioridad:pri,urgencia:urg,fecha_limite:fl,estado:est,updated_at:new Date().toISOString()}).eq('id',editId);
     const t=_agenda.find(x=>x.id===editId);
-    if(t){t.titulo=titulo;t.prioridad=pri;t.urgencia=urg;t.fecha_limite=fl;}
+    if(t){t.titulo=titulo;t.prioridad=pri;t.urgencia=urg;t.fecha_limite=fl;t.estado=est;}
   } else {
     const notas=nota?JSON.stringify([{texto:nota,fecha:hoyFmt,sistema:false}]):JSON.stringify([]);
     const {data:nd}=await supa.from('kaptura_agenda').insert({usuario:'1313',titulo,prioridad:pri,urgencia:urg,fecha_limite:fl,estado:'pendiente',origen:'manual',notas}).select().single();
@@ -471,6 +477,18 @@ async function guardarTarea(){
   }
   cerrarModalTarea();
   renderAgenda();
+}
+
+function agNotaKeydown(e, id) {
+  if(e.key === 'Enter' && !e.ctrlKey) {
+    // Enter solo = nueva línea (comportamiento natural del textarea)
+    return;
+  }
+  if(e.key === 'Enter' && e.ctrlKey) {
+    // Ctrl+Enter = guardar
+    e.preventDefault();
+    agregarNota(id);
+  }
 }
 
 async function agregarNota(id){
