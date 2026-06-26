@@ -4400,7 +4400,8 @@ async function subirDoc(tipoDoc) {
   var url = "";
   if(file) {
     var ext = file.name.split(".").pop();
-    var path = emp+"/"+tipo+"/"+entId.replace(/ /g,"_")+"_"+tipoDoc+"_"+Date.now()+"."+ext;
+    var safeId = entId.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-zA-Z0-9_\-]/g,"_");
+    var path = emp+"/"+tipo+"/"+safeId+"_"+tipoDoc+"_"+Date.now()+"."+ext;
     var up = await supa.storage.from("kaptura-guias").upload(path, file, {upsert:true});
     if(up.error) { toast("Error: "+up.error.message); return; }
     url = supa.storage.from("kaptura-guias").getPublicUrl(path).data.publicUrl;
