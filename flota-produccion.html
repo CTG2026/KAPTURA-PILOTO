@@ -4342,8 +4342,8 @@ function docBtnStyle(tipo, id) {
   var prox = docs.some(function(d){ return Math.round((new Date(d.fecha_vencimiento)-hoy)/864e5) <= 30; });
   // Sin docs con fecha = gris neutro (no rojo)
   if(!docs.length) return 'background:var(--surface2);border:1px solid var(--border);color:var(--muted);border-radius:5px;padding:3px 8px;font-size:10px;cursor:pointer;font-weight:700';
-  var bg  = venc ? 'rgba(239,68,68,0.15)' : prox ? 'rgba(201,168,76,0.15)' : 'rgba(76,175,80,0.15)';
-  var br  = venc ? 'rgba(239,68,68,0.3)'  : prox ? 'rgba(201,168,76,0.3)'  : 'rgba(76,175,80,0.3)';
+  var bg  = venc ? 'rgba(239,68,68,0.15)' : prox ? 'rgba(201,168,76,0.15)' : 'rgba(76,175,122,0.15)';
+  var br  = venc ? 'rgba(239,68,68,0.3)'  : prox ? 'rgba(201,168,76,0.3)'  : 'rgba(76,175,122,0.3)';
   var col = venc ? 'var(--danger)'        : prox ? 'var(--gold)'            : 'var(--green)';
   return 'background:'+bg+';border:1px solid '+br+';color:'+col+';border-radius:5px;padding:3px 8px;font-size:10px;cursor:pointer;font-weight:700';
 }
@@ -6057,7 +6057,7 @@ async function setupEditarEquipo(patente) {
   }
   if(!f) { toast('No se encontró el equipo'); return; }
   document.getElementById('setup-nueva-patente').value = f.patente;
-  document.getElementById('setup-nuevo-tipo').value    = f.tipo || 'tracto_rampla';
+  document.getElementById('setup-nuevo-tipo').value    = (f.tipo||'tracto_rampla').toLowerCase();
   document.getElementById('setup-nuevo-rend').value    = f.rendimiento_km_lt || '';
   document.getElementById('setup-nuevo-valor').value   = f.valor_camion || '';
   document.getElementById('setup-nueva-patente').dataset.editPatente = f.patente;
