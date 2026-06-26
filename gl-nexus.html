@@ -405,7 +405,7 @@ function renderAgenda(){
     const autoBadge=t.origen!=='manual'?'<span class="ag-tag t-auto">SISTEMA</span>':'';
     const estBadge=t.estado==='en_proceso'?'<span class="ag-tag t-proc">EN PROCESO</span>':(t.estado==='resuelto'?'<span class="ag-tag t-ok">RESUELTA</span>':'');
     const semBadge=sem.lbl?'<span class="ag-tag t-venc">'+sem.lbl+'</span>':'';
-    const notasHTML=notas.map(n=>'<div class="ag-entry"><div class="ag-dot '+(n.sistema?'':'g')+'"></div><div class="ag-entry-txt">'+n.texto+'</div><div class="ag-entry-date">'+n.fecha+'</div></div>').join('');
+    const notasHTML=notas.map((n,i)=>'<div class="ag-entry"><div class="ag-dot '+(n.sistema?'':'g')+'"></div><div class="ag-entry-txt">'+n.texto+'</div><div style="display:flex;gap:6px;align-items:center"><div class="ag-entry-date">'+n.fecha+'</div>'+(n.sistema?'':'<button onclick="editarNota(\''+t.id+'\','+i+')" style="background:transparent;border:none;color:var(--muted);font-size:10px;cursor:pointer;padding:0">✏</button>')+'</div></div>').join('');
     return '<div class="ag-card '+(t.estado==='resuelto'?'resuelta':sem.cls)+'" id="agc-'+t.id+'">'
       +'<div class="ag-card-hdr" onclick="toggleCard(\''+t.id+'\')">'
       +'<div style="flex:1"><div class="ag-title'+(t.estado==='resuelto'?' done':'')+'">' +t.titulo+'</div>'
@@ -477,6 +477,45 @@ async function guardarTarea(){
   }
   cerrarModalTarea();
   renderAgenda();
+}
+
+let _editNotaCtx = null; // {tareaId, idx}
+
+function editarNota(tareaId, idx) {
+  const t = _agenda.find(x => x.id === tareaId);
+  if(!t) return;
+  const notas = t.notas ? JSON.parse(t.notas) : [];
+  const nota = notas[idx];
+  if(!nota) return;
+  _editNotaCtx = {tareaId, idx};
+  const textarea = document.getElementById('agn-'+tareaId);
+  if(!textarea) return;
+  textarea.value = nota.texto;
+  textarea.focus();
+  // Cambiar botón Guardar a modo edición
+  const btn = textarea.nextElementSibling;
+  if(btn) { btn.textContent = '💾 Actualizar'; btn.onclick = () => guardarEdicionNota(); }
+}
+
+async function guardarEdicionNota() {
+  if(!_editNotaCtx) return;
+  const {tareaId, idx} = _editNotaCtx;
+  const t = _agenda.find(x => x.id === tareaId);
+  if(!t) return;
+  const notas = t.notas ? JSON.parse(t.notas) : [];
+  const textarea = document.getElementById('agn-'+tareaId);
+  const texto = textarea?.value.trim();
+  if(!texto) return;
+  notas[idx].texto = texto;
+  await supa.from('kaptura_agenda').update({notas: JSON.stringify(notas), updated_at: new Date().toISOString()}).eq('id', tareaId);
+  t.notas = JSON.stringify(notas);
+  // Restaurar botón
+  const btn = textarea.nextElementSibling;
+  if(btn) { btn.textContent = 'Guardar'; btn.onclick = () => agregarNota(tareaId); }
+  textarea.value = '';
+  _editNotaCtx = null;
+  renderAgenda();
+  setTimeout(() => { document.getElementById('agb-'+tareaId)?.classList.add('open'); }, 50);
 }
 
 function agNotaKeydown(e, id) {
