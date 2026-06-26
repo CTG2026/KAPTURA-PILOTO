@@ -5659,8 +5659,14 @@ function aplicarAccesoKaptura() {
     if(btnAsig) btnAsig.style.display = 'none';
   }
   if(esCliente) {
-    const nav = document.getElementById('nav');
-    if(nav) nav.style.display = 'none';
+    // Cliente salta directo a vista documentos sin pantalla de módulos
+    document.getElementById('pantalla-modulos').style.display = 'none';
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('main').style.display = '';
+    document.getElementById('nav').style.display = 'none';
+    DB._empresa = _sessionUsuario.empresa;
+    renderVistaCliente();
+    return;
   }
   const modFlota = document.getElementById('mod-flota');
   const modFlotaBadge = document.getElementById('mod-flota-badge');
