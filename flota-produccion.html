@@ -925,7 +925,10 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
           <div style="font-size:10px;color:var(--muted);margin-bottom:4px">VALOR COMERCIAL</div>
           <input id="setup-nuevo-valor" type="text" placeholder="Ej: 45000000" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:13px;color:var(--text);font-family:inherit;text-transform:uppercase">
         </div>
-        <button onclick="setupListaAgregarEquipo()" style="background:var(--surface2);border:1px solid var(--gold);border-radius:8px;padding:10px 14px;font-size:12px;font-weight:800;color:var(--gold);cursor:pointer;align-self:flex-end;white-space:nowrap">+ AGREGAR</button>
+        <div style="display:flex;gap:6px;align-self:flex-end">
+          <button id="setup-equipo-btn-guardar" onclick="setupGuardarEquipoEditado()" style="display:none;background:var(--surface2);border:1px solid var(--green);border-radius:8px;padding:10px 14px;font-size:12px;font-weight:800;color:var(--green);cursor:pointer;white-space:nowrap">💾 GUARDAR</button>
+          <button id="setup-equipo-btn-agregar" onclick="setupListaAgregarEquipo()" style="background:var(--surface2);border:1px solid var(--gold);border-radius:8px;padding:10px 14px;font-size:12px;font-weight:800;color:var(--gold);cursor:pointer;white-space:nowrap">+ AGREGAR</button>
+        </div>
       </div>
     </div>
 
@@ -4330,19 +4333,28 @@ function semaforo(f) {
 }
 
 function docBtnStyle(tipo, id) {
-  // Ignorar tipo "otro" — es opcional, no afecta el semáforo
-  var docs = (DB.documentos||[]).filter(function(d){ return d.tipo_entidad===tipo && d.entidad_id===id && d.tipo_doc !== 'otro'; });
+  // Solo evaluar docs con fecha vencimiento — ignorar "otro" y docs sin fecha
+  var docs = (DB.documentos||[]).filter(function(d){
+    return d.tipo_entidad===tipo && d.entidad_id===id && d.tipo_doc !== 'otro' && d.activo!==false && d.fecha_vencimiento;
+  });
   var hoy  = new Date();
-  var venc = docs.some(function(d){ return d.fecha_vencimiento && new Date(d.fecha_vencimiento) < hoy; });
-  var prox = docs.some(function(d){ return d.fecha_vencimiento && Math.round((new Date(d.fecha_vencimiento)-hoy)/864e5) <= 30; });
-  var bg  = (!docs.length||venc) ? 'rgba(239,68,68,0.15)' : prox ? 'rgba(201,168,76,0.15)' : 'rgba(76,175,122,0.15)';
-  var br  = (!docs.length||venc) ? 'rgba(239,68,68,0.3)'  : prox ? 'rgba(201,168,76,0.3)'  : 'rgba(76,175,122,0.3)';
-  var col = (!docs.length||venc) ? 'var(--danger)'        : prox ? 'var(--gold)'            : 'var(--green)';
+  var venc = docs.some(function(d){ return new Date(d.fecha_vencimiento) < hoy; });
+  var prox = docs.some(function(d){ return Math.round((new Date(d.fecha_vencimiento)-hoy)/864e5) <= 30; });
+  // Sin docs con fecha = gris neutro (no rojo)
+  if(!docs.length) return 'background:var(--surface2);border:1px solid var(--border);color:var(--muted);border-radius:5px;padding:3px 8px;font-size:10px;cursor:pointer;font-weight:700';
+  var bg  = venc ? 'rgba(239,68,68,0.15)' : prox ? 'rgba(201,168,76,0.15)' : 'rgba(76,175,80,0.15)';
+  var br  = venc ? 'rgba(239,68,68,0.3)'  : prox ? 'rgba(201,168,76,0.3)'  : 'rgba(76,175,80,0.3)';
+  var col = venc ? 'var(--danger)'        : prox ? 'var(--gold)'            : 'var(--green)';
   return 'background:'+bg+';border:1px solid '+br+';color:'+col+';border-radius:5px;padding:3px 8px;font-size:10px;cursor:pointer;font-weight:700';
 }
 
 function abrirDocs(tipo, entId) {
-  _docsCtx = {tipo:tipo, entId:entId};
+  var tipoEquipo = '';
+  if(tipo === 'equipo') {
+    var flota = (DB.flota||[]).find(function(f){ return f.patente === entId; });
+    tipoEquipo = flota ? (flota.tipo||'').toLowerCase() : '';
+  }
+  _docsCtx = {tipo:tipo, entId:entId, tipoEquipo:tipoEquipo};
   var label = tipo === "equipo" ? "DOCUMENTOS EQUIPOS" : tipo === "conductor" ? "DOCUMENTOS CONDUCTORES" : "DOCUMENTOS EMPRESA";
   var sub   = tipo === "equipo" ? "PATENTE "+entId.toUpperCase() : entId.toUpperCase();
   document.getElementById("docs-titulo").textContent = label;
@@ -4392,6 +4404,10 @@ function renderDocumentos() {
     html += _renderSeccionDocs(TIPOS_EMPRESA.tributario, docsEnt);
   } else {
     var tipos = _docsCtx.tipo === "equipo" ? TIPOS_EQUIPO : TIPOS_CONDUCTOR;
+    // Tractos no requieren Resolución Sanitaria
+    if(_docsCtx.tipo === "equipo" && _docsCtx.tipoEquipo && _docsCtx.tipoEquipo.indexOf('tracto') !== -1) {
+      tipos = tipos.filter(function(t){ return t.id !== 'resol_san'; });
+    }
     html = _renderSeccionDocs(tipos, docsEnt);
   }
   document.getElementById("docs-body").innerHTML = html;
@@ -6009,6 +6025,29 @@ async function setupAgregarEquipo() {
 }
 
 // ── SETUP EDITAR EQUIPO ──
+async function setupGuardarEquipoEditado() {
+  const patente  = document.getElementById('setup-nueva-patente').dataset.editPatente;
+  if(!patente) { toast('Error: sin patente en edición'); return; }
+  const tipo  = document.getElementById('setup-nuevo-tipo').value;
+  const rend  = parseFloat(document.getElementById('setup-nuevo-rend').value) || null;
+  const valor = parseInt(document.getElementById('setup-nuevo-valor').value.replace(/[^0-9]/g,'')) || null;
+  const emp   = DB._empresa || _sessionUsuario?.empresa;
+  const {error} = await supa.from('kaptura_flota').update({tipo, rendimiento_km_lt:rend, valor_camion:valor}).eq('patente', patente).eq('empresa', emp);
+  if(error) { toast('Error: '+error.message); return; }
+  // Actualizar DB local
+  const f = (DB.flota||[]).find(x => x.patente === patente);
+  if(f) { f.tipo = tipo; f.rendimiento_km_lt = rend; f.valor_camion = valor; }
+  // Limpiar y restaurar botones
+  document.getElementById('setup-nueva-patente').value = '';
+  document.getElementById('setup-nuevo-rend').value = '';
+  document.getElementById('setup-nuevo-valor').value = '';
+  delete document.getElementById('setup-nueva-patente').dataset.editPatente;
+  document.getElementById('setup-equipo-btn-guardar').style.display = 'none';
+  document.getElementById('setup-equipo-btn-agregar').style.display = 'inline-block';
+  toast('✓ Equipo '+patente+' actualizado');
+  renderSetupEquipos();
+}
+
 async function setupEditarEquipo(patente) {
   // Buscar en DB.flota o directo en Supabase
   let f = (DB.flota||[]).find(x => x.patente === patente);
@@ -6022,7 +6061,9 @@ async function setupEditarEquipo(patente) {
   document.getElementById('setup-nuevo-rend').value    = f.rendimiento_km_lt || '';
   document.getElementById('setup-nuevo-valor').value   = f.valor_camion || '';
   document.getElementById('setup-nueva-patente').dataset.editPatente = f.patente;
-  toast('✏ Datos del equipo cargados — edita y presiona GUARDAR TODA LA CONFIGURACIÓN');
+  document.getElementById('setup-equipo-btn-guardar').style.display = 'inline-block';
+  document.getElementById('setup-equipo-btn-agregar').style.display = 'none';
+  toast('✏ Edita los datos y presiona GUARDAR');
   setTimeout(() => {
     const el = document.getElementById('setup-nueva-patente');
     if(el) { el.scrollIntoView({behavior:'smooth', block:'center'}); el.focus(); }
