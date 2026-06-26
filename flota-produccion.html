@@ -6515,28 +6515,35 @@ async function verLiquidacion(id) {
       <button class="btn btn-navy" onclick="liqCambiarEstado('${id}','emitida')">Emitir →</button>`,
     emitida: `<button class="btn btn-ghost" onclick="cerrar('modal-ver-liq')">Cerrar</button>
       ${btnEditar}
+      ${btnElimModal}
       <button class="btn btn-outline" onclick="liqAdjuntarSII('${id}')">📎 Adjuntar Factura</button>
       <button class="btn btn-navy" onclick="liqCambiarEstado('${id}','enviada')">📤 Enviada al Cliente</button>`,
     enviada: `<button class="btn btn-ghost" onclick="cerrar('modal-ver-liq')">Cerrar</button>
       ${btnEditar}
+      ${btnElimModal}
       <button class="btn btn-outline" onclick="liqCambiarEstado('${id}','aprobada')">✓ Aprobada por Cliente</button>
       <button class="btn btn-navy" onclick="liqCambiarEstado('${id}','facturada')">🧾 Saltar a Facturada</button>`,
     aprobada: `<button class="btn btn-ghost" onclick="cerrar('modal-ver-liq')">Cerrar</button>
       ${btnEditar}
+      ${btnElimModal}
       <button class="btn btn-outline" onclick="liqAdjuntarSII('${id}')">📎 Adjuntar Factura SII</button>
       <button class="btn btn-navy" onclick="liqRegistrarFactura('${id}')">🧾 Registrar Factura</button>`,
     facturada: `<button class="btn btn-ghost" onclick="cerrar('modal-ver-liq')">Cerrar</button>
       ${btnEditar}
+      ${btnElimModal}
       <button class="btn btn-outline" onclick="liqAdjuntarSII('${id}')">📎 Adjuntar Factura SII</button>
       <button class="btn btn-navy" onclick="liqCambiarEstado('${id}','en_cobro')">💰 En Cobro</button>`,
     en_cobro: `<button class="btn btn-ghost" onclick="cerrar('modal-ver-liq')">Cerrar</button>
       ${btnEditar}
+      ${btnElimModal}
       <button class="btn btn-navy" onclick="liqRegistrarPago('${id}')">✓ Registrar Pago</button>`,
     factoring: `<button class="btn btn-ghost" onclick="cerrar('modal-ver-liq')">Cerrar</button>
       ${btnEditar}
+      ${btnElimModal}
       <button class="btn btn-navy" onclick="liqCambiarEstado('${id}','cobrada')">✓ Marcar Cobrada</button>`,
     por_cobrar: `<button class="btn btn-ghost" onclick="cerrar('modal-ver-liq')">Cerrar</button>
       ${btnEditar}
+      ${btnElimModal}
       <button class="btn btn-outline" onclick="liqAdjuntarSII('${id}')">📎 Adjuntar Factura SII</button>
       <button class="btn btn-navy" onclick="liqCambiarEstado('${id}','en_cobro')">💰 En Cobro</button>`,
     cobrada: `<button class="btn btn-ghost" onclick="cerrar('modal-ver-liq')">Cerrar</button>
