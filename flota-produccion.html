@@ -6195,14 +6195,10 @@ function _liqSemaforo(l, hoy) {
 }
 
 async function eliminarLiquidacion(id, e) {
-  e.stopPropagation();
-  // Solo admin_kaptura o coordinador principal puede eliminar
+  if(e && e.stopPropagation) e.stopPropagation();
   const rol  = _sessionUsuario?.rol;
   const pin  = _sessionUsuario?.pin;
   const emp  = _sessionUsuario?.empresa;
-  // Admin kaptura puede en cualquier empresa
-  // Coordinador Madrid: solo PIN 1996
-  // Coordinador Global: solo PIN 0101
   const puedeEliminar = rol === 'admin_kaptura' || 
     (rol === 'coordinador' && pin === '1996' && emp === 'flota_297221') ||
     (rol === 'coordinador' && pin === '0101' && emp === 'global_solutions');
@@ -6211,6 +6207,7 @@ async function eliminarLiquidacion(id, e) {
   const {error} = await supa.from('kaptura_liquidaciones').delete().eq('id', id);
   if(error) { toast('Error: '+error.message); return; }
   _liqData = _liqData.filter(l => l.id !== id);
+  cerrar('modal-ver-liq');
   toast('Liquidación eliminada');
   renderLiquidaciones();
 }
@@ -6505,7 +6502,7 @@ async function verLiquidacion(id) {
 
   // Botones según estado
   const puedeElim = (()=>{const r=_sessionUsuario?.rol,p=_sessionUsuario?.pin,em=_sessionUsuario?.empresa;return r==='admin_kaptura'||(r==='coordinador'&&p==='1996'&&em==='flota_297221')||(r==='coordinador'&&p==='0101'&&em==='global_solutions');})();
-  const btnElimModal = puedeElim ? `<button class="btn" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:var(--danger)" onclick="eliminarLiquidacion('${id}',event);cerrar('modal-ver-liq')">✕ Eliminar</button>` : '';
+  const btnElimModal = puedeElim ? `<button class="btn" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:var(--danger)" onclick="eliminarLiquidacion('${id}')">✕ Eliminar</button>` : '';
   const btnEditar = `<button class="btn btn-outline" onclick="editarLiquidacion('${id}')">✏ Editar</button>`;
   const btns = {
     borrador: `<button class="btn btn-ghost" onclick="cerrar('modal-ver-liq')">Cerrar</button>
