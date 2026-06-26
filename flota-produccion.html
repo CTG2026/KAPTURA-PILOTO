@@ -462,6 +462,11 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
           <div class="lbl">Servicios incluidos</div>
           <div id="edit-liq-svcs"></div>
         </div>
+        <!-- Agregar servicios -->
+        <div class="fld" id="edit-liq-svcs-agregar-wrap" style="display:none">
+          <div class="lbl">Agregar servicios</div>
+          <div id="edit-liq-svcs-disponibles"></div>
+        </div>
         <!-- Resumen (solo lectura) -->
         <div id="edit-liq-resumen" style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:12px">
           <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:var(--muted);font-size:12px">Monto neto</span><span id="edit-liq-neto" style="font-weight:700"></span></div>
@@ -6846,6 +6851,30 @@ async function editarLiquidacion(id) {
       </div>`).join('')
     : '<div style="font-size:11px;color:var(--muted)">— sin servicios cargados localmente</div>';
 
+  // Servicios disponibles para agregar (mismo cliente, cerrado, no incluidos aún)
+  const idsActuales = new Set(liq.servicios_ids||[]);
+  const svcsDisp = DB.servicios.filter(s =>
+    s.estado === 'cerrado' &&
+    (s.cliente||'').toUpperCase() === (liq.cliente||'').toUpperCase() &&
+    !idsActuales.has(s.id)
+  );
+  const wrap = document.getElementById('edit-liq-svcs-agregar-wrap');
+  const dispEl = document.getElementById('edit-liq-svcs-disponibles');
+  if(svcsDisp.length) {
+    wrap.style.display = 'block';
+    dispEl.innerHTML = svcsDisp.map(s => `
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;margin-bottom:5px">
+        <input type="checkbox" data-id="${s.id}" data-ingreso="${s.ingreso_total||s.tarifa_neta||0}" class="edit-liq-svc-chk" onchange="editLiqRecalcular()" style="width:16px;height:16px;accent-color:var(--gold)">
+        <div style="flex:1">
+          <span style="font-size:12px;font-weight:800;color:var(--gold)">${s.servicio_id}</span>
+          <span style="font-size:11px;color:var(--muted)"> · ${s.fecha||''} · ${s.origen||''} → ${s.destino||''}</span>
+        </div>
+        <span style="font-size:13px;font-weight:800">$${Number(s.ingreso_total||s.tarifa_neta||0).toLocaleString('es-CL')}</span>
+      </div>`).join('');
+  } else {
+    wrap.style.display = 'none';
+  }
+
   // Resumen
   document.getElementById('edit-liq-neto').textContent  = '$'+Number(liq.monto_neto||0).toLocaleString('es-CL');
   document.getElementById('edit-liq-iva').textContent   = '$'+Number(liq.iva||0).toLocaleString('es-CL');
@@ -6911,14 +6940,37 @@ async function _liqAdjuntarArchivo(id, accept, capture) {
   inp.click();
 }
 
+function editLiqRecalcular() {
+  const liq = _liqData.find(l=>l.id===_editLiqId);
+  if(!liq) return;
+  const nuevosChk = [...document.querySelectorAll('.edit-liq-svc-chk:checked')];
+  const montoNuevos = nuevosChk.reduce((sum, c) => sum + Number(c.dataset.ingreso||0), 0);
+  const montoTotal  = (liq.monto_neto||0) + montoNuevos;
+  const iva = Math.round(montoTotal * 0.19);
+  document.getElementById('edit-liq-neto').textContent  = '$'+montoTotal.toLocaleString('es-CL');
+  document.getElementById('edit-liq-iva').textContent   = '$'+iva.toLocaleString('es-CL');
+  document.getElementById('edit-liq-total').textContent = '$'+(montoTotal+iva).toLocaleString('es-CL');
+}
+
 async function guardarEdicionLiq() {
   const id = _editLiqId;
   if(!id) return;
   const liq = _liqData.find(l=>l.id===id);
   if(!liq) return;
-  const usaFact  = document.getElementById('edit-liq-factoring').checked;
-  const factPct  = parseFloat(document.getElementById('edit-liq-factoring-pct').value)||0;
-  const factCosto = usaFact ? Math.round((liq.monto_neto||0)*factPct/100) : 0;
+
+  // Servicios nuevos seleccionados
+  const nuevosChk = [...document.querySelectorAll('.edit-liq-svc-chk:checked')];
+  const nuevosIds  = nuevosChk.map(c => c.dataset.id);
+  const svcsIds    = [...(liq.servicios_ids||[]), ...nuevosIds];
+  const montoNuevos = nuevosChk.reduce((sum, c) => sum + Number(c.dataset.ingreso||0), 0);
+  const montoNeto   = (liq.monto_neto||0) + montoNuevos;
+  const iva         = Math.round(montoNeto * 0.19);
+  const total       = montoNeto + iva;
+
+  const usaFact   = document.getElementById('edit-liq-factoring').checked;
+  const factPct   = parseFloat(document.getElementById('edit-liq-factoring-pct').value)||0;
+  const factCosto = usaFact ? Math.round(montoNeto*factPct/100) : 0;
+
   const {error} = await supa.from('kaptura_liquidaciones').update({
     estado:            document.getElementById('edit-liq-estado').value,
     fecha_emision:     document.getElementById('edit-liq-fecha').value,
@@ -6931,7 +6983,11 @@ async function guardarEdicionLiq() {
     obs_pago:          document.getElementById('edit-liq-obs-pago').value.trim() || null,
     factoring:         usaFact,
     factoring_pct:     usaFact ? factPct : null,
-    factoring_costo:   usaFact ? factCosto : null
+    factoring_costo:   usaFact ? factCosto : null,
+    servicios_ids:     svcsIds,
+    monto_neto:        montoNeto,
+    iva:               iva,
+    total:             total
   }).eq('id', id);
   if(error) { toast('Error: '+error.message); return; }
   toast('✓ Liquidación actualizada');
