@@ -5346,7 +5346,7 @@ async function iniciarLogin() {
   if(saved) {
     try {
       const sess = JSON.parse(saved);
-      if(sess.pin && sess.empresa && (['coordinador','controller','administrador','conductor','despachador'].includes(sess.rol) || sess.modo === 'flota' || sess.modo === 'demo')) {
+      if(sess.pin && sess.empresa && (['coordinador','controller','administrador','conductor','despachador','admin_kaptura'].includes(sess.rol) || sess.modo === 'flota' || sess.modo === 'demo')) {
         _sessionUsuario = sess;
         document.getElementById('login-screen').style.display = 'none';
         document.getElementById('pantalla-modulos').style.display = 'none';
@@ -5425,7 +5425,7 @@ async function validarPinKaptura() {
     .select('*').eq('pin',_pinIngresado).eq('activo',true).single();
   if(usr) {
     _sessionUsuario = usr;
-    localStorage.setItem('kaptura_session', JSON.stringify({pin: _pinIngresado}));
+    localStorage.setItem('kaptura_session', JSON.stringify(usr));
     // Conductor → redirigir a conductor.html
     if(usr.rol === 'conductor') {
       window.location.href = 'conductor.html?empresa='+usr.empresa+'&conductor='+encodeURIComponent(usr.conductor_nombre||'');
@@ -6501,8 +6501,7 @@ async function verLiquidacion(id) {
     </div>` : ''}`;
 
   // Botones según estado
-  const puedeElim = (()=>{const r=_sessionUsuario?.rol,p=_sessionUsuario?.pin,em=_sessionUsuario?.empresa;return r==='admin_kaptura'||(r==='coordinador'&&p==='1996'&&em==='flota_297221')||(r==='coordinador'&&p==='0101'&&em==='global_solutions');})();
-  const btnElimModal = puedeElim ? `<button class="btn" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:var(--danger)" onclick="eliminarLiquidacion('${id}')">✕ Eliminar</button>` : '';
+  const btnElimModal = `<button class="btn" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:var(--danger)" onclick="eliminarLiquidacion('${id}')">✕ Eliminar</button>`;
   const btnEditar = `<button class="btn btn-outline" onclick="editarLiquidacion('${id}')">✏ Editar</button>`;
   const btns = {
     borrador: `<button class="btn btn-ghost" onclick="cerrar('modal-ver-liq')">Cerrar</button>
