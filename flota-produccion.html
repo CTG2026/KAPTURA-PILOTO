@@ -441,6 +441,126 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
     <div id="liq-lista"><div class="empty">Sin liquidaciones — crea la primera con + Nueva Liquidación</div></div>
   </div>
 
+  <!-- MODAL EDITAR LIQUIDACIÓN -->
+  <div id="modal-editar-liq" class="overlay" style="display:none">
+    <div class="modal" style="max-width:700px">
+      <div class="modal-hdr">
+        <div>
+          <div class="modal-ttl" id="edit-liq-titulo">Editar Liquidación</div>
+          <div class="modal-sub" id="edit-liq-sub"></div>
+        </div>
+        <button class="modal-cls" onclick="cerrar('modal-editar-liq')">✕</button>
+      </div>
+      <div class="modal-body">
+        <!-- Cliente (solo lectura) -->
+        <div class="fld">
+          <div class="lbl">Cliente</div>
+          <div id="edit-liq-cliente-txt" style="padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;font-size:13px;font-weight:700;color:var(--text)"></div>
+        </div>
+        <!-- Servicios incluidos (solo lectura) -->
+        <div class="fld">
+          <div class="lbl">Servicios incluidos</div>
+          <div id="edit-liq-svcs"></div>
+        </div>
+        <!-- Resumen (solo lectura) -->
+        <div id="edit-liq-resumen" style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:12px">
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:var(--muted);font-size:12px">Monto neto</span><span id="edit-liq-neto" style="font-weight:700"></span></div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:var(--muted);font-size:12px">IVA 19%</span><span id="edit-liq-iva" style="font-weight:700"></span></div>
+          <div style="display:flex;justify-content:space-between;padding-top:8px;border-top:1px solid var(--border)"><span style="font-weight:800;color:var(--gold)">TOTAL</span><span id="edit-liq-total" style="font-size:16px;font-weight:900;color:var(--gold)"></span></div>
+        </div>
+        <!-- Info general -->
+        <div class="section-ttl">Información General</div>
+        <div class="fld2">
+          <div class="fld">
+            <div class="lbl">Estado</div>
+            <select class="inp" id="edit-liq-estado">
+              <option value="borrador">Borrador</option>
+              <option value="emitida">Emitida</option>
+              <option value="enviada">Enviada</option>
+              <option value="aprobada">Aprobada</option>
+              <option value="facturada">Facturada</option>
+              <option value="en_cobro">En Cobro</option>
+              <option value="cobrada">Cobrada</option>
+            </select>
+          </div>
+          <div class="fld">
+            <div class="lbl">Fecha Emisión</div>
+            <input class="inp" type="date" id="edit-liq-fecha">
+          </div>
+        </div>
+        <div class="fld2">
+          <div class="fld">
+            <div class="lbl">Vencimiento</div>
+            <input class="inp" type="date" id="edit-liq-vencimiento">
+          </div>
+          <div class="fld">
+            <div class="lbl">Fecha Pago</div>
+            <input class="inp" type="date" id="edit-liq-fecha-pago">
+          </div>
+        </div>
+        <div class="fld">
+          <div class="lbl">Notas</div>
+          <textarea class="inp" id="edit-liq-notas" rows="2" placeholder="Observaciones..."></textarea>
+        </div>
+        <!-- Factura SII -->
+        <div class="section-ttl">Factura SII</div>
+        <div class="fld2">
+          <div class="fld">
+            <div class="lbl">N° Factura</div>
+            <input class="inp" type="text" id="edit-liq-num-factura" placeholder="Ej: 1234">
+          </div>
+          <div class="fld">
+            <div class="lbl">Fecha Factura</div>
+            <input class="inp" type="date" id="edit-liq-fecha-factura">
+          </div>
+        </div>
+        <div class="fld">
+          <div class="lbl">Documento adjunto</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-outline btn-sm" onclick="liqAdjuntarSIIEdit()">📁 Archivo</button>
+            <button class="btn btn-outline btn-sm" onclick="liqFotoEdit()">🖼 Foto</button>
+            <button class="btn btn-outline btn-sm" onclick="liqCamaraEdit()">📷 Cámara</button>
+          </div>
+          <div id="edit-liq-pdf-link" style="margin-top:6px;display:none"></div>
+        </div>
+        <!-- Pago -->
+        <div class="section-ttl">Pago</div>
+        <div class="fld2">
+          <div class="fld">
+            <div class="lbl">Forma de Pago Real</div>
+            <input class="inp" type="text" id="edit-liq-forma-pago" placeholder="Transferencia, cheque...">
+          </div>
+          <div class="fld">
+            <div class="lbl">Observaciones Pago</div>
+            <input class="inp" type="text" id="edit-liq-obs-pago" placeholder="Observaciones...">
+          </div>
+        </div>
+        <!-- Factoring -->
+        <div class="section-ttl">Factoring</div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <input type="checkbox" id="edit-liq-factoring" onchange="editLiqToggleFactoring()" style="width:18px;height:18px;accent-color:var(--gold)">
+          <label for="edit-liq-factoring" style="font-size:13px;color:var(--text);font-weight:600">Ceder a factoring</label>
+        </div>
+        <div id="edit-liq-factoring-inputs" style="display:none">
+          <div class="fld2">
+            <div class="fld">
+              <div class="lbl">Comisión (%)</div>
+              <input class="inp" type="number" id="edit-liq-factoring-pct" value="3" step="0.1">
+            </div>
+            <div class="fld">
+              <div class="lbl">Costo ($)</div>
+              <input class="inp" id="edit-liq-factoring-costo" readonly>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-ftr">
+        <button class="btn btn-ghost" onclick="cerrar('modal-editar-liq')">Cancelar</button>
+        <button class="btn btn-navy" onclick="guardarEdicionLiq()">💾 Guardar Cambios</button>
+      </div>
+    </div>
+  </div>
+
   <!-- MODAL NUEVA LIQUIDACIÓN -->
   <div id="modal-nueva-liq" class="overlay" style="display:none">
     <div class="modal" style="max-width:700px">
@@ -6550,117 +6670,122 @@ async function verLiquidacion(id) {
   document.getElementById('modal-ver-liq').style.display = 'flex';
 }
 
+let _editLiqId = null;
+
 async function editarLiquidacion(id) {
   const liq = _liqData.find(l => l.id === id);
   if(!liq) return;
+  _editLiqId = id;
   cerrar('modal-ver-liq');
 
-  // Precargar modal-nueva-liq con datos existentes
-  document.querySelector('.modal-ttl', document.getElementById('modal-nueva-liq')) ;
-  const tituloEl = document.querySelector('#modal-nueva-liq .modal-ttl');
-  if(tituloEl) tituloEl.textContent = 'Editar Liquidación';
-  document.getElementById('liq-numero-preview').textContent = liq.numero;
+  // Header
+  document.getElementById('edit-liq-titulo').textContent = 'Editar · ' + liq.numero;
+  document.getElementById('edit-liq-sub').textContent = liq.cliente + ' · ' + (liq.fecha_emision||'');
 
-  // Poblar cliente (readonly en edición)
-  const selCliente = document.getElementById('liq-cliente');
-  await liqSeleccionarClienteInit();
-  selCliente.value = liq.cliente;
-  selCliente.disabled = true;
+  // Cliente solo lectura
+  document.getElementById('edit-liq-cliente-txt').textContent = liq.cliente;
 
-  document.getElementById('liq-fecha').value       = liq.fecha_emision || '';
-  document.getElementById('liq-vencimiento').value = liq.fecha_vencimiento || '';
-  document.getElementById('liq-notas').value       = liq.notas || '';
-
-  // Factoring
-  if(liq.factoring) {
-    document.getElementById('liq-usa-factoring').checked = true;
-    document.getElementById('liq-factoring-inputs').style.display = 'block';
-    document.getElementById('liq-factoring-pct').value = liq.factoring_pct || 3;
-    document.getElementById('liq-factoring-section').style.display = 'block';
-  }
-
-  // Mostrar servicios ya incluidos (sin permitir cambiarlos)
+  // Servicios incluidos
   const svcs = DB.servicios.filter(s => (liq.servicios_ids||[]).includes(s.id));
-  const contSvcs = document.getElementById('liq-servicios-container');
-  const listaSvcs = document.getElementById('liq-servicios-lista');
-  if(contSvcs && listaSvcs) {
-    contSvcs.style.display = 'block';
-    listaSvcs.innerHTML = svcs.map(s => `
-      <div style="padding:8px 10px;background:var(--bg);border:1px solid var(--border);border-radius:7px;margin-bottom:5px;display:flex;justify-content:space-between;align-items:center">
+  document.getElementById('edit-liq-svcs').innerHTML = svcs.length
+    ? svcs.map(s => `<div style="padding:8px 10px;background:var(--bg);border:1px solid var(--border);border-radius:7px;margin-bottom:5px;display:flex;justify-content:space-between;align-items:center">
         <div><span style="font-weight:800;color:var(--gold)">${s.servicio_id}</span> <span style="font-size:11px;color:var(--muted)">${s.fecha||''} · ${s.origen||''} → ${s.destino||''}</span></div>
         <span style="font-weight:800">$${Number(s.ingreso_total||s.tarifa_neta||0).toLocaleString('es-CL')}</span>
-      </div>`).join('');
-  }
+      </div>`).join('')
+    : '<div style="font-size:11px;color:var(--muted)">— sin servicios cargados localmente</div>';
 
   // Resumen
-  document.getElementById('liq-resumen').style.display = 'block';
-  document.getElementById('liq-cant-svc').textContent  = svcs.length;
-  document.getElementById('liq-monto-neto').textContent = '$'+Number(liq.monto_neto||0).toLocaleString('es-CL');
-  document.getElementById('liq-iva').textContent        = '$'+Number(liq.iva||0).toLocaleString('es-CL');
-  document.getElementById('liq-total').textContent      = '$'+Number(liq.total||0).toLocaleString('es-CL');
+  document.getElementById('edit-liq-neto').textContent  = '$'+Number(liq.monto_neto||0).toLocaleString('es-CL');
+  document.getElementById('edit-liq-iva').textContent   = '$'+Number(liq.iva||0).toLocaleString('es-CL');
+  document.getElementById('edit-liq-total').textContent = '$'+Number(liq.total||0).toLocaleString('es-CL');
 
-  // Cambiar botones footer a modo edición
-  const ftr = document.querySelector('#modal-nueva-liq .modal-ftr');
-  if(ftr) ftr.innerHTML = `
-    <button class="btn btn-ghost" onclick="cancelarEditarLiq('${id}')">Cancelar</button>
-    <button class="btn btn-navy" onclick="guardarEdicionLiq('${id}')">💾 Guardar Cambios</button>`;
+  // Info general
+  document.getElementById('edit-liq-estado').value      = liq.estado || 'borrador';
+  document.getElementById('edit-liq-fecha').value       = liq.fecha_emision || '';
+  document.getElementById('edit-liq-vencimiento').value = liq.fecha_vencimiento || '';
+  document.getElementById('edit-liq-fecha-pago').value  = liq.fecha_pago || '';
+  document.getElementById('edit-liq-notas').value       = liq.notas || '';
 
-  document.getElementById('modal-nueva-liq').style.display = 'flex';
-}
-
-async function liqSeleccionarClienteInit() {
-  const sel = document.getElementById('liq-cliente');
-  if(sel.options.length <= 1) {
-    (DB.clientes||[]).forEach(c => {
-      const o = document.createElement('option');
-      o.value = c.nombre; o.textContent = c.nombre;
-      sel.appendChild(o);
-    });
+  // Factura SII
+  document.getElementById('edit-liq-num-factura').value   = liq.num_factura || '';
+  document.getElementById('edit-liq-fecha-factura').value = liq.fecha_factura || '';
+  const pdfLink = document.getElementById('edit-liq-pdf-link');
+  if(liq.pdf_sii_url) {
+    pdfLink.style.display = 'block';
+    pdfLink.innerHTML = `<a href="${liq.pdf_sii_url}" target="_blank" style="color:var(--gold);font-size:11px;font-weight:700">📄 Ver documento adjunto</a>`;
+  } else {
+    pdfLink.style.display = 'none';
   }
+
+  // Pago
+  document.getElementById('edit-liq-forma-pago').value = liq.forma_pago_real || '';
+  document.getElementById('edit-liq-obs-pago').value   = liq.obs_pago || '';
+
+  // Factoring
+  const usaFact = !!(liq.factoring);
+  document.getElementById('edit-liq-factoring').checked = usaFact;
+  document.getElementById('edit-liq-factoring-inputs').style.display = usaFact ? 'block' : 'none';
+  document.getElementById('edit-liq-factoring-pct').value = liq.factoring_pct || 3;
+  document.getElementById('edit-liq-factoring-costo').value = liq.factoring_costo ? '$'+Number(liq.factoring_costo).toLocaleString('es-CL') : '';
+
+  document.getElementById('modal-editar-liq').style.display = 'flex';
 }
 
-async function guardarEdicionLiq(id) {
-  const fecha      = document.getElementById('liq-fecha').value;
-  const vencimiento= document.getElementById('liq-vencimiento').value;
-  const notas      = document.getElementById('liq-notas').value.trim();
-  const usaFact    = document.getElementById('liq-usa-factoring').checked;
-  const factPct    = parseFloat(document.getElementById('liq-factoring-pct').value)||0;
-  const liq        = _liqData.find(l=>l.id===id);
+function editLiqToggleFactoring() {
+  const usa = document.getElementById('edit-liq-factoring').checked;
+  document.getElementById('edit-liq-factoring-inputs').style.display = usa ? 'block' : 'none';
+}
+
+function liqAdjuntarSIIEdit() { _liqAdjuntarArchivo(_editLiqId, 'image/*,application/pdf', null); }
+function liqFotoEdit()        { _liqAdjuntarArchivo(_editLiqId, 'image/*', null); }
+function liqCamaraEdit()      { _liqAdjuntarArchivo(_editLiqId, 'image/*', 'environment'); }
+
+async function _liqAdjuntarArchivo(id, accept, capture) {
+  const inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = accept;
+  if(capture) inp.capture = capture;
+  inp.onchange = async () => {
+    await _liqProcesarArchivo(id, inp.files[0]);
+    // Actualizar link en modal editar
+    const liq = _liqData.find(l=>l.id===id);
+    if(liq?.pdf_sii_url) {
+      const pdfLink = document.getElementById('edit-liq-pdf-link');
+      pdfLink.style.display = 'block';
+      pdfLink.innerHTML = `<a href="${liq.pdf_sii_url}" target="_blank" style="color:var(--gold);font-size:11px;font-weight:700">📄 Ver documento adjunto</a>`;
+      if(liq.num_factura) document.getElementById('edit-liq-num-factura').value = liq.num_factura;
+      if(liq.fecha_factura) document.getElementById('edit-liq-fecha-factura').value = liq.fecha_factura;
+    }
+  };
+  inp.click();
+}
+
+async function guardarEdicionLiq() {
+  const id = _editLiqId;
+  if(!id) return;
+  const liq = _liqData.find(l=>l.id===id);
   if(!liq) return;
-  const factCosto  = usaFact ? Math.round((liq.monto_neto||0)*factPct/100) : 0;
+  const usaFact  = document.getElementById('edit-liq-factoring').checked;
+  const factPct  = parseFloat(document.getElementById('edit-liq-factoring-pct').value)||0;
+  const factCosto = usaFact ? Math.round((liq.monto_neto||0)*factPct/100) : 0;
   const {error} = await supa.from('kaptura_liquidaciones').update({
-    fecha_emision: fecha,
-    fecha_vencimiento: vencimiento,
-    notas,
-    factoring: usaFact,
-    factoring_pct: usaFact ? factPct : null,
-    factoring_costo: factCosto
+    estado:            document.getElementById('edit-liq-estado').value,
+    fecha_emision:     document.getElementById('edit-liq-fecha').value,
+    fecha_vencimiento: document.getElementById('edit-liq-vencimiento').value,
+    fecha_pago:        document.getElementById('edit-liq-fecha-pago').value || null,
+    notas:             document.getElementById('edit-liq-notas').value.trim(),
+    num_factura:       document.getElementById('edit-liq-num-factura').value.trim() || null,
+    fecha_factura:     document.getElementById('edit-liq-fecha-factura').value || null,
+    forma_pago_real:   document.getElementById('edit-liq-forma-pago').value.trim() || null,
+    obs_pago:          document.getElementById('edit-liq-obs-pago').value.trim() || null,
+    factoring:         usaFact,
+    factoring_pct:     usaFact ? factPct : null,
+    factoring_costo:   usaFact ? factCosto : null
   }).eq('id', id);
   if(error) { toast('Error: '+error.message); return; }
   toast('✓ Liquidación actualizada');
-  // Restaurar modal a estado normal
-  cancelarEditarLiq(id);
+  cerrar('modal-editar-liq');
   await cargarLiquidaciones();
   verLiquidacion(id);
-}
-
-function cancelarEditarLiq(id) {
-  const tituloEl = document.querySelector('#modal-nueva-liq .modal-ttl');
-  if(tituloEl) tituloEl.textContent = 'Nueva Liquidación';
-  document.getElementById('liq-cliente').disabled = false;
-  document.getElementById('liq-cliente').value = '';
-  document.getElementById('liq-servicios-container').style.display = 'none';
-  document.getElementById('liq-resumen').style.display = 'none';
-  document.getElementById('liq-factoring-section').style.display = 'none';
-  document.getElementById('liq-usa-factoring').checked = false;
-  document.getElementById('liq-factoring-inputs').style.display = 'none';
-  const ftr = document.querySelector('#modal-nueva-liq .modal-ftr');
-  if(ftr) ftr.innerHTML = `
-    <button class="btn btn-ghost" onclick="cerrar('modal-nueva-liq')">Cancelar</button>
-    <button class="btn btn-outline" onclick="guardarLiquidacion('borrador')">Guardar borrador</button>
-    <button class="btn btn-navy" onclick="guardarLiquidacion('emitida')">✓ Emitir Liquidación</button>`;
-  cerrar('modal-nueva-liq');
-  if(id) verLiquidacion(id);
 }
 
 async function liqCambiarEstado(id, nuevoEstado) {
