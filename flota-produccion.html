@@ -77,8 +77,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 }
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(4px);z-index:200;display:flex;align-items:flex-end;justify-content:center}
 @media(min-width:640px){.overlay{align-items:center;padding:20px}}
-.modal{background:var(--surface);border-radius:16px 16px 0 0;width:100%;max-height:92vh;overflow-y:auto;box-shadow:var(--shl);border:1px solid var(--border);margin-top:auto}
-@media(min-width:640px){.modal{border-radius:16px;max-width:620px}}
+.modal{background:var(--surface);border-radius:16px 16px 0 0;width:100%;max-height:92vh;overflow-y:auto;box-shadow:var(--shl);border:1px solid var(--border)}
+@media(min-width:640px){.modal{border-radius:16px;max-width:620px;margin:0 auto}}
 .modal-hdr{padding:14px 16px 12px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;position:sticky;top:0;background:var(--surface);z-index:1}
 .modal-ttl{font-family:'DM Sans',sans-serif;font-size:17px;font-weight:900;text-transform:uppercase;letter-spacing:0.05em;color:var(--gold)}
 .modal-sub{font-size:11px;color:var(--muted);font-weight:600;margin-top:2px}
@@ -6441,33 +6441,156 @@ async function verLiquidacion(id) {
     </div>` : ''}`;
 
   // Botones según estado
+  const btnEditar = `<button class="btn btn-outline" onclick="editarLiquidacion('${id}')">✏ Editar</button>`;
   const btns = {
     borrador: `<button class="btn btn-ghost" onclick="cerrar('modal-ver-liq')">Cerrar</button>
+      ${btnEditar}
       <button class="btn btn-outline" onclick="liqAdjuntarSII('${id}')">📎 Adjuntar Factura</button>
       <button class="btn btn-navy" onclick="liqCambiarEstado('${id}','emitida')">Emitir →</button>`,
     emitida: `<button class="btn btn-ghost" onclick="cerrar('modal-ver-liq')">Cerrar</button>
+      ${btnEditar}
       <button class="btn btn-outline" onclick="liqAdjuntarSII('${id}')">📎 Adjuntar Factura</button>
       <button class="btn btn-navy" onclick="liqCambiarEstado('${id}','enviada')">📤 Enviada al Cliente</button>`,
     enviada: `<button class="btn btn-ghost" onclick="cerrar('modal-ver-liq')">Cerrar</button>
+      ${btnEditar}
       <button class="btn btn-outline" onclick="liqCambiarEstado('${id}','aprobada')">✓ Aprobada por Cliente</button>
       <button class="btn btn-navy" onclick="liqCambiarEstado('${id}','facturada')">🧾 Saltar a Facturada</button>`,
     aprobada: `<button class="btn btn-ghost" onclick="cerrar('modal-ver-liq')">Cerrar</button>
+      ${btnEditar}
       <button class="btn btn-outline" onclick="liqAdjuntarSII('${id}')">📎 Adjuntar Factura SII</button>
       <button class="btn btn-navy" onclick="liqRegistrarFactura('${id}')">🧾 Registrar Factura</button>`,
     facturada: `<button class="btn btn-ghost" onclick="cerrar('modal-ver-liq')">Cerrar</button>
+      ${btnEditar}
       <button class="btn btn-outline" onclick="liqAdjuntarSII('${id}')">📎 Adjuntar Factura SII</button>
       <button class="btn btn-navy" onclick="liqCambiarEstado('${id}','en_cobro')">💰 En Cobro</button>`,
     en_cobro: `<button class="btn btn-ghost" onclick="cerrar('modal-ver-liq')">Cerrar</button>
+      ${btnEditar}
       <button class="btn btn-navy" onclick="liqRegistrarPago('${id}')">✓ Registrar Pago</button>`,
     factoring: `<button class="btn btn-ghost" onclick="cerrar('modal-ver-liq')">Cerrar</button>
+      ${btnEditar}
       <button class="btn btn-navy" onclick="liqCambiarEstado('${id}','cobrada')">✓ Marcar Cobrada</button>`,
     por_cobrar: `<button class="btn btn-ghost" onclick="cerrar('modal-ver-liq')">Cerrar</button>
+      ${btnEditar}
       <button class="btn btn-outline" onclick="liqAdjuntarSII('${id}')">📎 Adjuntar Factura SII</button>
       <button class="btn btn-navy" onclick="liqCambiarEstado('${id}','en_cobro')">💰 En Cobro</button>`,
-    cobrada: `<button class="btn btn-ghost" onclick="cerrar('modal-ver-liq')">Cerrar</button>`
+    cobrada: `<button class="btn btn-ghost" onclick="cerrar('modal-ver-liq')">Cerrar</button>
+      ${btnEditar}`
   };
   document.getElementById('ver-liq-ftr').innerHTML = btns[liq.estado] || btns.borrador;
   document.getElementById('modal-ver-liq').style.display = 'flex';
+}
+
+async function editarLiquidacion(id) {
+  const liq = _liqData.find(l => l.id === id);
+  if(!liq) return;
+  cerrar('modal-ver-liq');
+
+  // Precargar modal-nueva-liq con datos existentes
+  document.querySelector('.modal-ttl', document.getElementById('modal-nueva-liq')) ;
+  const tituloEl = document.querySelector('#modal-nueva-liq .modal-ttl');
+  if(tituloEl) tituloEl.textContent = 'Editar Liquidación';
+  document.getElementById('liq-numero-preview').textContent = liq.numero;
+
+  // Poblar cliente (readonly en edición)
+  const selCliente = document.getElementById('liq-cliente');
+  await liqSeleccionarClienteInit();
+  selCliente.value = liq.cliente;
+  selCliente.disabled = true;
+
+  document.getElementById('liq-fecha').value       = liq.fecha_emision || '';
+  document.getElementById('liq-vencimiento').value = liq.fecha_vencimiento || '';
+  document.getElementById('liq-notas').value       = liq.notas || '';
+
+  // Factoring
+  if(liq.factoring) {
+    document.getElementById('liq-usa-factoring').checked = true;
+    document.getElementById('liq-factoring-inputs').style.display = 'block';
+    document.getElementById('liq-factoring-pct').value = liq.factoring_pct || 3;
+    document.getElementById('liq-factoring-section').style.display = 'block';
+  }
+
+  // Mostrar servicios ya incluidos (sin permitir cambiarlos)
+  const svcs = DB.servicios.filter(s => (liq.servicios_ids||[]).includes(s.id));
+  const contSvcs = document.getElementById('liq-servicios-container');
+  const listaSvcs = document.getElementById('liq-servicios-lista');
+  if(contSvcs && listaSvcs) {
+    contSvcs.style.display = 'block';
+    listaSvcs.innerHTML = svcs.map(s => `
+      <div style="padding:8px 10px;background:var(--bg);border:1px solid var(--border);border-radius:7px;margin-bottom:5px;display:flex;justify-content:space-between;align-items:center">
+        <div><span style="font-weight:800;color:var(--gold)">${s.servicio_id}</span> <span style="font-size:11px;color:var(--muted)">${s.fecha||''} · ${s.origen||''} → ${s.destino||''}</span></div>
+        <span style="font-weight:800">$${Number(s.ingreso_total||s.tarifa_neta||0).toLocaleString('es-CL')}</span>
+      </div>`).join('');
+  }
+
+  // Resumen
+  document.getElementById('liq-resumen').style.display = 'block';
+  document.getElementById('liq-cant-svc').textContent  = svcs.length;
+  document.getElementById('liq-monto-neto').textContent = '$'+Number(liq.monto_neto||0).toLocaleString('es-CL');
+  document.getElementById('liq-iva').textContent        = '$'+Number(liq.iva||0).toLocaleString('es-CL');
+  document.getElementById('liq-total').textContent      = '$'+Number(liq.total||0).toLocaleString('es-CL');
+
+  // Cambiar botones footer a modo edición
+  const ftr = document.querySelector('#modal-nueva-liq .modal-ftr');
+  if(ftr) ftr.innerHTML = `
+    <button class="btn btn-ghost" onclick="cancelarEditarLiq('${id}')">Cancelar</button>
+    <button class="btn btn-navy" onclick="guardarEdicionLiq('${id}')">💾 Guardar Cambios</button>`;
+
+  document.getElementById('modal-nueva-liq').style.display = 'flex';
+}
+
+async function liqSeleccionarClienteInit() {
+  const sel = document.getElementById('liq-cliente');
+  if(sel.options.length <= 1) {
+    (DB.clientes||[]).forEach(c => {
+      const o = document.createElement('option');
+      o.value = c.nombre; o.textContent = c.nombre;
+      sel.appendChild(o);
+    });
+  }
+}
+
+async function guardarEdicionLiq(id) {
+  const fecha      = document.getElementById('liq-fecha').value;
+  const vencimiento= document.getElementById('liq-vencimiento').value;
+  const notas      = document.getElementById('liq-notas').value.trim();
+  const usaFact    = document.getElementById('liq-usa-factoring').checked;
+  const factPct    = parseFloat(document.getElementById('liq-factoring-pct').value)||0;
+  const liq        = _liqData.find(l=>l.id===id);
+  if(!liq) return;
+  const factCosto  = usaFact ? Math.round((liq.monto_neto||0)*factPct/100) : 0;
+  const {error} = await supa.from('kaptura_liquidaciones').update({
+    fecha_emision: fecha,
+    fecha_vencimiento: vencimiento,
+    notas,
+    factoring: usaFact,
+    factoring_pct: usaFact ? factPct : null,
+    factoring_costo: factCosto
+  }).eq('id', id);
+  if(error) { toast('Error: '+error.message); return; }
+  toast('✓ Liquidación actualizada');
+  // Restaurar modal a estado normal
+  cancelarEditarLiq(id);
+  await cargarLiquidaciones();
+  verLiquidacion(id);
+}
+
+function cancelarEditarLiq(id) {
+  const tituloEl = document.querySelector('#modal-nueva-liq .modal-ttl');
+  if(tituloEl) tituloEl.textContent = 'Nueva Liquidación';
+  document.getElementById('liq-cliente').disabled = false;
+  document.getElementById('liq-cliente').value = '';
+  document.getElementById('liq-servicios-container').style.display = 'none';
+  document.getElementById('liq-resumen').style.display = 'none';
+  document.getElementById('liq-factoring-section').style.display = 'none';
+  document.getElementById('liq-usa-factoring').checked = false;
+  document.getElementById('liq-factoring-inputs').style.display = 'none';
+  const ftr = document.querySelector('#modal-nueva-liq .modal-ftr');
+  if(ftr) ftr.innerHTML = `
+    <button class="btn btn-ghost" onclick="cerrar('modal-nueva-liq')">Cancelar</button>
+    <button class="btn btn-outline" onclick="guardarLiquidacion('borrador')">Guardar borrador</button>
+    <button class="btn btn-navy" onclick="guardarLiquidacion('emitida')">✓ Emitir Liquidación</button>`;
+  cerrar('modal-nueva-liq');
+  if(id) verLiquidacion(id);
 }
 
 async function liqCambiarEstado(id, nuevoEstado) {
