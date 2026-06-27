@@ -2823,7 +2823,8 @@ async function abrirAsignar() {
     document.getElementById('asig-punto-inicio').value = 'base';
     if(hint) hint.textContent = 'Sin servicio anterior registrado — se asume salida desde base';
   }
-  document.getElementById('wrap-origen-custom').style.display = 'none';
+  const wrapOrigenCustom = document.getElementById('wrap-origen-custom');
+  if(wrapOrigenCustom) wrapOrigenCustom.style.display = 'none';
   document.getElementById('wrap-cliente-custom').style.display = 'none';
   // Poblar tipo operacion desde equipos en SETUP
 
@@ -2831,9 +2832,11 @@ async function abrirAsignar() {
   const obsInputAsig = document.getElementById('asig-obs-input');
   if(obsInputAsig) obsInputAsig.value = '';
   asigLimpiarPuntos();
-  // Dejar destino vacío — se puebla cuando se selecciona el cliente
-  const selDest = document.getElementById('asig-destino');
-  if(selDest) selDest.innerHTML = '<option value="">Selecciona cliente primero...</option>';
+  // Limpiar select servicio al abrir
+  const selSvcTar = document.getElementById('asig-servicio-tar');
+  if(selSvcTar) selSvcTar.innerHTML = '<option value="">Selecciona cliente primero...</option>';
+  document.getElementById('asig-origen').value = '';
+  document.getElementById('asig-destino').value = '';
   document.getElementById('wrap-asig-destino-custom').style.display = 'none';
   const sAsig2 = DB.servicios[svcActivoIdx];
   if(sAsig2) obsRenderHilo(document.getElementById('asig-obs-hilo'), obsParseHilo(sAsig2.notas||''));
@@ -2870,8 +2873,8 @@ function checkAsigDestino() {
 }
 
 function checkOtroOrigen() {
-  document.getElementById('wrap-origen-custom').style.display =
-    document.getElementById('asig-origen').value === 'otro' ? 'block' : 'none';
+  const el = document.getElementById('wrap-origen-custom');
+  if(el) el.style.display = document.getElementById('asig-origen').value === 'otro' ? 'block' : 'none';
 }
 function checkOtroCliente() {
   const clienteVal = document.getElementById('asig-cliente').value;
