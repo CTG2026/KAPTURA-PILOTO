@@ -2982,10 +2982,12 @@ async function guardarAsignacion() {
   const clienteSel= document.getElementById('asig-cliente').value;
   const clienteNew= document.getElementById('asig-cliente-custom').value.trim();
   const cliente   = clienteSel === '__otro__' ? clienteNew : clienteSel;
-  const origenSel = document.getElementById('asig-origen').value;
-  const origen    = origenSel === 'otro' ? document.getElementById('asig-origen-custom').value.trim() : origenSel;
-  const fecha     = document.getElementById('asig-fecha').value;
-  if(!patente||!conductor||!cliente||!origen||!fecha) { toast('⚠ Completa todos los campos'); return; }
+  const svcTarId = document.getElementById('asig-servicio-tar')?.value || '';
+  const origen   = svcTarId === '__otro__'
+    ? (document.getElementById('asig-destino-custom')?.value.trim()||'')
+    : document.getElementById('asig-origen').value.trim();
+  const fecha    = document.getElementById('asig-fecha').value;
+  if(!patente||!conductor||!cliente||!svcTarId||!fecha) { toast('⚠ Completa todos los campos'); return; }
   if(clienteSel === '__otro__' && clienteNew) {
     await supa.from('kaptura_clientes').insert({nombre:clienteNew, condicion_pago:'30 días'});
     DB.clientes.push({nombre:clienteNew});
