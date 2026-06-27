@@ -1268,39 +1268,22 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
       <!-- 3: Cliente -->
       <div class="fld"><label class="lbl">3. Cliente</label><select class="inp" id="asig-cliente" onchange="checkOtroCliente()"></select></div>
       <div class="fld" id="wrap-cliente-custom" style="display:none"><label class="lbl">Nombre del cliente nuevo</label><input class="inp" id="asig-cliente-custom" placeholder="Nombre del cliente"></div>
-      <!-- 4+5: Origen y Destino -->
-      <div class="fld2">
-        <div class="fld"><label class="lbl">4. Origen</label>
-          <select class="inp" id="asig-origen" onchange="checkOtroOrigen();precargarTarifario()">
-            <option value="">Selecciona cliente primero...</option>
-          </select>
-        </div>
-        <div class="fld"><label class="lbl">5. Destino</label>
-          <select class="inp" id="asig-destino" onchange="checkAsigDestino();precargarTarifario()">
-            <option value="">Selecciona cliente primero...</option>
-          </select>
-        </div>
+      <!-- 4: Servicio desde tarifario -->
+      <div class="fld"><label class="lbl">4. Servicio</label>
+        <select class="inp" id="asig-servicio-tar" onchange="seleccionarServicioTarifario()">
+          <option value="">Selecciona cliente primero...</option>
+        </select>
       </div>
-      <div class="fld" id="wrap-origen-custom" style="display:none"><label class="lbl">Especifica el origen</label><input class="inp" id="asig-origen-custom" placeholder="Ciudad de origen"></div>
       <div class="fld" id="wrap-asig-destino-custom" style="display:none">
-        <label class="lbl">Especifica el destino</label>
+        <label class="lbl">Especifica destino</label>
         <input class="inp" id="asig-destino-custom" placeholder="Destino específico">
       </div>
-      <!-- 6+7+8: Bloque tarifario -->
-      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:4px">
-        <div style="font-size:9px;font-weight:800;color:var(--gold);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:8px">Tarifario</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
-          <div>
-            <div style="font-size:9px;color:var(--muted);margin-bottom:3px;text-transform:uppercase;letter-spacing:0.1em;font-weight:800">6. Tarifa $</div>
-            <input class="inp" type="number" id="asig-tarifa" placeholder="0" style="font-size:13px;font-weight:800;color:var(--gold)">
-          </div>
-          <div>
-            <div style="font-size:9px;color:var(--muted);margin-bottom:3px;text-transform:uppercase;letter-spacing:0.1em;font-weight:800">7. KM Teórico</div>
-            <input class="inp" type="number" id="asig-km-teorico" placeholder="0">
-          </div>
-          <input type="hidden" id="asig-tag-teorico" value="0">
-        </div>
-      </div>
+      <!-- Campos ocultos origen/destino para guardar -->
+      <input type="hidden" id="asig-origen" value="">
+      <input type="hidden" id="asig-destino" value="">
+      <input type="hidden" id="asig-tarifa" value="">
+      <input type="hidden" id="asig-km-teorico" value="">
+      <input type="hidden" id="asig-tag-teorico" value="">
       <!-- Fecha y Tipo -->
       <div class="fld2">
         <div class="fld"><label class="lbl">Fecha del Servicio</label><input class="inp" id="asig-fecha" type="date"></div>
@@ -1312,9 +1295,10 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
           </select>
         </div>
       </div>
-      <div class="fld2">
-        <div class="fld"><label class="lbl">Hora Inicio</label><input class="inp" id="asig-hora-inicio" type="time"></div>
-        <div class="fld"><label class="lbl">Hora Llegada Estimada</label><input class="inp" id="asig-hora-llegada" type="time"></div>
+      <div class="fld">
+        <label class="lbl">Hora Inicio</label>
+        <input class="inp" id="asig-hora-inicio" type="time">
+        <input type="hidden" id="asig-hora-llegada" value="">
       </div>
       <!-- Puntos de entrega -->
       <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px">
@@ -2893,30 +2877,57 @@ function checkOtroCliente() {
   document.getElementById('wrap-cliente-custom').style.display =
     clienteVal === '__otro__' ? 'block' : 'none';
 
-  const selDest   = document.getElementById('asig-destino');
-  const selOrigen = document.getElementById('asig-origen');
+  const selSvc = document.getElementById('asig-servicio-tar');
+  if(!selSvc) return;
 
   if(clienteVal && clienteVal !== '__otro__') {
     const tarifCliente = (DB.tarifarios||[]).filter(function(t){
       return (t.cliente||'').toUpperCase() === clienteVal.toUpperCase();
     });
-    // Poblar destinos desde tarifario
-    const destinos = [...new Set(tarifCliente.map(function(t){ return t.destino; }).filter(Boolean))].sort();
-    if(selDest) {
-      selDest.innerHTML = '<option value="">Selecciona destino...</option>'
-        + destinos.map(function(d){ return '<option value="'+d+'">'+d+'</option>'; }).join('')
-        + '<option value="__otro__">✏ Otro destino...</option>';
-    }
-    // Poblar orígenes desde tarifario
-    const origenes = [...new Set(tarifCliente.map(function(t){ return t.origen; }).filter(Boolean))].sort();
-    if(selOrigen && origenes.length) {
-      selOrigen.innerHTML = origenes.map(function(o){ return '<option value="'+o+'">'+o+'</option>'; }).join('')
-        + '<option value="otro">Otro...</option>';
+    if(tarifCliente.length) {
+      selSvc.innerHTML = '<option value="">Selecciona servicio...</option>'
+        + tarifCliente.map(function(t){
+            return '<option value="'+t.id+'">'+(t.origen||'')+' → '+(t.destino||'')+'</option>';
+          }).join('')
+        + '<option value="__otro__">✏ Otro (no está en tarifario)...</option>';
+    } else {
+      selSvc.innerHTML = '<option value="">Sin servicios en tarifario — usa Otro</option>'
+        + '<option value="__otro__">✏ Especificar manualmente...</option>';
     }
     document.getElementById('wrap-asig-destino-custom').style.display = 'none';
+    // Limpiar hidden fields
+    document.getElementById('asig-origen').value = '';
+    document.getElementById('asig-destino').value = '';
+    document.getElementById('asig-tarifa').value = '';
+    document.getElementById('asig-km-teorico').value = '';
+    document.getElementById('asig-tag-teorico').value = '';
   } else {
-    if(selDest) selDest.innerHTML = '<option value="">Selecciona cliente primero...</option>';
+    selSvc.innerHTML = '<option value="">Selecciona cliente primero...</option>';
   }
+}
+
+function seleccionarServicioTarifario() {
+  const sel = document.getElementById('asig-servicio-tar');
+  const id  = sel.value;
+  const wrap = document.getElementById('wrap-asig-destino-custom');
+
+  if(id === '__otro__') {
+    wrap.style.display = 'block';
+    document.getElementById('asig-origen').value  = '';
+    document.getElementById('asig-destino').value = '';
+    return;
+  }
+  wrap.style.display = 'none';
+  if(!id) return;
+
+  const tar = (DB.tarifarios||[]).find(function(t){ return t.id === id; });
+  if(!tar) return;
+
+  document.getElementById('asig-origen').value      = tar.origen || '';
+  document.getElementById('asig-destino').value     = tar.destino || '';
+  document.getElementById('asig-tarifa').value      = tar.tarifa_neta || '';
+  document.getElementById('asig-km-teorico').value  = (tar.km_ida||0) + (tar.km_vuelta||0) || '';
+  document.getElementById('asig-tag-teorico').value = tar.peajes_habituales || '';
 }
 async function siguienteId() {
   const emp = DB._empresa || _sessionUsuario?.empresa || 'global_solutions';
