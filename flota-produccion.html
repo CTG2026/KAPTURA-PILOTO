@@ -1288,7 +1288,7 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
       </div>
       <!-- 6+7+8: Bloque tarifario -->
       <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:4px">
-        <div style="font-size:9px;font-weight:800;color:var(--gold);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:8px">Desde tarifario — editable</div>
+        <div style="font-size:9px;font-weight:800;color:var(--gold);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:8px">Tarifario</div>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
           <div>
             <div style="font-size:9px;color:var(--muted);margin-bottom:3px;text-transform:uppercase;letter-spacing:0.1em;font-weight:800">6. Tarifa $</div>
@@ -1298,10 +1298,7 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
             <div style="font-size:9px;color:var(--muted);margin-bottom:3px;text-transform:uppercase;letter-spacing:0.1em;font-weight:800">7. KM Teórico</div>
             <input class="inp" type="number" id="asig-km-teorico" placeholder="0">
           </div>
-          <div>
-            <div style="font-size:9px;color:var(--muted);margin-bottom:3px;text-transform:uppercase;letter-spacing:0.1em;font-weight:800">8. TAG/Peajes $</div>
-            <input class="inp" type="number" id="asig-tag-teorico" placeholder="0">
-          </div>
+          <input type="hidden" id="asig-tag-teorico" value="0">
         </div>
       </div>
       <!-- Fecha y Tipo -->
@@ -2777,8 +2774,6 @@ function poblarSelects() {
       DB.clientes.map(c => `<option value="${c.nombre}">${c.nombre}</option>`).join('') +
       '<option value="__otro__">+ Nuevo cliente...</option>';
   }
-  // Disparar origen/destino con primer cliente
-  setTimeout(checkOtroCliente, 50);
 }
 
 function poblarConfig() {
@@ -2857,6 +2852,8 @@ async function abrirAsignar() {
   document.getElementById('wrap-asig-destino-custom').style.display = 'none';
   const sAsig2 = DB.servicios[svcActivoIdx];
   if(sAsig2) obsRenderHilo(document.getElementById('asig-obs-hilo'), obsParseHilo(sAsig2.notas||''));
+  // Disparar origen/destino después de cargar datos
+  setTimeout(checkOtroCliente, 100);
   document.getElementById('modal-asignar').style.display = 'flex';
 }
 function precargarTarifario() {
