@@ -2791,14 +2791,16 @@ async function abrirAsignar() {
   if(DB.flota.length === 0 || DB.conductores.length === 0) {
     const emp = DB._empresa || _sessionUsuario?.empresa || 'global_solutions';
     if(!DB._empresa) DB._empresa = emp;
-    const [rf, rc, rcl] = await Promise.all([
+    const [rf, rc, rcl, rt] = await Promise.all([
       supa.from('kaptura_flota').select('*').eq('empresa', emp).eq('activo', true).order('patente'),
       supa.from('kaptura_conductores').select('*').eq('empresa', emp).eq('activo', true).order('nombre'),
-      supa.from('kaptura_clientes').select('*').eq('empresa', emp).order('nombre')
+      supa.from('kaptura_clientes').select('*').eq('empresa', emp).order('nombre'),
+      supa.from('kaptura_tarifarios').select('*').eq('empresa', emp)
     ]);
     DB.flota       = rf.data || [];
     DB.conductores = rc.data || [];
     DB.clientes    = rcl.data || [];
+    DB.tarifarios  = rt.data || [];
   }
   poblarSelects();
   document.getElementById('asig-fecha').value = hoyStr;
@@ -2849,18 +2851,29 @@ function checkOtroCliente() {
   const clienteVal = document.getElementById('asig-cliente').value;
   document.getElementById('wrap-cliente-custom').style.display =
     clienteVal === '__otro__' ? 'block' : 'none';
-  // Filtrar destinos por cliente seleccionado
-  const selDest = document.getElementById('asig-destino');
-  if(selDest && clienteVal && clienteVal !== '__otro__') {
-    const destinos = (DB.tarifarios||[])
-      .filter(function(t){ return (t.cliente||'').toUpperCase() === clienteVal.toUpperCase(); })
-      .map(function(t){ return t.destino; })
-      .filter(Boolean);
-    selDest.innerHTML = '<option value="">Selecciona destino...</option>'
-      + [...new Set(destinos)].sort().map(function(d){ return '<option value="'+d+'">'+d+'</option>'; }).join('')
-      + '<option value="__otro__">✏ Otro destino...</option>';
+
+  const selDest   = document.getElementById('asig-destino');
+  const selOrigen = document.getElementById('asig-origen');
+
+  if(clienteVal && clienteVal !== '__otro__') {
+    const tarifCliente = (DB.tarifarios||[]).filter(function(t){
+      return (t.cliente||'').toUpperCase() === clienteVal.toUpperCase();
+    });
+    // Poblar destinos desde tarifario
+    const destinos = [...new Set(tarifCliente.map(function(t){ return t.destino; }).filter(Boolean))].sort();
+    if(selDest) {
+      selDest.innerHTML = '<option value="">Selecciona destino...</option>'
+        + destinos.map(function(d){ return '<option value="'+d+'">'+d+'</option>'; }).join('')
+        + '<option value="__otro__">✏ Otro destino...</option>';
+    }
+    // Poblar orígenes desde tarifario
+    const origenes = [...new Set(tarifCliente.map(function(t){ return t.origen; }).filter(Boolean))].sort();
+    if(selOrigen && origenes.length) {
+      selOrigen.innerHTML = origenes.map(function(o){ return '<option value="'+o+'">'+o+'</option>'; }).join('')
+        + '<option value="otro">Otro...</option>';
+    }
     document.getElementById('wrap-asig-destino-custom').style.display = 'none';
-  } else if(!clienteVal || clienteVal === '__otro__') {
+  } else {
     if(selDest) selDest.innerHTML = '<option value="">Selecciona cliente primero...</option>';
   }
 }
@@ -4345,8 +4358,8 @@ function docBtnStyle(tipo, id) {
   var prox = docs.some(function(d){ return Math.round((new Date(d.fecha_vencimiento)-hoy)/864e5) <= 30; });
   // Sin docs con fecha = gris neutro (no rojo)
   if(!docs.length) return 'background:var(--surface2);border:1px solid var(--border);color:var(--muted);border-radius:5px;padding:3px 8px;font-size:10px;cursor:pointer;font-weight:700';
-  var bg  = venc ? 'rgba(239,68,68,0.15)' : prox ? 'rgba(201,168,76,0.15)' : 'rgba(76,175,122,0.15)';
-  var br  = venc ? 'rgba(239,68,68,0.3)'  : prox ? 'rgba(201,168,76,0.3)'  : 'rgba(76,175,122,0.3)';
+  var bg  = venc ? 'rgba(239,68,68,0.15)' : prox ? 'rgba(201,168,76,0.15)' : 'rgba(76,175,122,0.25)';
+  var br  = venc ? 'rgba(239,68,68,0.3)'  : prox ? 'rgba(201,168,76,0.3)'  : 'rgba(76,175,122,0.5)';
   var col = venc ? 'var(--danger)'        : prox ? 'var(--gold)'            : 'var(--green)';
   return 'background:'+bg+';border:1px solid '+br+';color:'+col+';border-radius:5px;padding:3px 8px;font-size:10px;cursor:pointer;font-weight:700';
 }
