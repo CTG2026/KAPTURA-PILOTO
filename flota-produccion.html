@@ -6026,7 +6026,7 @@ async function setupAgregarEquipo() {
 
 // ── SETUP EDITAR EQUIPO ──
 async function setupGuardarEquipoEditado() {
-  const patente  = document.getElementById('setup-nueva-patente').dataset.editPatente;
+  const patente  = _editEquipoPatente;
   if(!patente) { toast('Error: sin patente en edición'); return; }
   const tipo  = document.getElementById('setup-nuevo-tipo').value;
   const rend  = parseFloat(document.getElementById('setup-nuevo-rend').value) || null;
@@ -6041,7 +6041,7 @@ async function setupGuardarEquipoEditado() {
   document.getElementById('setup-nueva-patente').value = '';
   document.getElementById('setup-nuevo-rend').value = '';
   document.getElementById('setup-nuevo-valor').value = '';
-  delete document.getElementById('setup-nueva-patente').dataset.editPatente;
+  _editEquipoPatente = null;
   document.getElementById('setup-equipo-btn-guardar').style.display = 'none';
   document.getElementById('setup-equipo-btn-agregar').style.display = 'inline-block';
   toast('✓ Equipo '+patente+' actualizado');
@@ -6060,7 +6060,7 @@ async function setupEditarEquipo(patente) {
   document.getElementById('setup-nuevo-tipo').value    = (f.tipo||'tracto_rampla').toLowerCase();
   document.getElementById('setup-nuevo-rend').value    = f.rendimiento_km_lt || '';
   document.getElementById('setup-nuevo-valor').value   = f.valor_camion || '';
-  document.getElementById('setup-nueva-patente').dataset.editPatente = f.patente;
+  _editEquipoPatente = f.patente;
   document.getElementById('setup-equipo-btn-guardar').style.display = 'inline-block';
   document.getElementById('setup-equipo-btn-agregar').style.display = 'none';
   toast('✏ Edita los datos y presiona GUARDAR');
@@ -6436,7 +6436,7 @@ async function setupGuardarTodo() {
       const rend  = parseFloat(document.getElementById('setup-nuevo-rend')?.value)||null;
       const valor = parseInt((document.getElementById('setup-nuevo-valor')?.value||'').replace(/[^0-9]/g,''))||null;
       await supa.from('kaptura_flota').update({tipo, rendimiento_km_lt:rend, valor_camion:valor}).eq('patente',editPat);
-      delete document.getElementById('setup-nueva-patente').dataset.editPatente;
+      _editEquipoPatente = null;
       document.getElementById('setup-nueva-patente').value = '';
       document.getElementById('setup-nuevo-rend').value    = '';
       document.getElementById('setup-nuevo-valor').value   = '';
@@ -6909,6 +6909,7 @@ async function verLiquidacion(id) {
 }
 
 let _editLiqId = null;
+let _editEquipoPatente = null;
 
 async function editarLiquidacion(id) {
   const liq = _liqData.find(l => l.id === id);
