@@ -1276,11 +1276,12 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
       </div>
       <div class="fld" id="wrap-asig-destino-custom" style="display:none">
         <label class="lbl">Especifica destino</label>
-        <input class="inp" id="asig-destino-custom" placeholder="Destino específico">
+        <input class="inp" id="asig-destino-custom" placeholder="Ej: CHILLAN → SANTIAGO">
       </div>
-      <!-- Campos ocultos origen/destino para guardar -->
+      <!-- Campos hidden origen/destino para guardar -->
       <input type="hidden" id="asig-origen" value="">
       <input type="hidden" id="asig-destino" value="">
+      <!-- Campos hidden tarifario — se pueblan desde seleccionarServicioTarifario -->
       <input type="hidden" id="asig-tarifa" value="">
       <input type="hidden" id="asig-km-teorico" value="">
       <input type="hidden" id="asig-tag-teorico" value="">
@@ -2880,6 +2881,11 @@ function checkOtroCliente() {
   const selSvc = document.getElementById('asig-servicio-tar');
   if(!selSvc) return;
 
+  // Limpiar campos hidden
+  document.getElementById('asig-origen').value  = '';
+  document.getElementById('asig-destino').value = '';
+  document.getElementById('wrap-asig-destino-custom').style.display = 'none';
+
   if(clienteVal && clienteVal !== '__otro__') {
     const tarifCliente = (DB.tarifarios||[]).filter(function(t){
       return (t.cliente||'').toUpperCase() === clienteVal.toUpperCase();
@@ -2889,18 +2895,11 @@ function checkOtroCliente() {
         + tarifCliente.map(function(t){
             return '<option value="'+t.id+'">'+(t.origen||'')+' → '+(t.destino||'')+'</option>';
           }).join('')
-        + '<option value="__otro__">✏ Otro (no está en tarifario)...</option>';
+        + '<option value="__otro__">✏ Otro (no en tarifario)...</option>';
     } else {
-      selSvc.innerHTML = '<option value="">Sin servicios en tarifario — usa Otro</option>'
+      selSvc.innerHTML = '<option value="">Sin servicios en tarifario</option>'
         + '<option value="__otro__">✏ Especificar manualmente...</option>';
     }
-    document.getElementById('wrap-asig-destino-custom').style.display = 'none';
-    // Limpiar hidden fields
-    document.getElementById('asig-origen').value = '';
-    document.getElementById('asig-destino').value = '';
-    document.getElementById('asig-tarifa').value = '';
-    document.getElementById('asig-km-teorico').value = '';
-    document.getElementById('asig-tag-teorico').value = '';
   } else {
     selSvc.innerHTML = '<option value="">Selecciona cliente primero...</option>';
   }
@@ -2910,23 +2909,22 @@ function seleccionarServicioTarifario() {
   const sel = document.getElementById('asig-servicio-tar');
   const id  = sel.value;
   const wrap = document.getElementById('wrap-asig-destino-custom');
-
   if(id === '__otro__') {
     wrap.style.display = 'block';
     document.getElementById('asig-origen').value  = '';
     document.getElementById('asig-destino').value = '';
+    document.getElementById('asig-tarifa').value  = '';
+    document.getElementById('asig-km-teorico').value = '';
     return;
   }
   wrap.style.display = 'none';
   if(!id) return;
-
   const tar = (DB.tarifarios||[]).find(function(t){ return t.id === id; });
   if(!tar) return;
-
   document.getElementById('asig-origen').value      = tar.origen || '';
   document.getElementById('asig-destino').value     = tar.destino || '';
   document.getElementById('asig-tarifa').value      = tar.tarifa_neta || '';
-  document.getElementById('asig-km-teorico').value  = (tar.km_ida||0) + (tar.km_vuelta||0) || '';
+  document.getElementById('asig-km-teorico').value  = (parseInt(tar.km_ida||0) + parseInt(tar.km_vuelta||0)) || '';
   document.getElementById('asig-tag-teorico').value = tar.peajes_habituales || '';
 }
 async function siguienteId() {
@@ -2982,12 +2980,13 @@ async function guardarAsignacion() {
   const clienteSel= document.getElementById('asig-cliente').value;
   const clienteNew= document.getElementById('asig-cliente-custom').value.trim();
   const cliente   = clienteSel === '__otro__' ? clienteNew : clienteSel;
+  // Origen desde hidden field (seteado por seleccionarServicioTarifario)
   const svcTarId = document.getElementById('asig-servicio-tar')?.value || '';
   const origen   = svcTarId === '__otro__'
-    ? (document.getElementById('asig-destino-custom')?.value.trim()||'')
-    : document.getElementById('asig-origen').value.trim();
+    ? (document.getElementById('asig-destino-custom')?.value.trim()||'OTRO')
+    : (document.getElementById('asig-origen').value.trim()||'');
   const fecha    = document.getElementById('asig-fecha').value;
-  if(!patente||!conductor||!cliente||!svcTarId||!fecha) { toast('⚠ Completa todos los campos'); return; }
+  if(!patente||!conductor||!cliente||!svcTarId||!fecha) { toast('⚠ Completa patente, conductor, cliente, servicio y fecha'); return; }
   if(clienteSel === '__otro__' && clienteNew) {
     await supa.from('kaptura_clientes').insert({nombre:clienteNew, condicion_pago:'30 días'});
     DB.clientes.push({nombre:clienteNew});
