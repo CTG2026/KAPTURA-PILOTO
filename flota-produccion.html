@@ -1260,28 +1260,23 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
       <button class="modal-cls" onclick="cerrar('modal-asignar')">✕</button>
     </div>
     <div class="modal-body">
+      <!-- 1+2: Patente y Conductor -->
       <div class="fld2">
-        <div class="fld"><label class="lbl">Patente y Equipo</label><select class="inp" id="asig-patente"></select></div>
-        <div class="fld"><label class="lbl">Conductor</label><select class="inp" id="asig-conductor"></select></div>
+        <div class="fld"><label class="lbl">1. Patente / Equipo</label><select class="inp" id="asig-patente"></select></div>
+        <div class="fld"><label class="lbl">2. Conductor</label><select class="inp" id="asig-conductor"></select></div>
       </div>
-      <div class="fld"><label class="lbl">Cliente</label><select class="inp" id="asig-cliente" onchange="checkOtroCliente()"></select></div>
+      <!-- 3: Cliente -->
+      <div class="fld"><label class="lbl">3. Cliente</label><select class="inp" id="asig-cliente" onchange="checkOtroCliente()"></select></div>
       <div class="fld" id="wrap-cliente-custom" style="display:none"><label class="lbl">Nombre del cliente nuevo</label><input class="inp" id="asig-cliente-custom" placeholder="Nombre del cliente"></div>
-      <div class="fld">
-        <label class="lbl">Tipo de Servicio</label>
-        <select class="inp" id="asig-tipo-servicio">
-          <option value="normal">Normal</option>
-          <option value="devolucion">Devolución (tarifa inversa)</option>
-        </select>
-      </div>
+      <!-- 4+5: Origen y Destino -->
       <div class="fld2">
-        <div class="fld"><label class="lbl">Origen</label><select class="inp" id="asig-origen" onchange="checkOtroOrigen()">
-          <option value="Casablanca">Casablanca</option><option value="Coltauco">Coltauco</option>
-          <option value="Curacaví">Curacaví</option><option value="Romeral">Romeral</option>
-          <option value="Rancagua">Rancagua</option><option value="Santiago">Santiago</option>
-          <option value="San Antonio">San Antonio</option><option value="otro">Otro...</option>
-        </select></div>
-        <div class="fld"><label class="lbl">Destino Principal</label>
-          <select class="inp" id="asig-destino" onchange="checkAsigDestino()">
+        <div class="fld"><label class="lbl">4. Origen</label>
+          <select class="inp" id="asig-origen" onchange="checkOtroOrigen();precargarTarifario()">
+            <option value="">Selecciona cliente primero...</option>
+          </select>
+        </div>
+        <div class="fld"><label class="lbl">5. Destino</label>
+          <select class="inp" id="asig-destino" onchange="checkAsigDestino();precargarTarifario()">
             <option value="">Selecciona cliente primero...</option>
           </select>
         </div>
@@ -1291,7 +1286,35 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
         <label class="lbl">Especifica el destino</label>
         <input class="inp" id="asig-destino-custom" placeholder="Destino específico">
       </div>
-      <div class="fld"><label class="lbl">Fecha del Servicio</label><input class="inp" id="asig-fecha" type="date"></div>
+      <!-- 6+7+8: Bloque tarifario -->
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:4px">
+        <div style="font-size:9px;font-weight:800;color:var(--gold);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:8px">Desde tarifario — editable</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+          <div>
+            <div style="font-size:9px;color:var(--muted);margin-bottom:3px;text-transform:uppercase;letter-spacing:0.1em;font-weight:800">6. Tarifa $</div>
+            <input class="inp" type="number" id="asig-tarifa" placeholder="0" style="font-size:13px;font-weight:800;color:var(--gold)">
+          </div>
+          <div>
+            <div style="font-size:9px;color:var(--muted);margin-bottom:3px;text-transform:uppercase;letter-spacing:0.1em;font-weight:800">7. KM Teórico</div>
+            <input class="inp" type="number" id="asig-km-teorico" placeholder="0">
+          </div>
+          <div>
+            <div style="font-size:9px;color:var(--muted);margin-bottom:3px;text-transform:uppercase;letter-spacing:0.1em;font-weight:800">8. TAG/Peajes $</div>
+            <input class="inp" type="number" id="asig-tag-teorico" placeholder="0">
+          </div>
+        </div>
+      </div>
+      <!-- Fecha y Tipo -->
+      <div class="fld2">
+        <div class="fld"><label class="lbl">Fecha del Servicio</label><input class="inp" id="asig-fecha" type="date"></div>
+        <div class="fld"><label class="lbl">Tipo de Servicio</label>
+          <select class="inp" id="asig-tipo-servicio">
+            <option value="normal">Normal</option>
+            <option value="devolucion">Devolución (tarifa inversa)</option>
+            <option value="retorno">Retorno</option>
+          </select>
+        </div>
+      </div>
       <div class="fld2">
         <div class="fld"><label class="lbl">Hora Inicio</label><input class="inp" id="asig-hora-inicio" type="time"></div>
         <div class="fld"><label class="lbl">Hora Llegada Estimada</label><input class="inp" id="asig-hora-llegada" type="time"></div>
@@ -1302,7 +1325,6 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
         <div id="asig-puntos-lista"></div>
         <button class="btn btn-outline btn-sm btn-full" onclick="asigAgregarPunto()" id="asig-btn-agregar-punto">+ Guardar Punto</button>
       </div>
-
       <div class="fld">
         <label class="lbl">Punto de Inicio del Equipo</label>
         <select class="inp" id="asig-punto-inicio">
@@ -1311,18 +1333,16 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
         </select>
         <div style="font-size:10px;color:var(--muted);margin-top:4px" id="asig-punto-inicio-hint"></div>
       </div>
-
     </div>
-
-      <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px">
-        <div style="font-size:9px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);margin-bottom:8px">Observaciones</div>
-        <div id="asig-obs-hilo" style="margin-bottom:8px"></div>
-        <textarea id="asig-obs-input" class="inp" rows="2" placeholder="Agregar observación..." style="margin-bottom:6px"></textarea>
-        <button class="btn btn-outline btn-sm btn-full" onclick="obsAgregarAsignar()">💾 Guardar Observación</button>
-      </div>
+    <div style="border-top:1px solid var(--border);padding:12px 16px">
+      <div style="font-size:9px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);margin-bottom:8px">Observaciones</div>
+      <div id="asig-obs-hilo" style="margin-bottom:8px"></div>
+      <textarea id="asig-obs-input" class="inp" rows="2" placeholder="Agregar observación..." style="margin-bottom:6px"></textarea>
+      <button class="btn btn-outline btn-sm btn-full" onclick="obsAgregarAsignar()">💾 Guardar Observación</button>
+    </div>
     <div class="modal-ftr">
       <button class="btn btn-ghost" onclick="cerrar('modal-asignar')">← Volver</button>
-      <button class="btn btn-navy" onclick="guardarAsignacion()">Asignar →</button>
+      <button class="btn btn-navy" onclick="guardarAsignacion()">ASIGNAR →</button>
     </div>
   </div>
 </div>
@@ -2757,6 +2777,8 @@ function poblarSelects() {
       DB.clientes.map(c => `<option value="${c.nombre}">${c.nombre}</option>`).join('') +
       '<option value="__otro__">+ Nuevo cliente...</option>';
   }
+  // Disparar origen/destino con primer cliente
+  setTimeout(checkOtroCliente, 50);
 }
 
 function poblarConfig() {
@@ -2837,6 +2859,28 @@ async function abrirAsignar() {
   if(sAsig2) obsRenderHilo(document.getElementById('asig-obs-hilo'), obsParseHilo(sAsig2.notas||''));
   document.getElementById('modal-asignar').style.display = 'flex';
 }
+function precargarTarifario() {
+  const cliente = document.getElementById('asig-cliente').value;
+  const origen  = document.getElementById('asig-origen').value;
+  const destino = document.getElementById('asig-destino').value;
+  if(!cliente || !destino || destino === '__otro__') return;
+  const tar = (DB.tarifarios||[]).find(function(t){
+    return (t.cliente||'').toUpperCase() === cliente.toUpperCase() &&
+           (t.destino||'').toUpperCase() === destino.toUpperCase() &&
+           (!origen || origen === 'otro' || (t.origen||'').toUpperCase() === origen.toUpperCase());
+  }) || (DB.tarifarios||[]).find(function(t){
+    return (t.cliente||'').toUpperCase() === cliente.toUpperCase() &&
+           (t.destino||'').toUpperCase() === destino.toUpperCase();
+  });
+  if(!tar) return;
+  const tIn  = document.getElementById('asig-tarifa');
+  const kmIn = document.getElementById('asig-km-teorico');
+  const tagIn= document.getElementById('asig-tag-teorico');
+  if(tIn  && !tIn.dataset.manual)  tIn.value  = tar.tarifa_neta || '';
+  if(kmIn && !kmIn.dataset.manual) kmIn.value = (tar.km_ida||0) + (tar.km_vuelta||0) || '';
+  if(tagIn&& !tagIn.dataset.manual)tagIn.value= tar.peajes_habituales || '';
+}
+
 function checkAsigDestino() {
   const val = document.getElementById('asig-destino').value;
   const wrap = document.getElementById('wrap-asig-destino-custom');
@@ -2950,7 +2994,10 @@ async function guardarAsignacion() {
   const horaLlegada = document.getElementById('asig-hora-llegada').value || null;
   const destinoRaw = document.getElementById('asig-destino').value.trim();
   const destino = destinoRaw === '__otro__' ? (document.getElementById('asig-destino-custom')?.value.trim()||'') : destinoRaw;
-  const nuevo = { servicio_id:svId, patente, conductor, cliente, origen, destino: destino||null, fecha, estado:'asignado', margen_servicio:0, puntos_entrega:puntosAsig.length, punto_inicio:puntoInicio, tipo_operacion:tipoOperacion, empresa: DB._empresa||'global_solutions', puntos_asignados: puntosAsigStr, hora_inicio_asignada: horaInicio, hora_llegada_estimada: horaLlegada };
+  const tarifaAsig = parseInt(document.getElementById('asig-tarifa')?.value)||0;
+  const kmAsig     = parseInt(document.getElementById('asig-km-teorico')?.value)||0;
+  const tagAsig    = parseInt(document.getElementById('asig-tag-teorico')?.value)||0;
+  const nuevo = { servicio_id:svId, patente, conductor, cliente, origen, destino: destino||null, fecha, estado:'asignado', margen_servicio:0, puntos_entrega:puntosAsig.length, punto_inicio:puntoInicio, tipo_operacion:tipoOperacion, empresa: DB._empresa||'global_solutions', puntos_asignados: puntosAsigStr, hora_inicio_asignada: horaInicio, hora_llegada_estimada: horaLlegada, tarifa_neta: tarifaAsig||null, km_referencia: kmAsig||null, peajes_tag: tagAsig||null, ingreso_total: tarifaAsig||null };
   const {data:inserted, error} = await supa.from('servicios_piloto').insert(nuevo).select();
   if(error) { toast('Error: '+error.message); return; }
   let svcInsertado = inserted?.[0];
