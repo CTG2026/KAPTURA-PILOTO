@@ -330,6 +330,8 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
       <button class="btn btn-outline" id="dtab-otros" onclick="setDetalleTab('otros')" style="border-radius:6px;background:var(--surface2);color:var(--muted);border:none;font-size:12px;padding:6px 14px">Otros</button>
     </div>
 
+    <div id="costos-btn-registrar" style="margin-bottom:12px"></div>
+
     <!-- Tabla detalle -->
     <div style="overflow-x:auto">
       <table style="width:100%;border-collapse:collapse;font-size:13px">
@@ -1484,6 +1486,7 @@ async function cargarGastos() {
   }
   renderGastos();
   await renderCostosDash();
+  setDetalleTab(_detalleTabActivo);
 }
 
 function renderGastos() {
@@ -1522,6 +1525,18 @@ function setDetalleTab(tab) {
       ? 'border-radius:6px;background:var(--gold);color:var(--text);font-size:12px;padding:6px 14px'
       : 'border-radius:6px;background:var(--surface2);color:var(--muted);border:none;font-size:12px;padding:6px 14px';
   });
+  // Botón registrar específico por sub-tab
+  const btnWrap = document.getElementById('costos-btn-registrar');
+  if(btnWrap) {
+    const botones = {
+      combustible: `<button class="btn btn-navy" onclick="abrirNuevoGasto('combustible_camioneta')">+ Registrar Carga Combustible</button>`,
+      mantencion:  `<button class="btn btn-navy" onclick="abrirNuevoGasto('mantencion')">+ Registrar Mantención</button>`,
+      inversion:   `<button class="btn btn-navy" onclick="abrirNuevoGasto('inversion')">+ Registrar Inversión</button>`,
+      servicios:   '',
+      otros:       `<button class="btn btn-navy" onclick="abrirNuevoGasto('otros_varios')">+ Registrar Otro Costo</button>`,
+    };
+    btnWrap.innerHTML = botones[tab] || '';
+  }
   renderDetalleTab();
 }
 
@@ -1855,7 +1870,7 @@ function renderGastosResumen() {
   resumen.innerHTML = (cards + invCards) || '<div style="color:var(--g400);font-size:13px">Sin gastos en este período</div>';
 }
 
-function abrirNuevoGasto() {
+function abrirNuevoGasto(categoriaPredef) {
   // Poblar select de patentes
   const sel = document.getElementById('gasto-patente');
   sel.innerHTML = '<option value="">Seleccione equipo...</option>' +
@@ -1866,6 +1881,11 @@ function abrirNuevoGasto() {
     if(this.value === 'DISTRIBUCION' && cat) cat.value = 'distribucion';
     else if(this.value !== 'DISTRIBUCION' && cat && cat.value === 'distribucion') cat.value = 'mantencion';
   };
+  // Precargar categoría si viene desde un sub-tab específico
+  if(categoriaPredef) {
+    const catSel = document.getElementById('gasto-categoria');
+    if(catSel) { catSel.value = categoriaPredef; toggleGastoEquipo(); }
+  }
   // Poblar filtro
   const filtSel = document.getElementById('gasto-filtro-patente');
   if(filtSel && filtSel.options.length <= 1) {
