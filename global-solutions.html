@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>KAPTURA v8.1</title>
+<title>Global Solutions</title>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -195,7 +195,7 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
   <div id="mod-go" onclick="entrarModulo('go')" style="background:var(--surface);border:2px solid #22c55e;border-radius:14px;padding:18px;margin-bottom:12px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.4)">
     <div style="display:flex;align-items:center;justify-content:space-between">
       <div>
-        <div style="font-family:'DM Sans',sans-serif;font-size:22px;font-weight:900;color:var(--green)">📡 KAPTURA GO</div>
+        <div style="font-family:'DM Sans',sans-serif;font-size:22px;font-weight:900;color:var(--green)">📡 SISTEMA GO</div>
         <div style="font-size:12px;color:var(--muted);margin-top:4px">Inicia · GPS registra todo · Ver margen</div>
       </div>
       <div style="background:var(--green);color:var(--text);font-size:10px;font-weight:800;padding:4px 10px;border-radius:20px">BÁSICO</div>
@@ -206,7 +206,7 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
   <div id="mod-pro" onclick="entrarModulo('pro')" style="background:var(--surface);border:2px solid var(--gold);border-radius:14px;padding:18px;margin-bottom:12px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.4)">
     <div style="display:flex;align-items:center;justify-content:space-between">
       <div>
-        <div style="font-family:'DM Sans',sans-serif;font-size:22px;font-weight:900;color:var(--gold)">📱 KAPTURA PRO</div>
+        <div style="font-family:'DM Sans',sans-serif;font-size:22px;font-weight:900;color:var(--gold)">📱 SISTEMA PRO</div>
         <div style="font-size:12px;color:var(--muted);margin-top:4px">Guías · Etapas · KPIs · $/km · Ranking clientes</div>
       </div>
       <div style="background:var(--gold);color:var(--text);font-size:10px;font-weight:800;padding:4px 10px;border-radius:20px">PRO</div>
@@ -217,7 +217,7 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
   <div id="mod-flota" onclick="entrarModulo('flota')" style="background:var(--surface);border:2px solid var(--gold);border-radius:14px;padding:18px;margin-bottom:12px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.4)">
     <div style="display:flex;align-items:center;justify-content:space-between">
       <div>
-        <div style="font-family:'DM Sans',sans-serif;font-size:22px;font-weight:900;color:var(--gold)">🖥 KAPTURA FLOTA</div>
+        <div style="font-family:'DM Sans',sans-serif;font-size:22px;font-weight:900;color:var(--gold)">🖥 SISTEMA FLOTA</div>
         <div style="font-size:12px;color:var(--muted);margin-top:4px">Asignación · Flota · Coordinador · Gestión completa</div>
       </div>
       <div id="mod-flota-badge" style="background:var(--gold);color:var(--text);font-size:10px;font-weight:800;padding:4px 10px;border-radius:20px">PREMIUM</div>
@@ -927,7 +927,7 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
       <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Lo que pagas aunque los camiones no salgan.</div>
       <button onclick="document.getElementById('setup-cf-lista').style.display=document.getElementById('setup-cf-lista').style.display==='none'?'block':'none'" style="width:100%;background:rgba(255,107,0,0.12);border:1px solid rgba(255,107,0,0.3);border-radius:8px;padding:10px;font-size:13px;font-weight:700;color:var(--gold);cursor:pointer;margin-bottom:8px">+ Ingresar ítem por ítem</button>
       <div id="setup-cf-lista" style="display:none;margin-bottom:10px">
-        <div style="font-size:10px;color:var(--muted);margin-bottom:8px">Ingresa solo los que aplican. KAPTURA suma el total.</div>
+        <div style="font-size:10px;color:var(--muted);margin-bottom:8px">Ingresa solo los que aplican. El sistema suma el total.</div>
         <div id="setup-cf-items">
           <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)"><div><div style="font-size:12px;color:var(--text)">Crédito / leasing</div></div><input type="text" data-scf-item="credito" onchange="setupCFSumar()" placeholder="$0" style="width:85px;background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:5px 6px;font-size:12px;color:var(--text);text-align:right;font-family:inherit"></div>
           <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)"><div><div style="font-size:12px;color:var(--text)">Seguro SOAP</div><div style="font-size:10px;color:rgba(255,255,255,0.35)">Anual ÷12</div></div><input type="text" data-scf-item="soap" data-anual="true" onchange="setupCFSumar()" placeholder="$0" style="width:85px;background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:5px 6px;font-size:12px;color:var(--text);text-align:right;font-family:inherit"></div>
@@ -976,7 +976,7 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
       <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Reserva mensual para mantenciones mayores.</div>
       <button onclick="document.getElementById('setup-mayor-lista').style.display=document.getElementById('setup-mayor-lista').style.display==='none'?'block':'none'" style="width:100%;background:rgba(255,107,0,0.12);border:1px solid rgba(255,107,0,0.3);border-radius:8px;padding:10px;font-size:13px;font-weight:700;color:var(--gold);cursor:pointer;margin-bottom:8px">+ Ver componentes mayores</button>
       <div id="setup-mayor-lista" style="display:none;margin-bottom:10px">
-        <div style="font-size:10px;color:var(--muted);margin-bottom:8px">Ingresa el costo estimado de cada componente. KAPTURA calcula la reserva mensual sugerida.</div>
+        <div style="font-size:10px;color:var(--muted);margin-bottom:8px">Ingresa el costo estimado de cada componente. El sistema calcula la reserva mensual sugerida.</div>
         <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)"><div><div style="font-size:12px;color:var(--text)">Motor</div><div style="font-size:10px;color:rgba(255,255,255,0.35)">$3-8M · 500k–800k km</div></div><input type="text" data-smayor-item="motor" onchange="setupMayorSumar()" placeholder="$0" style="width:85px;background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:5px 6px;font-size:12px;color:var(--text);text-align:right;font-family:inherit"></div>
         <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)"><div><div style="font-size:12px;color:var(--text)">Caja de cambios</div><div style="font-size:10px;color:rgba(255,255,255,0.35)">$2.5-5M · 300k–500k km</div></div><input type="text" data-smayor-item="caja" onchange="setupMayorSumar()" placeholder="$0" style="width:85px;background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:5px 6px;font-size:12px;color:var(--text);text-align:right;font-family:inherit"></div>
         <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)"><div><div style="font-size:12px;color:var(--text)">Diferencial</div><div style="font-size:10px;color:rgba(255,255,255,0.35)">$1.5-3.5M · 300k–500k km</div></div><input type="text" data-smayor-item="diferencial" onchange="setupMayorSumar()" placeholder="$0" style="width:85px;background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:5px 6px;font-size:12px;color:var(--text);text-align:right;font-family:inherit"></div>
@@ -2231,15 +2231,20 @@ let DB_tarifario = [];
 
 // ══ INIT ══
 async function init() {
-  // Precargar empresa Global Solutions si no hay sesión activa
+  // Validar que la sesión sea de Global Solutions
   const sess = JSON.parse(localStorage.getItem('kaptura_session')||'{}');
+  if(sess.empresa && sess.empresa !== 'global_solutions') {
+    // Sesión de otra empresa — limpiar y pedir PIN de Global
+    localStorage.removeItem('kaptura_session');
+    location.reload();
+    return;
+  }
   if(!sess.empresa) {
-    // Solo preseleccionar empresa en el login
     window._empresaPredef = 'global_solutions';
   }
   document.getElementById('filtro-fecha').value = '';
   document.getElementById('hdr-info').innerHTML =
-    `${hoy.getDate()} ${MESES[hoy.getMonth()]} ${hoy.getFullYear()} · v${KAPTURA_VERSION}`;
+    `${hoy.getDate()} ${MESES[hoy.getMonth()]} ${hoy.getFullYear()}`;
   // Seleccionar mes en curso automáticamente
   const dashMes = document.getElementById('dash-mes');
   if(dashMes) dashMes.value = String(hoy.getMonth());
@@ -4497,7 +4502,7 @@ function verEvaluacion(evalId) {
     + '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid #2E3D3B;background:#212B2A"><div style="font-size:10px;font-weight:800;letter-spacing:0.12em;color:rgba(245,240,232,0.5);text-transform:uppercase">Margen</div><div style="font-size:22px;font-weight:900;color:'+color+'">'+fmt(e.margen)+'</div></div>'
     + '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:#212B2A"><div style="font-size:10px;font-weight:800;letter-spacing:0.12em;color:rgba(245,240,232,0.5);text-transform:uppercase">% Sobre Tarifa</div><div style="font-size:20px;font-weight:900;color:'+color+'">'+e.margen_pct+'%</div></div>'
     + '</div>'
-    + '<div style="text-align:center;font-size:10px;color:rgba(245,240,232,0.3);margin-top:16px;padding-top:12px;border-top:1px solid #2E3D3B">KAPTURA FLOTA · Evaluación generada el '+e.fecha+' · Uso interno</div>'
+    + '<div style="text-align:center;font-size:10px;color:rgba(245,240,232,0.3);margin-top:16px;padding-top:12px;border-top:1px solid #2E3D3B">GLOBAL SOLUTIONS · Evaluación generada el '+e.fecha+' · Uso interno</div>'
     + '</div>';
 
   document.getElementById('ver-eval-body').innerHTML = html;
@@ -4573,7 +4578,7 @@ async function abrirInforme(i) {
   let html = `
   <div style="border:2px solid #2A2A2A;border-radius:8px;overflow:hidden;margin-bottom:16px">
     <div class="inf-hdr">
-      <div style="font-family:'DM Sans',sans-serif;font-size:18px;font-weight:900">KAPTURA — INFORME DE SERVICIO</div>
+      <div style="font-family:'DM Sans',sans-serif;font-size:18px;font-weight:900">GLOBAL SOLUTIONS — INFORME DE SERVICIO</div>
       <div style="font-size:11px;opacity:0.7">${new Date().toLocaleDateString('es-CL')}</div>
     </div>
     <div class="inf-grid">
@@ -5004,7 +5009,7 @@ function imprimirInforme() {
 <div class="overlay" id="modal-ver-eval" style="display:none">
   <div class="modal" style="max-height:95vh;overflow-y:auto;background:#1A2120;border:1px solid #2E3D3B">
     <div class="modal-hdr" style="background:#212B2A;border-bottom:1px solid #2E3D3B">
-      <div><div class="modal-ttl" style="color:#C9A84C">KAPTURA — Evaluación de Servicio</div><div class="modal-sub" id="ver-eval-num" style="color:rgba(245,240,232,0.5)"></div></div>
+      <div><div class="modal-ttl" style="color:#C9A84C">GLOBAL SOLUTIONS — Evaluación de Servicio</div><div class="modal-sub" id="ver-eval-num" style="color:rgba(245,240,232,0.5)"></div></div>
       <button class="modal-cls" onclick="cerrar('modal-ver-eval')">✕</button>
     </div>
     <div class="modal-body" id="ver-eval-body"></div>
@@ -5157,7 +5162,7 @@ function abrirInformeResultados(mesKey) {
   const [y, m] = mesKey.split('-');
   const nombreMes = MESES_LARGO[parseInt(m)-1] + ' ' + y;
   document.getElementById('inf-detalle-titulo').textContent = 'Informe Resultados ' + nombreMes;
-  document.getElementById('inf-er-subtitulo').textContent = nombreMes + ' · KAPTURA';
+  document.getElementById('inf-er-subtitulo').textContent = nombreMes + ' · GLOBAL SOLUTIONS';
   document.getElementById('inf-lista-container').style.display = 'none';
   document.getElementById('inf-detalle-container').style.display = 'block';
 
@@ -5563,7 +5568,7 @@ function aplicarAccesoKaptura() {
 function entrarModulo(modulo) {
   const esConductor = _sessionUsuario?.rol === 'conductor';
   if(modulo === 'flota' && esConductor) {
-    alert('🔒 Este módulo requiere plan KAPTURA FLOTA');
+    alert('🔒 Este módulo no está disponible');
     return;
   }
   if(modulo === 'go' || modulo === 'pro') {
@@ -7013,7 +7018,7 @@ iniciarLogin();
 <div class="overlay" id="modal-ver-eval" style="display:none">
   <div class="modal" style="max-height:95vh;overflow-y:auto;background:#1A2120;border:1px solid #2E3D3B">
     <div class="modal-hdr" style="background:#212B2A;border-bottom:1px solid #2E3D3B">
-      <div><div class="modal-ttl" style="color:#C9A84C">KAPTURA — Evaluación de Servicio</div><div class="modal-sub" id="ver-eval-num" style="color:rgba(245,240,232,0.5)"></div></div>
+      <div><div class="modal-ttl" style="color:#C9A84C">GLOBAL SOLUTIONS — Evaluación de Servicio</div><div class="modal-sub" id="ver-eval-num" style="color:rgba(245,240,232,0.5)"></div></div>
       <button class="modal-cls" onclick="cerrar('modal-ver-eval')">✕</button>
     </div>
     <div class="modal-body" id="ver-eval-body"></div>
