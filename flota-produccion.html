@@ -5966,7 +5966,7 @@ async function setupGuardarEdicionTarifa() {
   const peajes  = parseFloat(document.getElementById('setup-tar-peajes')?.value)||null;
   if(!cliente||!origen||!destino||!valor) { toast('Completa cliente, origen, destino y tarifa'); return; }
   const {error} = await supa.from('kaptura_tarifarios').update({
-    cliente, origen, destino, tarifa_neta:valor, valor_punto:punto, descripcion:nombre,
+    cliente, origen, destino, tarifa_neta:valor, valor_punto:punto,
     km_ida:kmIda, km_vuelta:kmVta, peajes_habituales:peajes
   }).eq('id', id);
   if(error) { toast('Error: '+error.message); return; }
