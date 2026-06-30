@@ -327,6 +327,7 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
       <button class="btn btn-outline" id="dtab-mantencion" onclick="setDetalleTab('mantencion')" style="border-radius:6px;background:var(--surface2);color:var(--muted);border:none;font-size:12px;padding:6px 14px">Mantención</button>
       <button class="btn btn-outline" id="dtab-inversion" onclick="setDetalleTab('inversion')" style="border-radius:6px;background:var(--surface2);color:var(--muted);border:none;font-size:12px;padding:6px 14px">Inversión</button>
       <button class="btn btn-outline" id="dtab-servicios" onclick="setDetalleTab('servicios')" style="border-radius:6px;background:var(--surface2);color:var(--muted);border:none;font-size:12px;padding:6px 14px">Desde Servicios</button>
+      <button class="btn btn-outline" id="dtab-otros" onclick="setDetalleTab('otros')" style="border-radius:6px;background:var(--surface2);color:var(--muted);border:none;font-size:12px;padding:6px 14px">Otros</button>
     </div>
 
     <!-- Tabla detalle -->
@@ -360,12 +361,28 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
         </div>
         <div class="fld"><label class="lbl">Categoría</label>
           <select class="inp" id="gasto-categoria" onchange="toggleGastoEquipo()">
-            <option value="mantencion">Mantención</option>
-            <option value="neumaticos">Neumáticos</option>
-            <option value="reparacion">Reparación</option>
-            <option value="distribucion">Distribución (prorrateo flota)</option>
-            <option value="inversion">Inversión / Puesta en marcha</option>
-            <option value="otro">Otro</option>
+            <optgroup label="FLOTA Y OPERACIÓN">
+              <option value="mantencion">Mantención</option>
+              <option value="neumaticos">Neumáticos</option>
+              <option value="reparacion">Reparación</option>
+              <option value="distribucion">Distribución (prorrateo flota)</option>
+              <option value="inversion">Inversión / Puesta en marcha</option>
+            </optgroup>
+            <optgroup label="COMBUSTIBLE CAMIONETAS">
+              <option value="combustible_camioneta">Combustible Camioneta (manual)</option>
+            </optgroup>
+            <optgroup label="OTROS COSTOS — ADMINISTRACIÓN">
+              <option value="otros_locomocion">Locomoción</option>
+              <option value="otros_contador">Contador / Administración</option>
+              <option value="otros_gps">GPS / Rastreo Camionetas</option>
+              <option value="otros_internet">Internet</option>
+              <option value="otros_telefonia">Telefonía</option>
+              <option value="otros_mant_camioneta">Mantención Camionetas</option>
+              <option value="otros_representacion">Gastos de Representación</option>
+              <option value="otros_arriendo">Arriendo Oficina/Bodega</option>
+              <option value="otros_varios">Otros Gastos Administrativos</option>
+            </optgroup>
+            <option value="otro">Otro (sin categorizar)</option>
           </select>
         </div>
         <div class="fld"><label class="lbl">Descripción</label>
@@ -535,6 +552,7 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
       </select>
     </div>
     <div id="res-kpis" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px"></div>
+    <div id="res-desglose-costos"></div>
   </div>
 
   <!-- TAB INFORMES -->
@@ -590,7 +608,7 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
               <input type="radio" name="modo-comb" id="cfg-comb-manual" value="manual"> Manual (precio fijo)
             </label>
             <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px">
-              <input type="radio" name="modo-comb" id="cfg-comb-auto" value="automatico"> Automático (precio Copec día del servicio − 20% IVA)
+              <input type="radio" name="modo-comb" id="cfg-comb-auto" value="automatico"> Automático (precio Estación de Combustible día del servicio − 20% IVA)
             </label>
           </div>
         </div>
@@ -653,10 +671,10 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
             <div id="gps-status" style="font-size:11px;margin-top:6px;color:var(--g400);min-height:16px"></div>
           </div>
           <div style="border:1px solid var(--border);border-radius:8px;padding:12px;background:var(--bg)">
-            <div style="font-weight:700;font-size:12px;margin-bottom:4px">⛽ Copec (.csv)</div>
-            <div style="font-size:11px;color:var(--g400);margin-bottom:8px">Exportar desde portal Copec</div>
+            <div style="font-weight:700;font-size:12px;margin-bottom:4px">⛽ Estación de Combustible (.csv)</div>
+            <div style="font-size:11px;color:var(--g400);margin-bottom:8px">Exportar desde portal de tu estación de combustible</div>
             <input type="file" id="upload-copec" accept=".csv" style="display:none" onchange="procesarCopec(this)">
-            <button class="btn btn-outline" style="width:100%;font-size:11px" onclick="document.getElementById('upload-copec').click()">⬆ Subir Copec</button>
+            <button class="btn btn-outline" style="width:100%;font-size:11px" onclick="document.getElementById('upload-copec').click()">⬆ Subir Cargas</button>
             <div id="copec-status" style="font-size:11px;margin-top:6px;color:var(--g400);min-height:16px"></div>
           </div>
         </div>
@@ -899,7 +917,6 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
           <button id="btn-cancelar-tarifa" onclick="setupCancelarEdicionTarifa()" style="display:none;background:transparent;border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:12px;font-weight:800;color:var(--muted);cursor:pointer;white-space:nowrap">✕ Cancelar</button>
         </div>
       </div>
-    </div>
 
     <div id="setup-costos-extra">
     <!-- 6. COSTOS FIJOS -->
@@ -1497,7 +1514,7 @@ let _costosDashData = {};
 
 function setDetalleTab(tab) {
   _detalleTabActivo = tab;
-  ['combustible','mantencion','inversion','servicios'].forEach(t => {
+  ['combustible','mantencion','inversion','servicios','otros'].forEach(t => {
     const btn = document.getElementById('dtab-'+t);
     if(!btn) return;
     btn.className = t===tab ? 'btn' : 'btn btn-outline';
@@ -1706,6 +1723,40 @@ function renderDetalleTab() {
             <td style="padding:7px;text-align:right;font-weight:700">${fmt(tag+remun+fijo)}</td>
           </tr>`;
         }).join('');
+  } else if(_detalleTabActivo === 'otros') {
+    thead.innerHTML = '<th style="padding:8px;text-align:left">Categoría</th><th style="padding:8px;text-align:left">Descripción</th><th style="padding:8px;text-align:left">Fecha</th><th style="padding:8px;text-align:right">Monto</th>';
+    const labelsOtros = {
+      otros_locomocion:'Locomoción', otros_contador:'Contador / Administración', otros_gps:'GPS / Rastreo Camionetas',
+      otros_internet:'Internet', otros_telefonia:'Telefonía', otros_mant_camioneta:'Mantención Camionetas',
+      otros_representacion:'Gastos de Representación', otros_arriendo:'Arriendo Oficina/Bodega', otros_varios:'Otros Gastos Administrativos',
+      combustible_camioneta:'Combustible Camioneta'
+    };
+    const rowsOtros = DB_gastos.filter(g => (g.categoria||'').startsWith('otros_') || g.categoria === 'combustible_camioneta');
+    // Totales por categoría
+    const porCat = {};
+    rowsOtros.forEach(g => { const k=g.categoria; if(!porCat[k]) porCat[k]=0; porCat[k]+=g.monto_neto||0; });
+    const totalOtros = Object.values(porCat).reduce((a,v)=>a+v,0);
+    const resumenCatHTML = Object.entries(porCat).length===0 ? '' : `
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-bottom:16px">
+        ${Object.entries(porCat).map(([k,v])=>`
+          <div style="background:var(--surface2);border-radius:8px;padding:10px">
+            <div style="font-size:10px;color:var(--muted);font-weight:700;letter-spacing:0.04em">${labelsOtros[k]||k}</div>
+            <div style="font-size:15px;font-weight:900;color:var(--gold);margin-top:4px">${fmt(v)}</div>
+          </div>`).join('')}
+        <div style="background:var(--gold);border-radius:8px;padding:10px">
+          <div style="font-size:10px;color:var(--text);font-weight:700;letter-spacing:0.04em">TOTAL OTROS COSTOS</div>
+          <div style="font-size:15px;font-weight:900;color:var(--text);margin-top:4px">${fmt(totalOtros)}</div>
+        </div>
+      </div>`;
+    thead.innerHTML = '';
+    tbody.innerHTML = resumenCatHTML + (rowsOtros.length===0 ? '<tr><td colspan="4" style="padding:16px;text-align:center;color:var(--muted)">Sin otros costos registrados en este período</td></tr>'
+      : '<tr style="background:var(--bg)"><th style="padding:8px;text-align:left;color:var(--muted)">Categoría</th><th style="padding:8px;text-align:left;color:var(--muted)">Descripción</th><th style="padding:8px;text-align:left;color:var(--muted)">Fecha</th><th style="padding:8px;text-align:right;color:var(--muted)">Monto</th></tr>'
+      + rowsOtros.map(g=>`<tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:7px;font-weight:700">${labelsOtros[g.categoria]||g.categoria}</td>
+          <td style="padding:7px">${g.descripcion||'—'}</td>
+          <td style="padding:7px;color:var(--muted)">${g.fecha||'—'}</td>
+          <td style="padding:7px;text-align:right;font-weight:700">${fmt(g.monto_neto)}</td>
+        </tr>`).join(''));
   }
 }
 
@@ -1724,7 +1775,7 @@ async function renderCostosDash() {
   _costosDashData.copecRows = copecRows||[];
 
   // Gastos módulo
-  const mantencion  = DB_gastos.filter(g=>g.categoria!=='inversion'&&(!filtPat||g.patente===filtPat)).reduce((a,g)=>a+g.monto_neto,0);
+  const mantencion  = DB_gastos.filter(g=>g.categoria!=='inversion'&&!(g.categoria||'').startsWith('otros_')&&g.categoria!=='combustible_camioneta'&&(!filtPat||g.patente===filtPat)).reduce((a,g)=>a+g.monto_neto,0);
   const inversion   = DB_gastos.filter(g=>g.categoria==='inversion'&&(!filtPat||g.patente===filtPat)).reduce((a,g)=>a+g.monto_neto,0);
 
   // Desde servicios cerrados del mes
@@ -1840,7 +1891,8 @@ async function guardarGasto() {
   const cat     = document.getElementById('gasto-categoria').value;
   const desc    = document.getElementById('gasto-descripcion').value.trim();
   const monto   = parseInt(document.getElementById('gasto-monto').value)||0;
-  if((!patente && cat !== 'distribucion') || !fecha || monto <= 0) { toast('⚠ Complete equipo, fecha y monto'); return; }
+  const esAdmin = (cat||'').startsWith('otros_');
+  if((!patente && cat !== 'distribucion' && !esAdmin) || !fecha || monto <= 0) { toast('⚠ Complete fecha y monto (equipo requerido salvo gastos administrativos)'); return; }
 
   let foto_url = null;
   const fotoInput = document.getElementById('gasto-foto');
@@ -1887,6 +1939,8 @@ function toggleGastoEquipo() {
   if(!field) return;
   if(cat === 'distribucion') {
     field.innerHTML = `<label class="lbl">Equipo</label><div style="padding:8px;background:var(--surface);border-radius:6px;font-size:12px;color:rgba(255,255,255,0.6)">📋 Se prorrateará entre <strong>${nProrrateo} equipos</strong> de la flota</div>`;
+  } else if((cat||'').startsWith('otros_')) {
+    field.innerHTML = `<label class="lbl">Equipo (opcional)</label><div style="padding:8px;background:var(--surface);border-radius:6px;font-size:12px;color:rgba(255,255,255,0.5)">Gasto administrativo general — no requiere equipo</div><input type="hidden" id="gasto-patente" value="">`;
   } else {
     field.innerHTML = `<label class="lbl">Equipo</label><select class="inp" id="gasto-patente"><option value="">Seleccione equipo...</option>${DB.flota.filter(f=>f.activo!==false).map(f=>`<option value="${f.patente}">${f.patente} — ${f.tipo||''}</option>`).join('')}</select>`;
   }
@@ -2130,7 +2184,7 @@ async function procesarCopec(input) {
       status.textContent = `⏳ ${insertados}/${records.length} registros...`;
     }
 
-    status.textContent = `✅ ${insertados} registros Copec cargados${errores>0?' · ⚠ '+errores+' errores':''}`;
+    status.textContent = `✅ ${insertados} registros cargados${errores>0?' · ⚠ '+errores+' errores':''}`;
     status.style.color = errores > 0 ? '#F59E0B' : '#059669';
   } catch(e) {
     status.textContent = '❌ Error: ' + e.message;
@@ -2350,7 +2404,7 @@ async function calcMargenReal(mes, conf, ingresoTotal) {
   const {data:gastos} = await supa.from('kaptura_gastos')
     .select('monto_neto,categoria').gte('fecha',desde).lte('fecha',hasta);
   // Excluir gastos de inversión del margen real operacional
-  const gastosReal = (gastos||[]).filter(r=>r.categoria!=='inversion').reduce((a,r)=>a+(r.monto_neto||0),0);
+  const gastosReal = (gastos||[]).filter(r=>r.categoria!=='inversion'&&!(r.categoria||'').startsWith('otros_')&&r.categoria!=='combustible_camioneta').reduce((a,r)=>a+(r.monto_neto||0),0);
   const gastosInversion = (gastos||[]).filter(r=>r.categoria==='inversion').reduce((a,r)=>a+(r.monto_neto||0),0);
 
   // Resto de costos desde servicios cerrados (TAG, fijos, sueldos, viáticos, comisiones)
@@ -2377,7 +2431,7 @@ async function calcMargenReal(mes, conf, ingresoTotal) {
     if(elKpi) elKpi.className = 'kpi ' + (margenReal >= 0 ? 'green' : 'red');
   }
   const sub = document.getElementById('k-margen-real-sub');
-  if(sub) sub.textContent = `Copec $${Math.round(combustibleReal/1000)}k · Mant $${Math.round(gastosReal/1000)}k${gastosInversion>0?' · Inv $'+Math.round(gastosInversion/1000)+'k':''}`;
+  if(sub) sub.textContent = `Comb $${Math.round(combustibleReal/1000)}k · Mant $${Math.round(gastosReal/1000)}k${gastosInversion>0?' · Inv $'+Math.round(gastosInversion/1000)+'k':''}`;
 
 }
 
@@ -3618,7 +3672,7 @@ async function cargarGPS() {
 
     const hayGPS = eventos && eventos.length > 0;
     if(!hayGPS) {
-      toast('⚠ Sin GPS para ese rango — integrando Copec y costos');
+      toast('⚠ Sin GPS para ese rango — integrando combustible y costos');
       // Sin GPS: solo integrar Copec y costos fijos, dejar km en blanco
       document.getElementById('lbl-km').textContent = 'Sin GPS';
       document.getElementById('lbl-km').style.background = '#FEF3C7';
@@ -5155,6 +5209,11 @@ function renderResultados() {
   const ingresoTotal  = svcs.reduce((a,s)=>a+(s.ingreso_total||s.tarifa_neta||0), 0);
   const costoTotal    = svcs.reduce((a,s)=>a+(s.total_costos||0), 0);
   const margenTotal   = svcs.reduce((a,s)=>a+(s.margen_servicio||s.margen||0), 0);
+  const corretajeTotal = svcs.reduce((a,s)=>a+(s.costo_corretaje||0), 0);
+  const comisionCondTotal = svcs.reduce((a,s)=>a+(s.costo_comision_conductor||0), 0);
+  const combustibleTotal = svcs.reduce((a,s)=>a+(s.costo_combustible||0), 0);
+  const peajesTotal = svcs.reduce((a,s)=>a+(s.costo_peajes||0), 0);
+  const fijosTotal = svcs.reduce((a,s)=>a+(s.costo_fijo_dia||0), 0);
   const ticketProm    = svcs.length ? Math.round(ingresoTotal/svcs.length) : 0;
   const margenProm    = svcs.length ? Math.round(margenTotal/svcs.length) : 0;
   // Días únicos con actividad
@@ -5182,6 +5241,31 @@ function renderResultados() {
       <div style="font-family:'DM Sans',sans-serif;font-size:28px;font-weight:900;color:${colors[k.color]};line-height:1">${k.val}</div>
       <div style="font-size:10px;color:var(--g400);margin-top:4px;font-weight:600">${k.sub}</div>
     </div>`).join('');
+
+  // Desglose Estado de Resultados — Costo de Ventas detallado
+  const resDesgloseEl = document.getElementById('res-desglose-costos');
+  if(resDesgloseEl) {
+    const filas = [
+      ['Combustible', combustibleTotal],
+      ['Peajes / TAG', peajesTotal],
+      ['Comisión Conductor', comisionCondTotal],
+      ['Costo Corretaje', corretajeTotal],
+      ['Costo Fijo (prorrateo)', fijosTotal],
+    ].filter(f => f[1] > 0);
+    resDesgloseEl.innerHTML = `
+      <div class="sec-ttl" style="margin-top:20px">Costo de Ventas — Detalle</div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden">
+        ${filas.map(f=>`
+          <div style="display:flex;justify-content:space-between;padding:10px 16px;border-bottom:1px solid var(--border)">
+            <span style="font-size:12px;color:var(--text)">${f[0]}</span>
+            <span style="font-size:13px;font-weight:800;color:var(--text)">${fmt(f[1])}</span>
+          </div>`).join('')}
+        <div style="display:flex;justify-content:space-between;padding:12px 16px;background:var(--gold)">
+          <span style="font-size:12px;font-weight:800;color:#000">TOTAL COSTO DE VENTAS</span>
+          <span style="font-size:14px;font-weight:900;color:#000">${fmt(costoTotal)}</span>
+        </div>
+      </div>`;
+  }
 }
 
 // ══ RENDIMIENTO CARGAS MANUAL ══
