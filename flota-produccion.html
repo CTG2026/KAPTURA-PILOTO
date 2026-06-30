@@ -3168,7 +3168,7 @@ async function procesarGuia(input, pi) {
           max_tokens: 400,
           messages: [{role:'user', content:[
             {type:'image', source:{type:'base64', media_type:'image/jpeg', data:b64}},
-            {type:'text', text:`Eres un experto en documentos de despacho chilenos. En esta imagen hay una guía de despacho o factura. El NÚMERO DE GUÍA o FOLIO está casi siempre en la esquina SUPERIOR DERECHA del documento, precedido por "N°", "Folio", "Guía N°" o similar. Puede tener entre 4 y 9 dígitos, a veces con guiones. Extrae exactamente ese número. También extrae la fecha de emisión (formato DD/MM/AAAA) y el nombre del cliente comparándolo con esta lista: ${DB.clientes.map(c=>c.nombre).join(', ')}. Responde SOLO con JSON sin explicación ni markdown: {"num_guia":"","fecha_emision":"","cliente":""}`}
+            {type:'text', text:`Eres un experto en documentos de despacho chilenos. En esta imagen hay una guía de despacho o factura. El NÚMERO DE GUÍA o FOLIO está casi siempre en la esquina SUPERIOR DERECHA del documento, precedido por "N°", "Folio", "Guía N°" o similar. Es un número de 4 a 7 dígitos. NO confundas el folio con: RUT (tiene guión y dígito verificador), códigos de barra, números de orden de compra largos, ni números de bultos. El folio es el número más pequeño y prominente en la esquina superior derecha. Extrae SOLO ese número. También extrae la fecha de emisión (formato DD/MM/AAAA) y el nombre del cliente comparándolo con esta lista: ${DB.clientes.map(c=>c.nombre).join(', ')}. Responde SOLO con JSON sin explicación ni markdown: {"num_guia":"","fecha_emision":"","cliente":""}`}
           ]}]
         })
       });
