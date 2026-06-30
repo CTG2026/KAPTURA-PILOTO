@@ -41,9 +41,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .sec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:8px}
 .sec-ttl{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold)}
 .filtro{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
-.pill-filtro{background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;color:var(--muted);cursor:pointer;font-family:inherit;transition:all 0.15s}
-.pill-filtro.activo{background:rgba(201,168,76,0.2);border-color:var(--gold);color:var(--gold)}
-#filtro-sin-guia.activo{background:rgba(239,68,68,0.15);border-color:#ef4444;color:#ef4444}
 .filtro input{font-family:'DM Sans',sans-serif;font-size:12px;padding:6px 10px;border:1px solid var(--border);border-radius:6px;outline:none;background:var(--surface2);color:var(--text)}
 .btn{font-family:'DM Sans',sans-serif;font-size:11px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;padding:8px 14px;border-radius:6px;cursor:pointer;border:none;transition:all 0.15s;white-space:nowrap;display:inline-flex;align-items:center;gap:5px}
 .btn-navy{background:var(--gold);color:#000}.btn-navy:active{opacity:0.85}
@@ -77,8 +74,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 }
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(4px);z-index:200;display:flex;align-items:flex-end;justify-content:center}
 @media(min-width:640px){.overlay{align-items:center;padding:20px}}
-.modal{background:var(--surface);border-radius:16px 16px 0 0;width:100%;max-height:92vh;overflow-y:auto;box-shadow:var(--shl);border:1px solid var(--border)}
-@media(min-width:640px){.modal{border-radius:16px;max-width:620px;margin:0 auto}}
+.modal{background:var(--surface);border-radius:16px 16px 0 0;width:100%;max-height:92vh;overflow-y:auto;box-shadow:var(--shl);border:1px solid var(--border);margin-top:auto}
+@media(min-width:640px){.modal{border-radius:16px;max-width:620px}}
 .modal-hdr{padding:14px 16px 12px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;position:sticky;top:0;background:var(--surface);z-index:1}
 .modal-ttl{font-family:'DM Sans',sans-serif;font-size:17px;font-weight:900;text-transform:uppercase;letter-spacing:0.05em;color:var(--gold)}
 .modal-sub{font-size:11px;color:var(--muted);font-weight:600;margin-top:2px}
@@ -258,28 +255,9 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
       <div class="kpi" id="kpi-margen-prom"><div class="kpi-lbl">Margen Prom.</div><div class="kpi-val" id="k-prom">—</div><div class="kpi-sub">por servicio</div></div>
       <div class="kpi" id="k-margen-real-kpi"><div class="kpi-lbl">Margen Real</div><div class="kpi-val" id="k-margen-real">—</div><div class="kpi-sub" id="k-margen-real-sub">con costos reales</div></div>
     </div>
-    <div class="filtro" style="flex-direction:column;align-items:stretch;gap:8px">
-      <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
-        <input type="date" id="filtro-fecha" onchange="renderServicios()" style="flex:0 0 auto">
-        <select id="filtro-patente" onchange="renderServicios()" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--text);font-family:inherit">
-          <option value="">Todos los equipos</option>
-        </select>
-        <select id="filtro-conductor" onchange="renderServicios()" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--text);font-family:inherit">
-          <option value="">Todos los conductores</option>
-        </select>
-        <select id="filtro-cliente" onchange="renderServicios()" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--text);font-family:inherit">
-          <option value="">Todos los clientes</option>
-        </select>
-        <button id="filtro-sin-guia" onclick="toggleFiltroSinGuia()" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:6px 12px;font-size:12px;color:var(--muted);font-family:inherit;cursor:pointer;white-space:nowrap;font-weight:700">📄 Sin Guía</button>
-        <button class="btn btn-outline btn-sm" onclick="resetFiltros()">✕ Limpiar</button>
-      </div>
-      <div style="display:flex;flex-wrap:wrap;gap:6px" id="filtro-estados">
-        <button class="pill-filtro" data-estado="asignado" onclick="toggleFiltroEstado(this)">Asignado</button>
-        <button class="pill-filtro" data-estado="en_proceso" onclick="toggleFiltroEstado(this)">En Proceso</button>
-        <button class="pill-filtro" data-estado="ejecutado" onclick="toggleFiltroEstado(this)">Ejecutado</button>
-        <button class="pill-filtro" data-estado="borrador" onclick="toggleFiltroEstado(this)">Borrador</button>
-        <button class="pill-filtro" data-estado="cerrado" onclick="toggleFiltroEstado(this)">Cerrado</button>
-      </div>
+    <div class="filtro">
+      <input type="date" id="filtro-fecha" onchange="renderServicios()">
+      <button class="btn btn-outline btn-sm" onclick="resetFecha()">Todos</button>
     </div>
     <div class="sec-hdr">
       <div class="sec-ttl">Servicios</div>
@@ -429,144 +407,8 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
       <button class="btn btn-sm btn-ghost" id="liq-fil-por_cobrar" onclick="filtrarLiquidaciones('por_cobrar')">Por Cobrar</button>
       <button class="btn btn-sm btn-ghost" id="liq-fil-cobrada" onclick="filtrarLiquidaciones('cobrada')">Cobradas</button>
     </div>
-    <!-- Filtros vencimiento + cliente -->
-    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;align-items:center">
-      <button class="pill-filtro" id="liq-venc-vencida"  onclick="toggleLiqVenc('vencida')" >🔴 Vencida</button>
-      <button class="pill-filtro" id="liq-venc-urgente"  onclick="toggleLiqVenc('urgente')" >🟠 ≤7 días</button>
-      <button class="pill-filtro" id="liq-venc-proximo"  onclick="toggleLiqVenc('proximo')" >🟡 ≤30 días</button>
-      <button class="pill-filtro" id="liq-venc-ok"       onclick="toggleLiqVenc('ok')"      >🟢 Al día</button>
-      <select id="liq-fil-cliente" onchange="filtrarLiqCliente(this.value)" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:12px;color:var(--text);font-family:inherit">
-        <option value="">Todos los clientes</option>
-      </select>
-      <button class="btn btn-sm btn-ghost" onclick="resetLiqFiltros()" style="font-size:11px">✕ Limpiar</button>
-    </div>
     <!-- Lista liquidaciones -->
     <div id="liq-lista"><div class="empty">Sin liquidaciones — crea la primera con + Nueva Liquidación</div></div>
-  </div>
-
-  <!-- MODAL EDITAR LIQUIDACIÓN -->
-  <div id="modal-editar-liq" class="overlay" style="display:none">
-    <div class="modal" style="max-width:700px">
-      <div class="modal-hdr">
-        <div>
-          <div class="modal-ttl" id="edit-liq-titulo">Editar Liquidación</div>
-          <div class="modal-sub" id="edit-liq-sub"></div>
-        </div>
-        <button class="modal-cls" onclick="cerrar('modal-editar-liq')">✕</button>
-      </div>
-      <div class="modal-body">
-        <!-- Cliente (solo lectura) -->
-        <div class="fld">
-          <div class="lbl">Cliente</div>
-          <div id="edit-liq-cliente-txt" style="padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;font-size:13px;font-weight:700;color:var(--text)"></div>
-        </div>
-        <!-- Servicios incluidos (solo lectura) -->
-        <div class="fld">
-          <div class="lbl">Servicios incluidos</div>
-          <div id="edit-liq-svcs"></div>
-        </div>
-        <!-- Agregar servicios -->
-        <div class="fld" id="edit-liq-svcs-agregar-wrap" style="display:none">
-          <div class="lbl">Agregar servicios</div>
-          <div id="edit-liq-svcs-disponibles"></div>
-        </div>
-        <!-- Resumen (solo lectura) -->
-        <div id="edit-liq-resumen" style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:12px">
-          <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:var(--muted);font-size:12px">Monto neto</span><span id="edit-liq-neto" style="font-weight:700"></span></div>
-          <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:var(--muted);font-size:12px">IVA 19%</span><span id="edit-liq-iva" style="font-weight:700"></span></div>
-          <div style="display:flex;justify-content:space-between;padding-top:8px;border-top:1px solid var(--border)"><span style="font-weight:800;color:var(--gold)">TOTAL</span><span id="edit-liq-total" style="font-size:16px;font-weight:900;color:var(--gold)"></span></div>
-        </div>
-        <!-- Info general -->
-        <div class="section-ttl">Información General</div>
-        <div class="fld2">
-          <div class="fld">
-            <div class="lbl">Estado</div>
-            <select class="inp" id="edit-liq-estado">
-              <option value="borrador">Borrador</option>
-              <option value="emitida">Emitida</option>
-              <option value="enviada">Enviada</option>
-              <option value="aprobada">Aprobada</option>
-              <option value="facturada">Facturada</option>
-              <option value="en_cobro">En Cobro</option>
-              <option value="cobrada">Cobrada</option>
-            </select>
-          </div>
-          <div class="fld">
-            <div class="lbl">Fecha Emisión</div>
-            <input class="inp" type="date" id="edit-liq-fecha">
-          </div>
-        </div>
-        <div class="fld2">
-          <div class="fld">
-            <div class="lbl">Vencimiento</div>
-            <input class="inp" type="date" id="edit-liq-vencimiento">
-          </div>
-          <div class="fld">
-            <div class="lbl">Fecha Pago</div>
-            <input class="inp" type="date" id="edit-liq-fecha-pago">
-          </div>
-        </div>
-        <div class="fld">
-          <div class="lbl">Notas</div>
-          <textarea class="inp" id="edit-liq-notas" rows="2" placeholder="Observaciones..."></textarea>
-        </div>
-        <!-- Factura SII -->
-        <div class="section-ttl">Factura SII</div>
-        <div class="fld2">
-          <div class="fld">
-            <div class="lbl">N° Factura</div>
-            <input class="inp" type="text" id="edit-liq-num-factura" placeholder="Ej: 1234">
-          </div>
-          <div class="fld">
-            <div class="lbl">Fecha Factura</div>
-            <input class="inp" type="date" id="edit-liq-fecha-factura">
-          </div>
-        </div>
-        <div class="fld">
-          <div class="lbl">Documento adjunto</div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <button class="btn btn-outline btn-sm" onclick="liqAdjuntarSIIEdit()">📁 Archivo</button>
-            <button class="btn btn-outline btn-sm" onclick="liqFotoEdit()">🖼 Foto</button>
-            <button class="btn btn-outline btn-sm" onclick="liqCamaraEdit()">📷 Cámara</button>
-          </div>
-          <div id="edit-liq-pdf-link" style="margin-top:6px;display:none"></div>
-        </div>
-        <!-- Pago -->
-        <div class="section-ttl">Pago</div>
-        <div class="fld2">
-          <div class="fld">
-            <div class="lbl">Forma de Pago Real</div>
-            <input class="inp" type="text" id="edit-liq-forma-pago" placeholder="Transferencia, cheque...">
-          </div>
-          <div class="fld">
-            <div class="lbl">Observaciones Pago</div>
-            <input class="inp" type="text" id="edit-liq-obs-pago" placeholder="Observaciones...">
-          </div>
-        </div>
-        <!-- Factoring -->
-        <div class="section-ttl">Factoring</div>
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-          <input type="checkbox" id="edit-liq-factoring" onchange="editLiqToggleFactoring()" style="width:18px;height:18px;accent-color:var(--gold)">
-          <label for="edit-liq-factoring" style="font-size:13px;color:var(--text);font-weight:600">Ceder a factoring</label>
-        </div>
-        <div id="edit-liq-factoring-inputs" style="display:none">
-          <div class="fld2">
-            <div class="fld">
-              <div class="lbl">Comisión (%)</div>
-              <input class="inp" type="number" id="edit-liq-factoring-pct" value="3" step="0.1">
-            </div>
-            <div class="fld">
-              <div class="lbl">Costo ($)</div>
-              <input class="inp" id="edit-liq-factoring-costo" readonly>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="modal-ftr">
-        <button class="btn btn-ghost" onclick="cerrar('modal-editar-liq')">Cancelar</button>
-        <button class="btn btn-navy" onclick="guardarEdicionLiq()">💾 Guardar Cambios</button>
-      </div>
-    </div>
   </div>
 
   <!-- MODAL NUEVA LIQUIDACIÓN -->
@@ -886,13 +728,6 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
       </div>
     </div>
 
-    <!-- 1B. DOCUMENTOS EMPRESA -->
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px">
-      <div style="font-size:11px;font-weight:700;color:var(--gold);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px">📎 Documentos Empresa</div>
-      <div style="font-size:11px;color:var(--muted);margin-bottom:12px">Documentos legales y tributarios de la empresa.</div>
-      <button onclick="abrirDocs('empresa', DB._empresa)" style="width:100%;background:var(--surface2);border:1px solid var(--gold);border-radius:8px;padding:12px;font-size:13px;font-weight:700;color:var(--gold);cursor:pointer">📁 Ver / Gestionar Documentos Empresa</button>
-    </div>
-
     <!-- 2. FLOTA / EQUIPOS -->
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px">
       <div style="font-size:11px;font-weight:700;color:var(--gold);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px">2. Flota / Equipos</div>
@@ -912,9 +747,6 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
             <option value="camion_rampla">Camión con rampla</option>
             <option value="camion_caja_seca">Camión caja seca</option>
             <option value="camion_solo">Camión sin carro</option>
-            <option value="camion_frig_24">Camión Frigorífico Furgonado 24 pies</option>
-            <option value="trailer_frig_53">Tráiler Frigorífico 53 pies</option>
-            <option value="trailer_frig_48">Tráiler Frigorífico 48 pies</option>
             <option value="otro">Otro</option>
           </select>
         </div>
@@ -928,10 +760,7 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
           <div style="font-size:10px;color:var(--muted);margin-bottom:4px">VALOR COMERCIAL</div>
           <input id="setup-nuevo-valor" type="text" placeholder="Ej: 45000000" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:13px;color:var(--text);font-family:inherit;text-transform:uppercase">
         </div>
-        <div style="display:flex;gap:6px;align-self:flex-end">
-          <button id="setup-equipo-btn-guardar" onclick="setupGuardarEquipoEditado()" style="display:none;background:var(--surface2);border:1px solid var(--green);border-radius:8px;padding:10px 14px;font-size:12px;font-weight:800;color:var(--green);cursor:pointer;white-space:nowrap">💾 GUARDAR</button>
-          <button id="setup-equipo-btn-agregar" onclick="setupListaAgregarEquipo()" style="background:var(--surface2);border:1px solid var(--gold);border-radius:8px;padding:10px 14px;font-size:12px;font-weight:800;color:var(--gold);cursor:pointer;white-space:nowrap">+ AGREGAR</button>
-        </div>
+        <button onclick="setupListaAgregarEquipo()" style="background:var(--surface2);border:1px solid var(--gold);border-radius:8px;padding:10px 14px;font-size:12px;font-weight:800;color:var(--gold);cursor:pointer;align-self:flex-end;white-space:nowrap">+ AGREGAR</button>
       </div>
     </div>
 
@@ -1046,24 +875,33 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:6px">
         <div>
-          <div style="font-size:10px;color:var(--muted);margin-bottom:4px">KM IDA TEÓRICO</div>
+          <div style="font-size:10px;color:var(--muted);margin-bottom:4px">KM IDA (TEÓRICO)</div>
           <input id="setup-tar-km-ida" type="number" placeholder="0" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px;font-size:12px;color:var(--text);font-family:inherit">
         </div>
         <div>
-          <div style="font-size:10px;color:var(--muted);margin-bottom:4px">KM VUELTA TEÓRICO</div>
-          <input id="setup-tar-km-vuelta" type="number" placeholder="0" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px;font-size:12px;color:var(--text);font-family:inherit">
+          <div style="font-size:10px;color:var(--muted);margin-bottom:4px">KM VUELTA (TEÓRICO)</div>
+          <input id="setup-tar-km-vta" type="number" placeholder="0" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px;font-size:12px;color:var(--text);font-family:inherit">
         </div>
         <div>
-          <div style="font-size:10px;color:var(--muted);margin-bottom:4px">TAG TEÓRICO $</div>
-          <input id="setup-tar-tag" type="number" placeholder="0" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px;font-size:12px;color:var(--text);font-family:inherit">
+          <div style="font-size:10px;color:var(--muted);margin-bottom:4px">PEAJES HABITUALES $</div>
+          <input id="setup-tar-peajes" type="number" placeholder="0" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px;font-size:12px;color:var(--text);font-family:inherit">
+        </div>
+        <div style="display:none">
+            <div style="font-size:10px;color:var(--muted);margin-bottom:4px">KM VUELTA (TEÓRICO)</div>
+            <input id="setup-tar-km-vta" type="number" placeholder="0" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px;font-size:12px;color:var(--text);font-family:inherit">
+          </div>
         </div>
       </div>
-      <div style="text-align:right;display:flex;gap:8px;justify-content:flex-end">
-        <button id="setup-tar-btn-guardar" onclick="setupGuardarTarifaEditada()" style="display:none;background:var(--surface2);border:1px solid var(--green);border-radius:8px;padding:10px 14px;font-size:12px;font-weight:800;color:var(--green);cursor:pointer;white-space:nowrap">💾 GUARDAR</button>
-        <button id="setup-tar-btn-agregar" onclick="setupListaAgregarTarifa()" style="background:var(--surface2);border:1px solid var(--gold);border-radius:8px;padding:10px 14px;font-size:12px;font-weight:800;color:var(--gold);cursor:pointer;white-space:nowrap">+ AGREGAR</button>
+      <div style="text-align:right">
+        <div style="display:flex;gap:8px">
+          <button onclick="setupListaAgregarTarifa()" style="background:var(--surface2);border:1px solid var(--gold);border-radius:8px;padding:10px 14px;font-size:12px;font-weight:800;color:var(--gold);cursor:pointer;white-space:nowrap">+ AGREGAR</button>
+          <button id="btn-guardar-tarifa" onclick="setupGuardarEdicionTarifa()" style="display:none;background:var(--gold);border:none;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:800;color:#000;cursor:pointer;white-space:nowrap">💾 GUARDAR</button>
+          <button id="btn-cancelar-tarifa" onclick="setupCancelarEdicionTarifa()" style="display:none;background:transparent;border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:12px;font-weight:800;color:var(--muted);cursor:pointer;white-space:nowrap">✕ Cancelar</button>
+        </div>
       </div>
     </div>
 
+    <div id="setup-costos-extra">
     <!-- 6. COSTOS FIJOS -->
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px">
       <div style="font-size:11px;font-weight:700;color:var(--gold);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px">6. Costos fijos mensuales</div>
@@ -1161,47 +999,10 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
       </div>
     </div>
 
-
-    <!-- 🔗 PORTAL DOCUMENTOS -->
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px">
-      <div style="font-size:11px;font-weight:700;color:var(--gold);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px">🔗 Portal Documentos — Compartir con Clientes</div>
-      <div style="font-size:11px;color:var(--muted);margin-bottom:12px">Genera un link público para que tus clientes vean los documentos vigentes de tu empresa, equipos y conductores.</div>
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <button onclick="generarLinkDocs()" style="background:var(--gold);border:none;border-radius:8px;padding:10px 16px;font-size:12px;font-weight:800;color:#000;cursor:pointer">🔗 Generar Link</button>
-        <div id="docs-link-container" style="display:none;flex:1;min-width:200px">
-          <input id="docs-link-input" readonly style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:11px;color:var(--text);font-family:inherit">
-        </div>
-        <button id="docs-link-copiar" onclick="copiarLinkDocs()" style="display:none;background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:8px 12px;font-size:12px;font-weight:700;color:var(--text);cursor:pointer">📋 Copiar</button>
-      </div>
-    </div>
-
+    </div><!-- /setup-costos-extra -->
     <div style="height:80px"></div>
   </div>
 </main>
-
-<!-- TAB CLIENTE -->
-<div id="tab-cliente" style="display:none;padding:16px;max-width:600px;margin:0 auto">
-  <div style="text-align:center;margin-bottom:24px">
-    <div style="font-size:20px;font-weight:900;color:var(--gold);letter-spacing:0.05em">KAPTURA</div>
-    <div id="cli-empresa-nombre" style="font-size:13px;color:var(--muted);margin-top:4px"></div>
-  </div>
-  <div style="font-size:10px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);margin-bottom:12px">Documentos disponibles</div>
-  <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px">
-    <div style="font-size:12px;font-weight:800;color:var(--text);margin-bottom:10px">🏢 Empresa</div>
-    <button onclick="abrirDocs('empresa', DB._empresa)" style="width:100%;background:var(--surface2);border:1px solid var(--gold);border-radius:8px;padding:10px;font-size:12px;font-weight:700;color:var(--gold);cursor:pointer">📎 Ver Documentos Empresa</button>
-  </div>
-  <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px">
-    <div style="font-size:12px;font-weight:800;color:var(--text);margin-bottom:10px">🚛 Equipos</div>
-    <div id="cli-equipos-lista"></div>
-  </div>
-  <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px">
-    <div style="font-size:12px;font-weight:800;color:var(--text);margin-bottom:10px">👤 Conductores</div>
-    <div id="cli-conductores-lista"></div>
-  </div>
-  <div style="text-align:center;margin-top:20px">
-    <button onclick="cerrarSesionKaptura()" style="background:transparent;border:1px solid var(--border);border-radius:8px;padding:8px 20px;font-size:11px;color:var(--muted);cursor:pointer;font-family:inherit">⏏ Salir</button>
-  </div>
-</div>
 
 <!-- BOTÓN FIJO SETUP -->
 <div id="btn-setup-fixed" style="display:none;position:fixed;bottom:0;left:0;right:0;padding:12px 16px;background:var(--bg);border-top:2px solid var(--gold);z-index:999">
@@ -1260,46 +1061,41 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
       <button class="modal-cls" onclick="cerrar('modal-asignar')">✕</button>
     </div>
     <div class="modal-body">
-      <!-- 1+2: Patente y Conductor -->
       <div class="fld2">
-        <div class="fld"><label class="lbl">1. Patente / Equipo</label><select class="inp" id="asig-patente"></select></div>
-        <div class="fld"><label class="lbl">2. Conductor</label><select class="inp" id="asig-conductor"></select></div>
+        <div class="fld"><label class="lbl">Patente y Equipo</label><select class="inp" id="asig-patente"></select></div>
+        <div class="fld"><label class="lbl">Conductor</label><select class="inp" id="asig-conductor"></select></div>
       </div>
-      <!-- 3: Cliente -->
-      <div class="fld"><label class="lbl">3. Cliente</label><select class="inp" id="asig-cliente" onchange="checkOtroCliente()"></select></div>
+      <div class="fld"><label class="lbl">Cliente</label><select class="inp" id="asig-cliente" onchange="checkOtroCliente()"></select></div>
       <div class="fld" id="wrap-cliente-custom" style="display:none"><label class="lbl">Nombre del cliente nuevo</label><input class="inp" id="asig-cliente-custom" placeholder="Nombre del cliente"></div>
-      <!-- 4: Servicio desde tarifario -->
-      <div class="fld"><label class="lbl">4. Servicio</label>
-        <select class="inp" id="asig-servicio-tar" onchange="seleccionarServicioTarifario()">
-          <option value="">Selecciona cliente primero...</option>
+      <div class="fld">
+        <label class="lbl">Tipo de Servicio</label>
+        <select class="inp" id="asig-tipo-servicio">
+          <option value="normal">Normal</option>
+          <option value="devolucion">Devolución (tarifa inversa)</option>
         </select>
       </div>
-      <div class="fld" id="wrap-asig-destino-custom" style="display:none">
-        <label class="lbl">Especifica destino</label>
-        <input class="inp" id="asig-destino-custom" placeholder="Ej: CHILLAN → SANTIAGO">
-      </div>
-      <!-- Campos hidden origen/destino para guardar -->
-      <input type="hidden" id="asig-origen" value="">
-      <input type="hidden" id="asig-destino" value="">
-      <!-- Campos hidden tarifario — se pueblan desde seleccionarServicioTarifario -->
-      <input type="hidden" id="asig-tarifa" value="">
-      <input type="hidden" id="asig-km-teorico" value="">
-      <input type="hidden" id="asig-tag-teorico" value="">
-      <!-- Fecha y Tipo -->
       <div class="fld2">
-        <div class="fld"><label class="lbl">Fecha del Servicio</label><input class="inp" id="asig-fecha" type="date"></div>
-        <div class="fld"><label class="lbl">Tipo de Servicio</label>
-          <select class="inp" id="asig-tipo-servicio">
-            <option value="normal">Normal</option>
-            <option value="devolucion">Devolución (tarifa inversa)</option>
-            <option value="retorno">Retorno</option>
+        <div class="fld"><label class="lbl">Origen</label><select class="inp" id="asig-origen" onchange="checkOtroOrigen()">
+          <option value="Casablanca">Casablanca</option><option value="Coltauco">Coltauco</option>
+          <option value="Curacaví">Curacaví</option><option value="Romeral">Romeral</option>
+          <option value="Rancagua">Rancagua</option><option value="Santiago">Santiago</option>
+          <option value="San Antonio">San Antonio</option><option value="otro">Otro...</option>
+        </select></div>
+        <div class="fld"><label class="lbl">Destino Principal</label>
+          <select class="inp" id="asig-destino" onchange="checkAsigDestino()">
+            <option value="">Selecciona cliente primero...</option>
           </select>
         </div>
       </div>
-      <div class="fld">
-        <label class="lbl">Hora Inicio</label>
-        <input class="inp" id="asig-hora-inicio" type="time">
-        <input type="hidden" id="asig-hora-llegada" value="">
+      <div class="fld" id="wrap-origen-custom" style="display:none"><label class="lbl">Especifica el origen</label><input class="inp" id="asig-origen-custom" placeholder="Ciudad de origen"></div>
+      <div class="fld" id="wrap-asig-destino-custom" style="display:none">
+        <label class="lbl">Especifica el destino</label>
+        <input class="inp" id="asig-destino-custom" placeholder="Destino específico">
+      </div>
+      <div class="fld"><label class="lbl">Fecha del Servicio</label><input class="inp" id="asig-fecha" type="date"></div>
+      <div class="fld2">
+        <div class="fld"><label class="lbl">Hora Inicio</label><input class="inp" id="asig-hora-inicio" type="time"></div>
+        <div class="fld"><label class="lbl">Hora Llegada Estimada</label><input class="inp" id="asig-hora-llegada" type="time"></div>
       </div>
       <!-- Puntos de entrega -->
       <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px">
@@ -1307,6 +1103,7 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
         <div id="asig-puntos-lista"></div>
         <button class="btn btn-outline btn-sm btn-full" onclick="asigAgregarPunto()" id="asig-btn-agregar-punto">+ Guardar Punto</button>
       </div>
+
       <div class="fld">
         <label class="lbl">Punto de Inicio del Equipo</label>
         <select class="inp" id="asig-punto-inicio">
@@ -1315,16 +1112,18 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
         </select>
         <div style="font-size:10px;color:var(--muted);margin-top:4px" id="asig-punto-inicio-hint"></div>
       </div>
+
     </div>
-    <div style="border-top:1px solid var(--border);padding:12px 16px">
-      <div style="font-size:9px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);margin-bottom:8px">Observaciones</div>
-      <div id="asig-obs-hilo" style="margin-bottom:8px"></div>
-      <textarea id="asig-obs-input" class="inp" rows="2" placeholder="Agregar observación..." style="margin-bottom:6px"></textarea>
-      <button class="btn btn-outline btn-sm btn-full" onclick="obsAgregarAsignar()">💾 Guardar Observación</button>
-    </div>
+
+      <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px">
+        <div style="font-size:9px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);margin-bottom:8px">Observaciones</div>
+        <div id="asig-obs-hilo" style="margin-bottom:8px"></div>
+        <textarea id="asig-obs-input" class="inp" rows="2" placeholder="Agregar observación..." style="margin-bottom:6px"></textarea>
+        <button class="btn btn-outline btn-sm btn-full" onclick="obsAgregarAsignar()">💾 Guardar Observación</button>
+      </div>
     <div class="modal-ftr">
       <button class="btn btn-ghost" onclick="cerrar('modal-asignar')">← Volver</button>
-      <button class="btn btn-navy" onclick="guardarAsignacion()">ASIGNAR →</button>
+      <button class="btn btn-navy" onclick="guardarAsignacion()">Asignar →</button>
     </div>
   </div>
 </div>
@@ -2467,7 +2266,6 @@ async function init() {
 // ══ RENDER ══
 function renderTodo() {
   renderKPIs();
-  poblarSelectsFiltro();
   renderServicios();
   renderFlota();
   renderClientes();
@@ -2584,37 +2382,19 @@ async function calcMargenReal(mes, conf, ingresoTotal) {
 }
 
 function renderServicios() {
-  const fecha     = document.getElementById('filtro-fecha')?.value || '';
-  const patente   = document.getElementById('filtro-patente')?.value || '';
-  const conductor = document.getElementById('filtro-conductor')?.value || '';
-  const mes       = parseInt(document.getElementById('dash-mes')?.value ?? hoy.getMonth());
-  const anioStr   = String(hoy.getFullYear());
-  const mesStr    = String(mes+1).padStart(2,'0');
+  const fecha = document.getElementById('filtro-fecha').value;
+  const mes = parseInt(document.getElementById('dash-mes')?.value ?? hoy.getMonth());
+  const anioStr = String(hoy.getFullYear());
+  const mesStr = String(mes+1).padStart(2,'0');
   const esConductorRender = _sessionUsuario?.rol === 'conductor';
-
-  // Base: conductor ve solo sus activos; coordinador filtra por fecha/mes
-  let svcs = esConductorRender
+  const svcs = (esConductorRender
+    // Conductor ve todos sus servicios asignados/en proceso sin filtro de fecha
     ? DB.servicios.filter(s => ['asignado','en_proceso','ejecutado','borrador'].includes(s.estado))
     : fecha
       ? DB.servicios.filter(s => (s.fecha||'').startsWith(fecha))
-      : DB.servicios.filter(s => (s.fecha||'').startsWith(`${anioStr}-${mesStr}`));
-
-  // Filtros adicionales solo para coordinador
-  if(!esConductorRender) {
-    if(patente)   svcs = svcs.filter(s => s.patente === patente);
-    if(conductor) svcs = svcs.filter(s => (s.conductor||'') === conductor);
-    const cliente = document.getElementById('filtro-cliente')?.value||'';
-    if(cliente)   svcs = svcs.filter(s => (s.cliente||'') === cliente);
-    if(_filtroEstados && _filtroEstados.size > 0) svcs = svcs.filter(s => _filtroEstados.has(s.estado));
-    if(_filtroSinGuia) svcs = svcs.filter(s => {
-      const guiasPuntos = (s._puntos||[]).flatMap(p=>(p.guias||[]).map(g=>g.num_guia)).filter(Boolean);
-      return !s.num_guia && guiasPuntos.length === 0;
-    });
-  }
-
-  svcs = svcs.sort((a,b) => (b.fecha||'') > (a.fecha||'') ? 1 : (b.fecha||'') < (a.fecha||'') ? -1 :
+      : DB.servicios.filter(s => (s.fecha||'').startsWith(`${anioStr}-${mesStr}`))
+  ).sort((a,b) => (b.fecha||'') > (a.fecha||'') ? 1 : (b.fecha||'') < (a.fecha||'') ? -1 :
     (b.created_at||'') > (a.created_at||'') ? 1 : -1);
-
   const empty = document.getElementById('empty-svc');
   if(!svcs.length) {
     document.getElementById('cards-mobile').innerHTML = '';
@@ -2649,13 +2429,38 @@ function cardHTML(s,i) {
           <div class="svc-id" ${s.estado==='cerrado'?`onclick="editarServicioCerrado(${i})" title="Editar servicio" style="cursor:pointer;text-decoration:underline dotted"`:''}>${s.servicio_id||'—'}</div>
           <div style="font-size:10px;color:var(--muted);font-weight:600">${s.fecha||s.created_at?.split('T')[0]||'—'}</div>
         </div>
-        <div class="svc-pat">${s.patente||'—'}</div>
-        <div class="svc-line">${s.conductor||'—'}</div>
-        <div class="svc-line" style="color:var(--g400)">${s.cliente||'—'} · ${s.origen||'—'}</div>
-        ${(()=>{const gs=(s._puntos||[]).flatMap(p=>(p.guias||[]).map(g=>g.num_guia)).filter(Boolean);return gs.length?`<div style="font-size:10px;color:var(--gold);margin-top:2px;font-weight:700">📄 ${gs.join(' · ')}</div>`:s.num_guia?`<div style="font-size:10px;color:var(--gold);margin-top:2px;font-weight:700">📄 ${s.num_guia}</div>`:''})()}
+        <div class="svc-pat">${s.patente||'—'} · ${s.conductor||'—'}</div>
+        <div class="svc-line" style="color:var(--g400)">${s.cliente||'—'}</div>
+        <div class="svc-line" style="font-weight:700;color:rgba(245,240,232,0.85)">${s.origen||'—'} → ${s.destino||(s._puntos||[]).find(p=>p.tipo==='final')?.destino||'—'}</div>
+        ${(()=>{const gs=(s._puntos||[]).flatMap(p=>(p.guias||[]).map(g=>g.num_guia)).filter(Boolean);return gs.length?`<div style="font-size:10px;color:var(--gold);margin-top:4px;font-weight:700">📄 Guía ${gs.join(' · ')}</div>`:s.num_guia?`<div style="font-size:10px;color:var(--gold);margin-top:4px;font-weight:700">📄 Guía ${s.num_guia}</div>`:''})()}
       </div>
       ${pillHTML(s.estado)}
     </div>
+    ${(()=>{
+      if(_sessionUsuario?.rol === 'conductor') return '';
+      const tarifaVal = s.ingreso_total || s.tarifa_neta || 0;
+      const costosVal = s.total_costos || 0;
+      const margenVal = s.margen_servicio || (tarifaVal - costosVal) || 0;
+      if(!tarifaVal && !costosVal) return '';
+      const fmtK = v => v ? '$'+Math.round(v/1000)+'K' : '—';
+      const mColor = margenVal >= 0 ? 'var(--green)' : 'var(--danger)';
+      return `<div style="border-top:1px solid var(--border);margin:10px 0 0;padding-top:10px">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px">
+          <div style="text-align:center;background:rgba(255,255,255,0.03);border-radius:6px;padding:6px 4px">
+            <div style="font-size:8px;color:var(--muted);font-weight:700;letter-spacing:0.04em;text-transform:uppercase">Tarifa</div>
+            <div style="font-size:11px;font-weight:800;margin-top:2px;color:var(--gold)">${fmtK(tarifaVal)}</div>
+          </div>
+          <div style="text-align:center;background:rgba(255,255,255,0.03);border-radius:6px;padding:6px 4px">
+            <div style="font-size:8px;color:var(--muted);font-weight:700;letter-spacing:0.04em;text-transform:uppercase">Costos</div>
+            <div style="font-size:11px;font-weight:800;margin-top:2px;color:var(--danger)">${fmtK(costosVal)}</div>
+          </div>
+          <div style="text-align:center;background:rgba(255,255,255,0.03);border-radius:6px;padding:6px 4px">
+            <div style="font-size:8px;color:var(--muted);font-weight:700;letter-spacing:0.04em;text-transform:uppercase">Margen</div>
+            <div style="font-size:11px;font-weight:800;margin-top:2px;color:${mColor}">${fmtK(margenVal)}</div>
+          </div>
+        </div>
+      </div>`;
+    })()}
     <div class="svc-body"><div class="svc-acts">
       ${s.estado==='asignado' ? `<button class="btn btn-navy btn-sm" onclick="iniciarSvc(${i})">▶ Iniciar</button>` : ''}
       ${['en_proceso','registrando'].includes(s.estado) ? `<button class="btn btn-purple btn-sm" onclick="verServicio(${i})">📋 Registrar</button>` : ''}
@@ -2793,16 +2598,14 @@ async function abrirAsignar() {
   if(DB.flota.length === 0 || DB.conductores.length === 0) {
     const emp = DB._empresa || _sessionUsuario?.empresa || 'global_solutions';
     if(!DB._empresa) DB._empresa = emp;
-    const [rf, rc, rcl, rt] = await Promise.all([
+    const [rf, rc, rcl] = await Promise.all([
       supa.from('kaptura_flota').select('*').eq('empresa', emp).eq('activo', true).order('patente'),
       supa.from('kaptura_conductores').select('*').eq('empresa', emp).eq('activo', true).order('nombre'),
-      supa.from('kaptura_clientes').select('*').eq('empresa', emp).order('nombre'),
-      supa.from('kaptura_tarifarios').select('*').eq('empresa', emp)
+      supa.from('kaptura_clientes').select('*').eq('empresa', emp).order('nombre')
     ]);
     DB.flota       = rf.data || [];
     DB.conductores = rc.data || [];
     DB.clientes    = rcl.data || [];
-    DB.tarifarios  = rt.data || [];
   }
   poblarSelects();
   document.getElementById('asig-fecha').value = hoyStr;
@@ -2823,8 +2626,7 @@ async function abrirAsignar() {
     document.getElementById('asig-punto-inicio').value = 'base';
     if(hint) hint.textContent = 'Sin servicio anterior registrado — se asume salida desde base';
   }
-  const wrapOrigenCustom = document.getElementById('wrap-origen-custom');
-  if(wrapOrigenCustom) wrapOrigenCustom.style.display = 'none';
+  document.getElementById('wrap-origen-custom').style.display = 'none';
   document.getElementById('wrap-cliente-custom').style.display = 'none';
   // Poblar tipo operacion desde equipos en SETUP
 
@@ -2832,40 +2634,14 @@ async function abrirAsignar() {
   const obsInputAsig = document.getElementById('asig-obs-input');
   if(obsInputAsig) obsInputAsig.value = '';
   asigLimpiarPuntos();
-  // Limpiar select servicio al abrir
-  const selSvcTar = document.getElementById('asig-servicio-tar');
-  if(selSvcTar) selSvcTar.innerHTML = '<option value="">Selecciona cliente primero...</option>';
-  document.getElementById('asig-origen').value = '';
-  document.getElementById('asig-destino').value = '';
+  // Dejar destino vacío — se puebla cuando se selecciona el cliente
+  const selDest = document.getElementById('asig-destino');
+  if(selDest) selDest.innerHTML = '<option value="">Selecciona cliente primero...</option>';
   document.getElementById('wrap-asig-destino-custom').style.display = 'none';
   const sAsig2 = DB.servicios[svcActivoIdx];
   if(sAsig2) obsRenderHilo(document.getElementById('asig-obs-hilo'), obsParseHilo(sAsig2.notas||''));
-  // Disparar origen/destino después de cargar datos
-  setTimeout(checkOtroCliente, 100);
   document.getElementById('modal-asignar').style.display = 'flex';
 }
-function precargarTarifario() {
-  const cliente = document.getElementById('asig-cliente').value;
-  const origen  = document.getElementById('asig-origen').value;
-  const destino = document.getElementById('asig-destino').value;
-  if(!cliente || !destino || destino === '__otro__') return;
-  const tar = (DB.tarifarios||[]).find(function(t){
-    return (t.cliente||'').toUpperCase() === cliente.toUpperCase() &&
-           (t.destino||'').toUpperCase() === destino.toUpperCase() &&
-           (!origen || origen === 'otro' || (t.origen||'').toUpperCase() === origen.toUpperCase());
-  }) || (DB.tarifarios||[]).find(function(t){
-    return (t.cliente||'').toUpperCase() === cliente.toUpperCase() &&
-           (t.destino||'').toUpperCase() === destino.toUpperCase();
-  });
-  if(!tar) return;
-  const tIn  = document.getElementById('asig-tarifa');
-  const kmIn = document.getElementById('asig-km-teorico');
-  const tagIn= document.getElementById('asig-tag-teorico');
-  if(tIn  && !tIn.dataset.manual)  tIn.value  = tar.tarifa_neta || '';
-  if(kmIn && !kmIn.dataset.manual) kmIn.value = (tar.km_ida||0) + (tar.km_vuelta||0) || '';
-  if(tagIn&& !tagIn.dataset.manual)tagIn.value= tar.peajes_habituales || '';
-}
-
 function checkAsigDestino() {
   const val = document.getElementById('asig-destino').value;
   const wrap = document.getElementById('wrap-asig-destino-custom');
@@ -2873,62 +2649,27 @@ function checkAsigDestino() {
 }
 
 function checkOtroOrigen() {
-  const el = document.getElementById('wrap-origen-custom');
-  if(el) el.style.display = document.getElementById('asig-origen').value === 'otro' ? 'block' : 'none';
+  document.getElementById('wrap-origen-custom').style.display =
+    document.getElementById('asig-origen').value === 'otro' ? 'block' : 'none';
 }
 function checkOtroCliente() {
   const clienteVal = document.getElementById('asig-cliente').value;
   document.getElementById('wrap-cliente-custom').style.display =
     clienteVal === '__otro__' ? 'block' : 'none';
-
-  const selSvc = document.getElementById('asig-servicio-tar');
-  if(!selSvc) return;
-
-  // Limpiar campos hidden
-  document.getElementById('asig-origen').value  = '';
-  document.getElementById('asig-destino').value = '';
-  document.getElementById('wrap-asig-destino-custom').style.display = 'none';
-
-  if(clienteVal && clienteVal !== '__otro__') {
-    const tarifCliente = (DB.tarifarios||[]).filter(function(t){
-      return (t.cliente||'').toUpperCase() === clienteVal.toUpperCase();
-    });
-    if(tarifCliente.length) {
-      selSvc.innerHTML = '<option value="">Selecciona servicio...</option>'
-        + tarifCliente.map(function(t){
-            return '<option value="'+t.id+'">'+(t.origen||'')+' → '+(t.destino||'')+'</option>';
-          }).join('')
-        + '<option value="__otro__">✏ Otro (no en tarifario)...</option>';
-    } else {
-      selSvc.innerHTML = '<option value="">Sin servicios en tarifario</option>'
-        + '<option value="__otro__">✏ Especificar manualmente...</option>';
-    }
-  } else {
-    selSvc.innerHTML = '<option value="">Selecciona cliente primero...</option>';
+  // Filtrar destinos por cliente seleccionado
+  const selDest = document.getElementById('asig-destino');
+  if(selDest && clienteVal && clienteVal !== '__otro__') {
+    const destinos = (DB.tarifarios||[])
+      .filter(function(t){ return (t.cliente||'').toUpperCase() === clienteVal.toUpperCase(); })
+      .map(function(t){ return t.destino; })
+      .filter(Boolean);
+    selDest.innerHTML = '<option value="">Selecciona destino...</option>'
+      + [...new Set(destinos)].sort().map(function(d){ return '<option value="'+d+'">'+d+'</option>'; }).join('')
+      + '<option value="__otro__">✏ Otro destino...</option>';
+    document.getElementById('wrap-asig-destino-custom').style.display = 'none';
+  } else if(!clienteVal || clienteVal === '__otro__') {
+    if(selDest) selDest.innerHTML = '<option value="">Selecciona cliente primero...</option>';
   }
-}
-
-function seleccionarServicioTarifario() {
-  const sel = document.getElementById('asig-servicio-tar');
-  const id  = sel.value;
-  const wrap = document.getElementById('wrap-asig-destino-custom');
-  if(id === '__otro__') {
-    wrap.style.display = 'block';
-    document.getElementById('asig-origen').value  = '';
-    document.getElementById('asig-destino').value = '';
-    document.getElementById('asig-tarifa').value  = '';
-    document.getElementById('asig-km-teorico').value = '';
-    return;
-  }
-  wrap.style.display = 'none';
-  if(!id) return;
-  const tar = (DB.tarifarios||[]).find(function(t){ return t.id === id; });
-  if(!tar) return;
-  document.getElementById('asig-origen').value      = tar.origen || '';
-  document.getElementById('asig-destino').value     = tar.destino || '';
-  document.getElementById('asig-tarifa').value      = tar.tarifa_neta || '';
-  document.getElementById('asig-km-teorico').value  = (parseInt(tar.km_ida||0) + parseInt(tar.km_vuelta||0)) || '';
-  document.getElementById('asig-tag-teorico').value = tar.peajes_habituales || '';
 }
 async function siguienteId() {
   const emp = DB._empresa || _sessionUsuario?.empresa || 'global_solutions';
@@ -2983,13 +2724,10 @@ async function guardarAsignacion() {
   const clienteSel= document.getElementById('asig-cliente').value;
   const clienteNew= document.getElementById('asig-cliente-custom').value.trim();
   const cliente   = clienteSel === '__otro__' ? clienteNew : clienteSel;
-  // Origen desde hidden field (seteado por seleccionarServicioTarifario)
-  const svcTarId = document.getElementById('asig-servicio-tar')?.value || '';
-  const origen   = svcTarId === '__otro__'
-    ? (document.getElementById('asig-destino-custom')?.value.trim()||'OTRO')
-    : (document.getElementById('asig-origen').value.trim()||'');
-  const fecha    = document.getElementById('asig-fecha').value;
-  if(!patente||!conductor||!cliente||!svcTarId||!fecha) { toast('⚠ Completa patente, conductor, cliente, servicio y fecha'); return; }
+  const origenSel = document.getElementById('asig-origen').value;
+  const origen    = origenSel === 'otro' ? document.getElementById('asig-origen-custom').value.trim() : origenSel;
+  const fecha     = document.getElementById('asig-fecha').value;
+  if(!patente||!conductor||!cliente||!origen||!fecha) { toast('⚠ Completa todos los campos'); return; }
   if(clienteSel === '__otro__' && clienteNew) {
     await supa.from('kaptura_clientes').insert({nombre:clienteNew, condicion_pago:'30 días'});
     DB.clientes.push({nombre:clienteNew});
@@ -3006,10 +2744,7 @@ async function guardarAsignacion() {
   const horaLlegada = document.getElementById('asig-hora-llegada').value || null;
   const destinoRaw = document.getElementById('asig-destino').value.trim();
   const destino = destinoRaw === '__otro__' ? (document.getElementById('asig-destino-custom')?.value.trim()||'') : destinoRaw;
-  const tarifaAsig = parseInt(document.getElementById('asig-tarifa')?.value)||0;
-  const kmAsig     = parseInt(document.getElementById('asig-km-teorico')?.value)||0;
-  const tagAsig    = parseInt(document.getElementById('asig-tag-teorico')?.value)||0;
-  const nuevo = { servicio_id:svId, patente, conductor, cliente, origen, destino: destino||null, fecha, estado:'asignado', margen_servicio:0, puntos_entrega:puntosAsig.length, punto_inicio:puntoInicio, tipo_operacion:tipoOperacion, empresa: DB._empresa||'global_solutions', puntos_asignados: puntosAsigStr, hora_inicio_asignada: horaInicio, hora_llegada_estimada: horaLlegada, tarifa_neta: tarifaAsig||null, km_referencia: kmAsig||null, peajes_tag: tagAsig||null, ingreso_total: tarifaAsig||null };
+  const nuevo = { servicio_id:svId, patente, conductor, cliente, origen, destino: destino||null, fecha, estado:'asignado', margen_servicio:0, puntos_entrega:puntosAsig.length, punto_inicio:puntoInicio, tipo_operacion:tipoOperacion, empresa: DB._empresa||'global_solutions', puntos_asignados: puntosAsigStr, hora_inicio_asignada: horaInicio, hora_llegada_estimada: horaLlegada };
   const {data:inserted, error} = await supa.from('servicios_piloto').insert(nuevo).select();
   if(error) { toast('Error: '+error.message); return; }
   let svcInsertado = inserted?.[0];
@@ -3598,6 +3333,20 @@ async function irACostos() {
   const diasOpMes = getCfgNum(['dias_operativos','dias_op']) || 20;
   // cfDia: usar valor diario guardado explícitamente, o calcular desde mensual
   const cfDia     = cfMensual > 0 ? Math.round(cfMensual / diasOpMes) : getCfgNum(['costo_fijo_dia']);
+  // Precargar KM teórico desde tarifario si no hay GPS aún
+  const svcForKm = DB.servicios[svcActivoIdx];
+  if(svcForKm && !svcForKm.km_total) {
+    const tarMatch = (DB.tarifarios||[]).find(function(t){
+      return (t.cliente||'').toUpperCase()===(svcForKm.cliente||'').toUpperCase() &&
+             (t.destino||'').toUpperCase()===(svcForKm.destino||'').toUpperCase();
+    });
+    if(tarMatch && (tarMatch.km_ida || tarMatch.km_vuelta)) {
+      const teoIda = document.getElementById('cos-km-teo-ida');
+      const teoVta = document.getElementById('cos-km-teo-vta');
+      if(teoIda && !teoIda.value) teoIda.value = tarMatch.km_ida||0;
+      if(teoVta && !teoVta.value) teoVta.value = tarMatch.km_vuelta||0;
+    }
+  }
   // Mantención: km × (mant_costo ÷ mant_km) — se calcula en calcCostos() con km reales, aquí = 0
   const sueldoDiario = getCfgNum(['sueldo_diario','sueldo_conductor']) || 33000;
   const viaticoDia   = getCfgNum(['viatico_dia','viatico']);
@@ -4385,18 +4134,6 @@ async function cerrarServicio() {
 // DOCUMENTOS SETUP
 var TIPOS_EQUIPO = [{id:"permiso_circ",lbl:"Permiso Circulacion"},{id:"rev_tecnica",lbl:"Revision Tecnica"},{id:"soap",lbl:"SOAP"},{id:"resol_san",lbl:"Resolucion Sanitaria"},{id:"seguro",lbl:"Seguro"},{id:"otro",lbl:"Otro"}];
 var TIPOS_CONDUCTOR = [{id:"licencia",lbl:"Licencia de Conducir"},{id:"contrato",lbl:"Contrato"},{id:"otro",lbl:"Otro"}];
-var TIPOS_EMPRESA = {
-  legal: [
-    {id:"constitucion",lbl:"Constitución de Sociedad"},
-    {id:"cert_vigencia",lbl:"Certificado de Vigencia"},
-    {id:"empresa_legal_1",lbl:"Otro Documento Legal"}
-  ],
-  tributario: [
-    {id:"carpeta_trib",lbl:"Carpeta Tributaria"},
-    {id:"cert_tributario",lbl:"Certificados Tributarios"},
-    {id:"empresa_trib_1",lbl:"Otro Documento Tributario"}
-  ]
-};
 var _docsCtx = {tipo:null, entId:null};
 
 function semaforo(f) {
@@ -4408,83 +4145,49 @@ function semaforo(f) {
 }
 
 function docBtnStyle(tipo, id) {
-  // Solo evaluar docs con fecha vencimiento — ignorar "otro" y docs sin fecha
-  var docs = (DB.documentos||[]).filter(function(d){
-    return d.tipo_entidad===tipo && d.entidad_id===id && d.tipo_doc !== 'otro' && d.activo!==false && d.fecha_vencimiento;
-  });
+  var docs = (DB.documentos||[]).filter(function(d){ return d.tipo_entidad===tipo && d.entidad_id===id; });
   var hoy  = new Date();
-  var venc = docs.some(function(d){ return new Date(d.fecha_vencimiento) < hoy; });
-  var prox = docs.some(function(d){ return Math.round((new Date(d.fecha_vencimiento)-hoy)/864e5) <= 30; });
-  // Sin docs con fecha = gris neutro (no rojo)
-  if(!docs.length) return 'background:var(--surface2);border:1px solid var(--border);color:var(--muted);border-radius:5px;padding:3px 8px;font-size:10px;cursor:pointer;font-weight:700';
-  var bg  = venc ? 'rgba(239,68,68,0.15)' : prox ? 'rgba(201,168,76,0.15)' : 'rgba(76,175,122,0.25)';
-  var br  = venc ? 'rgba(239,68,68,0.3)'  : prox ? 'rgba(201,168,76,0.3)'  : 'rgba(76,175,122,0.5)';
-  var col = venc ? 'var(--danger)'        : prox ? 'var(--gold)'            : 'var(--green)';
+  var venc = docs.some(function(d){ return d.fecha_vencimiento && new Date(d.fecha_vencimiento) < hoy; });
+  var prox = docs.some(function(d){ return d.fecha_vencimiento && Math.round((new Date(d.fecha_vencimiento)-hoy)/864e5) <= 30; });
+  var bg  = (!docs.length||venc) ? 'rgba(239,68,68,0.15)' : prox ? 'rgba(201,168,76,0.15)' : 'rgba(76,175,122,0.15)';
+  var br  = (!docs.length||venc) ? 'rgba(239,68,68,0.3)'  : prox ? 'rgba(201,168,76,0.3)'  : 'rgba(76,175,122,0.3)';
+  var col = (!docs.length||venc) ? 'var(--danger)'        : prox ? 'var(--gold)'            : 'var(--green)';
   return 'background:'+bg+';border:1px solid '+br+';color:'+col+';border-radius:5px;padding:3px 8px;font-size:10px;cursor:pointer;font-weight:700';
 }
 
 function abrirDocs(tipo, entId) {
-  var tipoEquipo = '';
-  if(tipo === 'equipo') {
-    var flota = (DB.flota||[]).find(function(f){ return f.patente === entId; });
-    tipoEquipo = flota ? (flota.tipo||'').toLowerCase() : '';
-  }
-  _docsCtx = {tipo:tipo, entId:entId, tipoEquipo:tipoEquipo};
-  var label = tipo === "equipo" ? "DOCUMENTOS EQUIPOS" : tipo === "conductor" ? "DOCUMENTOS CONDUCTORES" : "DOCUMENTOS EMPRESA";
-  var sub   = tipo === "equipo" ? "PATENTE "+entId.toUpperCase() : entId.toUpperCase();
-  document.getElementById("docs-titulo").textContent = label;
-  document.getElementById("docs-sub").textContent = sub;
+  _docsCtx = {tipo:tipo, entId:entId};
+  document.getElementById("docs-titulo").textContent = tipo === "equipo" ? "EQUIPO" : "CONDUCTOR";
+  document.getElementById("docs-sub").textContent = entId;
   renderDocumentos();
   document.getElementById("modal-docs").style.display = "flex";
 }
 
-function _renderSeccionDocs(tipos, docsEnt) {
-  var html = "";
-  tipos.forEach(function(t) {
-    var docs = docsEnt.filter(function(d){ return d.tipo_doc===t.id && d.activo!==false; });
-    var docConFecha = docs.find(function(d){ return d.fecha_vencimiento; });
-    var sem = docConFecha ? semaforo(docConFecha.fecha_vencimiento) : docs.length ? '<span style="color:var(--muted);font-size:10px">Sin fecha</span>' : '<span style="color:var(--muted);font-size:10px">Sin documento</span>';
-    html += '<div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px">';
-    html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">';
-    html += '<div style="font-size:12px;font-weight:800;color:var(--text)">'+t.lbl+'</div><div style="font-size:11px">'+sem+'</div></div>';
-    // Mostrar todos los archivos adjuntos
-    if(docs.length) {
-      html += '<div style="margin-bottom:8px">';
-      docs.forEach(function(doc, i) {
-        if(doc.url) {
-          html += '<div style="display:flex;gap:8px;align-items:center;margin-bottom:4px">';
-          html += '<a href="'+doc.url+'" target="_blank" style="font-size:11px;color:var(--gold);font-weight:700">👁 Ver '+(docs.length>1?'('+(i+1)+')':'')+'</a>';
-          html += '<button data-did="'+doc.id+'" onclick="eliminarDocItem(this.dataset.did)" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:var(--danger);border-radius:4px;padding:2px 7px;font-size:9px;cursor:pointer">✕</button>';
-          html += '</div>';
-        }
-      });
-      html += '</div>';
-    }
-    // Fecha vencimiento + input agregar + botón guardar
-    html += '<div style="display:grid;grid-template-columns:1fr 1fr auto;gap:6px;align-items:flex-end">';
-    html += '<div><div style="font-size:9px;color:var(--muted);margin-bottom:3px">FECHA VENC.</div><input type="date" id="df-'+t.id+'" value="'+(docConFecha&&docConFecha.fecha_vencimiento?docConFecha.fecha_vencimiento:'')+'" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:6px 8px;font-size:11px;color:var(--text);font-family:inherit"></div>';
-    html += '<div><div style="font-size:9px;color:var(--muted);margin-bottom:3px">ADJUNTAR '+(docs.length?'('+docs.length+' adj.)':'')+'</div><input type="file" id="ff-'+t.id+'" accept="image/*,.pdf" multiple style="width:100%;font-size:10px;color:var(--text)"></div>';
-    html += '<button data-tid="'+t.id+'" onclick="subirDoc(this.dataset.tid)" style="background:var(--gold);border:none;border-radius:7px;padding:8px 12px;font-size:11px;font-weight:800;color:#000;cursor:pointer">💾</button></div></div>';
-  });
-  return html;
-}
-
 function renderDocumentos() {
+  var tipos = _docsCtx.tipo === "equipo" ? TIPOS_EQUIPO : TIPOS_CONDUCTOR;
   var docsEnt = (DB.documentos||[]).filter(function(d){ return d.tipo_entidad===_docsCtx.tipo && d.entidad_id===_docsCtx.entId; });
   var html = "";
-  if(_docsCtx.tipo === "empresa") {
-    html += '<div style="font-size:10px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border)">⚖ LEGAL</div>';
-    html += _renderSeccionDocs(TIPOS_EMPRESA.legal, docsEnt);
-    html += '<div style="font-size:10px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);margin:16px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border)">🧾 TRIBUTARIO</div>';
-    html += _renderSeccionDocs(TIPOS_EMPRESA.tributario, docsEnt);
-  } else {
-    var tipos = _docsCtx.tipo === "equipo" ? TIPOS_EQUIPO : TIPOS_CONDUCTOR;
-    // Tractos no requieren Resolución Sanitaria
-    if(_docsCtx.tipo === "equipo" && _docsCtx.tipoEquipo && _docsCtx.tipoEquipo.indexOf('tracto') !== -1) {
-      tipos = tipos.filter(function(t){ return t.id !== 'resol_san'; });
+  tipos.forEach(function(t) {
+    var doc = docsEnt.find(function(d){ return d.tipo_doc===t.id; });
+    var sem = doc ? semaforo(doc.fecha_vencimiento) : "<span style=\"color:var(--muted);font-size:10px\">Sin documento</span>";
+    html += "<div style=\"background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px\">";
+    html += "<div style=\"display:flex;justify-content:space-between;align-items:center;margin-bottom:8px\">";
+    html += "<div style=\"font-size:12px;font-weight:800;color:var(--text)\">"+t.lbl+"</div><div style=\"font-size:11px\">"+sem+"</div></div>";
+    if(doc && doc.url) {
+      html += "<div style=\"margin-bottom:8px;display:flex;gap:10px;align-items:center\">";
+      html += "<a href=\""+doc.url+"\" target=\"_blank\" style=\"font-size:11px;color:var(--gold);font-weight:700\">👁 Ver</a>";
+      html += "<span style=\"font-size:10px;color:var(--muted)\">"+(doc.fecha_vencimiento||"")+"</span>";
+      html += "<button data-did=\""+doc.id+"\" onclick=\"eliminarDocItem(this.dataset.did)\" style=\"background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:var(--danger);border-radius:4px;padding:2px 7px;font-size:9px;cursor:pointer\">✕</button></div>";
     }
-    html = _renderSeccionDocs(tipos, docsEnt);
-  }
+    html += "<div style=\"display:grid;grid-template-columns:1fr 1fr auto;gap:6px;align-items:flex-end\">";
+    html += "<div><div style=\"font-size:9px;color:var(--muted);margin-bottom:3px\">FECHA VENC.</div><input type=\"date\" id=\"df-"+t.id+"\" value=\""+(doc&&doc.fecha_vencimiento?doc.fecha_vencimiento:"")+"\" style=\"width:100%;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:6px 8px;font-size:11px;color:var(--text);font-family:inherit\"></div>";
+    if(doc && doc.url) {
+      html += "<div><div style=\"font-size:9px;color:var(--muted);margin-bottom:3px\">ADJUNTAR</div><div style=\"font-size:11px;color:var(--green);font-weight:700;padding:6px 0\">✓ Documento adjuntado</div></div>";
+    } else {
+      html += "<div><div style=\"font-size:9px;color:var(--muted);margin-bottom:3px\">ADJUNTAR</div><input type=\"file\" id=\"ff-"+t.id+"\" accept=\"image/*,.pdf\" capture=\"environment\" style=\"width:100%;font-size:10px;color:var(--text)\"></div>";
+    }
+    html += "<button data-tid=\""+t.id+"\" onclick=\"subirDoc(this.dataset.tid)\" style=\"background:var(--gold);border:none;border-radius:7px;padding:8px 12px;font-size:11px;font-weight:800;color:#000;cursor:pointer\">💾</button></div></div>";
+  });
   document.getElementById("docs-body").innerHTML = html;
 }
 
@@ -4494,41 +4197,22 @@ async function subirDoc(tipoDoc) {
   var fecha = document.getElementById("df-"+tipoDoc) && document.getElementById("df-"+tipoDoc).value || null;
   var fileEl = document.getElementById("ff-"+tipoDoc);
   var file = fileEl && fileEl.files && fileEl.files[0];
-  var fileEl = document.getElementById("ff-"+tipoDoc);
-  var files = fileEl && fileEl.files ? Array.from(fileEl.files) : [];
-  if(!files.length && !fecha) { toast("Ingresa fecha o adjunta archivo"); return; }
-
-  // Actualizar fecha en registros existentes si se ingresó una
-  if(fecha) {
-    var docsExist = (DB.documentos||[]).filter(function(d){ return d.tipo_entidad===tipo && d.entidad_id===entId && d.tipo_doc===tipoDoc; });
-    for(var i=0; i<docsExist.length; i++) {
-      await supa.from("kaptura_documentos").update({fecha_vencimiento:fecha}).eq("id", docsExist[i].id);
-      docsExist[i].fecha_vencimiento = fecha;
-    }
-    // Si no hay docs previos ni archivos nuevos, crear uno solo con fecha
-    if(!docsExist.length && !files.length) {
-      var ins0 = await supa.from("kaptura_documentos").insert({empresa:emp, tipo_entidad:tipo, entidad_id:entId, tipo_doc:tipoDoc, fecha_vencimiento:fecha, url:null, activo:true}).select().single();
-      if(ins0.data) DB.documentos.push(ins0.data);
-      toast("✓ Fecha guardada");
-      renderDocumentos();
-      return;
-    }
-  }
-
-  // Subir cada archivo por separado
-  for(var fi=0; fi<files.length; fi++) {
-    var file = files[fi];
+  if(!file && !fecha) { toast("Ingresa fecha o adjunta archivo"); return; }
+  var url = "";
+  if(file) {
     var ext = file.name.split(".").pop();
-    var safeId = entId.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-zA-Z0-9_\-]/g,"_");
-    var path = emp+"/"+tipo+"/"+safeId+"_"+tipoDoc+"_"+Date.now()+"_"+fi+"."+ext;
+    var path = emp+"/"+tipo+"/"+entId.replace(/ /g,"_")+"_"+tipoDoc+"_"+Date.now()+"."+ext;
     var up = await supa.storage.from("kaptura-guias").upload(path, file, {upsert:true});
-    if(up.error) { toast("Error archivo "+(fi+1)+": "+up.error.message); continue; }
-    var url = supa.storage.from("kaptura-guias").getPublicUrl(path).data.publicUrl;
-    var ins = await supa.from("kaptura_documentos").insert({empresa:emp, tipo_entidad:tipo, entidad_id:entId, tipo_doc:tipoDoc, fecha_vencimiento:fecha||null, url:url, activo:true}).select().single();
-    if(ins.error) { toast("Error: "+ins.error.message); continue; }
-    if(ins.data) DB.documentos.push(ins.data);
+    if(up.error) { toast("Error: "+up.error.message); return; }
+    url = supa.storage.from("kaptura-guias").getPublicUrl(path).data.publicUrl;
   }
-  toast("✓ "+(files.length>1?files.length+" archivos guardados":"Documento guardado"));
+  var docExist = (DB.documentos||[]).find(function(d){ return d.tipo_entidad===tipo && d.entidad_id===entId && d.tipo_doc===tipoDoc; });
+  if(docExist) await supa.from("kaptura_documentos").update({activo:false}).eq("id", docExist.id);
+  var ins = await supa.from("kaptura_documentos").insert({empresa:emp, tipo_entidad:tipo, entidad_id:entId, tipo_doc:tipoDoc, fecha_vencimiento:fecha||null, url:url||null, activo:true}).select().single();
+  if(ins.error) { toast("Error: "+ins.error.message); return; }
+  DB.documentos = (DB.documentos||[]).filter(function(d){ return !(d.tipo_entidad===tipo && d.entidad_id===entId && d.tipo_doc===tipoDoc); });
+  if(ins.data) DB.documentos.push(ins.data);
+  toast("✓ Documento guardado");
   renderDocumentos();
 }
 
@@ -5146,7 +4830,7 @@ function imprimirInforme() {
 </div>
 
 <!-- MODAL DOCS -->
-<div class="overlay" id="modal-docs" style="display:none"><div class="modal"><div class="modal-hdr"><div><div class="modal-ttl" id="docs-titulo" style="font-size:15px;font-weight:900;text-transform:uppercase;letter-spacing:0.05em"></div><div class="modal-sub" id="docs-sub" style="font-size:15px;font-weight:900;text-transform:uppercase;letter-spacing:0.05em;color:var(--text);margin-top:2px"></div></div><button class="modal-cls" onclick="cerrar('modal-docs')">✕</button></div><div class="modal-body" id="docs-body"></div></div></div>
+<div class="overlay" id="modal-docs" style="display:none"><div class="modal"><div class="modal-hdr"><div><div class="modal-ttl">📎 Docs — <span id="docs-titulo"></span></div><div class="modal-sub" id="docs-sub"></div></div><button class="modal-cls" onclick="cerrar('modal-docs')">✕</button></div><div class="modal-body" id="docs-body"></div></div></div>
 
 <!-- MODAL EVALUACIÓN -->
 <div class="overlay" id="modal-evaluacion" style="display:none">
@@ -5546,62 +5230,9 @@ function setTab(nombre, btn) {
   const btnFijo = document.getElementById('btn-setup-fixed');
   if(btnFijo) btnFijo.style.display = nombre==='setup' ? 'block' : 'none';
 }
-let _filtroSinGuia = false;
-let _filtroEstados = new Set();
-
-function toggleFiltroEstado(btn) {
-  const est = btn.dataset.estado;
-  if(_filtroEstados.has(est)) { _filtroEstados.delete(est); btn.classList.remove('activo'); }
-  else { _filtroEstados.add(est); btn.classList.add('activo'); }
-  renderServicios();
-}
-
-function toggleFiltroSinGuia() {
-  _filtroSinGuia = !_filtroSinGuia;
-  const btn = document.getElementById('filtro-sin-guia');
-  if(_filtroSinGuia) btn.classList.add('activo'); else btn.classList.remove('activo');
-  renderServicios();
-}
-
-function resetFiltros() {
-  document.getElementById('filtro-fecha').value = '';
-  document.getElementById('filtro-patente').value = '';
-  document.getElementById('filtro-conductor').value = '';
-  const cliSel = document.getElementById('filtro-cliente'); if(cliSel) cliSel.value = '';
-  _filtroSinGuia = false;
-  _filtroEstados = new Set();
-  document.getElementById('filtro-sin-guia').classList.remove('activo');
-  document.querySelectorAll('.pill-filtro').forEach(b => b.classList.remove('activo'));
-  renderServicios();
-}
-
 function resetFecha() {
   document.getElementById('filtro-fecha').value = '';
   renderServicios();
-}
-
-function poblarSelectsFiltro() {
-  const patSel = document.getElementById('filtro-patente');
-  const condSel = document.getElementById('filtro-conductor');
-  if(!patSel || !condSel) return;
-  const patActual = patSel.value;
-  const condActual = condSel.value;
-  // Patentes únicas desde flota activa
-  const patentes = [...new Set((DB.flota||[]).filter(f=>f.activo!==false).map(f=>f.patente))].sort();
-  patSel.innerHTML = '<option value="">Todos los equipos</option>' + patentes.map(p=>`<option value="${p}">${p}</option>`).join('');
-  patSel.value = patActual;
-  // Conductores únicos desde servicios
-  const conductores = [...new Set((DB.servicios||[]).map(s=>s.conductor).filter(Boolean))].sort();
-  condSel.innerHTML = '<option value="">Todos los conductores</option>' + conductores.map(c=>`<option value="${c}">${c}</option>`).join('');
-  condSel.value = condActual;
-  // Clientes únicos desde servicios
-  const cliSel = document.getElementById('filtro-cliente');
-  if(cliSel) {
-    const cliActual = cliSel.value;
-    const clientes = [...new Set((DB.servicios||[]).map(s=>s.cliente).filter(Boolean))].sort();
-    cliSel.innerHTML = '<option value="">Todos los clientes</option>' + clientes.map(c=>`<option value="${c}">${c}</option>`).join('');
-    cliSel.value = cliActual;
-  }
 }
 function cerrar(id) { document.getElementById(id).style.display = 'none'; }
 function fmt(n) {
@@ -5673,7 +5304,7 @@ async function iniciarLogin() {
   if(saved) {
     try {
       const sess = JSON.parse(saved);
-      if(sess.pin && sess.empresa && (['coordinador','controller','administrador','conductor','despachador','admin_kaptura','cliente'].includes(sess.rol) || sess.modo === 'flota' || sess.modo === 'demo')) {
+      if(sess.pin && sess.empresa && (['coordinador','controller','administrador','conductor','despachador'].includes(sess.rol) || sess.modo === 'flota' || sess.modo === 'demo')) {
         _sessionUsuario = sess;
         document.getElementById('login-screen').style.display = 'none';
         document.getElementById('pantalla-modulos').style.display = 'none';
@@ -5693,20 +5324,19 @@ async function iniciarLogin() {
             const el = document.getElementById(id); if(el) el.style.display = 'none';
           });
         }
-        if(sess.rol === 'cliente') {
-          // Cliente: ir directo a vista documentos
-          document.getElementById('loading').style.display = 'none';
-          document.getElementById('nav').style.display = 'none';
-          renderVistaCliente();
-          return;
-        }
         if(sess.rol === 'conductor') {
           // Ocultar tabs que no corresponden al conductor
           ['tab-btn-liquidaciones','tab-btn-flota','tab-btn-clientes','tab-btn-gastos',
-           'tab-btn-resultados','tab-btn-informes','tab-btn-config'].forEach(id => {
+           'tab-btn-resultados','tab-btn-informes','tab-btn-config','tab-btn-setup'].forEach(id => {
             const el = document.getElementById(id);
             if(el) el.style.display = 'none';
           });
+          // Forzar tab servicios activo y ocultar todos los demás contenidos
+          const btnSvc = document.getElementById('tab-btn-servicios');
+          if(btnSvc) setTab('servicios', btnSvc);
+          // Ocultar contenido de setup que está fuera del div tab-setup
+          const setupExtra = document.getElementById('setup-costos-extra');
+          if(setupExtra) setupExtra.style.display = 'none';
           // Ocultar botón + ASIGNAR y KPIs de gestión
           const btnAsig = document.getElementById('btn-asignar-nuevo');
           if(btnAsig) btnAsig.style.display = 'none';
@@ -5759,7 +5389,7 @@ async function validarPinKaptura() {
     .select('*').eq('pin',_pinIngresado).eq('activo',true).single();
   if(usr) {
     _sessionUsuario = usr;
-    localStorage.setItem('kaptura_session', JSON.stringify(usr));
+    localStorage.setItem('kaptura_session', JSON.stringify({pin: _pinIngresado}));
     // Conductor → redirigir a conductor.html
     if(usr.rol === 'conductor') {
       window.location.href = 'conductor.html?empresa='+usr.empresa+'&conductor='+encodeURIComponent(usr.conductor_nombre||'');
@@ -5785,7 +5415,6 @@ function aplicarAccesoKaptura() {
   document.getElementById('mod-empresa-label').textContent = empNombre;
   // Aplicar bloqueo según rol
   const esConductor = _sessionUsuario.rol === 'conductor';
-  const esCliente   = _sessionUsuario.rol === 'cliente';
   if(esConductor) {
     ['tab-btn-liquidaciones','tab-btn-flota','tab-btn-clientes','tab-btn-gastos',
      'tab-btn-resultados','tab-btn-informes','tab-btn-config'].forEach(id => {
@@ -5793,16 +5422,6 @@ function aplicarAccesoKaptura() {
     });
     const btnAsig = document.getElementById('btn-asignar-nuevo');
     if(btnAsig) btnAsig.style.display = 'none';
-  }
-  if(esCliente) {
-    // Cliente salta directo a vista documentos sin pantalla de módulos
-    document.getElementById('pantalla-modulos').style.display = 'none';
-    document.getElementById('loading').style.display = 'none';
-    document.getElementById('main').style.display = '';
-    document.getElementById('nav').style.display = 'none';
-    DB._empresa = _sessionUsuario.empresa;
-    renderVistaCliente();
-    return;
   }
   const modFlota = document.getElementById('mod-flota');
   const modFlotaBadge = document.getElementById('mod-flota-badge');
@@ -5824,20 +5443,6 @@ function aplicarAccesoKaptura() {
 
 function entrarModulo(modulo) {
   const esConductor = _sessionUsuario?.rol === 'conductor';
-  const esCliente   = _sessionUsuario?.rol === 'cliente';
-  if(modulo === 'flota' && esConductor) {
-    alert('🔒 Este módulo requiere plan KAPTURA FLOTA');
-    return;
-  }
-  if(esCliente) {
-    document.getElementById('pantalla-modulos').style.display = 'none';
-    document.getElementById('loading').style.display = 'none';
-    document.getElementById('main').style.display = '';
-    document.getElementById('nav').style.display = 'none';
-    DB._empresa = _sessionUsuario.empresa;
-    renderVistaCliente();
-    return;
-  }
   if(modulo === 'flota' && esConductor) {
     alert('🔒 Este módulo requiere plan KAPTURA FLOTA');
     return;
@@ -5858,29 +5463,6 @@ function entrarModulo(modulo) {
     init();
   }
 }
-
-async function renderVistaCliente() {
-  const emp = DB._empresa || _sessionUsuario?.empresa;
-  document.querySelectorAll('#main > [id^="tab-"]').forEach(el => el.style.display = 'none');
-  document.getElementById('tab-cliente').style.display = 'block';
-  const empNombre = emp === 'flota_297221' ? 'TRANSPORTE MADRID GAETE SPA' : emp;
-  document.getElementById('cli-empresa-nombre').textContent = empNombre;
-  const [fRes, cRes, dRes] = await Promise.all([
-    supa.from('kaptura_flota').select('patente,tipo').eq('empresa', emp).eq('activo', true),
-    supa.from('kaptura_usuarios').select('nombre').eq('empresa', emp).eq('rol', 'conductor'),
-    supa.from('kaptura_documentos').select('*').eq('empresa', emp).eq('activo', true)
-  ]);
-  DB.documentos = dRes.data || [];
-  const flota = fRes.data || [];
-  const conductores = cRes.data || [];
-  document.getElementById('cli-equipos-lista').innerHTML = flota.length
-    ? flota.map(f => `<button onclick="abrirDocs('equipo','${f.patente}')" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px;font-size:12px;font-weight:700;color:var(--text);cursor:pointer;margin-bottom:6px;display:block;text-align:left">🚛 ${f.patente} <span style="font-size:10px;color:var(--muted);font-weight:400">${f.tipo||''}</span></button>`).join('')
-    : '<div style="font-size:11px;color:var(--muted)">Sin equipos</div>';
-  document.getElementById('cli-conductores-lista').innerHTML = conductores.length
-    ? conductores.map(c => `<button onclick="abrirDocs('conductor','${c.nombre}')" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px;font-size:12px;font-weight:700;color:var(--text);cursor:pointer;margin-bottom:6px;display:block;text-align:left">👤 ${c.nombre}</button>`).join('')
-    : '<div style="font-size:11px;color:var(--muted)">Sin conductores</div>';
-}
-
 
 function cerrarSesionKaptura() {
   if(!confirm('¿Cerrar sesión?')) return;
@@ -5991,32 +5573,6 @@ function setupSeleccionarModo(modo) {
   document.getElementById('setup-modo-btn-unidad').querySelector('div').style.color = modo==='unidad' ? '#000' : '#fff';
 }
 
-async function generarLinkDocs() {
-  const emp = DB._empresa || _sessionUsuario?.empresa;
-  if(!emp) { toast('Sin empresa activa'); return; }
-  // Generar token aleatorio
-  const token = Math.random().toString(36).substring(2,10).toUpperCase() + Date.now().toString(36).toUpperCase();
-  const clave = 'token_docs_' + emp;
-  const {error} = await supa.from('kaptura_config').upsert({clave, valor:token, empresa:emp}, {onConflict:'clave,empresa'});
-  if(error) { toast('Error generando token: '+error.message); return; }
-  const link = 'https://ctg2026.github.io/KAPTURA-PILOTO/docs.html?token='+token+'&empresa='+emp;
-  document.getElementById('docs-link-input').value = link;
-  document.getElementById('docs-link-container').style.display = 'flex';
-  document.getElementById('docs-link-copiar').style.display = 'inline-block';
-  toast('✓ Link generado');
-}
-
-async function copiarLinkDocs() {
-  const link = document.getElementById('docs-link-input').value;
-  try {
-    await navigator.clipboard.writeText(link);
-    toast('✓ Link copiado al portapapeles');
-  } catch(e) {
-    document.getElementById('docs-link-input').select();
-    toast('Selecciona y copia manualmente');
-  }
-}
-
 async function setupGuardarEmpresa() {
   if(!DB._empresa && _sessionUsuario?.empresa) DB._empresa = _sessionUsuario.empresa;
   const emp = DB._empresa;
@@ -6100,29 +5656,6 @@ async function setupAgregarEquipo() {
 }
 
 // ── SETUP EDITAR EQUIPO ──
-async function setupGuardarEquipoEditado() {
-  const patente  = _editEquipoPatente;
-  if(!patente) { toast('Error: sin patente en edición'); return; }
-  const tipo  = document.getElementById('setup-nuevo-tipo').value;
-  const rend  = parseFloat(document.getElementById('setup-nuevo-rend').value) || null;
-  const valor = parseInt(document.getElementById('setup-nuevo-valor').value.replace(/[^0-9]/g,'')) || null;
-  const emp   = DB._empresa || _sessionUsuario?.empresa;
-  const {error} = await supa.from('kaptura_flota').update({tipo, rendimiento_km_lt:rend, valor_camion:valor}).eq('patente', patente).eq('empresa', emp);
-  if(error) { toast('Error: '+error.message); return; }
-  // Actualizar DB local
-  const f = (DB.flota||[]).find(x => x.patente === patente);
-  if(f) { f.tipo = tipo; f.rendimiento_km_lt = rend; f.valor_camion = valor; }
-  // Limpiar y restaurar botones
-  document.getElementById('setup-nueva-patente').value = '';
-  document.getElementById('setup-nuevo-rend').value = '';
-  document.getElementById('setup-nuevo-valor').value = '';
-  _editEquipoPatente = null;
-  document.getElementById('setup-equipo-btn-guardar').style.display = 'none';
-  document.getElementById('setup-equipo-btn-agregar').style.display = 'inline-block';
-  toast('✓ Equipo '+patente+' actualizado');
-  renderSetupListaEquipos();
-}
-
 async function setupEditarEquipo(patente) {
   // Buscar en DB.flota o directo en Supabase
   let f = (DB.flota||[]).find(x => x.patente === patente);
@@ -6132,13 +5665,11 @@ async function setupEditarEquipo(patente) {
   }
   if(!f) { toast('No se encontró el equipo'); return; }
   document.getElementById('setup-nueva-patente').value = f.patente;
-  document.getElementById('setup-nuevo-tipo').value    = (f.tipo||'tracto_rampla').toLowerCase();
+  document.getElementById('setup-nuevo-tipo').value    = f.tipo || 'tracto_rampla';
   document.getElementById('setup-nuevo-rend').value    = f.rendimiento_km_lt || '';
   document.getElementById('setup-nuevo-valor').value   = f.valor_camion || '';
-  _editEquipoPatente = f.patente;
-  document.getElementById('setup-equipo-btn-guardar').style.display = 'inline-block';
-  document.getElementById('setup-equipo-btn-agregar').style.display = 'none';
-  toast('✏ Edita los datos y presiona GUARDAR');
+  document.getElementById('setup-nueva-patente').dataset.editPatente = f.patente;
+  toast('✏ Datos del equipo cargados — edita y presiona GUARDAR TODA LA CONFIGURACIÓN');
   setTimeout(() => {
     const el = document.getElementById('setup-nueva-patente');
     if(el) { el.scrollIntoView({behavior:'smooth', block:'center'}); el.focus(); }
@@ -6273,7 +5804,10 @@ async function setupAgregarTarifa() {
   const destino = document.getElementById('setup-tar-destino').value.trim().toUpperCase();
   const valor   = parseFloat(document.getElementById('setup-tar-valor').value.replace(/[$.]/g,'').replace(',','.')) || 0;
   if(!cliente || !origen || !destino || !valor) { toast('Completa todos los campos de tarifa'); return; }
-  const {error} = await supa.from('kaptura_tarifarios').insert({cliente, origen, destino, tarifa_neta:valor, empresa:emp, activo:true});
+  const kmIda = parseFloat(document.getElementById('setup-tar-km-ida')?.value)||0;
+  const kmVta = parseFloat(document.getElementById('setup-tar-km-vta')?.value)||0;
+  const peajesHab = parseFloat(document.getElementById('setup-tar-peajes')?.value)||0;
+  const {error} = await supa.from('kaptura_tarifarios').insert({cliente, origen, destino, tarifa_neta:valor, empresa:emp, activo:true, km_ida:kmIda||null, km_vuelta:kmVta||null, peajes_habituales:peajesHab||null});
   if(error) { toast('Error: '+error.message); return; }
   ['cliente','origen','destino','valor'].forEach(f => { document.getElementById('setup-tar-'+f).value = ''; });
   toast('✓ Tarifa guardada');
@@ -6283,51 +5817,58 @@ async function setupAgregarTarifa() {
 async function setupEditarTarifa(id) {
   const t = (DB.tarifarios||[]).find(x => x.id === id);
   if(!t) { toast('No se encontró la tarifa'); return; }
-  document.getElementById('setup-tar-cliente').value    = t.cliente||'';
-  document.getElementById('setup-tar-origen').value     = (t.origen||'').toUpperCase();
-  document.getElementById('setup-tar-destino').value    = (t.destino||'').toUpperCase();
-  document.getElementById('setup-tar-valor').value      = t.tarifa_neta||'';
-  if(document.getElementById('setup-tar-punto')) document.getElementById('setup-tar-punto').value = t.valor_punto||'';
-  if(document.getElementById('setup-tar-nombre')) document.getElementById('setup-tar-nombre').value = '';
-  document.getElementById('setup-tar-km-ida').value     = t.km_ida||'';
-  document.getElementById('setup-tar-km-vuelta').value  = t.km_vuelta||'';
-  document.getElementById('setup-tar-tag').value        = t.peajes_habituales||'';
+  document.getElementById('setup-tar-cliente').value = t.cliente||'';
+  document.getElementById('setup-tar-origen').value  = (t.origen||'').toUpperCase();
+  document.getElementById('setup-tar-destino').value = (t.destino||'').toUpperCase();
+  document.getElementById('setup-tar-valor').value   = t.tarifa_neta||'';
+  if(document.getElementById('setup-tar-punto'))   document.getElementById('setup-tar-punto').value   = t.valor_punto||'';
+  if(document.getElementById('setup-tar-nombre'))  document.getElementById('setup-tar-nombre').value  = t.descripcion||'';
+  if(document.getElementById('setup-tar-km-ida'))  document.getElementById('setup-tar-km-ida').value  = t.km_ida||'';
+  if(document.getElementById('setup-tar-km-vta'))  document.getElementById('setup-tar-km-vta').value  = t.km_vuelta||'';
+  if(document.getElementById('setup-tar-peajes'))  document.getElementById('setup-tar-peajes').value  = t.peajes_habituales||'';
   document.getElementById('setup-tar-cliente').dataset.editId = id;
-  // Mostrar GUARDAR, ocultar AGREGAR
-  document.getElementById('setup-tar-btn-guardar').style.display = 'inline-block';
-  document.getElementById('setup-tar-btn-agregar').style.display = 'none';
-  toast('✏ Edita los campos y presiona GUARDAR');
+  // Mostrar botón guardar y ocultar agregar
+  document.getElementById('btn-guardar-tarifa').style.display  = '';
+  document.getElementById('btn-cancelar-tarifa').style.display = '';
+  toast('✏ Edita los datos y presiona 💾 GUARDAR');
   setTimeout(() => document.getElementById('setup-tar-cliente').scrollIntoView({behavior:'smooth', block:'center'}), 100);
 }
 
-async function setupGuardarTarifaEditada() {
-  const id      = document.getElementById('setup-tar-cliente').dataset.editId;
-  if(!id) { toast('Error: no hay tarifa en edición'); return; }
-  const emp     = DB._empresa || _sessionUsuario?.empresa;
-  const cliente = document.getElementById('setup-tar-cliente').value.trim();
+function setupCancelarEdicionTarifa() {
+  document.getElementById('setup-tar-cliente').dataset.editId = '';
+  document.getElementById('setup-tar-cliente').value  = '';
+  document.getElementById('setup-tar-origen').value   = '';
+  document.getElementById('setup-tar-destino').value  = '';
+  document.getElementById('setup-tar-valor').value    = '';
+  if(document.getElementById('setup-tar-punto'))   document.getElementById('setup-tar-punto').value   = '';
+  if(document.getElementById('setup-tar-nombre'))  document.getElementById('setup-tar-nombre').value  = '';
+  if(document.getElementById('setup-tar-km-ida'))  document.getElementById('setup-tar-km-ida').value  = '';
+  if(document.getElementById('setup-tar-km-vta'))  document.getElementById('setup-tar-km-vta').value  = '';
+  if(document.getElementById('setup-tar-peajes'))  document.getElementById('setup-tar-peajes').value  = '';
+  document.getElementById('btn-guardar-tarifa').style.display  = 'none';
+  document.getElementById('btn-cancelar-tarifa').style.display = 'none';
+}
+
+async function setupGuardarEdicionTarifa() {
+  const id  = document.getElementById('setup-tar-cliente').dataset.editId;
+  if(!id) { toast('Sin tarifa seleccionada'); return; }
+  const cliente = document.getElementById('setup-tar-cliente').value;
   const origen  = document.getElementById('setup-tar-origen').value.trim().toUpperCase();
   const destino = document.getElementById('setup-tar-destino').value.trim().toUpperCase();
-  const valor   = parseFloat(document.getElementById('setup-tar-valor').value.replace(/[^0-9]/g,'')) || 0;
-  const punto   = parseFloat(document.getElementById('setup-tar-punto').value.replace(/[^0-9]/g,'')) || 0;
-  const nombre  = document.getElementById('setup-tar-nombre').value.trim();
-  const kmIda   = parseFloat(document.getElementById('setup-tar-km-ida').value) || 0;
-  const kmVuelta= parseFloat(document.getElementById('setup-tar-km-vuelta').value) || 0;
-  const tagTeor = parseFloat(document.getElementById('setup-tar-tag').value) || 0;
-  if(!cliente || !origen || !destino || !valor) { toast('Completa cliente, origen, destino y tarifa'); return; }
+  const valor   = parseInt((document.getElementById('setup-tar-valor').value||'0').replace(/[^0-9]/g,''))||0;
+  const punto   = parseInt((document.getElementById('setup-tar-punto')?.value||'0').replace(/[^0-9]/g,''))||0;
+  const nombre  = document.getElementById('setup-tar-nombre')?.value.trim().toUpperCase()||null;
+  const kmIda   = parseFloat(document.getElementById('setup-tar-km-ida')?.value)||null;
+  const kmVta   = parseFloat(document.getElementById('setup-tar-km-vta')?.value)||null;
+  const peajes  = parseFloat(document.getElementById('setup-tar-peajes')?.value)||null;
+  if(!cliente||!origen||!destino||!valor) { toast('Completa cliente, origen, destino y tarifa'); return; }
   const {error} = await supa.from('kaptura_tarifarios').update({
-    cliente, origen, destino, tarifa_neta:valor, valor_punto:punto,
-    km_ida:kmIda, km_vuelta:kmVuelta, peajes_habituales:tagTeor, empresa:emp
+    cliente, origen, destino, tarifa_neta:valor, valor_punto:punto, descripcion:nombre,
+    km_ida:kmIda, km_vuelta:kmVta, peajes_habituales:peajes
   }).eq('id', id);
   if(error) { toast('Error: '+error.message); return; }
-  // Limpiar formulario y restaurar botones
-  ['cliente','origen','destino','valor','punto','nombre'].forEach(f => { document.getElementById('setup-tar-'+f).value = ''; });
-  document.getElementById('setup-tar-km-ida').value    = '';
-  document.getElementById('setup-tar-km-vuelta').value = '';
-  document.getElementById('setup-tar-tag').value       = '';
-  delete document.getElementById('setup-tar-cliente').dataset.editId;
-  document.getElementById('setup-tar-btn-guardar').style.display = 'none';
-  document.getElementById('setup-tar-btn-agregar').style.display = 'inline-block';
   toast('✓ Tarifa actualizada');
+  setupCancelarEdicionTarifa();
   cargarSetup();
 }
 
@@ -6414,26 +5955,20 @@ function renderSetupListaConductores() {
 }
 
 async function setupListaAgregarTarifa() {
-  const cliente   = document.getElementById('setup-tar-cliente').value.trim();
-  const origen    = document.getElementById('setup-tar-origen').value.trim().toUpperCase();
-  const destino   = document.getElementById('setup-tar-destino').value.trim().toUpperCase();
-  const valor     = parseFloat(document.getElementById('setup-tar-valor').value.replace(/[^0-9]/g,'')) || 0;
-  const punto     = parseFloat(document.getElementById('setup-tar-punto').value.replace(/[^0-9]/g,'')) || 0;
-  const nombre    = document.getElementById('setup-tar-nombre').value.trim();
-  const kmIda     = parseFloat(document.getElementById('setup-tar-km-ida').value) || 0;
-  const kmVuelta  = parseFloat(document.getElementById('setup-tar-km-vuelta').value) || 0;
-  const tagTeor   = parseFloat(document.getElementById('setup-tar-tag').value) || 0;
+  const cliente = document.getElementById('setup-tar-cliente').value.trim();
+  const origen  = document.getElementById('setup-tar-origen').value.trim().toUpperCase();
+  const destino = document.getElementById('setup-tar-destino').value.trim().toUpperCase();
+  const valor   = parseFloat(document.getElementById('setup-tar-valor').value.replace(/[^0-9]/g,'')) || 0;
+  const punto   = parseFloat(document.getElementById('setup-tar-punto').value.replace(/[^0-9]/g,'')) || 0;
+  const nombre  = document.getElementById('setup-tar-nombre').value.trim();
   if(!cliente || !origen || !destino || !valor) { toast('Completa cliente, origen, destino y tarifa'); return; }
-  _setupTarifas.push({cliente, origen, destino, valor, punto, nombre, kmIda, kmVuelta, tagTeor});
-  document.getElementById('setup-tar-cliente').value    = '';
-  document.getElementById('setup-tar-origen').value     = '';
-  document.getElementById('setup-tar-destino').value    = '';
-  document.getElementById('setup-tar-valor').value      = '';
-  document.getElementById('setup-tar-punto').value      = '';
-  document.getElementById('setup-tar-nombre').value     = '';
-  document.getElementById('setup-tar-km-ida').value     = '';
-  document.getElementById('setup-tar-km-vuelta').value  = '';
-  document.getElementById('setup-tar-tag').value        = '';
+  _setupTarifas.push({cliente, origen, destino, valor, punto, nombre});
+  document.getElementById('setup-tar-cliente').value = '';
+  document.getElementById('setup-tar-origen').value  = '';
+  document.getElementById('setup-tar-destino').value = '';
+  document.getElementById('setup-tar-valor').value   = '';
+  document.getElementById('setup-tar-punto').value   = '';
+  document.getElementById('setup-tar-nombre').value  = '';
   renderSetupListaTarifas();
   toast('Tarifa agregada a la lista — presiona GUARDAR para confirmar');
 }
@@ -6442,7 +5977,7 @@ function renderSetupListaTarifas() {
   const el = document.getElementById('setup-lista-tarifario');
   const guardados = (DB.tarifarios||[]).map(t => `
     <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 10px;background:var(--bg);border-radius:7px;margin-bottom:5px;border:1px solid var(--border)">
-      <div style="font-size:12px;color:var(--text)">${t.cliente||'—'} · ${t.origen||'—'} → ${t.destino||'—'}<span style="font-size:10px;color:var(--muted);margin-left:6px">✓</span></div>
+      <div style="font-size:12px;color:var(--text)">${t.cliente||'—'} · ${t.origen||'—'} → ${t.destino||'—'}<span style="font-size:10px;color:var(--muted);margin-left:6px">✓</span>${t.km_ida||t.km_vuelta?`<span style="font-size:10px;color:var(--muted);margin-left:6px">${(t.km_ida||0)+(t.km_vuelta||0)} km</span>`:''}</div>
       <div style="display:flex;align-items:center;gap:8px">
         <span style="font-size:13px;font-weight:800;color:var(--green)">$${Number(t.tarifa_neta||0).toLocaleString('es-CL')}</span>
         <button data-tid="${t.id}" onclick="setupEditarTarifa(this.dataset.tid)" style="background:rgba(201,168,76,0.15);border:1px solid rgba(201,168,76,0.3);color:var(--gold);border-radius:5px;padding:3px 8px;font-size:10px;cursor:pointer;font-weight:700">✏</button>
@@ -6511,7 +6046,7 @@ async function setupGuardarTodo() {
       const rend  = parseFloat(document.getElementById('setup-nuevo-rend')?.value)||null;
       const valor = parseInt((document.getElementById('setup-nuevo-valor')?.value||'').replace(/[^0-9]/g,''))||null;
       await supa.from('kaptura_flota').update({tipo, rendimiento_km_lt:rend, valor_camion:valor}).eq('patente',editPat);
-      _editEquipoPatente = null;
+      delete document.getElementById('setup-nueva-patente').dataset.editPatente;
       document.getElementById('setup-nueva-patente').value = '';
       document.getElementById('setup-nuevo-rend').value    = '';
       document.getElementById('setup-nuevo-valor').value   = '';
@@ -6524,7 +6059,8 @@ async function setupGuardarTodo() {
     _setupConductores = [];
     // Guardar tarifas pendientes
     for(const t of _setupTarifas) {
-      const {error} = await supa.from('kaptura_tarifarios').insert({cliente:t.cliente, origen:t.origen, destino:t.destino, tarifa_neta:t.valor, valor_punto:t.punto||0, km_ida:t.kmIda||0, km_vuelta:t.kmVuelta||0, peajes_habituales:t.tagTeor||0, empresa:DB._empresa, activo:true});
+      const {error} = await supa.from('kaptura_tarifarios').insert({cliente:t.cliente, origen:t.origen, destino:t.destino, tarifa_neta:t.valor, valor_punto:t.punto||0, empresa:DB._empresa, activo:true});
+      // nombre descriptivo guardado en DB si columna existe
       if(error) throw new Error('Tarifa: '+error.message);
     }
     _setupTarifas = [];
@@ -6554,8 +6090,6 @@ async function setupGuardarTodo() {
 // ══════════════════════════════════════
 
 let _liqFiltro = 'todas';
-let _liqFiltroVenc = '';
-let _liqFiltroCliente = '';
 let _liqData = [];
 let _liqSvcsSeleccionados = [];
 let _liqClienteActual = '';
@@ -6580,58 +6114,15 @@ function filtrarLiquidaciones(estado) {
   renderLiquidaciones();
 }
 
-function toggleLiqVenc(tipo) {
-  _liqFiltroVenc = _liqFiltroVenc === tipo ? '' : tipo;
-  ['vencida','urgente','proximo','ok'].forEach(t => {
-    const b = document.getElementById('liq-venc-'+t);
-    if(b) b.classList.toggle('activo', _liqFiltroVenc === t);
-  });
-  renderLiquidaciones();
-}
-
-function filtrarLiqCliente(val) {
-  _liqFiltroCliente = val;
-  renderLiquidaciones();
-}
-
-function resetLiqFiltros() {
-  _liqFiltro = 'todas';
-  _liqFiltroVenc = '';
-  _liqFiltroCliente = '';
-  document.querySelectorAll('[id^="liq-fil-"]').forEach(b => { b.style.background='var(--surface2)'; b.style.color='var(--muted)'; });
-  const btnTodas = document.getElementById('liq-fil-todas');
-  if(btnTodas) { btnTodas.style.background='var(--gold)'; btnTodas.style.color='#000'; }
-  ['vencida','urgente','proximo','ok'].forEach(t => { const b=document.getElementById('liq-venc-'+t); if(b) b.classList.remove('activo'); });
-  const selCli = document.getElementById('liq-fil-cliente');
-  if(selCli) selCli.value = '';
-  renderLiquidaciones();
-}
-
-function poblarSelectClienteLiq() {
-  const sel = document.getElementById('liq-fil-cliente');
-  if(!sel) return;
-  const actual = sel.value;
-  const clientes = [...new Set((_liqData||[]).map(l=>l.cliente).filter(Boolean))].sort();
-  sel.innerHTML = '<option value="">Todos los clientes</option>' + clientes.map(c=>`<option value="${c}">${c}</option>`).join('');
-  sel.value = actual;
-}
-
-function _liqSemaforo(l, hoy) {
-  if(!l.fecha_vencimiento) return 'sf';
-  if(['cobrada','factoring'].includes(l.estado)) return 'ok';
-  const venc = new Date(l.fecha_vencimiento); venc.setHours(0,0,0,0);
-  const dias = Math.round((venc - hoy) / 864e5);
-  if(dias < 0) return 'vencida';
-  if(dias <= 7) return 'urgente';
-  if(dias <= 30) return 'proximo';
-  return 'ok';
-}
-
 async function eliminarLiquidacion(id, e) {
-  if(e && e.stopPropagation) e.stopPropagation();
+  e.stopPropagation();
+  // Solo admin_kaptura o coordinador principal puede eliminar
   const rol  = _sessionUsuario?.rol;
   const pin  = _sessionUsuario?.pin;
   const emp  = _sessionUsuario?.empresa;
+  // Admin kaptura puede en cualquier empresa
+  // Coordinador Madrid: solo PIN 1996
+  // Coordinador Global: solo PIN 0101
   const puedeEliminar = rol === 'admin_kaptura' || 
     (rol === 'coordinador' && pin === '1996' && emp === 'flota_297221') ||
     (rol === 'coordinador' && pin === '0101' && emp === 'global_solutions');
@@ -6640,7 +6131,6 @@ async function eliminarLiquidacion(id, e) {
   const {error} = await supa.from('kaptura_liquidaciones').delete().eq('id', id);
   if(error) { toast('Error: '+error.message); return; }
   _liqData = _liqData.filter(l => l.id !== id);
-  cerrar('modal-ver-liq');
   toast('Liquidación eliminada');
   renderLiquidaciones();
 }
@@ -6648,12 +6138,9 @@ async function eliminarLiquidacion(id, e) {
 function renderLiquidaciones() {
   const lista = document.getElementById('liq-lista');
   const hoy = new Date(); hoy.setHours(0,0,0,0);
-  poblarSelectClienteLiq();
-  let items = _liqFiltro === 'todas' ? _liqData : _liqData.filter(l => l.estado === _liqFiltro);
-  if(_liqFiltroVenc)    items = items.filter(l => _liqSemaforo(l, hoy) === _liqFiltroVenc);
-  if(_liqFiltroCliente) items = items.filter(l => l.cliente === _liqFiltroCliente);
+  const items = _liqFiltro === 'todas' ? _liqData : _liqData.filter(l => l.estado === _liqFiltro);
   if(!items.length) {
-    lista.innerHTML = '<div class="empty">Sin liquidaciones para los filtros seleccionados</div>';
+    lista.innerHTML = '<div class="empty">Sin liquidaciones en este estado</div>';
     return;
   }
   lista.innerHTML = items.map(l => {
@@ -6923,234 +6410,36 @@ async function verLiquidacion(id) {
         </div>
         ${s.num_guia ? `<div style="font-size:10px;color:var(--muted);margin-top:3px">Guía: ${s.num_guia}</div>` : ''}
       </div>`).join('')}
-    ${(liq.num_factura || liq.pdf_sii_url) ? `
-    <div style="margin-top:12px;background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.3);border-radius:10px;padding:12px 14px">
-      <div style="font-size:9px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);margin-bottom:8px">FACTURA SII</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px">
-        <div><div style="color:var(--muted);font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:0.1em">N° Factura</div><div style="font-weight:800;color:var(--text)">${liq.num_factura || '—'}</div></div>
-        <div><div style="color:var(--muted);font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:0.1em">Fecha Emisión</div><div style="font-weight:700;color:var(--text)">${liq.fecha_factura || '—'}</div></div>
-      </div>
-      ${liq.pdf_sii_url ? `<div style="margin-top:10px"><a href="${liq.pdf_sii_url}" target="_blank" style="color:var(--gold);font-size:12px;font-weight:700">📄 Ver documento adjunto</a></div>` : ''}
-    </div>` : ''}`;
+    ${liq.pdf_sii_url ? `<div style="margin-top:10px"><a href="${liq.pdf_sii_url}" target="_blank" style="color:var(--gold);font-size:12px;font-weight:700">📄 Ver Factura SII adjunta</a></div>` : ''}`;
 
   // Botones según estado
-  const btnElimModal = `<button class="btn" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:var(--danger)" onclick="eliminarLiquidacion('${id}')">✕ Eliminar</button>`;
-  const btnEditar = `<button class="btn btn-outline" onclick="editarLiquidacion('${id}')">✏ Editar</button>`;
   const btns = {
     borrador: `<button class="btn btn-ghost" onclick="cerrar('modal-ver-liq')">Cerrar</button>
-      ${btnEditar}
-      ${btnElimModal}
       <button class="btn btn-outline" onclick="liqAdjuntarSII('${id}')">📎 Adjuntar Factura</button>
       <button class="btn btn-navy" onclick="liqCambiarEstado('${id}','emitida')">Emitir →</button>`,
     emitida: `<button class="btn btn-ghost" onclick="cerrar('modal-ver-liq')">Cerrar</button>
-      ${btnEditar}
-      ${btnElimModal}
       <button class="btn btn-outline" onclick="liqAdjuntarSII('${id}')">📎 Adjuntar Factura</button>
       <button class="btn btn-navy" onclick="liqCambiarEstado('${id}','enviada')">📤 Enviada al Cliente</button>`,
     enviada: `<button class="btn btn-ghost" onclick="cerrar('modal-ver-liq')">Cerrar</button>
-      ${btnEditar}
-      ${btnElimModal}
       <button class="btn btn-outline" onclick="liqCambiarEstado('${id}','aprobada')">✓ Aprobada por Cliente</button>
       <button class="btn btn-navy" onclick="liqCambiarEstado('${id}','facturada')">🧾 Saltar a Facturada</button>`,
     aprobada: `<button class="btn btn-ghost" onclick="cerrar('modal-ver-liq')">Cerrar</button>
-      ${btnEditar}
-      ${btnElimModal}
       <button class="btn btn-outline" onclick="liqAdjuntarSII('${id}')">📎 Adjuntar Factura SII</button>
       <button class="btn btn-navy" onclick="liqRegistrarFactura('${id}')">🧾 Registrar Factura</button>`,
     facturada: `<button class="btn btn-ghost" onclick="cerrar('modal-ver-liq')">Cerrar</button>
-      ${btnEditar}
-      ${btnElimModal}
       <button class="btn btn-outline" onclick="liqAdjuntarSII('${id}')">📎 Adjuntar Factura SII</button>
       <button class="btn btn-navy" onclick="liqCambiarEstado('${id}','en_cobro')">💰 En Cobro</button>`,
     en_cobro: `<button class="btn btn-ghost" onclick="cerrar('modal-ver-liq')">Cerrar</button>
-      ${btnEditar}
-      ${btnElimModal}
       <button class="btn btn-navy" onclick="liqRegistrarPago('${id}')">✓ Registrar Pago</button>`,
     factoring: `<button class="btn btn-ghost" onclick="cerrar('modal-ver-liq')">Cerrar</button>
-      ${btnEditar}
-      ${btnElimModal}
       <button class="btn btn-navy" onclick="liqCambiarEstado('${id}','cobrada')">✓ Marcar Cobrada</button>`,
     por_cobrar: `<button class="btn btn-ghost" onclick="cerrar('modal-ver-liq')">Cerrar</button>
-      ${btnEditar}
-      ${btnElimModal}
       <button class="btn btn-outline" onclick="liqAdjuntarSII('${id}')">📎 Adjuntar Factura SII</button>
       <button class="btn btn-navy" onclick="liqCambiarEstado('${id}','en_cobro')">💰 En Cobro</button>`,
-    cobrada: `<button class="btn btn-ghost" onclick="cerrar('modal-ver-liq')">Cerrar</button>
-      ${btnEditar}
-      ${btnElimModal}`
+    cobrada: `<button class="btn btn-ghost" onclick="cerrar('modal-ver-liq')">Cerrar</button>`
   };
   document.getElementById('ver-liq-ftr').innerHTML = btns[liq.estado] || btns.borrador;
   document.getElementById('modal-ver-liq').style.display = 'flex';
-}
-
-let _editLiqId = null;
-let _editEquipoPatente = null;
-
-async function editarLiquidacion(id) {
-  const liq = _liqData.find(l => l.id === id);
-  if(!liq) return;
-  _editLiqId = id;
-  cerrar('modal-ver-liq');
-
-  // Header
-  document.getElementById('edit-liq-titulo').textContent = 'Editar · ' + liq.numero;
-  document.getElementById('edit-liq-sub').textContent = liq.cliente + ' · ' + (liq.fecha_emision||'');
-
-  // Cliente solo lectura
-  document.getElementById('edit-liq-cliente-txt').textContent = liq.cliente;
-
-  // Servicios incluidos
-  const svcs = DB.servicios.filter(s => (liq.servicios_ids||[]).includes(s.id));
-  document.getElementById('edit-liq-svcs').innerHTML = svcs.length
-    ? svcs.map(s => `<div style="padding:8px 10px;background:var(--bg);border:1px solid var(--border);border-radius:7px;margin-bottom:5px;display:flex;justify-content:space-between;align-items:center">
-        <div><span style="font-weight:800;color:var(--gold)">${s.servicio_id}</span> <span style="font-size:11px;color:var(--muted)">${s.fecha||''} · ${s.origen||''} → ${s.destino||''}</span></div>
-        <span style="font-weight:800">$${Number(s.ingreso_total||s.tarifa_neta||0).toLocaleString('es-CL')}</span>
-      </div>`).join('')
-    : '<div style="font-size:11px;color:var(--muted)">— sin servicios cargados localmente</div>';
-
-  // Servicios disponibles para agregar (mismo cliente, cerrado, no incluidos aún)
-  const idsActuales = new Set(liq.servicios_ids||[]);
-  const svcsDisp = DB.servicios.filter(s =>
-    s.estado === 'cerrado' &&
-    (s.cliente||'').toUpperCase() === (liq.cliente||'').toUpperCase() &&
-    !idsActuales.has(s.id)
-  );
-  const wrap = document.getElementById('edit-liq-svcs-agregar-wrap');
-  const dispEl = document.getElementById('edit-liq-svcs-disponibles');
-  if(svcsDisp.length) {
-    wrap.style.display = 'block';
-    dispEl.innerHTML = svcsDisp.map(s => `
-      <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;margin-bottom:5px">
-        <input type="checkbox" data-id="${s.id}" data-ingreso="${s.ingreso_total||s.tarifa_neta||0}" class="edit-liq-svc-chk" onchange="editLiqRecalcular()" style="width:16px;height:16px;accent-color:var(--gold)">
-        <div style="flex:1">
-          <span style="font-size:12px;font-weight:800;color:var(--gold)">${s.servicio_id}</span>
-          <span style="font-size:11px;color:var(--muted)"> · ${s.fecha||''} · ${s.origen||''} → ${s.destino||''}</span>
-        </div>
-        <span style="font-size:13px;font-weight:800">$${Number(s.ingreso_total||s.tarifa_neta||0).toLocaleString('es-CL')}</span>
-      </div>`).join('');
-  } else {
-    wrap.style.display = 'none';
-  }
-
-  // Resumen
-  document.getElementById('edit-liq-neto').textContent  = '$'+Number(liq.monto_neto||0).toLocaleString('es-CL');
-  document.getElementById('edit-liq-iva').textContent   = '$'+Number(liq.iva||0).toLocaleString('es-CL');
-  document.getElementById('edit-liq-total').textContent = '$'+Number(liq.total||0).toLocaleString('es-CL');
-
-  // Info general
-  document.getElementById('edit-liq-estado').value      = liq.estado || 'borrador';
-  document.getElementById('edit-liq-fecha').value       = liq.fecha_emision || '';
-  document.getElementById('edit-liq-vencimiento').value = liq.fecha_vencimiento || '';
-  document.getElementById('edit-liq-fecha-pago').value  = liq.fecha_pago || '';
-  document.getElementById('edit-liq-notas').value       = liq.notas || '';
-
-  // Factura SII
-  document.getElementById('edit-liq-num-factura').value   = liq.num_factura || '';
-  document.getElementById('edit-liq-fecha-factura').value = liq.fecha_factura || '';
-  const pdfLink = document.getElementById('edit-liq-pdf-link');
-  if(liq.pdf_sii_url) {
-    pdfLink.style.display = 'block';
-    pdfLink.innerHTML = `<a href="${liq.pdf_sii_url}" target="_blank" style="color:var(--gold);font-size:11px;font-weight:700">📄 Ver documento adjunto</a>`;
-  } else {
-    pdfLink.style.display = 'none';
-  }
-
-  // Pago
-  document.getElementById('edit-liq-forma-pago').value = liq.forma_pago_real || '';
-  document.getElementById('edit-liq-obs-pago').value   = liq.obs_pago || '';
-
-  // Factoring
-  const usaFact = !!(liq.factoring);
-  document.getElementById('edit-liq-factoring').checked = usaFact;
-  document.getElementById('edit-liq-factoring-inputs').style.display = usaFact ? 'block' : 'none';
-  document.getElementById('edit-liq-factoring-pct').value = liq.factoring_pct || 3;
-  document.getElementById('edit-liq-factoring-costo').value = liq.factoring_costo ? '$'+Number(liq.factoring_costo).toLocaleString('es-CL') : '';
-
-  document.getElementById('modal-editar-liq').style.display = 'flex';
-}
-
-function editLiqToggleFactoring() {
-  const usa = document.getElementById('edit-liq-factoring').checked;
-  document.getElementById('edit-liq-factoring-inputs').style.display = usa ? 'block' : 'none';
-}
-
-function liqAdjuntarSIIEdit() { _liqAdjuntarArchivo(_editLiqId, 'image/*,application/pdf', null); }
-function liqFotoEdit()        { _liqAdjuntarArchivo(_editLiqId, 'image/*', null); }
-function liqCamaraEdit()      { _liqAdjuntarArchivo(_editLiqId, 'image/*', 'environment'); }
-
-async function _liqAdjuntarArchivo(id, accept, capture) {
-  const inp = document.createElement('input');
-  inp.type = 'file'; inp.accept = accept;
-  if(capture) inp.capture = capture;
-  inp.onchange = async () => {
-    await _liqProcesarArchivo(id, inp.files[0]);
-    // Actualizar link en modal editar
-    const liq = _liqData.find(l=>l.id===id);
-    if(liq?.pdf_sii_url) {
-      const pdfLink = document.getElementById('edit-liq-pdf-link');
-      pdfLink.style.display = 'block';
-      pdfLink.innerHTML = `<a href="${liq.pdf_sii_url}" target="_blank" style="color:var(--gold);font-size:11px;font-weight:700">📄 Ver documento adjunto</a>`;
-      if(liq.num_factura) document.getElementById('edit-liq-num-factura').value = liq.num_factura;
-      if(liq.fecha_factura) document.getElementById('edit-liq-fecha-factura').value = liq.fecha_factura;
-    }
-  };
-  inp.click();
-}
-
-function editLiqRecalcular() {
-  const liq = _liqData.find(l=>l.id===_editLiqId);
-  if(!liq) return;
-  const nuevosChk = [...document.querySelectorAll('.edit-liq-svc-chk:checked')];
-  const montoNuevos = nuevosChk.reduce((sum, c) => sum + Number(c.dataset.ingreso||0), 0);
-  const montoTotal  = (liq.monto_neto||0) + montoNuevos;
-  const iva = Math.round(montoTotal * 0.19);
-  document.getElementById('edit-liq-neto').textContent  = '$'+montoTotal.toLocaleString('es-CL');
-  document.getElementById('edit-liq-iva').textContent   = '$'+iva.toLocaleString('es-CL');
-  document.getElementById('edit-liq-total').textContent = '$'+(montoTotal+iva).toLocaleString('es-CL');
-}
-
-async function guardarEdicionLiq() {
-  const id = _editLiqId;
-  if(!id) return;
-  const liq = _liqData.find(l=>l.id===id);
-  if(!liq) return;
-
-  // Servicios nuevos seleccionados
-  const nuevosChk = [...document.querySelectorAll('.edit-liq-svc-chk:checked')];
-  const nuevosIds  = nuevosChk.map(c => c.dataset.id);
-  const svcsIds    = [...(liq.servicios_ids||[]), ...nuevosIds];
-  const montoNuevos = nuevosChk.reduce((sum, c) => sum + Number(c.dataset.ingreso||0), 0);
-  const montoNeto   = (liq.monto_neto||0) + montoNuevos;
-  const iva         = Math.round(montoNeto * 0.19);
-  const total       = montoNeto + iva;
-
-  const usaFact   = document.getElementById('edit-liq-factoring').checked;
-  const factPct   = parseFloat(document.getElementById('edit-liq-factoring-pct').value)||0;
-  const factCosto = usaFact ? Math.round(montoNeto*factPct/100) : 0;
-
-  const {error} = await supa.from('kaptura_liquidaciones').update({
-    estado:            document.getElementById('edit-liq-estado').value,
-    fecha_emision:     document.getElementById('edit-liq-fecha').value,
-    fecha_vencimiento: document.getElementById('edit-liq-vencimiento').value,
-    fecha_pago:        document.getElementById('edit-liq-fecha-pago').value || null,
-    notas:             document.getElementById('edit-liq-notas').value.trim(),
-    num_factura:       document.getElementById('edit-liq-num-factura').value.trim() || null,
-    fecha_factura:     document.getElementById('edit-liq-fecha-factura').value || null,
-    forma_pago_real:   document.getElementById('edit-liq-forma-pago').value.trim() || null,
-    obs_pago:          document.getElementById('edit-liq-obs-pago').value.trim() || null,
-    factoring:         usaFact,
-    factoring_pct:     usaFact ? factPct : null,
-    factoring_costo:   usaFact ? factCosto : null,
-    servicios_ids:     svcsIds,
-    monto_neto:        montoNeto,
-    iva:               iva,
-    total:             total
-  }).eq('id', id);
-  if(error) { toast('Error: '+error.message); return; }
-  toast('✓ Liquidación actualizada');
-  cerrar('modal-editar-liq');
-  await cargarLiquidaciones();
-  verLiquidacion(id);
 }
 
 async function liqCambiarEstado(id, nuevoEstado) {
@@ -7198,90 +6487,63 @@ async function liqRegistrarPago(id) {
   await cargarLiquidaciones();
 }
 
-async function _liqProcesarArchivo(id, file) {
-  if(!file) return;
-  const emp  = DB._empresa || _sessionUsuario?.empresa;
-  const ext  = file.name ? file.name.split('.').pop() : 'jpg';
-  const path = emp+'/facturas/LIQ_'+id+'_'+Date.now()+'.'+ext;
-  const {error: upErr} = await supa.storage.from('kaptura-guias').upload(path, file, {upsert:true});
-  if(upErr) { toast('Error subiendo archivo: '+upErr.message); return; }
-  const url = supa.storage.from('kaptura-guias').getPublicUrl(path).data.publicUrl;
-  const {error} = await supa.from('kaptura_liquidaciones').update({pdf_sii_url: url}).eq('id', id);
-  if(error) { toast('Error: '+error.message); return; }
-  toast('✓ Archivo adjuntado — leyendo datos con IA...');
-  try {
-    const reader = new FileReader();
-    reader.onload = async function(ev) {
-      const b64 = ev.target.result.split(',')[1];
-      const mtype = file.type === 'application/pdf' ? 'application/pdf' : 'image/jpeg';
-      const resp = await fetch('https://api.anthropic.com/v1/messages', {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({
-          model:'claude-haiku-4-5-20251001', max_tokens:200,
-          messages:[{role:'user', content:[
-            {type: mtype==='application/pdf'?'document':'image', source:{type:'base64',media_type:mtype,data:b64}},
-            {type:'text', text:'Lee esta factura y extrae SOLO: numero de folio/factura y fecha de emision. Responde SOLO en JSON: {"num_factura":"XXX","fecha_factura":"YYYY-MM-DD"}'}
-          ]}]
-        })
-      });
-      const data = await resp.json();
-      const txt = (data.content||[]).find(c=>c.type==='text')?.text||'';
-      try {
-        const parsed = JSON.parse(txt.replace(/```json|```/g,'').trim());
-        if(parsed.num_factura) {
-          await supa.from('kaptura_liquidaciones').update({
-            num_factura: parsed.num_factura,
-            fecha_factura: parsed.fecha_factura || null,
-            estado: 'facturada'
-          }).eq('id', id);
-          toast('✓ Factura N°'+parsed.num_factura+' · '+parsed.fecha_factura+' detectada automáticamente');
-        } else {
-          toast('✓ Adjuntada — N° factura no detectado, ingresa manualmente');
-        }
-      } catch(e) { toast('✓ Factura adjuntada (lectura manual requerida)'); }
+async function liqAdjuntarSII(id) {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*,.pdf';
+  input.capture = 'environment';
+  input.onchange = async function() {
+    const file = input.files[0];
+    if(!file) return;
+    const emp  = DB._empresa || _sessionUsuario?.empresa;
+    const ext  = file.name.split('.').pop();
+    const path = emp+'/facturas/LIQ_'+id+'_'+Date.now()+'.'+ext;
+    const {error: upErr} = await supa.storage.from('kaptura-guias').upload(path, file, {upsert:true});
+    if(upErr) { toast('Error subiendo archivo: '+upErr.message); return; }
+    const url = supa.storage.from('kaptura-guias').getPublicUrl(path).data.publicUrl;
+    const {error} = await supa.from('kaptura_liquidaciones').update({pdf_sii_url: url}).eq('id', id);
+    if(error) { toast('Error: '+error.message); return; }
+    toast('✓ Factura adjuntada — leyendo datos...');
+    // Intentar leer N° factura con Claude Vision
+    try {
+      const reader = new FileReader();
+      reader.onload = async function(ev) {
+        const b64 = ev.target.result.split(',')[1];
+        const mtype = file.type === 'application/pdf' ? 'application/pdf' : 'image/jpeg';
+        const resp = await fetch('https://api.anthropic.com/v1/messages', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({
+            model:'claude-haiku-4-5-20251001', max_tokens:200,
+            messages:[{role:'user', content:[
+              {type: mtype==='application/pdf'?'document':'image', source:{type:'base64',media_type:mtype,data:b64}},
+              {type:'text', text:'Lee esta factura y extrae SOLO: numero de folio/factura y fecha de emision. Responde SOLO en JSON: {"num_factura":"XXX","fecha_factura":"YYYY-MM-DD"}'}
+            ]}]
+          })
+        });
+        const data = await resp.json();
+        const txt = (data.content||[]).find(c=>c.type==='text')?.text||'';
+        try {
+          const parsed = JSON.parse(txt.replace(/```json|```/g,'').trim());
+          if(parsed.num_factura) {
+            await supa.from('kaptura_liquidaciones').update({
+              num_factura: parsed.num_factura,
+              fecha_factura: parsed.fecha_factura || null,
+              estado: 'facturada'
+            }).eq('id', id);
+            toast('✓ Factura N°'+parsed.num_factura+' detectada automáticamente');
+          }
+        } catch(e) { toast('✓ Factura adjuntada (lectura manual requerida)'); }
+        await cargarLiquidaciones();
+        verLiquidacion(id);
+      };
+      reader.readAsDataURL(file);
+    } catch(e) {
       await cargarLiquidaciones();
       verLiquidacion(id);
-    };
-    reader.readAsDataURL(file);
-  } catch(e) {
-    await cargarLiquidaciones();
-    verLiquidacion(id);
-  }
-}
-
-async function liqAdjuntarSII(id) {
-  // Modal con 3 opciones
-  const overlay = document.createElement('div');
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;display:flex;align-items:flex-end;justify-content:center';
-  overlay.innerHTML = `
-    <div style="background:var(--surface);border-radius:16px 16px 0 0;padding:24px 20px;width:100%;max-width:480px">
-      <div style="font-size:13px;font-weight:800;color:var(--gold);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:16px;text-align:center">📎 Adjuntar Factura</div>
-      <div style="display:flex;flex-direction:column;gap:10px">
-        <button id="liq-btn-archivo" style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:14px;font-size:13px;font-weight:700;color:var(--text);cursor:pointer;font-family:inherit;text-align:left">📁 Adjuntar archivo <span style="font-size:11px;color:var(--muted);font-weight:400;display:block;margin-top:2px">PDF o imagen desde tu dispositivo</span></button>
-        <button id="liq-btn-foto" style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:14px;font-size:13px;font-weight:700;color:var(--text);cursor:pointer;font-family:inherit;text-align:left">🖼 Pegar / subir foto <span style="font-size:11px;color:var(--muted);font-weight:400;display:block;margin-top:2px">Selecciona imagen desde galería</span></button>
-        <button id="liq-btn-camara" style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:14px;font-size:13px;font-weight:700;color:var(--text);cursor:pointer;font-family:inherit;text-align:left">📷 Tomar foto <span style="font-size:11px;color:var(--muted);font-weight:400;display:block;margin-top:2px">Abre la cámara del dispositivo</span></button>
-        <button id="liq-btn-cancelar" style="background:transparent;border:none;padding:10px;font-size:12px;color:var(--muted);cursor:pointer;font-family:inherit;font-weight:700">Cancelar</button>
-      </div>
-    </div>`;
-  document.body.appendChild(overlay);
-
-  const cerrarModal = () => document.body.removeChild(overlay);
-
-  const crearInput = (accept, capture) => {
-    const inp = document.createElement('input');
-    inp.type = 'file';
-    inp.accept = accept;
-    if(capture) inp.capture = capture;
-    inp.onchange = async () => { cerrarModal(); await _liqProcesarArchivo(id, inp.files[0]); };
-    return inp;
+    }
   };
-
-  overlay.querySelector('#liq-btn-archivo').onclick  = () => { cerrarModal(); crearInput('image/*,application/pdf', null).click(); };
-  overlay.querySelector('#liq-btn-foto').onclick     = () => { cerrarModal(); crearInput('image/*', null).click(); };
-  overlay.querySelector('#liq-btn-camara').onclick   = () => { cerrarModal(); crearInput('image/*', 'environment').click(); };
-  overlay.querySelector('#liq-btn-cancelar').onclick = () => cerrarModal();
-  overlay.onclick = (e) => { if(e.target === overlay) cerrarModal(); };
+  input.click();
 }
 
 
@@ -7538,7 +6800,7 @@ iniciarLogin();
 </div>
 
 <!-- MODAL DOCS -->
-<div class="overlay" id="modal-docs" style="display:none"><div class="modal"><div class="modal-hdr"><div><div class="modal-ttl" id="docs-titulo" style="font-size:15px;font-weight:900;text-transform:uppercase;letter-spacing:0.05em"></div><div class="modal-sub" id="docs-sub" style="font-size:15px;font-weight:900;text-transform:uppercase;letter-spacing:0.05em;color:var(--text);margin-top:2px"></div></div><button class="modal-cls" onclick="cerrar('modal-docs')">✕</button></div><div class="modal-body" id="docs-body"></div></div></div>
+<div class="overlay" id="modal-docs" style="display:none"><div class="modal"><div class="modal-hdr"><div><div class="modal-ttl">📎 Docs — <span id="docs-titulo"></span></div><div class="modal-sub" id="docs-sub"></div></div><button class="modal-cls" onclick="cerrar('modal-docs')">✕</button></div><div class="modal-body" id="docs-body"></div></div></div>
 
 <!-- MODAL EVALUACIÓN -->
 <div class="overlay" id="modal-evaluacion" style="display:none">
