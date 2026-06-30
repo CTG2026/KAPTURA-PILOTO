@@ -2976,7 +2976,7 @@ function puntosHTML(p, pi) {
       <select class="inp ${p.destino?'':'pend'}" style="${p.destino?'':'border-color:var(--orange)'}"
         id="dest-${pi}" onchange="setDestinoSelect(${pi},this.value)">
         <option value="">Selecciona destino...</option>
-        ${[...new Set((DB.tarifarios||[]).map(t=>t.destino).filter(Boolean))].sort().map(d=>`<option value="${d}" ${p.destino===d?'selected':''}>${d}</option>`).join('')}
+        ${(()=>{ const svcCliente = (DB.servicios[svcActivoIdx]?.cliente||'').toUpperCase(); const tarifsFiltrados = (DB.tarifarios||[]).filter(t=>(t.cliente||'').toUpperCase()===svcCliente); const destinos = [...new Set(tarifsFiltrados.map(t=>t.destino).filter(Boolean))].sort(); return destinos.map(d=>`<option value="${d}" ${p.destino===d?'selected':''}>${d}</option>`).join(''); })()} 
         <option value="__otro__" ${p.destino&&![...(DB.tarifarios||[]).map(t=>t.destino)].includes(p.destino)?'selected':''}>✏ Otro destino...</option>
       </select>
       ${p.destino && ![...(DB.tarifarios||[]).map(t=>t.destino)].includes(p.destino) ? `<input class="inp" style="margin-top:4px" value="${p.destino}" placeholder="Escribe el destino" id="dest-manual-${pi}" onblur="setDestino(${pi},this.value)">` : ''}
