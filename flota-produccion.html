@@ -268,9 +268,9 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
       <div style="overflow-x:auto"><table>
         <thead><tr>
           <th>ID</th><th style="white-space:nowrap;font-size:10px">F. Asignación</th><th style="white-space:nowrap;font-size:10px">F. Término</th><th>Patente</th><th>Conductor</th><th>Cliente</th>
-          <th>Origen</th><th>Destino</th><th>Guía</th><th>Tarifa $</th>
-          <th>Cant Ptos</th><th>Total Ptos $</th><th>Total Ingreso</th>
-          <th>Costos</th><th>Margen</th><th>Estado</th><th>Acciones</th>
+          <th>Origen</th><th>Destino</th><th>Guía</th><th class="th-financ">Tarifa $</th>
+          <th>Cant Ptos</th><th class="th-financ">Total Ptos $</th><th class="th-financ">Total Ingreso</th>
+          <th class="th-financ">Costos</th><th class="th-financ">Margen</th><th>Estado</th><th>Acciones</th>
         </tr></thead>
         <tbody id="tabla-svc"></tbody>
       </table></div>
@@ -2510,7 +2510,7 @@ function cardHTML(s,i) {
       ${pillHTML(s.estado)}
     </div>
     ${(()=>{
-      if(_sessionUsuario?.rol === 'conductor') return '';
+      if(!['coordinador','controller','administrador'].includes(_sessionUsuario?.rol)) return '';
       const tarifaVal = s.ingreso_total || s.tarifa_neta || 0;
       const costosVal = s.total_costos || 0;
       const margenVal = s.margen_servicio || (tarifaVal - costosVal) || 0;
@@ -2575,17 +2575,17 @@ function filaHTML(s,i) {
     <td>${s.origen||'—'}</td>
     <td style="font-weight:700">${destino}</td>
     <td style="font-size:12px;font-weight:700;color:var(--text)">${guia}</td>
-    <td style="font-weight:700;color:var(--green)">${tarifa}</td>
+    <td style="font-weight:700;color:var(--green)" class="td-financ">${tarifa}</td>
     <td style="text-align:center">${cantPtos}</td>
-    <td style="color:rgba(255,255,255,0.7)">${totalPtos}</td>
-    <td style="font-weight:700">${totalIng}</td>
-    <td>${costos}</td>
-    <td style="font-weight:700;color:${mColor}">${margen}</td>
+    <td style="color:rgba(255,255,255,0.7)" class="td-financ">${totalPtos}</td>
+    <td style="font-weight:700" class="td-financ">${totalIng}</td>
+    <td class="td-financ">${costos}</td>
+    <td style="font-weight:700;color:${mColor}" class="td-financ">${margen}</td>
     <td>${pillHTML(s.estado)}</td>
     <td><div style="display:flex;gap:4px;flex-wrap:wrap">
       ${s.estado==='asignado' ? `<button class="btn btn-navy btn-sm" onclick="iniciarSvc(${i})">▶ Iniciar</button>` : ''}
       ${['en_proceso','registrando'].includes(s.estado) ? `<button class="btn btn-purple btn-sm" onclick="verServicio(${i})">📋 Registrar</button>` : ''}
-      ${s.estado === 'borrador' ? `<button class="btn btn-purple btn-sm" onclick="verServicio(${i})">📋 Registrar</button>${_sessionUsuario?.rol !== 'conductor' ? `<button class="btn btn-green btn-sm" onclick="abrirCierre(${i})">🔒 Cierre</button>` : ''}` : (s.estado === 'ejecutado' && _sessionUsuario?.rol !== 'conductor') ? `<button class="btn btn-green btn-sm" onclick="abrirCierre(${i})">🔒 Cierre</button>` : ''}
+      ${s.estado === 'borrador' ? `<button class="btn btn-purple btn-sm" onclick="verServicio(${i})">📋 Registrar</button>${['coordinador','controller','administrador'].includes(_sessionUsuario?.rol) ? `<button class="btn btn-green btn-sm" onclick="abrirCierre(${i})">🔒 Cierre</button>` : ''}` : (s.estado === 'ejecutado' && ['coordinador','controller','administrador'].includes(_sessionUsuario?.rol)) ? `<button class="btn btn-green btn-sm" onclick="abrirCierre(${i})">🔒 Cierre</button>` : ''}
       ${s.estado==='cerrado' ? `<button class="btn btn-sm" style="background:rgba(201,168,76,0.15);color:var(--gold);border:1px solid rgba(201,168,76,0.3)" onclick="editarServicioCerrado(${i})">✏ Editar</button>` : ''}
       ${['confirmado','cerrado','borrador'].includes(s.estado) ? `<button class="btn btn-outline btn-sm" onclick="abrirInforme(${i})">📄 Informe</button>` : ''}
       ${(s._puntos||[]).some(p=>(p.guias||[]).length>0||p.num_guia) ? `<button class="btn btn-outline btn-sm" onclick="verGuias(${i})">🖼 Guías</button>` : ''}
@@ -5421,11 +5421,25 @@ async function iniciarLogin() {
           document.getElementById('tab-btn-setup').style.display = '';
         }
         if(sess.rol === 'despachador') {
-          // Despachador: solo ve servicios + botón asignar
+          // Despachador: solo ve servicios + botón asignar — sin datos financieros
           ['tab-btn-liquidaciones','tab-btn-flota','tab-btn-clientes','tab-btn-gastos',
            'tab-btn-resultados','tab-btn-informes','tab-btn-config','tab-btn-setup'].forEach(id => {
             const el = document.getElementById(id); if(el) el.style.display = 'none';
           });
+          // Forzar tab servicios activo
+          const btnSvcD = document.getElementById('tab-btn-servicios');
+          if(btnSvcD) setTab('servicios', btnSvcD);
+          // Ocultar contenido de setup fuera del div
+          const setupExtraD = document.getElementById('setup-costos-extra');
+          if(setupExtraD) setupExtraD.style.display = 'none';
+          // Ocultar KPIs financieros del dashboard
+          ['kpi-ingreso-mes','kpi-costos-mes','kpi-margen-teo','kpi-margen-prom','k-margen-real-kpi'].forEach(id => {
+            const el = document.getElementById(id); if(el) el.style.display = 'none';
+          });
+          // Ocultar columnas financieras de la tabla desktop
+          const styleDesp = document.createElement('style');
+          styleDesp.textContent = '.th-financ, .td-financ { display: none !important; }';
+          document.head.appendChild(styleDesp);
         }
         if(sess.rol === 'conductor') {
           // Ocultar tabs que no corresponden al conductor
