@@ -2431,8 +2431,7 @@ function cardHTML(s,i) {
         </div>
         <div class="svc-pat">${s.patente||'—'} · ${s.conductor||'—'}</div>
         <div class="svc-line" style="color:var(--g400)">${s.cliente||'—'}</div>
-        <div class="svc-line" style="font-weight:700;color:rgba(245,240,232,0.85)">${s.origen||'—'} → ${s.destino||(s._puntos||[]).find(p=>p.tipo==='final')?.destino||'—'}</div>
-        ${(()=>{const gs=(s._puntos||[]).flatMap(p=>(p.guias||[]).map(g=>g.num_guia)).filter(Boolean);return gs.length?`<div style="font-size:10px;color:var(--gold);margin-top:4px;font-weight:700">📄 Guía ${gs.join(' · ')}</div>`:s.num_guia?`<div style="font-size:10px;color:var(--gold);margin-top:4px;font-weight:700">📄 Guía ${s.num_guia}</div>`:''})()}
+        <div class="svc-line" style="font-weight:700;color:rgba(245,240,232,0.85)">${s.origen||'—'} → ${s.destino||(s._puntos||[]).find(p=>p.tipo==='final')?.destino||'—'}${(()=>{const gs=(s._puntos||[]).flatMap(p=>(p.guias||[]).map(g=>g.num_guia)).filter(Boolean);const guiaTxt=gs.length?gs.join(' · '):(s.num_guia||'');return guiaTxt?` <span style="color:var(--gold)">— Guía ${guiaTxt}</span>`:'';})()}</div>
       </div>
       ${pillHTML(s.estado)}
     </div>
