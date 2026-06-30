@@ -1068,14 +1068,7 @@ async function validarPinGo() {
     }
     if(usr.rol === 'admin_kaptura') { cargarPanelAdmin(); return; }
     if(['coordinador','controller','administrador'].includes(usr.rol)) {
-      // Verificar si tiene equipos — si no, completar onboarding primero
-      const {data: equipos} = await supa.from('kaptura_flota').select('id').eq('empresa', usr.empresa).eq('activo', true).limit(1);
-      if(!equipos || equipos.length === 0) {
-        // No tiene equipos — ir a completar configuración
-        window._flotaEmpresa = usr.empresa;
-        cargarConfigFlota(usr.empresa);
-        return;
-      }
+      // Ir directo a flota-produccion.html — la verificación de equipos se hace dentro de ese panel
       window.location.href = 'flota-produccion.html';
       return;
     }
