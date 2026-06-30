@@ -1083,6 +1083,10 @@ async function validarPinGo() {
       window.location.href = 'flota-produccion.html';
       return;
     }
+    if(usr.rol === 'despachador') {
+      window.location.href = 'flota-produccion.html';
+      return;
+    }
     showScreen('screen-modo');
   } else {
     // Verificar si es PIN de onboarding conductor de alguna empresa
