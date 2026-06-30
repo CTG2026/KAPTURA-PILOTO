@@ -1290,7 +1290,7 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
           <input class="inp" id="cos-litros-real" readonly style="color:#000;background:var(--green)">
           <div id="cos-rendimiento-cargas" style="font-size:10px;font-weight:700;color:var(--gold);margin-top:4px;display:none">
             📊 Rendimiento según cargas: <span id="cos-rend-valor">—</span> km/lt
-            <span style="font-size:9px;color:var(--g400);margin-left:4px">(<span id="cos-rend-km">—</span> km / <span id="cos-rend-lt">—</span> lt desde inicio Kaptura)</span>
+            <span style="font-size:9px;color:var(--g400);margin-left:4px">(<span id="cos-rend-km">—</span> km / <span id="cos-rend-lt">—</span> lt desde inicio)</span>
           </div>
         </div>
         <div class="fld"><label class="lbl">Combustible <span style="font-size:8px;font-weight:800;background:var(--gold);color:var(--text);padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-comb" oninput="calcCostos()" style=""></div>
@@ -2039,7 +2039,7 @@ async function actualizarFechaKaptura(patente, fecha) {
   if(error) { toast('Error: '+error.message); return; }
   const f = DB.flota.find(f=>f.patente===patente);
   if(f) f.fecha_inicio_kaptura = fecha;
-  toast(`✓ Fecha inicio Kaptura actualizada — ${patente}`);
+  toast(`✓ Fecha inicio actualizada — ${patente}`);
 }
 
 // ══ CARGA DE DATOS ══
@@ -2218,7 +2218,7 @@ async function procesarCopec(input) {
 const SUPA_URL = 'https://aqunzrukuruwzwywnurq.supabase.co';
 const SUPA_KEY = 'sb_publishable_70t9UxFlcqYDj7AMybsrHg__IMGNA8C';
 const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
-const KAPTURA_VERSION = '8.1';
+const KAPTURA_VERSION = '';
 const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 const hoy = new Date();
 const hoyStr = new Date().toLocaleDateString('en-CA', {timeZone:'America/Santiago'});
@@ -2604,7 +2604,7 @@ function renderFlota() {
         <span class="pill p-confirmado">Activo</span>
       </div>
       <div style="margin-top:8px;display:flex;align-items:center;gap:8px;font-size:11px">
-        <label style="color:var(--g400);font-weight:700;white-space:nowrap">Inicio Kaptura:</label>
+        <label style="color:var(--g400);font-weight:700;white-space:nowrap">Fecha Inicio:</label>
         <input type="date" value="${f.fecha_inicio_kaptura||''}" style="border:1px solid var(--g200);border-radius:4px;padding:3px 6px;font-size:11px"
           onchange="actualizarFechaKaptura('${f.patente}',this.value)">
       </div>
@@ -4809,7 +4809,7 @@ async function abrirInforme(i) {
 function imprimirInforme() {
   const body = document.getElementById('inf-body').innerHTML;
   const win = window.open('','_blank');
-  win.document.write(`<html><head><title>Informe Kaptura</title>
+  win.document.write(`<html><head><title>Informe Global Solutions</title>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
       :root{--gold:#C9A84C;--green:#7EA87E;--danger:#B05A5A;--text:#F5F0E8;--bg:#1A2120;--surface:#212B2A;--border:#2E3D3B;--muted:rgba(245,240,232,0.4)}
