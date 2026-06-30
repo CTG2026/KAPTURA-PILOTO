@@ -3415,10 +3415,19 @@ async function irACostos() {
       if(teoIda && !teoIda.value) teoIda.value = tarMatch.km_ida||0;
       if(teoVta && !teoVta.value) teoVta.value = tarMatch.km_vuelta||0;
     }
+    // Precargar peajes habituales desde tarifario si no hay valor manual
+    if(tarMatch && tarMatch.peajes_habituales) {
+      const elPeajes = document.getElementById('cos-peajes');
+      if(elPeajes && !elPeajes.dataset.manual) {
+        elPeajes.value = tarMatch.peajes_habituales;
+      }
+    }
   }
   // Mantención: km × (mant_costo ÷ mant_km) — se calcula en calcCostos() con km reales, aquí = 0
   const sueldoDiario = getCfgNum(['sueldo_diario','sueldo_conductor']) || 33000;
-  const viaticoDia   = getCfgNum(['viatico_dia','viatico']);
+  // Viático: buscar primero clave con sufijo empresa para evitar contaminación de clave global
+  const emp2 = DB._empresa || _sessionUsuario?.empresa || '';
+  const viaticoDia = parseInt(c['viatico_dia_'+emp2] || c['viatico_dia'] || c['viatico'] || 0);
   document.getElementById('cos-conductor').value = fmt(dias * sueldoDiario);
   // Costo fijo prorrateo: cfDia × días ÷ equipos en servicio ese día
   const equiposIni = parseInt(document.getElementById('cos-equipos')?.value)||1;
@@ -3463,13 +3472,13 @@ let _integrando = false;
 function calcCostoFijoEquipos() {
   var equipos = parseInt(document.getElementById('cos-equipos')?.value)||1;
   var c       = DB.config;
+  var emp3    = DB._empresa || (_sessionUsuario && _sessionUsuario.empresa) || '';
   var dias    = parseFloat(document.getElementById('cos-dias')?.value)||1;
-  var cfMens  = parseInt(c.costo_fijo_mensual||c.costo_fijo_mes||0);
-  var diasOp  = parseInt(c.dias_operativos||20);
-  // Si hay costo mensual, calcular diario desde mensual ÷ días operativos
-  // Si no hay mensual, usar costo_fijo_dia directamente (pero solo si es razonable)
-  var cfDia   = cfMens > 0 ? Math.round(cfMens/diasOp) : parseInt(c.costo_fijo_dia||0);
-  var cfProrr = cfDia > 0 ? Math.round((cfDia * dias) / equipos) : 0;
+  // Preferir clave con sufijo empresa para evitar contaminación global
+  var cfMens  = parseInt(c['costo_fijo_mensual_'+emp3] || c.costo_fijo_mensual || c.costo_fijo_mes || 0);
+  var diasOp  = parseInt(c['dias_operativos_'+emp3] || c.dias_operativos || 20);
+  var cfDiaBase = cfMens > 0 ? Math.round(cfMens/diasOp) : parseInt(c['costo_fijo_dia_'+emp3] || c.costo_fijo_dia || 0);
+  var cfProrr = cfDiaBase > 0 ? Math.round((dias * cfDiaBase) / equipos) : 0;
   var cfEl    = document.getElementById('cos-cf');
   if(cfEl) { cfEl.dataset.manual = '1'; cfEl.value = cfProrr; }
 }
