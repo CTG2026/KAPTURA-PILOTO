@@ -3261,12 +3261,17 @@ function confirmarEjecucion() {
 async function guardarEjecucion() {
   const s = DB.servicios[svcActivoIdx];
   if(!s?.id) { toast('Error: sin ID'); return; }
+  // Validar que exista al menos un punto final
+  const puntos = puntosData.length > 0 ? puntosData : (s._puntos||[]);
+  const pFinal = puntos.find(p => p.tipo === 'final');
+  if(!pFinal) { toast('⚠ Debes marcar al menos un punto como 🏁 Destino Final antes de guardar'); return; }
+  if(!pFinal.destino) { toast('⚠ El punto final debe tener un destino seleccionado'); return; }
   const fechaTerm = document.getElementById('ejec-fecha-termino').value;
   const retorno   = document.getElementById('ejec-retorno').value;
-  const puntos = puntosData.length > 0 ? puntosData : (s._puntos||[]);
   const puntosJSON = JSON.stringify(puntos.map(p=>({tipo:p.tipo,destino:p.destino,valor:p.valor||0,num_guia:p.num_guia||'',guias:p.guias||[]})));
   const {error} = await supa.from('servicios_piloto').update({
     estado:'ejecutado',
+    destino: pFinal.destino,
     hora_termino: fechaTerm ? fechaTerm+'T23:59:00' : null,
     notas: `Retorno: ${retorno}|_PUNTOS:${puntosJSON}`
   }).eq('id',s.id);
