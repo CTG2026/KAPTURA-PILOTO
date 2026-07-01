@@ -422,8 +422,9 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
       <button class="btn btn-sm btn-ghost" id="liq-fil-borrador" onclick="filtrarLiquidaciones('borrador')">Borrador</button>
       <button class="btn btn-sm btn-ghost" id="liq-fil-emitida" onclick="filtrarLiquidaciones('emitida')">Emitidas</button>
       <button class="btn btn-sm btn-ghost" id="liq-fil-enviada" onclick="filtrarLiquidaciones('enviada')">Enviadas</button>
+      <button class="btn btn-sm btn-ghost" id="liq-fil-aprobada" onclick="filtrarLiquidaciones('aprobada')">Aprobadas</button>
+      <button class="btn btn-sm btn-ghost" id="liq-fil-facturada" onclick="filtrarLiquidaciones('facturada')">Facturadas</button>
       <button class="btn btn-sm btn-ghost" id="liq-fil-en_cobro" onclick="filtrarLiquidaciones('en_cobro')">En Cobro</button>
-      <button class="btn btn-sm btn-ghost" id="liq-fil-por_cobrar" onclick="filtrarLiquidaciones('por_cobrar')">Por Cobrar</button>
       <button class="btn btn-sm btn-ghost" id="liq-fil-cobrada" onclick="filtrarLiquidaciones('cobrada')">Cobradas</button>
     </div>
     <!-- Lista liquidaciones -->
@@ -531,6 +532,46 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
       </div>
       <div class="modal-body" id="ver-liq-body"></div>
       <div class="modal-ftr" id="ver-liq-ftr"></div>
+    </div>
+  </div>
+
+  <!-- MODAL EDITAR SERVICIOS DE LIQUIDACIÓN -->
+  <div id="modal-editar-liq-servicios" class="overlay" style="display:none">
+    <div class="modal" style="max-width:700px">
+      <div class="modal-hdr">
+        <div>
+          <div class="modal-ttl">Editar Servicios</div>
+          <div class="modal-sub" id="liqe-numero-sub"></div>
+        </div>
+        <button class="modal-cls" onclick="cerrar('modal-editar-liq-servicios')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="section-ttl">Servicios disponibles del cliente</div>
+        <div id="liqe-servicios-lista" style="margin-bottom:12px"></div>
+        <div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:14px">
+          <div class="section-ttl">Resumen</div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+            <span style="color:var(--muted);font-size:12px">Servicios seleccionados</span>
+            <span id="liqe-cant-svc" style="font-weight:700;color:var(--text)">0</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+            <span style="color:var(--muted);font-size:12px">Monto neto</span>
+            <span id="liqe-monto-neto" style="font-weight:700;color:var(--text)">$0</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+            <span style="color:var(--muted);font-size:12px">IVA 19%</span>
+            <span id="liqe-iva" style="font-weight:700;color:var(--text)">$0</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding-top:8px;border-top:1px solid var(--border)">
+            <span style="font-size:13px;font-weight:800;color:var(--gold)">TOTAL</span>
+            <span id="liqe-total" style="font-size:18px;font-weight:900;color:var(--gold)">$0</span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-ftr">
+        <button class="btn btn-ghost" onclick="cerrar('modal-editar-liq-servicios')">Cancelar</button>
+        <button class="btn btn-navy" onclick="liqGuardarEdicionServicios()">✓ Guardar Cambios</button>
+      </div>
     </div>
   </div>
 
@@ -6262,7 +6303,7 @@ function renderLiquidaciones() {
   }
   lista.innerHTML = items.map(l => {
     // Calcular semáforo de vencimiento
-    const cobrada = ['cobrada','factoring'].includes(l.estado);
+    const cobrada = l.estado === 'cobrada';
     let lineColor = '#2E3D3B'; // default borde
     let badgeTxt = (l.estado||'').replace('_',' ').toUpperCase();
     let badgeBg  = 'rgba(245,240,232,0.1)';
@@ -6467,7 +6508,7 @@ async function guardarLiquidacion(estado) {
   const usaFactoring = document.getElementById('liq-usa-factoring').checked;
   const factPct = parseFloat(document.getElementById('liq-factoring-pct').value)||0;
   const factCosto = usaFactoring ? Math.round(total * factPct / 100) : 0;
-  const estadoFinal = usaFactoring && estado === 'emitida' ? 'factoring' : (estado === 'emitida' ? 'por_cobrar' : 'borrador');
+  const estadoFinal = estado === 'emitida' ? 'emitida' : 'borrador';
 
   const {error} = await supa.from('kaptura_liquidaciones').insert({
     numero,
@@ -6502,7 +6543,7 @@ async function verLiquidacion(id) {
   document.getElementById('ver-liq-numero').textContent = liq.numero;
   document.getElementById('ver-liq-sub').textContent = liq.cliente+' · '+liq.fecha_emision;
   
-  const estadoColor = {borrador:'var(--muted)',emitida:'var(--gold)',factoring:'#a78bfa',por_cobrar:'var(--green)',cobrada:'var(--muted)'};
+  const estadoColor = {borrador:'var(--muted)',emitida:'var(--gold)',enviada:'#a78bfa',aprobada:'#3B9DE0',facturada:'#BA7517',en_cobro:'#EF9F27',cobrada:'var(--green)'};
   
   document.getElementById('ver-liq-body').innerHTML = `
     <div style="background:var(--bg);border-radius:8px;padding:12px;margin-bottom:14px;border:1px solid var(--border)">
@@ -6527,19 +6568,23 @@ async function verLiquidacion(id) {
         </div>
         ${s.num_guia ? `<div style="font-size:10px;color:var(--muted);margin-top:3px">Guía: ${s.num_guia}</div>` : ''}
       </div>`).join('')}
-    ${liq.pdf_sii_url ? `<div style="margin-top:10px"><a href="${liq.pdf_sii_url}" target="_blank" style="color:var(--gold);font-size:12px;font-weight:700">📄 Ver Factura SII adjunta</a></div>` : ''}`;
+    ${liq.num_factura ? `<div style="margin-top:10px;font-size:12px;color:var(--text)"><span style="color:var(--muted)">N° Factura:</span> <span style="font-weight:800;color:var(--gold)">${liq.num_factura}</span></div>` : ''}
+    ${liq.pdf_sii_url ? `<div style="margin-top:6px"><a href="${liq.pdf_sii_url}" target="_blank" style="color:var(--gold);font-size:12px;font-weight:700">📄 Ver Factura SII adjunta</a></div>` : ''}`;
 
   // Botones según estado
+  const cliDataLiq = DB.clientes.find(c => c.nombre === liq.cliente);
+  const requiereAprobLiq = !!cliDataLiq?.requiere_aprobacion;
   const btns = {
     borrador: `<button class="btn btn-ghost" onclick="cerrar('modal-ver-liq')">Cerrar</button>
+      <button class="btn btn-outline" onclick="liqEditarServicios('${id}')">✏️ Editar Servicios</button>
       <button class="btn btn-outline" onclick="liqAdjuntarSII('${id}')">📎 Adjuntar Factura</button>
       <button class="btn btn-navy" onclick="liqCambiarEstado('${id}','emitida')">Emitir →</button>`,
     emitida: `<button class="btn btn-ghost" onclick="cerrar('modal-ver-liq')">Cerrar</button>
       <button class="btn btn-outline" onclick="liqAdjuntarSII('${id}')">📎 Adjuntar Factura</button>
       <button class="btn btn-navy" onclick="liqCambiarEstado('${id}','enviada')">📤 Enviada al Cliente</button>`,
     enviada: `<button class="btn btn-ghost" onclick="cerrar('modal-ver-liq')">Cerrar</button>
-      <button class="btn btn-outline" onclick="liqCambiarEstado('${id}','aprobada')">✓ Aprobada por Cliente</button>
-      <button class="btn btn-navy" onclick="liqCambiarEstado('${id}','facturada')">🧾 Saltar a Facturada</button>`,
+      <button class="btn btn-navy" onclick="liqCambiarEstado('${id}','aprobada')">✓ Aprobada por Cliente</button>
+      ${requiereAprobLiq ? '' : `<button class="btn btn-outline" onclick="liqCambiarEstado('${id}','facturada')">🧾 Saltar a Facturada</button>`}`,
     aprobada: `<button class="btn btn-ghost" onclick="cerrar('modal-ver-liq')">Cerrar</button>
       <button class="btn btn-outline" onclick="liqAdjuntarSII('${id}')">📎 Adjuntar Factura SII</button>
       <button class="btn btn-navy" onclick="liqRegistrarFactura('${id}')">🧾 Registrar Factura</button>`,
@@ -6559,6 +6604,89 @@ async function verLiquidacion(id) {
   document.getElementById('modal-ver-liq').style.display = 'flex';
 }
 
+let _liqEditIdActual = null;
+let _liqEditSvcsSeleccionados = [];
+
+function liqEditarServicios(id) {
+  const liq = _liqData.find(l => l.id === id);
+  if(!liq) return;
+  if(liq.estado !== 'borrador') { toast('Solo se pueden editar servicios en estado BORRADOR'); return; }
+
+  _liqEditIdActual = id;
+  _liqEditSvcsSeleccionados = [];
+
+  document.getElementById('liqe-numero-sub').textContent = liq.numero+' · '+liq.cliente;
+
+  // Servicios disponibles: cerrados del cliente + los que ya están en esta liquidación (aunque ya no estén 'cerrado')
+  const idsActuales = liq.servicios_ids || [];
+  const svcs = DB.servicios.filter(s =>
+    (s.cliente||'').toLowerCase() === (liq.cliente||'').toLowerCase() &&
+    (s.estado === 'cerrado' || idsActuales.includes(s.id))
+  );
+
+  const lista = document.getElementById('liqe-servicios-lista');
+  if(!svcs.length) {
+    lista.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:10px 0">No hay servicios disponibles para este cliente</div>';
+  } else {
+    lista.innerHTML = svcs.map(s => `
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;margin-bottom:5px">
+        <input type="checkbox" data-id="${s.id}" data-ingreso="${s.ingreso_total||s.tarifa_neta||0}" data-svcid="${s.servicio_id}" ${idsActuales.includes(s.id)?'checked':''} onchange="liqEditActualizarSeleccion()" style="width:16px;height:16px;accent-color:var(--gold)">
+        <div style="flex:1">
+          <div style="font-size:12px;font-weight:800;color:var(--gold)">${s.servicio_id}</div>
+          <div style="font-size:11px;color:var(--muted)">${s.fecha||''} · ${s.origen||''} → ${s.destino||''} · ${s.conductor||''}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:13px;font-weight:800;color:var(--text)">$${Number(s.ingreso_total||s.tarifa_neta||0).toLocaleString('es-CL')}</div>
+          <div style="font-size:10px;color:var(--muted)">${s.num_guia ? 'Guía: '+s.num_guia : 'Sin guía'}</div>
+        </div>
+      </div>`).join('');
+  }
+
+  liqEditActualizarSeleccion();
+  cerrar('modal-ver-liq');
+  document.getElementById('modal-editar-liq-servicios').style.display = 'flex';
+}
+
+function liqEditActualizarSeleccion() {
+  const checks = document.querySelectorAll('#liqe-servicios-lista input[type=checkbox]:checked');
+  _liqEditSvcsSeleccionados = Array.from(checks).map(c => ({id: c.dataset.id, svcid: c.dataset.svcid, ingreso: parseInt(c.dataset.ingreso)||0}));
+
+  const neto = _liqEditSvcsSeleccionados.reduce((a,s) => a + s.ingreso, 0);
+  const iva  = Math.round(neto * 0.19);
+  const total = neto + iva;
+
+  document.getElementById('liqe-cant-svc').textContent = _liqEditSvcsSeleccionados.length;
+  document.getElementById('liqe-monto-neto').textContent = '$'+neto.toLocaleString('es-CL');
+  document.getElementById('liqe-iva').textContent = '$'+iva.toLocaleString('es-CL');
+  document.getElementById('liqe-total').textContent = '$'+total.toLocaleString('es-CL');
+}
+
+async function liqGuardarEdicionServicios() {
+  if(!_liqEditIdActual) return;
+  if(_liqEditSvcsSeleccionados.length === 0) { toast('Selecciona al menos un servicio'); return; }
+
+  const liq = _liqData.find(l => l.id === _liqEditIdActual);
+  const neto = _liqEditSvcsSeleccionados.reduce((a,s) => a + s.ingreso, 0);
+  const iva  = Math.round(neto * 0.19);
+  const total = neto + iva;
+  const updates = {
+    servicios_ids: _liqEditSvcsSeleccionados.map(s => s.id),
+    monto_neto: neto,
+    iva,
+    total
+  };
+  if(liq?.factoring) {
+    const pct = liq.factoring_pct || 0;
+    updates.factoring_costo = Math.round(total * pct / 100);
+  }
+
+  const {error} = await supa.from('kaptura_liquidaciones').update(updates).eq('id', _liqEditIdActual);
+  if(error) { toast('Error: '+error.message); return; }
+  toast('✓ Servicios de la liquidación actualizados');
+  cerrar('modal-editar-liq-servicios');
+  await cargarLiquidaciones();
+}
+
 async function liqCambiarEstado(id, nuevoEstado) {
   const hoy = new Date().toISOString().split('T')[0];
   const extra = {};
@@ -6576,10 +6704,22 @@ async function liqCambiarEstado(id, nuevoEstado) {
 async function liqRegistrarFactura(id) {
   const numFact = prompt('N° de Factura SII:');
   if(!numFact) return;
+  const montoStr = prompt('Monto total de la factura ($):');
+  if(montoStr === null) return;
+  const montoFactura = parseInt(String(montoStr).replace(/[^\d]/g,'')) || 0;
+  const liq = _liqData.find(l => l.id === id);
+  const totalLiq = liq?.total || 0;
   const hoy = new Date().toISOString().split('T')[0];
-  const {error} = await supa.from('kaptura_liquidaciones').update({
-    estado:'facturada', num_factura:numFact, fecha_factura:hoy
-  }).eq('id', id);
+  const updates = { estado:'facturada', num_factura:numFact, fecha_factura:hoy };
+
+  if(montoFactura > 0 && Math.abs(montoFactura - totalLiq) > 1) {
+    const continuar = confirm('El monto de la factura ($'+montoFactura.toLocaleString('es-CL')+') no coincide con el total de la liquidación ($'+totalLiq.toLocaleString('es-CL')+'). ¿Continuar de todas formas?');
+    if(!continuar) return;
+    const notaDiscrepancia = '⚠️ Discrepancia factura: monto factura $'+montoFactura.toLocaleString('es-CL')+' vs total liquidación $'+totalLiq.toLocaleString('es-CL')+' (registrado '+hoy.split('-').reverse().join('/')+')';
+    updates.notas = (liq?.notas ? liq.notas+'\n' : '') + notaDiscrepancia;
+  }
+
+  const {error} = await supa.from('kaptura_liquidaciones').update(updates).eq('id', id);
   if(error) { toast('Error: '+error.message); return; }
   toast('✓ Factura N°'+numFact+' registrada');
   cerrar('modal-ver-liq');
@@ -6634,7 +6774,7 @@ async function liqAdjuntarSII(id) {
             model:'claude-haiku-4-5-20251001', max_tokens:200,
             messages:[{role:'user', content:[
               {type: mtype==='application/pdf'?'document':'image', source:{type:'base64',media_type:mtype,data:b64}},
-              {type:'text', text:'Lee esta factura y extrae SOLO: numero de folio/factura y fecha de emision. Responde SOLO en JSON: {"num_factura":"XXX","fecha_factura":"YYYY-MM-DD"}'}
+              {type:'text', text:'Lee esta factura y extrae SOLO: numero de folio/factura, fecha de emision y monto total (con IVA incluido). Responde SOLO en JSON: {"num_factura":"XXX","fecha_factura":"YYYY-MM-DD","monto_total":0}'}
             ]}]
           })
         });
@@ -6643,11 +6783,22 @@ async function liqAdjuntarSII(id) {
         try {
           const parsed = JSON.parse(txt.replace(/```json|```/g,'').trim());
           if(parsed.num_factura) {
-            await supa.from('kaptura_liquidaciones').update({
+            const liq = _liqData.find(l => l.id === id);
+            const totalLiq = liq?.total || 0;
+            const montoFactura = parseInt(parsed.monto_total) || 0;
+            const updates = {
               num_factura: parsed.num_factura,
               fecha_factura: parsed.fecha_factura || null,
               estado: 'facturada'
-            }).eq('id', id);
+            };
+            if(montoFactura > 0 && Math.abs(montoFactura - totalLiq) > 1) {
+              const continuar = confirm('La factura leída dice $'+montoFactura.toLocaleString('es-CL')+' y la liquidación totaliza $'+totalLiq.toLocaleString('es-CL')+'. ¿Registrar factura N°'+parsed.num_factura+' igual?');
+              if(!continuar) { await cargarLiquidaciones(); verLiquidacion(id); return; }
+              const hoyNota = new Date().toISOString().split('T')[0];
+              const notaDiscrepancia = '⚠️ Discrepancia factura: monto factura $'+montoFactura.toLocaleString('es-CL')+' vs total liquidación $'+totalLiq.toLocaleString('es-CL')+' (registrado '+hoyNota.split('-').reverse().join('/')+')';
+              updates.notas = (liq?.notas ? liq.notas+'\n' : '') + notaDiscrepancia;
+            }
+            await supa.from('kaptura_liquidaciones').update(updates).eq('id', id);
             toast('✓ Factura N°'+parsed.num_factura+' detectada automáticamente');
           }
         } catch(e) { toast('✓ Factura adjuntada (lectura manual requerida)'); }
