@@ -163,7 +163,7 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
 
 <header class="hdr">
   <div style="display:flex;flex-direction:column">
-    <div class="logo">KAPTURA</div>
+    <div class="logo" id="hdr-logo">KAPTURA</div>
     <div id="hdr-empresa" style="font-size:11px;font-weight:800;color:var(--gold);letter-spacing:0.05em;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:55vw"></div>
   </div>
   <div style="display:flex;align-items:center;gap:12px">
@@ -5468,6 +5468,7 @@ async function iniciarLogin() {
         document.getElementById('login-screen').style.display = 'none';
         document.getElementById('pantalla-modulos').style.display = 'none';
         document.getElementById('btn-cerrar-sesion').style.display = 'block';
+        document.getElementById('hdr-logo').textContent = (sess.empresa === 'global_solutions') ? 'GLOBAL SOLUTIONS' : 'KAPTURA';
         document.getElementById('hdr-empresa').textContent = sess.nombre || sess.empresa || 'KAPTURA FLOTA';
         document.getElementById('loading').style.display = 'flex';
         document.getElementById('main').style.display = '';
@@ -5582,6 +5583,7 @@ function aplicarAccesoKaptura() {
   // Ocultar login
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('btn-cerrar-sesion').style.display = 'block';
+  document.getElementById('hdr-logo').textContent = (_sessionUsuario?.empresa === 'global_solutions') ? 'GLOBAL SOLUTIONS' : 'KAPTURA';
   // Nombre empresa en header
   const empNombre = (_sessionUsuario?.empresa||'') === 'transportes_madrid' ? 'TRANSPORTES MADRID' : 'GLOBAL SOLUTIONS';
   document.getElementById('hdr-empresa').textContent = empNombre;
