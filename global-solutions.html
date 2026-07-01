@@ -181,6 +181,7 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
   <button class="ntab" id="tab-btn-resultados" onclick="setTab('resultados',this)">Resultados</button>
   <button class="ntab" id="tab-btn-informes" onclick="setTab('informes',this)">Informes</button>
   <button class="ntab" id="tab-btn-config" onclick="setTab('config',this)">Config</button>
+  <button class="ntab" id="tab-btn-disponibilidad" onclick="setTab('disponibilidad',this)">Disponibilidad</button>
   <button class="ntab" id="tab-btn-setup" onclick="setTab('setup',this)" style="display:none">Setup</button>
 </nav>
 
@@ -298,6 +299,12 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
       </div>
     </div>
     <div id="lista-clientes"></div>
+  </div>
+
+  <!-- TAB DISPONIBILIDAD -->
+  <div id="tab-disponibilidad" style="display:none">
+    <div class="sec-ttl" style="margin-bottom:12px">Disponibilidad y Ocupación Diaria</div>
+    <div id="disponibilidad-content"></div>
   </div>
 
   <!-- TAB COSTOS -->
@@ -5349,7 +5356,7 @@ async function recalcRendimientoCargas() {
 
 // ══ UTILS ══
 function setTab(nombre, btn) {
-  ['servicios','flota','clientes','gastos','liquidaciones','resultados','informes','config','setup'].forEach(t => {
+  ['servicios','flota','clientes','gastos','liquidaciones','resultados','informes','config','setup','disponibilidad'].forEach(t => {
     const el = document.getElementById(`tab-${t}`);
     if(el) el.style.display = t===nombre ? 'block' : 'none';
   });
@@ -5360,6 +5367,7 @@ function setTab(nombre, btn) {
   if(nombre==='informes') renderInformes();
   if(nombre==='setup') cargarSetup();
   if(nombre==='liquidaciones') cargarLiquidaciones();
+  if(nombre==='disponibilidad') cargarDisponibilidad();
   // Mostrar/ocultar botón fijo SETUP
   const btnFijo = document.getElementById('btn-setup-fixed');
   if(btnFijo) btnFijo.style.display = nombre==='setup' ? 'block' : 'none';
@@ -6246,6 +6254,183 @@ async function setupGuardarTodo() {
   } finally {
     if(btn) { btn.textContent = 'GUARDAR TODA LA CONFIGURACIÓN ✓'; btn.disabled = false; }
   }
+}
+
+// ══════════════════════════════════════
+// ══════════════════════════════════════
+// DISPONIBILIDAD Y OCUPACIÓN DIARIA
+// ══════════════════════════════════════
+
+let _dispData = {};
+let _dispForm = {};
+
+async function cargarDisponibilidad() {
+  const emp = DB._empresa || _sessionUsuario?.empresa;
+  if(!emp || !supa) return;
+  try {
+    const { data, error } = await supa.from('disponibilidad').select('*').eq('empresa', emp).order('fecha', {ascending:false});
+    if(error) { console.warn('Error cargar disponibilidad:', error); return; }
+    const disp = {};
+    (data||[]).forEach(r => {
+      if(!disp[r.fecha]) disp[r.fecha] = {};
+      disp[r.fecha][r.patente] = {
+        estado: r.estado||'', conductor: r.conductor||'', cliente: r.cliente||'',
+        tipoMant: r.tipo_mant||'', mantManual: r.mant_manual||''
+      };
+    });
+    _dispData = disp;
+  } catch(e) { console.warn('Error cargar disponibilidad:', e); }
+  renderDisponibilidad();
+}
+
+function dispActualizarForm(campo, valor) {
+  _dispForm[campo] = valor;
+  renderDisponibilidad();
+}
+
+function renderDisponibilidad() {
+  const cont = document.getElementById('disponibilidad-content');
+  if(!cont) return;
+
+  const FLOTA = (DB.flota||[]).map(f=>f.patente).filter(Boolean);
+  const conductores = (DB.conductores||[]).map(c=>c.nombre).filter(Boolean);
+  const clientes = (DB.clientes||[]).map(c=>c.nombre).filter(Boolean);
+  const ESTADOS = ['Disponible','En servicio','Mantención'];
+  const TIPOS_MANT = ['Frenos','Caja de cambios','Motor','Suspensión','Eléctrico','Neumáticos','Diferencial','Embrague','Dirección','Preventivo','Puesta en marcha','Otro'];
+  const ESTADO_COLOR = {
+    'Disponible':  { bg:'rgba(76,175,122,0.15)',  text:'var(--green)' },
+    'En servicio': { bg:'rgba(59,157,224,0.15)',  text:'#3B9DE0' },
+    'Mantención':  { bg:'var(--gold-dim)',        text:'var(--gold)' },
+    '':            { bg:'var(--surface2)',        text:'var(--muted)' },
+  };
+
+  const fd = _dispForm;
+  const hoyISO = (() => { const h=new Date(); return `${h.getFullYear()}-${String(h.getMonth()+1).padStart(2,'0')}-${String(h.getDate()).padStart(2,'0')}`; })();
+
+  const formHTML = `<div style="padding:14px 16px;background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:14px">
+    <div style="font-size:11px;font-weight:800;color:var(--gold);letter-spacing:0.05em;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border)">REGISTRAR ESTADO DE EQUIPO</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+      <div>
+        <div style="font-size:10px;font-weight:700;color:var(--muted);margin-bottom:3px">FECHA</div>
+        <input class="inp" id="disp_fecha" type="date" value="${fd.fecha||hoyISO}" onchange="dispActualizarForm('fecha', this.value)">
+      </div>
+      <div>
+        <div style="font-size:10px;font-weight:700;color:var(--muted);margin-bottom:3px">PATENTE</div>
+        <select class="inp" id="disp_patente" onchange="dispActualizarForm('patente', this.value)">
+          <option value="">Seleccionar...</option>
+          ${FLOTA.map(p=>`<option value="${p}" ${fd.patente===p?'selected':''}>${p}</option>`).join('')}
+        </select>
+      </div>
+      <div>
+        <div style="font-size:10px;font-weight:700;color:var(--muted);margin-bottom:3px">ESTADO</div>
+        <select class="inp" id="disp_estado" onchange="dispActualizarForm('estado', this.value)">
+          <option value="">Seleccionar...</option>
+          ${ESTADOS.map(e=>`<option value="${e}" ${fd.estado===e?'selected':''}>${e}</option>`).join('')}
+        </select>
+      </div>
+      ${fd.estado==='En servicio' ? `<div>
+        <div style="font-size:10px;font-weight:700;color:var(--muted);margin-bottom:3px">CONDUCTOR</div>
+        <select class="inp" id="disp_conductor" onchange="dispActualizarForm('conductor', this.value)">
+          <option value="">Seleccionar...</option>
+          ${conductores.map(c=>`<option value="${c}" ${fd.conductor===c?'selected':''}>${c}</option>`).join('')}
+        </select>
+      </div>
+      <div>
+        <div style="font-size:10px;font-weight:700;color:var(--muted);margin-bottom:3px">CLIENTE</div>
+        <select class="inp" id="disp_cliente" onchange="dispActualizarForm('cliente', this.value)">
+          <option value="">Seleccionar...</option>
+          ${clientes.map(c=>`<option value="${c}" ${fd.cliente===c?'selected':''}>${c}</option>`).join('')}
+        </select>
+      </div>` : ''}
+      ${fd.estado==='Mantención' ? `<div>
+        <div style="font-size:10px;font-weight:700;color:var(--muted);margin-bottom:3px">TIPO MANTENCIÓN</div>
+        <select class="inp" id="disp_tipo_mant" onchange="dispActualizarForm('tipoMant', this.value)">
+          <option value="">Seleccionar tipo...</option>
+          ${TIPOS_MANT.map(t=>`<option value="${t}" ${fd.tipoMant===t?'selected':''}>${t}</option>`).join('')}
+        </select>
+        ${fd.tipoMant==='Otro' ? `<input class="inp" id="disp_mant_manual" value="${fd.mantManual||''}" onchange="dispActualizarForm('mantManual', this.value)" placeholder="Describir mantención..." style="margin-top:6px">` : ''}
+      </div>` : ''}
+    </div>
+    <button class="btn btn-navy" onclick="guardarDisponibilidad()" style="width:100%">💾 Guardar registro</button>
+  </div>`;
+
+  const todasFechas = Object.keys(_dispData).sort((a,b) => new Date(b) - new Date(a));
+  const registrosHTML = todasFechas.length === 0 ? `<div style="text-align:center;color:var(--muted);font-size:12px;padding:20px">Sin registros aún</div>` :
+  todasFechas.map(fecha => {
+    const regs = _dispData[fecha] || {};
+    const patentes = Object.keys(regs);
+    if(patentes.length===0) return '';
+    const isOpen = !!_dispForm[`hist_${fecha}`];
+    const enServ = patentes.filter(p=>regs[p].estado==='En servicio').length;
+    const disp = patentes.filter(p=>regs[p].estado==='Disponible').length;
+    const mant = patentes.filter(p=>regs[p].estado==='Mantención').length;
+    const ocup = FLOTA.length>0 ? Math.round((enServ/FLOTA.length)*100) : 0;
+    const fechaLabel = new Date(fecha+'T00:00:00').toLocaleDateString('es-CL');
+
+    return `<div style="border:1px solid var(--border);border-radius:8px;margin-bottom:6px;overflow:hidden;background:var(--surface)">
+      <div onclick="dispActualizarForm('hist_${fecha}', ${!isOpen})" style="padding:10px 12px;cursor:pointer;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:12px;font-weight:700;color:var(--text)">📅 ${fechaLabel}</span>
+        <div style="display:flex;gap:5px;align-items:center">
+          <span style="font-size:9px;background:rgba(59,157,224,0.15);color:#3B9DE0;padding:2px 7px;border-radius:6px;font-weight:700">${ocup}% ocup.</span>
+          <span style="font-size:9px;background:rgba(76,175,122,0.15);color:var(--green);padding:2px 7px;border-radius:6px;font-weight:700">${disp} disp.</span>
+          ${mant?`<span style="font-size:9px;background:var(--gold-dim);color:var(--gold);padding:2px 7px;border-radius:6px;font-weight:700">${mant} mant.</span>`:''}
+          <span style="font-size:10px;color:var(--muted)">${isOpen?'▲':'▼'}</span>
+        </div>
+      </div>
+      ${isOpen?`<div style="padding:6px 12px 10px">
+        ${patentes.map(p=>{
+          const r=regs[p];
+          const col=ESTADO_COLOR[r.estado||'']||ESTADO_COLOR[''];
+          return `<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-top:1px solid var(--border)">
+            <span style="font-size:12px;font-weight:700;color:var(--text)">${p}</span>
+            <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end">
+              ${r.conductor?`<span style="font-size:10px;color:var(--muted)">${r.conductor}${r.cliente?' · '+r.cliente:''}</span>`:''}
+              ${r.tipoMant?`<span style="font-size:10px;color:var(--gold)">${r.tipoMant==='Otro'?(r.mantManual||'Otro'):r.tipoMant}</span>`:''}
+              <span style="font-size:10px;font-weight:700;color:${col.text};background:${col.bg};padding:2px 8px;border-radius:6px">${r.estado||'Sin registrar'}</span>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>`:''}
+    </div>`;
+  }).join('');
+
+  cont.innerHTML = `${formHTML}
+    <div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:0.05em;margin-bottom:8px">REGISTROS DEL MES</div>
+    ${registrosHTML}`;
+}
+
+async function guardarDisponibilidad() {
+  const fecha = _dispForm.fecha || document.getElementById('disp_fecha')?.value;
+  const patente = _dispForm.patente;
+  const estado = _dispForm.estado;
+  if(!patente || !estado || !fecha) { alert('Completa fecha, patente y estado'); return; }
+
+  const registro = {
+    estado,
+    conductor: _dispForm.conductor||'',
+    cliente: _dispForm.cliente||'',
+    tipoMant: _dispForm.tipoMant||'',
+    mantManual: _dispForm.mantManual||''
+  };
+
+  if(!_dispData[fecha]) _dispData[fecha] = {};
+  _dispData[fecha][patente] = registro;
+
+  const emp = DB._empresa || _sessionUsuario?.empresa;
+  try {
+    await supa.from('disponibilidad').upsert({
+      id: `${fecha}_${patente}_${emp}`,
+      fecha, patente, empresa: emp,
+      estado: registro.estado,
+      conductor: registro.conductor,
+      cliente: registro.cliente,
+      tipo_mant: registro.tipoMant,
+      mant_manual: registro.mantManual
+    }, { onConflict: 'id' });
+  } catch(e) { console.warn('Error guardar disponibilidad:', e); }
+
+  _dispForm = {};
+  renderDisponibilidad();
 }
 
 // ══════════════════════════════════════
