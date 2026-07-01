@@ -2457,7 +2457,12 @@ async function calcMargenReal(mes, conf, ingresoTotal) {
 
 function renderServicios() {
   const fecha = document.getElementById('filtro-fecha').value;
-  const mes = parseInt(document.getElementById('dash-mes')?.value ?? hoy.getMonth());
+  let mes = parseInt(document.getElementById('dash-mes')?.value ?? hoy.getMonth());
+  if(_sessionUsuario?.rol === 'despachador' && mes < 6) {
+    mes = 6;
+    const selMesR = document.getElementById('dash-mes');
+    if(selMesR) selMesR.value = '6';
+  }
   const anioStr = String(hoy.getFullYear());
   const mesStr = String(mes+1).padStart(2,'0');
   const esConductorRender = _sessionUsuario?.rol === 'conductor';
@@ -5466,6 +5471,12 @@ async function iniciarLogin() {
           const styleDesp = document.createElement('style');
           styleDesp.textContent = '.th-financ, .td-financ { display: none !important; }';
           document.head.appendChild(styleDesp);
+          // Ocultar meses anteriores a julio
+          const selMesD = document.getElementById('dash-mes');
+          if(selMesD) {
+            Array.from(selMesD.options).forEach(opt => { if(parseInt(opt.value) < 6) opt.style.display = 'none'; });
+            if(parseInt(selMesD.value) < 6) selMesD.value = '6';
+          }
         }
         if(sess.rol === 'conductor') {
           // Ocultar tabs que no corresponden al conductor
@@ -5611,6 +5622,11 @@ function entrarModulo(modulo) {
       ['kpi-ingreso-mes','kpi-costos-mes','kpi-margen-teo','kpi-margen-prom','k-margen-real-kpi'].forEach(id => {
         const el = document.getElementById(id); if(el) el.style.display = 'none';
       });
+      const selMes = document.getElementById('dash-mes');
+      if(selMes) {
+        Array.from(selMes.options).forEach(opt => { if(parseInt(opt.value) < 6) opt.style.display = 'none'; });
+        if(parseInt(selMes.value) < 6) selMes.value = '6';
+      }
     }
     init();
   }
