@@ -486,16 +486,6 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
             <span id="liq-total" style="font-size:18px;font-weight:900;color:var(--gold)">$0</span>
           </div>
         </div>
-        <!-- Cargos Adicionales -->
-        <div id="liq-adicionales-section" style="display:none">
-          <div class="section-ttl">Cargos Adicionales (opcional)</div>
-          <div id="liq-adicionales-lista" style="margin-bottom:8px"></div>
-          <div style="display:flex;gap:8px;margin-bottom:12px">
-            <input class="inp" id="liq-adic-concepto" placeholder="Concepto (ej: Estadía, Trasplaqueteo)" style="flex:2">
-            <input class="inp" type="number" id="liq-adic-monto" placeholder="Monto neto $" style="flex:1">
-            <button class="btn btn-outline btn-sm" onclick="liqAgregarAdicional()">+ Agregar</button>
-          </div>
-        </div>
         <!-- Factoring -->
         <div id="liq-factoring-section" style="display:none">
           <div class="section-ttl">Factoring (opcional)</div>
@@ -6262,23 +6252,12 @@ let _liqData = [];
 let _liqSvcsSeleccionados = [];
 let _liqClienteActual = '';
 
-function _liqGuiasTxt(s) {
-  const gs = (s._puntos||[]).flatMap(p => (p.guias||[]).map(g => g.num_guia)).filter(Boolean);
-  return gs.length ? gs.join(' · ') : (s.num_guia || '');
-}
-
 async function cargarLiquidaciones() {
   const emp = DB._empresa || _sessionUsuario?.empresa;
   if(!emp) return;
   const {data, error} = await supa.from('kaptura_liquidaciones')
     .select('*').eq('empresa', emp).order('created_at', {ascending:false});
-  _liqData = (data || []).map(l => {
-    l._adicionales = [];
-    if(l.notas && l.notas.includes('|_ADICIONALES:')) {
-      try { l._adicionales = JSON.parse(l.notas.split('|_ADICIONALES:')[1]); } catch(e) {}
-    }
-    return l;
-  });
+  _liqData = data || [];
   renderLiquidaciones();
 }
 
@@ -6388,12 +6367,9 @@ async function abrirNuevaLiquidacion() {
   const v = new Date(); v.setDate(v.getDate()+30);
   document.getElementById('liq-vencimiento').value = v.toISOString().split('T')[0];
   _liqSvcsSeleccionados = [];
-  _liqAdicionales = [];
-  document.getElementById('liq-adicionales-lista').innerHTML = '';
   document.getElementById('liq-servicios-container').style.display = 'none';
   document.getElementById('liq-resumen').style.display = 'none';
   document.getElementById('liq-factoring-section').style.display = 'none';
-  document.getElementById('liq-adicionales-section').style.display = 'none';
   document.getElementById('liq-numero-preview').textContent = 'Selecciona un cliente para asignar número';
   document.getElementById('modal-nueva-liq').style.display = 'flex';
 }
@@ -6473,13 +6449,12 @@ async function liqSeleccionarCliente() {
       </div>
       <div style="text-align:right">
         <div style="font-size:13px;font-weight:800;color:var(--text)">$${Number(s.ingreso_total||s.tarifa_neta||0).toLocaleString('es-CL')}</div>
-        <div style="font-size:10px;color:var(--muted)">${_liqGuiasTxt(s) ? 'Guía: '+_liqGuiasTxt(s) : 'Sin guía'}</div>
+        <div style="font-size:10px;color:var(--muted)">${s.num_guia ? 'Guía: '+s.num_guia : 'Sin guía'}</div>
       </div>
     </div>`).join('');
 
   container.style.display = 'block';
   document.getElementById('liq-factoring-section').style.display = 'block';
-  document.getElementById('liq-adicionales-section').style.display = 'block';
 
   // Verificar si cliente usa factoring
   const clienteData = DB.clientes.find(c => c.nombre?.toLowerCase() === cliente.toLowerCase());
@@ -6489,44 +6464,11 @@ async function liqSeleccionarCliente() {
   }
 }
 
-let _liqAdicionales = [];
-
-function liqAgregarAdicional() {
-  const concepto = document.getElementById('liq-adic-concepto').value.trim();
-  const monto = parseInt(document.getElementById('liq-adic-monto').value) || 0;
-  if(!concepto || monto <= 0) { toast('Ingresa un concepto y un monto válido'); return; }
-  _liqAdicionales.push({concepto, monto});
-  document.getElementById('liq-adic-concepto').value = '';
-  document.getElementById('liq-adic-monto').value = '';
-  liqRenderAdicionales();
-  liqActualizarSeleccion();
-}
-
-function liqQuitarAdicional(i) {
-  _liqAdicionales.splice(i, 1);
-  liqRenderAdicionales();
-  liqActualizarSeleccion();
-}
-
-function liqRenderAdicionales() {
-  const cont = document.getElementById('liq-adicionales-lista');
-  cont.innerHTML = _liqAdicionales.map((a,i) => `
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;margin-bottom:5px">
-      <span style="font-size:12px;color:var(--text)">${a.concepto}</span>
-      <div style="display:flex;align-items:center;gap:10px">
-        <span style="font-size:12px;font-weight:700;color:var(--gold)">$${a.monto.toLocaleString('es-CL')}</span>
-        <button onclick="liqQuitarAdicional(${i})" style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:14px;padding:0">✕</button>
-      </div>
-    </div>`).join('');
-}
-
 function liqActualizarSeleccion() {
   const checks = document.querySelectorAll('#liq-servicios-lista input[type=checkbox]:checked');
   _liqSvcsSeleccionados = Array.from(checks).map(c => ({id: c.dataset.id, svcid: c.dataset.svcid, ingreso: parseInt(c.dataset.ingreso)||0}));
   
-  const netoSvcs = _liqSvcsSeleccionados.reduce((a,s) => a + s.ingreso, 0);
-  const netoAdic = _liqAdicionales.reduce((a,x) => a + x.monto, 0);
-  const neto = netoSvcs + netoAdic;
+  const neto = _liqSvcsSeleccionados.reduce((a,s) => a + s.ingreso, 0);
   const iva  = Math.round(neto * 0.19);
   const total = neto + iva;
 
@@ -6534,7 +6476,7 @@ function liqActualizarSeleccion() {
   document.getElementById('liq-monto-neto').textContent = '$'+neto.toLocaleString('es-CL');
   document.getElementById('liq-iva').textContent = '$'+iva.toLocaleString('es-CL');
   document.getElementById('liq-total').textContent = '$'+total.toLocaleString('es-CL');
-  document.getElementById('liq-resumen').style.display = (_liqSvcsSeleccionados.length > 0 || _liqAdicionales.length > 0) ? 'block' : 'none';
+  document.getElementById('liq-resumen').style.display = _liqSvcsSeleccionados.length > 0 ? 'block' : 'none';
   liqCalcularFactoring();
 }
 
@@ -6547,7 +6489,7 @@ function liqToggleFactoring() {
 function liqCalcularFactoring() {
   const usa = document.getElementById('liq-usa-factoring').checked;
   if(!usa) return;
-  const neto = _liqSvcsSeleccionados.reduce((a,s) => a + s.ingreso, 0) + _liqAdicionales.reduce((a,x) => a + x.monto, 0);
+  const neto = _liqSvcsSeleccionados.reduce((a,s) => a + s.ingreso, 0);
   const total = Math.round(neto * 1.19);
   const pct = parseFloat(document.getElementById('liq-factoring-pct').value)||3;
   const costo = Math.round(total * pct / 100);
@@ -6560,17 +6502,13 @@ async function guardarLiquidacion(estado) {
   
   const emp = DB._empresa || _sessionUsuario?.empresa;
   const numero = document.getElementById('liq-numero-preview').textContent;
-  const netoSvcs = _liqSvcsSeleccionados.reduce((a,s) => a + s.ingreso, 0);
-  const netoAdic = _liqAdicionales.reduce((a,x) => a + x.monto, 0);
-  const neto = netoSvcs + netoAdic;
+  const neto = _liqSvcsSeleccionados.reduce((a,s) => a + s.ingreso, 0);
   const iva  = Math.round(neto * 0.19);
   const total = neto + iva;
   const usaFactoring = document.getElementById('liq-usa-factoring').checked;
   const factPct = parseFloat(document.getElementById('liq-factoring-pct').value)||0;
   const factCosto = usaFactoring ? Math.round(total * factPct / 100) : 0;
   const estadoFinal = estado === 'emitida' ? 'emitida' : 'borrador';
-  const notasBase = document.getElementById('liq-notas').value || '';
-  const notasFinal = _liqAdicionales.length ? notasBase + '|_ADICIONALES:' + JSON.stringify(_liqAdicionales) : notasBase;
 
   const {error} = await supa.from('kaptura_liquidaciones').insert({
     numero,
@@ -6586,7 +6524,7 @@ async function guardarLiquidacion(estado) {
     factoring: usaFactoring,
     factoring_pct: factPct,
     factoring_costo: factCosto,
-    notas: notasFinal
+    notas: document.getElementById('liq-notas').value
   });
 
   if(error) { toast('Error: '+error.message); return; }
@@ -6628,15 +6566,8 @@ async function verLiquidacion(id) {
           <div><span style="font-weight:800;color:var(--gold)">${s.servicio_id}</span> <span style="font-size:11px;color:var(--muted)">${s.fecha||''} · ${s.origen||''} → ${s.destino||''}</span></div>
           <span style="font-weight:800;color:var(--text)">$${Number(s.ingreso_total||s.tarifa_neta||0).toLocaleString('es-CL')}</span>
         </div>
-        ${_liqGuiasTxt(s) ? `<div style="font-size:10px;color:var(--muted);margin-top:3px">Guía: ${_liqGuiasTxt(s)}</div>` : ''}
+        ${s.num_guia ? `<div style="font-size:10px;color:var(--muted);margin-top:3px">Guía: ${s.num_guia}</div>` : ''}
       </div>`).join('')}
-    ${(liq._adicionales||[]).length ? `
-    <div style="font-size:10px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);margin:12px 0 8px">CARGOS ADICIONALES</div>
-    ${liq._adicionales.map(a => `
-      <div style="padding:8px 10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;margin-bottom:5px;display:flex;justify-content:space-between">
-        <span style="font-size:12px;color:var(--text)">${a.concepto}</span>
-        <span style="font-weight:800;color:var(--text)">$${Number(a.monto||0).toLocaleString('es-CL')}</span>
-      </div>`).join('')}` : ''}
     ${liq.num_factura ? `<div style="margin-top:10px;font-size:12px;color:var(--text)"><span style="color:var(--muted)">N° Factura:</span> <span style="font-weight:800;color:var(--gold)">${liq.num_factura}</span></div>` : ''}
     ${liq.pdf_sii_url ? `<div style="margin-top:6px"><a href="${liq.pdf_sii_url}" target="_blank" style="color:var(--gold);font-size:12px;font-weight:700">📄 Ver Factura SII adjunta</a></div>` : ''}`;
 
@@ -6692,23 +6623,16 @@ function liqImprimir(id) {
   const svcs = DB.servicios.filter(s => (liq.servicios_ids||[]).includes(s.id));
 
   const empresaInfo = {
-    razon: DB.config.razon_social || 'TRANSPORTE MADRID GAETE SPA',
-    rut: DB.config.rut_empresa || 'Pendiente de completar',
-    direccion: DB.config.direccion_empresa || 'Pendiente de completar'
-  };
+    flota_297221: {razon:'TRANSPORTE MADRID GAETE SPA', rut:'Pendiente de completar', direccion:'Pendiente de completar'}
+  }[DB._empresa] || {razon:(DB._empresa||'').toUpperCase(), rut:'Pendiente de completar', direccion:'Pendiente de completar'};
 
   const filasServicios = svcs.map(s => `
     <tr>
       <td>${s.servicio_id||''}</td>
       <td>${s.fecha||''}</td>
       <td>${(s.origen||'')+' → '+(s.destino||'')}</td>
-      <td>${_liqGuiasTxt(s)||'-'}</td>
+      <td>${s.num_guia||'-'}</td>
       <td style="text-align:right">$${Number(s.ingreso_total||s.tarifa_neta||0).toLocaleString('es-CL')}</td>
-    </tr>`).join('') + (liq._adicionales||[]).map(a => `
-    <tr>
-      <td colspan="3" style="font-style:italic;color:#555">${a.concepto}</td>
-      <td>-</td>
-      <td style="text-align:right">$${Number(a.monto||0).toLocaleString('es-CL')}</td>
     </tr>`).join('');
 
   const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${liq.numero}</title>
@@ -6735,6 +6659,7 @@ function liqImprimir(id) {
   <div style="display:flex;justify-content:space-between;gap:16px;margin-bottom:18px">
     <div style="flex:1;background:#f7f6f2;border-radius:6px;padding:10px 12px">
       <div style="font-size:10px;color:#888;text-transform:uppercase">Cliente</div>
+      <div style="font-size:13px;font-weight:700;margin-top:2px">${liq.cliente}</div>
       <div style="font-size:11px;color:#666;margin-top:1px">RUT: ${cliData?.rut||'-'}</div>
     </div>
     <div style="flex:1;background:#f7f6f2;border-radius:6px;padding:10px 12px">
@@ -6753,7 +6678,8 @@ function liqImprimir(id) {
     </div>
   </div>
   ${liq.num_factura ? `<div style="background:#faf3e3;border:0.5px solid #ecd9ac;border-radius:6px;padding:10px 12px;margin-bottom:18px"><div style="font-size:10px;color:#8a6c1f;text-transform:uppercase">Factura asociada</div><div style="font-size:12px;color:#5f4a15;margin-top:3px">N° ${liq.num_factura}${liq.fecha_factura?' · '+liq.fecha_factura:''}</div></div>` : ''}
-  <div style="border-top:0.5px solid #e0ddd3;padding-top:14px;display:flex;justify-content:flex-end;align-items:flex-end">
+  <div style="border-top:0.5px solid #e0ddd3;padding-top:14px;display:flex;justify-content:space-between;align-items:flex-end">
+    <div style="font-size:10px;color:#999;max-width:320px">Documento generado por KAPTURA. Los valores son netos, más IVA cuando corresponda.</div>
     <div style="text-align:center"><div style="width:160px;border-top:0.5px solid #999;padding-top:4px;font-size:10px;color:#999">Firma / timbre</div></div>
   </div>
   <div class="no-print"><button onclick="window.print()" style="padding:10px 24px;font-size:13px;cursor:pointer">Imprimir / Guardar como PDF</button></div>
@@ -6794,7 +6720,7 @@ function liqEditarServicios(id) {
         </div>
         <div style="text-align:right">
           <div style="font-size:13px;font-weight:800;color:var(--text)">$${Number(s.ingreso_total||s.tarifa_neta||0).toLocaleString('es-CL')}</div>
-          <div style="font-size:10px;color:var(--muted)">${_liqGuiasTxt(s) ? 'Guía: '+_liqGuiasTxt(s) : 'Sin guía'}</div>
+          <div style="font-size:10px;color:var(--muted)">${s.num_guia ? 'Guía: '+s.num_guia : 'Sin guía'}</div>
         </div>
       </div>`).join('');
   }
