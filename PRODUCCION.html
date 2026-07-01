@@ -1068,16 +1068,16 @@ async function validarPinGo() {
     }
     if(usr.rol === 'admin_kaptura') { cargarPanelAdmin(); return; }
     if(['coordinador','controller','administrador'].includes(usr.rol)) {
-      // Ir directo a flota-produccion.html — la verificación de equipos se hace dentro de ese panel
-      window.location.href = 'flota-produccion.html';
+      // Ir directo al panel correspondiente según empresa — la verificación de equipos se hace dentro de ese panel
+      window.location.href = usr.empresa === 'global_solutions' ? 'global-solutions.html' : 'flota-produccion.html';
       return;
     }
     if(usr.rol === 'conductor') {
-      window.location.href = 'flota-produccion.html';
+      window.location.href = usr.empresa === 'global_solutions' ? 'global-solutions.html' : 'flota-produccion.html';
       return;
     }
     if(usr.rol === 'despachador') {
-      window.location.href = 'flota-produccion.html';
+      window.location.href = usr.empresa === 'global_solutions' ? 'global-solutions.html' : 'flota-produccion.html';
       return;
     }
     showScreen('screen-modo');
@@ -1143,7 +1143,7 @@ async function confirmarOnboardingDespachador() {
   localStorage.setItem('kaptura_session', JSON.stringify({
     pin, empresa, rol: 'despachador', nombre
   }));
-  window.location.href = 'flota-produccion.html';
+  window.location.href = empresa === 'global_solutions' ? 'global-solutions.html' : 'flota-produccion.html';
 }
 
 async function confirmarOnboardingConductor() {
@@ -1184,7 +1184,7 @@ async function confirmarOnboardingConductor() {
   localStorage.setItem('kaptura_session', JSON.stringify({
     pin, empresa, rol: 'conductor', nombre, conductor_nombre: nombre
   }));
-  window.location.href = 'flota-produccion.html';
+  window.location.href = empresa === 'global_solutions' ? 'global-solutions.html' : 'flota-produccion.html';
 }
 
 async function cargarPanelAdmin() {
