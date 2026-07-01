@@ -2479,6 +2479,21 @@ function renderServicios() {
   empty.style.display = 'none';
   document.getElementById('cards-mobile').innerHTML = svcs.map(s => cardHTML(s, DB.servicios.indexOf(s))).join('');
   document.getElementById('tabla-svc').innerHTML    = svcs.map(s => filaHTML(s, DB.servicios.indexOf(s))).join('');
+
+  // Pasada de seguridad: despachador solo puede ver Iniciar / Registrar / Ed. Asignación
+  if(_sessionUsuario?.rol === 'despachador') {
+    const permitidas = ['Iniciar', 'Registrar', 'Ed. Asignación'];
+    document.querySelectorAll('#cards-mobile .svc-acts button, #tabla-svc button').forEach(btn => {
+      const texto = btn.textContent.trim();
+      const esPermitido = permitidas.some(p => texto.includes(p));
+      if(!esPermitido) btn.style.display = 'none';
+    });
+    document.querySelectorAll('#cards-mobile .svc-id, #tabla-svc td[onclick*="editarServicioCerrado"]').forEach(el => {
+      el.onclick = null;
+      el.style.cursor = 'default';
+      el.style.textDecoration = 'none';
+    });
+  }
 }
 
 function pillHTML(e) {
@@ -5587,6 +5602,15 @@ function entrarModulo(modulo) {
     DB._empresa = _sessionUsuario.empresa;
     if(['coordinador','controller','administrador'].includes(_sessionUsuario.rol)) {
       document.getElementById('tab-btn-setup').style.display = '';
+    }
+    if(_sessionUsuario.rol === 'despachador') {
+      ['tab-btn-liquidaciones','tab-btn-flota','tab-btn-clientes','tab-btn-gastos',
+       'tab-btn-resultados','tab-btn-informes','tab-btn-config','tab-btn-setup'].forEach(id => {
+        const el = document.getElementById(id); if(el) el.style.display = 'none';
+      });
+      ['kpi-ingreso-mes','kpi-costos-mes','kpi-margen-teo','kpi-margen-prom','k-margen-real-kpi'].forEach(id => {
+        const el = document.getElementById(id); if(el) el.style.display = 'none';
+      });
     }
     init();
   }
