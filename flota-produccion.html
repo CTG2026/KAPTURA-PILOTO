@@ -6692,8 +6692,10 @@ function liqImprimir(id) {
   const svcs = DB.servicios.filter(s => (liq.servicios_ids||[]).includes(s.id));
 
   const empresaInfo = {
-    flota_297221: {razon:'TRANSPORTE MADRID GAETE SPA', rut:'Pendiente de completar', direccion:'Pendiente de completar'}
-  }[DB._empresa] || {razon:(DB._empresa||'').toUpperCase(), rut:'Pendiente de completar', direccion:'Pendiente de completar'};
+    razon: DB.config.razon_social || 'TRANSPORTE MADRID GAETE SPA',
+    rut: DB.config.rut_empresa || 'Pendiente de completar',
+    direccion: DB.config.direccion_empresa || 'Pendiente de completar'
+  };
 
   const filasServicios = svcs.map(s => `
     <tr>
@@ -6726,14 +6728,13 @@ function liqImprimir(id) {
     </div>
     <div style="text-align:right">
       <div style="font-size:13px;font-weight:700">LIQUIDACIÓN DE SERVICIOS</div>
-      <div style="font-size:13px;font-weight:700;color:#C9A84C;margin-top:2px">${(liq.numero.match(/^LIQ-\d+/)||[liq.numero])[0]}</div>
+      <div style="font-size:13px;font-weight:700;color:#C9A84C;margin-top:2px">${liq.numero}</div>
       <div style="font-size:11px;color:#666;margin-top:4px">Emisión: ${liq.fecha_emision||'-'}</div>
     </div>
   </div>
   <div style="display:flex;justify-content:space-between;gap:16px;margin-bottom:18px">
     <div style="flex:1;background:#f7f6f2;border-radius:6px;padding:10px 12px">
       <div style="font-size:10px;color:#888;text-transform:uppercase">Cliente</div>
-      <div style="font-size:13px;font-weight:700;margin-top:2px">${liq.cliente}</div>
       <div style="font-size:11px;color:#666;margin-top:1px">RUT: ${cliData?.rut||'-'}</div>
     </div>
     <div style="flex:1;background:#f7f6f2;border-radius:6px;padding:10px 12px">
