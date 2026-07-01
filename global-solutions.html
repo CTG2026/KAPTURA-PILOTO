@@ -5474,7 +5474,7 @@ async function iniciarLogin() {
           // Ocultar meses anteriores a julio
           const selMesD = document.getElementById('dash-mes');
           if(selMesD) {
-            Array.from(selMesD.options).forEach(opt => { if(parseInt(opt.value) < 6) opt.style.display = 'none'; });
+            Array.from(selMesD.options).forEach(opt => { if(parseInt(opt.value) < 6) opt.remove(); });
             if(parseInt(selMesD.value) < 6) selMesD.value = '6';
           }
         }
@@ -5624,7 +5624,7 @@ function entrarModulo(modulo) {
       });
       const selMes = document.getElementById('dash-mes');
       if(selMes) {
-        Array.from(selMes.options).forEach(opt => { if(parseInt(opt.value) < 6) opt.style.display = 'none'; });
+        Array.from(selMes.options).forEach(opt => { if(parseInt(opt.value) < 6) opt.remove(); });
         if(parseInt(selMes.value) < 6) selMes.value = '6';
       }
     }
