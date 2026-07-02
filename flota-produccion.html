@@ -279,7 +279,7 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
           <th class="th-filtro" onclick="abrirFiltroColumna('cliente',event)">Cliente <span class="ico-filtro" id="ico-filtro-cliente">▾</span></th>
           <th class="th-filtro" onclick="abrirFiltroColumna('origen',event)">Origen <span class="ico-filtro" id="ico-filtro-origen">▾</span></th>
           <th class="th-filtro" onclick="abrirFiltroColumna('destino',event)">Destino <span class="ico-filtro" id="ico-filtro-destino">▾</span></th>
-          <th>Guía</th><th class="th-financ">Tarifa $</th>
+          <th class="th-filtro" onclick="abrirFiltroColumna('guia',event)">Guía <span class="ico-filtro" id="ico-filtro-guia">▾</span></th><th class="th-financ">Tarifa $</th>
           <th>Cant Ptos</th><th class="th-financ">Total Ptos $</th><th class="th-financ">Total Ingreso</th>
           <th class="th-financ">Costos</th><th class="th-financ">Margen</th>
           <th class="th-filtro" onclick="abrirFiltroColumna('estado',event)">Estado <span class="ico-filtro" id="ico-filtro-estado">▾</span></th>
@@ -2510,13 +2510,17 @@ async function calcMargenReal(mes, conf, ingresoTotal) {
 
 }
 
-let _filtrosColumna = {patente:[], conductor:[], cliente:[], origen:[], destino:[], estado:[]};
+let _filtrosColumna = {patente:[], conductor:[], cliente:[], origen:[], destino:[], guia:[], estado:[]};
 const _ESTADO_LABELS_FILTRO = {asignado:'Asignado', en_proceso:'En Proceso', ejecutado:'Ejecutado', borrador:'Borrador', cerrado:'Cerrado'};
 
 function _valorCampoFiltro(s, campo) {
   try {
     if(campo==='destino') return s.destino || (s._puntos||[]).find(p=>p.tipo==='final')?.destino || '';
     if(campo==='estado') return _ESTADO_LABELS_FILTRO[s.estado] || s.estado || '';
+    if(campo==='guia') {
+      const allGuias = (s._puntos||[]).flatMap(p=>(p.guias||[]).map(g=>g.num_guia)).filter(Boolean);
+      return (allGuias.length > 0 || !!s.num_guia) ? 'Con Guía' : 'Sin Guía';
+    }
     return s[campo] || '';
   } catch(e) { return ''; }
 }
@@ -2602,7 +2606,7 @@ function renderServicios() {
   );
   try {
     svcs = svcs.filter(s => {
-      for(const campo of ['patente','conductor','cliente','origen','destino','estado']) {
+      for(const campo of ['patente','conductor','cliente','origen','destino','guia','estado']) {
         const activos = _filtrosColumna[campo];
         if(activos && activos.length && !activos.includes(_valorCampoFiltro(s, campo))) return false;
       }
