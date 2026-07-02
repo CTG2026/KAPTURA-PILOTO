@@ -3266,9 +3266,8 @@ function buscarValor(pi) {
     const dl = p.destino.toLowerCase().trim();
     const match = DB.tarifarios.find(t => {
       const cli = (t.cliente||'').toLowerCase();
-      const dest = (t.destino||'').toLowerCase();
-      return cli.includes((svc.cliente||'').toLowerCase().split(' ')[0]) &&
-        (dest.includes(dl.split(',')[0].trim()) || dl.includes(dest.split(',')[0].trim()));
+      const dest = (t.destino||'').toLowerCase().trim();
+      return cli.includes((svc.cliente||'').toLowerCase().split(' ')[0]) && dest === dl;
     });
     if(match && match.tarifa_neta > 0) { puntosData[pi].valor = match.tarifa_neta; renderPuntos(); }
   }
