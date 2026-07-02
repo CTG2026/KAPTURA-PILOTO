@@ -73,7 +73,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
   .desk-tbl{display:block;background:var(--surface);border-radius:10px;box-shadow:var(--sh);border:1px solid var(--border);overflow:hidden}
   .desk-tbl table{width:100%;border-collapse:collapse;min-width:1200px}
   .desk-tbl thead{background:var(--bg)}
-  .desk-tbl thead th{padding:10px 10px;text-align:left;font-size:9px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+  .desk-tbl thead th{padding:10px 10px;text-align:left;font-size:12px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
   .desk-tbl tbody tr{border-bottom:1px solid var(--border)}
   .desk-tbl tbody tr:hover{background:var(--surface2)}
   .desk-tbl tbody td{padding:9px 10px;font-size:12px;vertical-align:middle;color:var(--text)}
@@ -2514,64 +2514,77 @@ let _filtrosColumna = {patente:[], conductor:[], cliente:[], origen:[], destino:
 const _ESTADO_LABELS_FILTRO = {asignado:'Asignado', en_proceso:'En Proceso', ejecutado:'Ejecutado', borrador:'Borrador', cerrado:'Cerrado'};
 
 function _valorCampoFiltro(s, campo) {
-  if(campo==='destino') return s.destino || (s._puntos||[]).find(p=>p.tipo==='final')?.destino || '';
-  if(campo==='estado') return _ESTADO_LABELS_FILTRO[s.estado] || s.estado || '';
-  return s[campo] || '';
+  try {
+    if(campo==='destino') return s.destino || (s._puntos||[]).find(p=>p.tipo==='final')?.destino || '';
+    if(campo==='estado') return _ESTADO_LABELS_FILTRO[s.estado] || s.estado || '';
+    return s[campo] || '';
+  } catch(e) { return ''; }
 }
 
 function _serviciosBaseParaFiltros() {
-  const fecha = document.getElementById('filtro-fecha')?.value;
-  const mes = parseInt(document.getElementById('dash-mes')?.value ?? hoy.getMonth());
-  const anioStr = String(hoy.getFullYear());
-  const mesStr = String(mes+1).padStart(2,'0');
-  return fecha
-    ? DB.servicios.filter(s => (s.fecha||'').startsWith(fecha))
-    : DB.servicios.filter(s => (s.fecha||'').startsWith(`${anioStr}-${mesStr}`));
+  try {
+    const fecha = document.getElementById('filtro-fecha')?.value;
+    const mes = parseInt(document.getElementById('dash-mes')?.value ?? hoy.getMonth());
+    const anioStr = String(hoy.getFullYear());
+    const mesStr = String(mes+1).padStart(2,'0');
+    return fecha
+      ? DB.servicios.filter(s => (s.fecha||'').startsWith(fecha))
+      : DB.servicios.filter(s => (s.fecha||'').startsWith(`${anioStr}-${mesStr}`));
+  } catch(e) { return []; }
 }
 
 function abrirFiltroColumna(campo, ev) {
-  ev.stopPropagation();
-  const pop = document.getElementById('popover-filtro-col');
-  if(pop.style.display==='block' && pop.dataset.campo===campo) { pop.style.display='none'; return; }
+  try {
+    ev.stopPropagation();
+    const pop = document.getElementById('popover-filtro-col');
+    if(!pop) return;
+    if(pop.style.display==='block' && pop.dataset.campo===campo) { pop.style.display='none'; return; }
 
-  const base = _serviciosBaseParaFiltros();
-  const valores = Array.from(new Set(base.map(s => _valorCampoFiltro(s, campo)).filter(v=>v))).sort();
-  const seleccionados = _filtrosColumna[campo] || [];
+    const base = _serviciosBaseParaFiltros();
+    const valores = Array.from(new Set(base.map(s => _valorCampoFiltro(s, campo)).filter(v=>v))).sort();
+    const seleccionados = _filtrosColumna[campo] || [];
 
-  pop.innerHTML = `
-    <div style="display:flex;justify-content:space-between;margin-bottom:6px;padding:0 2px">
-      <span onclick="_filtrosColumna['${campo}']=[];renderServicios();document.getElementById('popover-filtro-col').style.display='none'" style="font-size:10px;color:var(--gold);cursor:pointer;font-weight:700">Limpiar</span>
-      <span onclick="document.getElementById('popover-filtro-col').style.display='none'" style="font-size:10px;color:var(--muted);cursor:pointer">✕</span>
-    </div>
-    ${valores.map(v => `
-      <label class="chk-filtro-col">
-        <input type="checkbox" ${seleccionados.includes(v)?'checked':''} onchange="_toggleFiltroColumna('${campo}','${v.replace(/'/g,"\\'")}',this.checked)">
-        ${v}
-      </label>`).join('') || '<div style="font-size:11px;color:var(--muted);padding:6px">Sin valores</div>'}
-  `;
+    pop.innerHTML = `
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px;padding:0 2px">
+        <span onclick="_filtrosColumna['${campo}']=[];renderServicios();document.getElementById('popover-filtro-col').style.display='none'" style="font-size:10px;color:var(--gold);cursor:pointer;font-weight:700">Limpiar</span>
+        <span onclick="document.getElementById('popover-filtro-col').style.display='none'" style="font-size:10px;color:var(--muted);cursor:pointer">✕</span>
+      </div>
+      ${valores.map(v => `
+        <label class="chk-filtro-col">
+          <input type="checkbox" ${seleccionados.includes(v)?'checked':''} onchange="_toggleFiltroColumna('${campo}','${String(v).replace(/'/g,"\\'")}',this.checked)">
+          ${v}
+        </label>`).join('') || '<div style="font-size:11px;color:var(--muted);padding:6px">Sin valores</div>'}
+    `;
 
-  const th = ev.target.closest('th');
-  const rect = th.getBoundingClientRect();
-  pop.style.top = (rect.bottom+4)+'px';
-  pop.style.left = rect.left+'px';
-  pop.style.display = 'block';
-  pop.dataset.campo = campo;
+    const th = ev.target.closest('th');
+    if(th) {
+      const rect = th.getBoundingClientRect();
+      pop.style.top = (rect.bottom+4)+'px';
+      pop.style.left = rect.left+'px';
+    }
+    pop.style.display = 'block';
+    pop.dataset.campo = campo;
+  } catch(e) { console.warn('Error abrirFiltroColumna:', e); }
 }
 
 function _toggleFiltroColumna(campo, valor, checked) {
-  if(!_filtrosColumna[campo]) _filtrosColumna[campo] = [];
-  if(checked) { if(!_filtrosColumna[campo].includes(valor)) _filtrosColumna[campo].push(valor); }
-  else { _filtrosColumna[campo] = _filtrosColumna[campo].filter(v=>v!==valor); }
-  renderServicios();
-  const ico = document.getElementById('ico-filtro-'+campo);
-  if(ico) ico.classList.toggle('activo', _filtrosColumna[campo].length>0);
+  try {
+    if(!_filtrosColumna[campo]) _filtrosColumna[campo] = [];
+    if(checked) { if(!_filtrosColumna[campo].includes(valor)) _filtrosColumna[campo].push(valor); }
+    else { _filtrosColumna[campo] = _filtrosColumna[campo].filter(v=>v!==valor); }
+    renderServicios();
+    const ico = document.getElementById('ico-filtro-'+campo);
+    if(ico) ico.classList.toggle('activo', _filtrosColumna[campo].length>0);
+  } catch(e) { console.warn('Error _toggleFiltroColumna:', e); }
 }
 
-document.addEventListener('click', (e) => {
-  const pop = document.getElementById('popover-filtro-col');
-  if(pop && pop.style.display==='block' && !pop.contains(e.target) && !e.target.closest('.th-filtro')) {
-    pop.style.display = 'none';
-  }
+document.addEventListener('click', function(e) {
+  try {
+    const pop = document.getElementById('popover-filtro-col');
+    if(pop && pop.style.display==='block' && !pop.contains(e.target) && !e.target.closest('.th-filtro')) {
+      pop.style.display = 'none';
+    }
+  } catch(err) {}
 });
 
 function renderServicios() {
@@ -2580,19 +2593,23 @@ function renderServicios() {
   const anioStr = String(hoy.getFullYear());
   const mesStr = String(mes+1).padStart(2,'0');
   const esConductorRender = _sessionUsuario?.rol === 'conductor';
-  const svcs = (esConductorRender
+  let svcs = (esConductorRender
     // Conductor ve todos sus servicios asignados/en proceso sin filtro de fecha
     ? DB.servicios.filter(s => ['asignado','en_proceso','ejecutado','borrador'].includes(s.estado))
     : fecha
       ? DB.servicios.filter(s => (s.fecha||'').startsWith(fecha))
       : DB.servicios.filter(s => (s.fecha||'').startsWith(`${anioStr}-${mesStr}`))
-  ).filter(s => {
-    for(const campo of ['patente','conductor','cliente','origen','destino','estado']) {
-      const activos = _filtrosColumna[campo];
-      if(activos && activos.length && !activos.includes(_valorCampoFiltro(s, campo))) return false;
-    }
-    return true;
-  }).sort((a,b) => (b.fecha||'') > (a.fecha||'') ? 1 : (b.fecha||'') < (a.fecha||'') ? -1 :
+  );
+  try {
+    svcs = svcs.filter(s => {
+      for(const campo of ['patente','conductor','cliente','origen','destino','estado']) {
+        const activos = _filtrosColumna[campo];
+        if(activos && activos.length && !activos.includes(_valorCampoFiltro(s, campo))) return false;
+      }
+      return true;
+    });
+  } catch(e) { console.warn('Error aplicando filtros de columna:', e); }
+  svcs = svcs.sort((a,b) => (b.fecha||'') > (a.fecha||'') ? 1 : (b.fecha||'') < (a.fecha||'') ? -1 :
     (b.created_at||'') > (a.created_at||'') ? 1 : -1);
   const empty = document.getElementById('empty-svc');
   if(!svcs.length) {
@@ -2692,9 +2709,9 @@ function filaHTML(s,i) {
   const margen    = margenVal ? fmt(margenVal) : '—';
   const mColor    = margenVal >= 0 ? 'var(--green)' : 'var(--danger)';
   return `<tr>
-    <td style="font-family:'DM Sans',sans-serif;font-weight:800;color:var(--navy);${s.estado==='cerrado'?'cursor:pointer;text-decoration:underline dotted':''}" ${s.estado==='cerrado'?`onclick="editarServicioCerrado(${i})" title="Editar servicio"`:''}>${s.servicio_id||'—'}</td>
-    <td>${s.fecha||'—'}</td>
-    <td>${s._fecha_termino || (s.hora_termino ? s.hora_termino.substring(0,10) : '—')}</td>
+    <td style="font-family:'DM Sans',sans-serif;font-weight:800;color:var(--navy);white-space:nowrap;${s.estado==='cerrado'?'cursor:pointer;text-decoration:underline dotted':''}" ${s.estado==='cerrado'?`onclick="editarServicioCerrado(${i})" title="Editar servicio"`:''}>${s.servicio_id||'—'}</td>
+    <td style="white-space:nowrap">${s.fecha||'—'}</td>
+    <td style="white-space:nowrap">${s._fecha_termino || (s.hora_termino ? s.hora_termino.substring(0,10) : '—')}</td>
     <td style="font-family:'DM Sans',sans-serif;font-weight:700">${s.patente||'—'}</td>
     <td>${s.conductor||'—'}</td>
     <td>${s.cliente||'—'}</td>
