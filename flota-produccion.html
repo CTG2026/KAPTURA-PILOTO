@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>Global Solutions</title>
+<title>KAPTURA v8.1</title>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -41,6 +41,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .sec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:8px}
 .sec-ttl{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold)}
 .filtro{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.th-filtro{cursor:pointer;user-select:none}
+.th-filtro:hover{color:var(--gold)}
+.ico-filtro{font-size:9px;opacity:0.4}
+.ico-filtro.activo{opacity:1;color:var(--gold)}
+.chk-filtro-col{display:flex;align-items:center;gap:6px;padding:5px 6px;font-size:11px;color:var(--text);cursor:pointer;border-radius:5px}
+.chk-filtro-col:hover{background:var(--surface)}
 .filtro input{font-family:'DM Sans',sans-serif;font-size:12px;padding:6px 10px;border:1px solid var(--border);border-radius:6px;outline:none;background:var(--surface2);color:var(--text)}
 .btn{font-family:'DM Sans',sans-serif;font-size:11px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;padding:8px 14px;border-radius:6px;cursor:pointer;border:none;transition:all 0.15s;white-space:nowrap;display:inline-flex;align-items:center;gap:5px}
 .btn-navy{background:var(--gold);color:#000}.btn-navy:active{opacity:0.85}
@@ -120,7 +126,7 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
 <div id="login-screen" style="display:none">
   <div style="max-width:400px;margin:0 auto;padding:40px 20px">
     <div style="text-align:center;margin-bottom:32px">
-      <div style="color:rgba(255,255,255,0.7);font-size:11px;letter-spacing:3px;font-weight:700">GLOBAL SOLUTIONS</div>
+      <div style="color:rgba(255,255,255,0.7);font-size:11px;letter-spacing:3px;font-weight:700">KAPTURA</div>
       <div style="color:var(--text);font-size:26px;font-weight:800;margin-top:4px">Sistema de Gestión</div>
     </div>
     <div id="login-step-pin">
@@ -158,12 +164,12 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
 
 <div class="loading" id="loading">
   <div class="spin"></div>
-  <div style="font-size:12px;font-weight:700;color:var(--g600);letter-spacing:0.1em">CARGANDO...</div>
+  <div style="font-size:12px;font-weight:700;color:var(--g600);letter-spacing:0.1em">CARGANDO KAPTURA...</div>
 </div>
 
 <header class="hdr">
   <div style="display:flex;flex-direction:column">
-    <div class="logo">GS</div>
+    <div class="logo" id="hdr-logo">KAPTURA</div>
     <div id="hdr-empresa" style="font-size:11px;font-weight:800;color:var(--gold);letter-spacing:0.05em;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:55vw"></div>
   </div>
   <div style="display:flex;align-items:center;gap:12px">
@@ -181,7 +187,6 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
   <button class="ntab" id="tab-btn-resultados" onclick="setTab('resultados',this)">Resultados</button>
   <button class="ntab" id="tab-btn-informes" onclick="setTab('informes',this)">Informes</button>
   <button class="ntab" id="tab-btn-config" onclick="setTab('config',this)">Config</button>
-  <button class="ntab" id="tab-btn-disponibilidad" onclick="setTab('disponibilidad',this)">Disponibilidad</button>
   <button class="ntab" id="tab-btn-setup" onclick="setTab('setup',this)" style="display:none">Setup</button>
 </nav>
 
@@ -196,7 +201,7 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
   <div id="mod-go" onclick="entrarModulo('go')" style="background:var(--surface);border:2px solid #22c55e;border-radius:14px;padding:18px;margin-bottom:12px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.4)">
     <div style="display:flex;align-items:center;justify-content:space-between">
       <div>
-        <div style="font-family:'DM Sans',sans-serif;font-size:22px;font-weight:900;color:var(--green)">📡 SISTEMA GO</div>
+        <div style="font-family:'DM Sans',sans-serif;font-size:22px;font-weight:900;color:var(--green)">📡 KAPTURA GO</div>
         <div style="font-size:12px;color:var(--muted);margin-top:4px">Inicia · GPS registra todo · Ver margen</div>
       </div>
       <div style="background:var(--green);color:var(--text);font-size:10px;font-weight:800;padding:4px 10px;border-radius:20px">BÁSICO</div>
@@ -207,7 +212,7 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
   <div id="mod-pro" onclick="entrarModulo('pro')" style="background:var(--surface);border:2px solid var(--gold);border-radius:14px;padding:18px;margin-bottom:12px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.4)">
     <div style="display:flex;align-items:center;justify-content:space-between">
       <div>
-        <div style="font-family:'DM Sans',sans-serif;font-size:22px;font-weight:900;color:var(--gold)">📱 SISTEMA PRO</div>
+        <div style="font-family:'DM Sans',sans-serif;font-size:22px;font-weight:900;color:var(--gold)">📱 KAPTURA PRO</div>
         <div style="font-size:12px;color:var(--muted);margin-top:4px">Guías · Etapas · KPIs · $/km · Ranking clientes</div>
       </div>
       <div style="background:var(--gold);color:var(--text);font-size:10px;font-weight:800;padding:4px 10px;border-radius:20px">PRO</div>
@@ -218,7 +223,7 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
   <div id="mod-flota" onclick="entrarModulo('flota')" style="background:var(--surface);border:2px solid var(--gold);border-radius:14px;padding:18px;margin-bottom:12px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.4)">
     <div style="display:flex;align-items:center;justify-content:space-between">
       <div>
-        <div style="font-family:'DM Sans',sans-serif;font-size:22px;font-weight:900;color:var(--gold)">🖥 SISTEMA FLOTA</div>
+        <div style="font-family:'DM Sans',sans-serif;font-size:22px;font-weight:900;color:var(--gold)">🖥 KAPTURA FLOTA</div>
         <div style="font-size:12px;color:var(--muted);margin-top:4px">Asignación · Flota · Coordinador · Gestión completa</div>
       </div>
       <div id="mod-flota-badge" style="background:var(--gold);color:var(--text);font-size:10px;font-weight:800;padding:4px 10px;border-radius:20px">PREMIUM</div>
@@ -268,13 +273,22 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
     <div class="desk-tbl">
       <div style="overflow-x:auto"><table>
         <thead><tr>
-          <th>ID</th><th style="white-space:nowrap;font-size:10px">F. Asignación</th><th style="white-space:nowrap;font-size:10px">F. Término</th><th>Patente</th><th>Conductor</th><th>Cliente</th>
-          <th>Origen</th><th>Destino</th><th>Guía</th><th class="th-financ">Tarifa $</th>
+          <th>ID</th><th style="white-space:nowrap;font-size:10px">F. Asignación</th><th style="white-space:nowrap;font-size:10px">F. Término</th>
+          <th class="th-filtro" onclick="abrirFiltroColumna('patente',event)">Patente <span class="ico-filtro" id="ico-filtro-patente">▾</span></th>
+          <th class="th-filtro" onclick="abrirFiltroColumna('conductor',event)">Conductor <span class="ico-filtro" id="ico-filtro-conductor">▾</span></th>
+          <th class="th-filtro" onclick="abrirFiltroColumna('cliente',event)">Cliente <span class="ico-filtro" id="ico-filtro-cliente">▾</span></th>
+          <th class="th-filtro" onclick="abrirFiltroColumna('origen',event)">Origen <span class="ico-filtro" id="ico-filtro-origen">▾</span></th>
+          <th class="th-filtro" onclick="abrirFiltroColumna('destino',event)">Destino <span class="ico-filtro" id="ico-filtro-destino">▾</span></th>
+          <th>Guía</th><th class="th-financ">Tarifa $</th>
           <th>Cant Ptos</th><th class="th-financ">Total Ptos $</th><th class="th-financ">Total Ingreso</th>
-          <th class="th-financ">Costos</th><th class="th-financ">Margen</th><th>Estado</th><th>Acciones</th>
+          <th class="th-financ">Costos</th><th class="th-financ">Margen</th>
+          <th class="th-filtro" onclick="abrirFiltroColumna('estado',event)">Estado <span class="ico-filtro" id="ico-filtro-estado">▾</span></th>
+          <th>Acciones</th>
         </tr></thead>
         <tbody id="tabla-svc"></tbody>
       </table></div>
+
+      <div id="popover-filtro-col" style="display:none;position:fixed;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px;z-index:9999;max-height:320px;overflow-y:auto;box-shadow:0 6px 24px rgba(0,0,0,0.5);min-width:200px"></div>
     </div>
     <div id="empty-svc" class="empty" style="display:none">
       <div style="font-size:32px;margin-bottom:8px">📋</div>
@@ -299,12 +313,6 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
       </div>
     </div>
     <div id="lista-clientes"></div>
-  </div>
-
-  <!-- TAB DISPONIBILIDAD -->
-  <div id="tab-disponibilidad" style="display:none">
-    <div class="sec-ttl" style="margin-bottom:12px">Disponibilidad y Ocupación Diaria</div>
-    <div id="disponibilidad-content"></div>
   </div>
 
   <!-- TAB COSTOS -->
@@ -429,8 +437,9 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
       <button class="btn btn-sm btn-ghost" id="liq-fil-borrador" onclick="filtrarLiquidaciones('borrador')">Borrador</button>
       <button class="btn btn-sm btn-ghost" id="liq-fil-emitida" onclick="filtrarLiquidaciones('emitida')">Emitidas</button>
       <button class="btn btn-sm btn-ghost" id="liq-fil-enviada" onclick="filtrarLiquidaciones('enviada')">Enviadas</button>
+      <button class="btn btn-sm btn-ghost" id="liq-fil-aprobada" onclick="filtrarLiquidaciones('aprobada')">Aprobadas</button>
+      <button class="btn btn-sm btn-ghost" id="liq-fil-facturada" onclick="filtrarLiquidaciones('facturada')">Facturadas</button>
       <button class="btn btn-sm btn-ghost" id="liq-fil-en_cobro" onclick="filtrarLiquidaciones('en_cobro')">En Cobro</button>
-      <button class="btn btn-sm btn-ghost" id="liq-fil-por_cobrar" onclick="filtrarLiquidaciones('por_cobrar')">Por Cobrar</button>
       <button class="btn btn-sm btn-ghost" id="liq-fil-cobrada" onclick="filtrarLiquidaciones('cobrada')">Cobradas</button>
     </div>
     <!-- Lista liquidaciones -->
@@ -492,6 +501,16 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
             <span id="liq-total" style="font-size:18px;font-weight:900;color:var(--gold)">$0</span>
           </div>
         </div>
+        <!-- Cargos Adicionales -->
+        <div id="liq-adicionales-section" style="display:none">
+          <div class="section-ttl">Cargos Adicionales (opcional)</div>
+          <div id="liq-adicionales-lista" style="margin-bottom:8px"></div>
+          <div style="display:flex;gap:8px;margin-bottom:12px">
+            <input class="inp" id="liq-adic-concepto" placeholder="Concepto (ej: Estadía, Trasplaqueteo)" style="flex:2">
+            <input class="inp" type="number" id="liq-adic-monto" placeholder="Monto neto $" style="flex:1">
+            <button class="btn btn-outline btn-sm" onclick="liqAgregarAdicional()">+ Agregar</button>
+          </div>
+        </div>
         <!-- Factoring -->
         <div id="liq-factoring-section" style="display:none">
           <div class="section-ttl">Factoring (opcional)</div>
@@ -538,6 +557,46 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
       </div>
       <div class="modal-body" id="ver-liq-body"></div>
       <div class="modal-ftr" id="ver-liq-ftr"></div>
+    </div>
+  </div>
+
+  <!-- MODAL EDITAR SERVICIOS DE LIQUIDACIÓN -->
+  <div id="modal-editar-liq-servicios" class="overlay" style="display:none">
+    <div class="modal" style="max-width:700px">
+      <div class="modal-hdr">
+        <div>
+          <div class="modal-ttl">Editar Servicios</div>
+          <div class="modal-sub" id="liqe-numero-sub"></div>
+        </div>
+        <button class="modal-cls" onclick="cerrar('modal-editar-liq-servicios')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="section-ttl">Servicios disponibles del cliente</div>
+        <div id="liqe-servicios-lista" style="margin-bottom:12px"></div>
+        <div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:14px">
+          <div class="section-ttl">Resumen</div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+            <span style="color:var(--muted);font-size:12px">Servicios seleccionados</span>
+            <span id="liqe-cant-svc" style="font-weight:700;color:var(--text)">0</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+            <span style="color:var(--muted);font-size:12px">Monto neto</span>
+            <span id="liqe-monto-neto" style="font-weight:700;color:var(--text)">$0</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+            <span style="color:var(--muted);font-size:12px">IVA 19%</span>
+            <span id="liqe-iva" style="font-weight:700;color:var(--text)">$0</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding-top:8px;border-top:1px solid var(--border)">
+            <span style="font-size:13px;font-weight:800;color:var(--gold)">TOTAL</span>
+            <span id="liqe-total" style="font-size:18px;font-weight:900;color:var(--gold)">$0</span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-ftr">
+        <button class="btn btn-ghost" onclick="cerrar('modal-editar-liq-servicios')">Cancelar</button>
+        <button class="btn btn-navy" onclick="liqGuardarEdicionServicios()">✓ Guardar Cambios</button>
+      </div>
     </div>
   </div>
 
@@ -934,7 +993,7 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
       <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Lo que pagas aunque los camiones no salgan.</div>
       <button onclick="document.getElementById('setup-cf-lista').style.display=document.getElementById('setup-cf-lista').style.display==='none'?'block':'none'" style="width:100%;background:rgba(255,107,0,0.12);border:1px solid rgba(255,107,0,0.3);border-radius:8px;padding:10px;font-size:13px;font-weight:700;color:var(--gold);cursor:pointer;margin-bottom:8px">+ Ingresar ítem por ítem</button>
       <div id="setup-cf-lista" style="display:none;margin-bottom:10px">
-        <div style="font-size:10px;color:var(--muted);margin-bottom:8px">Ingresa solo los que aplican. El sistema suma el total.</div>
+        <div style="font-size:10px;color:var(--muted);margin-bottom:8px">Ingresa solo los que aplican. KAPTURA suma el total.</div>
         <div id="setup-cf-items">
           <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)"><div><div style="font-size:12px;color:var(--text)">Crédito / leasing</div></div><input type="text" data-scf-item="credito" onchange="setupCFSumar()" placeholder="$0" style="width:85px;background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:5px 6px;font-size:12px;color:var(--text);text-align:right;font-family:inherit"></div>
           <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)"><div><div style="font-size:12px;color:var(--text)">Seguro SOAP</div><div style="font-size:10px;color:rgba(255,255,255,0.35)">Anual ÷12</div></div><input type="text" data-scf-item="soap" data-anual="true" onchange="setupCFSumar()" placeholder="$0" style="width:85px;background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:5px 6px;font-size:12px;color:var(--text);text-align:right;font-family:inherit"></div>
@@ -983,7 +1042,7 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
       <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Reserva mensual para mantenciones mayores.</div>
       <button onclick="document.getElementById('setup-mayor-lista').style.display=document.getElementById('setup-mayor-lista').style.display==='none'?'block':'none'" style="width:100%;background:rgba(255,107,0,0.12);border:1px solid rgba(255,107,0,0.3);border-radius:8px;padding:10px;font-size:13px;font-weight:700;color:var(--gold);cursor:pointer;margin-bottom:8px">+ Ver componentes mayores</button>
       <div id="setup-mayor-lista" style="display:none;margin-bottom:10px">
-        <div style="font-size:10px;color:var(--muted);margin-bottom:8px">Ingresa el costo estimado de cada componente. El sistema calcula la reserva mensual sugerida.</div>
+        <div style="font-size:10px;color:var(--muted);margin-bottom:8px">Ingresa el costo estimado de cada componente. KAPTURA calcula la reserva mensual sugerida.</div>
         <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)"><div><div style="font-size:12px;color:var(--text)">Motor</div><div style="font-size:10px;color:rgba(255,255,255,0.35)">$3-8M · 500k–800k km</div></div><input type="text" data-smayor-item="motor" onchange="setupMayorSumar()" placeholder="$0" style="width:85px;background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:5px 6px;font-size:12px;color:var(--text);text-align:right;font-family:inherit"></div>
         <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)"><div><div style="font-size:12px;color:var(--text)">Caja de cambios</div><div style="font-size:10px;color:rgba(255,255,255,0.35)">$2.5-5M · 300k–500k km</div></div><input type="text" data-smayor-item="caja" onchange="setupMayorSumar()" placeholder="$0" style="width:85px;background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:5px 6px;font-size:12px;color:var(--text);text-align:right;font-family:inherit"></div>
         <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)"><div><div style="font-size:12px;color:var(--text)">Diferencial</div><div style="font-size:10px;color:rgba(255,255,255,0.35)">$1.5-3.5M · 300k–500k km</div></div><input type="text" data-smayor-item="diferencial" onchange="setupMayorSumar()" placeholder="$0" style="width:85px;background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:5px 6px;font-size:12px;color:var(--text);text-align:right;font-family:inherit"></div>
@@ -1297,7 +1356,7 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
           <input class="inp" id="cos-litros-real" readonly style="color:#000;background:var(--green)">
           <div id="cos-rendimiento-cargas" style="font-size:10px;font-weight:700;color:var(--gold);margin-top:4px;display:none">
             📊 Rendimiento según cargas: <span id="cos-rend-valor">—</span> km/lt
-            <span style="font-size:9px;color:var(--g400);margin-left:4px">(<span id="cos-rend-km">—</span> km / <span id="cos-rend-lt">—</span> lt desde inicio)</span>
+            <span style="font-size:9px;color:var(--g400);margin-left:4px">(<span id="cos-rend-km">—</span> km / <span id="cos-rend-lt">—</span> lt desde inicio Kaptura)</span>
           </div>
         </div>
         <div class="fld"><label class="lbl">Combustible <span style="font-size:8px;font-weight:800;background:var(--gold);color:var(--text);padding:1px 5px;border-radius:3px">AUTO</span></label><input class="inp" id="cos-comb" oninput="calcCostos()" style=""></div>
@@ -2046,7 +2105,7 @@ async function actualizarFechaKaptura(patente, fecha) {
   if(error) { toast('Error: '+error.message); return; }
   const f = DB.flota.find(f=>f.patente===patente);
   if(f) f.fecha_inicio_kaptura = fecha;
-  toast(`✓ Fecha inicio actualizada — ${patente}`);
+  toast(`✓ Fecha inicio Kaptura actualizada — ${patente}`);
 }
 
 // ══ CARGA DE DATOS ══
@@ -2225,7 +2284,7 @@ async function procesarCopec(input) {
 const SUPA_URL = 'https://aqunzrukuruwzwywnurq.supabase.co';
 const SUPA_KEY = 'sb_publishable_70t9UxFlcqYDj7AMybsrHg__IMGNA8C';
 const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
-const KAPTURA_VERSION = '';
+const KAPTURA_VERSION = '8.1';
 const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 const hoy = new Date();
 const hoyStr = new Date().toLocaleDateString('en-CA', {timeZone:'America/Santiago'});
@@ -2238,20 +2297,9 @@ let DB_tarifario = [];
 
 // ══ INIT ══
 async function init() {
-  // Validar que la sesión sea de Global Solutions
-  const sess = JSON.parse(localStorage.getItem('kaptura_session')||'{}');
-  if(sess.empresa && sess.empresa !== 'global_solutions') {
-    // Sesión de otra empresa — limpiar y pedir PIN de Global
-    localStorage.removeItem('kaptura_session');
-    location.reload();
-    return;
-  }
-  if(!sess.empresa) {
-    window._empresaPredef = 'global_solutions';
-  }
   document.getElementById('filtro-fecha').value = '';
   document.getElementById('hdr-info').innerHTML =
-    `${hoy.getDate()} ${MESES[hoy.getMonth()]} ${hoy.getFullYear()}`;
+    `${hoy.getDate()} ${MESES[hoy.getMonth()]} ${hoy.getFullYear()} · v${KAPTURA_VERSION}`;
   // Seleccionar mes en curso automáticamente
   const dashMes = document.getElementById('dash-mes');
   if(dashMes) dashMes.value = String(hoy.getMonth());
@@ -2462,14 +2510,73 @@ async function calcMargenReal(mes, conf, ingresoTotal) {
 
 }
 
+let _filtrosColumna = {patente:[], conductor:[], cliente:[], origen:[], destino:[], estado:[]};
+const _ESTADO_LABELS_FILTRO = {asignado:'Asignado', en_proceso:'En Proceso', ejecutado:'Ejecutado', borrador:'Borrador', cerrado:'Cerrado'};
+
+function _valorCampoFiltro(s, campo) {
+  if(campo==='destino') return s.destino || (s._puntos||[]).find(p=>p.tipo==='final')?.destino || '';
+  if(campo==='estado') return _ESTADO_LABELS_FILTRO[s.estado] || s.estado || '';
+  return s[campo] || '';
+}
+
+function _serviciosBaseParaFiltros() {
+  const fecha = document.getElementById('filtro-fecha')?.value;
+  const mes = parseInt(document.getElementById('dash-mes')?.value ?? hoy.getMonth());
+  const anioStr = String(hoy.getFullYear());
+  const mesStr = String(mes+1).padStart(2,'0');
+  return fecha
+    ? DB.servicios.filter(s => (s.fecha||'').startsWith(fecha))
+    : DB.servicios.filter(s => (s.fecha||'').startsWith(`${anioStr}-${mesStr}`));
+}
+
+function abrirFiltroColumna(campo, ev) {
+  ev.stopPropagation();
+  const pop = document.getElementById('popover-filtro-col');
+  if(pop.style.display==='block' && pop.dataset.campo===campo) { pop.style.display='none'; return; }
+
+  const base = _serviciosBaseParaFiltros();
+  const valores = Array.from(new Set(base.map(s => _valorCampoFiltro(s, campo)).filter(v=>v))).sort();
+  const seleccionados = _filtrosColumna[campo] || [];
+
+  pop.innerHTML = `
+    <div style="display:flex;justify-content:space-between;margin-bottom:6px;padding:0 2px">
+      <span onclick="_filtrosColumna['${campo}']=[];renderServicios();document.getElementById('popover-filtro-col').style.display='none'" style="font-size:10px;color:var(--gold);cursor:pointer;font-weight:700">Limpiar</span>
+      <span onclick="document.getElementById('popover-filtro-col').style.display='none'" style="font-size:10px;color:var(--muted);cursor:pointer">✕</span>
+    </div>
+    ${valores.map(v => `
+      <label class="chk-filtro-col">
+        <input type="checkbox" ${seleccionados.includes(v)?'checked':''} onchange="_toggleFiltroColumna('${campo}','${v.replace(/'/g,"\\'")}',this.checked)">
+        ${v}
+      </label>`).join('') || '<div style="font-size:11px;color:var(--muted);padding:6px">Sin valores</div>'}
+  `;
+
+  const th = ev.target.closest('th');
+  const rect = th.getBoundingClientRect();
+  pop.style.top = (rect.bottom+4)+'px';
+  pop.style.left = rect.left+'px';
+  pop.style.display = 'block';
+  pop.dataset.campo = campo;
+}
+
+function _toggleFiltroColumna(campo, valor, checked) {
+  if(!_filtrosColumna[campo]) _filtrosColumna[campo] = [];
+  if(checked) { if(!_filtrosColumna[campo].includes(valor)) _filtrosColumna[campo].push(valor); }
+  else { _filtrosColumna[campo] = _filtrosColumna[campo].filter(v=>v!==valor); }
+  renderServicios();
+  const ico = document.getElementById('ico-filtro-'+campo);
+  if(ico) ico.classList.toggle('activo', _filtrosColumna[campo].length>0);
+}
+
+document.addEventListener('click', (e) => {
+  const pop = document.getElementById('popover-filtro-col');
+  if(pop && pop.style.display==='block' && !pop.contains(e.target) && !e.target.closest('.th-filtro')) {
+    pop.style.display = 'none';
+  }
+});
+
 function renderServicios() {
   const fecha = document.getElementById('filtro-fecha').value;
-  let mes = parseInt(document.getElementById('dash-mes')?.value ?? hoy.getMonth());
-  if(_sessionUsuario?.rol === 'despachador' && mes < 6) {
-    mes = 6;
-    const selMesR = document.getElementById('dash-mes');
-    if(selMesR) selMesR.value = '6';
-  }
+  const mes = parseInt(document.getElementById('dash-mes')?.value ?? hoy.getMonth());
   const anioStr = String(hoy.getFullYear());
   const mesStr = String(mes+1).padStart(2,'0');
   const esConductorRender = _sessionUsuario?.rol === 'conductor';
@@ -2479,7 +2586,13 @@ function renderServicios() {
     : fecha
       ? DB.servicios.filter(s => (s.fecha||'').startsWith(fecha))
       : DB.servicios.filter(s => (s.fecha||'').startsWith(`${anioStr}-${mesStr}`))
-  ).sort((a,b) => (b.fecha||'') > (a.fecha||'') ? 1 : (b.fecha||'') < (a.fecha||'') ? -1 :
+  ).filter(s => {
+    for(const campo of ['patente','conductor','cliente','origen','destino','estado']) {
+      const activos = _filtrosColumna[campo];
+      if(activos && activos.length && !activos.includes(_valorCampoFiltro(s, campo))) return false;
+    }
+    return true;
+  }).sort((a,b) => (b.fecha||'') > (a.fecha||'') ? 1 : (b.fecha||'') < (a.fecha||'') ? -1 :
     (b.created_at||'') > (a.created_at||'') ? 1 : -1);
   const empty = document.getElementById('empty-svc');
   if(!svcs.length) {
@@ -2491,21 +2604,6 @@ function renderServicios() {
   empty.style.display = 'none';
   document.getElementById('cards-mobile').innerHTML = svcs.map(s => cardHTML(s, DB.servicios.indexOf(s))).join('');
   document.getElementById('tabla-svc').innerHTML    = svcs.map(s => filaHTML(s, DB.servicios.indexOf(s))).join('');
-
-  // Pasada de seguridad: despachador solo puede ver Iniciar / Registrar / Ed. Asignación
-  if(_sessionUsuario?.rol === 'despachador') {
-    const permitidas = ['Iniciar', 'Registrar', 'Ed. Asignación'];
-    document.querySelectorAll('#cards-mobile .svc-acts button, #tabla-svc button').forEach(btn => {
-      const texto = btn.textContent.trim();
-      const esPermitido = permitidas.some(p => texto.includes(p));
-      if(!esPermitido) btn.style.display = 'none';
-    });
-    document.querySelectorAll('#cards-mobile .svc-id, #tabla-svc td[onclick*="editarServicioCerrado"]').forEach(el => {
-      el.onclick = null;
-      el.style.cursor = 'default';
-      el.style.textDecoration = 'none';
-    });
-  }
 }
 
 function pillHTML(e) {
@@ -2527,7 +2625,7 @@ function cardHTML(s,i) {
     <div class="svc-top">
       <div>
         <div style="display:flex;align-items:center;gap:8px">
-          <div class="svc-id" ${s.estado==='cerrado'&&_sessionUsuario?.rol!=='despachador'?`onclick="editarServicioCerrado(${i})" title="Editar servicio" style="cursor:pointer;text-decoration:underline dotted"`:''}>${s.servicio_id||'—'}</div>
+          <div class="svc-id" ${s.estado==='cerrado'?`onclick="editarServicioCerrado(${i})" title="Editar servicio" style="cursor:pointer;text-decoration:underline dotted"`:''}>${s.servicio_id||'—'}</div>
           <div style="font-size:10px;color:var(--muted);font-weight:600">${s.fecha||s.created_at?.split('T')[0]||'—'}</div>
         </div>
         <div class="svc-pat">${s.patente||'—'} · ${s.conductor||'—'}</div>
@@ -2564,14 +2662,12 @@ function cardHTML(s,i) {
     <div class="svc-body"><div class="svc-acts">
       ${s.estado==='asignado' ? `<button class="btn btn-navy btn-sm" onclick="iniciarSvc(${i})">▶ Iniciar</button>` : ''}
       ${s.estado==='en_proceso' ? `<button class="btn btn-purple btn-sm" onclick="verServicio(${i})">📋 Registrar</button><button class="btn btn-outline btn-sm" onclick="abrirAsignar(${i})">✏ Ed. Asignación</button>` : ''}
-      ${_sessionUsuario?.rol==='despachador' ? '' : `
       ${s.estado==='ejecutado' ? `${['coordinador','controller','administrador'].includes(_sessionUsuario?.rol) ? `<button class="btn btn-green btn-sm" onclick="abrirCierre(${i})">🔒 Cierre</button>` : ''}<button class="btn btn-outline btn-sm" onclick="verServicio(${i})">✏ Ed. Registro</button>` : ''}
       ${s.estado === 'borrador' ? `<button class="btn btn-green btn-sm" onclick="abrirCierre(${i})">🔒 Cierre</button><button class="btn btn-outline btn-sm" onclick="verServicio(${i})">✏ Ed. Registro</button>` : ''}
       ${s.estado==='cerrado' ? `<button class="btn btn-sm" style="background:rgba(201,168,76,0.15);color:var(--gold);border:1px solid rgba(201,168,76,0.3)" onclick="abrirCierre(${i})">✏ Ed. Cierre</button>` : ''}
       ${['confirmado','cerrado','borrador'].includes(s.estado) ? `<button class="btn btn-outline btn-sm" onclick="abrirInforme(${i})">📄 Informe</button>` : ''}
       ${(s._puntos||[]).some(p=>(p.guias||[]).length>0||p.num_guia) ? `<button class="btn btn-outline btn-sm" onclick="verGuias(${i})">🖼 Guías</button>` : ''}
       <button class="btn btn-red btn-sm" onclick="eliminarSvc(${i})">✕</button>
-      `}
     </div></div>
   </div>`;
 }
@@ -2596,7 +2692,7 @@ function filaHTML(s,i) {
   const margen    = margenVal ? fmt(margenVal) : '—';
   const mColor    = margenVal >= 0 ? 'var(--green)' : 'var(--danger)';
   return `<tr>
-    <td style="font-family:'DM Sans',sans-serif;font-weight:800;color:var(--navy);${s.estado==='cerrado'?'cursor:pointer;text-decoration:underline dotted':''}" ${s.estado==='cerrado'&&_sessionUsuario?.rol!=='despachador'?`onclick="editarServicioCerrado(${i})" title="Editar servicio"`:''}>${s.servicio_id||'—'}</td>
+    <td style="font-family:'DM Sans',sans-serif;font-weight:800;color:var(--navy);${s.estado==='cerrado'?'cursor:pointer;text-decoration:underline dotted':''}" ${s.estado==='cerrado'?`onclick="editarServicioCerrado(${i})" title="Editar servicio"`:''}>${s.servicio_id||'—'}</td>
     <td>${s.fecha||'—'}</td>
     <td>${s._fecha_termino || (s.hora_termino ? s.hora_termino.substring(0,10) : '—')}</td>
     <td style="font-family:'DM Sans',sans-serif;font-weight:700">${s.patente||'—'}</td>
@@ -2615,14 +2711,12 @@ function filaHTML(s,i) {
     <td><div style="display:flex;gap:4px;flex-wrap:wrap">
       ${s.estado==='asignado' ? `<button class="btn btn-navy btn-sm" onclick="iniciarSvc(${i})">▶ Iniciar</button>` : ''}
       ${s.estado==='en_proceso' ? `<button class="btn btn-purple btn-sm" onclick="verServicio(${i})">📋 Registrar</button><button class="btn btn-outline btn-sm" onclick="abrirAsignar(${i})">✏ Ed. Asignación</button>` : ''}
-      ${_sessionUsuario?.rol==='despachador' ? '' : `
       ${s.estado==='ejecutado' ? `${['coordinador','controller','administrador'].includes(_sessionUsuario?.rol) ? `<button class="btn btn-green btn-sm" onclick="abrirCierre(${i})">🔒 Cierre</button>` : ''}<button class="btn btn-outline btn-sm" onclick="verServicio(${i})">✏ Ed. Registro</button>` : ''}
       ${s.estado === 'borrador' ? `<button class="btn btn-green btn-sm" onclick="abrirCierre(${i})">🔒 Cierre</button><button class="btn btn-outline btn-sm" onclick="verServicio(${i})">✏ Ed. Registro</button>` : ''}
       ${s.estado==='cerrado' ? `<button class="btn btn-sm" style="background:rgba(201,168,76,0.15);color:var(--gold);border:1px solid rgba(201,168,76,0.3)" onclick="abrirCierre(${i})">✏ Ed. Cierre</button>` : ''}
       ${['confirmado','cerrado','borrador'].includes(s.estado) ? `<button class="btn btn-outline btn-sm" onclick="abrirInforme(${i})">📄 Informe</button>` : ''}
       ${(s._puntos||[]).some(p=>(p.guias||[]).length>0||p.num_guia) ? `<button class="btn btn-outline btn-sm" onclick="verGuias(${i})">🖼 Guías</button>` : ''}
       <button class="btn btn-red btn-sm" onclick="eliminarSvc(${i})">✕</button>
-      `}
     </div></td>
   </tr>`;
 }
@@ -2635,7 +2729,7 @@ function renderFlota() {
         <span class="pill p-confirmado">Activo</span>
       </div>
       <div style="margin-top:8px;display:flex;align-items:center;gap:8px;font-size:11px">
-        <label style="color:var(--g400);font-weight:700;white-space:nowrap">Fecha Inicio:</label>
+        <label style="color:var(--g400);font-weight:700;white-space:nowrap">Inicio Kaptura:</label>
         <input type="date" value="${f.fecha_inicio_kaptura||''}" style="border:1px solid var(--g200);border-radius:4px;padding:3px 6px;font-size:11px"
           onchange="actualizarFechaKaptura('${f.patente}',this.value)">
       </div>
@@ -3457,10 +3551,19 @@ async function irACostos() {
       if(teoIda && !teoIda.value) teoIda.value = tarMatch.km_ida||0;
       if(teoVta && !teoVta.value) teoVta.value = tarMatch.km_vuelta||0;
     }
+    // Precargar peajes habituales desde tarifario si no hay valor manual
+    if(tarMatch && tarMatch.peajes_habituales) {
+      const elPeajes = document.getElementById('cos-peajes');
+      if(elPeajes && !elPeajes.dataset.manual) {
+        elPeajes.value = tarMatch.peajes_habituales;
+      }
+    }
   }
   // Mantención: km × (mant_costo ÷ mant_km) — se calcula en calcCostos() con km reales, aquí = 0
   const sueldoDiario = getCfgNum(['sueldo_diario','sueldo_conductor']) || 33000;
-  const viaticoDia   = getCfgNum(['viatico_dia','viatico']);
+  // Viático: buscar primero clave con sufijo empresa para evitar contaminación de clave global
+  const emp2 = DB._empresa || _sessionUsuario?.empresa || '';
+  const viaticoDia = parseInt(c['viatico_dia_'+emp2] || c['viatico_dia'] || c['viatico'] || 0);
   document.getElementById('cos-conductor').value = fmt(dias * sueldoDiario);
   // Costo fijo prorrateo: cfDia × días ÷ equipos en servicio ese día
   const equiposIni = parseInt(document.getElementById('cos-equipos')?.value)||1;
@@ -3505,13 +3608,13 @@ let _integrando = false;
 function calcCostoFijoEquipos() {
   var equipos = parseInt(document.getElementById('cos-equipos')?.value)||1;
   var c       = DB.config;
+  var emp3    = DB._empresa || (_sessionUsuario && _sessionUsuario.empresa) || '';
   var dias    = parseFloat(document.getElementById('cos-dias')?.value)||1;
-  var cfMens  = parseInt(c.costo_fijo_mensual||c.costo_fijo_mes||0);
-  var diasOp  = parseInt(c.dias_operativos||20);
-  // Si hay costo mensual, calcular diario desde mensual ÷ días operativos
-  // Si no hay mensual, usar costo_fijo_dia directamente (pero solo si es razonable)
-  var cfDia   = cfMens > 0 ? Math.round(cfMens/diasOp) : parseInt(c.costo_fijo_dia||0);
-  var cfProrr = cfDia > 0 ? Math.round((cfDia * dias) / equipos) : 0;
+  // Preferir clave con sufijo empresa para evitar contaminación global
+  var cfMens  = parseInt(c['costo_fijo_mensual_'+emp3] || c.costo_fijo_mensual || c.costo_fijo_mes || 0);
+  var diasOp  = parseInt(c['dias_operativos_'+emp3] || c.dias_operativos || 20);
+  var cfDiaBase = cfMens > 0 ? Math.round(cfMens/diasOp) : parseInt(c['costo_fijo_dia_'+emp3] || c.costo_fijo_dia || 0);
+  var cfProrr = cfDiaBase > 0 ? Math.round((dias * cfDiaBase) / equipos) : 0;
   var cfEl    = document.getElementById('cos-cf');
   if(cfEl) { cfEl.dataset.manual = '1'; cfEl.value = cfProrr; }
 }
@@ -4533,7 +4636,7 @@ function verEvaluacion(evalId) {
     + '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid #2E3D3B;background:#212B2A"><div style="font-size:10px;font-weight:800;letter-spacing:0.12em;color:rgba(245,240,232,0.5);text-transform:uppercase">Margen</div><div style="font-size:22px;font-weight:900;color:'+color+'">'+fmt(e.margen)+'</div></div>'
     + '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:#212B2A"><div style="font-size:10px;font-weight:800;letter-spacing:0.12em;color:rgba(245,240,232,0.5);text-transform:uppercase">% Sobre Tarifa</div><div style="font-size:20px;font-weight:900;color:'+color+'">'+e.margen_pct+'%</div></div>'
     + '</div>'
-    + '<div style="text-align:center;font-size:10px;color:rgba(245,240,232,0.3);margin-top:16px;padding-top:12px;border-top:1px solid #2E3D3B">GLOBAL SOLUTIONS · Evaluación generada el '+e.fecha+' · Uso interno</div>'
+    + '<div style="text-align:center;font-size:10px;color:rgba(245,240,232,0.3);margin-top:16px;padding-top:12px;border-top:1px solid #2E3D3B">KAPTURA FLOTA · Evaluación generada el '+e.fecha+' · Uso interno</div>'
     + '</div>';
 
   document.getElementById('ver-eval-body').innerHTML = html;
@@ -4609,7 +4712,7 @@ async function abrirInforme(i) {
   let html = `
   <div style="border:2px solid #2A2A2A;border-radius:8px;overflow:hidden;margin-bottom:16px">
     <div class="inf-hdr">
-      <div style="font-family:'DM Sans',sans-serif;font-size:18px;font-weight:900">GLOBAL SOLUTIONS — INFORME DE SERVICIO</div>
+      <div style="font-family:'DM Sans',sans-serif;font-size:18px;font-weight:900">KAPTURA — INFORME DE SERVICIO</div>
       <div style="font-size:11px;opacity:0.7">${new Date().toLocaleDateString('es-CL')}</div>
     </div>
     <div class="inf-grid">
@@ -4840,7 +4943,7 @@ async function abrirInforme(i) {
 function imprimirInforme() {
   const body = document.getElementById('inf-body').innerHTML;
   const win = window.open('','_blank');
-  win.document.write(`<html><head><title>Informe Global Solutions</title>
+  win.document.write(`<html><head><title>Informe Kaptura</title>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
       :root{--gold:#C9A84C;--green:#7EA87E;--danger:#B05A5A;--text:#F5F0E8;--bg:#1A2120;--surface:#212B2A;--border:#2E3D3B;--muted:rgba(245,240,232,0.4)}
@@ -5040,7 +5143,7 @@ function imprimirInforme() {
 <div class="overlay" id="modal-ver-eval" style="display:none">
   <div class="modal" style="max-height:95vh;overflow-y:auto;background:#1A2120;border:1px solid #2E3D3B">
     <div class="modal-hdr" style="background:#212B2A;border-bottom:1px solid #2E3D3B">
-      <div><div class="modal-ttl" style="color:#C9A84C">GLOBAL SOLUTIONS — Evaluación de Servicio</div><div class="modal-sub" id="ver-eval-num" style="color:rgba(245,240,232,0.5)"></div></div>
+      <div><div class="modal-ttl" style="color:#C9A84C">KAPTURA — Evaluación de Servicio</div><div class="modal-sub" id="ver-eval-num" style="color:rgba(245,240,232,0.5)"></div></div>
       <button class="modal-cls" onclick="cerrar('modal-ver-eval')">✕</button>
     </div>
     <div class="modal-body" id="ver-eval-body"></div>
@@ -5193,7 +5296,7 @@ function abrirInformeResultados(mesKey) {
   const [y, m] = mesKey.split('-');
   const nombreMes = MESES_LARGO[parseInt(m)-1] + ' ' + y;
   document.getElementById('inf-detalle-titulo').textContent = 'Informe Resultados ' + nombreMes;
-  document.getElementById('inf-er-subtitulo').textContent = nombreMes + ' · GLOBAL SOLUTIONS';
+  document.getElementById('inf-er-subtitulo').textContent = nombreMes + ' · KAPTURA';
   document.getElementById('inf-lista-container').style.display = 'none';
   document.getElementById('inf-detalle-container').style.display = 'block';
 
@@ -5356,7 +5459,7 @@ async function recalcRendimientoCargas() {
 
 // ══ UTILS ══
 function setTab(nombre, btn) {
-  ['servicios','flota','clientes','gastos','liquidaciones','resultados','informes','config','setup','disponibilidad'].forEach(t => {
+  ['servicios','flota','clientes','gastos','liquidaciones','resultados','informes','config','setup'].forEach(t => {
     const el = document.getElementById(`tab-${t}`);
     if(el) el.style.display = t===nombre ? 'block' : 'none';
   });
@@ -5367,7 +5470,6 @@ function setTab(nombre, btn) {
   if(nombre==='informes') renderInformes();
   if(nombre==='setup') cargarSetup();
   if(nombre==='liquidaciones') cargarLiquidaciones();
-  if(nombre==='disponibilidad') cargarDisponibilidad();
   // Mostrar/ocultar botón fijo SETUP
   const btnFijo = document.getElementById('btn-setup-fixed');
   if(btnFijo) btnFijo.style.display = nombre==='setup' ? 'block' : 'none';
@@ -5451,7 +5553,8 @@ async function iniciarLogin() {
         document.getElementById('login-screen').style.display = 'none';
         document.getElementById('pantalla-modulos').style.display = 'none';
         document.getElementById('btn-cerrar-sesion').style.display = 'block';
-        document.getElementById('hdr-empresa').textContent = sess.nombre || 'Global Solutions';
+        document.getElementById('hdr-logo').textContent = (sess.empresa === 'global_solutions') ? 'GLOBAL SOLUTIONS' : 'KAPTURA';
+        document.getElementById('hdr-empresa').textContent = sess.nombre || sess.empresa || 'KAPTURA FLOTA';
         document.getElementById('loading').style.display = 'flex';
         document.getElementById('main').style.display = '';
         document.getElementById('nav').style.display = '';
@@ -5479,12 +5582,6 @@ async function iniciarLogin() {
           const styleDesp = document.createElement('style');
           styleDesp.textContent = '.th-financ, .td-financ { display: none !important; }';
           document.head.appendChild(styleDesp);
-          // Ocultar meses anteriores a julio
-          const selMesD = document.getElementById('dash-mes');
-          if(selMesD) {
-            Array.from(selMesD.options).forEach(opt => { if(parseInt(opt.value) < 6) opt.remove(); });
-            if(parseInt(selMesD.value) < 6) selMesD.value = '6';
-          }
         }
         if(sess.rol === 'conductor') {
           // Ocultar tabs que no corresponden al conductor
@@ -5571,6 +5668,7 @@ function aplicarAccesoKaptura() {
   // Ocultar login
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('btn-cerrar-sesion').style.display = 'block';
+  document.getElementById('hdr-logo').textContent = (_sessionUsuario?.empresa === 'global_solutions') ? 'GLOBAL SOLUTIONS' : 'KAPTURA';
   // Nombre empresa en header
   const empNombre = (_sessionUsuario?.empresa||'') === 'transportes_madrid' ? 'TRANSPORTES MADRID' : 'GLOBAL SOLUTIONS';
   document.getElementById('hdr-empresa').textContent = empNombre;
@@ -5606,7 +5704,7 @@ function aplicarAccesoKaptura() {
 function entrarModulo(modulo) {
   const esConductor = _sessionUsuario?.rol === 'conductor';
   if(modulo === 'flota' && esConductor) {
-    alert('🔒 Este módulo no está disponible');
+    alert('🔒 Este módulo requiere plan KAPTURA FLOTA');
     return;
   }
   if(modulo === 'go' || modulo === 'pro') {
@@ -5621,20 +5719,6 @@ function entrarModulo(modulo) {
     DB._empresa = _sessionUsuario.empresa;
     if(['coordinador','controller','administrador'].includes(_sessionUsuario.rol)) {
       document.getElementById('tab-btn-setup').style.display = '';
-    }
-    if(_sessionUsuario.rol === 'despachador') {
-      ['tab-btn-liquidaciones','tab-btn-flota','tab-btn-clientes','tab-btn-gastos',
-       'tab-btn-resultados','tab-btn-informes','tab-btn-config','tab-btn-setup'].forEach(id => {
-        const el = document.getElementById(id); if(el) el.style.display = 'none';
-      });
-      ['kpi-ingreso-mes','kpi-costos-mes','kpi-margen-teo','kpi-margen-prom','k-margen-real-kpi'].forEach(id => {
-        const el = document.getElementById(id); if(el) el.style.display = 'none';
-      });
-      const selMes = document.getElementById('dash-mes');
-      if(selMes) {
-        Array.from(selMes.options).forEach(opt => { if(parseInt(opt.value) < 6) opt.remove(); });
-        if(parseInt(selMes.value) < 6) selMes.value = '6';
-      }
     }
     init();
   }
@@ -6257,199 +6341,6 @@ async function setupGuardarTodo() {
 }
 
 // ══════════════════════════════════════
-// ══════════════════════════════════════
-// DISPONIBILIDAD Y OCUPACIÓN DIARIA
-// ══════════════════════════════════════
-
-let _dispData = {};
-let _dispForm = {};
-
-async function cargarDisponibilidad() {
-  const emp = DB._empresa || _sessionUsuario?.empresa;
-  if(!emp || !supa) return;
-  try {
-    const { data, error } = await supa.from('disponibilidad').select('*').eq('empresa', emp).order('fecha', {ascending:false});
-    if(error) { console.warn('Error cargar disponibilidad:', error); return; }
-    const disp = {};
-    (data||[]).forEach(r => {
-      if(!disp[r.fecha]) disp[r.fecha] = {};
-      disp[r.fecha][r.patente] = {
-        estado: r.estado||'', conductor: r.conductor||'', cliente: r.cliente||'',
-        tipoMant: r.tipo_mant||'', mantManual: r.mant_manual||''
-      };
-    });
-    _dispData = disp;
-  } catch(e) { console.warn('Error cargar disponibilidad:', e); }
-  renderDisponibilidad();
-}
-
-function dispActualizarForm(campo, valor) {
-  _dispForm[campo] = valor;
-  renderDisponibilidad();
-}
-
-function renderDisponibilidad() {
-  const cont = document.getElementById('disponibilidad-content');
-  if(!cont) return;
-
-  const FLOTA = (DB.flota||[]).map(f=>f.patente).filter(Boolean);
-  const conductores = (DB.conductores||[]).map(c=>c.nombre).filter(Boolean);
-  const clientes = (DB.clientes||[]).map(c=>c.nombre).filter(Boolean);
-  const ESTADOS = ['Disponible','En servicio','Mantención'];
-  const TIPOS_MANT = ['Frenos','Caja de cambios','Motor','Suspensión','Eléctrico','Neumáticos','Diferencial','Embrague','Dirección','Preventivo','Puesta en marcha','Otro'];
-  const ESTADO_COLOR = {
-    'Disponible':  { bg:'rgba(76,175,122,0.15)',  text:'var(--green)' },
-    'En servicio': { bg:'rgba(59,157,224,0.15)',  text:'#3B9DE0' },
-    'Mantención':  { bg:'var(--gold-dim)',        text:'var(--gold)' },
-    '':            { bg:'var(--surface2)',        text:'var(--muted)' },
-  };
-
-  const fd = _dispForm;
-  const hoyISO = (() => { const h=new Date(); return `${h.getFullYear()}-${String(h.getMonth()+1).padStart(2,'0')}-${String(h.getDate()).padStart(2,'0')}`; })();
-
-  const formHTML = `<div style="padding:14px 16px;background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:14px">
-    <div style="font-size:11px;font-weight:800;color:var(--gold);letter-spacing:0.05em;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border)">REGISTRAR ESTADO DE EQUIPO</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
-      <div>
-        <div style="font-size:10px;font-weight:700;color:var(--muted);margin-bottom:3px">FECHA</div>
-        <input class="inp" id="disp_fecha" type="date" value="${fd.fecha||hoyISO}" onchange="dispActualizarForm('fecha', this.value)">
-      </div>
-      <div>
-        <div style="font-size:10px;font-weight:700;color:var(--muted);margin-bottom:3px">PATENTE</div>
-        <select class="inp" id="disp_patente" onchange="dispActualizarForm('patente', this.value)">
-          <option value="">Seleccionar...</option>
-          ${FLOTA.map(p=>`<option value="${p}" ${fd.patente===p?'selected':''}>${p}</option>`).join('')}
-        </select>
-      </div>
-      <div>
-        <div style="font-size:10px;font-weight:700;color:var(--muted);margin-bottom:3px">ESTADO</div>
-        <select class="inp" id="disp_estado" onchange="dispActualizarForm('estado', this.value)">
-          <option value="">Seleccionar...</option>
-          ${ESTADOS.map(e=>`<option value="${e}" ${fd.estado===e?'selected':''}>${e}</option>`).join('')}
-        </select>
-      </div>
-      ${fd.estado==='En servicio' ? `<div>
-        <div style="font-size:10px;font-weight:700;color:var(--muted);margin-bottom:3px">CONDUCTOR</div>
-        <select class="inp" id="disp_conductor" onchange="dispActualizarForm('conductor', this.value)">
-          <option value="">Seleccionar...</option>
-          ${conductores.map(c=>`<option value="${c}" ${fd.conductor===c?'selected':''}>${c}</option>`).join('')}
-        </select>
-      </div>
-      <div>
-        <div style="font-size:10px;font-weight:700;color:var(--muted);margin-bottom:3px">CLIENTE</div>
-        <select class="inp" id="disp_cliente" onchange="dispActualizarForm('cliente', this.value)">
-          <option value="">Seleccionar...</option>
-          ${clientes.map(c=>`<option value="${c}" ${fd.cliente===c?'selected':''}>${c}</option>`).join('')}
-        </select>
-      </div>` : ''}
-      ${fd.estado==='Mantención' ? `<div>
-        <div style="font-size:10px;font-weight:700;color:var(--muted);margin-bottom:3px">TIPO MANTENCIÓN</div>
-        <select class="inp" id="disp_tipo_mant" onchange="dispActualizarForm('tipoMant', this.value)">
-          <option value="">Seleccionar tipo...</option>
-          ${TIPOS_MANT.map(t=>`<option value="${t}" ${fd.tipoMant===t?'selected':''}>${t}</option>`).join('')}
-        </select>
-        ${fd.tipoMant==='Otro' ? `<input class="inp" id="disp_mant_manual" value="${fd.mantManual||''}" onchange="dispActualizarForm('mantManual', this.value)" placeholder="Describir mantención..." style="margin-top:6px">` : ''}
-      </div>` : ''}
-    </div>
-    <button class="btn btn-navy" onclick="guardarDisponibilidad()" style="width:100%">💾 Guardar registro</button>
-  </div>`;
-
-  const todasFechas = Object.keys(_dispData).sort((a,b) => new Date(b) - new Date(a));
-  const registrosHTML = todasFechas.length === 0 ? `<div style="text-align:center;color:var(--muted);font-size:12px;padding:20px">Sin registros aún</div>` :
-  todasFechas.map(fecha => {
-    const regs = _dispData[fecha] || {};
-    const patentes = Object.keys(regs);
-    if(patentes.length===0) return '';
-    const isOpen = !!_dispForm[`hist_${fecha}`];
-    const enServ = patentes.filter(p=>regs[p].estado==='En servicio').length;
-    const disp = patentes.filter(p=>regs[p].estado==='Disponible').length;
-    const mant = patentes.filter(p=>regs[p].estado==='Mantención').length;
-    const ocup = FLOTA.length>0 ? Math.round((enServ/FLOTA.length)*100) : 0;
-    const fechaLabel = new Date(fecha+'T00:00:00').toLocaleDateString('es-CL');
-
-    return `<div style="border:1px solid var(--border);border-radius:8px;margin-bottom:6px;overflow:hidden;background:var(--surface)">
-      <div onclick="dispActualizarForm('hist_${fecha}', ${!isOpen})" style="padding:10px 12px;cursor:pointer;display:flex;justify-content:space-between;align-items:center">
-        <span style="font-size:12px;font-weight:700;color:var(--text)">📅 ${fechaLabel}</span>
-        <div style="display:flex;gap:5px;align-items:center">
-          <span style="font-size:9px;background:rgba(59,157,224,0.15);color:#3B9DE0;padding:2px 7px;border-radius:6px;font-weight:700">${ocup}% ocup.</span>
-          <span style="font-size:9px;background:rgba(76,175,122,0.15);color:var(--green);padding:2px 7px;border-radius:6px;font-weight:700">${disp} disp.</span>
-          ${mant?`<span style="font-size:9px;background:var(--gold-dim);color:var(--gold);padding:2px 7px;border-radius:6px;font-weight:700">${mant} mant.</span>`:''}
-          <span style="font-size:10px;color:var(--muted)">${isOpen?'▲':'▼'}</span>
-        </div>
-      </div>
-      ${isOpen?`<div style="padding:6px 12px 10px">
-        ${patentes.map(p=>{
-          const r=regs[p];
-          const col=ESTADO_COLOR[r.estado||'']||ESTADO_COLOR[''];
-          return `<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-top:1px solid var(--border)">
-            <span style="font-size:12px;font-weight:700;color:var(--text)">${p}</span>
-            <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end">
-              ${r.conductor?`<span style="font-size:10px;color:var(--muted)">${r.conductor}${r.cliente?' · '+r.cliente:''}</span>`:''}
-              ${r.tipoMant?`<span style="font-size:10px;color:var(--gold)">${r.tipoMant==='Otro'?(r.mantManual||'Otro'):r.tipoMant}</span>`:''}
-              <span style="font-size:10px;font-weight:700;color:${col.text};background:${col.bg};padding:2px 8px;border-radius:6px">${r.estado||'Sin registrar'}</span>
-              <button onclick="eliminarDisponibilidad('${fecha}','${p}')" title="Eliminar registro" style="background:rgba(224,85,85,0.15);border:1px solid rgba(224,85,85,0.3);color:var(--danger);border-radius:5px;width:20px;height:20px;font-size:11px;cursor:pointer;line-height:1;padding:0">✕</button>
-            </div>
-          </div>`;
-        }).join('')}
-      </div>`:''}
-    </div>`;
-  }).join('');
-
-  cont.innerHTML = `${formHTML}
-    <div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:0.05em;margin-bottom:8px">REGISTROS DEL MES</div>
-    ${registrosHTML}`;
-}
-
-async function guardarDisponibilidad() {
-  const fecha = _dispForm.fecha || document.getElementById('disp_fecha')?.value;
-  const patente = _dispForm.patente;
-  const estado = _dispForm.estado;
-  if(!patente || !estado || !fecha) { alert('Completa fecha, patente y estado'); return; }
-
-  const registro = {
-    estado,
-    conductor: _dispForm.conductor||'',
-    cliente: _dispForm.cliente||'',
-    tipoMant: _dispForm.tipoMant||'',
-    mantManual: _dispForm.mantManual||''
-  };
-
-  if(!_dispData[fecha]) _dispData[fecha] = {};
-  _dispData[fecha][patente] = registro;
-
-  const emp = DB._empresa || _sessionUsuario?.empresa;
-  try {
-    await supa.from('disponibilidad').upsert({
-      id: `${fecha}_${patente}_${emp}`,
-      fecha, patente, empresa: emp,
-      estado: registro.estado,
-      conductor: registro.conductor,
-      cliente: registro.cliente,
-      tipo_mant: registro.tipoMant,
-      mant_manual: registro.mantManual
-    }, { onConflict: 'id' });
-  } catch(e) { console.warn('Error guardar disponibilidad:', e); }
-
-  _dispForm = {};
-  renderDisponibilidad();
-}
-
-async function eliminarDisponibilidad(fecha, patente) {
-  if(!confirm(`¿Eliminar el registro de ${patente} del ${fecha}?`)) return;
-
-  const emp = DB._empresa || _sessionUsuario?.empresa;
-  try {
-    await supa.from('disponibilidad').delete().eq('id', `${fecha}_${patente}_${emp}`);
-  } catch(e) { console.warn('Error eliminar disponibilidad:', e); return; }
-
-  if(_dispData[fecha]) {
-    delete _dispData[fecha][patente];
-    if(Object.keys(_dispData[fecha]).length === 0) delete _dispData[fecha];
-  }
-  renderDisponibilidad();
-}
-
-// ══════════════════════════════════════
 // LIQUIDACIONES
 // ══════════════════════════════════════
 
@@ -6458,12 +6349,23 @@ let _liqData = [];
 let _liqSvcsSeleccionados = [];
 let _liqClienteActual = '';
 
+function _liqGuiasTxt(s) {
+  const gs = (s._puntos||[]).flatMap(p => (p.guias||[]).map(g => g.num_guia)).filter(Boolean);
+  return gs.length ? gs.join(' · ') : (s.num_guia || '');
+}
+
 async function cargarLiquidaciones() {
   const emp = DB._empresa || _sessionUsuario?.empresa;
   if(!emp) return;
   const {data, error} = await supa.from('kaptura_liquidaciones')
     .select('*').eq('empresa', emp).order('created_at', {ascending:false});
-  _liqData = data || [];
+  _liqData = (data || []).map(l => {
+    l._adicionales = [];
+    if(l.notas && l.notas.includes('|_ADICIONALES:')) {
+      try { l._adicionales = JSON.parse(l.notas.split('|_ADICIONALES:')[1]); } catch(e) {}
+    }
+    return l;
+  });
   renderLiquidaciones();
 }
 
@@ -6509,7 +6411,7 @@ function renderLiquidaciones() {
   }
   lista.innerHTML = items.map(l => {
     // Calcular semáforo de vencimiento
-    const cobrada = ['cobrada','factoring'].includes(l.estado);
+    const cobrada = l.estado === 'cobrada';
     let lineColor = '#2E3D3B'; // default borde
     let badgeTxt = (l.estado||'').replace('_',' ').toUpperCase();
     let badgeBg  = 'rgba(245,240,232,0.1)';
@@ -6573,9 +6475,12 @@ async function abrirNuevaLiquidacion() {
   const v = new Date(); v.setDate(v.getDate()+30);
   document.getElementById('liq-vencimiento').value = v.toISOString().split('T')[0];
   _liqSvcsSeleccionados = [];
+  _liqAdicionales = [];
+  document.getElementById('liq-adicionales-lista').innerHTML = '';
   document.getElementById('liq-servicios-container').style.display = 'none';
   document.getElementById('liq-resumen').style.display = 'none';
   document.getElementById('liq-factoring-section').style.display = 'none';
+  document.getElementById('liq-adicionales-section').style.display = 'none';
   document.getElementById('liq-numero-preview').textContent = 'Selecciona un cliente para asignar número';
   document.getElementById('modal-nueva-liq').style.display = 'flex';
 }
@@ -6655,12 +6560,13 @@ async function liqSeleccionarCliente() {
       </div>
       <div style="text-align:right">
         <div style="font-size:13px;font-weight:800;color:var(--text)">$${Number(s.ingreso_total||s.tarifa_neta||0).toLocaleString('es-CL')}</div>
-        <div style="font-size:10px;color:var(--muted)">${s.num_guia ? 'Guía: '+s.num_guia : 'Sin guía'}</div>
+        <div style="font-size:10px;color:var(--muted)">${_liqGuiasTxt(s) ? 'Guía: '+_liqGuiasTxt(s) : 'Sin guía'}</div>
       </div>
     </div>`).join('');
 
   container.style.display = 'block';
   document.getElementById('liq-factoring-section').style.display = 'block';
+  document.getElementById('liq-adicionales-section').style.display = 'block';
 
   // Verificar si cliente usa factoring
   const clienteData = DB.clientes.find(c => c.nombre?.toLowerCase() === cliente.toLowerCase());
@@ -6670,11 +6576,44 @@ async function liqSeleccionarCliente() {
   }
 }
 
+let _liqAdicionales = [];
+
+function liqAgregarAdicional() {
+  const concepto = document.getElementById('liq-adic-concepto').value.trim();
+  const monto = parseInt(document.getElementById('liq-adic-monto').value) || 0;
+  if(!concepto || monto <= 0) { toast('Ingresa un concepto y un monto válido'); return; }
+  _liqAdicionales.push({concepto, monto});
+  document.getElementById('liq-adic-concepto').value = '';
+  document.getElementById('liq-adic-monto').value = '';
+  liqRenderAdicionales();
+  liqActualizarSeleccion();
+}
+
+function liqQuitarAdicional(i) {
+  _liqAdicionales.splice(i, 1);
+  liqRenderAdicionales();
+  liqActualizarSeleccion();
+}
+
+function liqRenderAdicionales() {
+  const cont = document.getElementById('liq-adicionales-lista');
+  cont.innerHTML = _liqAdicionales.map((a,i) => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;margin-bottom:5px">
+      <span style="font-size:12px;color:var(--text)">${a.concepto}</span>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:12px;font-weight:700;color:var(--gold)">$${a.monto.toLocaleString('es-CL')}</span>
+        <button onclick="liqQuitarAdicional(${i})" style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:14px;padding:0">✕</button>
+      </div>
+    </div>`).join('');
+}
+
 function liqActualizarSeleccion() {
   const checks = document.querySelectorAll('#liq-servicios-lista input[type=checkbox]:checked');
   _liqSvcsSeleccionados = Array.from(checks).map(c => ({id: c.dataset.id, svcid: c.dataset.svcid, ingreso: parseInt(c.dataset.ingreso)||0}));
   
-  const neto = _liqSvcsSeleccionados.reduce((a,s) => a + s.ingreso, 0);
+  const netoSvcs = _liqSvcsSeleccionados.reduce((a,s) => a + s.ingreso, 0);
+  const netoAdic = _liqAdicionales.reduce((a,x) => a + x.monto, 0);
+  const neto = netoSvcs + netoAdic;
   const iva  = Math.round(neto * 0.19);
   const total = neto + iva;
 
@@ -6682,7 +6621,7 @@ function liqActualizarSeleccion() {
   document.getElementById('liq-monto-neto').textContent = '$'+neto.toLocaleString('es-CL');
   document.getElementById('liq-iva').textContent = '$'+iva.toLocaleString('es-CL');
   document.getElementById('liq-total').textContent = '$'+total.toLocaleString('es-CL');
-  document.getElementById('liq-resumen').style.display = _liqSvcsSeleccionados.length > 0 ? 'block' : 'none';
+  document.getElementById('liq-resumen').style.display = (_liqSvcsSeleccionados.length > 0 || _liqAdicionales.length > 0) ? 'block' : 'none';
   liqCalcularFactoring();
 }
 
@@ -6695,7 +6634,7 @@ function liqToggleFactoring() {
 function liqCalcularFactoring() {
   const usa = document.getElementById('liq-usa-factoring').checked;
   if(!usa) return;
-  const neto = _liqSvcsSeleccionados.reduce((a,s) => a + s.ingreso, 0);
+  const neto = _liqSvcsSeleccionados.reduce((a,s) => a + s.ingreso, 0) + _liqAdicionales.reduce((a,x) => a + x.monto, 0);
   const total = Math.round(neto * 1.19);
   const pct = parseFloat(document.getElementById('liq-factoring-pct').value)||3;
   const costo = Math.round(total * pct / 100);
@@ -6708,13 +6647,17 @@ async function guardarLiquidacion(estado) {
   
   const emp = DB._empresa || _sessionUsuario?.empresa;
   const numero = document.getElementById('liq-numero-preview').textContent;
-  const neto = _liqSvcsSeleccionados.reduce((a,s) => a + s.ingreso, 0);
+  const netoSvcs = _liqSvcsSeleccionados.reduce((a,s) => a + s.ingreso, 0);
+  const netoAdic = _liqAdicionales.reduce((a,x) => a + x.monto, 0);
+  const neto = netoSvcs + netoAdic;
   const iva  = Math.round(neto * 0.19);
   const total = neto + iva;
   const usaFactoring = document.getElementById('liq-usa-factoring').checked;
   const factPct = parseFloat(document.getElementById('liq-factoring-pct').value)||0;
   const factCosto = usaFactoring ? Math.round(total * factPct / 100) : 0;
-  const estadoFinal = usaFactoring && estado === 'emitida' ? 'factoring' : (estado === 'emitida' ? 'por_cobrar' : 'borrador');
+  const estadoFinal = estado === 'emitida' ? 'emitida' : 'borrador';
+  const notasBase = document.getElementById('liq-notas').value || '';
+  const notasFinal = _liqAdicionales.length ? notasBase + '|_ADICIONALES:' + JSON.stringify(_liqAdicionales) : notasBase;
 
   const {error} = await supa.from('kaptura_liquidaciones').insert({
     numero,
@@ -6730,7 +6673,7 @@ async function guardarLiquidacion(estado) {
     factoring: usaFactoring,
     factoring_pct: factPct,
     factoring_costo: factCosto,
-    notas: document.getElementById('liq-notas').value
+    notas: notasFinal
   });
 
   if(error) { toast('Error: '+error.message); return; }
@@ -6749,7 +6692,7 @@ async function verLiquidacion(id) {
   document.getElementById('ver-liq-numero').textContent = liq.numero;
   document.getElementById('ver-liq-sub').textContent = liq.cliente+' · '+liq.fecha_emision;
   
-  const estadoColor = {borrador:'var(--muted)',emitida:'var(--gold)',factoring:'#a78bfa',por_cobrar:'var(--green)',cobrada:'var(--muted)'};
+  const estadoColor = {borrador:'var(--muted)',emitida:'var(--gold)',enviada:'#a78bfa',aprobada:'#3B9DE0',facturada:'#BA7517',en_cobro:'#EF9F27',cobrada:'var(--green)'};
   
   document.getElementById('ver-liq-body').innerHTML = `
     <div style="background:var(--bg);border-radius:8px;padding:12px;margin-bottom:14px;border:1px solid var(--border)">
@@ -6772,38 +6715,220 @@ async function verLiquidacion(id) {
           <div><span style="font-weight:800;color:var(--gold)">${s.servicio_id}</span> <span style="font-size:11px;color:var(--muted)">${s.fecha||''} · ${s.origen||''} → ${s.destino||''}</span></div>
           <span style="font-weight:800;color:var(--text)">$${Number(s.ingreso_total||s.tarifa_neta||0).toLocaleString('es-CL')}</span>
         </div>
-        ${s.num_guia ? `<div style="font-size:10px;color:var(--muted);margin-top:3px">Guía: ${s.num_guia}</div>` : ''}
+        ${_liqGuiasTxt(s) ? `<div style="font-size:10px;color:var(--muted);margin-top:3px">Guía: ${_liqGuiasTxt(s)}</div>` : ''}
       </div>`).join('')}
-    ${liq.pdf_sii_url ? `<div style="margin-top:10px"><a href="${liq.pdf_sii_url}" target="_blank" style="color:var(--gold);font-size:12px;font-weight:700">📄 Ver Factura SII adjunta</a></div>` : ''}`;
+    ${(liq._adicionales||[]).length ? `
+    <div style="font-size:10px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);margin:12px 0 8px">CARGOS ADICIONALES</div>
+    ${liq._adicionales.map(a => `
+      <div style="padding:8px 10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;margin-bottom:5px;display:flex;justify-content:space-between">
+        <span style="font-size:12px;color:var(--text)">${a.concepto}</span>
+        <span style="font-weight:800;color:var(--text)">$${Number(a.monto||0).toLocaleString('es-CL')}</span>
+      </div>`).join('')}` : ''}
+    ${liq.num_factura ? `<div style="margin-top:10px;font-size:12px;color:var(--text)"><span style="color:var(--muted)">N° Factura:</span> <span style="font-weight:800;color:var(--gold)">${liq.num_factura}</span></div>` : ''}
+    ${liq.pdf_sii_url ? `<div style="margin-top:6px"><a href="${liq.pdf_sii_url}" target="_blank" style="color:var(--gold);font-size:12px;font-weight:700">📄 Ver Factura SII adjunta</a></div>` : ''}`;
 
   // Botones según estado
+  const cliDataLiq = DB.clientes.find(c => c.nombre === liq.cliente);
+  const requiereAprobLiq = !!cliDataLiq?.requiere_aprobacion;
   const btns = {
     borrador: `<button class="btn btn-ghost" onclick="cerrar('modal-ver-liq')">Cerrar</button>
+      <button class="btn btn-outline" onclick="liqEditarServicios('${id}')">✏️ Editar Servicios</button>
       <button class="btn btn-outline" onclick="liqAdjuntarSII('${id}')">📎 Adjuntar Factura</button>
       <button class="btn btn-navy" onclick="liqCambiarEstado('${id}','emitida')">Emitir →</button>`,
     emitida: `<button class="btn btn-ghost" onclick="cerrar('modal-ver-liq')">Cerrar</button>
+      <button class="btn btn-outline" onclick="liqEditarServicios('${id}')">✏️ Editar Servicios</button>
       <button class="btn btn-outline" onclick="liqAdjuntarSII('${id}')">📎 Adjuntar Factura</button>
       <button class="btn btn-navy" onclick="liqCambiarEstado('${id}','enviada')">📤 Enviada al Cliente</button>`,
     enviada: `<button class="btn btn-ghost" onclick="cerrar('modal-ver-liq')">Cerrar</button>
-      <button class="btn btn-outline" onclick="liqCambiarEstado('${id}','aprobada')">✓ Aprobada por Cliente</button>
-      <button class="btn btn-navy" onclick="liqCambiarEstado('${id}','facturada')">🧾 Saltar a Facturada</button>`,
+      <button class="btn btn-outline" onclick="liqEditarServicios('${id}')">✏️ Editar Servicios</button>
+      <button class="btn btn-navy" onclick="liqCambiarEstado('${id}','aprobada')">✓ Aprobada por Cliente</button>
+      ${requiereAprobLiq ? '' : `<button class="btn btn-outline" onclick="liqCambiarEstado('${id}','facturada')">🧾 Saltar a Facturada</button>`}`,
     aprobada: `<button class="btn btn-ghost" onclick="cerrar('modal-ver-liq')">Cerrar</button>
+      <button class="btn btn-outline" onclick="liqEditarServicios('${id}')">✏️ Editar Servicios</button>
       <button class="btn btn-outline" onclick="liqAdjuntarSII('${id}')">📎 Adjuntar Factura SII</button>
       <button class="btn btn-navy" onclick="liqRegistrarFactura('${id}')">🧾 Registrar Factura</button>`,
     facturada: `<button class="btn btn-ghost" onclick="cerrar('modal-ver-liq')">Cerrar</button>
+      <button class="btn btn-outline" onclick="liqEditarServicios('${id}')">✏️ Editar Servicios</button>
       <button class="btn btn-outline" onclick="liqAdjuntarSII('${id}')">📎 Adjuntar Factura SII</button>
       <button class="btn btn-navy" onclick="liqCambiarEstado('${id}','en_cobro')">💰 En Cobro</button>`,
     en_cobro: `<button class="btn btn-ghost" onclick="cerrar('modal-ver-liq')">Cerrar</button>
+      <button class="btn btn-outline" onclick="liqEditarServicios('${id}')">✏️ Editar Servicios</button>
       <button class="btn btn-navy" onclick="liqRegistrarPago('${id}')">✓ Registrar Pago</button>`,
     factoring: `<button class="btn btn-ghost" onclick="cerrar('modal-ver-liq')">Cerrar</button>
+      <button class="btn btn-outline" onclick="liqEditarServicios('${id}')">✏️ Editar Servicios</button>
       <button class="btn btn-navy" onclick="liqCambiarEstado('${id}','cobrada')">✓ Marcar Cobrada</button>`,
     por_cobrar: `<button class="btn btn-ghost" onclick="cerrar('modal-ver-liq')">Cerrar</button>
+      <button class="btn btn-outline" onclick="liqEditarServicios('${id}')">✏️ Editar Servicios</button>
       <button class="btn btn-outline" onclick="liqAdjuntarSII('${id}')">📎 Adjuntar Factura SII</button>
       <button class="btn btn-navy" onclick="liqCambiarEstado('${id}','en_cobro')">💰 En Cobro</button>`,
-    cobrada: `<button class="btn btn-ghost" onclick="cerrar('modal-ver-liq')">Cerrar</button>`
+    cobrada: `<button class="btn btn-ghost" onclick="cerrar('modal-ver-liq')">Cerrar</button>
+      <button class="btn btn-outline" onclick="liqEditarServicios('${id}')">✏️ Editar Servicios</button>`
   };
-  document.getElementById('ver-liq-ftr').innerHTML = btns[liq.estado] || btns.borrador;
+  document.getElementById('ver-liq-ftr').innerHTML = (btns[liq.estado] || btns.borrador) +
+    `<button class="btn btn-outline" onclick="liqImprimir('${id}')">🖨️ Vista Previa</button>`;
   document.getElementById('modal-ver-liq').style.display = 'flex';
+}
+
+let _liqEditIdActual = null;
+let _liqEditSvcsSeleccionados = [];
+
+function liqImprimir(id) {
+  const liq = _liqData.find(l => l.id === id);
+  if(!liq) return;
+  const cliData = DB.clientes.find(c => c.nombre === liq.cliente);
+  const svcs = DB.servicios.filter(s => (liq.servicios_ids||[]).includes(s.id));
+
+  const empresaInfo = {
+    razon: DB.config.razon_social || 'TRANSPORTE MADRID GAETE SPA',
+    rut: DB.config.rut_empresa || 'Pendiente de completar',
+    direccion: DB.config.direccion_empresa || 'Pendiente de completar'
+  };
+
+  const filasServicios = svcs.map(s => `
+    <tr>
+      <td>${s.servicio_id||''}</td>
+      <td>${s.fecha||''}</td>
+      <td>${(s.origen||'')+' → '+(s.destino||'')}</td>
+      <td>${_liqGuiasTxt(s)||'-'}</td>
+      <td style="text-align:right">$${Number(s.ingreso_total||s.tarifa_neta||0).toLocaleString('es-CL')}</td>
+    </tr>`).join('') + (liq._adicionales||[]).map(a => `
+    <tr>
+      <td colspan="3" style="font-style:italic;color:#555">${a.concepto}</td>
+      <td>-</td>
+      <td style="text-align:right">$${Number(a.monto||0).toLocaleString('es-CL')}</td>
+    </tr>`).join('');
+
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${liq.numero}</title>
+  <style>
+    body{font-family:Arial,Helvetica,sans-serif;color:#1a1a1a;margin:0;padding:32px;background:#fff}
+    table{width:100%;border-collapse:collapse;font-size:12px}
+    th{text-align:left;padding:6px 4px;border-bottom:1.5px solid #1a1a1a;color:#444;font-weight:600}
+    td{padding:8px 4px;border-bottom:0.5px solid #e0ddd3}
+    .no-print{margin-top:20px;text-align:center}
+    @media print{.no-print{display:none}}
+  </style></head><body>
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #1a1a1a;padding-bottom:14px;margin-bottom:16px">
+    <div>
+      <div style="font-size:16px;font-weight:700">${empresaInfo.razon}</div>
+      <div style="font-size:11px;color:#666;margin-top:2px">RUT: ${empresaInfo.rut}</div>
+      <div style="font-size:11px;color:#666">Dirección: ${empresaInfo.direccion}</div>
+    </div>
+    <div style="text-align:right">
+      <div style="font-size:13px;font-weight:700">LIQUIDACIÓN DE SERVICIOS</div>
+      <div style="font-size:13px;font-weight:700;color:#C9A84C;margin-top:2px">${liq.numero}</div>
+      <div style="font-size:11px;color:#666;margin-top:4px">Emisión: ${liq.fecha_emision||'-'}</div>
+    </div>
+  </div>
+  <div style="display:flex;justify-content:space-between;gap:16px;margin-bottom:18px">
+    <div style="flex:1;background:#f7f6f2;border-radius:6px;padding:10px 12px">
+      <div style="font-size:10px;color:#888;text-transform:uppercase">Cliente</div>
+      <div style="font-size:11px;color:#666;margin-top:1px">RUT: ${cliData?.rut||'-'}</div>
+    </div>
+    <div style="flex:1;background:#f7f6f2;border-radius:6px;padding:10px 12px">
+      <div style="font-size:10px;color:#888;text-transform:uppercase">Condición de pago</div>
+      <div style="font-size:13px;font-weight:700;margin-top:2px">${cliData?.modalidad_pago||'-'}</div>
+      <div style="font-size:11px;color:#666;margin-top:1px">Vencimiento: ${liq.fecha_vencimiento||'-'}</div>
+    </div>
+  </div>
+  <table><thead><tr><th>Servicio</th><th>Fecha</th><th>Ruta</th><th>Guía</th><th style="text-align:right">Monto</th></tr></thead>
+  <tbody>${filasServicios}</tbody></table>
+  <div style="display:flex;justify-content:flex-end;margin:18px 0">
+    <div style="width:220px">
+      <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:12px;color:#555"><span>Monto neto</span><span>$${Number(liq.monto_neto||0).toLocaleString('es-CL')}</span></div>
+      <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:12px;color:#555"><span>IVA 19%</span><span>$${Number(liq.iva||0).toLocaleString('es-CL')}</span></div>
+      <div style="display:flex;justify-content:space-between;padding:8px 0 0;margin-top:4px;border-top:1.5px solid #1a1a1a;font-size:14px;font-weight:700"><span>Total</span><span>$${Number(liq.total||0).toLocaleString('es-CL')}</span></div>
+    </div>
+  </div>
+  ${liq.num_factura ? `<div style="background:#faf3e3;border:0.5px solid #ecd9ac;border-radius:6px;padding:10px 12px;margin-bottom:18px"><div style="font-size:10px;color:#8a6c1f;text-transform:uppercase">Factura asociada</div><div style="font-size:12px;color:#5f4a15;margin-top:3px">N° ${liq.num_factura}${liq.fecha_factura?' · '+liq.fecha_factura:''}</div></div>` : ''}
+  <div style="border-top:0.5px solid #e0ddd3;padding-top:14px;display:flex;justify-content:flex-end;align-items:flex-end">
+    <div style="text-align:center"><div style="width:160px;border-top:0.5px solid #999;padding-top:4px;font-size:10px;color:#999">Firma / timbre</div></div>
+  </div>
+  <div class="no-print"><button onclick="window.print()" style="padding:10px 24px;font-size:13px;cursor:pointer">Imprimir / Guardar como PDF</button></div>
+  </body></html>`;
+
+  const w = window.open('', '_blank');
+  if(!w) { toast('El navegador bloqueó la ventana emergente. Habilita pop-ups para este sitio.'); return; }
+  w.document.write(html);
+  w.document.close();
+}
+
+function liqEditarServicios(id) {
+  const liq = _liqData.find(l => l.id === id);
+  if(!liq) return;
+
+  _liqEditIdActual = id;
+  _liqEditSvcsSeleccionados = [];
+
+  document.getElementById('liqe-numero-sub').textContent = liq.numero+' · '+liq.cliente;
+
+  // Servicios disponibles: cerrados del cliente + los que ya están en esta liquidación (aunque ya no estén 'cerrado')
+  const idsActuales = liq.servicios_ids || [];
+  const svcs = DB.servicios.filter(s =>
+    (s.cliente||'').toLowerCase() === (liq.cliente||'').toLowerCase() &&
+    (s.estado === 'cerrado' || idsActuales.includes(s.id))
+  );
+
+  const lista = document.getElementById('liqe-servicios-lista');
+  if(!svcs.length) {
+    lista.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:10px 0">No hay servicios disponibles para este cliente</div>';
+  } else {
+    lista.innerHTML = svcs.map(s => `
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;margin-bottom:5px">
+        <input type="checkbox" data-id="${s.id}" data-ingreso="${s.ingreso_total||s.tarifa_neta||0}" data-svcid="${s.servicio_id}" ${idsActuales.includes(s.id)?'checked':''} onchange="liqEditActualizarSeleccion()" style="width:16px;height:16px;accent-color:var(--gold)">
+        <div style="flex:1">
+          <div style="font-size:12px;font-weight:800;color:var(--gold)">${s.servicio_id}</div>
+          <div style="font-size:11px;color:var(--muted)">${s.fecha||''} · ${s.origen||''} → ${s.destino||''} · ${s.conductor||''}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:13px;font-weight:800;color:var(--text)">$${Number(s.ingreso_total||s.tarifa_neta||0).toLocaleString('es-CL')}</div>
+          <div style="font-size:10px;color:var(--muted)">${_liqGuiasTxt(s) ? 'Guía: '+_liqGuiasTxt(s) : 'Sin guía'}</div>
+        </div>
+      </div>`).join('');
+  }
+
+  liqEditActualizarSeleccion();
+  cerrar('modal-ver-liq');
+  document.getElementById('modal-editar-liq-servicios').style.display = 'flex';
+}
+
+function liqEditActualizarSeleccion() {
+  const checks = document.querySelectorAll('#liqe-servicios-lista input[type=checkbox]:checked');
+  _liqEditSvcsSeleccionados = Array.from(checks).map(c => ({id: c.dataset.id, svcid: c.dataset.svcid, ingreso: parseInt(c.dataset.ingreso)||0}));
+
+  const neto = _liqEditSvcsSeleccionados.reduce((a,s) => a + s.ingreso, 0);
+  const iva  = Math.round(neto * 0.19);
+  const total = neto + iva;
+
+  document.getElementById('liqe-cant-svc').textContent = _liqEditSvcsSeleccionados.length;
+  document.getElementById('liqe-monto-neto').textContent = '$'+neto.toLocaleString('es-CL');
+  document.getElementById('liqe-iva').textContent = '$'+iva.toLocaleString('es-CL');
+  document.getElementById('liqe-total').textContent = '$'+total.toLocaleString('es-CL');
+}
+
+async function liqGuardarEdicionServicios() {
+  if(!_liqEditIdActual) return;
+  if(_liqEditSvcsSeleccionados.length === 0) { toast('Selecciona al menos un servicio'); return; }
+
+  const liq = _liqData.find(l => l.id === _liqEditIdActual);
+  const neto = _liqEditSvcsSeleccionados.reduce((a,s) => a + s.ingreso, 0);
+  const iva  = Math.round(neto * 0.19);
+  const total = neto + iva;
+  const updates = {
+    servicios_ids: _liqEditSvcsSeleccionados.map(s => s.id),
+    monto_neto: neto,
+    iva,
+    total
+  };
+  if(liq?.factoring) {
+    const pct = liq.factoring_pct || 0;
+    updates.factoring_costo = Math.round(total * pct / 100);
+  }
+
+  const {error} = await supa.from('kaptura_liquidaciones').update(updates).eq('id', _liqEditIdActual);
+  if(error) { toast('Error: '+error.message); return; }
+  toast('✓ Servicios de la liquidación actualizados');
+  cerrar('modal-editar-liq-servicios');
+  await cargarLiquidaciones();
 }
 
 async function liqCambiarEstado(id, nuevoEstado) {
@@ -6823,10 +6948,22 @@ async function liqCambiarEstado(id, nuevoEstado) {
 async function liqRegistrarFactura(id) {
   const numFact = prompt('N° de Factura SII:');
   if(!numFact) return;
+  const montoStr = prompt('Monto total de la factura ($):');
+  if(montoStr === null) return;
+  const montoFactura = parseInt(String(montoStr).replace(/[^\d]/g,'')) || 0;
+  const liq = _liqData.find(l => l.id === id);
+  const totalLiq = liq?.total || 0;
   const hoy = new Date().toISOString().split('T')[0];
-  const {error} = await supa.from('kaptura_liquidaciones').update({
-    estado:'facturada', num_factura:numFact, fecha_factura:hoy
-  }).eq('id', id);
+  const updates = { estado:'facturada', num_factura:numFact, fecha_factura:hoy };
+
+  if(montoFactura > 0 && Math.abs(montoFactura - totalLiq) > 1) {
+    const continuar = confirm('El monto de la factura ($'+montoFactura.toLocaleString('es-CL')+') no coincide con el total de la liquidación ($'+totalLiq.toLocaleString('es-CL')+'). ¿Continuar de todas formas?');
+    if(!continuar) return;
+    const notaDiscrepancia = '⚠️ Discrepancia factura: monto factura $'+montoFactura.toLocaleString('es-CL')+' vs total liquidación $'+totalLiq.toLocaleString('es-CL')+' (registrado '+hoy.split('-').reverse().join('/')+')';
+    updates.notas = (liq?.notas ? liq.notas+'\n' : '') + notaDiscrepancia;
+  }
+
+  const {error} = await supa.from('kaptura_liquidaciones').update(updates).eq('id', id);
   if(error) { toast('Error: '+error.message); return; }
   toast('✓ Factura N°'+numFact+' registrada');
   cerrar('modal-ver-liq');
@@ -6881,7 +7018,7 @@ async function liqAdjuntarSII(id) {
             model:'claude-haiku-4-5-20251001', max_tokens:200,
             messages:[{role:'user', content:[
               {type: mtype==='application/pdf'?'document':'image', source:{type:'base64',media_type:mtype,data:b64}},
-              {type:'text', text:'Lee esta factura y extrae SOLO: numero de folio/factura y fecha de emision. Responde SOLO en JSON: {"num_factura":"XXX","fecha_factura":"YYYY-MM-DD"}'}
+              {type:'text', text:'Lee esta factura y extrae SOLO: numero de folio/factura, fecha de emision y monto total (con IVA incluido). Responde SOLO en JSON: {"num_factura":"XXX","fecha_factura":"YYYY-MM-DD","monto_total":0}'}
             ]}]
           })
         });
@@ -6890,11 +7027,22 @@ async function liqAdjuntarSII(id) {
         try {
           const parsed = JSON.parse(txt.replace(/```json|```/g,'').trim());
           if(parsed.num_factura) {
-            await supa.from('kaptura_liquidaciones').update({
+            const liq = _liqData.find(l => l.id === id);
+            const totalLiq = liq?.total || 0;
+            const montoFactura = parseInt(parsed.monto_total) || 0;
+            const updates = {
               num_factura: parsed.num_factura,
               fecha_factura: parsed.fecha_factura || null,
               estado: 'facturada'
-            }).eq('id', id);
+            };
+            if(montoFactura > 0 && Math.abs(montoFactura - totalLiq) > 1) {
+              const continuar = confirm('La factura leída dice $'+montoFactura.toLocaleString('es-CL')+' y la liquidación totaliza $'+totalLiq.toLocaleString('es-CL')+'. ¿Registrar factura N°'+parsed.num_factura+' igual?');
+              if(!continuar) { await cargarLiquidaciones(); verLiquidacion(id); return; }
+              const hoyNota = new Date().toISOString().split('T')[0];
+              const notaDiscrepancia = '⚠️ Discrepancia factura: monto factura $'+montoFactura.toLocaleString('es-CL')+' vs total liquidación $'+totalLiq.toLocaleString('es-CL')+' (registrado '+hoyNota.split('-').reverse().join('/')+')';
+              updates.notas = (liq?.notas ? liq.notas+'\n' : '') + notaDiscrepancia;
+            }
+            await supa.from('kaptura_liquidaciones').update(updates).eq('id', id);
             toast('✓ Factura N°'+parsed.num_factura+' detectada automáticamente');
           }
         } catch(e) { toast('✓ Factura adjuntada (lectura manual requerida)'); }
@@ -7263,7 +7411,7 @@ iniciarLogin();
 <div class="overlay" id="modal-ver-eval" style="display:none">
   <div class="modal" style="max-height:95vh;overflow-y:auto;background:#1A2120;border:1px solid #2E3D3B">
     <div class="modal-hdr" style="background:#212B2A;border-bottom:1px solid #2E3D3B">
-      <div><div class="modal-ttl" style="color:#C9A84C">GLOBAL SOLUTIONS — Evaluación de Servicio</div><div class="modal-sub" id="ver-eval-num" style="color:rgba(245,240,232,0.5)"></div></div>
+      <div><div class="modal-ttl" style="color:#C9A84C">KAPTURA — Evaluación de Servicio</div><div class="modal-sub" id="ver-eval-num" style="color:rgba(245,240,232,0.5)"></div></div>
       <button class="modal-cls" onclick="cerrar('modal-ver-eval')">✕</button>
     </div>
     <div class="modal-body" id="ver-eval-body"></div>
