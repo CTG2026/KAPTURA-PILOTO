@@ -2455,7 +2455,7 @@ function adminEntrarComoFlota(empresa, nombre) {
     modo: 'flota',
     _admin_view: true
   }));
-  window.location.href = 'flota-produccion.html';
+  window.location.href = empresa === 'global_solutions' ? 'global-solutions.html' : 'flota-produccion.html';
 }
 
 </script>
