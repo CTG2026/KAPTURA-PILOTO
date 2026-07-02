@@ -6387,6 +6387,7 @@ function renderDisponibilidad() {
               ${r.conductor?`<span style="font-size:10px;color:var(--muted)">${r.conductor}${r.cliente?' · '+r.cliente:''}</span>`:''}
               ${r.tipoMant?`<span style="font-size:10px;color:var(--gold)">${r.tipoMant==='Otro'?(r.mantManual||'Otro'):r.tipoMant}</span>`:''}
               <span style="font-size:10px;font-weight:700;color:${col.text};background:${col.bg};padding:2px 8px;border-radius:6px">${r.estado||'Sin registrar'}</span>
+              <button onclick="eliminarDisponibilidad('${fecha}','${p}')" title="Eliminar registro" style="background:rgba(224,85,85,0.15);border:1px solid rgba(224,85,85,0.3);color:var(--danger);border-radius:5px;width:20px;height:20px;font-size:11px;cursor:pointer;line-height:1;padding:0">✕</button>
             </div>
           </div>`;
         }).join('')}
@@ -6430,6 +6431,21 @@ async function guardarDisponibilidad() {
   } catch(e) { console.warn('Error guardar disponibilidad:', e); }
 
   _dispForm = {};
+  renderDisponibilidad();
+}
+
+async function eliminarDisponibilidad(fecha, patente) {
+  if(!confirm(`¿Eliminar el registro de ${patente} del ${fecha}?`)) return;
+
+  const emp = DB._empresa || _sessionUsuario?.empresa;
+  try {
+    await supa.from('disponibilidad').delete().eq('id', `${fecha}_${patente}_${emp}`);
+  } catch(e) { console.warn('Error eliminar disponibilidad:', e); return; }
+
+  if(_dispData[fecha]) {
+    delete _dispData[fecha][patente];
+    if(Object.keys(_dispData[fecha]).length === 0) delete _dispData[fecha];
+  }
   renderDisponibilidad();
 }
 
