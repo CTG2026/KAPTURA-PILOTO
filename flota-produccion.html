@@ -6466,7 +6466,7 @@ function renderLiquidaciones() {
         vencCol = '#7EA87E';
       }
     }
-    const btnElim = (()=>{const r=_sessionUsuario?.rol,p=_sessionUsuario?.pin,em=_sessionUsuario?.empresa;const ok=r==='admin_kaptura'||(r==='coordinador'&&p==='1996'&&em==='flota_297221')||(r==='coordinador'&&p==='0101'&&em==='global_solutions');return ok?`<button onclick="eliminarLiquidacion('${l.id}',event)" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:var(--danger);border-radius:5px;padding:3px 10px;font-size:10px;cursor:pointer;font-weight:700">✕ Eliminar</button>`:'';})();
+    const btnElim = (()=>{const p=_sessionUsuario?.pin;const ok=p==='1313'||p==='1996';return ok?`<button onclick="eliminarLiquidacion('${l.id}',event)" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:var(--danger);border-radius:5px;padding:3px 10px;font-size:10px;cursor:pointer;font-weight:700">✕ Eliminar</button>`:'';})();
     return `<div onclick="verLiquidacion('${l.id}')" style="background:var(--surface);border:1px solid var(--border);border-left:6px solid ${lineColor};border-radius:10px;padding:12px 14px;margin-bottom:8px;cursor:pointer;display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center">
       <div>
         <div style="font-size:13px;font-weight:900;color:var(--gold)">${l.numero}</div>
