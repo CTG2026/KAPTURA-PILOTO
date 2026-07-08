@@ -78,9 +78,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
   .desk-tbl tbody tr:hover{background:var(--surface2)}
   .desk-tbl tbody td{padding:9px 10px;font-size:12px;vertical-align:middle;color:var(--text)}
 }
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(4px);z-index:200;display:flex;align-items:center;justify-content:center}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(4px);z-index:200;display:flex;align-items:flex-end;justify-content:center}
 @media(min-width:640px){.overlay{align-items:center;padding:20px}}
-.modal{background:var(--surface);border-radius:16px 16px 0 0;width:100%;max-height:92vh;overflow-y:auto;box-shadow:var(--shl);border:1px solid var(--border)}
+.modal{background:var(--surface);border-radius:16px 16px 0 0;width:100%;max-height:92vh;overflow-y:auto;box-shadow:var(--shl);border:1px solid var(--border);margin-top:auto}
 @media(min-width:640px){.modal{border-radius:16px;max-width:620px}}
 .modal-hdr{padding:14px 16px 12px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;position:sticky;top:0;background:var(--surface);z-index:1}
 .modal-ttl{font-family:'DM Sans',sans-serif;font-size:17px;font-weight:900;text-transform:uppercase;letter-spacing:0.05em;color:var(--gold)}
@@ -6651,7 +6651,7 @@ function renderLiquidaciones() {
         vencCol = '#7EA87E';
       }
     }
-    const btnElim = (()=>{const p=_sessionUsuario?.pin;const ok=p==='1313';return ok?`<button onclick="eliminarLiquidacion('${l.id}',event)" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:var(--danger);border-radius:5px;padding:3px 10px;font-size:10px;cursor:pointer;font-weight:700">✕ Eliminar</button>`:'';})();
+    const btnElim = (()=>{const r=_sessionUsuario?.rol,p=_sessionUsuario?.pin,em=_sessionUsuario?.empresa;const ok=r==='admin_kaptura'||(r==='coordinador'&&p==='1996'&&em==='flota_297221')||(r==='coordinador'&&p==='0101'&&em==='global_solutions');return ok?`<button onclick="eliminarLiquidacion('${l.id}',event)" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:var(--danger);border-radius:5px;padding:3px 10px;font-size:10px;cursor:pointer;font-weight:700">✕ Eliminar</button>`:'';})();
     return `<div onclick="verLiquidacion('${l.id}')" style="background:var(--surface);border:1px solid var(--border);border-left:6px solid ${lineColor};border-radius:10px;padding:12px 14px;margin-bottom:8px;cursor:pointer;display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center">
       <div>
         <div style="font-size:13px;font-weight:900;color:var(--gold)">${l.numero}</div>
@@ -7269,6 +7269,9 @@ iniciarLogin();
     </div>
   </div>
 </div>
+
+<!-- MODAL DOCS -->
+<div class="overlay" id="modal-docs" style="display:none"><div class="modal"><div class="modal-hdr"><div><div class="modal-ttl">📎 Docs — <span id="docs-titulo"></span></div><div class="modal-sub" id="docs-sub"></div></div><button class="modal-cls" onclick="cerrar('modal-docs')">✕</button></div><div class="modal-body" id="docs-body"></div></div></div>
 
 <!-- MODAL EVALUACIÓN -->
 <div class="overlay" id="modal-evaluacion" style="display:none">
