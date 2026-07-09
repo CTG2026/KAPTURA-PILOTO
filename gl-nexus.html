@@ -1171,7 +1171,8 @@ const DEC_ESTADO_CLS_CLARO = {abierta:'#B8860B', en_analisis:'#8A6D1E', decidida
 function renderTablaCorrelacion() {
   const cont = document.getElementById('obj-correlacion');
   if(!cont) return;
-  if(!_objetivoSuperior?.hipotesis || !_decisiones?.length) { cont.innerHTML = '<div style="font-size:12px;color:var(--muted)">Falta Hipótesis o Decisiones para armar la tabla.</div>'; return; }
+  const N = 'text-transform:none;background:#F5F1E7;';
+  if(!_objetivoSuperior?.hipotesis || !_decisiones?.length) { cont.innerHTML = `<div style="font-size:12px;color:var(--muted);text-transform:none">Falta Hipótesis o Decisiones para armar la tabla.</div>`; return; }
   const hipotesisLineas = _objetivoSuperior.hipotesis.split('\n').map(s=>s.trim()).filter(Boolean);
   let filas = '';
   let alertas = '';
@@ -1179,26 +1180,26 @@ function renderTablaCorrelacion() {
     const numH = String(idx+1);
     const decsRel = _decisiones.filter(d => (d.correlacion_hipotesis||'').split(',').map(s=>s.trim()).includes(numH));
     if(!decsRel.length) {
-      alertas += `<div style="background:#F7E4C4;border:1px solid #D9A441;border-radius:8px;padding:10px 14px;margin-bottom:10px;font-size:12px;color:#6B4E00">⚠ Hipótesis ${numH} no tiene ninguna decisión abierta que la sostenga.</div>`;
+      alertas += `<div style="background:#F7E4C4;border:1px solid #D9A441;border-radius:8px;padding:10px 14px;margin-bottom:10px;font-size:12px;color:#6B4E00;text-transform:none">⚠ Hipótesis ${numH} no tiene ninguna decisión abierta que la sostenga.</div>`;
       return;
     }
     decsRel.forEach((d, i) => {
       const estColor = DEC_ESTADO_CLS_CLARO[d.estado] || '#8A6D1E';
       filas += `<tr>
-        ${i===0 ? `<td rowspan="${decsRel.length}" style="padding:10px;border:1px solid #DCD5C4;vertical-align:top;font-size:12px;font-weight:700;color:#2B2B26;background:#EFE8D8">${numH}. ${hTexto}</td>` : ''}
-        <td style="padding:10px;border:1px solid #DCD5C4;vertical-align:top;font-size:12px;color:#8A5A00;font-weight:700;white-space:nowrap">${d.titulo}</td>
-        <td style="padding:10px;border:1px solid #DCD5C4;vertical-align:top;font-size:12px;color:#3A362C">${d.correlacion_razon||'Sin definir.'}</td>
-        <td style="padding:10px;border:1px solid #DCD5C4;vertical-align:top;font-size:11px;font-weight:700;color:${estColor};white-space:nowrap">${(DEC_ESTADO_LBL[d.estado]||d.estado||'').toUpperCase()}</td>
+        ${i===0 ? `<td rowspan="${decsRel.length}" style="padding:14px 16px;border-bottom:1px solid #E4DDC9;vertical-align:top;font-size:13px;font-weight:700;color:#2B2B26;${N}">${numH}. ${hTexto}</td>` : ''}
+        <td style="padding:14px 16px;border-bottom:1px solid #E4DDC9;vertical-align:top;font-size:13px;color:#8A5A00;font-weight:700;${N}">${d.titulo}</td>
+        <td style="padding:14px 16px;border-bottom:1px solid #E4DDC9;vertical-align:top;font-size:13px;color:#3A362C;line-height:1.5;${N}">${d.correlacion_razon||'Sin definir.'}</td>
+        <td style="padding:14px 16px;border-bottom:1px solid #E4DDC9;vertical-align:top;font-size:12px;font-weight:700;color:${estColor};white-space:nowrap;${N}">${DEC_ESTADO_LBL[d.estado]||d.estado||''}</td>
       </tr>`;
     });
   });
-  cont.innerHTML = `${alertas}<div style="background:#F5F1E7;border-radius:10px;padding:16px;overflow-x:auto">
+  cont.innerHTML = `${alertas}<div style="background:#F5F1E7;border-radius:10px;padding:20px;overflow-x:auto">
   <table style="width:100%;border-collapse:collapse;background:#F5F1E7">
     <tr>
-      <th style="padding:10px;border:1px solid #DCD5C4;text-align:left;font-size:11px;color:#6B6455;text-transform:uppercase">Hipótesis</th>
-      <th style="padding:10px;border:1px solid #DCD5C4;text-align:left;font-size:11px;color:#6B6455;text-transform:uppercase">Decisión</th>
-      <th style="padding:10px;border:1px solid #DCD5C4;text-align:left;font-size:11px;color:#6B6455;text-transform:uppercase">Por qué</th>
-      <th style="padding:10px;border:1px solid #DCD5C4;text-align:left;font-size:11px;color:#6B6455;text-transform:uppercase">Estado</th>
+      <th style="padding:10px 16px;border-bottom:2px solid #D9D1BC;text-align:left;font-size:12px;color:#6B6455;font-weight:700;${N}">Hipótesis</th>
+      <th style="padding:10px 16px;border-bottom:2px solid #D9D1BC;text-align:left;font-size:12px;color:#6B6455;font-weight:700;${N}">Decisión</th>
+      <th style="padding:10px 16px;border-bottom:2px solid #D9D1BC;text-align:left;font-size:12px;color:#6B6455;font-weight:700;${N}">Por qué</th>
+      <th style="padding:10px 16px;border-bottom:2px solid #D9D1BC;text-align:left;font-size:12px;color:#6B6455;font-weight:700;${N}">Estado</th>
     </tr>
     ${filas}
   </table></div>`;
