@@ -124,6 +124,24 @@ tbody tr:hover{background:var(--surface2)}
 .ag-cancel{background:var(--bg);color:var(--muted)}
 .ag-save{background:#1B2E35;color:#fff}
 .ag-sec{font-size:9px;font-weight:800;letter-spacing:0.18em;color:var(--muted);margin:14px 0 8px;padding-left:2px;text-transform:uppercase}
+/* DIRECCIÓN */
+.dir-banner{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px 22px;margin-bottom:18px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+.dir-banner-lbl{font-size:9px;font-weight:800;letter-spacing:0.18em;color:var(--muted);margin-bottom:6px}
+.dir-banner-est{font-size:16px;font-weight:900}
+.dir-banner-idx{font-size:28px;font-weight:900;color:var(--gold);text-align:right}
+.dir-top{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.dir-card-top{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;cursor:pointer;transition:border-color 0.15s;min-height:90px;display:flex;flex-direction:column;justify-content:center}
+.dir-card-top:hover{border-color:var(--gold)}
+.dir-card-top-ttl{font-size:13px;font-weight:900;color:var(--text);margin-bottom:6px}
+.dir-card-top-sub{font-size:10px;color:var(--muted);letter-spacing:0.04em}
+.dir-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px}
+.dir-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px 16px;cursor:pointer;transition:border-color 0.15s;text-align:center}
+.dir-card:hover{border-color:var(--gold)}
+.dir-card-dot{width:10px;height:10px;border-radius:50%;margin:0 auto 12px}
+.dir-card-ttl{font-size:12px;font-weight:900;letter-spacing:0.05em}
+.dir-dot-g{background:var(--green)}
+.dir-dot-y{background:var(--gold)}
+.dir-dot-r{background:var(--danger)}
 </style>
 </head>
 <body>
@@ -143,6 +161,7 @@ tbody tr:hover{background:var(--surface2)}
   <div class="tab active" id="tab-btn-torre" onclick="setTab('torre',this)">🗼 Torre de Control</div>
   <div class="tab" id="tab-btn-comisiones" onclick="setTab('comisiones',this)">💰 Comisiones</div>
   <div class="tab" id="tab-btn-agenda" onclick="setTab('agenda',this)">📋 Agenda</div>
+  <div class="tab" id="tab-btn-direccion" onclick="setTab('direccion',this)">🧭 Dirección</div>
 </div>
 
 <!-- TORRE -->
@@ -297,6 +316,68 @@ tbody tr:hover{background:var(--surface2)}
   </div>
 </div>
 
+<!-- DIRECCIÓN -->
+<div class="pane" id="pane-direccion">
+  <div id="direccion-content"></div>
+</div>
+
+<!-- MODAL PLACEHOLDER DIRECCIÓN -->
+<div class="overlay" id="modal-direccion-placeholder">
+  <div class="modal" style="max-width:420px;text-align:center">
+    <div class="modal-hdr" style="justify-content:flex-end">
+      <button class="modal-cls" onclick="cerrarModal('modal-direccion-placeholder')">✕</button>
+    </div>
+    <div class="modal-body" style="padding:0 24px 32px">
+      <div style="font-size:15px;font-weight:900;color:var(--gold);margin-bottom:10px" id="dir-ph-titulo"></div>
+      <div style="font-size:12px;color:var(--muted)">Próximamente...</div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DECISIONES ESTRATÉGICAS -->
+<div class="overlay" id="modal-decisiones">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-hdr">
+      <div class="modal-ttl">🧭 Decisiones Estratégicas</div>
+      <button class="modal-cls" onclick="cerrarModal('modal-decisiones')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="decisiones-lista"><div class="empty">Cargando...</div></div>
+    </div>
+    <div class="modal-ftr">
+      <button class="btn btn-outline" onclick="abrirModalNuevaDecision()">+ Nueva decisión</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NUEVA DECISIÓN -->
+<div class="ag-modal-bg" id="modal-decision-nueva-bg">
+  <div class="ag-modal">
+    <div class="ag-modal-title">Nueva decisión estratégica</div>
+    <div class="ag-field"><label>Título de la decisión</label><input id="dec-titulo" placeholder="Ej: Definir modelo de crecimiento de flota"></div>
+    <div class="ag-field"><label>Contexto</label><textarea id="dec-contexto" placeholder="Breve contexto u origen de la decisión..."></textarea></div>
+    <div class="ag-field"><label>Responsable</label><input id="dec-responsable" placeholder="Nombre del responsable"></div>
+    <div class="ag-field"><label>Fecha límite (opcional)</label><input id="dec-fecha-lim" type="date"></div>
+    <div class="ag-modal-ftr">
+      <button class="ag-cancel" onclick="cerrarModalNuevaDecision()">Cancelar</button>
+      <button class="ag-save" onclick="guardarDecision()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DETALLE DECISIÓN (placeholder — navegación preparada) -->
+<div class="overlay" id="modal-decision-detalle">
+  <div class="modal" style="max-width:420px;text-align:center">
+    <div class="modal-hdr" style="justify-content:flex-end">
+      <button class="modal-cls" onclick="cerrarModal('modal-decision-detalle')">✕</button>
+    </div>
+    <div class="modal-body" style="padding:0 24px 32px">
+      <div style="font-size:15px;font-weight:900;color:var(--gold);margin-bottom:10px" id="dec-detalle-titulo"></div>
+      <div style="font-size:12px;color:var(--muted)">Vista de detalle — próximamente<br>(Contexto · Alternativas · Riesgos · Criterios · Decisión tomada)</div>
+    </div>
+  </div>
+</div>
+
 <script>
 const SUPA_URL = 'https://aqunzrukuruwzwywnurq.supabase.co';
 const SUPA_KEY = 'sb_publishable_70t9UxFlcqYDj7AMybsrHg__IMGNA8C';
@@ -331,6 +412,7 @@ function setTab(tab, el) {
   document.querySelectorAll('.pane').forEach(p=>p.classList.remove('active'));
   el.classList.add('active');
   document.getElementById('pane-'+tab).classList.add('active');
+  if(tab==='direccion') renderDireccion();
 }
 
 function salir() {
@@ -842,6 +924,129 @@ async function eliminarTarea(id){
   await supa.from('kaptura_agenda').delete().eq('id',id);
   _agenda=_agenda.filter(x=>x.id!==id);
   renderAgenda();
+}
+
+// ══ DIRECCIÓN — COCKPIT EJECUTIVO ══
+const DIR_AREAS = [
+  {id:'comercial',   lbl:'Comercial',   estado:'g'},
+  {id:'operaciones', lbl:'Operaciones', estado:'y'},
+  {id:'finanzas',    lbl:'Finanzas',    estado:'y'},
+  {id:'personas',    lbl:'Personas',    estado:'g'},
+  {id:'riesgos',     lbl:'Riesgos',     estado:'r'},
+  {id:'decisiones',  lbl:'Decisiones',  estado:'y'}
+];
+const DIR_DOT = {g:'dir-dot-g', y:'dir-dot-y', r:'dir-dot-r'};
+
+function renderDireccion() {
+  const cont = document.getElementById('direccion-content');
+  if(!cont) return;
+  cont.innerHTML = `
+    <div class="dir-banner">
+      <div>
+        <div class="dir-banner-lbl">Estado General</div>
+        <div class="dir-banner-est" style="color:var(--gold)">🟡 Atención requerida</div>
+      </div>
+      <div>
+        <div class="dir-banner-lbl">Índice General</div>
+        <div class="dir-banner-idx">74%</div>
+      </div>
+    </div>
+    <div class="dir-top">
+      <div class="dir-card-top" onclick="abrirModuloDireccion('Objetivo Superior')">
+        <div class="dir-card-top-ttl">🎯 Objetivo Superior</div>
+        <div class="dir-card-top-sub">Propósito · Hipótesis · Objetivo Estratégico</div>
+      </div>
+      <div class="dir-card-top" onclick="abrirModuloDireccion('Plan de Estabilización')">
+        <div class="dir-card-top-ttl">🧭 Plan de Estabilización</div>
+        <div class="dir-card-top-sub">Diagnóstico · Riesgos · Planes de Acción</div>
+      </div>
+    </div>
+    <div class="dir-grid">
+      ${DIR_AREAS.map(a => `
+        <div class="dir-card" onclick="${a.id==='decisiones' ? 'abrirDecisiones()' : `abrirModuloDireccion('${a.lbl}')`}">
+          <div class="dir-card-dot ${DIR_DOT[a.estado]}"></div>
+          <div class="dir-card-ttl">${a.lbl}</div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function abrirModuloDireccion(nombre) {
+  document.getElementById('dir-ph-titulo').textContent = nombre.toUpperCase() + ' — PRÓXIMAMENTE...';
+  document.getElementById('modal-direccion-placeholder').style.display = 'flex';
+}
+
+// ══ DECISIONES ESTRATÉGICAS ══
+let _decisiones = [];
+const DEC_ESTADO_LBL = {abierta:'Abierta', en_analisis:'En Análisis', decidida:'Decidida'};
+const DEC_ESTADO_CLS = {abierta:'badge-asig', en_analisis:'badge-proc', decidida:'badge-cerr'};
+
+async function cargarDecisiones() {
+  try {
+    const { data, error } = await supa.from('gl_nexus_decisiones').select('*').order('created_at',{ascending:false});
+    if(error) { console.warn('Error cargar decisiones:', error); _decisiones = []; return; }
+    _decisiones = data || [];
+  } catch(e) { console.warn('Error cargarDecisiones:', e); _decisiones = []; }
+}
+
+function renderListaDecisiones() {
+  const cont = document.getElementById('decisiones-lista');
+  if(!cont) return;
+  const abiertas = _decisiones.filter(d => d.estado !== 'decidida');
+  if(!abiertas.length) { cont.innerHTML = '<div class="empty">Sin decisiones estratégicas abiertas</div>'; return; }
+  cont.innerHTML = abiertas.map(d => `
+    <div onclick="verDetalleDecision('${d.id}')" style="cursor:pointer;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:800;color:var(--text)">${d.titulo}</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:3px">${d.responsable||'Sin responsable'} ${d.fecha_limite?('· Vence '+d.fecha_limite.split('-').reverse().join('/')):''}</div>
+      </div>
+      <span class="badge ${DEC_ESTADO_CLS[d.estado]||'badge-asig'}">${(DEC_ESTADO_LBL[d.estado]||d.estado||'').toUpperCase()}</span>
+    </div>`).join('');
+}
+
+async function abrirDecisiones() {
+  document.getElementById('modal-decisiones').style.display = 'flex';
+  document.getElementById('decisiones-lista').innerHTML = '<div class="empty">Cargando...</div>';
+  await cargarDecisiones();
+  renderListaDecisiones();
+}
+
+function abrirModalNuevaDecision() {
+  document.getElementById('dec-titulo').value = '';
+  document.getElementById('dec-contexto').value = '';
+  document.getElementById('dec-responsable').value = '';
+  document.getElementById('dec-fecha-lim').value = '';
+  document.getElementById('modal-decision-nueva-bg').classList.add('open');
+}
+
+function cerrarModalNuevaDecision() {
+  document.getElementById('modal-decision-nueva-bg').classList.remove('open');
+}
+
+async function guardarDecision() {
+  const titulo = document.getElementById('dec-titulo').value.trim();
+  if(!titulo) { alert('Ingresa el título de la decisión'); return; }
+  const contexto = document.getElementById('dec-contexto').value.trim();
+  const responsable = document.getElementById('dec-responsable').value.trim();
+  const fecha_limite = document.getElementById('dec-fecha-lim').value || null;
+  const nums = _decisiones.map(d => parseInt((d.id||'').replace('DEC-',''))||0);
+  const next = (nums.length ? Math.max(...nums) : 0) + 1;
+  const id = 'DEC-' + String(next).padStart(3,'0');
+  const { error } = await supa.from('gl_nexus_decisiones').insert({
+    id, titulo, contexto, responsable, fecha_limite, estado: 'abierta'
+  });
+  if(error) { alert('Error: '+error.message); return; }
+  cerrarModalNuevaDecision();
+  await cargarDecisiones();
+  renderListaDecisiones();
+}
+
+function verDetalleDecision(id) {
+  const d = _decisiones.find(x => x.id === id);
+  if(!d) return;
+  document.getElementById('dec-detalle-titulo').textContent = d.titulo.toUpperCase();
+  document.getElementById('modal-decision-detalle').style.display = 'flex';
 }
 
 init();
