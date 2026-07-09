@@ -1162,7 +1162,7 @@ function renderNumbered(text, vacioMsg) {
   if(!text) return `<div style="font-size:12px;color:var(--muted)">${vacioMsg}</div>`;
   const items = text.split('\n').map(s=>s.trim()).filter(Boolean);
   if(items.length<=1) return `<div style="font-size:12px;color:var(--text);line-height:1.6">${text}</div>`;
-  return '<ol style="margin:0;padding-left:18px;font-size:12px;color:var(--text);line-height:1.9">' + items.map(i=>`<li>${i}</li>`).join('') + '</ol>';
+  return '<div style="font-size:12px;color:var(--text);line-height:1.9">' + items.map(i=>`<div>${i}</div>`).join('') + '</div>';
 }
 
 function verDetalleDecision(id) {
