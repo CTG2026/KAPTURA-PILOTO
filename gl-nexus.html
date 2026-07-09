@@ -336,7 +336,7 @@ tbody tr:hover{background:var(--surface2)}
 
 <!-- MODAL DECISIONES ESTRATÉGICAS -->
 <div class="overlay" id="modal-decisiones">
-  <div class="modal" style="max-width:560px">
+  <div class="modal" style="max-width:840px">
     <div class="modal-hdr">
       <div class="modal-ttl">🧭 Decisiones Estratégicas</div>
       <button class="modal-cls" onclick="cerrarModal('modal-decisiones')">✕</button>
@@ -365,15 +365,42 @@ tbody tr:hover{background:var(--surface2)}
   </div>
 </div>
 
-<!-- MODAL DETALLE DECISIÓN (placeholder — navegación preparada) -->
+<!-- MODAL DETALLE DECISIÓN (vista completa) -->
 <div class="overlay" id="modal-decision-detalle">
-  <div class="modal" style="max-width:420px;text-align:center">
-    <div class="modal-hdr" style="justify-content:flex-end">
+  <div class="modal" style="max-width:720px;max-height:88vh">
+    <div class="modal-hdr">
+      <div style="flex:1">
+        <div style="font-size:16px;font-weight:900;color:var(--gold)" id="dec-detalle-titulo"></div>
+        <div style="margin-top:6px" id="dec-detalle-estado"></div>
+      </div>
       <button class="modal-cls" onclick="cerrarModal('modal-decision-detalle')">✕</button>
     </div>
-    <div class="modal-body" style="padding:0 24px 32px">
-      <div style="font-size:15px;font-weight:900;color:var(--gold);margin-bottom:10px" id="dec-detalle-titulo"></div>
-      <div style="font-size:12px;color:var(--muted)">Vista de detalle — próximamente<br>(Contexto · Alternativas · Riesgos · Criterios · Decisión tomada)</div>
+    <div class="modal-body">
+      <div class="sec-ttl">Contexto</div>
+      <div style="font-size:12px;color:var(--text);margin-bottom:16px;line-height:1.6" id="dec-detalle-contexto"></div>
+
+      <div class="sec-ttl">Alternativas</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:16px" id="dec-detalle-alternativas">Pendiente — no estructurado en base de datos aún.</div>
+
+      <div class="sec-ttl">Riesgos</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:16px" id="dec-detalle-riesgos">Pendiente — no estructurado en base de datos aún.</div>
+
+      <div class="sec-ttl">Criterios para decidir</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:16px" id="dec-detalle-criterios">Pendiente — no estructurado en base de datos aún.</div>
+
+      <div class="sec-ttl">Resultado esperado / KPI de éxito</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:16px" id="dec-detalle-resultado">Pendiente — no estructurado en base de datos aún.</div>
+
+      <div class="sec-ttl">Decisión tomada</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:16px" id="dec-detalle-decision">Aún no se ha tomado una decisión final.</div>
+
+      <div style="display:flex;gap:24px;margin-top:8px;padding-top:14px;border-top:1px solid var(--border)">
+        <div><div class="kpi-lbl">Responsable</div><div style="font-size:12px;color:var(--text);margin-top:4px" id="dec-detalle-responsable">—</div></div>
+        <div><div class="kpi-lbl">Fecha límite</div><div style="font-size:12px;color:var(--text);margin-top:4px" id="dec-detalle-fecha">—</div></div>
+      </div>
+    </div>
+    <div class="modal-ftr">
+      <button class="btn btn-ghost" onclick="cerrarModal('modal-decision-detalle')">← Volver a Decisiones</button>
     </div>
   </div>
 </div>
@@ -1045,7 +1072,11 @@ async function guardarDecision() {
 function verDetalleDecision(id) {
   const d = _decisiones.find(x => x.id === id);
   if(!d) return;
-  document.getElementById('dec-detalle-titulo').textContent = d.titulo.toUpperCase();
+  document.getElementById('dec-detalle-titulo').textContent = d.titulo;
+  document.getElementById('dec-detalle-estado').innerHTML = `<span class="badge ${DEC_ESTADO_CLS[d.estado]||'badge-asig'}">${(DEC_ESTADO_LBL[d.estado]||d.estado||'').toUpperCase()}</span>`;
+  document.getElementById('dec-detalle-contexto').textContent = d.contexto || 'Sin contexto registrado.';
+  document.getElementById('dec-detalle-responsable').textContent = d.responsable || 'Sin responsable';
+  document.getElementById('dec-detalle-fecha').textContent = d.fecha_limite ? d.fecha_limite.split('-').reverse().join('/') : 'Sin fecha límite';
   document.getElementById('modal-decision-detalle').style.display = 'flex';
 }
 
