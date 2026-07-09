@@ -365,7 +365,28 @@ tbody tr:hover{background:var(--surface2)}
   </div>
 </div>
 
-<!-- MODAL DETALLE DECISIÓN (vista completa) -->
+<!-- MODAL OBJETIVO SUPERIOR -->
+<div class="overlay" id="modal-objetivo-superior">
+  <div class="modal" style="max-width:840px;max-height:88vh">
+    <div class="modal-hdr">
+      <div class="modal-ttl">🎯 Objetivo Superior</div>
+      <button class="modal-cls" onclick="cerrarModal('modal-objetivo-superior')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="sec-ttl" style="display:flex;justify-content:space-between;align-items:center">Propósito <button onclick="editarCampoObjetivo('proposito')" style="background:transparent;border:none;color:var(--muted);font-size:11px;cursor:pointer;text-transform:uppercase">✏ Editar</button></div>
+      <div style="margin-bottom:16px;font-size:12px;color:var(--text);line-height:1.6" id="obj-proposito"></div>
+
+      <div class="sec-ttl" style="display:flex;justify-content:space-between;align-items:center">Hipótesis <button onclick="editarCampoObjetivo('hipotesis')" style="background:transparent;border:none;color:var(--muted);font-size:11px;cursor:pointer;text-transform:uppercase">✏ Editar</button></div>
+      <div style="margin-bottom:16px;font-size:12px;color:var(--text);line-height:1.6" id="obj-hipotesis"></div>
+
+      <div class="sec-ttl" style="display:flex;justify-content:space-between;align-items:center">Objetivo Estratégico <button onclick="editarCampoObjetivo('objetivo_estrategico')" style="background:transparent;border:none;color:var(--muted);font-size:11px;cursor:pointer;text-transform:uppercase">✏ Editar</button></div>
+      <div style="margin-bottom:16px;font-size:12px;color:var(--text);line-height:1.6" id="obj-objetivo_estrategico"></div>
+    </div>
+    <div class="modal-ftr">
+      <button class="btn btn-ghost" onclick="cerrarModal('modal-objetivo-superior')">← Volver a Dirección</button>
+    </div>
+  </div>
+</div>
 <div class="overlay" id="modal-decision-detalle">
   <div class="modal" style="max-width:936px;max-height:88vh">
     <div class="modal-hdr">
@@ -376,25 +397,25 @@ tbody tr:hover{background:var(--surface2)}
       <button class="modal-cls" onclick="cerrarModal('modal-decision-detalle')">✕</button>
     </div>
     <div class="modal-body">
-      <div class="sec-ttl">Contexto</div>
+      <div class="sec-ttl" style="display:flex;justify-content:space-between;align-items:center">Contexto <button onclick="editarCampoDecision('contexto')" style="background:transparent;border:none;color:var(--muted);font-size:11px;cursor:pointer;text-transform:uppercase">✏ Editar</button></div>
       <div style="margin-bottom:16px" id="dec-detalle-contexto"></div>
 
-      <div class="sec-ttl">Alternativas</div>
+      <div class="sec-ttl" style="display:flex;justify-content:space-between;align-items:center">Alternativas <button onclick="editarCampoDecision('alternativas')" style="background:transparent;border:none;color:var(--muted);font-size:11px;cursor:pointer;text-transform:uppercase">✏ Editar</button></div>
       <div style="margin-bottom:16px" id="dec-detalle-alternativas"></div>
 
-      <div class="sec-ttl">Riesgos</div>
+      <div class="sec-ttl" style="display:flex;justify-content:space-between;align-items:center">Riesgos <button onclick="editarCampoDecision('riesgos')" style="background:transparent;border:none;color:var(--muted);font-size:11px;cursor:pointer;text-transform:uppercase">✏ Editar</button></div>
       <div style="margin-bottom:16px" id="dec-detalle-riesgos"></div>
 
-      <div class="sec-ttl">Criterios para decidir</div>
+      <div class="sec-ttl" style="display:flex;justify-content:space-between;align-items:center">Criterios para decidir <button onclick="editarCampoDecision('criterios')" style="background:transparent;border:none;color:var(--muted);font-size:11px;cursor:pointer;text-transform:uppercase">✏ Editar</button></div>
       <div style="margin-bottom:16px" id="dec-detalle-criterios"></div>
 
-      <div class="sec-ttl">Resultado esperado / KPI de éxito</div>
+      <div class="sec-ttl" style="display:flex;justify-content:space-between;align-items:center">Resultado esperado / KPI de éxito <button onclick="editarCampoDecision('resultado_esperado')" style="background:transparent;border:none;color:var(--muted);font-size:11px;cursor:pointer;text-transform:uppercase">✏ Editar</button></div>
       <div style="margin-bottom:16px" id="dec-detalle-resultado"></div>
 
-      <div class="sec-ttl">Próximos pasos</div>
+      <div class="sec-ttl" style="display:flex;justify-content:space-between;align-items:center">Próximos pasos <button onclick="editarCampoDecision('proximos_pasos')" style="background:transparent;border:none;color:var(--muted);font-size:11px;cursor:pointer;text-transform:uppercase">✏ Editar</button></div>
       <div style="margin-bottom:16px" id="dec-detalle-pasos"></div>
 
-      <div class="sec-ttl">Decisión tomada</div>
+      <div class="sec-ttl" style="display:flex;justify-content:space-between;align-items:center">Decisión tomada <button onclick="editarCampoDecision('decision_tomada')" style="background:transparent;border:none;color:var(--muted);font-size:11px;cursor:pointer;text-transform:uppercase">✏ Editar</button></div>
       <div style="margin-bottom:16px" id="dec-detalle-decision"></div>
 
       <div style="display:flex;gap:24px;margin-top:8px;padding-top:14px;border-top:1px solid var(--border)">
@@ -982,7 +1003,7 @@ function renderDireccion() {
       </div>
     </div>
     <div class="dir-top">
-      <div class="dir-card-top" onclick="abrirModuloDireccion('Objetivo Superior')">
+      <div class="dir-card-top" onclick="abrirObjetivoSuperior()">
         <div class="dir-card-top-ttl">🎯 Objetivo Superior</div>
         <div class="dir-card-top-sub">Propósito · Hipótesis · Objetivo Estratégico</div>
       </div>
@@ -1072,6 +1093,70 @@ async function guardarDecision() {
   renderListaDecisiones();
 }
 
+// ══ OBJETIVO SUPERIOR ══
+let _objetivoSuperior = null;
+
+async function abrirObjetivoSuperior() {
+  document.getElementById('modal-objetivo-superior').style.display = 'flex';
+  const { data, error } = await supa.from('gl_nexus_objetivo_superior').select('*').eq('id','global').single();
+  if(error) { console.warn('Error cargar objetivo superior:', error); return; }
+  _objetivoSuperior = data;
+  renderObjetivoSuperior();
+}
+
+function renderObjetivoSuperior() {
+  if(!_objetivoSuperior) return;
+  document.getElementById('obj-proposito').textContent = _objetivoSuperior.proposito || 'Sin definir.';
+  document.getElementById('obj-hipotesis').textContent = _objetivoSuperior.hipotesis || 'Sin definir.';
+  document.getElementById('obj-objetivo_estrategico').textContent = _objetivoSuperior.objetivo_estrategico || 'Sin definir.';
+}
+
+function editarCampoObjetivo(campo) {
+  if(!_objetivoSuperior) return;
+  const cont = document.getElementById('obj-'+campo);
+  const valorActual = _objetivoSuperior[campo] || '';
+  cont.innerHTML = `<textarea id="edit-obj-${campo}" style="width:100%;min-height:90px;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px 11px;font-size:12px;color:var(--text);font-family:'DM Sans',sans-serif;text-transform:none;resize:vertical;line-height:1.6">${valorActual}</textarea>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button onclick="guardarCampoObjetivo('${campo}')" class="ag-f-btn ag-f-ok">Guardar</button>
+      <button onclick="renderObjetivoSuperior()" class="ag-f-btn">Cancelar</button>
+    </div>`;
+  document.getElementById('edit-obj-'+campo).focus();
+}
+
+async function guardarCampoObjetivo(campo) {
+  const val = document.getElementById('edit-obj-'+campo).value.trim();
+  const { error } = await supa.from('gl_nexus_objetivo_superior').update({[campo]: val, updated_at: new Date().toISOString()}).eq('id','global');
+  if(error) { alert('Error: '+error.message); return; }
+  _objetivoSuperior[campo] = val;
+  renderObjetivoSuperior();
+}
+
+let _decDetalleId = null;
+const DEC_CAMPO_DOM = {contexto:'contexto', alternativas:'alternativas', riesgos:'riesgos', criterios:'criterios', resultado_esperado:'resultado', proximos_pasos:'pasos', decision_tomada:'decision'};
+const DEC_CAMPO_VACIO = {contexto:'Sin contexto registrado.', decision_tomada:'Aún no se ha tomado una decisión final.'};
+
+function editarCampoDecision(campo) {
+  const d = _decisiones.find(x => x.id === _decDetalleId);
+  if(!d) return;
+  const cont = document.getElementById('dec-detalle-'+DEC_CAMPO_DOM[campo]);
+  const valorActual = d[campo] || '';
+  cont.innerHTML = `<textarea id="edit-campo-${campo}" style="width:100%;min-height:90px;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px 11px;font-size:12px;color:var(--text);font-family:'DM Sans',sans-serif;text-transform:none;resize:vertical;line-height:1.6" placeholder="Un punto por línea (Enter = nueva línea)...">${valorActual}</textarea>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button onclick="guardarCampoDecision('${campo}')" class="ag-f-btn ag-f-ok">Guardar</button>
+      <button onclick="verDetalleDecision(_decDetalleId)" class="ag-f-btn">Cancelar</button>
+    </div>`;
+  document.getElementById('edit-campo-'+campo).focus();
+}
+
+async function guardarCampoDecision(campo) {
+  const val = document.getElementById('edit-campo-'+campo).value.trim();
+  const { error } = await supa.from('gl_nexus_decisiones').update({[campo]: val, updated_at: new Date().toISOString()}).eq('id', _decDetalleId);
+  if(error) { alert('Error: '+error.message); return; }
+  const d = _decisiones.find(x => x.id === _decDetalleId);
+  if(d) d[campo] = val;
+  verDetalleDecision(_decDetalleId);
+}
+
 function renderNumbered(text, vacioMsg) {
   vacioMsg = vacioMsg || 'Pendiente — no estructurado en base de datos aún.';
   if(!text) return `<div style="font-size:12px;color:var(--muted)">${vacioMsg}</div>`;
@@ -1083,6 +1168,7 @@ function renderNumbered(text, vacioMsg) {
 function verDetalleDecision(id) {
   const d = _decisiones.find(x => x.id === id);
   if(!d) return;
+  _decDetalleId = id;
   document.getElementById('dec-detalle-titulo').textContent = d.titulo;
   document.getElementById('dec-detalle-estado').innerHTML = `<span class="badge ${DEC_ESTADO_CLS[d.estado]||'badge-asig'}">${(DEC_ESTADO_LBL[d.estado]||d.estado||'').toUpperCase()}</span>`;
   document.getElementById('dec-detalle-contexto').innerHTML = renderNumbered(d.contexto, 'Sin contexto registrado.');
