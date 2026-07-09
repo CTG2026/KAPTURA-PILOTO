@@ -425,7 +425,7 @@ tbody tr:hover{background:var(--surface2)}
 
 <!-- MODAL OBJETIVO SUPERIOR -->
 <div class="overlay" id="modal-objetivo-superior">
-  <div class="modal" style="max-width:840px;max-height:88vh">
+  <div class="modal" style="max-width:1200px;max-height:88vh">
     <div class="modal-hdr">
       <div class="modal-ttl">🎯 Objetivo Superior</div>
       <button class="modal-cls" onclick="cerrarModal('modal-objetivo-superior')">✕</button>
@@ -439,6 +439,9 @@ tbody tr:hover{background:var(--surface2)}
 
       <div class="sec-ttl" style="display:flex;justify-content:space-between;align-items:center">Objetivo Estratégico <button onclick="editarCampoObjetivo('objetivo_estrategico')" style="background:transparent;border:none;color:var(--muted);font-size:11px;cursor:pointer;text-transform:uppercase">✏ Editar</button></div>
       <div style="margin-bottom:16px;font-size:12px;color:var(--text);line-height:1.6" id="obj-objetivo_estrategico"></div>
+
+      <div class="sec-ttl">Correlación — Decisiones vs. Hipótesis <span style="color:var(--muted);font-weight:400;text-transform:none;font-size:11px">(se arma sola desde las 5 decisiones — vista para revisar a diario o en cada reunión)</span></div>
+      <div style="margin-bottom:16px" id="obj-correlacion"></div>
     </div>
     <div class="modal-ftr">
       <button class="btn btn-ghost" onclick="cerrarModal('modal-objetivo-superior')">← Volver a Dirección</button>
@@ -1159,7 +1162,46 @@ async function abrirObjetivoSuperior() {
   const { data, error } = await supa.from('gl_nexus_objetivo_superior').select('*').eq('id','global').single();
   if(error) { console.warn('Error cargar objetivo superior:', error); return; }
   _objetivoSuperior = data;
+  if(!_decisiones || !_decisiones.length) await cargarDecisiones();
   renderObjetivoSuperior();
+}
+
+const DEC_ESTADO_CLS_CLARO = {abierta:'#B8860B', en_analisis:'#8A6D1E', decidida:'#2E7D32'};
+
+function renderTablaCorrelacion() {
+  const cont = document.getElementById('obj-correlacion');
+  if(!cont) return;
+  if(!_objetivoSuperior?.hipotesis || !_decisiones?.length) { cont.innerHTML = '<div style="font-size:12px;color:var(--muted)">Falta Hipótesis o Decisiones para armar la tabla.</div>'; return; }
+  const hipotesisLineas = _objetivoSuperior.hipotesis.split('\n').map(s=>s.trim()).filter(Boolean);
+  let filas = '';
+  let alertas = '';
+  hipotesisLineas.forEach((hTexto, idx) => {
+    const numH = String(idx+1);
+    const decsRel = _decisiones.filter(d => (d.correlacion_hipotesis||'').split(',').map(s=>s.trim()).includes(numH));
+    if(!decsRel.length) {
+      alertas += `<div style="background:#F7E4C4;border:1px solid #D9A441;border-radius:8px;padding:10px 14px;margin-bottom:10px;font-size:12px;color:#6B4E00">⚠ Hipótesis ${numH} no tiene ninguna decisión abierta que la sostenga.</div>`;
+      return;
+    }
+    decsRel.forEach((d, i) => {
+      const estColor = DEC_ESTADO_CLS_CLARO[d.estado] || '#8A6D1E';
+      filas += `<tr>
+        ${i===0 ? `<td rowspan="${decsRel.length}" style="padding:10px;border:1px solid #DCD5C4;vertical-align:top;font-size:12px;font-weight:700;color:#2B2B26;background:#EFE8D8">${numH}. ${hTexto}</td>` : ''}
+        <td style="padding:10px;border:1px solid #DCD5C4;vertical-align:top;font-size:12px;color:#8A5A00;font-weight:700;white-space:nowrap">${d.titulo}</td>
+        <td style="padding:10px;border:1px solid #DCD5C4;vertical-align:top;font-size:12px;color:#3A362C">${d.correlacion_razon||'Sin definir.'}</td>
+        <td style="padding:10px;border:1px solid #DCD5C4;vertical-align:top;font-size:11px;font-weight:700;color:${estColor};white-space:nowrap">${(DEC_ESTADO_LBL[d.estado]||d.estado||'').toUpperCase()}</td>
+      </tr>`;
+    });
+  });
+  cont.innerHTML = `${alertas}<div style="background:#F5F1E7;border-radius:10px;padding:16px;overflow-x:auto">
+  <table style="width:100%;border-collapse:collapse;background:#F5F1E7">
+    <tr>
+      <th style="padding:10px;border:1px solid #DCD5C4;text-align:left;font-size:11px;color:#6B6455;text-transform:uppercase">Hipótesis</th>
+      <th style="padding:10px;border:1px solid #DCD5C4;text-align:left;font-size:11px;color:#6B6455;text-transform:uppercase">Decisión</th>
+      <th style="padding:10px;border:1px solid #DCD5C4;text-align:left;font-size:11px;color:#6B6455;text-transform:uppercase">Por qué</th>
+      <th style="padding:10px;border:1px solid #DCD5C4;text-align:left;font-size:11px;color:#6B6455;text-transform:uppercase">Estado</th>
+    </tr>
+    ${filas}
+  </table></div>`;
 }
 
 function renderObjetivoSuperior() {
@@ -1167,6 +1209,7 @@ function renderObjetivoSuperior() {
   document.getElementById('obj-proposito').innerHTML = renderNumbered(_objetivoSuperior.proposito, 'Sin definir.');
   document.getElementById('obj-hipotesis').innerHTML = renderNumbered(_objetivoSuperior.hipotesis, 'Sin definir.');
   document.getElementById('obj-objetivo_estrategico').innerHTML = renderNumbered(_objetivoSuperior.objetivo_estrategico, 'Sin definir.');
+  renderTablaCorrelacion();
 }
 
 function editarCampoObjetivo(campo) {
