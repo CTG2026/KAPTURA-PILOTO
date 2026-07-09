@@ -365,6 +365,38 @@ tbody tr:hover{background:var(--surface2)}
   </div>
 </div>
 
+<!-- MODAL PLAN DE ESTABILIZACIÓN -->
+<div class="overlay" id="modal-plan-estabilizacion">
+  <div class="modal" style="max-width:840px;max-height:88vh">
+    <div class="modal-hdr">
+      <div class="modal-ttl">🧭 Plan de Estabilización — Diagnóstico</div>
+      <button class="modal-cls" onclick="cerrarModal('modal-plan-estabilizacion')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="sec-ttl" style="display:flex;justify-content:space-between;align-items:center">Diagnóstico Comercial <button onclick="editarCampoPlan('diagnostico_comercial')" style="background:transparent;border:none;color:var(--muted);font-size:11px;cursor:pointer;text-transform:uppercase">✏ Editar</button></div>
+      <div style="margin-bottom:16px" id="plan-diagnostico_comercial"></div>
+
+      <div class="sec-ttl" style="display:flex;justify-content:space-between;align-items:center">Diagnóstico Operacional <button onclick="editarCampoPlan('diagnostico_operacional')" style="background:transparent;border:none;color:var(--muted);font-size:11px;cursor:pointer;text-transform:uppercase">✏ Editar</button></div>
+      <div style="margin-bottom:16px" id="plan-diagnostico_operacional"></div>
+
+      <div class="sec-ttl" style="display:flex;justify-content:space-between;align-items:center">Diagnóstico Financiero <button onclick="editarCampoPlan('diagnostico_financiero')" style="background:transparent;border:none;color:var(--muted);font-size:11px;cursor:pointer;text-transform:uppercase">✏ Editar</button></div>
+      <div style="margin-bottom:16px" id="plan-diagnostico_financiero"></div>
+
+      <div class="sec-ttl" style="display:flex;justify-content:space-between;align-items:center">Diagnóstico Organizacional <button onclick="editarCampoPlan('diagnostico_organizacional')" style="background:transparent;border:none;color:var(--muted);font-size:11px;cursor:pointer;text-transform:uppercase">✏ Editar</button></div>
+      <div style="margin-bottom:16px" id="plan-diagnostico_organizacional"></div>
+
+      <div class="sec-ttl" style="display:flex;justify-content:space-between;align-items:center">Riesgos <button onclick="editarCampoPlan('riesgos')" style="background:transparent;border:none;color:var(--muted);font-size:11px;cursor:pointer;text-transform:uppercase">✏ Editar</button></div>
+      <div style="margin-bottom:16px" id="plan-riesgos"></div>
+
+      <div class="sec-ttl" style="display:flex;justify-content:space-between;align-items:center">Planes de Acción <button onclick="editarCampoPlan('planes_accion')" style="background:transparent;border:none;color:var(--muted);font-size:11px;cursor:pointer;text-transform:uppercase">✏ Editar</button></div>
+      <div style="margin-bottom:16px" id="plan-planes_accion"></div>
+    </div>
+    <div class="modal-ftr">
+      <button class="btn btn-ghost" onclick="cerrarModal('modal-plan-estabilizacion')">← Volver a Dirección</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL OBJETIVO SUPERIOR -->
 <div class="overlay" id="modal-objetivo-superior">
   <div class="modal" style="max-width:840px;max-height:88vh">
@@ -1007,7 +1039,7 @@ function renderDireccion() {
         <div class="dir-card-top-ttl">🎯 Objetivo Superior</div>
         <div class="dir-card-top-sub">Propósito · Hipótesis · Objetivo Estratégico</div>
       </div>
-      <div class="dir-card-top" onclick="abrirModuloDireccion('Plan de Estabilización')">
+      <div class="dir-card-top" onclick="abrirPlanEstabilizacion()">
         <div class="dir-card-top-ttl">🧭 Plan de Estabilización</div>
         <div class="dir-card-top-sub">Diagnóstico · Riesgos · Planes de Acción</div>
       </div>
@@ -1129,6 +1161,45 @@ async function guardarCampoObjetivo(campo) {
   if(error) { alert('Error: '+error.message); return; }
   _objetivoSuperior[campo] = val;
   renderObjetivoSuperior();
+}
+
+// ══ PLAN DE ESTABILIZACIÓN ══
+let _planEstabilizacion = null;
+const PLAN_CAMPOS = ['diagnostico_comercial','diagnostico_operacional','diagnostico_financiero','diagnostico_organizacional','riesgos','planes_accion'];
+
+async function abrirPlanEstabilizacion() {
+  document.getElementById('modal-plan-estabilizacion').style.display = 'flex';
+  const { data, error } = await supa.from('gl_nexus_plan_estabilizacion').select('*').eq('id','global').single();
+  if(error) { console.warn('Error cargar plan estabilizacion:', error); return; }
+  _planEstabilizacion = data;
+  renderPlanEstabilizacion();
+}
+
+function renderPlanEstabilizacion() {
+  if(!_planEstabilizacion) return;
+  PLAN_CAMPOS.forEach(c => {
+    document.getElementById('plan-'+c).innerHTML = renderNumbered(_planEstabilizacion[c], 'Sin definir.');
+  });
+}
+
+function editarCampoPlan(campo) {
+  if(!_planEstabilizacion) return;
+  const cont = document.getElementById('plan-'+campo);
+  const valorActual = _planEstabilizacion[campo] || '';
+  cont.innerHTML = `<textarea id="edit-plan-${campo}" style="width:100%;min-height:110px;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px 11px;font-size:12px;color:var(--text);font-family:'DM Sans',sans-serif;text-transform:none;resize:vertical;line-height:1.6">${valorActual}</textarea>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button onclick="guardarCampoPlan('${campo}')" class="ag-f-btn ag-f-ok">Guardar</button>
+      <button onclick="renderPlanEstabilizacion()" class="ag-f-btn">Cancelar</button>
+    </div>`;
+  document.getElementById('edit-plan-'+campo).focus();
+}
+
+async function guardarCampoPlan(campo) {
+  const val = document.getElementById('edit-plan-'+campo).value.trim();
+  const { error } = await supa.from('gl_nexus_plan_estabilizacion').update({[campo]: val, updated_at: new Date().toISOString()}).eq('id','global');
+  if(error) { alert('Error: '+error.message); return; }
+  _planEstabilizacion[campo] = val;
+  renderPlanEstabilizacion();
 }
 
 let _decDetalleId = null;
