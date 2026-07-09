@@ -1106,9 +1106,9 @@ async function abrirObjetivoSuperior() {
 
 function renderObjetivoSuperior() {
   if(!_objetivoSuperior) return;
-  document.getElementById('obj-proposito').textContent = _objetivoSuperior.proposito || 'Sin definir.';
-  document.getElementById('obj-hipotesis').textContent = _objetivoSuperior.hipotesis || 'Sin definir.';
-  document.getElementById('obj-objetivo_estrategico').textContent = _objetivoSuperior.objetivo_estrategico || 'Sin definir.';
+  document.getElementById('obj-proposito').innerHTML = renderNumbered(_objetivoSuperior.proposito, 'Sin definir.');
+  document.getElementById('obj-hipotesis').innerHTML = renderNumbered(_objetivoSuperior.hipotesis, 'Sin definir.');
+  document.getElementById('obj-objetivo_estrategico').innerHTML = renderNumbered(_objetivoSuperior.objetivo_estrategico, 'Sin definir.');
 }
 
 function editarCampoObjetivo(campo) {
