@@ -365,6 +365,32 @@ tbody tr:hover{background:var(--surface2)}
   </div>
 </div>
 
+<!-- MODAL ÁREA (genérico: Comercial/Operaciones/Finanzas/Personas/Riesgos) -->
+<div class="overlay" id="modal-area">
+  <div class="modal" style="max-width:840px;max-height:88vh">
+    <div class="modal-hdr">
+      <div style="flex:1">
+        <div class="modal-ttl" id="area-titulo"></div>
+        <div style="margin-top:6px" id="area-estado-badge"></div>
+      </div>
+      <button class="modal-cls" onclick="cerrarModal('modal-area')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="sec-ttl" style="display:flex;justify-content:space-between;align-items:center">Objetivo <button onclick="editarCampoArea('objetivo')" style="background:transparent;border:none;color:var(--muted);font-size:11px;cursor:pointer;text-transform:uppercase">✏ Editar</button></div>
+      <div style="margin-bottom:16px" id="area-objetivo"></div>
+
+      <div class="sec-ttl" style="display:flex;justify-content:space-between;align-items:center">KPIs <button onclick="editarCampoArea('kpis')" style="background:transparent;border:none;color:var(--muted);font-size:11px;cursor:pointer;text-transform:uppercase">✏ Editar</button></div>
+      <div style="margin-bottom:16px" id="area-kpis"></div>
+
+      <div class="sec-ttl" style="display:flex;justify-content:space-between;align-items:center">Brechas <button onclick="editarCampoArea('brechas')" style="background:transparent;border:none;color:var(--muted);font-size:11px;cursor:pointer;text-transform:uppercase">✏ Editar</button></div>
+      <div style="margin-bottom:16px" id="area-brechas"></div>
+    </div>
+    <div class="modal-ftr">
+      <button class="btn btn-ghost" onclick="cerrarModal('modal-area')">← Volver a Dirección</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL PLAN DE ESTABILIZACIÓN -->
 <div class="overlay" id="modal-plan-estabilizacion">
   <div class="modal" style="max-width:840px;max-height:88vh">
@@ -1046,7 +1072,7 @@ function renderDireccion() {
     </div>
     <div class="dir-grid">
       ${DIR_AREAS.map(a => `
-        <div class="dir-card" onclick="${a.id==='decisiones' ? 'abrirDecisiones()' : `abrirModuloDireccion('${a.lbl}')`}">
+        <div class="dir-card" onclick="${a.id==='decisiones' ? 'abrirDecisiones()' : `abrirAreaDireccion('${a.id}')`}">
           <div class="dir-card-dot ${DIR_DOT[a.estado]}"></div>
           <div class="dir-card-ttl">${a.lbl}</div>
         </div>
@@ -1161,6 +1187,48 @@ async function guardarCampoObjetivo(campo) {
   if(error) { alert('Error: '+error.message); return; }
   _objetivoSuperior[campo] = val;
   renderObjetivoSuperior();
+}
+
+// ══ ÁREAS (Comercial/Operaciones/Finanzas/Personas/Riesgos) ══
+let _areaActual = null;
+const AREA_ESTADO_CLS = {g:'badge-cerr', y:'badge-proc', r:'badge-asig'};
+const AREA_ESTADO_LBL = {g:'En buen curso', y:'Atención requerida', r:'Crítico'};
+
+async function abrirAreaDireccion(id) {
+  document.getElementById('modal-area').style.display = 'flex';
+  const { data, error } = await supa.from('gl_nexus_areas').select('*').eq('id', id).single();
+  if(error) { console.warn('Error cargar area:', error); return; }
+  _areaActual = data;
+  renderArea();
+}
+
+function renderArea() {
+  if(!_areaActual) return;
+  document.getElementById('area-titulo').textContent = _areaActual.nombre;
+  document.getElementById('area-estado-badge').innerHTML = `<span class="badge ${AREA_ESTADO_CLS[_areaActual.estado]||'badge-proc'}">${(AREA_ESTADO_LBL[_areaActual.estado]||'').toUpperCase()}</span>`;
+  document.getElementById('area-objetivo').innerHTML = renderNumbered(_areaActual.objetivo, 'Sin definir.');
+  document.getElementById('area-kpis').innerHTML = renderNumbered(_areaActual.kpis, 'Sin definir.');
+  document.getElementById('area-brechas').innerHTML = renderNumbered(_areaActual.brechas, 'Sin definir.');
+}
+
+function editarCampoArea(campo) {
+  if(!_areaActual) return;
+  const cont = document.getElementById('area-'+campo);
+  const valorActual = _areaActual[campo] || '';
+  cont.innerHTML = `<textarea id="edit-area-${campo}" style="width:100%;min-height:90px;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px 11px;font-size:12px;color:var(--text);font-family:'DM Sans',sans-serif;text-transform:none;resize:vertical;line-height:1.6">${valorActual}</textarea>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button onclick="guardarCampoArea('${campo}')" class="ag-f-btn ag-f-ok">Guardar</button>
+      <button onclick="renderArea()" class="ag-f-btn">Cancelar</button>
+    </div>`;
+  document.getElementById('edit-area-'+campo).focus();
+}
+
+async function guardarCampoArea(campo) {
+  const val = document.getElementById('edit-area-'+campo).value.trim();
+  const { error } = await supa.from('gl_nexus_areas').update({[campo]: val, updated_at: new Date().toISOString()}).eq('id', _areaActual.id);
+  if(error) { alert('Error: '+error.message); return; }
+  _areaActual[campo] = val;
+  renderArea();
 }
 
 // ══ PLAN DE ESTABILIZACIÓN ══
