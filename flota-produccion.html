@@ -6797,7 +6797,8 @@ function liqImprimir(id) {
   const liq = _liqData.find(l => l.id === id);
   if(!liq) return;
   const cliData = DB.clientes.find(c => c.nombre === liq.cliente);
-  const svcs = DB.servicios.filter(s => (liq.servicios_ids||[]).includes(s.id));
+  const svcs = DB.servicios.filter(s => (liq.servicios_ids||[]).includes(s.id))
+    .sort((a,b) => (a.fecha||'').localeCompare(b.fecha||''));
 
   const empresaInfo = {
     razon: DB.config.razon_social || 'TRANSPORTE MADRID GAETE SPA',
