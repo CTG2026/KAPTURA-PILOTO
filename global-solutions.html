@@ -6565,6 +6565,11 @@ let _liqData = [];
 let _liqSvcsSeleccionados = [];
 let _liqClienteActual = '';
 
+function _liqGuiasTxt(s) {
+  const gs = (s._puntos||[]).flatMap(p => (p.guias||[]).map(g => g.num_guia)).filter(Boolean);
+  return gs.length ? gs.join(' · ') : (s.num_guia || '');
+}
+
 async function cargarLiquidaciones() {
   const emp = DB._empresa || _sessionUsuario?.empresa;
   if(!emp) return;
@@ -6742,7 +6747,7 @@ async function liqSeleccionarCliente() {
   const svcs = DB.servicios.filter(s => 
     s.estado === 'cerrado' && 
     (s.cliente||'').toLowerCase() === cliente.toLowerCase()
-  );
+  ).sort((a,b) => (a.fecha||'').localeCompare(b.fecha||''));
 
   const container = document.getElementById('liq-servicios-container');
   const lista = document.getElementById('liq-servicios-lista');
@@ -6851,7 +6856,8 @@ async function verLiquidacion(id) {
   if(!liq) return;
   
   // Cargar servicios incluidos
-  const svcs = DB.servicios.filter(s => (liq.servicios_ids||[]).includes(s.id));
+  const svcs = DB.servicios.filter(s => (liq.servicios_ids||[]).includes(s.id))
+    .sort((a,b) => (a.fecha||'').localeCompare(b.fecha||''));
   
   document.getElementById('ver-liq-numero').textContent = liq.numero;
   document.getElementById('ver-liq-sub').textContent = liq.cliente+' · '+liq.fecha_emision;
@@ -6909,8 +6915,90 @@ async function verLiquidacion(id) {
       <button class="btn btn-navy" onclick="liqCambiarEstado('${id}','en_cobro')">💰 En Cobro</button>`,
     cobrada: `<button class="btn btn-ghost" onclick="cerrar('modal-ver-liq')">Cerrar</button>`
   };
-  document.getElementById('ver-liq-ftr').innerHTML = btns[liq.estado] || btns.borrador;
+  document.getElementById('ver-liq-ftr').innerHTML = (btns[liq.estado] || btns.borrador) +
+    `<button class="btn btn-outline" onclick="liqImprimir('${id}')">🖨️ Vista Previa</button>`;
   document.getElementById('modal-ver-liq').style.display = 'flex';
+}
+
+function liqImprimir(id) {
+  const liq = _liqData.find(l => l.id === id);
+  if(!liq) return;
+  const cliData = DB.clientes.find(c => c.nombre === liq.cliente);
+  const svcs = DB.servicios.filter(s => (liq.servicios_ids||[]).includes(s.id))
+    .sort((a,b) => (a.fecha||'').localeCompare(b.fecha||''));
+
+  const empresaInfo = {
+    razon: DB.config.razon_social || '',
+    rut: DB.config.rut_empresa || '',
+    direccion: DB.config.direccion_empresa || ''
+  };
+
+  const filasServicios = svcs.map(s => `
+    <tr>
+      <td>${s.servicio_id||''}</td>
+      <td>${s.fecha||''}</td>
+      <td>${(s.origen||'')+' → '+(s.destino||'')}</td>
+      <td>${_liqGuiasTxt(s)||'-'}</td>
+      <td style="text-align:right">$${Number(s.ingreso_total||s.tarifa_neta||0).toLocaleString('es-CL')}</td>
+    </tr>`).join('') + (liq._adicionales||[]).map(a => `
+    <tr>
+      <td colspan="3" style="font-style:italic;color:#555">${a.concepto}</td>
+      <td>-</td>
+      <td style="text-align:right">$${Number(a.monto||0).toLocaleString('es-CL')}</td>
+    </tr>`).join('');
+
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${liq.numero}</title>
+  <style>
+    body{font-family:Arial,Helvetica,sans-serif;color:#1a1a1a;margin:0;padding:32px;background:#fff}
+    table{width:100%;border-collapse:collapse;font-size:12px}
+    th{text-align:left;padding:6px 4px;border-bottom:1.5px solid #1a1a1a;color:#444;font-weight:600}
+    td{padding:8px 4px;border-bottom:0.5px solid #e0ddd3}
+    .no-print{margin-top:20px;text-align:center}
+    @media print{.no-print{display:none}}
+  </style></head><body>
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #1a1a1a;padding-bottom:14px;margin-bottom:16px">
+    <div>
+      <div style="font-size:16px;font-weight:700">${empresaInfo.razon}</div>
+      <div style="font-size:11px;color:#666;margin-top:2px">RUT: ${empresaInfo.rut}</div>
+      <div style="font-size:11px;color:#666">Dirección: ${empresaInfo.direccion}</div>
+    </div>
+    <div style="text-align:right">
+      <div style="font-size:13px;font-weight:700">LIQUIDACIÓN DE SERVICIOS</div>
+      <div style="font-size:13px;font-weight:700;color:#C9A84C;margin-top:2px">${liq.numero}</div>
+      <div style="font-size:11px;color:#666;margin-top:4px">Emisión: ${liq.fecha_emision||'-'}</div>
+    </div>
+  </div>
+  <div style="display:flex;justify-content:space-between;gap:16px;margin-bottom:18px">
+    <div style="flex:1;background:#f7f6f2;border-radius:6px;padding:10px 12px">
+      <div style="font-size:10px;color:#888;text-transform:uppercase">Cliente</div>
+      <div style="font-size:11px;color:#666;margin-top:1px">RUT: ${cliData?.rut||'-'}</div>
+    </div>
+    <div style="flex:1;background:#f7f6f2;border-radius:6px;padding:10px 12px">
+      <div style="font-size:10px;color:#888;text-transform:uppercase">Condición de pago</div>
+      <div style="font-size:13px;font-weight:700;margin-top:2px">${cliData?.modalidad_pago||'-'}</div>
+      <div style="font-size:11px;color:#666;margin-top:1px">Vencimiento: ${liq.fecha_vencimiento||'-'}</div>
+    </div>
+  </div>
+  <table><thead><tr><th>Servicio</th><th>Fecha</th><th>Ruta</th><th>Guía</th><th style="text-align:right">Monto</th></tr></thead>
+  <tbody>${filasServicios}</tbody></table>
+  <div style="display:flex;justify-content:flex-end;margin:18px 0">
+    <div style="width:220px">
+      <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:12px;color:#555"><span>Monto neto</span><span>$${Number(liq.monto_neto||0).toLocaleString('es-CL')}</span></div>
+      <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:12px;color:#555"><span>IVA 19%</span><span>$${Number(liq.iva||0).toLocaleString('es-CL')}</span></div>
+      <div style="display:flex;justify-content:space-between;padding:8px 0 0;margin-top:4px;border-top:1.5px solid #1a1a1a;font-size:14px;font-weight:700"><span>Total</span><span>$${Number(liq.total||0).toLocaleString('es-CL')}</span></div>
+    </div>
+  </div>
+  ${liq.num_factura ? `<div style="background:#faf3e3;border:0.5px solid #ecd9ac;border-radius:6px;padding:10px 12px;margin-bottom:18px"><div style="font-size:10px;color:#8a6c1f;text-transform:uppercase">Factura asociada</div><div style="font-size:12px;color:#5f4a15;margin-top:3px">N° ${liq.num_factura}${liq.fecha_factura?' · '+liq.fecha_factura:''}</div></div>` : ''}
+  <div style="border-top:0.5px solid #e0ddd3;padding-top:14px;display:flex;justify-content:flex-end;align-items:flex-end">
+    <div style="text-align:center"><div style="width:160px;border-top:0.5px solid #999;padding-top:4px;font-size:10px;color:#999">Firma / timbre</div></div>
+  </div>
+  <div class="no-print"><button onclick="window.print()" style="padding:10px 24px;font-size:13px;cursor:pointer">Imprimir / Guardar como PDF</button></div>
+  </body></html>`;
+
+  const w = window.open('', '_blank');
+  if(!w) { toast('El navegador bloqueó la ventana emergente. Habilita pop-ups para este sitio.'); return; }
+  w.document.write(html);
+  w.document.close();
 }
 
 async function liqCambiarEstado(id, nuevoEstado) {
