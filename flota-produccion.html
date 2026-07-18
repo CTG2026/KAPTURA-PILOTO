@@ -6560,7 +6560,7 @@ async function liqSeleccionarCliente() {
   const svcs = DB.servicios.filter(s => 
     s.estado === 'cerrado' && 
     (s.cliente||'').toLowerCase() === cliente.toLowerCase()
-  );
+  ).sort((a,b) => (a.fecha||'').localeCompare(b.fecha||''));
 
   const container = document.getElementById('liq-servicios-container');
   const lista = document.getElementById('liq-servicios-lista');
@@ -6707,7 +6707,8 @@ async function verLiquidacion(id) {
   if(!liq) return;
   
   // Cargar servicios incluidos
-  const svcs = DB.servicios.filter(s => (liq.servicios_ids||[]).includes(s.id));
+  const svcs = DB.servicios.filter(s => (liq.servicios_ids||[]).includes(s.id))
+    .sort((a,b) => (a.fecha||'').localeCompare(b.fecha||''));
   
   document.getElementById('ver-liq-numero').textContent = liq.numero;
   document.getElementById('ver-liq-sub').textContent = liq.cliente+' · '+liq.fecha_emision;
