@@ -4751,7 +4751,7 @@ async function abrirInforme(i) {
       <div class="inf-cell"><div class="inf-lbl">Salida Destino</div><div class="inf-val">${s._horasSvc?.salida_destino ? s._horasSvc.salida_destino.split('T')[1]?.substring(0,5) : '—'}</div></div>
       <div class="inf-cell"><div class="inf-lbl">Llegada a Base</div><div class="inf-val">${s._horasSvc?.llegada_base ? s._horasSvc.llegada_base.split('T')[1]?.substring(0,5) : '—'}</div></div>
       <div class="inf-cell"><div class="inf-lbl">KM GPS</div><div class="inf-val">${s.km_total ? s.km_total+' km' : '—'}</div></div>
-      <div class="inf-cell"><div class="inf-lbl">Km Vacíos</div><div class="inf-val">${s.km_base_carga ? s.km_base_carga+' km' : '—'}</div></div>
+      <div class="inf-cell"><div class="inf-lbl">Km Vacíos</div><div class="inf-val">${s.km_base_carga != null ? s.km_base_carga+' km' : '—'}</div></div>
       <div class="inf-cell"><div class="inf-lbl">Km Cargado</div><div class="inf-val">${s.km_carga_destino ? s.km_carga_destino+' km' : '—'}</div></div>
       <div class="inf-cell"><div class="inf-lbl">Rend. Teórico</div><div class="inf-val" id="inf-rend-teorico">${rendTeorico ? rendTeorico + " km/lt" : "—"}</div></div>
       <div class="inf-cell"><div class="inf-lbl">Rend. según cargas</div><div class="inf-val" id="inf-rend-cargas">—</div></div>
