@@ -4723,7 +4723,7 @@ async function abrirInforme(i) {
     ).reduce((a,sv)=>a+(sv.km_total||0),0);
     const rendReal = (totalLtInf > 0 && kmSvcsInf > 0) ? Math.round(kmSvcsInf/totalLtInf*10)/10 : null;
     const elReal = document.getElementById('inf-rend-cargas');
-    if(elReal) elReal.textContent = rendReal ? rendReal + ' km/lt' : '—';
+    if(elReal) elReal.textContent = rendReal ? rendReal + ' km/lt' : 'Sin carga registrada';
     // Rendimiento teórico ya está en el HTML — actualizar si el elemento existe
     const elTeo = document.getElementById('inf-rend-teorico');
     if(elTeo && elTeo.textContent === '—') elTeo.textContent = rendTeorico + ' km/lt';
