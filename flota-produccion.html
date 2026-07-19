@@ -4754,7 +4754,7 @@ async function abrirInforme(i) {
       <div class="inf-cell"><div class="inf-lbl">Km Vacíos</div><div class="inf-val">${(s.km_base_carga!=null || s.km_retorno!=null) ? ((s.km_base_carga||0)+(s.km_retorno||0))+' km' : '—'}</div></div>
       <div class="inf-cell"><div class="inf-lbl">Km Cargado</div><div class="inf-val">${s.km_carga_destino ? s.km_carga_destino+' km' : '—'}</div></div>
       <div class="inf-cell"><div class="inf-lbl">Rend. Teórico</div><div class="inf-val" id="inf-rend-teorico">${rendTeorico ? rendTeorico + " km/lt" : "—"}</div></div>
-      <div class="inf-cell"><div class="inf-lbl">Rend. según cargas</div><div class="inf-val" id="inf-rend-cargas">—</div></div>
+      <div class="inf-cell"><div class="inf-lbl">Rend. según cargas</div><div class="inf-val" id="inf-rend-cargas">Sin carga registrada</div></div>
       <div class="inf-cell"><div class="inf-lbl">Total Ingresos</div><div class="inf-val" style="font-weight:900;color:var(--green)">${fmt(s.ingreso_total||s.tarifa_neta||0)}</div></div>
       <div class="inf-cell"><div class="inf-lbl">$/km Tarifa</div><div class="inf-val" style="font-weight:900;color:var(--green)">${s.km_total ? fmt(Math.round((s.ingreso_total||s.tarifa_neta||0)/s.km_total)) : '—'}</div></div>
       <div class="inf-cell"><div class="inf-lbl">$/km Costo</div><div class="inf-val" style="font-weight:900;color:#DC2626">${s.km_total && s.total_costos ? fmt(Math.round(s.total_costos/s.km_total)) : '—'}</div></div>
