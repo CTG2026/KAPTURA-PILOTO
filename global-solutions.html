@@ -2242,6 +2242,22 @@ async function procesarCopec(input) {
 const SUPA_URL = 'https://aqunzrukuruwzwywnurq.supabase.co';
 const SUPA_KEY = 'sb_publishable_70t9UxFlcqYDj7AMybsrHg__IMGNA8C';
 const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
+// Extrae el primer bloque JSON balanceado ({...} o [...]) al inicio de un string,
+// ignorando cualquier contenido que venga despues (ej. otro marcador o texto libre agregado).
+// Soluciona el bug donde split()[1] + JSON.parse fallaba si habia texto despues del cierre.
+function extractBalancedJSON(str) {
+  if(!str) return null;
+  str = str.trim();
+  const openChar = str[0];
+  if(openChar !== '{' && openChar !== '[') return null;
+  const closeChar = openChar === '{' ? '}' : ']';
+  let depth = 0;
+  for(let i=0; i<str.length; i++) {
+    if(str[i] === openChar) depth++;
+    else if(str[i] === closeChar) { depth--; if(depth===0) return str.substring(0,i+1); }
+  }
+  return null;
+}
 const KAPTURA_VERSION = '';
 const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 const hoy = new Date();
@@ -2298,19 +2314,19 @@ async function init() {
       const marker = notas.includes('|_PUNTOS:') ? '|_PUNTOS:' : notas.includes('_PUNTOS:') ? '_PUNTOS:' : null;
       if(marker) {
         try {
-          const parsed = JSON.parse(notas.split(marker)[1].split('|_PORTICOS:')[0]);
+          const parsed = JSON.parse(extractBalancedJSON(notas.split(marker)[1]));
           if(parsed && parsed.length > 0) svc._puntos = parsed;
         } catch(e) {}
       }
       if(!svc._puntos) svc._puntos = [];
       if(notas.includes('|_PORTICOS:')) {
-        try { svc._porticos = JSON.parse(notas.split('|_PORTICOS:')[1].split('|_CORREDOR:')[0]); } catch(e) {}
+        try { svc._porticos = JSON.parse(extractBalancedJSON(notas.split('|_PORTICOS:')[1])); } catch(e) {}
       }
       if(notas.includes('|_CORREDOR:')) {
-        try { svc._corredor = notas.split('|_CORREDOR:')[1].split('|_HORAS:')[0].trim(); } catch(e) {}
+        try { svc._corredor = notas.split('|_CORREDOR:')[1].split('|_HORAS:')[0].split('|_PUNTOS:')[0].trim(); } catch(e) {}
       }
       if(notas.includes('|_HORAS:')) {
-        try { svc._horasSvc = JSON.parse(notas.split('|_HORAS:')[1]); } catch(e) {}
+        try { svc._horasSvc = JSON.parse(extractBalancedJSON(notas.split('|_HORAS:')[1])); } catch(e) {}
       }
       // Derivar fecha_termino si no existe en BD
       if(!svc.fecha_termino && svc._horasSvc) {
@@ -3477,7 +3493,7 @@ function parsePuntos(s) {
   const notas = s.notas || '';
   const marker = notas.includes('|_PUNTOS:') ? '|_PUNTOS:' : notas.includes('_PUNTOS:') ? '_PUNTOS:' : null;
   if(marker) {
-    try { return JSON.parse(notas.split(marker)[1]); } catch(e) {}
+    try { return JSON.parse(extractBalancedJSON(notas.split(marker)[1])); } catch(e) {}
   }
   return [];
 }
@@ -3492,7 +3508,7 @@ async function loadPuntosFromDB(s) {
   if(sv) {
     const notas = sv.notas || '';
     const marker = notas.includes('|_PUNTOS:') ? '|_PUNTOS:' : notas.includes('_PUNTOS:') ? '_PUNTOS:' : null;
-    if(marker) { try { puntos = JSON.parse(notas.split(marker)[1]); } catch(e) {} }
+    if(marker) { try { puntos = JSON.parse(extractBalancedJSON(notas.split(marker)[1])); } catch(e) {} }
     if(puntos.length === 0) {
       // Build from available data
       const nInts = Math.max(0,(sv.puntos_entrega||1)-1);
@@ -4261,7 +4277,7 @@ async function guardarCostosBorrador() {
     const {data:svFresh} = await supa.from('servicios_piloto').select('notas,tarifa_neta,ingreso_total').eq('id',s.id).single();
     if(svFresh?.notas) {
       const marker = svFresh.notas.includes('|_PUNTOS:') ? '|_PUNTOS:' : svFresh.notas.includes('_PUNTOS:') ? '_PUNTOS:' : null;
-      if(marker) { try { puntos = JSON.parse(svFresh.notas.split(marker)[1]); } catch(e) {} }
+      if(marker) { try { puntos = JSON.parse(extractBalancedJSON(svFresh.notas.split(marker)[1])); } catch(e) {} }
     }
   }
   const final    = puntos.find(p=>p.tipo==='final');
@@ -4820,7 +4836,8 @@ async function abrirInforme(i) {
     ['Mantención',          s.costo_mantencion || s.mantencion_prorrateada || 0],
     ['Reserva Contingencia', s.costo_contingencia || 0],
     ['Viático',             s.costo_viaticos || 0],
-    ['Corretaje/Generador', s.costo_corretaje || comGenValI || 0],
+    // Corretaje/Generador: modelo no existe en Global Solutions, se omite la fila (no solo en $0)
+    ...(DB._empresa === 'global_solutions' ? [] : [['Corretaje/Generador', s.costo_corretaje || comGenValI || 0]]),
     ['Factoring',           s.factoring || 0],
   ];
   costoItems.forEach(([label, val]) => {
