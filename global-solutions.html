@@ -2586,8 +2586,8 @@ function renderServicios() {
       return true;
     });
   } catch(e) { console.warn('Error aplicando filtros de columna:', e); }
-  svcs = svcs.sort((a,b) => (b.fecha||'') > (a.fecha||'') ? 1 : (b.fecha||'') < (a.fecha||'') ? -1 :
-    (b.created_at||'') > (a.created_at||'') ? 1 : -1);
+  svcs = svcs.sort((a,b) => (a.fecha||'') > (b.fecha||'') ? 1 : (a.fecha||'') < (b.fecha||'') ? -1 :
+    (a.created_at||'') > (b.created_at||'') ? 1 : -1);
   const empty = document.getElementById('empty-svc');
   if(!svcs.length) {
     document.getElementById('cards-mobile').innerHTML = '';
