@@ -71,12 +71,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 @media(min-width:900px){
   .svc-list{display:none}
   .desk-tbl{display:block;background:var(--surface);border-radius:10px;box-shadow:var(--sh);border:1px solid var(--border);overflow:hidden}
-  .desk-tbl table{width:100%;border-collapse:collapse;min-width:1200px}
+  .desk-tbl table{width:100%;border-collapse:collapse;min-width:820px}
   .desk-tbl thead{background:var(--bg)}
-  .desk-tbl thead th{padding:10px 10px;text-align:left;font-size:12px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+  .desk-tbl thead th{padding:8px 6px;text-align:left;font-size:11px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
   .desk-tbl tbody tr{border-bottom:1px solid var(--border)}
   .desk-tbl tbody tr:hover{background:var(--surface2)}
-  .desk-tbl tbody td{padding:9px 10px;font-size:12px;vertical-align:middle;color:var(--text)}
+  .desk-tbl tbody td{padding:7px 6px;font-size:11px;vertical-align:middle;color:var(--text)}
 }
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(4px);z-index:1000;display:flex;align-items:flex-end;justify-content:center}
 @media(min-width:640px){.overlay{align-items:center;padding:20px}}
@@ -282,7 +282,7 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
           <th class="th-filtro" onclick="abrirFiltroColumna('destino',event)">Destino <span class="ico-filtro" id="ico-filtro-destino">▾</span></th>
           <th class="th-filtro" onclick="abrirFiltroColumna('guia',event)">Guía <span class="ico-filtro" id="ico-filtro-guia">▾</span></th>
           <th class="th-financ">Tarifa $</th>
-          <th>Cant Ptos</th><th class="th-financ">Total Ptos $</th><th class="th-financ">Total Ingreso</th>
+          <th class="th-financ">Total Ingreso</th>
           <th class="th-financ">Costos</th><th class="th-financ">Margen</th>
           <th class="th-filtro" onclick="abrirFiltroColumna('estado',event)">Estado <span class="ico-filtro" id="ico-filtro-estado">▾</span></th>
           <th>Acciones</th>
@@ -290,6 +290,7 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
         <tbody id="tabla-svc"></tbody>
       </table></div>
 
+      <div id="popover-acciones" style="display:none;position:fixed;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px;z-index:9999;box-shadow:0 6px 24px rgba(0,0,0,0.5);min-width:170px"></div>
       <div id="popover-filtro-col" style="display:none;position:fixed;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px;z-index:9999;max-height:320px;overflow-y:auto;box-shadow:0 6px 24px rgba(0,0,0,0.5);min-width:200px"></div>
     </div>
     <div id="empty-svc" class="empty" style="display:none">
@@ -2556,6 +2557,10 @@ document.addEventListener('click', function(e) {
     if(pop && pop.style.display==='block' && !pop.contains(e.target) && !e.target.closest('.th-filtro')) {
       pop.style.display = 'none';
     }
+    const popA = document.getElementById('popover-acciones');
+    if(popA && popA.style.display==='block' && !popA.contains(e.target) && !e.target.closest('[onclick*="abrirAcciones"]')) {
+      popA.style.display = 'none';
+    }
   } catch(err) {}
 });
 
@@ -2713,13 +2718,22 @@ function filaHTML(s,i) {
     <td style="font-weight:700">${destino}</td>
     <td style="font-size:12px;font-weight:700;color:var(--text)">${guia}</td>
     <td style="font-weight:700;color:var(--green)" class="td-financ">${tarifa}</td>
-    <td style="text-align:center">${cantPtos}</td>
-    <td style="color:rgba(255,255,255,0.7)" class="td-financ">${totalPtos}</td>
     <td style="font-weight:700" class="td-financ">${totalIng}</td>
     <td class="td-financ">${costos}</td>
     <td style="font-weight:700;color:${mColor}" class="td-financ">${margen}</td>
     <td>${pillHTML(s.estado)}</td>
-    <td><div style="display:flex;gap:4px;flex-wrap:wrap">
+    <td><button class="btn btn-outline btn-sm" onclick="abrirAcciones(${i},event)">⋮ Acciones</button></td>
+  </tr>`;
+}
+
+function abrirAcciones(i, ev) {
+  try {
+    ev.stopPropagation();
+    const pop = document.getElementById('popover-acciones');
+    if(!pop) return;
+    if(pop.style.display==='block' && pop.dataset.idx==String(i)) { pop.style.display='none'; return; }
+    const s = DB.servicios[i];
+    pop.innerHTML = `<div style="display:flex;flex-direction:column;gap:4px">
       ${s.estado==='asignado' ? `<button class="btn btn-navy btn-sm" onclick="iniciarSvc(${i})">▶ Iniciar</button>` : ''}
       ${s.estado==='en_proceso' ? `<button class="btn btn-purple btn-sm" onclick="verServicio(${i})">📋 Registrar</button><button class="btn btn-outline btn-sm" onclick="abrirAsignar(${i})">✏ Ed. Asignación</button>` : ''}
       ${_sessionUsuario?.rol==='despachador' ? '' : `
@@ -2728,10 +2742,18 @@ function filaHTML(s,i) {
       ${s.estado==='cerrado' ? `<button class="btn btn-sm" style="background:rgba(201,168,76,0.15);color:var(--gold);border:1px solid rgba(201,168,76,0.3)" onclick="abrirCierre(${i})">✏ Ed. Cierre</button>` : ''}
       ${['confirmado','cerrado','borrador'].includes(s.estado) ? `<button class="btn btn-outline btn-sm" onclick="abrirInforme(${i})">📄 Informe</button>` : ''}
       ${(s._puntos||[]).some(p=>(p.guias||[]).length>0||p.num_guia) ? `<button class="btn btn-outline btn-sm" onclick="verGuias(${i})">🖼 Guías</button>` : ''}
-      <button class="btn btn-red btn-sm" onclick="eliminarSvc(${i})">✕</button>
+      <button class="btn btn-red btn-sm" onclick="eliminarSvc(${i})">✕ Eliminar</button>
       `}
-    </div></td>
-  </tr>`;
+    </div>`;
+    const btn = ev.target.closest('button');
+    if(btn) {
+      const rect = btn.getBoundingClientRect();
+      pop.style.top = (rect.bottom+4)+'px';
+      pop.style.left = Math.max(4, rect.right-170)+'px';
+    }
+    pop.style.display = 'block';
+    pop.dataset.idx = i;
+  } catch(e) { console.warn('Error abrirAcciones:', e); }
 }
 
 function renderFlota() {
