@@ -282,7 +282,7 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
           <th class="th-filtro" onclick="abrirFiltroColumna('destino',event)">Destino <span class="ico-filtro" id="ico-filtro-destino">▾</span></th>
           <th class="th-filtro" onclick="abrirFiltroColumna('guia',event)">Guía <span class="ico-filtro" id="ico-filtro-guia">▾</span></th>
           <th class="th-financ">Tarifa $</th>
-          <th class="th-financ">Total Ingreso</th>
+          <th>Cant Ptos</th><th class="th-financ">Total Ptos $</th><th class="th-financ">Total Ingreso</th>
           <th class="th-financ">Costos</th><th class="th-financ">Margen</th>
           <th class="th-filtro" onclick="abrirFiltroColumna('estado',event)">Estado <span class="ico-filtro" id="ico-filtro-estado">▾</span></th>
           <th>Acciones</th>
@@ -2695,7 +2695,7 @@ function filaHTML(s,i) {
   const totalPtos = pInts.length > 0 ? fmt(pInts.reduce((a,p)=>a+(p.valor||0),0)) : '—';
   const destino   = pFinal?.destino || s.destino || '—';
   // Join all guia numbers with dash separator
-  const allGuias = (s._puntos||[]).flatMap(p=>(p.guias||[]).map(g=>g.num_guia)).filter(Boolean);
+  const allGuias = [...new Set((s._puntos||[]).flatMap(p=>(p.guias||[]).map(g=>g.num_guia)).filter(Boolean))];
   const guia = allGuias.length > 0 ? allGuias.join(' — ') : (s.num_guia ? s.num_guia.replace(/,/g,' — ') : '—');
   const ptsVal      = pInts.reduce((a,p)=>a+(p.valor||0),0);
   const tarifaFinal = pFinal?.valor || 0;
@@ -2718,6 +2718,8 @@ function filaHTML(s,i) {
     <td style="font-weight:700">${destino}</td>
     <td style="font-size:12px;font-weight:700;color:var(--text)">${guia}</td>
     <td style="font-weight:700;color:var(--green)" class="td-financ">${tarifa}</td>
+    <td style="text-align:center">${cantPtos}</td>
+    <td style="color:rgba(255,255,255,0.7)" class="td-financ">${totalPtos}</td>
     <td style="font-weight:700" class="td-financ">${totalIng}</td>
     <td class="td-financ">${costos}</td>
     <td style="font-weight:700;color:${mColor}" class="td-financ">${margen}</td>
