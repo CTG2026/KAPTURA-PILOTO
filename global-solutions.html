@@ -189,7 +189,6 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
   <button class="ntab" id="tab-btn-config" onclick="setTab('config',this)">Config</button>
   <button class="ntab" id="tab-btn-disponibilidad" onclick="setTab('disponibilidad',this)">Disponibilidad</button>
   <button class="ntab" id="tab-btn-setup" onclick="setTab('setup',this)" style="display:none">Setup</button>
-  <button class="ntab" id="tab-btn-porfiado" onclick="setTab('porfiado',this)">El Porfiado</button>
 </nav>
 
 <!-- ═══ PANTALLA MÓDULOS ═══ -->
@@ -1045,13 +1044,6 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
 
     </div><!-- /setup-costos-extra -->
     <div style="height:80px"></div>
-  </div>
-  <!-- TAB EL PORFIADO -->
-  <div id="tab-porfiado" style="display:none">
-    <div style="text-align:center;padding:60px 20px;color:var(--muted)">
-      <div style="font-size:20px;font-weight:800;color:var(--gold);margin-bottom:8px">EL PORFIADO</div>
-      <div style="font-size:13px">Contenido pendiente de definir.</div>
-    </div>
   </div>
 </main>
 
@@ -5512,7 +5504,7 @@ async function recalcRendimientoCargas() {
 
 // ══ UTILS ══
 function setTab(nombre, btn) {
-  ['servicios','flota','clientes','gastos','liquidaciones','resultados','informes','config','setup','disponibilidad','porfiado'].forEach(t => {
+  ['servicios','flota','clientes','gastos','liquidaciones','resultados','informes','config','setup','disponibilidad'].forEach(t => {
     const el = document.getElementById(`tab-${t}`);
     if(el) el.style.display = t===nombre ? 'block' : 'none';
   });
