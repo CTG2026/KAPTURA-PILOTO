@@ -1,0 +1,12 @@
+[
+{"codigo":"PROC-FIN-01","nombre":"Registro de servicio y cálculo de costo/margen","responsable":"Claude / Pablo"},
+{"codigo":"PROC-FIN-02","nombre":"Liquidación, aprobación y facturación","responsable":"Pablo"},
+{"codigo":"PROC-FIN-03","nombre":"Gestión de factoring","responsable":"Pablo / Claude"},
+{"codigo":"PROC-FIN-04","nombre":"Registro y categorización de Caja","responsable":"Claude / Pablo semanal"},
+{"codigo":"PROC-FIN-05","nombre":"Cierre mensual y Estado de Resultados","responsable":"Claude"},
+{"codigo":"PROC-FIN-06","nombre":"Auditoría cruzada de cobertura","responsable":"Claude"},
+{"codigo":"PROC-FIN-07","nombre":"Presupuesto vs Real","responsable":"Claude"},
+{"codigo":"PROC-FIN-08","nombre":"Inversiones y financiamiento","responsable":"Claude / Pablo"},
+{"codigo":"PROC-FIN-09","nombre":"Arquitectura de cascada Liquidación→CxC→Factoring→Caja→Presupuesto","responsable":"Claude"}
+]
+Nota: el detalle completo de "pasos" de cada procedimiento vive en la tabla kaptura_procedimientos de Supabase (proyecto aqunzrukuruwzwywnurq). Este archivo es un índice de respaldo, no el reemplazo de la fuente completa.
