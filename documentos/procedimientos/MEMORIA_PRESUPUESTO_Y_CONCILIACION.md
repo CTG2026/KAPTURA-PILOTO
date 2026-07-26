@@ -1,0 +1,122 @@
+# Memoria de Trabajo — Presupuesto, Flujo de Caja y Conciliación Bancaria (Global Solutions)
+
+**Propósito de este documento:** procedimiento fijo y acumulado de reglas para que Claude arme y actualice el Presupuesto/Flujo de Caja de Global Solutions (Sollem + TRAST), lo concilie contra la cartola bancaria real y el SII, y mantenga el archivo Excel `Presupuesto_Flujo_Caja_Conciliacion_Ago_Sep_2026.xlsx` sin perder el aprendizaje entre sesiones. Es un documento hermano de `MEMORIA_TRABAJO_SERVICIOS.md` y `PROCEDIMIENTO_CALCULO_SERVICIOS.md` — esos cubren el cierre de servicios reales con GPS; este cubre la parte financiera/presupuestaria y su conciliación contra el banco y el SII.
+
+---
+
+## 1. Estructura fija del archivo Excel (orden obligatorio de hojas)
+
+1. **`Supuestos_Presupuesto`** — todos los inputs (celdas azules), organizados en 3 bloques: SOLLEM, TRAST, COMPARTIDOS/EMPRESA. Cambiar cualquier valor acá recalcula todo el archivo.
+2. **`Sollem`** — Ingreso, Costos Directos, Margen y Costeo por Km de Sollem, Agosto y Septiembre en columnas B/C.
+3. **`TRAST`** — mismo formato que Sollem, para TRAST.
+4. **`Consolidado`** — suma Sollem+TRAST, resta Costos de Estructura (no atribuibles a un cliente) → Estado de Resultados completo, más el Flujo de Caja semanal (base bruta/cash).
+5. **`Conciliación_Junio`**, **`Conciliación_Julio`** — cruce real cartola vs RCV Compra/Venta SII, mes a mes.
+6. **`Real_vs_Presupuesto`** — control semanal, vincula el Flujo de Caja de `Consolidado` con datos reales que se van llenando.
+7. **`Resumen_Ejecutivo`** — Informe de Resultados Financieros (Estado de Resultados neto) + Plan vs Real vs Reproyección.
+
+**Regla fija:** nunca insertar hojas nuevas en otro orden ni duplicar la lógica de Sollem/TRAST en Consolidado — Consolidado siempre debe ser fórmula que sume las hojas de cliente, nunca un cálculo independiente (evita discrepancias).
+
+---
+
+## 2. REGLA CRÍTICA — Ingreso Neto vs. Ingreso Bruto (IVA), nunca mezclar (25-07-2026)
+
+**Error real cometido y corregido:** la primera versión del presupuesto comparaba Ingreso **bruto** (con IVA) contra una mezcla de costos donde solo Combustible venía bruto y el resto neto. Esto sobreestimó la "utilidad" en el equivalente al IVA cobrado (~19% del ingreso), que en realidad hay que devolverle al Fisco al mes siguiente — no es ganancia.
+
+**Regla fija, aplica siempre:**
+- **Estado de Resultados (utilidad real)** = SIEMPRE en base **neta** (sin IVA). Ingreso Neto − Costos Netos = Margen real.
+- **Flujo de Caja (semanal)** = SIEMPRE en base **bruta** (con IVA, lo que efectivamente entra/sale del banco).
+- Combustible: el precio de bomba ($1.200/lt Sollem, mismo para TRAST) YA incluye IVA — para el margen neto se divide por 1,19; para caja se usa el monto bruto completo.
+- Peajes, Provisión/Contingencia, Sueldo, Viático, Comisión, Factoring: **no llevan IVA** (no son compras facturadas por terceros con IVA recuperable).
+- Mantención: se trata como neto (dato ya viene sin IVA en el supuesto $25/km).
+- Costo Fijo Estructural y Costo Cuenta Corriente: **no se dividen entre Sollem y TRAST** — son costos de la empresa completa, van solo en `Consolidado`.
+
+---
+
+## 3. REGLA — Tarifario de Agosto: qué columna usar (25-07-2026)
+
+El archivo `Tarifas_Con_Baja_24-07_SOLLEM_AGOSTO_2026.xlsx` (hoja `CASABLANCA`, origen real de Sollem) tiene 3 columnas de tarifa por destino que **no son intercambiables**:
+
+| Columna | Qué es | Uso correcto |
+|---|---|---|
+| `Tarifa Orig.` (F) | Tarifa histórica de referencia | No usar directo |
+| `Nueva Tarifa` (I) = F×(1+Factor%) | **Es la tarifa ACTUAL/vigente hoy** — validado: calza exacto con el `tarifa_neta` ya cargado en `servicios_piloto` (ej. Requinoa $512.000, Peumo $512.000) | Usar solo para comparar contra el presente, NUNCA para presupuestar Agosto |
+| `Nueva Tarifa Final (con baja 20,86% o 47,59%)` (columna R) | **Es la tarifa que regirá en AGOSTO** (el archivo se llama "Con_Baja" porque introduce una reducción desde Agosto) | **Esta es la que se debe usar para presupuestar Agosto/Septiembre en adelante** |
+
+**Ojo:** el % de "baja" no es parejo — la mayoría de los destinos tiene 47,59% de baja, pero algunos (ej. San Fernando) tienen solo 20,86%. Siempre revisar la columna `Factor Baja` fila por fila, no asumir un % único.
+
+**Advertencia estructural:** las hojas `PENCO` y `BULNES` del mismo archivo tienen un número de columnas distinto (`A1:T` vs `A1:Y` en `CASABLANCA`/`COPIAPO`) — al leer estas hojas por posición de columna, la columna "Tarifa Final" puede quedar mal indexada si no se verifica el header real fila por fila antes de asumir la posición.
+
+---
+
+## 4. REGLA — Puntos de entrega multipunto (Sollem), confirmada 25-07-2026
+
+- **Todo servicio Sollem tiene un mínimo de 2 puntos de entrega** — nunca modelar un servicio con 1 solo punto como el caso base; el "+1 punto adicional" es la norma, no la excepción.
+- **Tarifa del servicio** = Tarifa Agosto (columna "Final con baja") del **destino de mayor valor** de la ruta + **$60.000 neto por cada punto adicional** desde el 2°.
+- **El punto adicional también agrega distancia real, no solo ingreso** — error real cometido y corregido: la primera versión sumaba el ingreso del punto adicional pero dejaba el km igual, como si el camión no se moviera. Evidencia real (2 casos, S-58 y S-60, comparando km GPS real vs. km de ida+vuelta al destino principal): **~120 km adicionales por cada punto adicional** (113km y 128,5km respectivamente, promedio 120,75 ≈ 120km). **Muestra chica (n=2)** — revisar y afinar cuando haya más servicios multipunto reales cerrados con GPS.
+- Aplicar esta regla en ambos niveles: al presupuestar (Supuestos_Presupuesto → Sollem) y al cerrar un servicio real multipunto por SQL (ya cubierto en parte por la regla de conteo de puntos de `MEMORIA_TRABAJO_SERVICIOS.md`, sección 2nonies — esa regla cuenta puntos por N° de guías; esta memoria agrega el impacto en tarifa y km).
+
+---
+
+## 5. REGLA — Tasas confirmadas para el presupuesto de Sollem (25-07-2026)
+
+Reemplazan supuestos anteriores marcados como estimados/en conflicto:
+
+| Variable | Valor confirmado | Reemplaza a |
+|---|---|---|
+| **Peajes** | **$50.000 neto por servicio, flat** (no por día, no por km) | El supuesto de "$50.000/día" y también el dato real observado de $22.895/servicio en `servicios_piloto` — el usuario confirmó que ese dato real no se conoce con exactitud, y que $50.000/servicio es la mejor estimación de negocio a usar en el presupuesto |
+| **Factoring** | **3% sobre la tarifa BRUTA (con IVA)** | El 6,4% observado en la única liquidación validada contra cartola (LIQ-001), y el 3% que aparecía en `servicios_piloto` pero calculado sobre neto — ambos quedan reemplazados por esta regla única y explícita |
+| **Comisión Conductor** | 8% sobre la tarifa **NETA** (sin IVA) | Sin cambios — pero se deja explícito para no confundir con el factoring (que sí es sobre bruto) |
+| **Costo Fijo Equipo (Sollem)** | **$29.167/día** (evidencia real: `costo_fijo_dia` de S-58/S-59/S-60 en `servicios_piloto`) | El estimado inicial de $36.000/día, que era prestado de TRAST por no tener dato propio de Sollem |
+| **Costo Contingencia** | **$25.000/día** — línea que faltaba completa en el primer presupuesto armado | — |
+| **Cadencia de servicios** | 1 servicio cada 1,5 días, de lunes a viernes | Consistente con "13 servicios/mes/equipo" ya usado |
+| **"Provisión Fondo de Reserva $500.000/equipo/mes"** | **Eliminada del modelo** — no existe como categoría real en ningún servicio Sollem en `servicios_piloto`; fue reemplazada por Costo Contingencia ($25.000/día), que sí es real y evidenciada | — |
+
+---
+
+## 6. Metodología de Costeo por Km (estándar de mercado para transporte de carga)
+
+Aplicar siempre esta estructura, tanto en `Sollem` como en `TRAST`, y verificar que el "Costo Total por Km" **reconcilie exactamente** con el Total de Costos Operacionales Directos ÷ Km — error real cometido y corregido: la primera versión del costeo por km omitía Peajes, Comisión y Provisión/Contingencia, lo que inflaba artificialmente el margen por km mostrado.
+
+```
+Costo Fijo por Km       = Costo Fijo del Equipo (prorrateado por día) ÷ Km del período
+Costo Variable por Km   = (Combustible + Mantención + Peajes) ÷ Km del período
+Costo Conductor por Km  = (Sueldo + Viático + Comisión) ÷ Km del período
+Provisión/Contingencia por Km = Provisión ÷ Km del período
+─────────────────────────────────────────────────────────
+COSTO TOTAL POR KM      = Total Costos Operacionales Directos ÷ Km del período   ← debe calzar EXACTO con la suma de las 4 líneas de arriba
+Tarifa por Km efectiva  = Ingreso Neto ÷ Km del período
+Margen por Km           = Tarifa/Km − Costo Total/Km
+```
+
+---
+
+## 7. Conciliación Bancaria — procedimiento confirmado y ya construido
+
+1. Fuentes: Cartola bancaria (histórica o provisoria) + RCV Compra + RCV Venta del mismo período (SII).
+2. ⚠️ **Cuidado con el corrimiento de columnas en los CSV del SII** — cuando el header tiene menos campos que la fila de datos, `pandas.read_csv` puede desalinear todo. Solución fija: `pd.read_csv(path, sep=';', index_col=False)`.
+3. Cruce por monto exacto (redondeado) + fecha más cercana, marcando cada factura como "Pagada" (con referencia al movimiento de cartola) o "Sin identificar".
+4. **Sollem se factoriza el 100% de sus facturas** — nunca esperar un abono directo del cliente en la cartola para Sollem; el abono real llega de la entidad de factoring (INCOFIN, Financia Capital u otras) por un monto menor a la factura (descontada la comisión de factoring).
+5. Movimientos de cartola sin factura asociada: clasificar (Combustible, Factoring, Venta POS/Tarjeta, Transferencia conductor/personal, Transferencia interna, Otro) — nunca dejarlos sin explicar.
+6. Cuadre de saldo obligatorio: Saldo Inicial + Abonos − Cargos = Saldo Final (según cartola) — diferencia debe ser $0, si no, hay un error de extracción de datos.
+7. **Hallazgo real de esta sesión — módulo de factoring de Kaptura muy subregistrado:** de ~$11,7M en depósitos de factoring reales identificados en la cartola (junio+julio), Kaptura solo tenía 1 registro en `kaptura_cuentas_por_cobrar` (19% de cobertura) — mismo patrón de subregistro ya documentado para `servicios_piloto` en `MEMORIA_TRABAJO_SERVICIOS.md` sección 5.
+
+---
+
+## 8. Respaldo del archivo — mecanismo ya en uso
+
+- El archivo Excel se respalda en GitHub (`ctg2026/KAPTURA-PILOTO/finanzas/conciliacion_bancaria/Presupuesto_Flujo_Caja_Conciliacion_Ago_Sep_2026.xlsx`), mismo mecanismo ya usado para guías y documentos de compliance (Supabase Storage no es alcanzable por las herramientas de Claude).
+- **No se crea una tabla paralela en Supabase con los mismos datos del Excel** — se evaluó y se descartó por duplicación real de información. El Excel es la única fuente de verdad de la conciliación y el presupuesto; Supabase solo guarda lo que ya existía antes (`servicios_piloto`, `kaptura_cuentas_por_cobrar`, etc.), que mide otra cosa.
+
+---
+
+## 9. Pendientes reales, no resueltos
+
+1. **Km por punto adicional (120km) es un promedio de solo 2 muestras reales** — afinar cuando existan más servicios multipunto cerrados con GPS.
+2. **TRAST todavía no ha comenzado operaciones reales** — todo su presupuesto usa el combo de referencia del `Simulador_Combos_TRAST_V8.xlsx` (Padre Hurtado→Quilicura→Llay Llay→Talca→Talca, $1.020.777/2 días) como único caso disponible; reemplazar por el mix real de rutas apenas exista.
+3. **Cartola de julio es provisoria** (corte 25-07-2026, con movimientos hasta 27-07) — repetir la conciliación de julio con la cartola definitiva de fin de mes.
+4. **Ingresos posibles desde la cuenta "Santa Berenice" (antigua)** — clientes que aún estén terminando de pagar saldos ahí no quedan visibles en la cartola nueva; no se ha conseguido ni revisado esa cartola antigua todavía.
+5. **Costo Fijo Equipo y Contingencia de TRAST** no tienen el mismo nivel de evidencia real que los de Sollem (vienen del simulador de combos, no de servicios TRAST ya cerrados) — revisar cuando existan datos reales.
+
+---
+
+*Última actualización: 25-07-2026. Documento vivo — actualizar cada vez que se confirme un supuesto nuevo, se corrija un error de cálculo, o se cierre un pendiente.*
