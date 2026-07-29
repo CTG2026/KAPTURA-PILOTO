@@ -113,19 +113,18 @@ Margen por Km           = Tarifa/Km − Costo Total/Km
 
 - **Pablo no participa en este proceso.** El usuario (Carlos, Director General) lo ejecuta directamente con Claude, con el mínimo esfuerzo posible de su parte — Claude baja/procesa/categoriza/presenta, no delega pasos manuales evitables a nadie.
 - **Cuenta oficial única desde Agosto: Banco Santander 0-000-3776731-0 (Global Solutions SPA).** Todo el proceso recurrente (diario/semanal/mensual) se construye sobre esta cuenta exclusivamente.
-- **Procedimiento explícito, sin ambigüedad (corregido 29-07-2026 — la versión anterior decía "anotar el saldo" sin especificar cómo, y eso no sirve):**
+- **Procedimiento explícito, sin ambigüedad Y sin retrabajo (corregido 29-07-2026, dos veces):**
 
   1. Entrar a **sii.cl** → Registro de Compras y Ventas → descargar **RCV Compra** (CSV) del mes en curso.
   2. Entrar a **sii.cl** → mismo lugar → descargar **RCV Venta** (CSV) del mes en curso.
   3. **Subir esos 2 archivos CSV directo en el chat** (adjuntar).
   4. Entrar a **Banco Santander Empresas** → Consulta de movimientos → descargar **cartola de movimientos** (Excel), cuenta 0-000-3776731-0.
   5. **Subir ese archivo Excel directo en el chat.**
-  6. (Diario) Entrar a Banco Santander → **Saldo de Cuentas Corrientes** → ver en pantalla el "Saldo disponible".
-  7. **Escribir ese número directo como mensaje de texto en el chat** (ej. "Saldo hoy: $63.371") — no se sube archivo ni se descarga nada para esto, basta el número escrito.
-  8. Claude cruza y actualiza automático: `Conciliación_[Mes]`, `Real_vs_Presupuesto`, `Resumen_Ejecutivo`, `Bitácora_Saldo_Diario`.
-  9. Claude entrega el Excel actualizado + resumen de hallazgos en el mismo chat.
+  6. Claude cruza y actualiza automático: `Conciliación_[Mes]`, `Real_vs_Presupuesto`, `Resumen_Ejecutivo`, y actualiza `Bitácora_Saldo_Diario` tomando el saldo **directo de la última fila (columna SALDO) de la misma cartola de movimientos del paso 5** — NUNCA pedir un reporte de "Saldo de Cuentas Corrientes" aparte, sería un archivo duplicado para el mismo dato que la cartola ya trae.
+  7. Claude presenta el resumen de resultados **en el chat** (no solo el archivo) y entrega el Excel actualizado.
 
-- **Cadencia:** pasos 1-3-5 semanal (RCV+cartola), paso 6-7 diario (saldo), cierre del mes en `Resumen_Ejecutivo` al terminar cada mes.
+- **Regla fija: Claude siempre presenta el informe/resumen de resultados en el chat, nunca solo el archivo sin comentario.**
+- **Cadencia:** el usuario sube RCV+cartola con la frecuencia que le sea cómoda (ideal: diaria, mínimo: semanal) — mientras más seguido, más fina queda la `Bitácora_Saldo_Diario`. Cierre formal del mes en `Resumen_Ejecutivo` al terminar cada mes.
 - **Categorización automática de movimientos de cartola sin factura RCV asociada — regla fija, ya en uso, mantener siempre:**
 
 | Palabra clave en descripción | Categoría |
