@@ -109,14 +109,71 @@ Margen por Km           = Tarifa/Km − Costo Total/Km
 
 ---
 
-## 9. Pendientes reales, no resueltos
+## 9. REGLA — Modelo operativo desde Agosto 2026 (confirmado 29-07-2026)
 
-1. **Km por punto adicional (120km) es un promedio de solo 2 muestras reales** — afinar cuando existan más servicios multipunto cerrados con GPS.
+- **Pablo no participa en este proceso.** El usuario (Carlos, Director General) lo ejecuta directamente con Claude, con el mínimo esfuerzo posible de su parte — Claude baja/procesa/categoriza/presenta, no delega pasos manuales evitables a nadie.
+- **Cuenta oficial única desde Agosto: Banco Santander 0-000-3776731-0 (Global Solutions SPA).** Todo el proceso recurrente (diario/semanal/mensual) se construye sobre esta cuenta exclusivamente.
+- **Cadencia fija del proceso:**
+  1. **Diaria:** bajar "Saldo de Cuentas Corrientes" (reporte simple de saldo, sin movimientos) y registrar el saldo disponible — sirve de alerta temprana, comparándolo contra el Saldo Acumulado proyectado en `Consolidado`.
+  2. **Semanal:** bajar cartola de movimientos completa + RCV Compra/Venta del SII del período, cruzar (mismo método ya construido en `Conciliación_Junio`/`Conciliación_Julio`), llenar la columna "Real" en `Real_vs_Presupuesto`.
+  3. **Mensual:** cerrar el mes en `Resumen_Ejecutivo` (Estado de Resultados real vs. presupuestado), revisar y ajustar `Supuestos_Presupuesto` si corresponde.
+- **Categorización automática de movimientos de cartola sin factura RCV asociada — regla fija, ya en uso, mantener siempre:**
+
+| Palabra clave en descripción | Categoría |
+|---|---|
+| ESMAX | Combustible |
+| INCOFIN, FINANCIA CAPITA | Factoring confirmado (Sollem se factoriza 100%) |
+| GETNET | Venta POS/Tarjeta (no es factura RCV) |
+| TRANSF A / TRANSF DE | Transferencia conductor/personal |
+| COMPRA NACIONAL | Compra con tarjeta (gasto operativo menor) |
+| GLOBAL SOLUTION | Transferencia interna Global Solutions |
+| (cualquier otro) | Otro / revisar manualmente |
+
+## 10. REGLA — Cuentas paralelas: Santa Berenice y Mercado Pago son SOLO historia (29-07-2026)
+
+- **"Sociedad de Transporte Santa Berenice SPA"** (cuenta antigua, Banco Estado/Santander distinta) y **"Global Solutions Spa Mercado Pago"** (billetera, usada principalmente para pagar combustible) **NO se concilian de forma continua** — son historia previa a agosto. Solo se revisan puntualmente si aparece una discrepancia real en la cuenta oficial que las involucre (ej. un cliente que pagó por error a la cuenta antigua).
+- **Confirmado:** el pago de SOLLEM SPA por $2.136.590 (08-07-2026) a Santa Berenice **no fue pago de un servicio** — fue el reembolso de Sollem a Global por moras que Global tuvo que absorber ante el factoring por atrasos de pago de Sollem. No cruzar este monto contra ninguna factura RCV.
+- **Confirmado: INCOFIN S.A. = LATAM TRADE CAPITAL** (misma entidad de factoring, no dos distintas — el correo de contacto real es `@latamtradecapital`).
+- Santa Berenice también factoriza con Kapitalbox Logistic SPA (entidad adicional, distinta a Incofin/Financia Capital) — anotado solo como referencia histórica, no aplica a la cuenta oficial de agosto.
+
+## 11. Tasas y supuestos finales confirmados para Sollem (actualización 29-07-2026)
+
+Reemplaza cualquier valor anterior en conflicto:
+
+| Variable | Valor final | Estado |
+|---|---|---|
+| Km base servicio 1 punto | **359 km** | Real, estudio 79 combos / 127 servicios Sexta Región |
+| Km adicional por punto extra | **50 km** | Real, mediana 40km / promedio 50km, 35 pares GPS limpios de outliers |
+| Puntos de entrega mínimo | **2** (siempre, sin excepción) | Confirmado — el "punto adicional" es la norma |
+| Pago por punto adicional (neto) | **$60.000** | Confirmado |
+| Tarifa por destino (Agosto) | Columna **"Nueva Tarifa Final" (con baja)** del tarifario Casablanca — NO la "Nueva Tarifa" (esa es la tarifa ACTUAL/vigente hoy, no la de agosto) | Confirmado, ver sección 3 |
+| Tarifa multipunto | Tarifa Agosto del **destino de mayor valor** de la ruta + $60.000 × puntos adicionales | Confirmado |
+| Peajes | **$50.000/servicio, flat** (no por día) | Sigue siendo la cifra de negocio elegida — **investigación en curso, ver sección 12, sin resolver** |
+| Factoring | **3% sobre tarifa BRUTA (con IVA)** | Confirmado, reemplaza definitivamente el 6,4% y el 3%-sobre-neto vistos antes |
+| Comisión conductor | **8% sobre tarifa NETA (sin IVA)** | Confirmado |
+| Costo Fijo Equipo | **$29.167/día** | Real, evidencia `costo_fijo_dia` en `servicios_piloto` |
+| Contingencia | **$25.000/día** | Real, `costo_contingencia` en `servicios_piloto` |
+| Cadencia de servicios | 1 servicio cada 1,5 días, L-V | Sin cambios |
+
+**Resultado con la muestra ampliada de 15 combos (60 de 127 servicios reales):** Utilidad Neta promedio ponderada por servicio = **$117.444** (tarifa neta promedio $557.706, km promedio 413,2). La tabla completa de combos (con fórmulas dinámicas ligadas a `Supuestos_Presupuesto`) vive dentro de la hoja `Sollem`, al inicio, como memoria de cálculo — no está pegada a mano, se recalcula sola si cambia cualquier supuesto.
+
+## 12. PENDIENTE CRÍTICO — Peajes reales: conflicto de $22.895 vs. $65.600 sin resolver (29-07-2026)
+
+- `kaptura_corredores` (corredor C1, Coltauco↔Casablanca vía Ruta 5+Autopista Central+Ruta 68) dice el ciclo completo (ida+vuelta, 4 pórticos: Angostura, Autopista Central, Lo Prado, Zapata) cuesta **$22.895**.
+- Pero la tabla de detalle real por pórtico `porticos_tag` (`valor_3_ejes`, tarifas 2026 verificadas para camión de 3 ejes) da: Angostura $9.000 + Autopista Central $7.400 + Lo Prado $8.200 + Zapata $8.200 = **$32.800 un sentido → $65.600 ida y vuelta**.
+- **Estas dos fuentes de Kaptura se contradicen por casi 3 veces** y ambas podrían compartir el mismo error de origen (no son 2 fuentes independientes como se pensó al principio). El campo `nota` del corredor C1 no tiene memoria de cálculo, solo dice "MUST:Mostazal" (palabra clave de matching).
+- **Sigue sin resolverse** — se necesita un comprobante real de TAG/cartola de un viaje Coltauco-Casablanca para saber cuál de los dos números es el correcto. Mientras tanto, el presupuesto sigue usando **$50.000/servicio** como cifra de negocio (ni una ni la otra), elegida deliberadamente como estimación conservadora ante la incertidumbre.
+
+
+
+## 13. Pendientes reales, no resueltos
+
+1. **Peajes: conflicto $22.895 vs $65.600 sin resolver** — ver sección 12, es el pendiente más importante abierto hoy.
 2. **TRAST todavía no ha comenzado operaciones reales** — todo su presupuesto usa el combo de referencia del `Simulador_Combos_TRAST_V8.xlsx` (Padre Hurtado→Quilicura→Llay Llay→Talca→Talca, $1.020.777/2 días) como único caso disponible; reemplazar por el mix real de rutas apenas exista.
-3. **Cartola de julio es provisoria** (corte 25-07-2026, con movimientos hasta 27-07) — repetir la conciliación de julio con la cartola definitiva de fin de mes.
-4. **Ingresos posibles desde la cuenta "Santa Berenice" (antigua)** — clientes que aún estén terminando de pagar saldos ahí no quedan visibles en la cartola nueva; no se ha conseguido ni revisado esa cartola antigua todavía.
-5. **Costo Fijo Equipo y Contingencia de TRAST** no tienen el mismo nivel de evidencia real que los de Sollem (vienen del simulador de combos, no de servicios TRAST ya cerrados) — revisar cuando existan datos reales.
+3. **Costo Fijo Equipo y Contingencia de TRAST** no tienen el mismo nivel de evidencia real que los de Sollem (vienen del simulador de combos, no de servicios TRAST ya cerrados) — revisar cuando existan datos reales.
+4. **Bitácora de saldo diario** — todavía no está armada; es el primer paso operativo pendiente antes de que arranque agosto.
+5. **Combos Sollem: muestra de 15 combos cubre 60 de 127 servicios (47%)** — si se necesita mayor precisión, ampliar la muestra a los 79 combos completos.
 
 ---
 
-*Última actualización: 25-07-2026. Documento vivo — actualizar cada vez que se confirme un supuesto nuevo, se corrija un error de cálculo, o se cierre un pendiente.*
+*Última actualización: 29-07-2026. Documento vivo — actualizar cada vez que se confirme un supuesto nuevo, se corrija un error de cálculo, o se cierre un pendiente.*
