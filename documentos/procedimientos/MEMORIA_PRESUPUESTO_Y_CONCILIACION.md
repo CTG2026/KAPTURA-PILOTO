@@ -156,7 +156,8 @@ Reemplaza cualquier valor anterior en conflicto:
 | Pago por punto adicional (neto) | **$60.000** | Confirmado |
 | Tarifa por destino (Agosto) | Columna **"Nueva Tarifa Final" (con baja)** del tarifario Casablanca — NO la "Nueva Tarifa" (esa es la tarifa ACTUAL/vigente hoy, no la de agosto) | Confirmado, ver sección 3 |
 | Tarifa multipunto | Tarifa Agosto del **destino de mayor valor** de la ruta + $60.000 × puntos adicionales | Confirmado |
-| Peajes | **$50.000/servicio, flat** (no por día) | Sigue siendo la cifra de negocio elegida — **investigación en curso, ver sección 12, sin resolver** |
+| Peajes | **$50.000/servicio, flat** (no por día) | Sigue siendo la cifra de negocio elegida — **investigación en curso, ver sección 12, sin resolver. 29-07-2026: se recibió una instrucción afirmando "peajes llevan IVA, dividir por 1,19" sin ninguna evidencia real adjunta (boleta/comprobante), y en el mismo mensaje que la afirmaba también decía explícitamente que el tema seguía sin confirmar — contradicción real, NO aplicada. Requiere boleta real antes de cambiar esto.**
+| Precio combustible | **$1.199/lt** | Real, promedio ponderado de 36 transacciones Aramco de julio 2026 (reemplaza el estimado de $1.200/lt — prácticamente idéntico, buena validación) |
 | Factoring | **3% sobre tarifa BRUTA (con IVA)** | Confirmado, reemplaza definitivamente el 6,4% y el 3%-sobre-neto vistos antes |
 | Comisión conductor | **8% sobre tarifa NETA (sin IVA)** | Confirmado |
 | Costo Fijo Equipo | **$29.167/día** | Real, evidencia `costo_fijo_dia` en `servicios_piloto` |
