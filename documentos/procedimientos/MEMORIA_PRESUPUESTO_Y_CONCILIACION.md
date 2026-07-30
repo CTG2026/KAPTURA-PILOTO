@@ -111,6 +111,8 @@ Margen por Km           = Tarifa/Km − Costo Total/Km
 
 ## 9. REGLA — Modelo operativo desde Agosto 2026 (confirmado 29-07-2026)
 
+> **Fuente de verdad a partir del 30-07-2026: `kaptura_procedimientos`, código `PROC-FIN-14`** (aprobado por el Director) — define los 3 pilares (Rentable/Líquido/Solvente), umbrales (15% reproyección mensual, 75 días factoring, 32% operacional por servicio en `[OPE]`), la secuencia fija (persistencia primero, siempre), y la autoauditoría de 6 puntos antes de cualquier cierre. Esta memoria .md ya no repite ese contenido — solo referencia. Todo documento fuente (cartola, RCV, tarifario, etc.) se sube primero a GitHub (`documentos_financieros/{empresa}/`) y se registra en `kaptura_documentos_financieros` — ver Sección 8bis.
+
 - **Pablo no participa en este proceso.** El usuario (Carlos, Director General) lo ejecuta directamente con Claude, con el mínimo esfuerzo posible de su parte — Claude baja/procesa/categoriza/presenta, no delega pasos manuales evitables a nadie.
 - **Cuenta oficial única desde Agosto: Banco Santander 0-000-3776731-0 (Global Solutions SPA).** Todo el proceso recurrente (diario/semanal/mensual) se construye sobre esta cuenta exclusivamente.
 - **Procedimiento explícito, sin ambigüedad Y sin retrabajo (corregido 29-07-2026, dos veces):**
