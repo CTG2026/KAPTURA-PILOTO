@@ -6864,6 +6864,13 @@ function liqImprimir(id) {
     </div>
   </div>
   ${liq.num_factura ? `<div style="background:#faf3e3;border:0.5px solid #ecd9ac;border-radius:6px;padding:10px 12px;margin-bottom:18px"><div style="font-size:10px;color:#8a6c1f;text-transform:uppercase">Factura asociada</div><div style="font-size:12px;color:#5f4a15;margin-top:3px">N° ${liq.num_factura}${liq.fecha_factura?' · '+liq.fecha_factura:''}</div></div>` : ''}
+  ${DB.config['banco_cuenta_numero'] ? `<div style="background:#f7f6f2;border:0.5px solid #e0ddd3;border-radius:6px;padding:10px 12px;margin-bottom:18px">
+    <div style="font-size:10px;color:#888;text-transform:uppercase;margin-bottom:4px">Datos para transferencia</div>
+    <div style="font-size:12px;color:#444;line-height:1.6">
+      ${DB.config['banco_titular']||''} · RUT ${DB.config['banco_rut']||''}<br>
+      Banco ${DB.config['banco_nombre']||''} · ${DB.config['banco_cuenta_tipo']||''} N° ${DB.config['banco_cuenta_numero']||''}
+    </div>
+  </div>` : ''}
   <div style="border-top:0.5px solid #e0ddd3;padding-top:14px;display:flex;justify-content:flex-end;align-items:flex-end">
     <div style="text-align:center"><div style="width:160px;border-top:0.5px solid #999;padding-top:4px;font-size:10px;color:#999">Firma / timbre</div></div>
   </div>
