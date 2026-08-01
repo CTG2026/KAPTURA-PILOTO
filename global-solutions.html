@@ -5651,7 +5651,7 @@ async function iniciarLogin() {
   if(saved) {
     try {
       const sess = JSON.parse(saved);
-      if(sess.pin && sess.empresa && (['coordinador','controller','administrador','conductor','despachador'].includes(sess.rol) || sess.modo === 'flota' || sess.modo === 'demo')) {
+      if(sess.pin && sess.empresa && (['coordinador','controller','administrador','conductor','despachador','mantenedor'].includes(sess.rol) || sess.modo === 'flota' || sess.modo === 'demo')) {
         _sessionUsuario = sess;
         document.getElementById('login-screen').style.display = 'none';
         document.getElementById('pantalla-modulos').style.display = 'none';
@@ -5690,6 +5690,25 @@ async function iniciarLogin() {
             Array.from(selMesD.options).forEach(opt => { if(parseInt(opt.value) < 6) opt.remove(); });
             if(parseInt(selMesD.value) < 6) selMesD.value = '6';
           }
+        }
+        if(sess.rol === 'mantenedor') {
+          // Mantenedor: solo Disponibilidad + Servicios sin datos financieros ni botón asignar
+          ['tab-btn-liquidaciones','tab-btn-flota','tab-btn-clientes','tab-btn-gastos',
+           'tab-btn-resultados','tab-btn-informes','tab-btn-config','tab-btn-setup'].forEach(id => {
+            const el = document.getElementById(id); if(el) el.style.display = 'none';
+          });
+          const btnSvcM = document.getElementById('tab-btn-servicios');
+          if(btnSvcM) setTab('servicios', btnSvcM);
+          const setupExtraM = document.getElementById('setup-costos-extra');
+          if(setupExtraM) setupExtraM.style.display = 'none';
+          ['kpi-ingreso-mes','kpi-costos-mes','kpi-margen-teo','kpi-margen-prom','k-margen-real-kpi'].forEach(id => {
+            const el = document.getElementById(id); if(el) el.style.display = 'none';
+          });
+          const btnAsigM = document.getElementById('btn-asignar-nuevo');
+          if(btnAsigM) btnAsigM.style.display = 'none';
+          const styleMant = document.createElement('style');
+          styleMant.textContent = '.th-financ, .td-financ { display: none !important; }';
+          document.head.appendChild(styleMant);
         }
         if(sess.rol === 'conductor') {
           // Ocultar tabs que no corresponden al conductor
@@ -5840,6 +5859,17 @@ function entrarModulo(modulo) {
         Array.from(selMes.options).forEach(opt => { if(parseInt(opt.value) < 6) opt.remove(); });
         if(parseInt(selMes.value) < 6) selMes.value = '6';
       }
+    }
+    if(_sessionUsuario.rol === 'mantenedor') {
+      ['tab-btn-liquidaciones','tab-btn-flota','tab-btn-clientes','tab-btn-gastos',
+       'tab-btn-resultados','tab-btn-informes','tab-btn-config','tab-btn-setup'].forEach(id => {
+        const el = document.getElementById(id); if(el) el.style.display = 'none';
+      });
+      ['kpi-ingreso-mes','kpi-costos-mes','kpi-margen-teo','kpi-margen-prom','k-margen-real-kpi'].forEach(id => {
+        const el = document.getElementById(id); if(el) el.style.display = 'none';
+      });
+      const btnAsigM2 = document.getElementById('btn-asignar-nuevo');
+      if(btnAsigM2) btnAsigM2.style.display = 'none';
     }
     init();
   }
