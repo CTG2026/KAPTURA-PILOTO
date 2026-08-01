@@ -255,9 +255,9 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
       <div class="kpi orange"><div class="kpi-lbl">Ejecutados Hoy</div><div class="kpi-val orange" id="k-ejec-hoy">—</div><div class="kpi-sub" id="k-ejec-mes">— este mes</div></div>
       <div class="kpi"><div class="kpi-lbl">Servicios Mes</div><div class="kpi-val" id="k-svcs-mes">—</div><div class="kpi-sub" id="k-svcs-mes-sub">acumulados</div></div>
       <div class="kpi orange" id="kpi-por-confirmar"><div class="kpi-lbl">Por Confirmar</div><div class="kpi-val orange" id="k-pend">—</div><div class="kpi-sub">borradores</div></div>
-      <div class="kpi green" id="kpi-ingreso-mes"><div class="kpi-lbl">Ingreso Mes</div><div class="kpi-val green" id="k-ingreso">—</div><div class="kpi-sub" id="k-ingreso-sub">—</div></div>
-      <div class="kpi red" id="kpi-costos-mes"><div class="kpi-lbl">Costos Mes</div><div class="kpi-val red" id="k-costos">—</div><div class="kpi-sub" id="k-costos-sub">—</div></div>
-      <div class="kpi green" id="kpi-margen-teo"><div class="kpi-lbl">Margen Teórico</div><div class="kpi-val green" id="k-margen">—</div><div class="kpi-sub" id="k-margen-sub">—</div></div>
+      <div class="kpi" id="kpi-ingreso-mes"><div class="kpi-lbl">Ingreso Mes</div><div class="kpi-val" id="k-ingreso">—</div><div class="kpi-sub" id="k-ingreso-sub">—</div></div>
+      <div class="kpi" id="kpi-costos-mes"><div class="kpi-lbl">Costos Mes</div><div class="kpi-val" id="k-costos">—</div><div class="kpi-sub" id="k-costos-sub">—</div></div>
+      <div class="kpi" id="kpi-margen-teo"><div class="kpi-lbl">Margen Teórico</div><div class="kpi-val" id="k-margen">—</div><div class="kpi-sub" id="k-margen-sub">—</div></div>
       <div class="kpi" id="kpi-margen-prom"><div class="kpi-lbl">Margen Prom.</div><div class="kpi-val" id="k-prom">—</div><div class="kpi-sub">por servicio</div></div>
       <div class="kpi" id="k-margen-real-kpi"><div class="kpi-lbl">Margen Real</div><div class="kpi-val" id="k-margen-real">—</div><div class="kpi-sub" id="k-margen-real-sub">con costos reales</div></div>
     </div>
@@ -2452,12 +2452,41 @@ function renderKPIs() {
     document.getElementById('k-svcs-mes').textContent = svcsMes.length;
     document.getElementById('k-svcs-mes-sub').textContent = `acumulados ${MESES[mes]}`;
   }
-  document.getElementById('k-ingreso').textContent = fmt(ingresoTotal);
-  document.getElementById('k-ingreso-sub').textContent = `${conf.length} servicios · ${MESES[mes]}`;
-  document.getElementById('k-costos').textContent = fmt(costosTotal);
-  document.getElementById('k-costos-sub').textContent = MESES[mes];
-  document.getElementById('k-margen').textContent = fmt(mt);
-  document.getElementById('k-margen-sub').textContent = `${conf.length} servicios · ${MESES[mes]}`;
+  // Ingreso/Costos/Margen Mes: TODOS los servicios del mes sin importar estado (no solo confirmado/cerrado).
+  // Color: blanco mientras falte algun dato por cargar; verde si esta 100% completo y es >=0; rojo solo si el valor es negativo.
+  const svcsMesTodos = DB.servicios.filter(s => {
+    const fParts = (s.fecha||'2026-01-01').split('-');
+    const fMes = parseInt(fParts[1],10)-1;
+    return fMes===mes;
+  });
+  const ingresoMesTodos = svcsMesTodos.reduce((a,s) => a+(s.ingreso_total||s.tarifa_neta||0), 0);
+  const costosMesTodos  = svcsMesTodos.reduce((a,s) => a+(s.total_costos||0), 0);
+  const margenMesTodos  = ingresoMesTodos - costosMesTodos;
+  const ingresoCompleto = svcsMesTodos.length>0 && svcsMesTodos.every(s => (s.ingreso_total||s.tarifa_neta||0) > 0);
+  const costosCompleto  = svcsMesTodos.length>0 && svcsMesTodos.every(s => (s.total_costos||0) > 0);
+  const margenCompleto  = ingresoCompleto && costosCompleto;
+
+  function pintarKpi(elValId, elKpiId, completo, valor) {
+    const elVal = document.getElementById(elValId);
+    const elKpi = document.getElementById(elKpiId);
+    elVal?.classList.remove('green','red');
+    elKpi?.classList.remove('green','red');
+    if (completo) {
+      const cls = valor < 0 ? 'red' : 'green';
+      elVal?.classList.add(cls);
+      elKpi?.classList.add(cls);
+    }
+  }
+  pintarKpi('k-ingreso','kpi-ingreso-mes', ingresoCompleto, ingresoMesTodos);
+  pintarKpi('k-costos','kpi-costos-mes', costosCompleto, costosMesTodos);
+  pintarKpi('k-margen','kpi-margen-teo', margenCompleto, margenMesTodos);
+
+  document.getElementById('k-ingreso').textContent = fmt(ingresoMesTodos);
+  document.getElementById('k-ingreso-sub').textContent = `${svcsMesTodos.length} servicios · ${MESES[mes]}${ingresoCompleto?'':' (parcial)'}`;
+  document.getElementById('k-costos').textContent = fmt(costosMesTodos);
+  document.getElementById('k-costos-sub').textContent = `${MESES[mes]}${costosCompleto?'':' (parcial)'}`;
+  document.getElementById('k-margen').textContent = fmt(margenMesTodos);
+  document.getElementById('k-margen-sub').textContent = `${svcsMesTodos.length} servicios · ${MESES[mes]}${margenCompleto?'':' (parcial)'}`;
   document.getElementById('k-prom').textContent = fmt(pr);
 
   // Margen Real = Ingresos − (Copec real + Gastos módulo + TAG/Peajes + Fijos + Sueldos + Viáticos + Comisiones)
