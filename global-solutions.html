@@ -561,7 +561,7 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
   <!-- TAB RESULTADOS -->
   <div id="tab-resultados" style="display:none">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
-      <div style="font-family:'DM Sans',sans-serif;font-size:20px;font-weight:900;letter-spacing:0.05em">RESULTADOS</div>
+      <div style="font-family:'DM Sans',sans-serif;font-size:20px;font-weight:900;letter-spacing:0.05em">RESULTADOS <span id="res-badge-parcial" style="display:none;font-size:10px;font-weight:800;letter-spacing:0.08em;padding:3px 8px;border-radius:4px;vertical-align:middle;margin-left:6px">PARCIAL</span></div>
       <select id="res-mes" class="inp" style="width:auto;font-size:11px;padding:4px 8px" onchange="renderResultados()">
         <option value="0">Enero</option>
         <option value="1">Febrero</option>
@@ -5437,12 +5437,25 @@ function abrirInformeResultados(mesKey) {
 function renderResultados() {
   const mes = parseInt(document.getElementById('res-mes')?.value ?? hoy.getMonth());
   const anio = hoy.getFullYear();
+  // Sin barrera de estado: incluye TODOS los servicios del mes/anio, para poder usarse como informe parcial
+  // en cualquier momento, no solo cuando el 100% de los servicios ya paso por el flujo de cierre formal.
   const svcs = DB.servicios.filter(s => {
     const fParts = (s.fecha||'2026-01-01').split('-');
     const fAnio = parseInt(fParts[0],10);
     const fMes = parseInt(fParts[1],10)-1;
-    return fMes===mes && fAnio===anio && s.estado==='cerrado';
+    return fMes===mes && fAnio===anio;
   });
+  const informeCompleto = svcs.length>0 && svcs.every(s => (s.ingreso_total||s.tarifa_neta||0) > 0 && (s.total_costos||0) > 0);
+  const badge = document.getElementById('res-badge-parcial');
+  if (badge) {
+    if (informeCompleto) {
+      badge.style.display = 'none';
+    } else {
+      badge.style.display = 'inline-block';
+      badge.style.color = '#ffffff';
+      badge.style.background = 'rgba(255,255,255,0.12)';
+    }
+  }
 
   const DIAS_OPERATIVOS = 20;
   const ingresoTotal  = svcs.reduce((a,s)=>a+(s.ingreso_total||s.tarifa_neta||0), 0);
