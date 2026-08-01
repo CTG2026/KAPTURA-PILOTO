@@ -2407,8 +2407,9 @@ function renderKPIs() {
   const svcsHoy = DB.servicios.filter(s => (s.fecha||'').startsWith(hoyStr));
   const borradores = DB.servicios.filter(s => s.estado === 'borrador');
   const conf = DB.servicios.filter(s => {
-    const f = new Date(s.created_at||'2026-01-01');
-    return f.getMonth()===mes && ['confirmado','cerrado'].includes(s.estado);
+    const fParts = (s.fecha||'2026-01-01').split('-');
+    const fMes = parseInt(fParts[1],10)-1;
+    return fMes===mes && ['confirmado','cerrado'].includes(s.estado);
   });
   const mt = conf.reduce((a,s) => a+(s.margen_servicio||s.margen||0), 0);
   const pr = conf.length ? Math.round(mt/conf.length) : 0;
@@ -2418,8 +2419,9 @@ function renderKPIs() {
     (s.fecha||'').startsWith(hoyStr) && ['ejecutado','borrador','confirmado','cerrado'].includes(s.estado)
   ).length;
   const ejMes = DB.servicios.filter(s => {
-    const f = new Date(s.created_at||'2026-01-01');
-    return f.getMonth()===mes && ['ejecutado','borrador','confirmado','cerrado'].includes(s.estado);
+    const fParts = (s.fecha||'2026-01-01').split('-');
+    const fMes = parseInt(fParts[1],10)-1;
+    return fMes===mes && ['ejecutado','borrador','confirmado','cerrado'].includes(s.estado);
   }).length;
 
   const esConductorKpi = _sessionUsuario?.rol === 'conductor';
@@ -5382,8 +5384,10 @@ function renderResultados() {
   const mes = parseInt(document.getElementById('res-mes')?.value ?? hoy.getMonth());
   const anio = hoy.getFullYear();
   const svcs = DB.servicios.filter(s => {
-    const f = new Date(s.created_at||'2026-01-01');
-    return f.getMonth()===mes && f.getFullYear()===anio && s.estado==='cerrado';
+    const fParts = (s.fecha||'2026-01-01').split('-');
+    const fAnio = parseInt(fParts[0],10);
+    const fMes = parseInt(fParts[1],10)-1;
+    return fMes===mes && fAnio===anio && s.estado==='cerrado';
   });
 
   const DIAS_OPERATIVOS = 20;
