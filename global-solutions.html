@@ -6730,7 +6730,8 @@ function renderDisponibilidad() {
     const disp = patentes.filter(p=>regs[p].estado==='Disponible').length;
     const mant = patentes.filter(p=>regs[p].estado==='Mantención').length;
     const ocup = FLOTA.length>0 ? Math.round((enServ/FLOTA.length)*100) : 0;
-    const fechaLabel = new Date(fecha+'T00:00:00').toLocaleDateString('es-CL');
+    const fechaISO = /^\d{2}-\d{2}-\d{4}$/.test(fecha) ? fecha.split('-').reverse().join('-') : fecha;
+    const fechaLabel = new Date(fechaISO+'T00:00:00').toLocaleDateString('es-CL');
 
     return `<div style="border:1px solid var(--border);border-radius:8px;margin-bottom:6px;overflow:hidden;background:var(--surface)">
       <div onclick="dispActualizarForm('hist_${fecha}', ${!isOpen})" style="padding:10px 12px;cursor:pointer;display:flex;justify-content:space-between;align-items:center">
