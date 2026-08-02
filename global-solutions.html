@@ -257,11 +257,12 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
       </select>
     </div>
     <div class="kpis">
-      <div class="kpi" onclick="filtrarPorKPI('hoy')" style="cursor:pointer"><div class="kpi-lbl">Servicios Hoy</div><div class="kpi-val" id="k-hoy">—</div><div class="kpi-sub" id="k-hoy-sub">—</div></div>
-      <div class="kpi orange" onclick="filtrarPorKPI('ejecHoy')" style="cursor:pointer"><div class="kpi-lbl">Ejecutados Hoy</div><div class="kpi-val orange" id="k-ejec-hoy">—</div><div class="kpi-sub" id="k-ejec-mes">— este mes</div></div>
-      <div class="kpi" onclick="filtrarPorKPI('mes')" style="cursor:pointer"><div class="kpi-lbl">Servicios Mes</div><div class="kpi-val" id="k-svcs-mes">—</div><div class="kpi-sub" id="k-svcs-mes-sub">acumulados</div></div>
-      <div class="kpi orange" id="kpi-por-confirmar" onclick="filtrarPorKPI('borrador')" style="cursor:pointer"><div class="kpi-lbl">Por Confirmar</div><div class="kpi-val orange" id="k-pend">—</div><div class="kpi-sub">borradores</div></div>
-      <div class="kpi orange" id="kpi-pend-cierre" onclick="filtrarPorKPI('ejecutado')" style="cursor:pointer"><div class="kpi-lbl">Pendientes de Cierre</div><div class="kpi-val orange" id="k-pend-cierre">—</div><div class="kpi-sub">ejecutados por conductor</div></div>
+      <div class="kpi orange" id="kpi-por-confirmar" onclick="filtrarPorKPI('borrador')" style="cursor:pointer"><div class="kpi-lbl">Servicios Pendientes de Ejecutar</div><div class="kpi-val orange" id="k-pend">—</div><div class="kpi-sub">borradores</div></div>
+      <div class="kpi" onclick="filtrarPorKPI('asignado')" style="cursor:pointer"><div class="kpi-lbl">Servicios Asignados</div><div class="kpi-val" id="k-hoy">—</div><div class="kpi-sub" id="k-hoy-sub">—</div></div>
+      <div class="kpi orange" onclick="filtrarPorKPI('enproceso')" style="cursor:pointer"><div class="kpi-lbl">Servicios En Proceso</div><div class="kpi-val orange" id="k-ejec-hoy">—</div><div class="kpi-sub" id="k-ejec-mes">— este mes</div></div>
+      <div class="kpi orange" id="kpi-pend-cierre" onclick="filtrarPorKPI('ejecutado')" style="cursor:pointer"><div class="kpi-lbl">Servicios Ejecutados</div><div class="kpi-val orange" id="k-pend-cierre">—</div><div class="kpi-sub">esperando Cierre</div></div>
+      <div class="kpi" onclick="filtrarPorKPI('cerrado')" style="cursor:pointer"><div class="kpi-lbl">Servicios Cerrados</div><div class="kpi-val" id="k-cerrados">—</div><div class="kpi-sub">este mes</div></div>
+      <div class="kpi" onclick="filtrarPorKPI('mes')" style="cursor:pointer"><div class="kpi-lbl">Resumen del Mes</div><div class="kpi-val" id="k-svcs-mes">—</div><div class="kpi-sub" id="k-svcs-mes-sub">acumulados</div></div>
       <div class="kpi" id="kpi-ingreso-mes"><div class="kpi-lbl">Ingreso Mes</div><div class="kpi-val" id="k-ingreso">—</div><div class="kpi-sub" id="k-ingreso-sub">—</div></div>
       <div class="kpi" id="kpi-costos-mes"><div class="kpi-lbl">Costos Mes</div><div class="kpi-val" id="k-costos">—</div><div class="kpi-sub" id="k-costos-sub">—</div></div>
       <div class="kpi" id="kpi-margen-teo"><div class="kpi-lbl">Margen Teórico</div><div class="kpi-val" id="k-margen">—</div><div class="kpi-sub" id="k-margen-sub">—</div></div>
@@ -2477,10 +2478,12 @@ function renderKPIs() {
     const kpiRendEl = document.getElementById('kpi-rendimiento-real');
     if(kpiRendEl) kpiRendEl.style.display = '';
   } else {
-    document.getElementById('k-hoy').textContent = svcsHoy.length;
-    document.getElementById('k-hoy-sub').textContent = svcsHoy.filter(s=>['en_proceso','registrando'].includes(s.estado)).length + ' en proceso';
-    document.getElementById('k-ejec-hoy').textContent = ejHoy;
-    document.getElementById('k-ejec-mes').textContent = ejMes + ' este mes';
+    const asignadosAct = DB.servicios.filter(s => s.estado === 'asignado');
+    const enProcesoAct = DB.servicios.filter(s => s.estado === 'en_proceso');
+    document.getElementById('k-hoy').textContent = asignadosAct.length;
+    document.getElementById('k-hoy-sub').textContent = 'esperando iniciar';
+    document.getElementById('k-ejec-hoy').textContent = enProcesoAct.length;
+    document.getElementById('k-ejec-mes').textContent = 'en ruta ahora';
     document.getElementById('k-pend').textContent = borradores.length;
     const ejecutadosPend = DB.servicios.filter(s => s.estado === 'ejecutado');
     const kpiPendCierreEl = document.getElementById('kpi-pend-cierre');
@@ -2497,6 +2500,9 @@ function renderKPIs() {
       }
     }
     const svcsMes = DB.servicios.filter(s => (s.fecha||'').startsWith(`${hoy.getFullYear()}-${String(mes+1).padStart(2,'0')}`));
+    const cerradosMes = svcsMes.filter(s => s.estado === 'cerrado');
+    const elCerrados = document.getElementById('k-cerrados');
+    if(elCerrados) elCerrados.textContent = cerradosMes.length;
     document.getElementById('k-svcs-mes').textContent = svcsMes.length;
     document.getElementById('k-svcs-mes-sub').textContent = `acumulados ${MESES[mes]}`;
   }
@@ -2684,11 +2690,12 @@ function filtrarPorKPI(tipo) {
   const mesStr = String((parseInt(document.getElementById('dash-mes')?.value ?? hoy.getMonth()))+1).padStart(2,'0');
   const enEsteMes = s => (s.fecha||'').startsWith(`${anioStr}-${mesStr}`);
   const config = {
-    hoy:      { titulo: 'Servicios de Hoy', filtro: s => (s.fecha||'').startsWith(hoyStr) },
-    ejecHoy:  { titulo: 'Ejecutados Hoy', filtro: s => (s.fecha||'').startsWith(hoyStr) && s.estado==='ejecutado' },
-    mes:      { titulo: 'Servicios del Mes', filtro: enEsteMes },
-    borrador: { titulo: 'Por Confirmar (Borradores)', filtro: s => s.estado==='borrador' },
-    ejecutado:{ titulo: 'Pendientes de Cierre', filtro: s => s.estado==='ejecutado' }
+    borrador:  { titulo: 'Servicios Pendientes de Ejecutar', filtro: s => s.estado==='borrador' },
+    asignado:  { titulo: 'Servicios Asignados', filtro: s => s.estado==='asignado' },
+    enproceso: { titulo: 'Servicios En Proceso', filtro: s => s.estado==='en_proceso' },
+    ejecutado: { titulo: 'Servicios Ejecutados', filtro: s => s.estado==='ejecutado' },
+    cerrado:   { titulo: 'Servicios Cerrados (Mes)', filtro: s => s.estado==='cerrado' && enEsteMes(s) },
+    mes:       { titulo: 'Resumen del Mes', filtro: enEsteMes }
   }[tipo];
   if(!config) return;
   const lista = DB.servicios.filter(config.filtro)
@@ -2702,10 +2709,12 @@ function filtrarPorKPI(tipo) {
     body.innerHTML = lista.map(s => {
       const idx = DB.servicios.indexOf(s);
       const dest = s.destino || (s._puntos||[]).find(p=>p.tipo==='final')?.destino || '—';
+      const guiasTxt = (s._puntos||[]).flatMap(p=>(p.guias||[]).map(g=>g.num_guia)).filter(Boolean).join(' · ') || s.num_guia || '—';
       return `<div onclick="abrirDesdeKPI(${idx})" style="display:flex;justify-content:space-between;align-items:center;padding:10px 4px;border-bottom:1px solid var(--border);cursor:pointer" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='transparent'">
         <div>
           <div style="font-size:12px;font-weight:800;color:var(--gold)">${s.servicio_id||'—'} <span style="color:var(--text);font-weight:700">· ${s.patente||'—'} · ${s.conductor||'—'}</span></div>
           <div style="font-size:11px;color:var(--muted);margin-top:2px">${s.cliente||'—'} · ${s.origen||'—'} → ${dest}</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:2px">📅 ${s.fecha||'—'} · Guía ${guiasTxt}</div>
         </div>
         ${pillHTML(s.estado)}
       </div>`;
