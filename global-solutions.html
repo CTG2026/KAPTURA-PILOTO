@@ -240,7 +240,8 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
 <main class="main" id="main" style="display:none">
   <!-- TAB SERVICIOS -->
   <div id="tab-servicios">
-    <div style="display:flex;align-items:center;justify-content:flex-end;padding:8px 12px 0">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 12px 0">
+      <button class="btn" id="btn-asignar-nuevo" onclick="abrirAsignar()" style="background:var(--gold);color:#000;font-weight:800;font-size:13px;padding:10px 18px;border-radius:10px;border:none;box-shadow:0 2px 8px rgba(201,168,76,0.4)">+ Asignar Servicio</button>
       <select id="dash-mes" class="inp" style="width:auto;font-size:11px;padding:4px 8px" onchange="renderKPIs();renderServicios()">
         <option value="0">Enero</option>
         <option value="1">Febrero</option>
@@ -263,12 +264,12 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
       <div class="kpi orange" id="kpi-pend-cierre" onclick="filtrarPorKPI('ejecutado')" style="cursor:pointer"><div class="kpi-lbl">Servicios Ejecutados</div><div class="kpi-val orange" id="k-pend-cierre">—</div><div class="kpi-sub">esperando Cierre</div></div>
       <div class="kpi" onclick="filtrarPorKPI('cerrado')" style="cursor:pointer"><div class="kpi-lbl">Servicios Cerrados</div><div class="kpi-val" id="k-cerrados">—</div><div class="kpi-sub">este mes</div></div>
       <div class="kpi" onclick="filtrarPorKPI('mes')" style="cursor:pointer"><div class="kpi-lbl">Resumen del Mes</div><div class="kpi-val" id="k-svcs-mes">—</div><div class="kpi-sub" id="k-svcs-mes-sub">acumulados</div></div>
-      <div class="kpi" id="kpi-ingreso-mes"><div class="kpi-lbl">Ingreso Mes</div><div class="kpi-val" id="k-ingreso">—</div><div class="kpi-sub" id="k-ingreso-sub">—</div></div>
-      <div class="kpi" id="kpi-costos-mes"><div class="kpi-lbl">Costos Mes</div><div class="kpi-val" id="k-costos">—</div><div class="kpi-sub" id="k-costos-sub">—</div></div>
-      <div class="kpi" id="kpi-margen-teo"><div class="kpi-lbl">Margen Teórico</div><div class="kpi-val" id="k-margen">—</div><div class="kpi-sub" id="k-margen-sub">—</div></div>
-      <div class="kpi" id="kpi-margen-prom"><div class="kpi-lbl">Margen Prom.</div><div class="kpi-val" id="k-prom">—</div><div class="kpi-sub">por servicio</div></div>
-      <div class="kpi" id="kpi-combustible-mes"><div class="kpi-lbl">Combustible Mes</div><div class="kpi-val" id="k-combustible">—</div><div class="kpi-sub" id="k-combustible-sub">—</div></div>
-      <div class="kpi" id="k-margen-real-kpi"><div class="kpi-lbl">Margen Real</div><div class="kpi-val" id="k-margen-real">—</div><div class="kpi-sub" id="k-margen-real-sub">con costos reales</div></div>
+      <div class="kpi" id="kpi-ingreso-mes" style="display:none"><div class="kpi-lbl">Ingreso Mes</div><div class="kpi-val" id="k-ingreso">—</div><div class="kpi-sub" id="k-ingreso-sub">—</div></div>
+      <div class="kpi" id="kpi-costos-mes" style="display:none"><div class="kpi-lbl">Costos Mes</div><div class="kpi-val" id="k-costos">—</div><div class="kpi-sub" id="k-costos-sub">—</div></div>
+      <div class="kpi" id="kpi-margen-teo" style="display:none"><div class="kpi-lbl">Margen Teórico</div><div class="kpi-val" id="k-margen">—</div><div class="kpi-sub" id="k-margen-sub">—</div></div>
+      <div class="kpi" id="kpi-margen-prom" style="display:none"><div class="kpi-lbl">Margen Prom.</div><div class="kpi-val" id="k-prom">—</div><div class="kpi-sub">por servicio</div></div>
+      <div class="kpi" id="kpi-combustible-mes" style="display:none"><div class="kpi-lbl">Combustible Mes</div><div class="kpi-val" id="k-combustible">—</div><div class="kpi-sub" id="k-combustible-sub">—</div></div>
+      <div class="kpi" id="k-margen-real-kpi" style="display:none"><div class="kpi-lbl">Margen Real</div><div class="kpi-val" id="k-margen-real">—</div><div class="kpi-sub" id="k-margen-real-sub">con costos reales</div></div>
       <div class="kpi" id="kpi-rendimiento-real" style="display:none"><div class="kpi-lbl">Rendimiento Real Equipo</div><div class="kpi-val" id="k-rend-real">—</div><div class="kpi-sub" id="k-rend-real-sub">km/lt histórico</div></div>
     </div>
     <div class="filtro">
@@ -277,7 +278,6 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
     </div>
     <div class="sec-hdr">
       <div class="sec-ttl">Servicios</div>
-      <button class="btn btn-navy" id="btn-asignar-nuevo" onclick="abrirAsignar()">+ Asignar</button>
     </div>
     <div class="svc-list" id="cards-mobile"></div>
     <div class="desk-tbl">
