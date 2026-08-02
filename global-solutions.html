@@ -1235,6 +1235,7 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
         <div class="info-item"><div class="lbl2">DESTINO</div><div class="val" id="reg-destino-info">—</div></div>
         <div class="info-item"><div class="lbl2">CONDUCTOR</div><div class="val" id="reg-conductor-info">—</div></div>
       </div>
+      <div id="reg-ruta-secuencial" style="margin-top:10px"></div>
       <div style="margin-top:8px">
         <label class="lbl">Fecha término del servicio</label>
         <input class="inp" id="reg-fecha-termino" type="date" onchange="onFechaTermino()" style="border-color:var(--gold)">
@@ -3241,6 +3242,22 @@ function abrirRegistrar(i) {
   const elDestReg = document.getElementById('reg-destino-info');
   if(elDestReg) elDestReg.textContent = pFinalReg?.destino || s.destino || '—';
   document.getElementById('reg-conductor-info').textContent = s.conductor||'—';
+  // Ruta secuencial completa, con etiqueta de tipo en cada parada
+  const elRuta = document.getElementById('reg-ruta-secuencial');
+  if(elRuta) {
+    const pasos = [s.origen||'ORIGEN', ...puntosData.map(p=>p.destino||'—')];
+    elRuta.innerHTML = `<div style="font-size:9px;font-weight:800;letter-spacing:0.12em;color:var(--gold);margin-bottom:6px">RUTA DE ESTE SERVICIO</div>
+      <div style="display:flex;flex-direction:column;gap:4px">
+        ${pasos.map((nombre, idx) => {
+          if(idx === 0) return `<div style="font-size:12px;font-weight:700;color:var(--muted)">🚩 Salida: ${nombre}</div>`;
+          const p = puntosData[idx-1];
+          const etiqueta = p.tipo === 'final' ? '🏁 Destino Final' : '🔁 Punto Intermedio';
+          return `<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:700;padding-left:14px;border-left:2px solid var(--border)">
+            <span>${idx}. ${nombre}</span><span style="font-size:10px;color:var(--gold);font-weight:800">${etiqueta}</span>
+          </div>`;
+        }).join('')}
+      </div>`;
+  }
   document.getElementById('reg-fecha-termino').value      = s._fecha_termino || s.fecha || hoyStr;
   const tipoEl = document.getElementById('reg-tipo-entrega');
   if(tipoEl) tipoEl.value = s.tipo_entrega || 'normal';
