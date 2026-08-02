@@ -257,11 +257,11 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
       </select>
     </div>
     <div class="kpis">
-      <div class="kpi"><div class="kpi-lbl">Servicios Hoy</div><div class="kpi-val" id="k-hoy">—</div><div class="kpi-sub" id="k-hoy-sub">—</div></div>
-      <div class="kpi orange"><div class="kpi-lbl">Ejecutados Hoy</div><div class="kpi-val orange" id="k-ejec-hoy">—</div><div class="kpi-sub" id="k-ejec-mes">— este mes</div></div>
-      <div class="kpi"><div class="kpi-lbl">Servicios Mes</div><div class="kpi-val" id="k-svcs-mes">—</div><div class="kpi-sub" id="k-svcs-mes-sub">acumulados</div></div>
-      <div class="kpi orange" id="kpi-por-confirmar"><div class="kpi-lbl">Por Confirmar</div><div class="kpi-val orange" id="k-pend">—</div><div class="kpi-sub">borradores</div></div>
-      <div class="kpi orange" id="kpi-pend-cierre"><div class="kpi-lbl">Pendientes de Cierre</div><div class="kpi-val orange" id="k-pend-cierre">—</div><div class="kpi-sub">ejecutados por conductor</div></div>
+      <div class="kpi" onclick="filtrarPorKPI('hoy')" style="cursor:pointer"><div class="kpi-lbl">Servicios Hoy</div><div class="kpi-val" id="k-hoy">—</div><div class="kpi-sub" id="k-hoy-sub">—</div></div>
+      <div class="kpi orange" onclick="filtrarPorKPI('ejecHoy')" style="cursor:pointer"><div class="kpi-lbl">Ejecutados Hoy</div><div class="kpi-val orange" id="k-ejec-hoy">—</div><div class="kpi-sub" id="k-ejec-mes">— este mes</div></div>
+      <div class="kpi" onclick="filtrarPorKPI('mes')" style="cursor:pointer"><div class="kpi-lbl">Servicios Mes</div><div class="kpi-val" id="k-svcs-mes">—</div><div class="kpi-sub" id="k-svcs-mes-sub">acumulados</div></div>
+      <div class="kpi orange" id="kpi-por-confirmar" onclick="filtrarPorKPI('borrador')" style="cursor:pointer"><div class="kpi-lbl">Por Confirmar</div><div class="kpi-val orange" id="k-pend">—</div><div class="kpi-sub">borradores</div></div>
+      <div class="kpi orange" id="kpi-pend-cierre" onclick="filtrarPorKPI('ejecutado')" style="cursor:pointer"><div class="kpi-lbl">Pendientes de Cierre</div><div class="kpi-val orange" id="k-pend-cierre">—</div><div class="kpi-sub">ejecutados por conductor</div></div>
       <div class="kpi" id="kpi-ingreso-mes"><div class="kpi-lbl">Ingreso Mes</div><div class="kpi-val" id="k-ingreso">—</div><div class="kpi-sub" id="k-ingreso-sub">—</div></div>
       <div class="kpi" id="kpi-costos-mes"><div class="kpi-lbl">Costos Mes</div><div class="kpi-val" id="k-costos">—</div><div class="kpi-sub" id="k-costos-sub">—</div></div>
       <div class="kpi" id="kpi-margen-teo"><div class="kpi-lbl">Margen Teórico</div><div class="kpi-val" id="k-margen">—</div><div class="kpi-sub" id="k-margen-sub">—</div></div>
@@ -2668,6 +2668,23 @@ document.addEventListener('click', function(e) {
   } catch(err) {}
 });
 
+function filtrarPorKPI(tipo) {
+  _filtrosColumna.estado = [];
+  const elFecha = document.getElementById('filtro-fecha');
+  const label = {
+    hoy: 'Servicios de hoy', ejecHoy: 'Ejecutados hoy', mes: 'Servicios del mes',
+    borrador: 'Por confirmar (borradores)', ejecutado: 'Pendientes de Cierre'
+  }[tipo] || 'Servicios del mes';
+  if(tipo === 'hoy') { if(elFecha) elFecha.value = hoyStr; }
+  else if(tipo === 'ejecHoy') { if(elFecha) elFecha.value = hoyStr; _filtrosColumna.estado = ['ejecutado']; }
+  else if(tipo === 'mes') { if(elFecha) elFecha.value = ''; }
+  else if(tipo === 'borrador') { if(elFecha) elFecha.value = ''; _filtrosColumna.estado = ['borrador']; }
+  else if(tipo === 'ejecutado') { if(elFecha) elFecha.value = ''; _filtrosColumna.estado = ['ejecutado']; }
+  renderServicios();
+  toast(`🔍 ${label}`);
+  const elTabla = document.getElementById('tabla-svc') || document.getElementById('cards-mobile');
+  if(elTabla) elTabla.scrollIntoView({behavior:'smooth', block:'start'});
+}
 function renderServicios() {
   const fecha = document.getElementById('filtro-fecha').value;
   let mes = parseInt(document.getElementById('dash-mes')?.value ?? hoy.getMonth());
