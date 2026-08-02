@@ -576,7 +576,7 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
         <option value="1">Febrero</option>
         <option value="2">Marzo</option>
         <option value="3">Abril</option>
-        <option value="4" selected>Mayo</option>
+        <option value="4">Mayo</option>
         <option value="5">Junio</option>
         <option value="6">Julio</option>
         <option value="7">Agosto</option>
@@ -2310,6 +2310,10 @@ async function init() {
   // Seleccionar mes en curso automáticamente
   const dashMes = document.getElementById('dash-mes');
   if(dashMes) dashMes.value = String(hoy.getMonth());
+  const resMes = document.getElementById('res-mes');
+  if(resMes) resMes.value = String(hoy.getMonth());
+  const gastoMes = document.getElementById('gasto-filtro-mes');
+  if(gastoMes) gastoMes.value = `${hoy.getFullYear()}-${String(hoy.getMonth()+1).padStart(2,'0')}`;
 
   try {
     const emp = DB._empresa || 'global_solutions';
