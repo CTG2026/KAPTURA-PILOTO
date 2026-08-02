@@ -2692,9 +2692,14 @@ function renderServicios() {
   document.getElementById('cards-mobile').innerHTML = svcs.map(s => cardHTML(s, DB.servicios.indexOf(s))).join('');
   document.getElementById('tabla-svc').innerHTML    = svcs.map(s => filaHTML(s, DB.servicios.indexOf(s))).join('');
 
-  // Pasada de seguridad: despachador solo puede ver Iniciar / Registrar / Ed. Asignación
-  if(_sessionUsuario?.rol === 'despachador') {
-    const permitidas = ['Iniciar', 'Registrar', 'Ed. Asignación'];
+  // Pasada de seguridad: cada rol restringido solo ve sus botones permitidos
+  const permitidasPorRol = {
+    despachador: ['Iniciar', 'Registrar', 'Ed. Asignación'],
+    conductor:   ['Iniciar', 'Registrar'],
+    mantenedor:  []
+  };
+  const permitidas = permitidasPorRol[_sessionUsuario?.rol];
+  if(permitidas) {
     document.querySelectorAll('#cards-mobile .svc-acts button, #tabla-svc button').forEach(btn => {
       const texto = btn.textContent.trim();
       const esPermitido = permitidas.some(p => texto.includes(p));
