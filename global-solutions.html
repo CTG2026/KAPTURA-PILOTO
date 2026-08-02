@@ -2976,24 +2976,30 @@ function checkOtroOrigen() {
   document.getElementById('wrap-origen-custom').style.display =
     document.getElementById('asig-origen').value === 'otro' ? 'block' : 'none';
 }
+function getDestinosCliente(clienteVal) {
+  if(!clienteVal || clienteVal === '__otro__') return [];
+  return [...new Set((DB.tarifarios||[])
+    .filter(function(t){ return (t.cliente||'').toUpperCase() === clienteVal.toUpperCase(); })
+    .map(function(t){ return t.destino; })
+    .filter(Boolean))].sort();
+}
 function checkOtroCliente() {
   const clienteVal = document.getElementById('asig-cliente').value;
   document.getElementById('wrap-cliente-custom').style.display =
     clienteVal === '__otro__' ? 'block' : 'none';
   // Filtrar destinos por cliente seleccionado
   const selDest = document.getElementById('asig-destino');
+  const destinos = getDestinosCliente(clienteVal);
   if(selDest && clienteVal && clienteVal !== '__otro__') {
-    const destinos = (DB.tarifarios||[])
-      .filter(function(t){ return (t.cliente||'').toUpperCase() === clienteVal.toUpperCase(); })
-      .map(function(t){ return t.destino; })
-      .filter(Boolean);
     selDest.innerHTML = '<option value="">Selecciona destino...</option>'
-      + [...new Set(destinos)].sort().map(function(d){ return '<option value="'+d+'">'+d+'</option>'; }).join('')
+      + destinos.map(function(d){ return '<option value="'+d+'">'+d+'</option>'; }).join('')
       + '<option value="__otro__">✏ Otro destino...</option>';
     document.getElementById('wrap-asig-destino-custom').style.display = 'none';
   } else if(!clienteVal || clienteVal === '__otro__') {
     if(selDest) selDest.innerHTML = '<option value="">Selecciona cliente primero...</option>';
   }
+  // Refrescar la lista de destinos disponibles en los puntos intermedios ya agregados
+  asigRenderPuntos();
 }
 async function siguienteId() {
   const emp = DB._empresa || _sessionUsuario?.empresa || 'global_solutions';
@@ -3022,14 +3028,34 @@ function asigRenderPuntos() {
   const lista = document.getElementById('asig-puntos-lista');
   const btn   = document.getElementById('asig-btn-agregar-punto');
   if(!lista) return;
-  lista.innerHTML = _asigPuntos.map((p, i) => `
-    <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px">
+  const clienteVal = document.getElementById('asig-cliente')?.value || '';
+  const destinos = getDestinosCliente(clienteVal);
+  lista.innerHTML = _asigPuntos.map((p, i) => {
+    const esOtro = p.esOtro || (p.nombre && !destinos.includes(p.nombre));
+    return `
+    <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px;flex-wrap:wrap">
       <div style="font-size:10px;font-weight:800;color:var(--gold);min-width:20px">P${p.num}</div>
-      <input class="inp" style="flex:1" type="text" placeholder="Destino punto ${p.num}"
-        value="${p.nombre}" onchange="_asigPuntos[${i}].nombre=this.value.toUpperCase()">
+      <select class="inp" style="flex:1;min-width:140px" onchange="asigPuntoSelect(${i}, this.value)">
+        <option value="">Selecciona destino...</option>
+        ${destinos.map(d => `<option value="${d}" ${!esOtro && p.nombre===d ? 'selected':''}>${d}</option>`).join('')}
+        <option value="__otro__" ${esOtro ? 'selected':''}>✏ Otro destino...</option>
+      </select>
+      ${esOtro ? `<input class="inp" style="flex:1;min-width:140px" type="text" placeholder="Destino punto ${p.num}"
+        value="${p.nombre||''}" onchange="_asigPuntos[${i}].nombre=this.value.toUpperCase()">` : ''}
       <button onclick="asigEliminarPunto(${i})" style="background:rgba(239,68,68,0.2);border:1px solid rgba(239,68,68,0.4);color:var(--danger);border-radius:5px;padding:4px 8px;cursor:pointer;font-size:11px">✕</button>
-    </div>`).join('');
+    </div>`;
+  }).join('');
   if(btn) btn.style.display = _asigPuntos.length >= 6 ? 'none' : '';
+}
+function asigPuntoSelect(i, val) {
+  if(val === '__otro__') {
+    _asigPuntos[i].esOtro = true;
+    _asigPuntos[i].nombre = '';
+  } else {
+    _asigPuntos[i].esOtro = false;
+    _asigPuntos[i].nombre = val;
+  }
+  asigRenderPuntos();
 }
 
 function asigLimpiarPuntos() {
