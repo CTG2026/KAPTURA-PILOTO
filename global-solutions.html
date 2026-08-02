@@ -2964,6 +2964,8 @@ async function abrirAsignar() {
   document.getElementById('wrap-asig-destino-custom').style.display = 'none';
   const sAsig2 = DB.servicios[svcActivoIdx];
   if(sAsig2) obsRenderHilo(document.getElementById('asig-obs-hilo'), obsParseHilo(sAsig2.notas||''));
+  // Sincronizar destinos con el cliente que haya quedado preseleccionado por defecto
+  checkOtroCliente();
   document.getElementById('modal-asignar').style.display = 'flex';
 }
 function checkAsigDestino() {
