@@ -3209,23 +3209,27 @@ function abrirRegistrar(i) {
   // Cargar puntos: primero desde notas (_puntos), si vacío usar puntos_asignados del coordinador
   if(s._puntos && s._puntos.length > 0) {
     puntosData = [...s._puntos];
-  } else if(s.puntos_asignados) {
-    try {
-      const asig = JSON.parse(s.puntos_asignados);
-      if(asig && asig.length > 0) {
-        puntosData = asig.map(p => ({
-          tipo: p.num === asig.length ? 'final' : 'intermedio',
-          destino: (p.nombre||'').toUpperCase(),
-          valor: null, num_guia: '', guias: [], capturada: false, procesando: false
-        }));
-      } else {
-        puntosData = [{tipo:null,destino:'',valor:null,num_guia:'',capturada:false,procesando:false}];
-      }
-    } catch(e) {
-      puntosData = [{tipo:null,destino:'',valor:null,num_guia:'',capturada:false,procesando:false}];
-    }
   } else {
-    puntosData = [{tipo:null,destino:'',valor:null,num_guia:'',capturada:false,procesando:false}];
+    // Los puntos intermedios y el destino principal se guardan en campos separados al asignar —
+    // unificarlos siempre en una sola secuencia: intermedios + destino principal como final real.
+    let intermedios = [];
+    if(s.puntos_asignados) {
+      try {
+        const asig = JSON.parse(s.puntos_asignados);
+        if(asig && asig.length > 0) {
+          intermedios = asig.map(p => ({
+            tipo: 'intermedio', destino: (p.nombre||'').toUpperCase(),
+            valor: null, num_guia: '', guias: [], capturada: false, procesando: false
+          }));
+        }
+      } catch(e) {}
+    }
+    const finalReal = { tipo:'final', destino: (s.destino||'').toUpperCase(), valor:null, num_guia:'', guias:[], capturada:false, procesando:false };
+    // Evitar duplicar si el destino principal coincide con el último intermedio ya cargado
+    const yaIncluido = intermedios.some(p => p.destino === finalReal.destino && finalReal.destino);
+    puntosData = finalReal.destino && !yaIncluido ? [...intermedios, finalReal]
+               : intermedios.length > 0 ? intermedios
+               : [{tipo:null,destino:'',valor:null,num_guia:'',capturada:false,procesando:false}];
   }
   document.getElementById('reg-id').textContent           = s.servicio_id||'—';
   document.getElementById('reg-sub').textContent          = `${s.patente} · ${s.conductor} · ${s.cliente}`;
