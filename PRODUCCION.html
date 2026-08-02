@@ -1080,6 +1080,10 @@ async function validarPinGo() {
       window.location.href = usr.empresa === 'global_solutions' ? 'global-solutions.html' : 'flota-produccion.html';
       return;
     }
+    if(usr.rol === 'mantenedor') {
+      window.location.href = usr.empresa === 'global_solutions' ? 'global-solutions.html' : 'flota-produccion.html';
+      return;
+    }
     showScreen('screen-modo');
   } else {
     // Verificar si es PIN de onboarding conductor de alguna empresa
