@@ -267,6 +267,7 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
       <div class="kpi" id="kpi-margen-prom"><div class="kpi-lbl">Margen Prom.</div><div class="kpi-val" id="k-prom">—</div><div class="kpi-sub">por servicio</div></div>
       <div class="kpi" id="kpi-combustible-mes"><div class="kpi-lbl">Combustible Mes</div><div class="kpi-val" id="k-combustible">—</div><div class="kpi-sub" id="k-combustible-sub">—</div></div>
       <div class="kpi" id="k-margen-real-kpi"><div class="kpi-lbl">Margen Real</div><div class="kpi-val" id="k-margen-real">—</div><div class="kpi-sub" id="k-margen-real-sub">con costos reales</div></div>
+      <div class="kpi" id="kpi-rendimiento-real" style="display:none"><div class="kpi-lbl">Rendimiento Real Equipo</div><div class="kpi-val" id="k-rend-real">—</div><div class="kpi-sub" id="k-rend-real-sub">km/lt histórico</div></div>
     </div>
     <div class="filtro">
       <input type="date" id="filtro-fecha" onchange="renderServicios()">
@@ -2393,6 +2394,28 @@ function renderTodo() {
   poblarConfig();
 }
 
+async function calcularRendimientoRealEquipo(patente) {
+  try {
+    const elVal = document.getElementById('k-rend-real');
+    const elSub = document.getElementById('k-rend-real-sub');
+    if(!elVal) return;
+    const [{data: gpsRows}, {data: combRows}] = await Promise.all([
+      supa.from('kaptura_gps_eventos').select('km_tramo').eq('patente', patente).eq('evento','trip'),
+      supa.from('kaptura_combustible').select('litros').eq('patente', patente)
+    ]);
+    const kmTotal = (gpsRows||[]).reduce((a,r) => a+(parseFloat(r.km_tramo)||0), 0);
+    const ltsTotal = (combRows||[]).reduce((a,r) => a+(parseFloat(r.litros)||0), 0);
+    if(kmTotal > 0 && ltsTotal > 0) {
+      const rend = Math.round((kmTotal/ltsTotal)*100)/100;
+      elVal.textContent = rend + ' km/lt';
+      if(elSub) elSub.textContent = `${patente} · ${Math.round(kmTotal)}km / ${Math.round(ltsTotal)}lt histórico`;
+    } else {
+      elVal.textContent = '—';
+      if(elSub) elSub.textContent = `${patente} · sin datos suficientes`;
+    }
+  } catch(e) { console.warn('Error calculando rendimiento real:', e); }
+}
+
 function renderKPIs() {
   const mes = parseInt(document.getElementById('dash-mes')?.value ?? hoy.getMonth());
   const svcsHoy = DB.servicios.filter(s => (s.fecha||'').startsWith(hoyStr));
@@ -2433,6 +2456,12 @@ function renderKPIs() {
     document.getElementById('k-ejec-mes').textContent = MESES[mes];
     document.getElementById('k-svcs-mes').textContent = ejecutados;
     document.getElementById('k-svcs-mes-sub').textContent = MESES[mes];
+    // Rendimiento real histórico del equipo (por patente, no por conductor)
+    const svcHoyCond = DB.servicios.find(s => (s.fecha||'').startsWith(hoyStr)) || svcsMesCond[0];
+    const patRend = svcHoyCond?.patente;
+    if(patRend) calcularRendimientoRealEquipo(patRend);
+    const kpiRendEl = document.getElementById('kpi-rendimiento-real');
+    if(kpiRendEl) kpiRendEl.style.display = '';
   } else {
     document.getElementById('k-hoy').textContent = svcsHoy.length;
     document.getElementById('k-hoy-sub').textContent = svcsHoy.filter(s=>['en_proceso','registrando'].includes(s.estado)).length + ' en proceso';
