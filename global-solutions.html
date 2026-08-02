@@ -3169,7 +3169,7 @@ async function confirmarInicio() {
   if(!s.id) { toast('Error: servicio sin ID'); return; }
   const fechaInicio = document.getElementById('ini-fecha-inicio').value;
   const {error} = await supa.from('servicios_piloto').update({
-    estado:'en_proceso', fecha:fechaInicio
+    estado:'en_proceso', fecha:fechaInicio, hora_inicio: new Date().toISOString()
   }).eq('id',s.id);
   if(error) { toast('Error: '+error.message); return; }
   DB.servicios[svcIniciarIdx] = {...s, estado:'en_proceso'};
@@ -3573,7 +3573,7 @@ async function guardarEjecucion() {
   const {error} = await supa.from('servicios_piloto').update({
     estado:'ejecutado',
     destino: pFinal.destino,
-    hora_termino: fechaTerm ? fechaTerm+'T23:59:00' : null,
+    hora_termino: new Date().toISOString(),
     notas: `Retorno: ${retorno}|_PUNTOS:${puntosJSON}`
   }).eq('id',s.id);
   if(error) { toast('Error: '+error.message); return; }
