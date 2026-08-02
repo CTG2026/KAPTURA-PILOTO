@@ -2734,7 +2734,7 @@ function cardHTML(s,i) {
     <div class="svc-body"><div class="svc-acts">
       ${s.estado==='asignado' ? `<button class="btn btn-navy btn-sm" onclick="iniciarSvc(${i})">▶ Iniciar</button>` : ''}
       ${s.estado==='en_proceso' ? `<button class="btn btn-purple btn-sm" onclick="verServicio(${i})">📋 Registrar</button><button class="btn btn-outline btn-sm" onclick="abrirAsignar(${i})">✏ Ed. Asignación</button>` : ''}
-      ${_sessionUsuario?.rol==='despachador' ? '' : `
+      ${['despachador','conductor'].includes(_sessionUsuario?.rol) ? '' : `
       ${s.estado==='ejecutado' ? `${['coordinador','controller','administrador'].includes(_sessionUsuario?.rol) ? `<button class="btn btn-green btn-sm" onclick="abrirCierre(${i})">🔒 Cierre</button>` : ''}<button class="btn btn-outline btn-sm" onclick="verServicio(${i})">✏ Ed. Registro</button>` : ''}
       ${s.estado === 'borrador' ? `<button class="btn btn-green btn-sm" onclick="abrirCierre(${i})">🔒 Cierre</button><button class="btn btn-outline btn-sm" onclick="verServicio(${i})">✏ Ed. Registro</button>` : ''}
       ${s.estado==='cerrado' ? `<button class="btn btn-sm" style="background:rgba(201,168,76,0.15);color:var(--gold);border:1px solid rgba(201,168,76,0.3)" onclick="abrirCierre(${i})">✏ Ed. Cierre</button>` : ''}
@@ -2796,7 +2796,7 @@ function abrirAcciones(i, ev) {
     pop.innerHTML = `<div style="display:flex;flex-direction:column;gap:4px">
       ${s.estado==='asignado' ? `<button class="btn btn-navy btn-sm" onclick="iniciarSvc(${i})">▶ Iniciar</button>` : ''}
       ${s.estado==='en_proceso' ? `<button class="btn btn-purple btn-sm" onclick="verServicio(${i})">📋 Registrar</button><button class="btn btn-outline btn-sm" onclick="abrirAsignar(${i})">✏ Ed. Asignación</button>` : ''}
-      ${_sessionUsuario?.rol==='despachador' ? '' : `
+      ${['despachador','conductor'].includes(_sessionUsuario?.rol) ? '' : `
       ${s.estado==='ejecutado' ? `${['coordinador','controller','administrador'].includes(_sessionUsuario?.rol) ? `<button class="btn btn-green btn-sm" onclick="abrirCierre(${i})">🔒 Cierre</button>` : ''}<button class="btn btn-outline btn-sm" onclick="verServicio(${i})">✏ Ed. Registro</button>` : ''}
       ${s.estado === 'borrador' ? `<button class="btn btn-green btn-sm" onclick="abrirCierre(${i})">🔒 Cierre</button><button class="btn btn-outline btn-sm" onclick="verServicio(${i})">✏ Ed. Registro</button>` : ''}
       ${s.estado==='cerrado' ? `<button class="btn btn-sm" style="background:rgba(201,168,76,0.15);color:var(--gold);border:1px solid rgba(201,168,76,0.3)" onclick="abrirCierre(${i})">✏ Ed. Cierre</button>` : ''}
@@ -5736,6 +5736,10 @@ async function iniciarLogin() {
           if(filtroFecha) filtroFecha.style.display = 'none';
           const dasMes = document.getElementById('dash-mes');
           if(dasMes) dasMes.closest('select') && (dasMes.style.display = 'none');
+          // Ocultar columnas financieras de la tabla
+          const styleCond = document.createElement('style');
+          styleCond.textContent = '.th-financ, .td-financ { display: none !important; }';
+          document.head.appendChild(styleCond);
         }
         init();
         return;
