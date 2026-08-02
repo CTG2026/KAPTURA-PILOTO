@@ -261,6 +261,7 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
       <div class="kpi orange"><div class="kpi-lbl">Ejecutados Hoy</div><div class="kpi-val orange" id="k-ejec-hoy">—</div><div class="kpi-sub" id="k-ejec-mes">— este mes</div></div>
       <div class="kpi"><div class="kpi-lbl">Servicios Mes</div><div class="kpi-val" id="k-svcs-mes">—</div><div class="kpi-sub" id="k-svcs-mes-sub">acumulados</div></div>
       <div class="kpi orange" id="kpi-por-confirmar"><div class="kpi-lbl">Por Confirmar</div><div class="kpi-val orange" id="k-pend">—</div><div class="kpi-sub">borradores</div></div>
+      <div class="kpi orange" id="kpi-pend-cierre"><div class="kpi-lbl">Pendientes de Cierre</div><div class="kpi-val orange" id="k-pend-cierre">—</div><div class="kpi-sub">ejecutados por conductor</div></div>
       <div class="kpi" id="kpi-ingreso-mes"><div class="kpi-lbl">Ingreso Mes</div><div class="kpi-val" id="k-ingreso">—</div><div class="kpi-sub" id="k-ingreso-sub">—</div></div>
       <div class="kpi" id="kpi-costos-mes"><div class="kpi-lbl">Costos Mes</div><div class="kpi-val" id="k-costos">—</div><div class="kpi-sub" id="k-costos-sub">—</div></div>
       <div class="kpi" id="kpi-margen-teo"><div class="kpi-lbl">Margen Teórico</div><div class="kpi-val" id="k-margen">—</div><div class="kpi-sub" id="k-margen-sub">—</div></div>
@@ -2469,6 +2470,20 @@ function renderKPIs() {
     document.getElementById('k-ejec-hoy').textContent = ejHoy;
     document.getElementById('k-ejec-mes').textContent = ejMes + ' este mes';
     document.getElementById('k-pend').textContent = borradores.length;
+    const ejecutadosPend = DB.servicios.filter(s => s.estado === 'ejecutado');
+    const kpiPendCierreEl = document.getElementById('kpi-pend-cierre');
+    if(kpiPendCierreEl) {
+      if(['coordinador','controller','administrador'].includes(_sessionUsuario?.rol)) {
+        kpiPendCierreEl.style.display = '';
+        document.getElementById('k-pend-cierre').textContent = ejecutadosPend.length;
+        if(ejecutadosPend.length > 0 && !window._avisoCierreDado) {
+          window._avisoCierreDado = true;
+          toast(`🔔 ${ejecutadosPend.length} servicio${ejecutadosPend.length>1?'s':''} ejecutado${ejecutadosPend.length>1?'s':''} esperando Cierre`);
+        }
+      } else {
+        kpiPendCierreEl.style.display = 'none';
+      }
+    }
     const svcsMes = DB.servicios.filter(s => (s.fecha||'').startsWith(`${hoy.getFullYear()}-${String(mes+1).padStart(2,'0')}`));
     document.getElementById('k-svcs-mes').textContent = svcsMes.length;
     document.getElementById('k-svcs-mes-sub').textContent = `acumulados ${MESES[mes]}`;
@@ -3252,31 +3267,61 @@ function onFechaTermino() {
 }
 
 function renderPuntos() {
+  const activeIdx = puntosData.findIndex(p => !p.capturada);
   document.getElementById('puntos-container').innerHTML =
-    puntosData.map((p,pi) => puntosHTML(p,pi)).join('');
+    puntosData.map((p,pi) => puntosHTML(p,pi,activeIdx)).join('');
 }
 
-function puntosHTML(p, pi) {
+function puntosHTML(p, pi, activeIdx) {
+  const esConductorPunto = _sessionUsuario?.rol === 'conductor';
+  const esActivo    = !esConductorPunto || pi === activeIdx || (activeIdx === -1 && pi === puntosData.length-1);
+  const esCompletado = esConductorPunto && p.capturada && pi < activeIdx;
+  const esFuturo     = esConductorPunto && !p.capturada && activeIdx !== -1 && pi > activeIdx;
+
+  // Punto ya capturado: solo lectura, sin poder tocar nada
+  if(esCompletado) {
+    return `<div style="background:var(--surface);border-radius:10px;padding:12px;margin-bottom:10px;border:1px solid rgba(34,197,94,0.35);opacity:0.85">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <div style="font-family:'DM Sans',sans-serif;font-size:14px;font-weight:800;color:var(--green)">
+          📍 PUNTO ${pi+1} — ${p.tipo==='final'?'🏁 Destino Final':'🔁 Intermedio'} <span style="color:var(--green)">✓</span>
+        </div>
+      </div>
+      <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:6px">${p.destino||'—'}</div>
+      ${(p.guias||[]).map(g => `<div style="font-size:10px;color:var(--muted)">Guía N° ${g.num_guia} · ${g.fecha_guia||'—'}</div>`).join('')}
+      <div style="font-size:10px;color:var(--muted);margin-top:6px;font-style:italic">Ya registrado — no editable desde acá</div>
+    </div>`;
+  }
+  // Punto futuro: visible pero bloqueado, todavía no le corresponde
+  if(esFuturo) {
+    return `<div style="background:var(--surface);border-radius:10px;padding:12px;margin-bottom:10px;border:1px solid var(--border);opacity:0.4">
+      <div style="font-family:'DM Sans',sans-serif;font-size:14px;font-weight:800;color:var(--muted)">
+        🔒 PUNTO ${pi+1} — ${p.tipo==='final'?'🏁 Destino Final':'🔁 Intermedio'}
+      </div>
+      <div style="font-size:12px;font-weight:700;color:var(--muted);margin-top:4px">${p.destino||'—'}</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:6px">Se habilita cuando termines el punto anterior</div>
+    </div>`;
+  }
   return `<div style="background:var(--surface);border-radius:10px;padding:12px;margin-bottom:10px;border:1px solid var(--border)">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
       <div style="font-family:'DM Sans',sans-serif;font-size:14px;font-weight:800;color:var(--gold)">
         📍 PUNTO ${pi+1} ${p.capturada ? '<span style="color:var(--green)">✓</span>' : ''}
       </div>
-      ${puntosData.length > 1 ? `<button class="btn btn-red btn-sm" onclick="eliminarPunto(${pi})">✕</button>` : ''}
+      ${(puntosData.length > 1 && !esConductorPunto) ? `<button class="btn btn-red btn-sm" onclick="eliminarPunto(${pi})">✕</button>` : ''}
     </div>
-    <div style="display:flex;gap:6px;margin-bottom:10px">
+    ${esConductorPunto ? '' : `<div style="display:flex;gap:6px;margin-bottom:10px">
       <button class="btn btn-sm ${p.tipo==='intermedio'?'btn-navy':'btn-outline'}" onclick="setTipo(${pi},'intermedio')">🔁 Intermedio</button>
       <button class="btn btn-sm ${p.tipo==='final'?'btn-navy':'btn-outline'}" onclick="setTipo(${pi},'final')">🏁 Destino Final</button>
-    </div>
+    </div>`}
     <div style="margin-bottom:8px">
       <label class="lbl">Destino del Punto</label>
+      ${esConductorPunto ? `<div style="font-size:13px;font-weight:800;color:var(--text);padding:8px 0">${p.tipo==='final'?'🏁':'🔁'} ${p.destino||'—'}</div>` : `
       <select class="inp ${p.destino?'':'pend'}" style="${p.destino?'':'border-color:var(--orange)'}"
         id="dest-${pi}" onchange="setDestinoSelect(${pi},this.value)">
         <option value="">Selecciona destino...</option>
         ${(()=>{ const svcCliente = (DB.servicios[svcActivoIdx]?.cliente||'').toUpperCase(); const tarifsFiltrados = (DB.tarifarios||[]).filter(t=>(t.cliente||'').toUpperCase()===svcCliente); const destinos = [...new Set(tarifsFiltrados.map(t=>t.destino).filter(Boolean))].sort(); return destinos.map(d=>`<option value="${d}" ${p.destino===d?'selected':''}>${d}</option>`).join(''); })()} 
         <option value="__otro__" ${p.destino&&![...(DB.tarifarios||[]).map(t=>t.destino)].includes(p.destino)?'selected':''}>✏ Otro destino...</option>
       </select>
-      ${p.destino && ![...(DB.tarifarios||[]).map(t=>t.destino)].includes(p.destino) ? `<input class="inp" style="margin-top:4px" value="${p.destino}" placeholder="Escribe el destino" id="dest-manual-${pi}" onblur="setDestino(${pi},this.value)">` : ''}
+      ${p.destino && ![...(DB.tarifarios||[]).map(t=>t.destino)].includes(p.destino) ? `<input class="inp" style="margin-top:4px" value="${p.destino}" placeholder="Escribe el destino" id="dest-manual-${pi}" onblur="setDestino(${pi},this.value)">` : ''}`}
     </div>
     <!-- Tarifa oculta al conductor — visible solo para coordinador en modal costos -->
     <!-- Guías registradas -->
@@ -3291,8 +3336,8 @@ function puntosHTML(p, pi) {
               <div style="font-size:10px;color:var(--muted)">${g.fecha_guia||'—'}</div>
             </div>
             ${g.img_url ? `<button class="btn btn-outline btn-sm" onclick="window.open('${g.img_url}','_blank')">👁 Ver</button>` : ''}
-            <button class="btn btn-sm" style="background:rgba(255,107,0,0.15);color:var(--gold);padding:4px 8px;border:1px solid rgba(255,107,0,0.3)" onclick="editarGuia(${pi},${gi})">✏</button>
-            <button class="btn btn-red btn-sm" onclick="eliminarGuia(${pi},${gi})">✕</button>
+            ${esConductorPunto ? '' : `<button class="btn btn-sm" style="background:rgba(255,107,0,0.15);color:var(--gold);padding:4px 8px;border:1px solid rgba(255,107,0,0.3)" onclick="editarGuia(${pi},${gi})">✏</button>
+            <button class="btn btn-red btn-sm" onclick="eliminarGuia(${pi},${gi})">✕</button>`}
           </div>
           <!-- Modo edición (oculto por defecto) -->
           <div id="guia-edit-${pi}-${gi}" style="display:none;background:rgba(255,107,0,0.1);border-radius:8px;padding:10px;border:1.5px solid var(--gold)">
