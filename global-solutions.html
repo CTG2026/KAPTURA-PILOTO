@@ -1219,6 +1219,17 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
   </div>
 </div>
 
+<!-- MODAL RESUMEN KPI -->
+<div class="overlay" id="modal-kpi-resumen" style="display:none">
+  <div class="modal" style="max-width:600px">
+    <div class="modal-hdr">
+      <div><div class="modal-ttl" id="kpi-resumen-ttl">Resumen</div><div class="modal-sub" id="kpi-resumen-sub"></div></div>
+      <button class="modal-cls" onclick="cerrar('modal-kpi-resumen')">✕</button>
+    </div>
+    <div class="modal-body" id="kpi-resumen-body" style="max-height:70vh;overflow-y:auto"></div>
+  </div>
+</div>
+
 <!-- MODAL REGISTRAR -->
 <div class="overlay" id="modal-registrar" style="display:none">
   <div class="modal" style="max-width:680px">
@@ -2669,21 +2680,46 @@ document.addEventListener('click', function(e) {
 });
 
 function filtrarPorKPI(tipo) {
-  _filtrosColumna.estado = [];
-  const elFecha = document.getElementById('filtro-fecha');
-  const label = {
-    hoy: 'Servicios de hoy', ejecHoy: 'Ejecutados hoy', mes: 'Servicios del mes',
-    borrador: 'Por confirmar (borradores)', ejecutado: 'Pendientes de Cierre'
-  }[tipo] || 'Servicios del mes';
-  if(tipo === 'hoy') { if(elFecha) elFecha.value = hoyStr; }
-  else if(tipo === 'ejecHoy') { if(elFecha) elFecha.value = hoyStr; _filtrosColumna.estado = ['ejecutado']; }
-  else if(tipo === 'mes') { if(elFecha) elFecha.value = ''; }
-  else if(tipo === 'borrador') { if(elFecha) elFecha.value = ''; _filtrosColumna.estado = ['borrador']; }
-  else if(tipo === 'ejecutado') { if(elFecha) elFecha.value = ''; _filtrosColumna.estado = ['ejecutado']; }
-  renderServicios();
-  toast(`🔍 ${label}`);
-  const elTabla = document.getElementById('tabla-svc') || document.getElementById('cards-mobile');
-  if(elTabla) elTabla.scrollIntoView({behavior:'smooth', block:'start'});
+  const anioStr = String(hoy.getFullYear());
+  const mesStr = String((parseInt(document.getElementById('dash-mes')?.value ?? hoy.getMonth()))+1).padStart(2,'0');
+  const enEsteMes = s => (s.fecha||'').startsWith(`${anioStr}-${mesStr}`);
+  const config = {
+    hoy:      { titulo: 'Servicios de Hoy', filtro: s => (s.fecha||'').startsWith(hoyStr) },
+    ejecHoy:  { titulo: 'Ejecutados Hoy', filtro: s => (s.fecha||'').startsWith(hoyStr) && s.estado==='ejecutado' },
+    mes:      { titulo: 'Servicios del Mes', filtro: enEsteMes },
+    borrador: { titulo: 'Por Confirmar (Borradores)', filtro: s => s.estado==='borrador' },
+    ejecutado:{ titulo: 'Pendientes de Cierre', filtro: s => s.estado==='ejecutado' }
+  }[tipo];
+  if(!config) return;
+  const lista = DB.servicios.filter(config.filtro)
+    .sort((a,b) => (b.fecha||'') > (a.fecha||'') ? 1 : -1);
+  document.getElementById('kpi-resumen-ttl').textContent = config.titulo;
+  document.getElementById('kpi-resumen-sub').textContent = `${lista.length} servicio${lista.length!==1?'s':''}`;
+  const body = document.getElementById('kpi-resumen-body');
+  if(lista.length === 0) {
+    body.innerHTML = `<div style="text-align:center;color:var(--muted);font-size:12px;padding:24px">Sin servicios en esta categoría</div>`;
+  } else {
+    body.innerHTML = lista.map(s => {
+      const idx = DB.servicios.indexOf(s);
+      const dest = s.destino || (s._puntos||[]).find(p=>p.tipo==='final')?.destino || '—';
+      return `<div onclick="abrirDesdeKPI(${idx})" style="display:flex;justify-content:space-between;align-items:center;padding:10px 4px;border-bottom:1px solid var(--border);cursor:pointer" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='transparent'">
+        <div>
+          <div style="font-size:12px;font-weight:800;color:var(--gold)">${s.servicio_id||'—'} <span style="color:var(--text);font-weight:700">· ${s.patente||'—'} · ${s.conductor||'—'}</span></div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">${s.cliente||'—'} · ${s.origen||'—'} → ${dest}</div>
+        </div>
+        ${pillHTML(s.estado)}
+      </div>`;
+    }).join('');
+  }
+  document.getElementById('modal-kpi-resumen').style.display = 'flex';
+}
+function abrirDesdeKPI(idx) {
+  cerrar('modal-kpi-resumen');
+  const s = DB.servicios[idx];
+  if(!s) return;
+  if(s.estado === 'asignado') iniciarSvc(idx);
+  else if(s.estado === 'cerrado') abrirCierre(idx);
+  else abrirRegistrar(idx);
 }
 function renderServicios() {
   const fecha = document.getElementById('filtro-fecha').value;
