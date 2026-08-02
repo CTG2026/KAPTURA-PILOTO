@@ -2954,8 +2954,16 @@ function renderClientes() {
 }
 
 function poblarSelects() {
+  const ordenPatente = ['XR','GK','WR','GC','BP','DS'];
+  const flotaOrdenada = [...DB.flota.filter(f=>f.activo!==false)].sort((a,b) => {
+    const ia = ordenPatente.indexOf((a.patente||'').slice(0,2));
+    const ib = ordenPatente.indexOf((b.patente||'').slice(0,2));
+    const pa = ia === -1 ? 999 : ia;
+    const pb = ib === -1 ? 999 : ib;
+    return pa !== pb ? pa - pb : (a.patente||'').localeCompare(b.patente||'');
+  });
   document.getElementById('asig-patente').innerHTML =
-    DB.flota.filter(f=>f.activo!==false).map(f => {
+    flotaOrdenada.map(f => {
       const tipo = (f.tipo||'').replace(/_/g,' ');
       return `<option value="${f.patente}">${f.patente}${tipo ? ' — '+tipo : ''}</option>`;
     }).join('');
