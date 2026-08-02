@@ -1242,7 +1242,7 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
       </div></div>
       <div class="section-ttl">📍 Puntos de Entrega</div>
       <div id="puntos-container"></div>
-      <button class="btn btn-outline btn-full btn-sm" onclick="agregarPunto()" style="margin-bottom:14px">+ Agregar Punto de Entrega</button>
+      <button class="btn btn-outline btn-full btn-sm" id="btn-agregar-punto-reg" onclick="agregarPunto()" style="margin-bottom:14px">+ Agregar Punto de Entrega</button>
     </div>
       <div class="section-ttl">📝 Observaciones del Conductor</div>
       <div class="fld">
@@ -3242,6 +3242,8 @@ function abrirRegistrar(i) {
   const elDestReg = document.getElementById('reg-destino-info');
   if(elDestReg) elDestReg.textContent = pFinalReg?.destino || s.destino || '—';
   document.getElementById('reg-conductor-info').textContent = s.conductor||'—';
+  const btnAgregarPtoReg = document.getElementById('btn-agregar-punto-reg');
+  if(btnAgregarPtoReg) btnAgregarPtoReg.style.display = _sessionUsuario?.rol === 'conductor' ? 'none' : '';
   // Ruta secuencial completa, con etiqueta de tipo en cada parada
   const elRuta = document.getElementById('reg-ruta-secuencial');
   if(elRuta) {
@@ -3295,9 +3297,7 @@ function renderPuntos() {
 
 function puntosHTML(p, pi, activeIdx) {
   const esConductorPunto = _sessionUsuario?.rol === 'conductor';
-  const esActivo    = !esConductorPunto || pi === activeIdx || (activeIdx === -1 && pi === puntosData.length-1);
-  const esCompletado = esConductorPunto && p.capturada && pi < activeIdx;
-  const esFuturo     = esConductorPunto && !p.capturada && activeIdx !== -1 && pi > activeIdx;
+  const esCompletado = esConductorPunto && p.capturada;
 
   // Punto ya capturado: solo lectura, sin poder tocar nada
   if(esCompletado) {
@@ -3310,16 +3310,6 @@ function puntosHTML(p, pi, activeIdx) {
       <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:6px">${p.destino||'—'}</div>
       ${(p.guias||[]).map(g => `<div style="font-size:10px;color:var(--muted)">Guía N° ${g.num_guia} · ${g.fecha_guia||'—'}</div>`).join('')}
       <div style="font-size:10px;color:var(--muted);margin-top:6px;font-style:italic">Ya registrado — no editable desde acá</div>
-    </div>`;
-  }
-  // Punto futuro: visible pero bloqueado, todavía no le corresponde
-  if(esFuturo) {
-    return `<div style="background:var(--surface);border-radius:10px;padding:12px;margin-bottom:10px;border:1px solid var(--border);opacity:0.4">
-      <div style="font-family:'DM Sans',sans-serif;font-size:14px;font-weight:800;color:var(--muted)">
-        🔒 PUNTO ${pi+1} — ${p.tipo==='final'?'🏁 Destino Final':'🔁 Intermedio'}
-      </div>
-      <div style="font-size:12px;font-weight:700;color:var(--muted);margin-top:4px">${p.destino||'—'}</div>
-      <div style="font-size:10px;color:var(--muted);margin-top:6px">Se habilita cuando termines el punto anterior</div>
     </div>`;
   }
   return `<div style="background:var(--surface);border-radius:10px;padding:12px;margin-bottom:10px;border:1px solid var(--border)">
