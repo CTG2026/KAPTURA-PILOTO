@@ -5824,7 +5824,9 @@ async function iniciarLogin() {
             const el = document.getElementById(id); if(el) el.style.display = 'none';
           });
           const btnSvcM = document.getElementById('tab-btn-servicios');
-          if(btnSvcM) setTab('servicios', btnSvcM);
+          const btnDispM = document.getElementById('tab-btn-disponibilidad');
+          if(btnDispM) { btnDispM.style.order = '-1'; setTab('disponibilidad', btnDispM); }
+          if(btnSvcM) btnSvcM.style.order = '0';
           const setupExtraM = document.getElementById('setup-costos-extra');
           if(setupExtraM) setupExtraM.style.display = 'none';
           ['kpi-ingreso-mes','kpi-costos-mes','kpi-margen-teo','kpi-margen-prom','k-margen-real-kpi'].forEach(id => {
@@ -6000,6 +6002,10 @@ function entrarModulo(modulo) {
       });
       const btnAsigM2 = document.getElementById('btn-asignar-nuevo');
       if(btnAsigM2) btnAsigM2.style.display = 'none';
+      const btnDispM2 = document.getElementById('tab-btn-disponibilidad');
+      const btnSvcM2  = document.getElementById('tab-btn-servicios');
+      if(btnDispM2) { btnDispM2.style.order = '-1'; setTab('disponibilidad', btnDispM2); }
+      if(btnSvcM2) btnSvcM2.style.order = '0';
     }
     init();
   }
@@ -6628,6 +6634,8 @@ async function setupGuardarTodo() {
 
 let _dispData = {};
 let _dispForm = {};
+let _dispMesFiltro = null;
+function dispCambiarMesFiltro(val) { _dispMesFiltro = val; renderDisponibilidad(); }
 
 async function cargarDisponibilidad() {
   const emp = DB._empresa || _sessionUsuario?.empresa;
@@ -6719,8 +6727,20 @@ function renderDisponibilidad() {
     <button class="btn btn-navy" onclick="guardarDisponibilidad()" style="width:100%">💾 Guardar registro</button>
   </div>`;
 
-  const todasFechas = Object.keys(_dispData).sort((a,b) => new Date(b) - new Date(a));
-  const registrosHTML = todasFechas.length === 0 ? `<div style="text-align:center;color:var(--muted);font-size:12px;padding:20px">Sin registros aún</div>` :
+  const mesActualStr = `${hoy.getFullYear()}-${String(hoy.getMonth()+1).padStart(2,'0')}`;
+  if(!_dispMesFiltro) _dispMesFiltro = mesActualStr;
+  const mesesDisponibles = [...new Set(Object.keys(_dispData).map(f => f.slice(0,7)))];
+  if(!mesesDisponibles.includes(mesActualStr)) mesesDisponibles.push(mesActualStr);
+  mesesDisponibles.sort((a,b)=>b.localeCompare(a));
+  const nombreMes = (ym) => { const [y,m]=ym.split('-'); return `${MESES[parseInt(m)-1]} ${y}`; };
+  const selectorMesHTML = `<div style="margin-bottom:10px">
+    <select class="inp" style="width:auto;display:inline-block" onchange="dispCambiarMesFiltro(this.value)">
+      ${mesesDisponibles.map(ym => `<option value="${ym}" ${ym===_dispMesFiltro?'selected':''}>${nombreMes(ym)}</option>`).join('')}
+    </select>
+  </div>`;
+
+  const todasFechas = Object.keys(_dispData).filter(f => f.startsWith(_dispMesFiltro)).sort((a,b) => new Date(b) - new Date(a));
+  const registrosHTML = todasFechas.length === 0 ? `<div style="text-align:center;color:var(--muted);font-size:12px;padding:20px">Sin registros en ${nombreMes(_dispMesFiltro)}</div>` :
   todasFechas.map(fecha => {
     const regs = _dispData[fecha] || {};
     const patentes = Object.keys(regs);
@@ -6763,6 +6783,7 @@ function renderDisponibilidad() {
 
   cont.innerHTML = `${formHTML}
     <div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:0.05em;margin-bottom:8px">REGISTROS DEL MES</div>
+    ${selectorMesHTML}
     ${registrosHTML}`;
 }
 
