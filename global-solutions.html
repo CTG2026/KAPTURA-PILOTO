@@ -2885,7 +2885,7 @@ function poblarSelects() {
     toast('⚠ Debes agregar clientes en SETUP antes de asignar');
   } else {
     document.getElementById('asig-cliente').innerHTML =
-      DB.clientes.map(c => `<option value="${c.nombre}">${c.nombre}</option>`).join('') +
+      DB.clientes.map(c => `<option value="${c.nombre}" ${c.nombre==='Sollem SpA'?'selected':''}>${c.nombre}</option>`).join('') +
       '<option value="__otro__">+ Nuevo cliente...</option>';
   }
 }
