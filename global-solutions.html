@@ -1121,7 +1121,8 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
         <label class="lbl">Tipo de Servicio</label>
         <select class="inp" id="asig-tipo-servicio">
           <option value="normal">Normal</option>
-          <option value="devolucion">Devolución (tarifa inversa)</option>
+          <option value="devolucion_full">Devolución Full (100% tarifa inversa)</option>
+          <option value="devolucion_parcial">Devolución Parcial (30% tarifa inversa)</option>
         </select>
       </div>
       <div class="fld2">
@@ -3096,7 +3097,8 @@ async function guardarAsignacion() {
   const horaLlegada = document.getElementById('asig-hora-llegada').value || null;
   const destinoRaw = document.getElementById('asig-destino').value.trim();
   const destino = destinoRaw === '__otro__' ? (document.getElementById('asig-destino-custom')?.value.trim()||'') : destinoRaw;
-  const nuevo = { servicio_id:svId, patente, conductor, cliente, origen, destino: destino||null, fecha, estado:'asignado', margen_servicio:0, puntos_entrega:puntosAsig.length, punto_inicio:puntoInicio, tipo_operacion:tipoOperacion, empresa: DB._empresa||'global_solutions', puntos_asignados: puntosAsigStr, hora_inicio_asignada: horaInicio, hora_llegada_estimada: horaLlegada };
+  const tipoServicio = document.getElementById('asig-tipo-servicio')?.value || 'normal';
+  const nuevo = { servicio_id:svId, patente, conductor, cliente, origen, destino: destino||null, fecha, estado:'asignado', margen_servicio:0, puntos_entrega:puntosAsig.length, punto_inicio:puntoInicio, tipo_operacion:tipoOperacion, tipo_servicio:tipoServicio, empresa: DB._empresa||'global_solutions', puntos_asignados: puntosAsigStr, hora_inicio_asignada: horaInicio, hora_llegada_estimada: horaLlegada };
   const {data:inserted, error} = await supa.from('servicios_piloto').insert(nuevo).select();
   if(error) { toast('Error: '+error.message); return; }
   let svcInsertado = inserted?.[0];
@@ -3401,7 +3403,13 @@ function buscarValor(pi) {
       return cli.includes((svc.cliente||'').toLowerCase().split(' ')[0]) &&
         (dest.includes(dl.split(',')[0].trim()) || dl.includes(dest.split(',')[0].trim()));
     });
-    if(match && match.tarifa_neta > 0) { puntosData[pi].valor = match.tarifa_neta; renderPuntos(); }
+    if(match && match.tarifa_neta > 0) {
+      let valorFinal = match.tarifa_neta;
+      if(svc.tipo_servicio === 'devolucion_full') valorFinal = Math.round(match.tarifa_neta * 1.0);
+      else if(svc.tipo_servicio === 'devolucion_parcial') valorFinal = Math.round(match.tarifa_neta * 0.3);
+      puntosData[pi].valor = valorFinal;
+      renderPuntos();
+    }
   }
 }
 
