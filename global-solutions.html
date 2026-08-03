@@ -3056,7 +3056,11 @@ async function abrirAsignar(i) {
     if (ttlEl) ttlEl.textContent = `Editar Asignación — ${svcEdit.servicio_id}`;
     if (subEl) subEl.textContent = `${svcEdit.patente} · ${svcEdit.conductor}`;
     document.getElementById('asig-patente').value = svcEdit.patente || '';
-    document.getElementById('asig-conductor').value = svcEdit.conductor || '';
+    const condSel = document.getElementById('asig-conductor');
+    if (condSel) {
+      const condMatch = [...condSel.options].find(o => o.value.toUpperCase() === (svcEdit.conductor||'').toUpperCase());
+      condSel.value = condMatch ? condMatch.value : (svcEdit.conductor || '');
+    }
     document.getElementById('asig-cliente').value = svcEdit.cliente || '';
     document.getElementById('wrap-cliente-custom').style.display = 'none';
     checkOtroCliente(); // puebla destinos/puntos segun el cliente ya seteado
