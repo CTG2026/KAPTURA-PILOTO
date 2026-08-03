@@ -7,6 +7,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -1167,7 +1168,7 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
           <option value="Rancagua">Rancagua</option><option value="Santiago">Santiago</option>
           <option value="San Antonio">San Antonio</option><option value="otro">Otro...</option>
         </select></div>
-        <div class="fld"><label class="lbl">Destino Principal</label>
+        <div class="fld"><label class="lbl">Destino Final</label>
           <select class="inp" id="asig-destino" onchange="checkAsigDestino()">
             <option value="">Selecciona cliente primero...</option>
           </select>
@@ -1480,6 +1481,15 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
 </div>
 
 <div class="toast" id="toast"></div>
+<div id="panel-asig-ok" style="display:none;position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--card,#1a1a1a);border:1px solid var(--gold);border-radius:10px;padding:16px 18px;z-index:1000;max-width:320px;box-shadow:0 4px 20px rgba(0,0,0,0.4)">
+  <div style="font-size:12px;font-weight:800;color:var(--gold);letter-spacing:0.05em;margin-bottom:6px">✓ SERVICIO ASIGNADO</div>
+  <div id="panel-asig-resumen" style="font-size:13px;font-weight:700;margin-bottom:12px"></div>
+  <div style="display:flex;gap:8px">
+    <button class="btn btn-navy" style="flex:1;font-size:11px" onclick="descargarPdfAsignacion()">📄 Descargar PDF</button>
+    <button class="btn btn-navy" style="flex:1;font-size:11px" onclick="enviarWhatsappAsignacion()">💬 WhatsApp</button>
+  </div>
+  <div style="text-align:center;margin-top:8px"><a href="#" onclick="document.getElementById('panel-asig-ok').style.display='none';return false" style="font-size:10px;color:var(--muted,#888)">Cerrar</a></div>
+</div>
 
 <script>
 
@@ -3013,7 +3023,80 @@ async function guardarAsignacion() {
   DB.servicios.unshift(svcInsertado);
   cerrar('modal-asignar');
   renderServicios(); renderKPIs();
-  toast(`✓ ${svId} asignado — ${patente} · ${conductor}`);
+  mostrarPanelAsignacionOk(svcInsertado);
+}
+
+let _ultimaAsignacion = null;
+function mostrarPanelAsignacionOk(s) {
+  _ultimaAsignacion = s;
+  const panel = document.getElementById('panel-asig-ok');
+  const resumen = document.getElementById('panel-asig-resumen');
+  if (!panel || !resumen) return;
+  resumen.textContent = `${s.servicio_id} — ${s.patente} · ${s.conductor} · ${s.cliente}`;
+  panel.style.display = 'block';
+}
+
+function _destinoFinalAsignacion(s) {
+  if (s.destino) return s.destino;
+  if (s.puntos_asignados) {
+    try {
+      const pts = JSON.parse(s.puntos_asignados);
+      if (pts.length > 0) return pts[pts.length-1].nombre || '';
+    } catch(e) {}
+  }
+  return '';
+}
+
+function descargarPdfAsignacion() {
+  const s = _ultimaAsignacion;
+  if (!s || !window.jspdf) { toast('⚠ No se pudo generar el PDF'); return; }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  const destino = _destinoFinalAsignacion(s);
+  let puntos = [];
+  if (s.puntos_asignados) { try { puntos = JSON.parse(s.puntos_asignados); } catch(e) {} }
+
+  doc.setFont('helvetica','bold'); doc.setFontSize(16);
+  doc.text(`Asignación ${s.servicio_id}`, 20, 20);
+
+  doc.setFontSize(9); doc.setTextColor(120);
+  const campos = [
+    ['CLIENTE', s.cliente||'', 'PATENTE', s.patente||''],
+    ['FECHA INICIO', s.fecha||'', 'ORIGEN', s.origen||''],
+    ['DESTINO', destino, 'CONDUCTOR', s.conductor||''],
+    ['HORA PRESENTACIÓN CARGUÍO', s.hora_inicio_asignada||'', 'ESTADO', (s.estado||'').toUpperCase()],
+  ];
+  let y = 35;
+  campos.forEach(([l1,v1,l2,v2]) => {
+    doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(120);
+    doc.text(l1, 20, y); doc.text(l2, 110, y);
+    doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.setTextColor(20);
+    doc.text((v1||'').toUpperCase(), 20, y+6); doc.text((v2||'').toUpperCase(), 110, y+6);
+    y += 16;
+  });
+
+  doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(180,140,20);
+  doc.text('RUTA DE ESTE SERVICIO', 20, y+2); y += 10;
+  doc.setFontSize(11); doc.setTextColor(20);
+  doc.text(`SALIDA: ${(s.origen||'').toUpperCase()}`, 20, y); y += 8;
+  puntos.forEach((p,i) => {
+    doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(20);
+    doc.text(`${i+1}. ${(p.nombre||'').toUpperCase()}`, 20, y);
+    doc.setFontSize(8); doc.setTextColor(26,79,160);
+    const etiqueta = (i === puntos.length-1) ? 'DESTINO FINAL' : 'PUNTO INTERMEDIO';
+    doc.text(etiqueta, 140, y);
+    y += 8;
+  });
+
+  doc.save(`Asignacion_${s.servicio_id}.pdf`);
+}
+
+function enviarWhatsappAsignacion() {
+  const s = _ultimaAsignacion;
+  if (!s) { toast('⚠ No hay asignación para enviar'); return; }
+  const destino = _destinoFinalAsignacion(s);
+  const msg = `Asignación ${s.servicio_id}: ${s.patente} - ${s.conductor}\n${s.origen} → ${destino}\nCliente: ${s.cliente}${s.hora_inicio_asignada ? '\nPresentación carguío: '+s.hora_inicio_asignada : ''}`;
+  window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
 }
 
 // ══ PASO 1 — INICIAR ══

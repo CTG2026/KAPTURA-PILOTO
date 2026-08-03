@@ -4,14 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Global Solutions</title>
-<meta name="apple-mobile-web-app-title" content="Global Solutions">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta property="og:title" content="Global Solutions">
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20160%20160%22%3E%3Crect%20width%3D%22160%22%20height%3D%22160%22%20fill%3D%22%230D0D0D%22/%3E%3Crect%20x%3D%2210%22%20y%3D%2210%22%20width%3D%22140%22%20height%3D%22140%22%20rx%3D%2224%22%20fill%3D%22%23FF6B00%22/%3E%3Ctext%20x%3D%2280%22%20y%3D%22106%22%20font-family%3D%22Arial%2C%20sans-serif%22%20font-size%3D%2260%22%20font-weight%3D%22900%22%20text-anchor%3D%22middle%22%20fill%3D%22%23000%22%3EGS%3C/text%3E%3C/svg%3E">
-<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20160%20160%22%3E%3Crect%20width%3D%22160%22%20height%3D%22160%22%20fill%3D%22%230D0D0D%22/%3E%3Crect%20x%3D%2210%22%20y%3D%2210%22%20width%3D%22140%22%20height%3D%22140%22%20rx%3D%2224%22%20fill%3D%22%23FF6B00%22/%3E%3Ctext%20x%3D%2280%22%20y%3D%22106%22%20font-family%3D%22Arial%2C%20sans-serif%22%20font-size%3D%2260%22%20font-weight%3D%22900%22%20text-anchor%3D%22middle%22%20fill%3D%22%23000%22%3EGS%3C/text%3E%3C/svg%3E">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -185,14 +181,14 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
 
 <nav class="nav" id="nav" style="display:none">
   <button class="ntab active" id="tab-btn-servicios" onclick="setTab('servicios',this)">Servicios</button>
-  <button class="ntab" id="tab-btn-disponibilidad" onclick="setTab('disponibilidad',this)">Disponibilidad</button>
-  <button class="ntab" id="tab-btn-flota" onclick="setTab('flota',this)">Flota</button>
   <button class="ntab" id="tab-btn-liquidaciones" onclick="setTab('liquidaciones',this)">Liquidaciones</button>
+  <button class="ntab" id="tab-btn-flota" onclick="setTab('flota',this)">Flota</button>
   <button class="ntab" id="tab-btn-clientes" onclick="setTab('clientes',this)">Clientes</button>
   <button class="ntab" id="tab-btn-gastos" onclick="setTab('gastos',this)">Costos</button>
   <button class="ntab" id="tab-btn-resultados" onclick="setTab('resultados',this)">Resultados</button>
   <button class="ntab" id="tab-btn-informes" onclick="setTab('informes',this)">Informes</button>
   <button class="ntab" id="tab-btn-config" onclick="setTab('config',this)">Config</button>
+  <button class="ntab" id="tab-btn-disponibilidad" onclick="setTab('disponibilidad',this)">Disponibilidad</button>
   <button class="ntab" id="tab-btn-setup" onclick="setTab('setup',this)" style="display:none">Setup</button>
 </nav>
 
@@ -240,8 +236,7 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
 <main class="main" id="main" style="display:none">
   <!-- TAB SERVICIOS -->
   <div id="tab-servicios">
-    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 12px 0">
-      <button class="btn" id="btn-asignar-nuevo" onclick="abrirAsignar()" style="background:var(--gold);color:#000;font-weight:800;font-size:13px;padding:10px 18px;border-radius:10px;border:none;box-shadow:0 2px 8px rgba(201,168,76,0.4)">+ Asignar Servicio</button>
+    <div style="display:flex;align-items:center;justify-content:flex-end;padding:8px 12px 0">
       <select id="dash-mes" class="inp" style="width:auto;font-size:11px;padding:4px 8px" onchange="renderKPIs();renderServicios()">
         <option value="0">Enero</option>
         <option value="1">Febrero</option>
@@ -258,19 +253,16 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
       </select>
     </div>
     <div class="kpis">
-      <div class="kpi orange" id="kpi-por-confirmar" onclick="filtrarPorKPI('borrador')" style="cursor:pointer"><div class="kpi-lbl">Servicios Pendientes de Ejecutar</div><div class="kpi-val orange" id="k-pend">—</div><div class="kpi-sub">borradores</div></div>
-      <div class="kpi" onclick="filtrarPorKPI('asignado')" style="cursor:pointer"><div class="kpi-lbl">Servicios Asignados</div><div class="kpi-val" id="k-hoy">—</div><div class="kpi-sub" id="k-hoy-sub">—</div></div>
-      <div class="kpi orange" onclick="filtrarPorKPI('enproceso')" style="cursor:pointer"><div class="kpi-lbl">Servicios En Proceso</div><div class="kpi-val orange" id="k-ejec-hoy">—</div><div class="kpi-sub" id="k-ejec-mes">— este mes</div></div>
-      <div class="kpi orange" id="kpi-pend-cierre" onclick="filtrarPorKPI('ejecutado')" style="cursor:pointer"><div class="kpi-lbl">Servicios Ejecutados</div><div class="kpi-val orange" id="k-pend-cierre">—</div><div class="kpi-sub">esperando Cierre</div></div>
-      <div class="kpi" onclick="filtrarPorKPI('cerrado')" style="cursor:pointer"><div class="kpi-lbl">Servicios Cerrados</div><div class="kpi-val" id="k-cerrados">—</div><div class="kpi-sub">este mes</div></div>
-      <div class="kpi" onclick="filtrarPorKPI('mes')" style="cursor:pointer"><div class="kpi-lbl">Resumen del Mes</div><div class="kpi-val" id="k-svcs-mes">—</div><div class="kpi-sub" id="k-svcs-mes-sub">acumulados</div></div>
-      <div class="kpi" id="kpi-ingreso-mes" style="display:none"><div class="kpi-lbl">Ingreso Mes</div><div class="kpi-val" id="k-ingreso">—</div><div class="kpi-sub" id="k-ingreso-sub">—</div></div>
-      <div class="kpi" id="kpi-costos-mes" style="display:none"><div class="kpi-lbl">Costos Mes</div><div class="kpi-val" id="k-costos">—</div><div class="kpi-sub" id="k-costos-sub">—</div></div>
-      <div class="kpi" id="kpi-margen-teo" style="display:none"><div class="kpi-lbl">Margen Teórico</div><div class="kpi-val" id="k-margen">—</div><div class="kpi-sub" id="k-margen-sub">—</div></div>
-      <div class="kpi" id="kpi-margen-prom" style="display:none"><div class="kpi-lbl">Margen Prom.</div><div class="kpi-val" id="k-prom">—</div><div class="kpi-sub">por servicio</div></div>
-      <div class="kpi" id="kpi-combustible-mes" style="display:none"><div class="kpi-lbl">Combustible Mes</div><div class="kpi-val" id="k-combustible">—</div><div class="kpi-sub" id="k-combustible-sub">—</div></div>
-      <div class="kpi" id="k-margen-real-kpi" style="display:none"><div class="kpi-lbl">Margen Real</div><div class="kpi-val" id="k-margen-real">—</div><div class="kpi-sub" id="k-margen-real-sub">con costos reales</div></div>
-      <div class="kpi" id="kpi-rendimiento-real" style="display:none"><div class="kpi-lbl">Rendimiento Real Equipo</div><div class="kpi-val" id="k-rend-real">—</div><div class="kpi-sub" id="k-rend-real-sub">km/lt histórico</div></div>
+      <div class="kpi"><div class="kpi-lbl">Servicios Hoy</div><div class="kpi-val" id="k-hoy">—</div><div class="kpi-sub" id="k-hoy-sub">—</div></div>
+      <div class="kpi orange"><div class="kpi-lbl">Ejecutados Hoy</div><div class="kpi-val orange" id="k-ejec-hoy">—</div><div class="kpi-sub" id="k-ejec-mes">— este mes</div></div>
+      <div class="kpi"><div class="kpi-lbl">Servicios Mes</div><div class="kpi-val" id="k-svcs-mes">—</div><div class="kpi-sub" id="k-svcs-mes-sub">acumulados</div></div>
+      <div class="kpi orange" id="kpi-por-confirmar"><div class="kpi-lbl">Por Confirmar</div><div class="kpi-val orange" id="k-pend">—</div><div class="kpi-sub">borradores</div></div>
+      <div class="kpi" id="kpi-ingreso-mes"><div class="kpi-lbl">Ingreso Mes</div><div class="kpi-val" id="k-ingreso">—</div><div class="kpi-sub" id="k-ingreso-sub">—</div></div>
+      <div class="kpi" id="kpi-costos-mes"><div class="kpi-lbl">Costos Mes</div><div class="kpi-val" id="k-costos">—</div><div class="kpi-sub" id="k-costos-sub">—</div></div>
+      <div class="kpi" id="kpi-margen-teo"><div class="kpi-lbl">Margen Teórico</div><div class="kpi-val" id="k-margen">—</div><div class="kpi-sub" id="k-margen-sub">—</div></div>
+      <div class="kpi" id="kpi-margen-prom"><div class="kpi-lbl">Margen Prom.</div><div class="kpi-val" id="k-prom">—</div><div class="kpi-sub">por servicio</div></div>
+      <div class="kpi" id="kpi-combustible-mes"><div class="kpi-lbl">Combustible Mes</div><div class="kpi-val" id="k-combustible">—</div><div class="kpi-sub" id="k-combustible-sub">—</div></div>
+      <div class="kpi" id="k-margen-real-kpi"><div class="kpi-lbl">Margen Real</div><div class="kpi-val" id="k-margen-real">—</div><div class="kpi-sub" id="k-margen-real-sub">con costos reales</div></div>
     </div>
     <div class="filtro">
       <input type="date" id="filtro-fecha" onchange="renderServicios()">
@@ -278,6 +270,7 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
     </div>
     <div class="sec-hdr">
       <div class="sec-ttl">Servicios</div>
+      <button class="btn btn-navy" id="btn-asignar-nuevo" onclick="abrirAsignar()">+ Asignar</button>
     </div>
     <div class="svc-list" id="cards-mobile"></div>
     <div class="desk-tbl">
@@ -576,7 +569,7 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
         <option value="1">Febrero</option>
         <option value="2">Marzo</option>
         <option value="3">Abril</option>
-        <option value="4">Mayo</option>
+        <option value="4" selected>Mayo</option>
         <option value="5">Junio</option>
         <option value="6">Julio</option>
         <option value="7">Agosto</option>
@@ -1123,8 +1116,7 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
         <label class="lbl">Tipo de Servicio</label>
         <select class="inp" id="asig-tipo-servicio">
           <option value="normal">Normal</option>
-          <option value="devolucion_full">Devolución Full (100% tarifa inversa)</option>
-          <option value="devolucion_parcial">Devolución Parcial (30% tarifa inversa)</option>
+          <option value="devolucion">Devolución (tarifa inversa)</option>
         </select>
       </div>
       <div class="fld2">
@@ -1134,7 +1126,7 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
           <option value="Rancagua">Rancagua</option><option value="Santiago">Santiago</option>
           <option value="San Antonio">San Antonio</option><option value="otro">Otro...</option>
         </select></div>
-        <div class="fld"><label class="lbl">Destino Principal</label>
+        <div class="fld"><label class="lbl">Destino Final</label>
           <select class="inp" id="asig-destino" onchange="checkAsigDestino()">
             <option value="">Selecciona cliente primero...</option>
           </select>
@@ -1220,17 +1212,6 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
   </div>
 </div>
 
-<!-- MODAL RESUMEN KPI -->
-<div class="overlay" id="modal-kpi-resumen" style="display:none">
-  <div class="modal" style="max-width:600px">
-    <div class="modal-hdr">
-      <div><div class="modal-ttl" id="kpi-resumen-ttl">Resumen</div><div class="modal-sub" id="kpi-resumen-sub"></div></div>
-      <button class="modal-cls" onclick="cerrar('modal-kpi-resumen')">✕</button>
-    </div>
-    <div class="modal-body" id="kpi-resumen-body" style="max-height:70vh;overflow-y:auto"></div>
-  </div>
-</div>
-
 <!-- MODAL REGISTRAR -->
 <div class="overlay" id="modal-registrar" style="display:none">
   <div class="modal" style="max-width:680px">
@@ -1247,14 +1228,13 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
         <div class="info-item"><div class="lbl2">DESTINO</div><div class="val" id="reg-destino-info">—</div></div>
         <div class="info-item"><div class="lbl2">CONDUCTOR</div><div class="val" id="reg-conductor-info">—</div></div>
       </div>
-      <div id="reg-ruta-secuencial" style="margin-top:10px"></div>
       <div style="margin-top:8px">
         <label class="lbl">Fecha término del servicio</label>
         <input class="inp" id="reg-fecha-termino" type="date" onchange="onFechaTermino()" style="border-color:var(--gold)">
       </div></div>
       <div class="section-ttl">📍 Puntos de Entrega</div>
       <div id="puntos-container"></div>
-      <button class="btn btn-outline btn-full btn-sm" id="btn-agregar-punto-reg" onclick="agregarPunto()" style="margin-bottom:14px">+ Agregar Punto de Entrega</button>
+      <button class="btn btn-outline btn-full btn-sm" onclick="agregarPunto()" style="margin-bottom:14px">+ Agregar Punto de Entrega</button>
     </div>
       <div class="section-ttl">📝 Observaciones del Conductor</div>
       <div class="fld">
@@ -1459,6 +1439,15 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
 </div>
 
 <div class="toast" id="toast"></div>
+<div id="panel-asig-ok" style="display:none;position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--card,#1a1a1a);border:1px solid var(--gold);border-radius:10px;padding:16px 18px;z-index:1000;max-width:320px;box-shadow:0 4px 20px rgba(0,0,0,0.4)">
+  <div style="font-size:12px;font-weight:800;color:var(--gold);letter-spacing:0.05em;margin-bottom:6px">✓ SERVICIO ASIGNADO</div>
+  <div id="panel-asig-resumen" style="font-size:13px;font-weight:700;margin-bottom:12px"></div>
+  <div style="display:flex;gap:8px">
+    <button class="btn btn-navy" style="flex:1;font-size:11px" onclick="descargarPdfAsignacion()">📄 Descargar PDF</button>
+    <button class="btn btn-navy" style="flex:1;font-size:11px" onclick="enviarWhatsappAsignacion()">💬 WhatsApp</button>
+  </div>
+  <div style="text-align:center;margin-top:8px"><a href="#" onclick="document.getElementById('panel-asig-ok').style.display='none';return false" style="font-size:10px;color:var(--muted,#888)">Cerrar</a></div>
+</div>
 
 <script>
 
@@ -2310,10 +2299,6 @@ async function init() {
   // Seleccionar mes en curso automáticamente
   const dashMes = document.getElementById('dash-mes');
   if(dashMes) dashMes.value = String(hoy.getMonth());
-  const resMes = document.getElementById('res-mes');
-  if(resMes) resMes.value = String(hoy.getMonth());
-  const gastoMes = document.getElementById('gasto-filtro-mes');
-  if(gastoMes) gastoMes.value = `${hoy.getFullYear()}-${String(hoy.getMonth()+1).padStart(2,'0')}`;
 
   try {
     const emp = DB._empresa || 'global_solutions';
@@ -2413,28 +2398,6 @@ function renderTodo() {
   poblarConfig();
 }
 
-async function calcularRendimientoRealEquipo(patente) {
-  try {
-    const elVal = document.getElementById('k-rend-real');
-    const elSub = document.getElementById('k-rend-real-sub');
-    if(!elVal) return;
-    const [{data: gpsRows}, {data: combRows}] = await Promise.all([
-      supa.from('kaptura_gps_eventos').select('km_tramo').eq('patente', patente).eq('evento','trip'),
-      supa.from('kaptura_combustible').select('litros').eq('patente', patente)
-    ]);
-    const kmTotal = (gpsRows||[]).reduce((a,r) => a+(parseFloat(r.km_tramo)||0), 0);
-    const ltsTotal = (combRows||[]).reduce((a,r) => a+(parseFloat(r.litros)||0), 0);
-    if(kmTotal > 0 && ltsTotal > 0) {
-      const rend = Math.round((kmTotal/ltsTotal)*100)/100;
-      elVal.textContent = rend + ' km/lt';
-      if(elSub) elSub.textContent = `${patente} · ${Math.round(kmTotal)}km / ${Math.round(ltsTotal)}lt histórico`;
-    } else {
-      elVal.textContent = '—';
-      if(elSub) elSub.textContent = `${patente} · sin datos suficientes`;
-    }
-  } catch(e) { console.warn('Error calculando rendimiento real:', e); }
-}
-
 function renderKPIs() {
   const mes = parseInt(document.getElementById('dash-mes')?.value ?? hoy.getMonth());
   const svcsHoy = DB.servicios.filter(s => (s.fecha||'').startsWith(hoyStr));
@@ -2475,38 +2438,13 @@ function renderKPIs() {
     document.getElementById('k-ejec-mes').textContent = MESES[mes];
     document.getElementById('k-svcs-mes').textContent = ejecutados;
     document.getElementById('k-svcs-mes-sub').textContent = MESES[mes];
-    // Rendimiento real histórico del equipo (por patente, no por conductor)
-    const svcHoyCond = DB.servicios.find(s => (s.fecha||'').startsWith(hoyStr)) || svcsMesCond[0];
-    const patRend = svcHoyCond?.patente;
-    if(patRend) calcularRendimientoRealEquipo(patRend);
-    const kpiRendEl = document.getElementById('kpi-rendimiento-real');
-    if(kpiRendEl) kpiRendEl.style.display = '';
   } else {
-    const asignadosAct = DB.servicios.filter(s => s.estado === 'asignado');
-    const enProcesoAct = DB.servicios.filter(s => s.estado === 'en_proceso');
-    document.getElementById('k-hoy').textContent = asignadosAct.length;
-    document.getElementById('k-hoy-sub').textContent = 'esperando iniciar';
-    document.getElementById('k-ejec-hoy').textContent = enProcesoAct.length;
-    document.getElementById('k-ejec-mes').textContent = 'en ruta ahora';
+    document.getElementById('k-hoy').textContent = svcsHoy.length;
+    document.getElementById('k-hoy-sub').textContent = svcsHoy.filter(s=>['en_proceso','registrando'].includes(s.estado)).length + ' en proceso';
+    document.getElementById('k-ejec-hoy').textContent = ejHoy;
+    document.getElementById('k-ejec-mes').textContent = ejMes + ' este mes';
     document.getElementById('k-pend').textContent = borradores.length;
-    const ejecutadosPend = DB.servicios.filter(s => s.estado === 'ejecutado');
-    const kpiPendCierreEl = document.getElementById('kpi-pend-cierre');
-    if(kpiPendCierreEl) {
-      if(['coordinador','controller','administrador'].includes(_sessionUsuario?.rol)) {
-        kpiPendCierreEl.style.display = '';
-        document.getElementById('k-pend-cierre').textContent = ejecutadosPend.length;
-        if(ejecutadosPend.length > 0 && !window._avisoCierreDado) {
-          window._avisoCierreDado = true;
-          toast(`🔔 ${ejecutadosPend.length} servicio${ejecutadosPend.length>1?'s':''} ejecutado${ejecutadosPend.length>1?'s':''} esperando Cierre`);
-        }
-      } else {
-        kpiPendCierreEl.style.display = 'none';
-      }
-    }
     const svcsMes = DB.servicios.filter(s => (s.fecha||'').startsWith(`${hoy.getFullYear()}-${String(mes+1).padStart(2,'0')}`));
-    const cerradosMes = svcsMes.filter(s => s.estado === 'cerrado');
-    const elCerrados = document.getElementById('k-cerrados');
-    if(elCerrados) elCerrados.textContent = cerradosMes.length;
     document.getElementById('k-svcs-mes').textContent = svcsMes.length;
     document.getElementById('k-svcs-mes-sub').textContent = `acumulados ${MESES[mes]}`;
   }
@@ -2689,51 +2627,6 @@ document.addEventListener('click', function(e) {
   } catch(err) {}
 });
 
-function filtrarPorKPI(tipo) {
-  const anioStr = String(hoy.getFullYear());
-  const mesStr = String((parseInt(document.getElementById('dash-mes')?.value ?? hoy.getMonth()))+1).padStart(2,'0');
-  const enEsteMes = s => (s.fecha||'').startsWith(`${anioStr}-${mesStr}`);
-  const config = {
-    borrador:  { titulo: 'Servicios Pendientes de Ejecutar', filtro: s => s.estado==='borrador' },
-    asignado:  { titulo: 'Servicios Asignados', filtro: s => s.estado==='asignado' },
-    enproceso: { titulo: 'Servicios En Proceso', filtro: s => s.estado==='en_proceso' },
-    ejecutado: { titulo: 'Servicios Ejecutados', filtro: s => s.estado==='ejecutado' },
-    cerrado:   { titulo: 'Servicios Cerrados (Mes)', filtro: s => s.estado==='cerrado' && enEsteMes(s) },
-    mes:       { titulo: 'Resumen del Mes', filtro: enEsteMes }
-  }[tipo];
-  if(!config) return;
-  const lista = DB.servicios.filter(config.filtro)
-    .sort((a,b) => (b.fecha||'') > (a.fecha||'') ? 1 : -1);
-  document.getElementById('kpi-resumen-ttl').textContent = config.titulo;
-  document.getElementById('kpi-resumen-sub').textContent = `${lista.length} servicio${lista.length!==1?'s':''}`;
-  const body = document.getElementById('kpi-resumen-body');
-  if(lista.length === 0) {
-    body.innerHTML = `<div style="text-align:center;color:var(--muted);font-size:12px;padding:24px">Sin servicios en esta categoría</div>`;
-  } else {
-    body.innerHTML = lista.map(s => {
-      const idx = DB.servicios.indexOf(s);
-      const dest = s.destino || (s._puntos||[]).find(p=>p.tipo==='final')?.destino || '—';
-      const guiasTxt = (s._puntos||[]).flatMap(p=>(p.guias||[]).map(g=>g.num_guia)).filter(Boolean).join(' · ') || s.num_guia || '—';
-      return `<div onclick="abrirDesdeKPI(${idx})" style="display:flex;justify-content:space-between;align-items:center;padding:10px 4px;border-bottom:1px solid var(--border);cursor:pointer" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='transparent'">
-        <div>
-          <div style="font-size:12px;font-weight:800;color:var(--gold)">${s.servicio_id||'—'} <span style="color:var(--text);font-weight:700">· ${s.patente||'—'} · ${s.conductor||'—'}</span></div>
-          <div style="font-size:11px;color:var(--muted);margin-top:2px">${s.cliente||'—'} · ${s.origen||'—'} → ${dest}</div>
-          <div style="font-size:10px;color:var(--muted);margin-top:2px">📅 ${s.fecha||'—'} · Guía ${guiasTxt}</div>
-        </div>
-        ${pillHTML(s.estado)}
-      </div>`;
-    }).join('');
-  }
-  document.getElementById('modal-kpi-resumen').style.display = 'flex';
-}
-function abrirDesdeKPI(idx) {
-  cerrar('modal-kpi-resumen');
-  const s = DB.servicios[idx];
-  if(!s) return;
-  if(s.estado === 'asignado') iniciarSvc(idx);
-  else if(s.estado === 'cerrado') abrirCierre(idx);
-  else abrirRegistrar(idx);
-}
 function renderServicios() {
   const fecha = document.getElementById('filtro-fecha').value;
   let mes = parseInt(document.getElementById('dash-mes')?.value ?? hoy.getMonth());
@@ -2774,14 +2667,9 @@ function renderServicios() {
   document.getElementById('cards-mobile').innerHTML = svcs.map(s => cardHTML(s, DB.servicios.indexOf(s))).join('');
   document.getElementById('tabla-svc').innerHTML    = svcs.map(s => filaHTML(s, DB.servicios.indexOf(s))).join('');
 
-  // Pasada de seguridad: cada rol restringido solo ve sus botones permitidos
-  const permitidasPorRol = {
-    despachador: ['Iniciar', 'Registrar', 'Ed. Asignación'],
-    conductor:   ['Iniciar', 'Registrar'],
-    mantenedor:  []
-  };
-  const permitidas = permitidasPorRol[_sessionUsuario?.rol];
-  if(permitidas) {
+  // Pasada de seguridad: despachador solo puede ver Iniciar / Registrar / Ed. Asignación
+  if(_sessionUsuario?.rol === 'despachador') {
+    const permitidas = ['Iniciar', 'Registrar', 'Ed. Asignación'];
     document.querySelectorAll('#cards-mobile .svc-acts button, #tabla-svc button').forEach(btn => {
       const texto = btn.textContent.trim();
       const esPermitido = permitidas.some(p => texto.includes(p));
@@ -2851,7 +2739,7 @@ function cardHTML(s,i) {
     <div class="svc-body"><div class="svc-acts">
       ${s.estado==='asignado' ? `<button class="btn btn-navy btn-sm" onclick="iniciarSvc(${i})">▶ Iniciar</button>` : ''}
       ${s.estado==='en_proceso' ? `<button class="btn btn-purple btn-sm" onclick="verServicio(${i})">📋 Registrar</button><button class="btn btn-outline btn-sm" onclick="abrirAsignar(${i})">✏ Ed. Asignación</button>` : ''}
-      ${['despachador','conductor'].includes(_sessionUsuario?.rol) ? '' : `
+      ${_sessionUsuario?.rol==='despachador' ? '' : `
       ${s.estado==='ejecutado' ? `${['coordinador','controller','administrador'].includes(_sessionUsuario?.rol) ? `<button class="btn btn-green btn-sm" onclick="abrirCierre(${i})">🔒 Cierre</button>` : ''}<button class="btn btn-outline btn-sm" onclick="verServicio(${i})">✏ Ed. Registro</button>` : ''}
       ${s.estado === 'borrador' ? `<button class="btn btn-green btn-sm" onclick="abrirCierre(${i})">🔒 Cierre</button><button class="btn btn-outline btn-sm" onclick="verServicio(${i})">✏ Ed. Registro</button>` : ''}
       ${s.estado==='cerrado' ? `<button class="btn btn-sm" style="background:rgba(201,168,76,0.15);color:var(--gold);border:1px solid rgba(201,168,76,0.3)" onclick="abrirCierre(${i})">✏ Ed. Cierre</button>` : ''}
@@ -2913,7 +2801,7 @@ function abrirAcciones(i, ev) {
     pop.innerHTML = `<div style="display:flex;flex-direction:column;gap:4px">
       ${s.estado==='asignado' ? `<button class="btn btn-navy btn-sm" onclick="iniciarSvc(${i})">▶ Iniciar</button>` : ''}
       ${s.estado==='en_proceso' ? `<button class="btn btn-purple btn-sm" onclick="verServicio(${i})">📋 Registrar</button><button class="btn btn-outline btn-sm" onclick="abrirAsignar(${i})">✏ Ed. Asignación</button>` : ''}
-      ${['despachador','conductor'].includes(_sessionUsuario?.rol) ? '' : `
+      ${_sessionUsuario?.rol==='despachador' ? '' : `
       ${s.estado==='ejecutado' ? `${['coordinador','controller','administrador'].includes(_sessionUsuario?.rol) ? `<button class="btn btn-green btn-sm" onclick="abrirCierre(${i})">🔒 Cierre</button>` : ''}<button class="btn btn-outline btn-sm" onclick="verServicio(${i})">✏ Ed. Registro</button>` : ''}
       ${s.estado === 'borrador' ? `<button class="btn btn-green btn-sm" onclick="abrirCierre(${i})">🔒 Cierre</button><button class="btn btn-outline btn-sm" onclick="verServicio(${i})">✏ Ed. Registro</button>` : ''}
       ${s.estado==='cerrado' ? `<button class="btn btn-sm" style="background:rgba(201,168,76,0.15);color:var(--gold);border:1px solid rgba(201,168,76,0.3)" onclick="abrirCierre(${i})">✏ Ed. Cierre</button>` : ''}
@@ -2958,16 +2846,8 @@ function renderClientes() {
 }
 
 function poblarSelects() {
-  const ordenPatente = ['XR','GK','WR','GC','BP','DS'];
-  const flotaOrdenada = [...DB.flota.filter(f=>f.activo!==false)].sort((a,b) => {
-    const ia = ordenPatente.indexOf((a.patente||'').slice(0,2));
-    const ib = ordenPatente.indexOf((b.patente||'').slice(0,2));
-    const pa = ia === -1 ? 999 : ia;
-    const pb = ib === -1 ? 999 : ib;
-    return pa !== pb ? pa - pb : (a.patente||'').localeCompare(b.patente||'');
-  });
   document.getElementById('asig-patente').innerHTML =
-    flotaOrdenada.map(f => {
+    DB.flota.filter(f=>f.activo!==false).map(f => {
       const tipo = (f.tipo||'').replace(/_/g,' ');
       return `<option value="${f.patente}">${f.patente}${tipo ? ' — '+tipo : ''}</option>`;
     }).join('');
@@ -2981,7 +2861,7 @@ function poblarSelects() {
     toast('⚠ Debes agregar clientes en SETUP antes de asignar');
   } else {
     document.getElementById('asig-cliente').innerHTML =
-      DB.clientes.map(c => `<option value="${c.nombre}" ${c.nombre==='Sollem SpA'?'selected':''}>${c.nombre}</option>`).join('') +
+      DB.clientes.map(c => `<option value="${c.nombre}">${c.nombre}</option>`).join('') +
       '<option value="__otro__">+ Nuevo cliente...</option>';
   }
 }
@@ -3060,8 +2940,6 @@ async function abrirAsignar() {
   document.getElementById('wrap-asig-destino-custom').style.display = 'none';
   const sAsig2 = DB.servicios[svcActivoIdx];
   if(sAsig2) obsRenderHilo(document.getElementById('asig-obs-hilo'), obsParseHilo(sAsig2.notas||''));
-  // Sincronizar destinos con el cliente que haya quedado preseleccionado por defecto
-  checkOtroCliente();
   document.getElementById('modal-asignar').style.display = 'flex';
 }
 function checkAsigDestino() {
@@ -3074,30 +2952,24 @@ function checkOtroOrigen() {
   document.getElementById('wrap-origen-custom').style.display =
     document.getElementById('asig-origen').value === 'otro' ? 'block' : 'none';
 }
-function getDestinosCliente(clienteVal) {
-  if(!clienteVal || clienteVal === '__otro__') return [];
-  return [...new Set((DB.tarifarios||[])
-    .filter(function(t){ return (t.cliente||'').toUpperCase() === clienteVal.toUpperCase(); })
-    .map(function(t){ return t.destino; })
-    .filter(Boolean))].sort();
-}
 function checkOtroCliente() {
   const clienteVal = document.getElementById('asig-cliente').value;
   document.getElementById('wrap-cliente-custom').style.display =
     clienteVal === '__otro__' ? 'block' : 'none';
   // Filtrar destinos por cliente seleccionado
   const selDest = document.getElementById('asig-destino');
-  const destinos = getDestinosCliente(clienteVal);
   if(selDest && clienteVal && clienteVal !== '__otro__') {
+    const destinos = (DB.tarifarios||[])
+      .filter(function(t){ return (t.cliente||'').toUpperCase() === clienteVal.toUpperCase(); })
+      .map(function(t){ return t.destino; })
+      .filter(Boolean);
     selDest.innerHTML = '<option value="">Selecciona destino...</option>'
-      + destinos.map(function(d){ return '<option value="'+d+'">'+d+'</option>'; }).join('')
+      + [...new Set(destinos)].sort().map(function(d){ return '<option value="'+d+'">'+d+'</option>'; }).join('')
       + '<option value="__otro__">✏ Otro destino...</option>';
     document.getElementById('wrap-asig-destino-custom').style.display = 'none';
   } else if(!clienteVal || clienteVal === '__otro__') {
     if(selDest) selDest.innerHTML = '<option value="">Selecciona cliente primero...</option>';
   }
-  // Refrescar la lista de destinos disponibles en los puntos intermedios ya agregados
-  asigRenderPuntos();
 }
 async function siguienteId() {
   const emp = DB._empresa || _sessionUsuario?.empresa || 'global_solutions';
@@ -3126,34 +2998,14 @@ function asigRenderPuntos() {
   const lista = document.getElementById('asig-puntos-lista');
   const btn   = document.getElementById('asig-btn-agregar-punto');
   if(!lista) return;
-  const clienteVal = document.getElementById('asig-cliente')?.value || '';
-  const destinos = getDestinosCliente(clienteVal);
-  lista.innerHTML = _asigPuntos.map((p, i) => {
-    const esOtro = p.esOtro || (p.nombre && !destinos.includes(p.nombre));
-    return `
-    <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px;flex-wrap:wrap">
+  lista.innerHTML = _asigPuntos.map((p, i) => `
+    <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px">
       <div style="font-size:10px;font-weight:800;color:var(--gold);min-width:20px">P${p.num}</div>
-      <select class="inp" style="flex:1;min-width:140px" onchange="asigPuntoSelect(${i}, this.value)">
-        <option value="">Selecciona destino...</option>
-        ${destinos.map(d => `<option value="${d}" ${!esOtro && p.nombre===d ? 'selected':''}>${d}</option>`).join('')}
-        <option value="__otro__" ${esOtro ? 'selected':''}>✏ Otro destino...</option>
-      </select>
-      ${esOtro ? `<input class="inp" style="flex:1;min-width:140px" type="text" placeholder="Destino punto ${p.num}"
-        value="${p.nombre||''}" onchange="_asigPuntos[${i}].nombre=this.value.toUpperCase()">` : ''}
+      <input class="inp" style="flex:1" type="text" placeholder="Destino punto ${p.num}"
+        value="${p.nombre}" onchange="_asigPuntos[${i}].nombre=this.value.toUpperCase()">
       <button onclick="asigEliminarPunto(${i})" style="background:rgba(239,68,68,0.2);border:1px solid rgba(239,68,68,0.4);color:var(--danger);border-radius:5px;padding:4px 8px;cursor:pointer;font-size:11px">✕</button>
-    </div>`;
-  }).join('');
+    </div>`).join('');
   if(btn) btn.style.display = _asigPuntos.length >= 6 ? 'none' : '';
-}
-function asigPuntoSelect(i, val) {
-  if(val === '__otro__') {
-    _asigPuntos[i].esOtro = true;
-    _asigPuntos[i].nombre = '';
-  } else {
-    _asigPuntos[i].esOtro = false;
-    _asigPuntos[i].nombre = val;
-  }
-  asigRenderPuntos();
 }
 
 function asigLimpiarPuntos() {
@@ -3192,8 +3044,7 @@ async function guardarAsignacion() {
   const horaLlegada = document.getElementById('asig-hora-llegada').value || null;
   const destinoRaw = document.getElementById('asig-destino').value.trim();
   const destino = destinoRaw === '__otro__' ? (document.getElementById('asig-destino-custom')?.value.trim()||'') : destinoRaw;
-  const tipoServicio = document.getElementById('asig-tipo-servicio')?.value || 'normal';
-  const nuevo = { servicio_id:svId, patente, conductor, cliente, origen, destino: destino||null, fecha, estado:'asignado', margen_servicio:0, puntos_entrega:puntosAsig.length, punto_inicio:puntoInicio, tipo_operacion:tipoOperacion, tipo_servicio:tipoServicio, empresa: DB._empresa||'global_solutions', puntos_asignados: puntosAsigStr, hora_inicio_asignada: horaInicio, hora_llegada_estimada: horaLlegada };
+  const nuevo = { servicio_id:svId, patente, conductor, cliente, origen, destino: destino||null, fecha, estado:'asignado', margen_servicio:0, puntos_entrega:puntosAsig.length, punto_inicio:puntoInicio, tipo_operacion:tipoOperacion, empresa: DB._empresa||'global_solutions', puntos_asignados: puntosAsigStr, hora_inicio_asignada: horaInicio, hora_llegada_estimada: horaLlegada };
   const {data:inserted, error} = await supa.from('servicios_piloto').insert(nuevo).select();
   if(error) { toast('Error: '+error.message); return; }
   let svcInsertado = inserted?.[0];
@@ -3204,7 +3055,80 @@ async function guardarAsignacion() {
   DB.servicios.unshift(svcInsertado);
   cerrar('modal-asignar');
   renderServicios(); renderKPIs();
-  toast(`✓ ${svId} asignado — ${patente} · ${conductor}`);
+  mostrarPanelAsignacionOk(svcInsertado);
+}
+
+let _ultimaAsignacion = null;
+function mostrarPanelAsignacionOk(s) {
+  _ultimaAsignacion = s;
+  const panel = document.getElementById('panel-asig-ok');
+  const resumen = document.getElementById('panel-asig-resumen');
+  if (!panel || !resumen) return;
+  resumen.textContent = `${s.servicio_id} — ${s.patente} · ${s.conductor} · ${s.cliente}`;
+  panel.style.display = 'block';
+}
+
+function _destinoFinalAsignacion(s) {
+  if (s.destino) return s.destino;
+  if (s.puntos_asignados) {
+    try {
+      const pts = JSON.parse(s.puntos_asignados);
+      if (pts.length > 0) return pts[pts.length-1].nombre || '';
+    } catch(e) {}
+  }
+  return '';
+}
+
+function descargarPdfAsignacion() {
+  const s = _ultimaAsignacion;
+  if (!s || !window.jspdf) { toast('⚠ No se pudo generar el PDF'); return; }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  const destino = _destinoFinalAsignacion(s);
+  let puntos = [];
+  if (s.puntos_asignados) { try { puntos = JSON.parse(s.puntos_asignados); } catch(e) {} }
+
+  doc.setFont('helvetica','bold'); doc.setFontSize(16);
+  doc.text(`GLOBAL SOLUTIONS — Asignación ${s.servicio_id}`, 20, 20);
+
+  doc.setFontSize(9); doc.setTextColor(120);
+  const campos = [
+    ['CLIENTE', s.cliente||'', 'PATENTE', s.patente||''],
+    ['FECHA INICIO', s.fecha||'', 'ORIGEN', s.origen||''],
+    ['DESTINO', destino, 'CONDUCTOR', s.conductor||''],
+    ['HORA PRESENTACIÓN CARGUÍO', s.hora_inicio_asignada||'', 'ESTADO', (s.estado||'').toUpperCase()],
+  ];
+  let y = 35;
+  campos.forEach(([l1,v1,l2,v2]) => {
+    doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(120);
+    doc.text(l1, 20, y); doc.text(l2, 110, y);
+    doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.setTextColor(20);
+    doc.text((v1||'').toUpperCase(), 20, y+6); doc.text((v2||'').toUpperCase(), 110, y+6);
+    y += 16;
+  });
+
+  doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(180,140,20);
+  doc.text('RUTA DE ESTE SERVICIO', 20, y+2); y += 10;
+  doc.setFontSize(11); doc.setTextColor(20);
+  doc.text(`SALIDA: ${(s.origen||'').toUpperCase()}`, 20, y); y += 8;
+  puntos.forEach((p,i) => {
+    doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(20);
+    doc.text(`${i+1}. ${(p.nombre||'').toUpperCase()}`, 20, y);
+    doc.setFontSize(8); doc.setTextColor(26,79,160);
+    const etiqueta = (i === puntos.length-1) ? 'DESTINO FINAL' : 'PUNTO INTERMEDIO';
+    doc.text(etiqueta, 140, y);
+    y += 8;
+  });
+
+  doc.save(`Asignacion_${s.servicio_id}.pdf`);
+}
+
+function enviarWhatsappAsignacion() {
+  const s = _ultimaAsignacion;
+  if (!s) { toast('⚠ No hay asignación para enviar'); return; }
+  const destino = _destinoFinalAsignacion(s);
+  const msg = `Asignación ${s.servicio_id}: ${s.patente} - ${s.conductor}\n${s.origen} → ${destino}\nCliente: ${s.cliente}${s.hora_inicio_asignada ? '\nPresentación carguío: '+s.hora_inicio_asignada : ''}`;
+  window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
 }
 
 // ══ PASO 1 — INICIAR ══
@@ -3259,7 +3183,7 @@ async function confirmarInicio() {
   if(!s.id) { toast('Error: servicio sin ID'); return; }
   const fechaInicio = document.getElementById('ini-fecha-inicio').value;
   const {error} = await supa.from('servicios_piloto').update({
-    estado:'en_proceso', fecha:fechaInicio, hora_inicio: new Date().toISOString()
+    estado:'en_proceso', fecha:fechaInicio
   }).eq('id',s.id);
   if(error) { toast('Error: '+error.message); return; }
   DB.servicios[svcIniciarIdx] = {...s, estado:'en_proceso'};
@@ -3284,27 +3208,23 @@ function abrirRegistrar(i) {
   // Cargar puntos: primero desde notas (_puntos), si vacío usar puntos_asignados del coordinador
   if(s._puntos && s._puntos.length > 0) {
     puntosData = [...s._puntos];
-  } else {
-    // Los puntos intermedios y el destino principal se guardan en campos separados al asignar —
-    // unificarlos siempre en una sola secuencia: intermedios + destino principal como final real.
-    let intermedios = [];
-    if(s.puntos_asignados) {
-      try {
-        const asig = JSON.parse(s.puntos_asignados);
-        if(asig && asig.length > 0) {
-          intermedios = asig.map(p => ({
-            tipo: 'intermedio', destino: (p.nombre||'').toUpperCase(),
-            valor: null, num_guia: '', guias: [], capturada: false, procesando: false
-          }));
-        }
-      } catch(e) {}
+  } else if(s.puntos_asignados) {
+    try {
+      const asig = JSON.parse(s.puntos_asignados);
+      if(asig && asig.length > 0) {
+        puntosData = asig.map(p => ({
+          tipo: p.num === asig.length ? 'final' : 'intermedio',
+          destino: (p.nombre||'').toUpperCase(),
+          valor: null, num_guia: '', guias: [], capturada: false, procesando: false
+        }));
+      } else {
+        puntosData = [{tipo:null,destino:'',valor:null,num_guia:'',capturada:false,procesando:false}];
+      }
+    } catch(e) {
+      puntosData = [{tipo:null,destino:'',valor:null,num_guia:'',capturada:false,procesando:false}];
     }
-    const finalReal = { tipo:'final', destino: (s.destino||'').toUpperCase(), valor:null, num_guia:'', guias:[], capturada:false, procesando:false };
-    // Evitar duplicar si el destino principal coincide con el último intermedio ya cargado
-    const yaIncluido = intermedios.some(p => p.destino === finalReal.destino && finalReal.destino);
-    puntosData = finalReal.destino && !yaIncluido ? [...intermedios, finalReal]
-               : intermedios.length > 0 ? intermedios
-               : [{tipo:null,destino:'',valor:null,num_guia:'',capturada:false,procesando:false}];
+  } else {
+    puntosData = [{tipo:null,destino:'',valor:null,num_guia:'',capturada:false,procesando:false}];
   }
   document.getElementById('reg-id').textContent           = s.servicio_id||'—';
   document.getElementById('reg-sub').textContent          = `${s.patente} · ${s.conductor} · ${s.cliente}`;
@@ -3316,24 +3236,6 @@ function abrirRegistrar(i) {
   const elDestReg = document.getElementById('reg-destino-info');
   if(elDestReg) elDestReg.textContent = pFinalReg?.destino || s.destino || '—';
   document.getElementById('reg-conductor-info').textContent = s.conductor||'—';
-  const btnAgregarPtoReg = document.getElementById('btn-agregar-punto-reg');
-  if(btnAgregarPtoReg) btnAgregarPtoReg.style.display = _sessionUsuario?.rol === 'conductor' ? 'none' : '';
-  // Ruta secuencial completa, con etiqueta de tipo en cada parada
-  const elRuta = document.getElementById('reg-ruta-secuencial');
-  if(elRuta) {
-    const pasos = [s.origen||'ORIGEN', ...puntosData.map(p=>p.destino||'—')];
-    elRuta.innerHTML = `<div style="font-size:9px;font-weight:800;letter-spacing:0.12em;color:var(--gold);margin-bottom:6px">RUTA DE ESTE SERVICIO</div>
-      <div style="display:flex;flex-direction:column;gap:4px">
-        ${pasos.map((nombre, idx) => {
-          if(idx === 0) return `<div style="font-size:12px;font-weight:700;color:var(--muted)">🚩 Salida: ${nombre}</div>`;
-          const p = puntosData[idx-1];
-          const etiqueta = p.tipo === 'final' ? '🏁 Destino Final' : '🔁 Punto Intermedio';
-          return `<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:700;padding-left:14px;border-left:2px solid var(--border)">
-            <span>${idx}. ${nombre}</span><span style="font-size:10px;color:var(--gold);font-weight:800">${etiqueta}</span>
-          </div>`;
-        }).join('')}
-      </div>`;
-  }
   document.getElementById('reg-fecha-termino').value      = s._fecha_termino || s.fecha || hoyStr;
   const tipoEl = document.getElementById('reg-tipo-entrega');
   if(tipoEl) tipoEl.value = s.tipo_entrega || 'normal';
@@ -3364,49 +3266,31 @@ function onFechaTermino() {
 }
 
 function renderPuntos() {
-  const activeIdx = puntosData.findIndex(p => !p.capturada);
   document.getElementById('puntos-container').innerHTML =
-    puntosData.map((p,pi) => puntosHTML(p,pi,activeIdx)).join('');
+    puntosData.map((p,pi) => puntosHTML(p,pi)).join('');
 }
 
-function puntosHTML(p, pi, activeIdx) {
-  const esConductorPunto = _sessionUsuario?.rol === 'conductor';
-  const esCompletado = esConductorPunto && p.capturada;
-
-  // Punto ya capturado: solo lectura, sin poder tocar nada
-  if(esCompletado) {
-    return `<div style="background:var(--surface);border-radius:10px;padding:12px;margin-bottom:10px;border:1px solid rgba(34,197,94,0.35);opacity:0.85">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-        <div style="font-family:'DM Sans',sans-serif;font-size:14px;font-weight:800;color:var(--green)">
-          📍 PUNTO ${pi+1} — ${p.tipo==='final'?'🏁 Destino Final':'🔁 Intermedio'} <span style="color:var(--green)">✓</span>
-        </div>
-      </div>
-      <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:6px">${p.destino||'—'}</div>
-      ${(p.guias||[]).map(g => `<div style="font-size:10px;color:var(--muted)">Guía N° ${g.num_guia} · ${g.fecha_guia||'—'}</div>`).join('')}
-      <div style="font-size:10px;color:var(--muted);margin-top:6px;font-style:italic">Ya registrado — no editable desde acá</div>
-    </div>`;
-  }
+function puntosHTML(p, pi) {
   return `<div style="background:var(--surface);border-radius:10px;padding:12px;margin-bottom:10px;border:1px solid var(--border)">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
       <div style="font-family:'DM Sans',sans-serif;font-size:14px;font-weight:800;color:var(--gold)">
         📍 PUNTO ${pi+1} ${p.capturada ? '<span style="color:var(--green)">✓</span>' : ''}
       </div>
-      ${(puntosData.length > 1 && !esConductorPunto) ? `<button class="btn btn-red btn-sm" onclick="eliminarPunto(${pi})">✕</button>` : ''}
+      ${puntosData.length > 1 ? `<button class="btn btn-red btn-sm" onclick="eliminarPunto(${pi})">✕</button>` : ''}
     </div>
-    ${esConductorPunto ? '' : `<div style="display:flex;gap:6px;margin-bottom:10px">
+    <div style="display:flex;gap:6px;margin-bottom:10px">
       <button class="btn btn-sm ${p.tipo==='intermedio'?'btn-navy':'btn-outline'}" onclick="setTipo(${pi},'intermedio')">🔁 Intermedio</button>
       <button class="btn btn-sm ${p.tipo==='final'?'btn-navy':'btn-outline'}" onclick="setTipo(${pi},'final')">🏁 Destino Final</button>
-    </div>`}
+    </div>
     <div style="margin-bottom:8px">
       <label class="lbl">Destino del Punto</label>
-      ${esConductorPunto ? `<div style="font-size:13px;font-weight:800;color:var(--text);padding:8px 0">${p.tipo==='final'?'🏁':'🔁'} ${p.destino||'—'}</div>` : `
       <select class="inp ${p.destino?'':'pend'}" style="${p.destino?'':'border-color:var(--orange)'}"
         id="dest-${pi}" onchange="setDestinoSelect(${pi},this.value)">
         <option value="">Selecciona destino...</option>
         ${(()=>{ const svcCliente = (DB.servicios[svcActivoIdx]?.cliente||'').toUpperCase(); const tarifsFiltrados = (DB.tarifarios||[]).filter(t=>(t.cliente||'').toUpperCase()===svcCliente); const destinos = [...new Set(tarifsFiltrados.map(t=>t.destino).filter(Boolean))].sort(); return destinos.map(d=>`<option value="${d}" ${p.destino===d?'selected':''}>${d}</option>`).join(''); })()} 
         <option value="__otro__" ${p.destino&&![...(DB.tarifarios||[]).map(t=>t.destino)].includes(p.destino)?'selected':''}>✏ Otro destino...</option>
       </select>
-      ${p.destino && ![...(DB.tarifarios||[]).map(t=>t.destino)].includes(p.destino) ? `<input class="inp" style="margin-top:4px" value="${p.destino}" placeholder="Escribe el destino" id="dest-manual-${pi}" onblur="setDestino(${pi},this.value)">` : ''}`}
+      ${p.destino && ![...(DB.tarifarios||[]).map(t=>t.destino)].includes(p.destino) ? `<input class="inp" style="margin-top:4px" value="${p.destino}" placeholder="Escribe el destino" id="dest-manual-${pi}" onblur="setDestino(${pi},this.value)">` : ''}
     </div>
     <!-- Tarifa oculta al conductor — visible solo para coordinador en modal costos -->
     <!-- Guías registradas -->
@@ -3419,11 +3303,10 @@ function puntosHTML(p, pi, activeIdx) {
             <div style="flex:1">
               <div style="font-size:11px;font-weight:800;color:var(--green)">Guía N° ${g.num_guia}</div>
               <div style="font-size:10px;color:var(--muted)">${g.fecha_guia||'—'}</div>
-              ${g.descripcion_mercaderia ? `<div style="font-size:10px;color:var(--gold);margin-top:2px">📦 ${g.descripcion_mercaderia}</div>` : ''}
             </div>
             ${g.img_url ? `<button class="btn btn-outline btn-sm" onclick="window.open('${g.img_url}','_blank')">👁 Ver</button>` : ''}
-            ${esConductorPunto ? '' : `<button class="btn btn-sm" style="background:rgba(255,107,0,0.15);color:var(--gold);padding:4px 8px;border:1px solid rgba(255,107,0,0.3)" onclick="editarGuia(${pi},${gi})">✏</button>
-            <button class="btn btn-red btn-sm" onclick="eliminarGuia(${pi},${gi})">✕</button>`}
+            <button class="btn btn-sm" style="background:rgba(255,107,0,0.15);color:var(--gold);padding:4px 8px;border:1px solid rgba(255,107,0,0.3)" onclick="editarGuia(${pi},${gi})">✏</button>
+            <button class="btn btn-red btn-sm" onclick="eliminarGuia(${pi},${gi})">✕</button>
           </div>
           <!-- Modo edición (oculto por defecto) -->
           <div id="guia-edit-${pi}-${gi}" style="display:none;background:rgba(255,107,0,0.1);border-radius:8px;padding:10px;border:1.5px solid var(--gold)">
@@ -3539,13 +3422,7 @@ function buscarValor(pi) {
       return cli.includes((svc.cliente||'').toLowerCase().split(' ')[0]) &&
         (dest.includes(dl.split(',')[0].trim()) || dl.includes(dest.split(',')[0].trim()));
     });
-    if(match && match.tarifa_neta > 0) {
-      let valorFinal = match.tarifa_neta;
-      if(svc.tipo_servicio === 'devolucion_full') valorFinal = Math.round(match.tarifa_neta * 1.0);
-      else if(svc.tipo_servicio === 'devolucion_parcial') valorFinal = Math.round(match.tarifa_neta * 0.3);
-      puntosData[pi].valor = valorFinal;
-      renderPuntos();
-    }
+    if(match && match.tarifa_neta > 0) { puntosData[pi].valor = match.tarifa_neta; renderPuntos(); }
   }
 }
 
@@ -3600,7 +3477,7 @@ async function procesarGuia(input, pi) {
           max_tokens: 400,
           messages: [{role:'user', content:[
             {type:'image', source:{type:'base64', media_type:'image/jpeg', data:b64}},
-            {type:'text', text:`Eres un experto en documentos de despacho chilenos. En esta imagen hay una guía de despacho o factura. El NÚMERO DE GUÍA o FOLIO está casi siempre en la esquina SUPERIOR DERECHA del documento, precedido por "N°", "Folio", "Guía N°" o similar. Es un número de 4 a 7 dígitos. NO confundas el folio con: RUT (tiene guión y dígito verificador), códigos de barra, números de orden de compra largos, ni números de bultos. El folio es el número más pequeño y prominente en la esquina superior derecha. Extrae SOLO ese número. También extrae la fecha de emisión (formato DD/MM/AAAA) y el nombre del cliente comparándolo con esta lista: ${DB.clientes.map(c=>c.nombre).join(', ')}.${(DB.servicios[svcActivoIdx]?.cliente||'').toUpperCase().includes('SOLLEM') ? ' Además, extrae el contenido de la columna "Descripción" de la tabla de productos (ej. "SULFATO DE MAGNESIO HEPTAHIDRATADO") — es el nombre del producto/mercadería transportada, no el código. Responde SOLO con JSON sin explicación ni markdown: {"num_guia":"","fecha_emision":"","cliente":"","descripcion_mercaderia":""}' : ' Responde SOLO con JSON sin explicación ni markdown: {"num_guia":"","fecha_emision":"","cliente":""}'}`}
+            {type:'text', text:`Eres un experto en documentos de despacho chilenos. En esta imagen hay una guía de despacho o factura. El NÚMERO DE GUÍA o FOLIO está casi siempre en la esquina SUPERIOR DERECHA del documento, precedido por "N°", "Folio", "Guía N°" o similar. Es un número de 4 a 7 dígitos. NO confundas el folio con: RUT (tiene guión y dígito verificador), códigos de barra, números de orden de compra largos, ni números de bultos. El folio es el número más pequeño y prominente en la esquina superior derecha. Extrae SOLO ese número. También extrae la fecha de emisión (formato DD/MM/AAAA) y el nombre del cliente comparándolo con esta lista: ${DB.clientes.map(c=>c.nombre).join(', ')}. Responde SOLO con JSON sin explicación ni markdown: {"num_guia":"","fecha_emision":"","cliente":""}`}
           ]}]
         })
       });
@@ -3627,7 +3504,7 @@ async function procesarGuia(input, pi) {
         }
       } catch(e) { console.warn('Storage upload failed:', e.message); }
       if(!puntosData[pi].guias) puntosData[pi].guias = [];
-      puntosData[pi].guias.push({num_guia:json.num_guia, fecha_guia:json.fecha_emision||'', img_url:imgUrl, descripcion_mercaderia:json.descripcion_mercaderia||''});
+      puntosData[pi].guias.push({num_guia:json.num_guia, fecha_guia:json.fecha_emision||'', img_url:imgUrl});
       puntosData[pi] = {...puntosData[pi], capturada:true, procesando:false, num_guia:puntosData[pi].guias.map(g=>g.num_guia).join(',')};
       // Buscar tarifa automática del tarifario
       const match = DB.tarifarios.find(t=>(t.cliente||'').toLowerCase().includes((DB.servicios[svcActivoIdx]?.cliente||'').toLowerCase().split(' ')[0]));
@@ -3704,7 +3581,7 @@ async function guardarEjecucion() {
   const {error} = await supa.from('servicios_piloto').update({
     estado:'ejecutado',
     destino: pFinal.destino,
-    hora_termino: new Date().toISOString(),
+    hora_termino: fechaTerm ? fechaTerm+'T23:59:00' : null,
     notas: `Retorno: ${retorno}|_PUNTOS:${puntosJSON}`
   }).eq('id',s.id);
   if(error) { toast('Error: '+error.message); return; }
@@ -5852,7 +5729,7 @@ async function iniciarLogin() {
   if(saved) {
     try {
       const sess = JSON.parse(saved);
-      if(sess.pin && sess.empresa && (['coordinador','controller','administrador','conductor','despachador','mantenedor'].includes(sess.rol) || sess.modo === 'flota' || sess.modo === 'demo')) {
+      if(sess.pin && sess.empresa && (['coordinador','controller','administrador','conductor','despachador'].includes(sess.rol) || sess.modo === 'flota' || sess.modo === 'demo')) {
         _sessionUsuario = sess;
         document.getElementById('login-screen').style.display = 'none';
         document.getElementById('pantalla-modulos').style.display = 'none';
@@ -5892,31 +5769,10 @@ async function iniciarLogin() {
             if(parseInt(selMesD.value) < 6) selMesD.value = '6';
           }
         }
-        if(sess.rol === 'mantenedor') {
-          // Mantenedor: solo Disponibilidad + Servicios sin datos financieros ni botón asignar
-          ['tab-btn-liquidaciones','tab-btn-flota','tab-btn-clientes','tab-btn-gastos',
-           'tab-btn-resultados','tab-btn-informes','tab-btn-config','tab-btn-setup'].forEach(id => {
-            const el = document.getElementById(id); if(el) el.style.display = 'none';
-          });
-          const btnSvcM = document.getElementById('tab-btn-servicios');
-          const btnDispM = document.getElementById('tab-btn-disponibilidad');
-          if(btnDispM) { btnDispM.style.order = '-1'; setTab('disponibilidad', btnDispM); }
-          if(btnSvcM) btnSvcM.style.order = '0';
-          const setupExtraM = document.getElementById('setup-costos-extra');
-          if(setupExtraM) setupExtraM.style.display = 'none';
-          ['kpi-ingreso-mes','kpi-costos-mes','kpi-margen-teo','kpi-margen-prom','k-margen-real-kpi'].forEach(id => {
-            const el = document.getElementById(id); if(el) el.style.display = 'none';
-          });
-          const btnAsigM = document.getElementById('btn-asignar-nuevo');
-          if(btnAsigM) btnAsigM.style.display = 'none';
-          const styleMant = document.createElement('style');
-          styleMant.textContent = '.th-financ, .td-financ { display: none !important; }';
-          document.head.appendChild(styleMant);
-        }
         if(sess.rol === 'conductor') {
           // Ocultar tabs que no corresponden al conductor
           ['tab-btn-liquidaciones','tab-btn-flota','tab-btn-clientes','tab-btn-gastos',
-           'tab-btn-resultados','tab-btn-informes','tab-btn-config','tab-btn-setup','tab-btn-disponibilidad'].forEach(id => {
+           'tab-btn-resultados','tab-btn-informes','tab-btn-config','tab-btn-setup'].forEach(id => {
             const el = document.getElementById(id);
             if(el) el.style.display = 'none';
           });
@@ -5939,10 +5795,6 @@ async function iniciarLogin() {
           if(filtroFecha) filtroFecha.style.display = 'none';
           const dasMes = document.getElementById('dash-mes');
           if(dasMes) dasMes.closest('select') && (dasMes.style.display = 'none');
-          // Ocultar columnas financieras de la tabla
-          const styleCond = document.createElement('style');
-          styleCond.textContent = '.th-financ, .td-financ { display: none !important; }';
-          document.head.appendChild(styleCond);
         }
         init();
         return;
@@ -6066,21 +5918,6 @@ function entrarModulo(modulo) {
         Array.from(selMes.options).forEach(opt => { if(parseInt(opt.value) < 6) opt.remove(); });
         if(parseInt(selMes.value) < 6) selMes.value = '6';
       }
-    }
-    if(_sessionUsuario.rol === 'mantenedor') {
-      ['tab-btn-liquidaciones','tab-btn-flota','tab-btn-clientes','tab-btn-gastos',
-       'tab-btn-resultados','tab-btn-informes','tab-btn-config','tab-btn-setup'].forEach(id => {
-        const el = document.getElementById(id); if(el) el.style.display = 'none';
-      });
-      ['kpi-ingreso-mes','kpi-costos-mes','kpi-margen-teo','kpi-margen-prom','k-margen-real-kpi'].forEach(id => {
-        const el = document.getElementById(id); if(el) el.style.display = 'none';
-      });
-      const btnAsigM2 = document.getElementById('btn-asignar-nuevo');
-      if(btnAsigM2) btnAsigM2.style.display = 'none';
-      const btnDispM2 = document.getElementById('tab-btn-disponibilidad');
-      const btnSvcM2  = document.getElementById('tab-btn-servicios');
-      if(btnDispM2) { btnDispM2.style.order = '-1'; setTab('disponibilidad', btnDispM2); }
-      if(btnSvcM2) btnSvcM2.style.order = '0';
     }
     init();
   }
@@ -6709,8 +6546,6 @@ async function setupGuardarTodo() {
 
 let _dispData = {};
 let _dispForm = {};
-let _dispMesFiltro = null;
-function dispCambiarMesFiltro(val) { _dispMesFiltro = val; renderDisponibilidad(); }
 
 async function cargarDisponibilidad() {
   const emp = DB._empresa || _sessionUsuario?.empresa;
@@ -6802,20 +6637,8 @@ function renderDisponibilidad() {
     <button class="btn btn-navy" onclick="guardarDisponibilidad()" style="width:100%">💾 Guardar registro</button>
   </div>`;
 
-  const mesActualStr = `${hoy.getFullYear()}-${String(hoy.getMonth()+1).padStart(2,'0')}`;
-  if(!_dispMesFiltro) _dispMesFiltro = mesActualStr;
-  const mesesDisponibles = [...new Set(Object.keys(_dispData).map(f => f.slice(0,7)))];
-  if(!mesesDisponibles.includes(mesActualStr)) mesesDisponibles.push(mesActualStr);
-  mesesDisponibles.sort((a,b)=>b.localeCompare(a));
-  const nombreMes = (ym) => { const [y,m]=ym.split('-'); return `${MESES[parseInt(m)-1]} ${y}`; };
-  const selectorMesHTML = `<div style="margin-bottom:10px">
-    <select class="inp" style="width:auto;display:inline-block" onchange="dispCambiarMesFiltro(this.value)">
-      ${mesesDisponibles.map(ym => `<option value="${ym}" ${ym===_dispMesFiltro?'selected':''}>${nombreMes(ym)}</option>`).join('')}
-    </select>
-  </div>`;
-
-  const todasFechas = Object.keys(_dispData).filter(f => f.startsWith(_dispMesFiltro)).sort((a,b) => new Date(b) - new Date(a));
-  const registrosHTML = todasFechas.length === 0 ? `<div style="text-align:center;color:var(--muted);font-size:12px;padding:20px">Sin registros en ${nombreMes(_dispMesFiltro)}</div>` :
+  const todasFechas = Object.keys(_dispData).sort((a,b) => new Date(b) - new Date(a));
+  const registrosHTML = todasFechas.length === 0 ? `<div style="text-align:center;color:var(--muted);font-size:12px;padding:20px">Sin registros aún</div>` :
   todasFechas.map(fecha => {
     const regs = _dispData[fecha] || {};
     const patentes = Object.keys(regs);
@@ -6825,8 +6648,7 @@ function renderDisponibilidad() {
     const disp = patentes.filter(p=>regs[p].estado==='Disponible').length;
     const mant = patentes.filter(p=>regs[p].estado==='Mantención').length;
     const ocup = FLOTA.length>0 ? Math.round((enServ/FLOTA.length)*100) : 0;
-    const fechaISO = /^\d{2}-\d{2}-\d{4}$/.test(fecha) ? fecha.split('-').reverse().join('-') : fecha;
-    const fechaLabel = new Date(fechaISO+'T00:00:00').toLocaleDateString('es-CL');
+    const fechaLabel = new Date(fecha+'T00:00:00').toLocaleDateString('es-CL');
 
     return `<div style="border:1px solid var(--border);border-radius:8px;margin-bottom:6px;overflow:hidden;background:var(--surface)">
       <div onclick="dispActualizarForm('hist_${fecha}', ${!isOpen})" style="padding:10px 12px;cursor:pointer;display:flex;justify-content:space-between;align-items:center">
@@ -6858,7 +6680,6 @@ function renderDisponibilidad() {
 
   cont.innerHTML = `${formHTML}
     <div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:0.05em;margin-bottom:8px">REGISTROS DEL MES</div>
-    ${selectorMesHTML}
     ${registrosHTML}`;
 }
 
@@ -6956,7 +6777,7 @@ async function eliminarLiquidacion(id, e) {
   // Coordinador Global: solo PIN 0101
   const puedeEliminar = rol === 'admin_kaptura' || 
     (rol === 'coordinador' && pin === '1996' && emp === 'flota_297221') ||
-    (rol === 'coordinador' && pin === '0002' && emp === 'global_solutions');
+    (rol === 'coordinador' && pin === '0101' && emp === 'global_solutions');
   if(!puedeEliminar) { toast('Sin permiso para eliminar liquidaciones'); return; }
   if(!confirm('¿Eliminar esta liquidación? Esta acción no se puede deshacer.')) return;
   const {error} = await supa.from('kaptura_liquidaciones').delete().eq('id', id);
@@ -6969,9 +6790,7 @@ async function eliminarLiquidacion(id, e) {
 function renderLiquidaciones() {
   const lista = document.getElementById('liq-lista');
   const hoy = new Date(); hoy.setHours(0,0,0,0);
-  const items = _liqFiltro === 'todas' ? _liqData
-    : _liqFiltro === 'por_cobrar' ? _liqData.filter(l => l.estado === 'emitida' && !l.factoring)
-    : _liqData.filter(l => l.estado === _liqFiltro);
+  const items = _liqFiltro === 'todas' ? _liqData : _liqData.filter(l => l.estado === _liqFiltro);
   if(!items.length) {
     lista.innerHTML = '<div class="empty">Sin liquidaciones en este estado</div>';
     return;
@@ -7101,14 +6920,10 @@ async function liqSeleccionarCliente() {
   }
   document.getElementById('liq-numero-preview').textContent = numero;
 
-  // Cargar servicios cerrados de ese cliente, excluyendo los que ya están en OTRA liquidación
-  const {data: liqsExistentes} = await supa.from('kaptura_liquidaciones')
-    .select('servicios_ids').eq('empresa', emp);
-  const idsYaLiquidados = new Set((liqsExistentes||[]).flatMap(l => l.servicios_ids||[]));
+  // Cargar servicios cerrados de ese cliente
   const svcs = DB.servicios.filter(s => 
     s.estado === 'cerrado' && 
-    (s.cliente||'').toLowerCase() === cliente.toLowerCase() &&
-    !idsYaLiquidados.has(s.id)
+    (s.cliente||'').toLowerCase() === cliente.toLowerCase()
   ).sort((a,b) => (a.fecha||'').localeCompare(b.fecha||''));
 
   const container = document.getElementById('liq-servicios-container');
