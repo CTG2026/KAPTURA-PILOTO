@@ -2847,8 +2847,9 @@ function cardHTML(s,i) {
         </div>
         <div class="svc-pat">${s.patente||'—'} · ${s.conductor||'—'}</div>
         <div class="svc-line" style="color:var(--g400)">${s.cliente||'—'}</div>
-        <div class="svc-line" style="font-weight:700;color:rgba(245,240,232,0.85)">${s.origen||'—'} → ${destinoCard}${(()=>{const gs=(s._puntos||[]).flatMap(p=>(p.guias||[]).map(g=>g.num_guia)).filter(Boolean);const guiaTxt=gs.length?gs.join(' · '):(s.num_guia||'');return guiaTxt?` <span style="color:var(--gold)">— Guía ${guiaTxt}</span>`:'';})()}</div>
-        ${rutaCard.intermedios.map(nombre=>`<div class="svc-line" style="font-size:10px;font-weight:600;color:rgba(255,255,255,0.55)">${nombre}</div>`).join('')}
+        <div class="svc-line" style="font-weight:700;color:rgba(245,240,232,0.85)">Origen: ${s.origen||'—'}${(()=>{const gs=(s._puntos||[]).flatMap(p=>(p.guias||[]).map(g=>g.num_guia)).filter(Boolean);const guiaTxt=gs.length?gs.join(' · '):(s.num_guia||'');return guiaTxt?` <span style="color:var(--gold)">— Guía ${guiaTxt}</span>`:'';})()}</div>
+        <div class="svc-line" style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.55)">FINAL: ${destinoCard}</div>
+        ${rutaCard.intermedios.map((nombre,idx)=>`<div class="svc-line" style="font-size:10px;font-weight:600;color:rgba(255,255,255,0.55)">INTERMEDIO ${idx+1}: ${nombre}</div>`).join('')}
       </div>
       ${pillHTML(s.estado)}
     </div>
@@ -2914,7 +2915,7 @@ function filaHTML(s,i) {
   const margen    = margenVal ? fmt(margenVal) : '—';
   const mColor    = margenVal >= 0 ? 'var(--green)' : 'var(--danger)';
   const rutaFila = _rutaPreview(s);
-  const destinoCelda = `<div>${rutaFila.destinoFinal}</div>${rutaFila.intermedios.map(nombre=>`<div style="font-size:10px;font-weight:600;color:rgba(255,255,255,0.55)">${nombre}</div>`).join('')}`;
+  const destinoCelda = `<div style="font-weight:700">FINAL: ${rutaFila.destinoFinal}</div>${rutaFila.intermedios.map((nombre,idx)=>`<div style="font-size:10px;font-weight:600;color:rgba(255,255,255,0.55)">INTERMEDIO ${idx+1}: ${nombre}</div>`).join('')}`;
   const clickFila = _sessionUsuario?.rol==='conductor' ? `verDetalleAsignacionConductor(${i})` : `abrirInforme(${i})`;
   return `<tr onclick="${clickFila}" style="cursor:pointer">
     <td style="font-family:'DM Sans',sans-serif;font-weight:800;color:var(--navy);white-space:nowrap;${s.estado==='cerrado'?'cursor:pointer;text-decoration:underline dotted':''}" ${s.estado==='cerrado'&&_sessionUsuario?.rol!=='despachador'?`onclick="event.stopPropagation();editarServicioCerrado(${i})" title="Editar servicio"`:''}>${s.servicio_id||'—'}</td>
