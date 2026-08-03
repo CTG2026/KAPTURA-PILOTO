@@ -1110,7 +1110,7 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
 <div class="overlay" id="modal-asignar" style="display:none">
   <div class="modal">
     <div class="modal-hdr">
-      <div><div class="modal-ttl">Asignar Servicio</div><div class="modal-sub">Paso 0 · Coordinador</div></div>
+      <div><div class="modal-ttl" id="asig-modal-ttl">Asignar Servicio</div><div class="modal-sub" id="asig-modal-sub">Paso 0 · Coordinador</div></div>
       <button class="modal-cls" onclick="cerrar('modal-asignar')">✕</button>
     </div>
     <div class="modal-body">
@@ -3025,7 +3025,11 @@ function poblarConfig() {
 
 
 // ══ PASO 0 — ASIGNAR ══
-async function abrirAsignar() {
+let _asigEditIdx = -1;
+async function abrirAsignar(i) {
+  _asigEditIdx = (typeof i === 'number' && DB.servicios[i]) ? i : -1;
+  const svcEdit = _asigEditIdx >= 0 ? DB.servicios[_asigEditIdx] : null;
+
   // Si flota o conductores vacíos, recargar frescos desde Supabase
   if(DB.flota.length === 0 || DB.conductores.length === 0) {
     const emp = DB._empresa || _sessionUsuario?.empresa || 'global_solutions';
@@ -3040,6 +3044,62 @@ async function abrirAsignar() {
     DB.clientes    = rcl.data || [];
   }
   poblarSelects();
+
+  const ttlEl = document.getElementById('asig-modal-ttl');
+  const subEl = document.getElementById('asig-modal-sub');
+
+  if (svcEdit) {
+    // ══ MODO EDICIÓN — precargar todos los campos del servicio existente ══
+    if (ttlEl) ttlEl.textContent = `Editar Asignación — ${svcEdit.servicio_id}`;
+    if (subEl) subEl.textContent = `${svcEdit.patente} · ${svcEdit.conductor}`;
+    document.getElementById('asig-patente').value = svcEdit.patente || '';
+    document.getElementById('asig-conductor').value = svcEdit.conductor || '';
+    document.getElementById('asig-cliente').value = svcEdit.cliente || '';
+    document.getElementById('wrap-cliente-custom').style.display = 'none';
+    checkOtroCliente(); // puebla destinos/puntos segun el cliente ya seteado
+    const tipoSvcEl = document.getElementById('asig-tipo-servicio');
+    if (tipoSvcEl) tipoSvcEl.value = svcEdit.tipo_servicio || 'normal';
+    document.getElementById('asig-origen').value = svcEdit.origen || '';
+    checkOtroOrigen();
+    document.getElementById('asig-fecha').value = svcEdit.fecha || hoyStr;
+    document.getElementById('asig-hora-inicio').value = svcEdit.hora_inicio_asignada || '';
+    document.getElementById('asig-hora-llegada').value = svcEdit.hora_llegada_estimada || '';
+    document.getElementById('asig-punto-inicio').value = svcEdit.punto_inicio || 'base';
+    const hint = document.getElementById('asig-punto-inicio-hint');
+    if (hint) hint.textContent = '';
+    // Destino final
+    const destSel = document.getElementById('asig-destino');
+    if (destSel) {
+      const opts = [...destSel.options].map(o => o.value);
+      if (svcEdit.destino && opts.includes(svcEdit.destino)) {
+        destSel.value = svcEdit.destino;
+        document.getElementById('wrap-asig-destino-custom').style.display = 'none';
+      } else if (svcEdit.destino) {
+        destSel.value = '__otro__';
+        document.getElementById('wrap-asig-destino-custom').style.display = '';
+        const custEl = document.getElementById('asig-destino-custom');
+        if (custEl) custEl.value = svcEdit.destino;
+      }
+    }
+    // Puntos de entrega ya asignados
+    _asigPuntos = [];
+    if (svcEdit.puntos_asignados) {
+      try {
+        const pts = JSON.parse(svcEdit.puntos_asignados);
+        _asigPuntos = pts.map((p,idx) => ({num: idx+1, nombre: p.nombre||''}));
+      } catch(e) {}
+    }
+    asigRenderPuntos();
+    const obsInputAsig2 = document.getElementById('asig-obs-input');
+    if (obsInputAsig2) obsInputAsig2.value = '';
+    obsRenderHilo(document.getElementById('asig-obs-hilo'), obsParseHilo(svcEdit.notas||''));
+    document.getElementById('modal-asignar').style.display = 'flex';
+    return;
+  }
+
+  // ══ MODO NUEVO — comportamiento original ══
+  if (ttlEl) ttlEl.textContent = 'Asignar Servicio';
+  if (subEl) subEl.textContent = 'Paso 0 · Coordinador';
   document.getElementById('asig-fecha').value = hoyStr;
   // Pre-seleccionar punto de inicio según servicio anterior del equipo
   const patenteActual = document.getElementById('asig-patente').value;
@@ -3196,7 +3256,6 @@ async function guardarAsignacion() {
   // Obtener tipo desde el equipo seleccionado en DB.flota
   const equipoSel = DB.flota.find(f => f.patente === patente);
   const tipoOperacion = equipoSel?.tipo || 'con_carro';
-  const svId = await siguienteId();
   // Guardar puntos de asignación
   const puntosAsig = _asigPuntos.filter(p=>p.nombre).map(p=>({num:p.num, nombre:p.nombre, tipo:'entrega'}));
   const puntosAsigStr = puntosAsig.length > 0 ? JSON.stringify(puntosAsig) : null;
@@ -3205,6 +3264,23 @@ async function guardarAsignacion() {
   const destinoRaw = document.getElementById('asig-destino').value.trim();
   const destino = destinoRaw === '__otro__' ? (document.getElementById('asig-destino-custom')?.value.trim()||'') : destinoRaw;
   const tipoServicio = document.getElementById('asig-tipo-servicio')?.value || 'normal';
+
+  if (_asigEditIdx >= 0 && DB.servicios[_asigEditIdx]) {
+    // ══ MODO EDICIÓN — UPDATE sobre el servicio existente, nunca crear uno nuevo ══
+    const svcOriginal = DB.servicios[_asigEditIdx];
+    const cambios = { patente, conductor, cliente, origen, destino: destino||null, fecha, puntos_entrega:puntosAsig.length, punto_inicio:puntoInicio, tipo_operacion:tipoOperacion, tipo_servicio:tipoServicio, puntos_asignados: puntosAsigStr, hora_inicio_asignada: horaInicio, hora_llegada_estimada: horaLlegada };
+    const {data:actualizado, error} = await supa.from('servicios_piloto').update(cambios).eq('id', svcOriginal.id).select();
+    if(error) { toast('Error: '+error.message); return; }
+    const svcActualizado = actualizado?.[0] || {...svcOriginal, ...cambios};
+    DB.servicios[_asigEditIdx] = svcActualizado;
+    _asigEditIdx = -1;
+    cerrar('modal-asignar');
+    renderServicios(); renderKPIs();
+    toast(`✓ ${svcActualizado.servicio_id} actualizado`);
+    return;
+  }
+
+  const svId = await siguienteId();
   const nuevo = { servicio_id:svId, patente, conductor, cliente, origen, destino: destino||null, fecha, estado:'asignado', margen_servicio:0, puntos_entrega:puntosAsig.length, punto_inicio:puntoInicio, tipo_operacion:tipoOperacion, tipo_servicio:tipoServicio, empresa: DB._empresa||'global_solutions', puntos_asignados: puntosAsigStr, hora_inicio_asignada: horaInicio, hora_llegada_estimada: horaLlegada };
   const {data:inserted, error} = await supa.from('servicios_piloto').insert(nuevo).select();
   if(error) { toast('Error: '+error.message); return; }
