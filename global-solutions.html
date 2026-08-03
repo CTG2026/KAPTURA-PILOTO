@@ -2929,6 +2929,7 @@ function abrirAcciones(i, ev) {
       ${s.estado==='cerrado' ? `<button class="btn btn-sm" style="background:rgba(201,168,76,0.15);color:var(--gold);border:1px solid rgba(201,168,76,0.3)" onclick="abrirCierre(${i})">✏ Ed. Cierre</button>` : ''}
       ${['confirmado','cerrado','borrador'].includes(s.estado) ? `<button class="btn btn-outline btn-sm" onclick="abrirInforme(${i})">📄 Informe</button>` : ''}
       ${(s._puntos||[]).some(p=>(p.guias||[]).length>0||p.num_guia) ? `<button class="btn btn-outline btn-sm" onclick="verGuias(${i})">🖼 Guías</button>` : ''}
+      <button class="btn btn-outline btn-sm" onclick="descargarPdfServicio(${i})">📄 PDF</button>
       <button class="btn btn-red btn-sm" onclick="eliminarSvc(${i})">✕ Eliminar</button>
       `}
     </div>`;
@@ -3239,8 +3240,18 @@ function _destinoFinalAsignacion(s) {
 }
 
 function descargarPdfAsignacion() {
-  const s = _ultimaAsignacion;
-  if (!s || !window.jspdf) { toast('⚠ No se pudo generar el PDF'); return; }
+  if (!_ultimaAsignacion) { toast('⚠ No se pudo generar el PDF'); return; }
+  _generarPdfServicio(_ultimaAsignacion);
+}
+
+function descargarPdfServicio(i) {
+  const s = DB.servicios[i];
+  if (!s) { toast('⚠ No se pudo generar el PDF'); return; }
+  _generarPdfServicio(s);
+}
+
+function _generarPdfServicio(s) {
+  if (!window.jspdf) { toast('⚠ No se pudo generar el PDF'); return; }
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
   const destino = _destinoFinalAsignacion(s);
