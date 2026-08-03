@@ -3160,7 +3160,6 @@ function _generarPdfServicio(s) {
   const campos = [
     ['CLIENTE', s.cliente||'', 'PATENTE', s.patente||''],
     ['FECHA INICIO', s.fecha||'', 'CONDUCTOR', s.conductor||''],
-    ['ORIGEN', s.origen||'', 'DESTINO FINAL', destinoFinal||''],
     ['HORA PRESENTACIÓN CARGUÍO', s.hora_inicio_asignada||'', 'ESTADO', (s.estado||'').toUpperCase()],
   ];
   let y = 35;
@@ -3172,15 +3171,21 @@ function _generarPdfServicio(s) {
     y += 16;
   });
 
-  if (intermedios.length > 0) {
-    doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(180,140,20);
-    doc.text('PUNTOS INTERMEDIOS', 20, y+2); y += 10;
-    intermedios.forEach((p,i) => {
-      doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(20);
-      doc.text(`Punto Intermedio ${i+1}: ${(p.nombre||'').toUpperCase()}`, 20, y);
-      y += 8;
-    });
-  }
+  // ══ RUTA — misma secuencia en Editar Asignación, Informe y PDF: Origen, Destino Final, Puntos Intermedios ══
+  doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(180,140,20);
+  doc.text('RUTA DEL SERVICIO', 20, y+2); y += 10;
+  const rutaFilas = [
+    ['ORIGEN', s.origen||''],
+    ['DESTINO FINAL', destinoFinal||''],
+    ...intermedios.map((p,i) => [`PUNTO INTERMEDIO ${i+1}`, p.nombre||'']),
+  ];
+  rutaFilas.forEach(([label, valor]) => {
+    doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(120);
+    doc.text(label, 20, y);
+    doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.setTextColor(20);
+    doc.text((valor||'').toUpperCase(), 20, y+6);
+    y += 14;
+  });
 
   doc.save(`Asignacion_${s.servicio_id}.pdf`);
 }
