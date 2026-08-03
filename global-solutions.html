@@ -3419,6 +3419,7 @@ function puntosHTML(p, pi, activeIdx) {
             <div style="flex:1">
               <div style="font-size:11px;font-weight:800;color:var(--green)">Guía N° ${g.num_guia}</div>
               <div style="font-size:10px;color:var(--muted)">${g.fecha_guia||'—'}</div>
+              ${g.descripcion_mercaderia ? `<div style="font-size:10px;color:var(--gold);margin-top:2px">📦 ${g.descripcion_mercaderia}</div>` : ''}
             </div>
             ${g.img_url ? `<button class="btn btn-outline btn-sm" onclick="window.open('${g.img_url}','_blank')">👁 Ver</button>` : ''}
             ${esConductorPunto ? '' : `<button class="btn btn-sm" style="background:rgba(255,107,0,0.15);color:var(--gold);padding:4px 8px;border:1px solid rgba(255,107,0,0.3)" onclick="editarGuia(${pi},${gi})">✏</button>
@@ -3599,7 +3600,7 @@ async function procesarGuia(input, pi) {
           max_tokens: 400,
           messages: [{role:'user', content:[
             {type:'image', source:{type:'base64', media_type:'image/jpeg', data:b64}},
-            {type:'text', text:`Eres un experto en documentos de despacho chilenos. En esta imagen hay una guía de despacho o factura. El NÚMERO DE GUÍA o FOLIO está casi siempre en la esquina SUPERIOR DERECHA del documento, precedido por "N°", "Folio", "Guía N°" o similar. Es un número de 4 a 7 dígitos. NO confundas el folio con: RUT (tiene guión y dígito verificador), códigos de barra, números de orden de compra largos, ni números de bultos. El folio es el número más pequeño y prominente en la esquina superior derecha. Extrae SOLO ese número. También extrae la fecha de emisión (formato DD/MM/AAAA) y el nombre del cliente comparándolo con esta lista: ${DB.clientes.map(c=>c.nombre).join(', ')}. Responde SOLO con JSON sin explicación ni markdown: {"num_guia":"","fecha_emision":"","cliente":""}`}
+            {type:'text', text:`Eres un experto en documentos de despacho chilenos. En esta imagen hay una guía de despacho o factura. El NÚMERO DE GUÍA o FOLIO está casi siempre en la esquina SUPERIOR DERECHA del documento, precedido por "N°", "Folio", "Guía N°" o similar. Es un número de 4 a 7 dígitos. NO confundas el folio con: RUT (tiene guión y dígito verificador), códigos de barra, números de orden de compra largos, ni números de bultos. El folio es el número más pequeño y prominente en la esquina superior derecha. Extrae SOLO ese número. También extrae la fecha de emisión (formato DD/MM/AAAA) y el nombre del cliente comparándolo con esta lista: ${DB.clientes.map(c=>c.nombre).join(', ')}.${(DB.servicios[svcActivoIdx]?.cliente||'').toUpperCase().includes('SOLLEM') ? ' Además, extrae el contenido de la columna "Descripción" de la tabla de productos (ej. "SULFATO DE MAGNESIO HEPTAHIDRATADO") — es el nombre del producto/mercadería transportada, no el código. Responde SOLO con JSON sin explicación ni markdown: {"num_guia":"","fecha_emision":"","cliente":"","descripcion_mercaderia":""}' : ' Responde SOLO con JSON sin explicación ni markdown: {"num_guia":"","fecha_emision":"","cliente":""}'}`}
           ]}]
         })
       });
@@ -3626,7 +3627,7 @@ async function procesarGuia(input, pi) {
         }
       } catch(e) { console.warn('Storage upload failed:', e.message); }
       if(!puntosData[pi].guias) puntosData[pi].guias = [];
-      puntosData[pi].guias.push({num_guia:json.num_guia, fecha_guia:json.fecha_emision||'', img_url:imgUrl});
+      puntosData[pi].guias.push({num_guia:json.num_guia, fecha_guia:json.fecha_emision||'', img_url:imgUrl, descripcion_mercaderia:json.descripcion_mercaderia||''});
       puntosData[pi] = {...puntosData[pi], capturada:true, procesando:false, num_guia:puntosData[pi].guias.map(g=>g.num_guia).join(',')};
       // Buscar tarifa automática del tarifario
       const match = DB.tarifarios.find(t=>(t.cliente||'').toLowerCase().includes((DB.servicios[svcActivoIdx]?.cliente||'').toLowerCase().split(' ')[0]));
