@@ -3334,9 +3334,11 @@ function _generarPdfServicio(s) {
   if (!window.jspdf) { toast('⚠ No se pudo generar el PDF'); return; }
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
-  const destino = _destinoFinalAsignacion(s);
+  const destinoFinal = _destinoFinalAsignacion(s);
   let puntos = [];
   if (s.puntos_asignados) { try { puntos = JSON.parse(s.puntos_asignados); } catch(e) {} }
+  // puntos_asignados son SIEMPRE los puntos intermedios -- el destino final real vive en s.destino, aparte
+  const intermedios = puntos.filter(p => (p.nombre||'').toUpperCase() !== (destinoFinal||'').toUpperCase());
 
   doc.setFont('helvetica','bold'); doc.setFontSize(16);
   doc.text(`GLOBAL SOLUTIONS — Asignación ${s.servicio_id}`, 20, 20);
@@ -3344,8 +3346,8 @@ function _generarPdfServicio(s) {
   doc.setFontSize(9); doc.setTextColor(120);
   const campos = [
     ['CLIENTE', s.cliente||'', 'PATENTE', s.patente||''],
-    ['FECHA INICIO', s.fecha||'', 'ORIGEN', s.origen||''],
-    ['DESTINO', destino, 'CONDUCTOR', s.conductor||''],
+    ['FECHA INICIO', s.fecha||'', 'CONDUCTOR', s.conductor||''],
+    ['ORIGEN', s.origen||'', 'DESTINO FINAL', destinoFinal||''],
     ['HORA PRESENTACIÓN CARGUÍO', s.hora_inicio_asignada||'', 'ESTADO', (s.estado||'').toUpperCase()],
   ];
   let y = 35;
@@ -3357,18 +3359,15 @@ function _generarPdfServicio(s) {
     y += 16;
   });
 
-  doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(180,140,20);
-  doc.text('RUTA DE ESTE SERVICIO', 20, y+2); y += 10;
-  doc.setFontSize(11); doc.setTextColor(20);
-  doc.text(`SALIDA: ${(s.origen||'').toUpperCase()}`, 20, y); y += 8;
-  puntos.forEach((p,i) => {
-    doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(20);
-    doc.text(`${i+1}. ${(p.nombre||'').toUpperCase()}`, 20, y);
-    doc.setFontSize(8); doc.setTextColor(26,79,160);
-    const etiqueta = (i === puntos.length-1) ? 'DESTINO FINAL' : 'PUNTO INTERMEDIO';
-    doc.text(etiqueta, 140, y);
-    y += 8;
-  });
+  if (intermedios.length > 0) {
+    doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(180,140,20);
+    doc.text('PUNTOS INTERMEDIOS', 20, y+2); y += 10;
+    intermedios.forEach((p,i) => {
+      doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(20);
+      doc.text(`Punto Intermedio ${i+1}: ${(p.nombre||'').toUpperCase()}`, 20, y);
+      y += 8;
+    });
+  }
 
   doc.save(`Asignacion_${s.servicio_id}.pdf`);
 }
@@ -5183,7 +5182,8 @@ async function abrirInforme(i) {
       <div class="inf-cell"><div class="inf-lbl">Conductor</div><div class="inf-val">${s.conductor||'—'}</div></div>
       <div class="inf-cell"><div class="inf-lbl">Cliente</div><div class="inf-val">${s.cliente||'—'}</div></div>
       <div class="inf-cell"><div class="inf-lbl">Origen</div><div class="inf-val">${s.origen||'—'}</div></div>
-      <div class="inf-cell"><div class="inf-lbl">Destino</div><div class="inf-val">${(s._puntos||[]).find(p=>p.tipo==='final')?.destino||s.destino||'—'}</div></div>
+      <div class="inf-cell"><div class="inf-lbl">Destino Final</div><div class="inf-val">${final?.destino||(s._puntos||[]).find(p=>p.tipo==='final')?.destino||s.destino||'—'}</div></div>
+      ${ints.map((p,idx) => `<div class="inf-cell"><div class="inf-lbl">Punto Intermedio ${idx+1}</div><div class="inf-val">${p.destino||'—'}</div></div>`).join('')}
       <div class="inf-cell"><div class="inf-lbl">Fecha Inicio</div><div class="inf-val">${s.fecha||'—'}</div></div>
       <div class="inf-cell"><div class="inf-lbl">Fecha Término</div><div class="inf-val">${fechaTerm}</div></div>
       <div class="inf-cell"><div class="inf-lbl">Días en ruta</div><div class="inf-val">${s.dias_servicio||'—'}</div></div>
