@@ -2689,11 +2689,11 @@ function pillHTML(e) {
 }
 
 function cardHTML(s,i) {
-  return `<div class="svc-card">
+  return `<div class="svc-card" onclick="abrirInforme(${i})" style="cursor:pointer">
     <div class="svc-top">
       <div>
         <div style="display:flex;align-items:center;gap:8px">
-          <div class="svc-id" ${s.estado==='cerrado'?`onclick="editarServicioCerrado(${i})" title="Editar servicio" style="cursor:pointer;text-decoration:underline dotted"`:''}>${s.servicio_id||'—'}</div>
+          <div class="svc-id" ${s.estado==='cerrado'?`onclick="event.stopPropagation();editarServicioCerrado(${i})" title="Editar servicio" style="cursor:pointer;text-decoration:underline dotted"`:''}>${s.servicio_id||'—'}</div>
           <div style="font-size:10px;color:var(--muted);font-weight:600">${s.fecha||s.created_at?.split('T')[0]||'—'}</div>
         </div>
         <div class="svc-pat">${s.patente||'—'} · ${s.conductor||'—'}</div>
@@ -2727,7 +2727,7 @@ function cardHTML(s,i) {
         </div>
       </div>`;
     })()}
-    <div class="svc-body"><div class="svc-acts">
+    <div class="svc-body" onclick="event.stopPropagation()"><div class="svc-acts">
       ${s.estado==='asignado' ? `<button class="btn btn-navy btn-sm" onclick="iniciarSvc(${i})">▶ Iniciar</button>` : ''}
       ${s.estado==='en_proceso' ? `<button class="btn btn-purple btn-sm" onclick="verServicio(${i})">📋 Registrar</button><button class="btn btn-outline btn-sm" onclick="abrirAsignar(${i})">✏ Ed. Asignación</button>` : ''}
       ${s.estado==='ejecutado' ? `${['coordinador','controller','administrador'].includes(_sessionUsuario?.rol) ? `<button class="btn btn-green btn-sm" onclick="abrirCierre(${i})">🔒 Cierre</button>` : ''}<button class="btn btn-outline btn-sm" onclick="verServicio(${i})">✏ Ed. Registro</button>` : ''}
@@ -2760,8 +2760,8 @@ function filaHTML(s,i) {
   const margenVal = s.margen_servicio||s.margen||0;
   const margen    = margenVal ? fmt(margenVal) : '—';
   const mColor    = margenVal >= 0 ? 'var(--green)' : 'var(--danger)';
-  return `<tr>
-    <td style="font-family:'DM Sans',sans-serif;font-weight:800;color:var(--navy);white-space:nowrap;${s.estado==='cerrado'?'cursor:pointer;text-decoration:underline dotted':''}" ${s.estado==='cerrado'?`onclick="editarServicioCerrado(${i})" title="Editar servicio"`:''}>${s.servicio_id||'—'}</td>
+  return `<tr onclick="abrirInforme(${i})" style="cursor:pointer">
+    <td style="font-family:'DM Sans',sans-serif;font-weight:800;color:var(--navy);white-space:nowrap;${s.estado==='cerrado'?'cursor:pointer;text-decoration:underline dotted':''}" ${s.estado==='cerrado'?`onclick="event.stopPropagation();editarServicioCerrado(${i})" title="Editar servicio"`:''}>${s.servicio_id||'—'}</td>
     <td style="white-space:nowrap">${s.fecha||'—'}</td>
     <td style="white-space:nowrap">${s._fecha_termino || (s.hora_termino ? s.hora_termino.substring(0,10) : '—')}</td>
     <td style="font-family:'DM Sans',sans-serif;font-weight:700">${s.patente||'—'}</td>
@@ -2777,7 +2777,7 @@ function filaHTML(s,i) {
     <td class="td-financ">${costos}</td>
     <td style="font-weight:700;color:${mColor}" class="td-financ">${margen}</td>
     <td>${pillHTML(s.estado)}</td>
-    <td><div style="display:flex;gap:4px;flex-wrap:wrap">
+    <td onclick="event.stopPropagation()"><div style="display:flex;gap:4px;flex-wrap:wrap">
       ${s.estado==='asignado' ? `<button class="btn btn-navy btn-sm" onclick="iniciarSvc(${i})">▶ Iniciar</button>` : ''}
       ${s.estado==='en_proceso' ? `<button class="btn btn-purple btn-sm" onclick="verServicio(${i})">📋 Registrar</button><button class="btn btn-outline btn-sm" onclick="abrirAsignar(${i})">✏ Ed. Asignación</button>` : ''}
       ${s.estado==='ejecutado' ? `${['coordinador','controller','administrador'].includes(_sessionUsuario?.rol) ? `<button class="btn btn-green btn-sm" onclick="abrirCierre(${i})">🔒 Cierre</button>` : ''}<button class="btn btn-outline btn-sm" onclick="verServicio(${i})">✏ Ed. Registro</button>` : ''}
@@ -2864,6 +2864,7 @@ function poblarConfig() {
 
 // ══ PASO 0 — ASIGNAR ══
 let _asigEditIdx = -1;
+let _asigPanelTimer = null;
 async function abrirAsignar(i) {
   _asigEditIdx = (typeof i === 'number' && DB.servicios[i]) ? i : -1;
   const svcEdit = _asigEditIdx >= 0 ? DB.servicios[_asigEditIdx] : null;
@@ -3110,6 +3111,8 @@ function mostrarPanelAsignacionOk(s) {
   if (!panel || !resumen) return;
   resumen.textContent = `${s.servicio_id} — ${s.patente} · ${s.conductor} · ${s.cliente}`;
   panel.style.display = 'block';
+  if (_asigPanelTimer) clearTimeout(_asigPanelTimer);
+  _asigPanelTimer = setTimeout(() => { panel.style.display = 'none'; }, 15000);
 }
 
 function _destinoFinalAsignacion(s) {
