@@ -3052,6 +3052,7 @@ function poblarConfig() {
 // ══ PASO 0 — ASIGNAR ══
 let _asigEditIdx = -1;
 let _asigPanelTimer = null;
+let _asigNotasBuffer = '';
 async function abrirAsignar(i) {
   _asigEditIdx = (typeof i === 'number' && DB.servicios[i]) ? i : -1;
   const svcEdit = _asigEditIdx >= 0 ? DB.servicios[_asigEditIdx] : null;
@@ -3122,7 +3123,8 @@ async function abrirAsignar(i) {
     asigRenderPuntos();
     const obsInputAsig2 = document.getElementById('asig-obs-input');
     if (obsInputAsig2) obsInputAsig2.value = '';
-    obsRenderHilo(document.getElementById('asig-obs-hilo'), obsParseHilo(svcEdit.notas||''));
+    _asigNotasBuffer = svcEdit.notas || '';
+    obsRenderHilo(document.getElementById('asig-obs-hilo'), obsParseHilo(_asigNotasBuffer));
     document.getElementById('modal-asignar').style.display = 'flex';
     return;
   }
@@ -3160,8 +3162,8 @@ async function abrirAsignar(i) {
   const selDest = document.getElementById('asig-destino');
   if(selDest) selDest.innerHTML = '<option value="">Selecciona cliente primero...</option>';
   document.getElementById('wrap-asig-destino-custom').style.display = 'none';
-  const sAsig2 = DB.servicios[svcActivoIdx];
-  if(sAsig2) obsRenderHilo(document.getElementById('asig-obs-hilo'), obsParseHilo(sAsig2.notas||''));
+  _asigNotasBuffer = '';
+  obsRenderHilo(document.getElementById('asig-obs-hilo'), []);
   // Sincronizar destinos con el cliente que haya quedado preseleccionado por defecto
   checkOtroCliente();
   document.getElementById('modal-asignar').style.display = 'flex';
@@ -3298,7 +3300,7 @@ async function guardarAsignacion() {
   if (_asigEditIdx >= 0 && DB.servicios[_asigEditIdx]) {
     // ══ MODO EDICIÓN — UPDATE sobre el servicio existente, nunca crear uno nuevo ══
     const svcOriginal = DB.servicios[_asigEditIdx];
-    const cambios = { patente, conductor, cliente, origen, destino: destino||null, fecha, puntos_entrega:puntosAsig.length, punto_inicio:puntoInicio, tipo_operacion:tipoOperacion, tipo_servicio:tipoServicio, puntos_asignados: puntosAsigStr, hora_inicio_asignada: horaInicio, hora_llegada_estimada: horaLlegada };
+    const cambios = { patente, conductor, cliente, origen, destino: destino||null, fecha, puntos_entrega:puntosAsig.length, punto_inicio:puntoInicio, tipo_operacion:tipoOperacion, tipo_servicio:tipoServicio, puntos_asignados: puntosAsigStr, hora_inicio_asignada: horaInicio, hora_llegada_estimada: horaLlegada, notas: _asigNotasBuffer||svcOriginal.notas||null };
     const {data:actualizado, error} = await supa.from('servicios_piloto').update(cambios).eq('id', svcOriginal.id).select();
     if(error) { toast('Error: '+error.message); return; }
     const svcActualizado = actualizado?.[0] || {...svcOriginal, ...cambios};
@@ -3311,7 +3313,7 @@ async function guardarAsignacion() {
   }
 
   const svId = await siguienteId();
-  const nuevo = { servicio_id:svId, patente, conductor, cliente, origen, destino: destino||null, fecha, estado:'asignado', margen_servicio:0, puntos_entrega:puntosAsig.length, punto_inicio:puntoInicio, tipo_operacion:tipoOperacion, tipo_servicio:tipoServicio, empresa: DB._empresa||'global_solutions', puntos_asignados: puntosAsigStr, hora_inicio_asignada: horaInicio, hora_llegada_estimada: horaLlegada };
+  const nuevo = { servicio_id:svId, patente, conductor, cliente, origen, destino: destino||null, fecha, estado:'asignado', margen_servicio:0, puntos_entrega:puntosAsig.length, punto_inicio:puntoInicio, tipo_operacion:tipoOperacion, tipo_servicio:tipoServicio, empresa: DB._empresa||'global_solutions', puntos_asignados: puntosAsigStr, hora_inicio_asignada: horaInicio, hora_llegada_estimada: horaLlegada, notas: _asigNotasBuffer||null };
   const {data:inserted, error} = await supa.from('servicios_piloto').insert(nuevo).select();
   if(error) { toast('Error: '+error.message); return; }
   let svcInsertado = inserted?.[0];
@@ -7723,13 +7725,17 @@ async function obsAgregarIniciar() {
 async function obsAgregarAsignar() {
   const txt = document.getElementById('asig-obs-input')?.value?.trim();
   if(!txt) { toast('Escribe una observación'); return; }
-  const s = DB.servicios[svcActivoIdx];
-  if(!s) return;
-  const hilo = obsParseHilo(s.notas||'');
+  const hilo = obsParseHilo(_asigNotasBuffer||'');
   const nuevaObs = {rol:'coordinador', fase:'asignación', texto:txt, ts:new Date().toISOString(), num: hilo.length+1};
-  const notasNew = obsAgregarAlNotas(s.notas||'', nuevaObs);
-  await supa.from('servicios_piloto').update({notas:notasNew}).eq('id',s.id);
-  s.notas = notasNew;
+  const notasNew = obsAgregarAlNotas(_asigNotasBuffer||'', nuevaObs);
+  _asigNotasBuffer = notasNew;
+  // Si es un servicio existente (modo edicion), guardar directo en Supabase
+  if (_asigEditIdx >= 0 && DB.servicios[_asigEditIdx]?.id) {
+    const s = DB.servicios[_asigEditIdx];
+    await supa.from('servicios_piloto').update({notas:notasNew}).eq('id', s.id);
+    s.notas = notasNew;
+  }
+  // Si es un servicio nuevo (aun no guardado), queda en el buffer y se incluye al hacer guardarAsignacion()
   document.getElementById('asig-obs-input').value = '';
   obsRenderHilo(document.getElementById('asig-obs-hilo'), obsParseHilo(notasNew));
   toast('✓ Observación agregada');
