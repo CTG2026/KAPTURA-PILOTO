@@ -2819,10 +2819,24 @@ function pillHTML(e) {
   return `<span class="pill ${m[e]||'p-asignado'}">${t[e]||e}</span>`;
 }
 
+function _rutaPreview(s) {
+  // Servicios ya registrados/cerrados: los puntos vienen de notas -> s._puntos
+  if ((s._puntos||[]).length > 0) {
+    const final = s._puntos.find(p=>p.tipo==='final');
+    const ints  = s._puntos.filter(p=>p.tipo==='intermedio');
+    return { destinoFinal: final?.destino || s.destino || '—', intermedios: ints.map(p=>p.destino).filter(Boolean) };
+  }
+  // Servicios recien asignados: los puntos viven en puntos_asignados, el destino final en s.destino
+  let puntos = [];
+  if (s.puntos_asignados) { try { puntos = JSON.parse(s.puntos_asignados); } catch(e) {} }
+  const destinoFinal = s.destino || '—';
+  const intermedios = puntos.filter(p => (p.nombre||'').toUpperCase() !== (destinoFinal||'').toUpperCase()).map(p=>p.nombre).filter(Boolean);
+  return { destinoFinal, intermedios };
+}
+
 function cardHTML(s,i) {
-  const pIntsCard  = (s._puntos||[]).filter(p=>p.tipo==='intermedio');
-  const pFinalCard = (s._puntos||[]).find(p=>p.tipo==='final');
-  const destinoCard = s.destino || pFinalCard?.destino || '—';
+  const rutaCard = _rutaPreview(s);
+  const destinoCard = rutaCard.destinoFinal;
   const clickCard = _sessionUsuario?.rol==='conductor' ? `verDetalleAsignacionConductor(${i})` : `abrirInforme(${i})`;
   return `<div class="svc-card" onclick="${clickCard}" style="cursor:pointer">
     <div class="svc-top">
@@ -2834,7 +2848,7 @@ function cardHTML(s,i) {
         <div class="svc-pat">${s.patente||'—'} · ${s.conductor||'—'}</div>
         <div class="svc-line" style="color:var(--g400)">${s.cliente||'—'}</div>
         <div class="svc-line" style="font-weight:700;color:rgba(245,240,232,0.85)">${s.origen||'—'} → ${destinoCard}${(()=>{const gs=(s._puntos||[]).flatMap(p=>(p.guias||[]).map(g=>g.num_guia)).filter(Boolean);const guiaTxt=gs.length?gs.join(' · '):(s.num_guia||'');return guiaTxt?` <span style="color:var(--gold)">— Guía ${guiaTxt}</span>`:'';})()}</div>
-        ${pIntsCard.map(p=>`<div class="svc-line" style="font-size:10px;font-weight:600;color:rgba(255,255,255,0.55)">${p.destino||'—'}</div>`).join('')}
+        ${rutaCard.intermedios.map(nombre=>`<div class="svc-line" style="font-size:10px;font-weight:600;color:rgba(255,255,255,0.55)">${nombre}</div>`).join('')}
       </div>
       ${pillHTML(s.estado)}
     </div>
@@ -2899,7 +2913,8 @@ function filaHTML(s,i) {
   const margenVal = s.margen_servicio||s.margen||0;
   const margen    = margenVal ? fmt(margenVal) : '—';
   const mColor    = margenVal >= 0 ? 'var(--green)' : 'var(--danger)';
-  const destinoCelda = `<div>${destino}</div>${pInts.map(p=>`<div style="font-size:10px;font-weight:600;color:rgba(255,255,255,0.55)">${p.destino||'—'}</div>`).join('')}`;
+  const rutaFila = _rutaPreview(s);
+  const destinoCelda = `<div>${rutaFila.destinoFinal}</div>${rutaFila.intermedios.map(nombre=>`<div style="font-size:10px;font-weight:600;color:rgba(255,255,255,0.55)">${nombre}</div>`).join('')}`;
   const clickFila = _sessionUsuario?.rol==='conductor' ? `verDetalleAsignacionConductor(${i})` : `abrirInforme(${i})`;
   return `<tr onclick="${clickFila}" style="cursor:pointer">
     <td style="font-family:'DM Sans',sans-serif;font-weight:800;color:var(--navy);white-space:nowrap;${s.estado==='cerrado'?'cursor:pointer;text-decoration:underline dotted':''}" ${s.estado==='cerrado'&&_sessionUsuario?.rol!=='despachador'?`onclick="event.stopPropagation();editarServicioCerrado(${i})" title="Editar servicio"`:''}>${s.servicio_id||'—'}</td>
