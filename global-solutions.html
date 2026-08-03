@@ -6956,7 +6956,7 @@ async function eliminarLiquidacion(id, e) {
   // Coordinador Global: solo PIN 0101
   const puedeEliminar = rol === 'admin_kaptura' || 
     (rol === 'coordinador' && pin === '1996' && emp === 'flota_297221') ||
-    (rol === 'coordinador' && pin === '0101' && emp === 'global_solutions');
+    (rol === 'coordinador' && pin === '0002' && emp === 'global_solutions');
   if(!puedeEliminar) { toast('Sin permiso para eliminar liquidaciones'); return; }
   if(!confirm('¿Eliminar esta liquidación? Esta acción no se puede deshacer.')) return;
   const {error} = await supa.from('kaptura_liquidaciones').delete().eq('id', id);
@@ -6969,7 +6969,9 @@ async function eliminarLiquidacion(id, e) {
 function renderLiquidaciones() {
   const lista = document.getElementById('liq-lista');
   const hoy = new Date(); hoy.setHours(0,0,0,0);
-  const items = _liqFiltro === 'todas' ? _liqData : _liqData.filter(l => l.estado === _liqFiltro);
+  const items = _liqFiltro === 'todas' ? _liqData
+    : _liqFiltro === 'por_cobrar' ? _liqData.filter(l => l.estado === 'emitida' && !l.factoring)
+    : _liqData.filter(l => l.estado === _liqFiltro);
   if(!items.length) {
     lista.innerHTML = '<div class="empty">Sin liquidaciones en este estado</div>';
     return;
@@ -7099,10 +7101,14 @@ async function liqSeleccionarCliente() {
   }
   document.getElementById('liq-numero-preview').textContent = numero;
 
-  // Cargar servicios cerrados de ese cliente
+  // Cargar servicios cerrados de ese cliente, excluyendo los que ya están en OTRA liquidación
+  const {data: liqsExistentes} = await supa.from('kaptura_liquidaciones')
+    .select('servicios_ids').eq('empresa', emp);
+  const idsYaLiquidados = new Set((liqsExistentes||[]).flatMap(l => l.servicios_ids||[]));
   const svcs = DB.servicios.filter(s => 
     s.estado === 'cerrado' && 
-    (s.cliente||'').toLowerCase() === cliente.toLowerCase()
+    (s.cliente||'').toLowerCase() === cliente.toLowerCase() &&
+    !idsYaLiquidados.has(s.id)
   ).sort((a,b) => (a.fecha||'').localeCompare(b.fecha||''));
 
   const container = document.getElementById('liq-servicios-container');
