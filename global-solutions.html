@@ -2962,7 +2962,17 @@ function abrirAcciones(i, ev) {
     const btn = ev.target.closest('button');
     if(btn) {
       const rect = btn.getBoundingClientRect();
-      pop.style.top = (rect.bottom+4)+'px';
+      pop.style.visibility = 'hidden';
+      pop.style.display = 'block';
+      const popH = pop.offsetHeight;
+      pop.style.visibility = '';
+      const espacioAbajo = window.innerHeight - rect.bottom;
+      const espacioArriba = rect.top;
+      if (espacioAbajo < popH + 12 && espacioArriba > espacioAbajo) {
+        pop.style.top = Math.max(4, rect.top - popH - 4) + 'px';
+      } else {
+        pop.style.top = Math.min(rect.bottom+4, window.innerHeight - popH - 4) + 'px';
+      }
       pop.style.left = Math.max(4, rect.right-170)+'px';
     }
     pop.style.display = 'block';
