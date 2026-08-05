@@ -78,6 +78,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
   .desk-tbl tbody tr{border-bottom:1px solid var(--border)}
   .desk-tbl tbody tr:hover{background:var(--surface2)}
   .desk-tbl tbody td{padding:9px 10px;font-size:12px;vertical-align:middle;color:var(--text)}
+  .desk-tbl tbody tr.fila-ejecutado td:not(:last-child),.desk-tbl tbody tr.fila-ejecutado td:not(:last-child) *{color:var(--green)!important}
+.svc-card.fila-ejecutado-card .svc-top,.svc-card.fila-ejecutado-card .svc-top *{color:var(--green)!important}
 }
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(4px);z-index:1000;display:flex;align-items:flex-end;justify-content:center}
 @media(min-width:640px){.overlay{align-items:center;padding:20px}}
@@ -2707,7 +2709,8 @@ function cardHTML(s,i) {
   const rutaCard = _rutaPreview(s);
   const destinoCard = rutaCard.destinoFinal;
   const clickCard = _sessionUsuario?.rol==='conductor' ? `verDetalleAsignacionConductor(${i})` : `abrirInforme(${i})`;
-  return `<div class="svc-card" onclick="${clickCard}" style="cursor:pointer">
+  const claseCard = s.estado==='ejecutado' ? 'fila-ejecutado-card' : '';
+  return `<div class="svc-card ${claseCard}" onclick="${clickCard}" style="cursor:pointer">
     <div class="svc-top">
       <div>
         <div style="display:flex;align-items:center;gap:8px">
@@ -2784,7 +2787,8 @@ function filaHTML(s,i) {
   const rutaFila = _rutaPreview(s);
   const destinoCelda = `<div style="font-weight:700">FINAL: ${rutaFila.destinoFinal}</div>${rutaFila.intermedios.map((nombre,idx)=>`<div style="font-size:10px;font-weight:600;color:rgba(255,255,255,0.55)">INTERMEDIO ${idx+1}: ${nombre}</div>`).join('')}`;
   const clickFila = _sessionUsuario?.rol==='conductor' ? `verDetalleAsignacionConductor(${i})` : `abrirInforme(${i})`;
-  return `<tr onclick="${clickFila}" style="cursor:pointer">
+  const claseFila = s.estado==='ejecutado' ? 'fila-ejecutado' : '';
+  return `<tr onclick="${clickFila}" style="cursor:pointer" class="${claseFila}">
     <td style="font-family:'DM Sans',sans-serif;font-weight:800;color:var(--navy);white-space:nowrap;${s.estado==='cerrado'?'cursor:pointer;text-decoration:underline dotted':''}" ${s.estado==='cerrado'?`onclick="event.stopPropagation();editarServicioCerrado(${i})" title="Editar servicio"`:''}>${s.servicio_id||'—'}</td>
     <td style="white-space:nowrap">${s.fecha||'—'}</td>
     <td style="white-space:nowrap">${s._fecha_termino || (s.hora_termino ? s.hora_termino.substring(0,10) : '—')}</td>
