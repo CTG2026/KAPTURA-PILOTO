@@ -3389,18 +3389,23 @@ function _generarPdfServicio(s) {
   doc.text(`GLOBAL SOLUTIONS — Asignación ${s.servicio_id}`, 20, 20);
 
   doc.setFontSize(9); doc.setTextColor(120);
+  const fechaTermino = s._fecha_termino || (s.hora_termino ? String(s.hora_termino).substring(0,10) : '');
   const campos = [
-    ['CLIENTE', s.cliente||'', 'PATENTE', s.patente||''],
-    ['FECHA INICIO', s.fecha||'', 'CONDUCTOR', s.conductor||''],
-    ['HORA PRESENTACIÓN CARGUÍO', s.hora_llegada_estimada||'', 'ESTADO', (s.estado||'').toUpperCase()],
+    ['CLIENTE', s.cliente||''],
+    ['CONDUCTOR', s.conductor||''],
+    ['PATENTE', s.patente||''],
+    ['HORA PRESENTACIÓN CARGUÍO', s.hora_llegada_estimada||''],
+    ['FECHA INICIO', s.fecha||''],
+    ['FECHA TÉRMINO', fechaTermino||''],
+    ['ESTADO', (s.estado||'').toUpperCase()],
   ];
   let y = 35;
-  campos.forEach(([l1,v1,l2,v2]) => {
+  campos.forEach(([label, valor]) => {
     doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(120);
-    doc.text(l1, 20, y); doc.text(l2, 110, y);
+    doc.text(label, 20, y);
     doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.setTextColor(20);
-    doc.text((v1||'').toUpperCase(), 20, y+6); doc.text((v2||'').toUpperCase(), 110, y+6);
-    y += 16;
+    doc.text((valor||'').toUpperCase(), 20, y+6);
+    y += 14;
   });
 
   // ══ RUTA — misma secuencia en Editar Asignación, Informe y PDF: Origen, Destino Final, Puntos Intermedios ══
