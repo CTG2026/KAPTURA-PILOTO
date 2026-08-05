@@ -277,7 +277,7 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
     <div class="desk-tbl">
       <table>
         <thead><tr>
-          <th>ID</th><th style="white-space:nowrap;font-size:10px">F. Asignación</th><th style="white-space:nowrap;font-size:10px">F. Término</th>
+          <th>ID</th><th style="white-space:nowrap;font-size:10px">F. Término</th>
           <th class="th-filtro" onclick="abrirFiltroColumna('patente',event)">Patente <span class="ico-filtro" id="ico-filtro-patente">▾</span></th>
           <th class="th-filtro" onclick="abrirFiltroColumna('conductor',event)">Conductor <span class="ico-filtro" id="ico-filtro-conductor">▾</span></th>
           <th class="th-filtro" onclick="abrirFiltroColumna('cliente',event)">Cliente <span class="ico-filtro" id="ico-filtro-cliente">▾</span></th>
@@ -2715,7 +2715,6 @@ function cardHTML(s,i) {
       <div>
         <div style="display:flex;align-items:center;gap:8px">
           <div class="svc-id" ${s.estado==='cerrado'?`onclick="event.stopPropagation();editarServicioCerrado(${i})" title="Editar servicio" style="cursor:pointer;text-decoration:underline dotted"`:''}>${s.servicio_id||'—'}</div>
-          <div style="font-size:10px;color:var(--muted);font-weight:600">${s.fecha||s.created_at?.split('T')[0]||'—'}</div>
         </div>
         <div class="svc-pat">${s.patente||'—'} · ${s.conductor||'—'}</div>
         <div class="svc-line" style="color:var(--g400)">${s.cliente||'—'}</div>
@@ -2790,7 +2789,6 @@ function filaHTML(s,i) {
   const claseFila = s.estado==='ejecutado' ? 'fila-ejecutado' : '';
   return `<tr onclick="${clickFila}" style="cursor:pointer" class="${claseFila}">
     <td style="font-family:'DM Sans',sans-serif;font-weight:800;color:var(--navy);white-space:nowrap;${s.estado==='cerrado'?'cursor:pointer;text-decoration:underline dotted':''}" ${s.estado==='cerrado'?`onclick="event.stopPropagation();editarServicioCerrado(${i})" title="Editar servicio"`:''}>${s.servicio_id||'—'}</td>
-    <td style="white-space:nowrap">${s.fecha||'—'}</td>
     <td style="white-space:nowrap">${s._fecha_termino || (s.hora_termino ? s.hora_termino.substring(0,10) : '—')}</td>
     <td style="font-family:'DM Sans',sans-serif;font-weight:700">${s.patente||'—'}</td>
     <td>${s.conductor||'—'}</td>
