@@ -76,10 +76,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .desk-tbl{display:none}
 @media(min-width:900px){
   .svc-list{display:none}
-  .desk-tbl{display:block;background:var(--surface);border-radius:10px;box-shadow:var(--sh);border:1px solid var(--border);overflow:hidden}
+  .desk-tbl{display:block;background:var(--surface);border-radius:10px;box-shadow:var(--sh);border:1px solid var(--border);max-height:65vh;overflow:auto}
   .desk-tbl table{width:100%;border-collapse:collapse;min-width:820px}
   .desk-tbl thead{background:var(--bg)}
-  .desk-tbl thead th{padding:8px 6px;text-align:left;font-size:11px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+  .desk-tbl thead th{padding:8px 6px;text-align:left;font-size:11px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);white-space:nowrap;position:sticky;top:0;z-index:5;background:var(--bg);box-shadow:0 1px 0 var(--border)}
   .desk-tbl tbody tr{border-bottom:1px solid var(--border)}
   .desk-tbl tbody tr:hover{background:var(--surface2)}
   .desk-tbl tbody td{padding:7px 6px;font-size:11px;vertical-align:middle;color:var(--text)}
@@ -282,7 +282,7 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
     </div>
     <div class="svc-list" id="cards-mobile"></div>
     <div class="desk-tbl">
-      <div style="overflow-x:auto"><table>
+      <table>
         <thead><tr>
           <th>ID</th><th style="white-space:nowrap;font-size:10px">F. Asignación</th><th style="white-space:nowrap;font-size:10px">F. Término</th>
           <th class="th-filtro" onclick="abrirFiltroColumna('patente',event)">Patente <span class="ico-filtro" id="ico-filtro-patente">▾</span></th>
@@ -298,7 +298,7 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
           <th>Acciones</th>
         </tr></thead>
         <tbody id="tabla-svc"></tbody>
-      </table></div>
+      </table>
 
       <div id="popover-acciones" style="display:none;position:fixed;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px;z-index:9999;box-shadow:0 6px 24px rgba(0,0,0,0.5);min-width:170px"></div>
       <div id="popover-filtro-col" style="display:none;position:fixed;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px;z-index:9999;max-height:320px;overflow-y:auto;box-shadow:0 6px 24px rgba(0,0,0,0.5);min-width:200px"></div>
