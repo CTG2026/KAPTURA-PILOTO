@@ -3888,9 +3888,8 @@ async function procesarGuia(input, pi) {
       if(!puntosData[pi].guias) puntosData[pi].guias = [];
       puntosData[pi].guias.push({num_guia:json.num_guia, fecha_guia:json.fecha_emision||'', img_url:imgUrl, descripcion_mercaderia:json.descripcion_mercaderia||''});
       puntosData[pi] = {...puntosData[pi], capturada:true, procesando:false, num_guia:puntosData[pi].guias.map(g=>g.num_guia).join(',')};
-      // Buscar tarifa automática del tarifario
-      const match = DB.tarifarios.find(t=>(t.cliente||'').toLowerCase().includes((DB.servicios[svcActivoIdx]?.cliente||'').toLowerCase().split(' ')[0]));
-      if(match && match.valor_punto > 0) { puntosData[pi].valor = match.valor_punto; toast(`✓ Guía ${json.num_guia} leída`); renderPuntos(); return; }
+      // Buscar tarifa automática del tarifario (misma logica centralizada que buscarValor, respeta destino/vigencia/tipo)
+      buscarValor(pi);
       toast(`✓ Guía ${json.num_guia} leída`);
     } else {
       puntosData[pi].procesando = false;
