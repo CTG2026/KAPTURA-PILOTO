@@ -3520,22 +3520,38 @@ function setDestinoSelect(pi, val) {
   setDestino(pi, val);
 }
 
+function _tarifaVigente(candidatos, fechaServicio) {
+  const fecha = fechaServicio || '9999-12-31';
+  const validos = candidatos.filter(t => !t.vigente_desde || t.vigente_desde <= fecha);
+  validos.sort((a,b) => (b.vigente_desde||'0000-00-00').localeCompare(a.vigente_desde||'0000-00-00'));
+  return validos[0];
+}
+
 function buscarValor(pi) {
   const p = puntosData[pi];
   const svc = DB.servicios[svcActivoIdx];
   if(!svc) return;
-  if(p.tipo === 'intermedio') {
-    const match = DB.tarifarios.find(t => (t.cliente||'').toLowerCase().includes((svc.cliente||'').toLowerCase().split(' ')[0]));
+  const clienteKey = (svc.cliente||'').toLowerCase().split(' ')[0];
+  if(p.tipo === 'intermedio' && p.destino) {
+    const dl = p.destino.toLowerCase().trim();
+    const candidatos = DB.tarifarios.filter(t => {
+      const cli = (t.cliente||'').toLowerCase();
+      const dest = (t.destino||'').toLowerCase();
+      return cli.includes(clienteKey) &&
+        (dest.includes(dl.split(',')[0].trim()) || dl.includes(dest.split(',')[0].trim()));
+    });
+    const match = _tarifaVigente(candidatos, svc.fecha);
     if(match && match.valor_punto > 0) { puntosData[pi].valor = match.valor_punto; renderPuntos(); }
     return;
   }
   if(p.tipo === 'final' && p.destino) {
     const dl = p.destino.toLowerCase().trim();
-    const match = DB.tarifarios.find(t => {
+    const candidatos = DB.tarifarios.filter(t => {
       const cli = (t.cliente||'').toLowerCase();
       const dest = (t.destino||'').toLowerCase().trim();
-      return cli.includes((svc.cliente||'').toLowerCase().split(' ')[0]) && dest === dl;
+      return cli.includes(clienteKey) && dest === dl;
     });
+    const match = _tarifaVigente(candidatos, svc.fecha);
     if(match && match.tarifa_neta > 0) { puntosData[pi].valor = match.tarifa_neta; renderPuntos(); }
   }
 }
@@ -3746,7 +3762,7 @@ async function loadPuntosFromDB(s) {
     if(puntos.length === 0) {
       // Build from available data
       const nInts = Math.max(0,(sv.puntos_entrega||1)-1);
-      const vp = DB.tarifarios.find(t=>(t.cliente||'').toLowerCase().includes((s.cliente||'').toLowerCase().split(' ')[0]))?.valor_punto||40000;
+      const vp = DB.tarifarios.find(t=>(t.cliente||'').toLowerCase().includes((s.cliente||'').toLowerCase().split(' ')[0]))?.valor_punto||60000;
       for(let pi=0; pi<nInts; pi++) puntos.push({tipo:'intermedio',destino:`Punto ${pi+1}`,valor:vp,num_guia:''});
       if(sv.destino||s.destino) puntos.push({tipo:'final',destino:sv.destino||s.destino||'—',valor:sv.tarifa_neta||s.tarifa_neta||0,num_guia:''});
     }
