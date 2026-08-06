@@ -2760,6 +2760,7 @@ function cardHTML(s,i) {
       ${['confirmado','cerrado','borrador'].includes(s.estado) ? `<button class="btn btn-outline btn-sm" onclick="abrirInforme(${i})">📄 Informe</button>` : ''}
       ${(s._puntos||[]).some(p=>(p.guias||[]).length>0||p.num_guia) ? `<button class="btn btn-outline btn-sm" onclick="verGuias(${i})">🖼 Guías</button>` : ''}
       <button class="btn btn-outline btn-sm" onclick="descargarPdfServicio(${i})">📄 PDF</button>
+      <button class="btn btn-outline btn-sm" onclick="enviarWhatsappServicio(${i})">💬 WhatsApp</button>
       <button class="btn btn-red btn-sm" onclick="eliminarSvc(${i})">✕</button>
     </div></div>
   </div>`;
@@ -2815,6 +2816,7 @@ function filaHTML(s,i) {
       ${['confirmado','cerrado','borrador'].includes(s.estado) ? `<button class="btn btn-outline btn-sm" onclick="abrirInforme(${i})">📄 Informe</button>` : ''}
       ${(s._puntos||[]).some(p=>(p.guias||[]).length>0||p.num_guia) ? `<button class="btn btn-outline btn-sm" onclick="verGuias(${i})">🖼 Guías</button>` : ''}
       <button class="btn btn-outline btn-sm" onclick="descargarPdfServicio(${i})">📄 PDF</button>
+      <button class="btn btn-outline btn-sm" onclick="enviarWhatsappServicio(${i})">💬 WhatsApp</button>
       <button class="btn btn-red btn-sm" onclick="eliminarSvc(${i})">✕</button>
     </div></td>
   </tr>`;
@@ -3248,8 +3250,17 @@ function _generarPdfServicio(s) {
 }
 
 function enviarWhatsappAsignacion() {
-  const s = _ultimaAsignacion;
+  if (!_ultimaAsignacion) { toast('⚠ No hay asignación para enviar'); return; }
+  _enviarWhatsappServicio(_ultimaAsignacion);
+}
+
+function enviarWhatsappServicio(i) {
+  const s = DB.servicios[i];
   if (!s) { toast('⚠ No hay asignación para enviar'); return; }
+  _enviarWhatsappServicio(s);
+}
+
+function _enviarWhatsappServicio(s) {
   const destinoFinal = _destinoFinalAsignacion(s);
   let puntos = [];
   if (s.puntos_asignados) { try { puntos = JSON.parse(s.puntos_asignados); } catch(e) {} }
