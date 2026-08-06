@@ -3453,8 +3453,25 @@ function _generarPdfServicio(s) {
 function enviarWhatsappAsignacion() {
   const s = _ultimaAsignacion;
   if (!s) { toast('⚠ No hay asignación para enviar'); return; }
-  const destino = _destinoFinalAsignacion(s);
-  const msg = `Asignación ${s.servicio_id}: ${s.patente} - ${s.conductor}\n${s.origen} → ${destino}\nCliente: ${s.cliente}${s.hora_inicio_asignada ? '\nPresentación carguío: '+s.hora_inicio_asignada : ''}`;
+  const destinoFinal = _destinoFinalAsignacion(s);
+  let puntos = [];
+  if (s.puntos_asignados) { try { puntos = JSON.parse(s.puntos_asignados); } catch(e) {} }
+  const intermedios = puntos.filter(p => (p.nombre||'').toUpperCase() !== (destinoFinal||'').toUpperCase());
+  const fechaTermino = s._fecha_termino || (s.hora_termino ? String(s.hora_termino).substring(0,10) : '');
+
+  let msg = `GLOBAL SOLUTIONS — Asignación ${s.servicio_id}\n\n`;
+  msg += `Cliente: ${s.cliente||'—'}\n`;
+  msg += `Conductor: ${s.conductor||'—'}\n`;
+  msg += `Patente: ${s.patente||'—'}\n`;
+  msg += `Hora Presentación Carguío: ${s.hora_llegada_estimada||'—'}\n`;
+  msg += `Fecha Inicio: ${s.fecha||'—'}\n`;
+  msg += `Fecha Término: ${fechaTermino||'—'}\n`;
+  msg += `Estado: ${(s.estado||'').toUpperCase()}\n\n`;
+  msg += `RUTA DEL SERVICIO\n`;
+  msg += `Origen: ${s.origen||'—'}\n`;
+  msg += `Destino Final: ${destinoFinal||'—'}\n`;
+  intermedios.forEach((p,i) => { msg += `Punto Intermedio ${i+1}: ${p.nombre||'—'}\n`; });
+
   window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
 }
 
