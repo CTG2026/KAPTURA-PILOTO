@@ -2766,6 +2766,31 @@ function cardHTML(s,i) {
   </div>`;
 }
 
+function activarEdicionTarifa(i) {
+  const view = document.getElementById('tarifa-view-'+i);
+  const input = document.getElementById('tarifa-input-'+i);
+  if(view) view.style.display = 'none';
+  if(input) { input.style.display = 'inline-block'; input.focus(); input.select(); }
+}
+
+async function guardarTarifaManual(i, val) {
+  const view = document.getElementById('tarifa-view-'+i);
+  const input = document.getElementById('tarifa-input-'+i);
+  const s = DB.servicios[i];
+  if(!s) return;
+  const nuevoValor = parseFloat(String(val).replace(/[^0-9.-]/g,'')) || 0;
+  if(input) input.style.display = 'none';
+  if(view) view.style.display = 'inline';
+  if(nuevoValor === (s.tarifa_neta||0)) return;
+  const nuevoIngreso = nuevoValor + (s.adicionales||0);
+  const {error} = await supa.from('servicios_piloto').update({tarifa_neta: nuevoValor, ingreso_total: nuevoIngreso}).eq('id', s.id);
+  if(error) { toast('⚠ Error al guardar tarifa: '+error.message); return; }
+  s.tarifa_neta = nuevoValor;
+  s.ingreso_total = nuevoIngreso;
+  toast(`✓ Tarifa de ${s.servicio_id} actualizada`);
+  renderServicios(); renderKPIs();
+}
+
 function filaHTML(s,i) {
   const pInts  = (s._puntos||[]).filter(p=>p.tipo==='intermedio');
   const pFinal = (s._puntos||[]).find(p=>p.tipo==='final');
@@ -2799,7 +2824,10 @@ function filaHTML(s,i) {
     <td>${s.origen||'—'}</td>
     <td style="font-weight:700">${destinoCelda}</td>
     <td style="font-size:12px;font-weight:700;color:var(--text)">${guia}</td>
-    <td style="font-weight:700;color:var(--green)" class="td-financ">${tarifa}</td>
+    <td style="font-weight:700;color:var(--green)" class="td-financ" onclick="event.stopPropagation()">
+      <span id="tarifa-view-${i}" onmouseenter="activarEdicionTarifa(${i})" onclick="activarEdicionTarifa(${i})" style="cursor:pointer">${tarifa}</span>
+      <input type="text" id="tarifa-input-${i}" value="${tarifaTotal||''}" style="display:none;width:90px;background:var(--bg);border:1px solid var(--gold);border-radius:5px;padding:3px 6px;font-size:11px;color:var(--text);text-align:right" onblur="guardarTarifaManual(${i},this.value)" onkeydown="if(event.key==='Enter'){this.blur()}" onclick="event.stopPropagation()">
+    </td>
     <td style="text-align:center">${cantPtos}</td>
     <td style="color:rgba(255,255,255,0.7)" class="td-financ">${totalPtos}</td>
     <td style="font-weight:700" class="td-financ">${totalIng}</td>
