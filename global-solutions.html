@@ -5998,7 +5998,7 @@ async function abrirFlujoCajaReal() {
   head.innerHTML = '<th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:800;color:var(--gold)">CONCEPTO</th>' +
     dias.map(d => {
       const dt = new Date(d+'T12:00:00');
-      return `<th style="padding:10px 14px;text-align:right;font-size:11px;font-weight:800;color:var(--gold)">${diasCortos[dt.getDay()]}<br>${d.slice(8,10)}-${d.slice(5,7)}</th>`;
+      return `<th style="padding:10px 14px;text-align:right;font-size:11px;font-weight:800;color:var(--gold)">${diasCortos[dt.getDay()]}<br><span style="font-size:13px">${d.slice(8,10)}-${d.slice(5,7)}-${d.slice(0,4)}</span></th>`;
     }).join('') + '<th style="padding:10px 14px;text-align:right;font-size:11px;font-weight:800;color:var(--gold)">TOTAL</th>';
 
   let acumulado = 0;
@@ -6073,7 +6073,7 @@ async function abrirFlujoCajaProyectado() {
     dias.map((d,i) => {
       const dt = new Date(d+'T12:00:00');
       const lbl = esHabil[i] ? '' : ' 🚫';
-      return `<th style="padding:10px 14px;text-align:right;font-size:11px;font-weight:800;color:var(--gold)">${diasCortos[dt.getDay()]}${lbl}<br>${d.slice(8,10)}-${d.slice(5,7)}</th>`;
+      return `<th style="padding:10px 14px;text-align:right;font-size:11px;font-weight:800;color:var(--gold)">${diasCortos[dt.getDay()]}${lbl}<br><span style="font-size:13px">${d.slice(8,10)}-${d.slice(5,7)}-${d.slice(0,4)}</span></th>`;
     }).join('') + '<th style="padding:10px 14px;text-align:right;font-size:11px;font-weight:800;color:var(--gold)">TOTAL</th>';
 
   function filaHtml(label, valores, bold, colorPos, colorNeg) {
