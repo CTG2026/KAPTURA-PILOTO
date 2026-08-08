@@ -643,6 +643,20 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
         </table>
       </div>
       <div style="font-size:11px;color:var(--muted);margin-top:10px" id="inf-flujo-nota"></div>
+      <div id="inf-cxc-section" style="display:none;margin-top:24px">
+        <div style="font-family:'DM Sans',sans-serif;font-size:14px;font-weight:900;letter-spacing:0.05em;margin-bottom:10px">CUENTAS POR COBRAR SEGÚN INGRESOS</div>
+        <div style="background:var(--surface);border-radius:12px;overflow:hidden;border:1.5px solid #2A2A2A;overflow-x:auto">
+          <table style="width:100%;border-collapse:collapse">
+            <thead><tr style="background:#1A2120">
+              <th style="padding:8px 14px;text-align:left;font-size:10px;font-weight:800;color:#C9A84C">TIPO</th>
+              <th style="padding:8px 14px;text-align:left;font-size:10px;font-weight:800;color:#C9A84C">CLIENTE</th>
+              <th style="padding:8px 14px;text-align:right;font-size:10px;font-weight:800;color:#C9A84C">MONTO</th>
+              <th style="padding:8px 14px;text-align:left;font-size:10px;font-weight:800;color:#C9A84C">ESTADO / FECHA</th>
+            </tr></thead>
+            <tbody id="inf-cxc-body"></tbody>
+          </table>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -5972,6 +5986,7 @@ async function abrirFlujoCajaReal() {
   document.getElementById('inf-flujo-container').style.display = 'block';
   document.getElementById('inf-flujo-titulo').textContent = 'Flujo de Caja — Últimos 7 días';
   document.getElementById('inf-flujo-nota').textContent = 'Cargando...';
+  document.getElementById('inf-cxc-section').style.display = 'none';
 
   const hoy = new Date();
   const dias = [];
@@ -6095,6 +6110,46 @@ async function abrirFlujoCajaProyectado() {
 
   document.getElementById('inf-flujo-nota').textContent =
     `🚫 = día no hábil (sin proyección operacional). Fuente: kaptura_presupuesto (mes ${mesKey}, ${DIAS_HABILES_MES} días hábiles) + kaptura_cuentas_por_cobrar (cobros con fecha comprometida). ${(presu||[]).length===0?'⚠ Sin presupuesto cargado para este mes.':''}`;
+
+  // Cuentas por Cobrar (facturadas) y por Facturar (ejecutado, sin factura)
+  const {data:cxf, error:e3} = await supa.from('kaptura_cuentas_por_facturar').select('*')
+    .eq('empresa','global_solutions').neq('estado','facturado');
+
+  const cxcSection = document.getElementById('inf-cxc-section');
+  const cxcBody = document.getElementById('inf-cxc-body');
+  cxcSection.style.display = 'block';
+
+  let filas = '';
+  (cxc||[]).forEach(c => {
+    filas += `<tr style="border-top:1px solid #2A2A2A">
+      <td style="padding:8px 14px;font-size:12px;color:#F5F0E8">Facturada, pendiente cobro</td>
+      <td style="padding:8px 14px;font-size:12px">${c.cliente||'—'}</td>
+      <td style="padding:8px 14px;text-align:right;font-size:12px;font-weight:700">${fmt(Number(c.monto_esperado)||0)}</td>
+      <td style="padding:8px 14px;font-size:11px;color:var(--muted)">${c.estado||''}${c.fecha_esperada?' · '+c.fecha_esperada:''}</td>
+    </tr>`;
+  });
+  const cxfPorCliente = {};
+  (cxf||[]).forEach(f => {
+    const cli = f.cliente||'—';
+    cxfPorCliente[cli] = (cxfPorCliente[cli]||0) + (Number(f.monto_neto)||0);
+  });
+  Object.entries(cxfPorCliente).forEach(([cli, monto]) => {
+    if(monto===0) return;
+    filas += `<tr style="border-top:1px solid #2A2A2A">
+      <td style="padding:8px 14px;font-size:12px;color:#F5F0E8">Ejecutado, por facturar</td>
+      <td style="padding:8px 14px;font-size:12px">${cli}</td>
+      <td style="padding:8px 14px;text-align:right;font-size:12px;font-weight:700">${fmt(monto)}</td>
+      <td style="padding:8px 14px;font-size:11px;color:var(--muted)">servicios_piloto, sin num_factura</td>
+    </tr>`;
+  });
+  const totalCxC = (cxc||[]).reduce((a,c)=>a+(Number(c.monto_esperado)||0),0);
+  const totalCxF = Object.values(cxfPorCliente).reduce((a,b)=>a+b,0);
+  filas += `<tr style="border-top:2px solid #C9A84C;background:var(--bg)">
+    <td colspan="2" style="padding:8px 14px;font-size:12px;font-weight:800">TOTAL (CxC + CxF)</td>
+    <td style="padding:8px 14px;text-align:right;font-size:12px;font-weight:800">${fmt(totalCxC+totalCxF)}</td>
+    <td></td>
+  </tr>`;
+  cxcBody.innerHTML = filas || '<tr><td colspan="4" style="padding:14px;color:var(--muted);font-size:12px">Sin cuentas por cobrar ni por facturar pendientes.</td></tr>';
 }
 
 function abrirInformeResultados(mesKey) {
