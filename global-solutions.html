@@ -669,31 +669,25 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
 
       <div id="inf-cons-alertas"></div>
 
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start">
-        <div style="min-width:0">
-          <div style="font-family:'DM Sans',sans-serif;font-size:13px;font-weight:900;letter-spacing:0.05em;color:#C9A84C;margin-bottom:8px">ÚLTIMOS 7 DÍAS (REAL)</div>
-          <div style="background:var(--surface);border-radius:12px;overflow:hidden;border:1.5px solid #2A2A2A;overflow-x:auto;margin-bottom:8px">
-            <table style="width:100%;border-collapse:collapse;min-width:640px">
-              <thead><tr style="background:#1A2120" id="inf-cons-real-head"></tr></thead>
-              <tbody id="inf-cons-real-body"></tbody>
-            </table>
-          </div>
-          <div style="font-size:11px;color:var(--muted)" id="inf-cons-real-nota"></div>
-        </div>
-
-        <div style="min-width:0">
-          <div style="font-family:'DM Sans',sans-serif;font-size:13px;font-weight:900;letter-spacing:0.05em;color:#C9A84C;margin-bottom:8px">PRÓXIMOS 7 DÍAS (PROYECTADO)</div>
-          <div style="background:var(--surface);border-radius:12px;overflow:hidden;border:1.5px solid #2A2A2A;overflow-x:auto;margin-bottom:8px">
-            <table style="width:100%;border-collapse:collapse;min-width:640px">
-              <thead><tr style="background:#1A2120" id="inf-cons-proy-head"></tr></thead>
-              <tbody id="inf-cons-proy-body"></tbody>
-            </table>
-          </div>
-          <div style="font-size:11px;color:var(--muted)" id="inf-cons-proy-nota"></div>
-        </div>
+      <div style="font-family:'DM Sans',sans-serif;font-size:13px;font-weight:900;letter-spacing:0.05em;color:#C9A84C;margin-bottom:8px">ÚLTIMOS 7 DÍAS (REAL)</div>
+      <div style="background:var(--surface);border-radius:12px;overflow:hidden;border:1.5px solid #2A2A2A;margin-bottom:8px">
+        <table style="width:100%;table-layout:fixed;border-collapse:collapse">
+          <thead><tr style="background:#1A2120" id="inf-cons-real-head"></tr></thead>
+          <tbody id="inf-cons-real-body"></tbody>
+        </table>
       </div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:24px" id="inf-cons-real-nota"></div>
 
-      <div style="font-family:'DM Sans',sans-serif;font-size:13px;font-weight:900;letter-spacing:0.05em;color:#C9A84C;margin:24px 0 8px">PENDIENTE — CUENTAS POR COBRAR / POR FACTURAR</div>
+      <div style="font-family:'DM Sans',sans-serif;font-size:13px;font-weight:900;letter-spacing:0.05em;color:#C9A84C;margin-bottom:8px">PRÓXIMOS 7 DÍAS (PROYECTADO)</div>
+      <div style="background:var(--surface);border-radius:12px;overflow:hidden;border:1.5px solid #2A2A2A;margin-bottom:8px">
+        <table style="width:100%;table-layout:fixed;border-collapse:collapse">
+          <thead><tr style="background:#1A2120" id="inf-cons-proy-head"></tr></thead>
+          <tbody id="inf-cons-proy-body"></tbody>
+        </table>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:24px" id="inf-cons-proy-nota"></div>
+
+      <div style="font-family:'DM Sans',sans-serif;font-size:13px;font-weight:900;letter-spacing:0.05em;color:#C9A84C;margin-bottom:8px">PENDIENTE — CUENTAS POR COBRAR / POR FACTURAR</div>
       <div style="background:var(--surface);border-radius:12px;overflow:hidden;border:1.5px solid #2A2A2A;overflow-x:auto">
         <table style="width:100%;border-collapse:collapse">
           <thead><tr style="background:#1A2120">
@@ -6084,11 +6078,11 @@ async function renderFlujoReal(headId, bodyId, notaId, alertasId) {
 
   const head = document.getElementById(headId);
   const diasCortos = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
-  head.innerHTML = '<th style="background:#1A2120;padding:10px 14px;text-align:left;font-size:11px;font-weight:800;color:#C9A84C">CONCEPTO</th>' +
+  head.innerHTML = '<th style="background:#1A2120;padding:5px 4px;text-align:left;font-size:9px;font-weight:800;color:#C9A84C">CONCEPTO</th>' +
     dias.map(d => {
       const dt = new Date(d+'T12:00:00');
-      return `<th style="background:#1A2120;padding:10px 14px;text-align:right;font-size:11px;font-weight:800;color:#C9A84C">${diasCortos[dt.getDay()]}<br><span style="font-size:13px">${d.slice(8,10)}-${d.slice(5,7)}-${d.slice(0,4)}</span></th>`;
-    }).join('') + '<th style="background:#1A2120;padding:10px 14px;text-align:right;font-size:11px;font-weight:800;color:#C9A84C">TOTAL</th>';
+      return `<th style="background:#1A2120;padding:5px 3px;text-align:right;font-size:9px;font-weight:800;color:#C9A84C">${diasCortos[dt.getDay()]}<br><span style="font-size:10px">${d.slice(8,10)}-${d.slice(5,7)}-${d.slice(0,4)}</span></th>`;
+    }).join('') + '<th style="background:#1A2120;padding:5px 3px;text-align:right;font-size:9px;font-weight:800;color:#C9A84C">TOTAL</th>';
 
   let acumulado = 0;
   const filaIngreso = dias.map(d => porDia[d].ingreso);
@@ -6102,9 +6096,9 @@ async function renderFlujoReal(headId, bodyId, notaId, alertasId) {
     const fw = bold ? 'font-weight:800' : 'font-weight:400';
     const bg = bold ? 'background:var(--bg)' : '';
     return `<tr style="${bg};border-top:1px solid #2A2A2A">
-      <td style="padding:8px 14px;font-size:12px;${fw}">${label}</td>
-      ${valores.map(v => `<td style="padding:8px 14px;text-align:right;font-size:12px;${fw};color:${v<0?(colorNeg||'#ef4444'):(colorPos||'inherit')}">${fmt(v)}</td>`).join('')}
-      <td style="padding:8px 14px;text-align:right;font-size:12px;${fw}">${fmt(total)}</td>
+      <td style="padding:5px 4px;font-size:10px;${fw}">${label}</td>
+      ${valores.map(v => `<td style="padding:5px 3px;text-align:right;font-size:10px;${fw};color:${v<0?(colorNeg||'#ef4444'):(colorPos||'inherit')}">${fmt(v)}</td>`).join('')}
+      <td style="padding:5px 3px;text-align:right;font-size:10px;${fw}">${fmt(total)}</td>
     </tr>`;
   }
 
@@ -6199,21 +6193,21 @@ async function renderFlujoProyectado(headId, bodyId, notaId, cxcBodyId, cxcNotaI
   const filaAcum = filaSaldo.map(s => acumulado += s);
 
   const head = document.getElementById(headId);
-  head.innerHTML = '<th style="background:#1A2120;padding:10px 14px;text-align:left;font-size:11px;font-weight:800;color:#C9A84C">CONCEPTO</th>' +
+  head.innerHTML = '<th style="background:#1A2120;padding:5px 4px;text-align:left;font-size:9px;font-weight:800;color:#C9A84C">CONCEPTO</th>' +
     dias.map((d,i) => {
       const dt = new Date(d+'T12:00:00');
       const lbl = esHabil[i] ? '' : ' 🚫';
-      return `<th style="background:#1A2120;padding:10px 14px;text-align:right;font-size:11px;font-weight:800;color:#C9A84C">${diasCortos[dt.getDay()]}${lbl}<br><span style="font-size:13px">${d.slice(8,10)}-${d.slice(5,7)}-${d.slice(0,4)}</span></th>`;
-    }).join('') + '<th style="background:#1A2120;padding:10px 14px;text-align:right;font-size:11px;font-weight:800;color:#C9A84C">TOTAL</th>';
+      return `<th style="background:#1A2120;padding:5px 3px;text-align:right;font-size:9px;font-weight:800;color:#C9A84C">${diasCortos[dt.getDay()]}${lbl}<br><span style="font-size:10px">${d.slice(8,10)}-${d.slice(5,7)}-${d.slice(0,4)}</span></th>`;
+    }).join('') + '<th style="background:#1A2120;padding:5px 3px;text-align:right;font-size:9px;font-weight:800;color:#C9A84C">TOTAL</th>';
 
   function filaHtml(label, valores, bold, colorPos, colorNeg, esAcumulado) {
     const total = esAcumulado ? valores[valores.length-1] : valores.reduce((a,b)=>a+b,0);
     const fw = bold ? 'font-weight:800' : 'font-weight:400';
     const bg = bold ? 'background:var(--bg)' : '';
     return `<tr style="${bg};border-top:1px solid #2A2A2A">
-      <td style="padding:8px 14px;font-size:12px;${fw}">${label}</td>
-      ${valores.map((v,i) => `<td style="padding:8px 14px;text-align:right;font-size:12px;${fw};color:${!esHabil[i]&&v===0?'var(--muted)':(v<0?(colorNeg||'#ef4444'):(colorPos||'inherit'))}">${esHabil[i]||v!==0?fmt(v):'—'}</td>`).join('')}
-      <td style="padding:8px 14px;text-align:right;font-size:12px;${fw}">${fmt(total)}</td>
+      <td style="padding:5px 4px;font-size:10px;${fw}">${label}</td>
+      ${valores.map((v,i) => `<td style="padding:5px 3px;text-align:right;font-size:10px;${fw};color:${!esHabil[i]&&v===0?'var(--muted)':(v<0?(colorNeg||'#ef4444'):(colorPos||'inherit'))}">${esHabil[i]||v!==0?fmt(v):'—'}</td>`).join('')}
+      <td style="padding:5px 3px;text-align:right;font-size:10px;${fw}">${fmt(total)}</td>
     </tr>`;
   }
 
