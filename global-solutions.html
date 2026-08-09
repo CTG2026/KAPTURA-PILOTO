@@ -6000,8 +6000,9 @@ async function abrirFlujoCajaReal() {
     .eq('empresa','global_solutions').gte('fecha',desde).lte('fecha',hasta);
   if(error){ document.getElementById('inf-flujo-nota').textContent = 'Error: '+error.message; return; }
 
-  const {data:servs, error:e2} = await supa.from('servicios_piloto').select('fecha,ingreso_total,num_factura')
+  const {data:servs, error:e2} = await supa.from('servicios_piloto').select('fecha,ingreso_total')
     .eq('empresa','global_solutions').gte('fecha',desde).lte('fecha',hasta);
+  if(e2) console.error('Error servicios_piloto:', e2.message);
 
   const porDia = {};
   dias.forEach(d => porDia[d] = {ingreso:0, egreso:0, devengado:0});
@@ -6012,7 +6013,7 @@ async function abrirFlujoCajaReal() {
   });
   (servs||[]).forEach(s => {
     if(!porDia[s.fecha]) return;
-    if(!s.num_factura) porDia[s.fecha].devengado += Number(s.ingreso_total)||0;
+    porDia[s.fecha].devengado += Number(s.ingreso_total)||0;
   });
 
   const head = document.getElementById('inf-flujo-head');
@@ -6047,10 +6048,10 @@ async function abrirFlujoCajaReal() {
     filaHtml('Saldo del día', filaSaldo, true) +
     filaHtml('Saldo acumulado', filaAcum, true, '', '', true) +
     `<tr style="border-top:2px solid #C9A84C"><td colspan="${dias.length+2}" style="padding:6px 14px;font-size:10px;color:var(--muted);font-style:italic">Memo — no forma parte del cálculo de Saldo (no es plata en el banco todavía):</td></tr>` +
-    filaHtml('Ventas Devengadas (ejecutado, sin factura)', filaDevengado, false, '#C9A84C');
+    filaHtml('Ventas Devengadas (todos los servicios del día)', filaDevengado, false, '#C9A84C');
 
   document.getElementById('inf-flujo-nota').textContent =
-    `Fuente: kaptura_caja, ${(rows||[]).length} movimientos entre ${desde} y ${hasta}. Ventas Devengadas: servicios_piloto sin num_factura, por fecha de servicio.`;
+    `Fuente: kaptura_caja, ${(rows||[]).length} movimientos entre ${desde} y ${hasta}. Ventas Devengadas: ingreso_total de servicios_piloto por fecha de servicio (incluye facturados y no facturados).`;
 }
 
 // ══ FLUJO DE CAJA — PRÓXIMOS 7 DÍAS (proyectado, solo días hábiles) ══
