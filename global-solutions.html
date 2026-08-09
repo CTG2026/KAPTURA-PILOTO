@@ -659,6 +659,48 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
         </div>
       </div>
     </div>
+
+    <!-- Vista Consolidada: Ultimos 7 + Proximos 7 + CxC/CxF -->
+    <div id="inf-consolidado-container" style="display:none">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+        <button class="btn btn-outline btn-sm" onclick="volverListaInformes()">← Volver</button>
+        <div style="font-family:'DM Sans',sans-serif;font-size:18px;font-weight:900;letter-spacing:0.05em">FLUJO DE CAJA — VISTA CONSOLIDADA (PASADO + FUTURO)</div>
+      </div>
+
+      <div id="inf-cons-alertas"></div>
+
+      <div style="font-family:'DM Sans',sans-serif;font-size:13px;font-weight:900;letter-spacing:0.05em;color:#C9A84C;margin-bottom:8px">PASADO — ÚLTIMOS 7 DÍAS (REAL)</div>
+      <div style="background:var(--surface);border-radius:12px;overflow:hidden;border:1.5px solid #2A2A2A;overflow-x:auto;margin-bottom:8px">
+        <table style="width:100%;border-collapse:collapse;min-width:800px">
+          <thead><tr style="background:#1A2120" id="inf-cons-real-head"></tr></thead>
+          <tbody id="inf-cons-real-body"></tbody>
+        </table>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:24px" id="inf-cons-real-nota"></div>
+
+      <div style="font-family:'DM Sans',sans-serif;font-size:13px;font-weight:900;letter-spacing:0.05em;color:#C9A84C;margin-bottom:8px">FUTURO — PRÓXIMOS 7 DÍAS (PROYECTADO)</div>
+      <div style="background:var(--surface);border-radius:12px;overflow:hidden;border:1.5px solid #2A2A2A;overflow-x:auto;margin-bottom:8px">
+        <table style="width:100%;border-collapse:collapse;min-width:800px">
+          <thead><tr style="background:#1A2120" id="inf-cons-proy-head"></tr></thead>
+          <tbody id="inf-cons-proy-body"></tbody>
+        </table>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:24px" id="inf-cons-proy-nota"></div>
+
+      <div style="font-family:'DM Sans',sans-serif;font-size:13px;font-weight:900;letter-spacing:0.05em;color:#C9A84C;margin-bottom:8px">PENDIENTE — CUENTAS POR COBRAR / POR FACTURAR</div>
+      <div style="background:var(--surface);border-radius:12px;overflow:hidden;border:1.5px solid #2A2A2A;overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse">
+          <thead><tr style="background:#1A2120">
+            <th style="padding:8px 14px;text-align:left;font-size:10px;font-weight:800;color:#C9A84C">TIPO</th>
+            <th style="padding:8px 14px;text-align:left;font-size:10px;font-weight:800;color:#C9A84C">CLIENTE</th>
+            <th style="padding:8px 14px;text-align:right;font-size:10px;font-weight:800;color:#C9A84C">MONTO</th>
+            <th style="padding:8px 14px;text-align:left;font-size:10px;font-weight:800;color:#C9A84C">ESTADO / FECHA</th>
+          </tr></thead>
+          <tbody id="inf-cons-cxc-body"></tbody>
+        </table>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:10px" id="inf-cons-cxc-nota"></div>
+    </div>
   </div>
 
   <!-- TAB CONFIG -->
@@ -5954,6 +5996,13 @@ function renderInformes() {
         <div style="font-size:11px;color:var(--muted);margin-top:2px">Solo días hábiles L-V — kaptura_presupuesto</div>
       </div>
       <div style="font-size:18px;color:var(--muted)">›</div>
+    </div>
+    <div onclick="abrirFlujoCajaConsolidado()" style="display:flex;align-items:center;justify-content:space-between;background:var(--surface);border:1.5px solid #C9A84C;border-radius:10px;padding:14px 18px;cursor:pointer;transition:border-color 0.15s" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='#C9A84C'">
+      <div>
+        <div style="font-size:13px;font-weight:800;color:var(--navy)">📊 Flujo de Caja — Vista Consolidada (Pasado + Futuro + CxC)</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px">Últimos 7 días + Próximos 7 días + Cuentas por Cobrar/Facturar, todo junto</div>
+      </div>
+      <div style="font-size:18px;color:var(--muted)">›</div>
     </div>`;
 
   if(keys.length === 0) {
@@ -5978,16 +6027,12 @@ function volverListaInformes() {
   document.getElementById('inf-lista-container').style.display = 'block';
   document.getElementById('inf-detalle-container').style.display = 'none';
   document.getElementById('inf-flujo-container').style.display = 'none';
+  document.getElementById('inf-consolidado-container').style.display = 'none';
 }
 
-// ══ FLUJO DE CAJA — ÚLTIMOS 7 DÍAS (real, kaptura_caja) ══
-async function abrirFlujoCajaReal() {
-  document.getElementById('inf-lista-container').style.display = 'none';
-  document.getElementById('inf-detalle-container').style.display = 'none';
-  document.getElementById('inf-flujo-container').style.display = 'block';
-  document.getElementById('inf-flujo-titulo').textContent = 'Flujo de Caja — Últimos 7 días';
-  document.getElementById('inf-flujo-nota').textContent = 'Cargando...';
-  document.getElementById('inf-cxc-section').style.display = 'none';
+// ══ FLUJO DE CAJA — ÚLTIMOS 7 DÍAS (real, kaptura_caja) — PARAMETRIZADA ══
+async function renderFlujoReal(headId, bodyId, notaId, alertasId) {
+  document.getElementById(notaId).textContent = 'Cargando...';
 
   const hoy = new Date();
   const dias = [];
@@ -5999,7 +6044,7 @@ async function abrirFlujoCajaReal() {
 
   const {data:rows, error} = await supa.from('kaptura_caja').select('*')
     .eq('empresa','global_solutions').gte('fecha',desde).lte('fecha',hasta);
-  if(error){ document.getElementById('inf-flujo-nota').textContent = 'Error: '+error.message; return; }
+  if(error){ document.getElementById(notaId).textContent = 'Error: '+error.message; return; }
 
   const {data:servs, error:e2} = await supa.from('servicios_piloto').select('fecha,ingreso_total')
     .eq('empresa','global_solutions').gte('fecha',desde).lte('fecha',hasta);
@@ -6031,7 +6076,7 @@ async function abrirFlujoCajaReal() {
   const filaPresupuesto = dias.map((d,i) => esHabil[i] ? ingresoDiarioHabil : 0);
   const filaPresupuestoEgreso = dias.map((d,i) => esHabil[i] ? egresoDiarioHabil : 0);
 
-  const head = document.getElementById('inf-flujo-head');
+  const head = document.getElementById(headId);
   const diasCortos = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
   head.innerHTML = '<th style="background:#1A2120;padding:10px 14px;text-align:left;font-size:11px;font-weight:800;color:#C9A84C">CONCEPTO</th>' +
     dias.map(d => {
@@ -6057,7 +6102,7 @@ async function abrirFlujoCajaReal() {
     </tr>`;
   }
 
-  document.getElementById('inf-flujo-body').innerHTML =
+  document.getElementById(bodyId).innerHTML =
     filaHtml('Ingresos en Cuenta Banco', filaIngreso, false, '#059669') +
     filaHtml('Egresos en Cuenta Banco', filaEgreso.map(v=>-v), false, '', '#DC2626') +
     filaHtml('Saldo del día', filaSaldo, true) +
@@ -6068,10 +6113,11 @@ async function abrirFlujoCajaReal() {
     filaHtml('Egresos según Presupuesto (día hábil L-V)', filaPresupuestoEgreso, false, '#94A3B8') +
     filaHtml('Egresos Reales (cuenta banco)', filaEgreso, false, '#DC2626');
 
-  document.getElementById('inf-flujo-nota').textContent =
+  document.getElementById(notaId).textContent =
     `Fuente: kaptura_caja, ${(rows||[]).length} movimientos entre ${desde} y ${hasta}. Ventas Devengadas: ingreso_total de servicios_piloto por fecha de servicio. Presupuesto: kaptura_presupuesto mes ${mesKey} ÷ ${DIAS_HABILES_MES} días hábiles.${ingresoMensual===0?' ⚠ Sin presupuesto de ingreso cargado para este mes.':''}`;
 
   // ══ CENTINELA — 3 alertas ══
+  if(!alertasId) return;
   const totalPresupuesto = filaPresupuesto.reduce((a,b)=>a+b,0);
   const totalDevengado = filaDevengado.reduce((a,b)=>a+b,0);
   const totalCaja = filaIngreso.reduce((a,b)=>a+b,0);
@@ -6087,7 +6133,7 @@ async function abrirFlujoCajaReal() {
   if(pctCobranza!==null && pctCobranza < UMBRAL) {
     alertas.push({tipo:'Cobranza', color:'#D97706', msg:`Solo se ha cobrado el ${Math.round(pctCobranza*100)}% de lo devengado (${fmt(totalCaja)} de ${fmt(totalDevengado)}) — brecha de ${fmt(brechaCobranza)}. Se vende, pero no se cobra al ritmo necesario.`});
   }
-  const alertasContainer = document.getElementById('inf-alertas-centinela');
+  const alertasContainer = document.getElementById(alertasId);
   if(alertas.length===0) {
     alertasContainer.innerHTML = '';
   } else if(alertas.length>=2) {
@@ -6103,14 +6149,18 @@ async function abrirFlujoCajaReal() {
   }
 }
 
-// ══ FLUJO DE CAJA — PRÓXIMOS 7 DÍAS (proyectado, solo días hábiles) ══
-async function abrirFlujoCajaProyectado() {
+async function abrirFlujoCajaReal() {
   document.getElementById('inf-lista-container').style.display = 'none';
   document.getElementById('inf-detalle-container').style.display = 'none';
   document.getElementById('inf-flujo-container').style.display = 'block';
-  document.getElementById('inf-flujo-titulo').textContent = 'Flujo de Caja — Próximos 7 días (proyectado)';
-  document.getElementById('inf-flujo-nota').textContent = 'Cargando...';
-  document.getElementById('inf-alertas-centinela').innerHTML = '';
+  document.getElementById('inf-flujo-titulo').textContent = 'Flujo de Caja — Últimos 7 días';
+  document.getElementById('inf-cxc-section').style.display = 'none';
+  await renderFlujoReal('inf-flujo-head','inf-flujo-body','inf-flujo-nota','inf-alertas-centinela');
+}
+
+// ══ FLUJO DE CAJA — PRÓXIMOS 7 DÍAS (proyectado, solo días hábiles) — PARAMETRIZADA ══
+async function renderFlujoProyectado(headId, bodyId, notaId, cxcBodyId, cxcNotaId) {
+  document.getElementById(notaId).textContent = 'Cargando...';
 
   const hoy = new Date();
   const dias = [];
@@ -6118,13 +6168,13 @@ async function abrirFlujoCajaProyectado() {
     const d = new Date(hoy); d.setDate(d.getDate()+i);
     dias.push(d.toISOString().slice(0,10));
   }
-  const mesKey = dias[0].slice(0,7); // YYYY-MM del primer día
+  const mesKey = dias[0].slice(0,7);
 
   const [{data:presu, error:e1}, {data:cxc, error:e2}] = await Promise.all([
     supa.from('kaptura_presupuesto').select('*').eq('empresa','global_solutions').eq('mes',mesKey),
     supa.from('kaptura_cuentas_por_cobrar').select('*').eq('empresa','global_solutions').in('estado',['pendiente','programado'])
   ]);
-  if(e1){ document.getElementById('inf-flujo-nota').textContent = 'Error presupuesto: '+e1.message; return; }
+  if(e1){ document.getElementById(notaId).textContent = 'Error presupuesto: '+e1.message; return; }
 
   const DIAS_HABILES_MES = 20;
   const cat = {};
@@ -6134,8 +6184,6 @@ async function abrirFlujoCajaProyectado() {
 
   const diasCortos = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
   const esHabil = dias.map(d => { const dow = new Date(d+'T12:00:00').getDay(); return dow>=1 && dow<=5; });
-
-  // Cobros puntuales con fecha comprometida dentro de la ventana
   const cobrosPuntuales = dias.map(d => (cxc||[]).filter(c => c.fecha_esperada===d).reduce((a,c)=>a+(Number(c.monto_esperado)||0),0));
 
   const filaIngreso = dias.map((d,i) => (esHabil[i]?ingresoDiario:0) + cobrosPuntuales[i]);
@@ -6144,7 +6192,7 @@ async function abrirFlujoCajaProyectado() {
   let acumulado = 0;
   const filaAcum = filaSaldo.map(s => acumulado += s);
 
-  const head = document.getElementById('inf-flujo-head');
+  const head = document.getElementById(headId);
   head.innerHTML = '<th style="background:#1A2120;padding:10px 14px;text-align:left;font-size:11px;font-weight:800;color:#C9A84C">CONCEPTO</th>' +
     dias.map((d,i) => {
       const dt = new Date(d+'T12:00:00');
@@ -6163,22 +6211,20 @@ async function abrirFlujoCajaProyectado() {
     </tr>`;
   }
 
-  document.getElementById('inf-flujo-body').innerHTML =
+  document.getElementById(bodyId).innerHTML =
     filaHtml('Ingresos proyectados', filaIngreso, false, '#059669') +
     filaHtml('Egresos proyectados', filaEgreso.map(v=>-v), false, '', '#DC2626') +
     filaHtml('Saldo del día', filaSaldo, true) +
     filaHtml('Saldo acumulado', filaAcum, true, '', '', true);
 
-  document.getElementById('inf-flujo-nota').textContent =
+  document.getElementById(notaId).textContent =
     `🚫 = día no hábil (sin proyección operacional). Fuente: kaptura_presupuesto (mes ${mesKey}, ${DIAS_HABILES_MES} días hábiles) + kaptura_cuentas_por_cobrar (cobros con fecha comprometida). ${(presu||[]).length===0?'⚠ Sin presupuesto cargado para este mes.':''}`;
 
-  // Cuentas por Cobrar (facturadas) y por Facturar (ejecutado, sin factura)
+  if(!cxcBodyId) return;
   const {data:cxf, error:e3} = await supa.from('kaptura_cuentas_por_facturar').select('*')
-    .eq('empresa','global_solutions').neq('estado','facturado');
+    .eq('empresa','global_solutions').eq('estado','pendiente_facturar');
 
-  const cxcSection = document.getElementById('inf-cxc-section');
-  const cxcBody = document.getElementById('inf-cxc-body');
-  cxcSection.style.display = 'block';
+  const cxcBody = document.getElementById(cxcBodyId);
 
   let filas = '';
   (cxc||[]).forEach(c => {
@@ -6200,7 +6246,7 @@ async function abrirFlujoCajaProyectado() {
       <td style="padding:8px 14px;font-size:12px;color:#F5F0E8">Ejecutado, por facturar</td>
       <td style="padding:8px 14px;font-size:12px">${cli}</td>
       <td style="padding:8px 14px;text-align:right;font-size:12px;font-weight:700">${fmt(monto)}</td>
-      <td style="padding:8px 14px;font-size:11px;color:var(--muted)">servicios_piloto, sin num_factura</td>
+      <td style="padding:8px 14px;font-size:11px;color:var(--muted)">servicios_piloto, sin factura</td>
     </tr>`;
   });
   const totalCxC = (cxc||[]).reduce((a,c)=>a+(Number(c.monto_esperado)||0),0);
@@ -6211,6 +6257,29 @@ async function abrirFlujoCajaProyectado() {
     <td></td>
   </tr>`;
   cxcBody.innerHTML = filas || '<tr><td colspan="4" style="padding:14px;color:var(--muted);font-size:12px">Sin cuentas por cobrar ni por facturar pendientes.</td></tr>';
+  if(cxcNotaId) document.getElementById(cxcNotaId).textContent = `CxC: solo facturas ya emitidas, estado pendiente/programado. CxF: servicios_piloto ejecutados sin factura (kaptura_cuentas_por_facturar, estado pendiente_facturar).`;
+}
+
+async function abrirFlujoCajaProyectado() {
+  document.getElementById('inf-lista-container').style.display = 'none';
+  document.getElementById('inf-detalle-container').style.display = 'none';
+  document.getElementById('inf-flujo-container').style.display = 'block';
+  document.getElementById('inf-flujo-titulo').textContent = 'Flujo de Caja — Próximos 7 días (proyectado)';
+  document.getElementById('inf-alertas-centinela').innerHTML = '';
+  document.getElementById('inf-cxc-section').style.display = 'block';
+  await renderFlujoProyectado('inf-flujo-head','inf-flujo-body','inf-flujo-nota','inf-cxc-body');
+}
+
+// ══ VISTA CONSOLIDADA — Pasado + Futuro + CxC/CxF ══
+async function abrirFlujoCajaConsolidado() {
+  document.getElementById('inf-lista-container').style.display = 'none';
+  document.getElementById('inf-detalle-container').style.display = 'none';
+  document.getElementById('inf-flujo-container').style.display = 'none';
+  document.getElementById('inf-consolidado-container').style.display = 'block';
+  await Promise.all([
+    renderFlujoReal('inf-cons-real-head','inf-cons-real-body','inf-cons-real-nota','inf-cons-alertas'),
+    renderFlujoProyectado('inf-cons-proy-head','inf-cons-proy-body','inf-cons-proy-nota','inf-cons-cxc-body','inf-cons-cxc-nota')
+  ]);
 }
 
 function abrirInformeResultados(mesKey) {
