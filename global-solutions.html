@@ -634,6 +634,7 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
         <button class="btn btn-outline btn-sm" onclick="volverListaInformes()">← Volver</button>
         <div style="font-family:'DM Sans',sans-serif;font-size:18px;font-weight:900;letter-spacing:0.05em" id="inf-flujo-titulo">—</div>
       </div>
+      <div id="inf-alertas-centinela"></div>
       <div style="background:var(--surface);border-radius:12px;overflow:hidden;border:1.5px solid #2A2A2A;overflow-x:auto">
         <table style="width:100%;border-collapse:collapse;min-width:800px">
           <thead>
@@ -6004,6 +6005,14 @@ async function abrirFlujoCajaReal() {
     .eq('empresa','global_solutions').gte('fecha',desde).lte('fecha',hasta);
   if(e2) console.error('Error servicios_piloto:', e2.message);
 
+  const mesKey = desde.slice(0,7);
+  const {data:presu, error:e3} = await supa.from('kaptura_presupuesto').select('*')
+    .eq('empresa','global_solutions').eq('mes',mesKey).eq('categoria','ingreso');
+  if(e3) console.error('Error presupuesto:', e3.message);
+  const DIAS_HABILES_MES = 20;
+  const ingresoMensual = (presu||[]).reduce((a,p)=>a+(Number(p.monto_presupuestado)||0),0);
+  const ingresoDiarioHabil = ingresoMensual / DIAS_HABILES_MES;
+
   const porDia = {};
   dias.forEach(d => porDia[d] = {ingreso:0, egreso:0, devengado:0});
   (rows||[]).forEach(r => {
@@ -6015,6 +6024,9 @@ async function abrirFlujoCajaReal() {
     if(!porDia[s.fecha]) return;
     porDia[s.fecha].devengado += Number(s.ingreso_total)||0;
   });
+
+  const esHabil = dias.map(d => { const dow = new Date(d+'T12:00:00').getDay(); return dow>=1 && dow<=5; });
+  const filaPresupuesto = dias.map((d,i) => esHabil[i] ? ingresoDiarioHabil : 0);
 
   const head = document.getElementById('inf-flujo-head');
   const diasCortos = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
@@ -6048,10 +6060,42 @@ async function abrirFlujoCajaReal() {
     filaHtml('Saldo del día', filaSaldo, true) +
     filaHtml('Saldo acumulado', filaAcum, true, '', '', true) +
     `<tr style="border-top:2px solid #C9A84C"><td colspan="${dias.length+2}" style="padding:6px 14px;font-size:10px;color:var(--muted);font-style:italic">Memo — no forma parte del cálculo de Saldo (no es plata en el banco todavía):</td></tr>` +
+    filaHtml('Presupuesto de Ingresos (día hábil L-V)', filaPresupuesto, false, '#94A3B8') +
     filaHtml('Ventas Devengadas (todos los servicios del día)', filaDevengado, false, '#C9A84C');
 
   document.getElementById('inf-flujo-nota').textContent =
-    `Fuente: kaptura_caja, ${(rows||[]).length} movimientos entre ${desde} y ${hasta}. Ventas Devengadas: ingreso_total de servicios_piloto por fecha de servicio (incluye facturados y no facturados).`;
+    `Fuente: kaptura_caja, ${(rows||[]).length} movimientos entre ${desde} y ${hasta}. Ventas Devengadas: ingreso_total de servicios_piloto por fecha de servicio. Presupuesto: kaptura_presupuesto mes ${mesKey} ÷ ${DIAS_HABILES_MES} días hábiles.${ingresoMensual===0?' ⚠ Sin presupuesto de ingreso cargado para este mes.':''}`;
+
+  // ══ CENTINELA — 3 alertas ══
+  const totalPresupuesto = filaPresupuesto.reduce((a,b)=>a+b,0);
+  const totalDevengado = filaDevengado.reduce((a,b)=>a+b,0);
+  const totalCaja = filaIngreso.reduce((a,b)=>a+b,0);
+  const UMBRAL = 0.85;
+  const pctOperacional = totalPresupuesto>0 ? totalDevengado/totalPresupuesto : null;
+  const brechaCobranza = totalDevengado - totalCaja;
+  const pctCobranza = totalDevengado>0 ? totalCaja/totalDevengado : null;
+
+  let alertas = [];
+  if(pctOperacional!==null && pctOperacional < UMBRAL) {
+    alertas.push({tipo:'Operacional', color:'#DC2626', msg:`Ventas Devengadas (${fmt(totalDevengado)}) están al ${Math.round(pctOperacional*100)}% del Presupuesto (${fmt(totalPresupuesto)}) — bajo el umbral de ${Math.round(UMBRAL*100)}%. No se está generando la actividad esperada.`});
+  }
+  if(pctCobranza!==null && pctCobranza < UMBRAL) {
+    alertas.push({tipo:'Cobranza', color:'#D97706', msg:`Solo se ha cobrado el ${Math.round(pctCobranza*100)}% de lo devengado (${fmt(totalCaja)} de ${fmt(totalDevengado)}) — brecha de ${fmt(brechaCobranza)}. Se vende, pero no se cobra al ritmo necesario.`});
+  }
+  const alertasContainer = document.getElementById('inf-alertas-centinela');
+  if(alertas.length===0) {
+    alertasContainer.innerHTML = '';
+  } else if(alertas.length>=2) {
+    alertasContainer.innerHTML = `<div style="background:#450A0A;border:1.5px solid #DC2626;border-radius:8px;padding:12px 16px;margin-bottom:14px">
+      <div style="color:#FCA5A5;font-weight:800;font-size:12px;margin-bottom:4px">⚠ ALERTA COMBINADA — problema doble</div>
+      <div style="color:#F5F0E8;font-size:11px">No se está vendiendo lo suficiente NI se está cobrando lo que se vende. ${alertas.map(a=>a.msg).join(' ')}</div>
+    </div>`;
+  } else {
+    alertasContainer.innerHTML = alertas.map(a => `<div style="background:#1A2120;border:1.5px solid ${a.color};border-radius:8px;padding:12px 16px;margin-bottom:14px">
+      <div style="color:${a.color};font-weight:800;font-size:12px;margin-bottom:4px">⚠ ALERTA ${a.tipo.toUpperCase()}</div>
+      <div style="color:#F5F0E8;font-size:11px">${a.msg}</div>
+    </div>`).join('');
+  }
 }
 
 // ══ FLUJO DE CAJA — PRÓXIMOS 7 DÍAS (proyectado, solo días hábiles) ══
@@ -6061,6 +6105,7 @@ async function abrirFlujoCajaProyectado() {
   document.getElementById('inf-flujo-container').style.display = 'block';
   document.getElementById('inf-flujo-titulo').textContent = 'Flujo de Caja — Próximos 7 días (proyectado)';
   document.getElementById('inf-flujo-nota').textContent = 'Cargando...';
+  document.getElementById('inf-alertas-centinela').innerHTML = '';
 
   const hoy = new Date();
   const dias = [];
