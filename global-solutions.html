@@ -664,30 +664,36 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
     <div id="inf-consolidado-container" style="display:none">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
         <button class="btn btn-outline btn-sm" onclick="volverListaInformes()">← Volver</button>
-        <div style="font-family:'DM Sans',sans-serif;font-size:18px;font-weight:900;letter-spacing:0.05em">FLUJO DE CAJA — VISTA CONSOLIDADA (PASADO + FUTURO)</div>
+        <div style="font-family:'DM Sans',sans-serif;font-size:18px;font-weight:900;letter-spacing:0.05em">FLUJO DE CAJA — VISTA CONSOLIDADA</div>
       </div>
 
       <div id="inf-cons-alertas"></div>
 
-      <div style="font-family:'DM Sans',sans-serif;font-size:13px;font-weight:900;letter-spacing:0.05em;color:#C9A84C;margin-bottom:8px">PASADO — ÚLTIMOS 7 DÍAS (REAL)</div>
-      <div style="background:var(--surface);border-radius:12px;overflow:hidden;border:1.5px solid #2A2A2A;overflow-x:auto;margin-bottom:8px">
-        <table style="width:100%;border-collapse:collapse;min-width:800px">
-          <thead><tr style="background:#1A2120" id="inf-cons-real-head"></tr></thead>
-          <tbody id="inf-cons-real-body"></tbody>
-        </table>
-      </div>
-      <div style="font-size:11px;color:var(--muted);margin-bottom:24px" id="inf-cons-real-nota"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start">
+        <div style="min-width:0">
+          <div style="font-family:'DM Sans',sans-serif;font-size:13px;font-weight:900;letter-spacing:0.05em;color:#C9A84C;margin-bottom:8px">ÚLTIMOS 7 DÍAS (REAL)</div>
+          <div style="background:var(--surface);border-radius:12px;overflow:hidden;border:1.5px solid #2A2A2A;overflow-x:auto;margin-bottom:8px">
+            <table style="width:100%;border-collapse:collapse;min-width:640px">
+              <thead><tr style="background:#1A2120" id="inf-cons-real-head"></tr></thead>
+              <tbody id="inf-cons-real-body"></tbody>
+            </table>
+          </div>
+          <div style="font-size:11px;color:var(--muted)" id="inf-cons-real-nota"></div>
+        </div>
 
-      <div style="font-family:'DM Sans',sans-serif;font-size:13px;font-weight:900;letter-spacing:0.05em;color:#C9A84C;margin-bottom:8px">FUTURO — PRÓXIMOS 7 DÍAS (PROYECTADO)</div>
-      <div style="background:var(--surface);border-radius:12px;overflow:hidden;border:1.5px solid #2A2A2A;overflow-x:auto;margin-bottom:8px">
-        <table style="width:100%;border-collapse:collapse;min-width:800px">
-          <thead><tr style="background:#1A2120" id="inf-cons-proy-head"></tr></thead>
-          <tbody id="inf-cons-proy-body"></tbody>
-        </table>
+        <div style="min-width:0">
+          <div style="font-family:'DM Sans',sans-serif;font-size:13px;font-weight:900;letter-spacing:0.05em;color:#C9A84C;margin-bottom:8px">PRÓXIMOS 7 DÍAS (PROYECTADO)</div>
+          <div style="background:var(--surface);border-radius:12px;overflow:hidden;border:1.5px solid #2A2A2A;overflow-x:auto;margin-bottom:8px">
+            <table style="width:100%;border-collapse:collapse;min-width:640px">
+              <thead><tr style="background:#1A2120" id="inf-cons-proy-head"></tr></thead>
+              <tbody id="inf-cons-proy-body"></tbody>
+            </table>
+          </div>
+          <div style="font-size:11px;color:var(--muted)" id="inf-cons-proy-nota"></div>
+        </div>
       </div>
-      <div style="font-size:11px;color:var(--muted);margin-bottom:24px" id="inf-cons-proy-nota"></div>
 
-      <div style="font-family:'DM Sans',sans-serif;font-size:13px;font-weight:900;letter-spacing:0.05em;color:#C9A84C;margin-bottom:8px">PENDIENTE — CUENTAS POR COBRAR / POR FACTURAR</div>
+      <div style="font-family:'DM Sans',sans-serif;font-size:13px;font-weight:900;letter-spacing:0.05em;color:#C9A84C;margin:24px 0 8px">PENDIENTE — CUENTAS POR COBRAR / POR FACTURAR</div>
       <div style="background:var(--surface);border-radius:12px;overflow:hidden;border:1.5px solid #2A2A2A;overflow-x:auto">
         <table style="width:100%;border-collapse:collapse">
           <thead><tr style="background:#1A2120">
@@ -5999,7 +6005,7 @@ function renderInformes() {
     </div>
     <div onclick="abrirFlujoCajaConsolidado()" style="display:flex;align-items:center;justify-content:space-between;background:var(--surface);border:1.5px solid #C9A84C;border-radius:10px;padding:14px 18px;cursor:pointer;transition:border-color 0.15s" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='#C9A84C'">
       <div>
-        <div style="font-size:13px;font-weight:800;color:var(--navy)">📊 Flujo de Caja — Vista Consolidada (Pasado + Futuro + CxC)</div>
+        <div style="font-size:13px;font-weight:800;color:var(--navy)">📊 Flujo de Caja — Vista Consolidada</div>
         <div style="font-size:11px;color:var(--muted);margin-top:2px">Últimos 7 días + Próximos 7 días + Cuentas por Cobrar/Facturar, todo junto</div>
       </div>
       <div style="font-size:18px;color:var(--muted)">›</div>
