@@ -6055,8 +6055,8 @@ async function abrirFlujoCajaReal() {
   }
 
   document.getElementById('inf-flujo-body').innerHTML =
-    filaHtml('Ingresos', filaIngreso, false, '#059669') +
-    filaHtml('Egresos', filaEgreso.map(v=>-v), false, '', '#DC2626') +
+    filaHtml('Ingresos en Cuenta Banco', filaIngreso, false, '#059669') +
+    filaHtml('Egresos en Cuenta Banco', filaEgreso.map(v=>-v), false, '', '#DC2626') +
     filaHtml('Saldo del día', filaSaldo, true) +
     filaHtml('Saldo acumulado', filaAcum, true, '', '', true) +
     `<tr style="border-top:2px solid #C9A84C"><td colspan="${dias.length+2}" style="padding:6px 14px;font-size:10px;color:var(--muted);font-style:italic">Memo — no forma parte del cálculo de Saldo (no es plata en el banco todavía):</td></tr>` +
