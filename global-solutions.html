@@ -6007,11 +6007,13 @@ async function abrirFlujoCajaReal() {
 
   const mesKey = desde.slice(0,7);
   const {data:presu, error:e3} = await supa.from('kaptura_presupuesto').select('*')
-    .eq('empresa','global_solutions').eq('mes',mesKey).eq('categoria','ingreso');
+    .eq('empresa','global_solutions').eq('mes',mesKey);
   if(e3) console.error('Error presupuesto:', e3.message);
   const DIAS_HABILES_MES = 20;
-  const ingresoMensual = (presu||[]).reduce((a,p)=>a+(Number(p.monto_presupuestado)||0),0);
+  const ingresoMensual = (presu||[]).filter(p=>p.categoria==='ingreso').reduce((a,p)=>a+(Number(p.monto_presupuestado)||0),0);
+  const egresoMensual = (presu||[]).filter(p=>p.categoria!=='ingreso').reduce((a,p)=>a+(Number(p.monto_presupuestado)||0),0);
   const ingresoDiarioHabil = ingresoMensual / DIAS_HABILES_MES;
+  const egresoDiarioHabil = egresoMensual / DIAS_HABILES_MES;
 
   const porDia = {};
   dias.forEach(d => porDia[d] = {ingreso:0, egreso:0, devengado:0});
@@ -6027,6 +6029,7 @@ async function abrirFlujoCajaReal() {
 
   const esHabil = dias.map(d => { const dow = new Date(d+'T12:00:00').getDay(); return dow>=1 && dow<=5; });
   const filaPresupuesto = dias.map((d,i) => esHabil[i] ? ingresoDiarioHabil : 0);
+  const filaPresupuestoEgreso = dias.map((d,i) => esHabil[i] ? egresoDiarioHabil : 0);
 
   const head = document.getElementById('inf-flujo-head');
   const diasCortos = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
@@ -6061,7 +6064,9 @@ async function abrirFlujoCajaReal() {
     filaHtml('Saldo acumulado', filaAcum, true, '', '', true) +
     `<tr style="border-top:2px solid #C9A84C"><td colspan="${dias.length+2}" style="padding:6px 14px;font-size:10px;color:var(--muted);font-style:italic">Memo — no forma parte del cálculo de Saldo (no es plata en el banco todavía):</td></tr>` +
     filaHtml('Presupuesto de Ingresos (día hábil L-V)', filaPresupuesto, false, '#94A3B8') +
-    filaHtml('Ventas Devengadas (todos los servicios del día)', filaDevengado, false, '#C9A84C');
+    filaHtml('Ventas Devengadas (todos los servicios del día)', filaDevengado, false, '#C9A84C') +
+    filaHtml('Egresos según Presupuesto (día hábil L-V)', filaPresupuestoEgreso, false, '#94A3B8') +
+    filaHtml('Egresos Reales (cuenta banco)', filaEgreso, false, '#DC2626');
 
   document.getElementById('inf-flujo-nota').textContent =
     `Fuente: kaptura_caja, ${(rows||[]).length} movimientos entre ${desde} y ${hasta}. Ventas Devengadas: ingreso_total de servicios_piloto por fecha de servicio. Presupuesto: kaptura_presupuesto mes ${mesKey} ÷ ${DIAS_HABILES_MES} días hábiles.${ingresoMensual===0?' ⚠ Sin presupuesto de ingreso cargado para este mes.':''}`;
