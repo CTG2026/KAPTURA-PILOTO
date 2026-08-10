@@ -2997,6 +2997,54 @@ async function guardarTarifaManual(i, val) {
   renderServicios(); renderKPIs();
 }
 
+function activarEdicionCantPtos(i) {
+  const view = document.getElementById('cantptos-view-'+i);
+  const input = document.getElementById('cantptos-input-'+i);
+  if(view) view.style.display = 'none';
+  if(input) { input.style.display = 'inline-block'; input.focus(); input.select(); }
+}
+
+async function guardarCantPtosManual(i, val) {
+  const view = document.getElementById('cantptos-view-'+i);
+  const input = document.getElementById('cantptos-input-'+i);
+  const s = DB.servicios[i];
+  if(!s) return;
+  if(input) input.style.display = 'none';
+  if(view) view.style.display = 'inline';
+  const VALOR_PUNTO_DEFAULT = 60000;
+  const nuevaCant = Math.max(0, parseInt(val)||0);
+  let puntos = s._puntos && s._puntos.length ? [...s._puntos] : [];
+  let intermedios = puntos.filter(p=>p.tipo==='intermedio');
+  const final = puntos.find(p=>p.tipo==='final') || {tipo:'final', destino: s.destino||'—', valor: s.tarifa_neta||0, num_guia:''};
+  if(nuevaCant === intermedios.length) return; // sin cambios
+  if(nuevaCant > intermedios.length) {
+    const faltan = nuevaCant - intermedios.length;
+    for(let k=0;k<faltan;k++) {
+      intermedios.push({tipo:'intermedio', destino:'PENDIENTE — completar destino', valor: VALOR_PUNTO_DEFAULT, num_guia:''});
+    }
+  } else {
+    intermedios = intermedios.slice(0, nuevaCant);
+  }
+  const nuevosPuntos = [...intermedios, final];
+  const valorPts = intermedios.reduce((a,p)=>a+(p.valor||0),0);
+  const nuevoIngreso = (final.valor||0) + valorPts;
+  const notasBase = (s.notas||'').split('|_PUNTOS:')[0].split('_PUNTOS:')[0];
+  const nuevasNotas = `${notasBase}|_PUNTOS:${JSON.stringify(nuevosPuntos)}`;
+  const {error} = await supa.from('servicios_piloto').update({notas: nuevasNotas, puntos_entrega: nuevosPuntos.length, ingreso_total: nuevoIngreso}).eq('id', s.id);
+  if(error) { toast('⚠ Error al guardar cantidad de puntos: '+error.message); return; }
+  s._puntos = nuevosPuntos;
+  s.notas = nuevasNotas;
+  s.puntos_entrega = nuevosPuntos.length;
+  s.ingreso_total = nuevoIngreso;
+  toast(`✓ ${s.servicio_id}: ${nuevaCant} puntos intermedios. ${faltanNota(nuevaCant, intermedios)}`);
+  renderServicios(); renderKPIs();
+}
+
+function faltanNota(nuevaCant, intermedios) {
+  const pendientes = intermedios.filter(p=>p.destino==='PENDIENTE — completar destino').length;
+  return pendientes>0 ? `⚠ ${pendientes} punto(s) nuevo(s) sin destino — complételo en el detalle del servicio.` : '';
+}
+
 function filaHTML(s,i) {
   const pInts  = (s._puntos||[]).filter(p=>p.tipo==='intermedio');
   const pFinal = (s._puntos||[]).find(p=>p.tipo==='final');
@@ -3035,7 +3083,10 @@ function filaHTML(s,i) {
       <span id="tarifa-view-${i}" onmouseenter="activarEdicionTarifa(${i})" onclick="activarEdicionTarifa(${i})" style="cursor:pointer">${tarifa}</span>
       <input type="text" id="tarifa-input-${i}" value="${tarifaTotal||''}" style="display:none;width:90px;background:var(--bg);border:1px solid var(--gold);border-radius:5px;padding:3px 6px;font-size:11px;color:var(--text);text-align:right" onblur="guardarTarifaManual(${i},this.value)" onkeydown="if(event.key==='Enter'){this.blur()}" onclick="event.stopPropagation()">
     </td>
-    <td style="text-align:center">${cantPtos}</td>
+    <td style="text-align:center" class="td-financ" onclick="event.stopPropagation()">
+      <span id="cantptos-view-${i}" onmouseenter="activarEdicionCantPtos(${i})" onclick="activarEdicionCantPtos(${i})" style="cursor:pointer">${cantPtos}</span>
+      <input type="text" id="cantptos-input-${i}" value="${pInts.length||0}" style="display:none;width:50px;background:var(--bg);border:1px solid var(--gold);border-radius:5px;padding:3px 6px;font-size:11px;color:var(--text);text-align:center" onblur="guardarCantPtosManual(${i},this.value)" onkeydown="if(event.key==='Enter'){this.blur()}" onclick="event.stopPropagation()">
+    </td>
     <td style="color:rgba(255,255,255,0.7)" class="td-financ">${totalPtos}</td>
     <td style="font-weight:700" class="td-financ">${totalIng}</td>
     <td class="td-financ">${costos}</td>
