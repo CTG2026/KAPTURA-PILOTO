@@ -76,6 +76,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .desk-tbl{display:none}
 @media(min-width:900px){
   .svc-list{display:none}
+  #totales-mobile{display:none}
   .desk-tbl{display:block;background:var(--surface);border-radius:10px;box-shadow:var(--sh);border:1px solid var(--border);max-height:65vh;overflow:auto}
   .desk-tbl table{width:100%;border-collapse:collapse;min-width:820px}
   .desk-tbl thead{background:var(--bg)}
@@ -283,6 +284,7 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
       <div class="sec-ttl">Servicios</div>
     </div>
     <div class="svc-list" id="cards-mobile"></div>
+    <div id="totales-mobile" style="background:var(--surface);border:2px solid var(--gold);border-radius:10px;padding:14px;margin-bottom:16px"></div>
     <div class="desk-tbl">
       <table>
         <thead><tr>
@@ -2909,6 +2911,19 @@ function renderTotalesServicios(svcs) {
     <td class="td-financ">${fmt(sumCostos)}</td>
     <td class="td-financ" style="color:${mColor}">${fmt(sumMargen)}</td>
     <td></td><td></td>`;
+
+  const totMob = document.getElementById('totales-mobile');
+  if (totMob) {
+    totMob.innerHTML = `
+      <div style="font-size:10px;font-weight:800;color:var(--gold);letter-spacing:0.08em;margin-bottom:8px">TOTALES — ${svcs.length} SERVICIOS</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px">
+        <div><div style="color:var(--muted);font-size:10px">Tarifa</div><div style="font-weight:800;color:var(--green)">${fmt(sumTarifa)}</div></div>
+        <div><div style="color:var(--muted);font-size:10px">Total Ptos</div><div style="font-weight:800">${fmt(sumPtos)}</div></div>
+        <div><div style="color:var(--muted);font-size:10px">Total Ingreso</div><div style="font-weight:800">${fmt(sumIngreso)}</div></div>
+        <div><div style="color:var(--muted);font-size:10px">Costos</div><div style="font-weight:800">${fmt(sumCostos)}</div></div>
+        <div style="grid-column:span 2"><div style="color:var(--muted);font-size:10px">Margen</div><div style="font-weight:800;color:${mColor}">${fmt(sumMargen)}</div></div>
+      </div>`;
+  }
 }
 
 function pillHTML(e) {
