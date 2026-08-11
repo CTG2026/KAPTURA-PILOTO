@@ -300,6 +300,7 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
           <th>Acciones</th>
         </tr></thead>
         <tbody id="tabla-svc"></tbody>
+        <tfoot><tr id="tabla-svc-totales" style="background:var(--bg);font-weight:800;border-top:2px solid var(--gold)"></tr></tfoot>
       </table>
 
       <div id="popover-acciones" style="display:none;position:fixed;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px;z-index:9999;box-shadow:0 6px 24px rgba(0,0,0,0.5);min-width:170px"></div>
@@ -2858,6 +2859,7 @@ function renderServicios() {
   empty.style.display = 'none';
   document.getElementById('cards-mobile').innerHTML = svcs.map(s => cardHTML(s, DB.servicios.indexOf(s))).join('');
   document.getElementById('tabla-svc').innerHTML    = svcs.map(s => filaHTML(s, DB.servicios.indexOf(s))).join('');
+  renderTotalesServicios(svcs);
 
   // Pasada de seguridad: cada rol restringido solo ve sus botones permitidos
   const permitidasPorRol = {
@@ -2878,6 +2880,35 @@ function renderServicios() {
       el.style.textDecoration = 'none';
     });
   }
+}
+
+function renderTotalesServicios(svcs) {
+  const fila = document.getElementById('tabla-svc-totales');
+  if (!fila) return;
+  let sumTarifa = 0, sumPtos = 0, sumIngreso = 0, sumCostos = 0, sumMargen = 0;
+  svcs.forEach(s => {
+    const pInts  = (s._puntos||[]).filter(p=>p.tipo==='intermedio');
+    const pFinal = (s._puntos||[]).find(p=>p.tipo==='final');
+    const ptsVal      = pInts.reduce((a,p)=>a+(p.valor||0),0);
+    const tarifaFinal = pFinal?.valor || 0;
+    const tarifaTotal = s.tarifa_neta || (tarifaFinal + ptsVal) || 0;
+    const totalIngVal = s.ingreso_total || (tarifaFinal + ptsVal) || tarifaTotal || 0;
+    sumTarifa  += tarifaTotal;
+    sumPtos    += ptsVal;
+    sumIngreso += totalIngVal;
+    sumCostos  += s.total_costos || 0;
+    sumMargen  += s.margen_servicio || s.margen || 0;
+  });
+  const mColor = sumMargen >= 0 ? 'var(--green)' : 'var(--danger)';
+  fila.innerHTML = `
+    <td colspan="10" style="text-align:right;padding:8px 10px">TOTALES (${svcs.length} servicios)</td>
+    <td class="td-financ" style="color:var(--green)">${fmt(sumTarifa)}</td>
+    <td></td>
+    <td class="td-financ">${fmt(sumPtos)}</td>
+    <td class="td-financ" style="font-weight:800">${fmt(sumIngreso)}</td>
+    <td class="td-financ">${fmt(sumCostos)}</td>
+    <td class="td-financ" style="color:${mColor}">${fmt(sumMargen)}</td>
+    <td></td><td></td>`;
 }
 
 function pillHTML(e) {
