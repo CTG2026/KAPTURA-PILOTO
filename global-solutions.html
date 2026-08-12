@@ -3490,8 +3490,11 @@ function checkOtroOrigen() {
 }
 function getDestinosCliente(clienteVal) {
   if(!clienteVal || clienteVal === '__otro__') return [];
+  const clientesBuscar = clienteVal.toUpperCase() === 'CITRUS AGRO'
+    ? ['CITRUS AGRO', 'SOLLEM SPA']   // Citrus comparte tarifario con Sollem, ademas de sus propios destinos (Maule/Ñuble)
+    : [clienteVal.toUpperCase()];
   return [...new Set((DB.tarifarios||[])
-    .filter(function(t){ return (t.cliente||'').toUpperCase() === clienteVal.toUpperCase(); })
+    .filter(function(t){ return clientesBuscar.includes((t.cliente||'').toUpperCase()); })
     .map(function(t){ return t.destino; })
     .filter(Boolean))].sort();
 }
