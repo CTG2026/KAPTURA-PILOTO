@@ -3313,7 +3313,7 @@ function _generarPdfServicio(s) {
     ['CLIENTE', s.cliente||''],
     ['CONDUCTOR', s.conductor||''],
     ['PATENTE', s.patente||''],
-    ['HORA PRESENTACIÓN CARGUÍO', s.hora_llegada_estimada||''],
+    ['HORA PRESENTACIÓN CARGUÍO', s.hora_inicio_asignada||''],
     ['FECHA INICIO', s.fecha||''],
     ['FECHA TÉRMINO', fechaTermino||''],
     ['ESTADO', (s.estado||'').toUpperCase()],
@@ -3391,7 +3391,7 @@ function _enviarWhatsappServicio(s) {
   msg += `Cliente: ${s.cliente||'—'}\n`;
   msg += `Conductor: ${s.conductor||'—'}\n`;
   msg += `Patente: ${s.patente||'—'}\n`;
-  msg += `Hora Presentación Carguío: ${s.hora_llegada_estimada||'—'}\n`;
+  msg += `Hora Presentación Carguío: ${s.hora_inicio_asignada||'—'}\n`;
   msg += `Fecha Inicio: ${s.fecha||'—'}\n`;
   msg += `Fecha Término: ${fechaTermino||'—'}\n`;
   msg += `Estado: ${(s.estado||'').toUpperCase()}\n\n`;
