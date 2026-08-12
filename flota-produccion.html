@@ -2828,11 +2828,22 @@ async function guardarTarifaManual(i, val) {
   if(input) input.style.display = 'none';
   if(view) view.style.display = 'inline';
   if(nuevoValor === (s.tarifa_neta||0)) return;
-  const nuevoIngreso = nuevoValor + (s.adicionales||0);
-  const {error} = await supa.from('servicios_piloto').update({tarifa_neta: nuevoValor, ingreso_total: nuevoIngreso}).eq('id', s.id);
+  const intermediosActuales = (s._puntos||[]).filter(p=>p.tipo==='intermedio');
+  const adicionalesReales = intermediosActuales.length ? intermediosActuales.reduce((a,p)=>a+(p.valor||0),0) : (s.adicionales||0);
+  const nuevoIngreso = nuevoValor + adicionalesReales;
+  let nuevasNotas = s.notas;
+  let puntosSync = s._puntos && s._puntos.length ? [...s._puntos] : null;
+  if (puntosSync) {
+    puntosSync = puntosSync.map(p => p.tipo==='final' ? {...p, valor: nuevoValor} : p);
+    const notasBase = (s.notas||'').split('|_PUNTOS:')[0].split('_PUNTOS:')[0];
+    nuevasNotas = `${notasBase}|_PUNTOS:${JSON.stringify(puntosSync)}`;
+  }
+  const {error} = await supa.from('servicios_piloto').update({tarifa_neta: nuevoValor, adicionales: adicionalesReales, ingreso_total: nuevoIngreso, notas: nuevasNotas}).eq('id', s.id);
   if(error) { toast('⚠ Error al guardar tarifa: '+error.message); return; }
   s.tarifa_neta = nuevoValor;
+  s.adicionales = adicionalesReales;
   s.ingreso_total = nuevoIngreso;
+  if (puntosSync) { s._puntos = puntosSync; s.notas = nuevasNotas; }
   toast(`✓ Tarifa de ${s.servicio_id} actualizada`);
   renderServicios(); renderKPIs();
 }
