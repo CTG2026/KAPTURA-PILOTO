@@ -3162,8 +3162,8 @@ async function siguienteId() {
   const {data} = await supa.from('servicios_piloto').select('servicio_id')
     .eq('empresa', emp).not('servicio_id','is',null).order('created_at',{ascending:false}).limit(200);
   let max = 0;
-  (data||[]).forEach(r => { const m=(r.servicio_id||'').match(/S-(\d+)/); if(m) max=Math.max(max,parseInt(m[1])); });
-  return `S-${String(max+1).padStart(2,'0')}`;
+  (data||[]).forEach(r => { const m=(r.servicio_id||'').match(/TM-(\d+)/); if(m) max=Math.max(max,parseInt(m[1])); });
+  return `TM-${String(max+1).padStart(3,'0')}`;
 }
 // ── PUNTOS DE ENTREGA EN ASIGNAR ──
 let _asigPuntos = [];
