@@ -3578,7 +3578,9 @@ function abrirRegistrar(i) {
       puntosData = [{tipo:null,destino:'',valor:null,num_guia:'',capturada:false,procesando:false}];
     }
   } else {
-    puntosData = [{tipo:null,destino:'',valor:null,num_guia:'',capturada:false,procesando:false}];
+    puntosData = s.destino
+      ? [{tipo:'final',destino:s.destino,valor:null,num_guia:'',guias:[],capturada:false,procesando:false}]
+      : [{tipo:null,destino:'',valor:null,num_guia:'',capturada:false,procesando:false}];
   }
   document.getElementById('reg-id').textContent           = s.servicio_id||'—';
   document.getElementById('reg-sub').textContent          = `${s.patente} · ${s.conductor} · ${s.cliente}`;
