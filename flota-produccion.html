@@ -2853,6 +2853,79 @@ async function guardarTarifaManual(i, val) {
   renderServicios(); renderKPIs();
 }
 
+function activarEdicionAsig(i) {
+  const view = document.getElementById('asig-view-'+i);
+  const input = document.getElementById('asig-input-'+i);
+  if(view) view.style.display = 'none';
+  if(input) { input.style.display = 'inline-block'; input.focus(); }
+}
+
+async function guardarAsigManual(i, val) {
+  const view = document.getElementById('asig-view-'+i);
+  const input = document.getElementById('asig-input-'+i);
+  const s = DB.servicios[i];
+  if(!s) return;
+  if(input) input.style.display = 'none';
+  if(view) view.style.display = 'inline';
+  if(!val || val === s.fecha) return;
+  const {error} = await supa.from('servicios_piloto').update({fecha: val}).eq('id', s.id);
+  if(error) { toast('⚠ Error al guardar fecha asignación: '+error.message); return; }
+  s.fecha = val;
+  toast(`✓ Fecha asignación de ${s.servicio_id} actualizada`);
+  renderServicios(); renderKPIs();
+}
+
+function activarEdicionInicio(i) {
+  const view = document.getElementById('inicio-view-'+i);
+  const input = document.getElementById('inicio-input-'+i);
+  if(view) view.style.display = 'none';
+  if(input) { input.style.display = 'inline-block'; input.focus(); }
+}
+
+async function guardarInicioManual(i, val) {
+  const view = document.getElementById('inicio-view-'+i);
+  const input = document.getElementById('inicio-input-'+i);
+  const s = DB.servicios[i];
+  if(!s) return;
+  if(input) input.style.display = 'none';
+  if(view) view.style.display = 'inline';
+  const actual = s.hora_inicio ? String(s.hora_inicio).substring(0,10) : '';
+  if(!val || val === actual) return;
+  const horaPrevia = s.hora_inicio ? String(s.hora_inicio).substring(11,19) : '12:00:00';
+  const nuevoTimestamp = `${val} ${horaPrevia}+00`;
+  const {error} = await supa.from('servicios_piloto').update({hora_inicio: nuevoTimestamp}).eq('id', s.id);
+  if(error) { toast('⚠ Error al guardar fecha inicio: '+error.message); return; }
+  s.hora_inicio = nuevoTimestamp;
+  toast(`✓ Fecha inicio de ${s.servicio_id} actualizada`);
+  renderServicios(); renderKPIs();
+}
+
+function activarEdicionTermino(i) {
+  const view = document.getElementById('termino-view-'+i);
+  const input = document.getElementById('termino-input-'+i);
+  if(view) view.style.display = 'none';
+  if(input) { input.style.display = 'inline-block'; input.focus(); }
+}
+
+async function guardarTerminoManual(i, val) {
+  const view = document.getElementById('termino-view-'+i);
+  const input = document.getElementById('termino-input-'+i);
+  const s = DB.servicios[i];
+  if(!s) return;
+  if(input) input.style.display = 'none';
+  if(view) view.style.display = 'inline';
+  const actual = s._fecha_termino || (s.hora_termino ? String(s.hora_termino).substring(0,10) : '');
+  if(!val || val === actual) return;
+  const horaPrevia = s.hora_termino ? String(s.hora_termino).substring(11,19) : '18:00:00';
+  const nuevoTimestamp = `${val} ${horaPrevia}+00`;
+  const {error} = await supa.from('servicios_piloto').update({hora_termino: nuevoTimestamp}).eq('id', s.id);
+  if(error) { toast('⚠ Error al guardar fecha término: '+error.message); return; }
+  s.hora_termino = nuevoTimestamp;
+  s._fecha_termino = val;
+  toast(`✓ Fecha término de ${s.servicio_id} actualizada`);
+  renderServicios(); renderKPIs();
+}
+
 function filaHTML(s,i) {
   const pInts  = (s._puntos||[]).filter(p=>p.tipo==='intermedio');
   const pFinal = (s._puntos||[]).find(p=>p.tipo==='final');
@@ -2878,9 +2951,18 @@ function filaHTML(s,i) {
   const claseFila = s.estado==='ejecutado' ? 'fila-ejecutado' : '';
   return `<tr onclick="${clickFila}" style="cursor:pointer" class="${claseFila}">
     <td style="font-family:'DM Sans',sans-serif;font-weight:800;color:var(--navy);white-space:nowrap;${s.estado==='cerrado'?'cursor:pointer;text-decoration:underline dotted':''}" ${s.estado==='cerrado'?`onclick="event.stopPropagation();editarServicioCerrado(${i})" title="Editar servicio"`:''}>${s.servicio_id||'—'}</td>
-    <td style="white-space:nowrap">${s.fecha||'—'}</td>
-    <td style="white-space:nowrap">${s.hora_inicio ? String(s.hora_inicio).substring(0,10) : '—'}</td>
-    <td style="white-space:nowrap">${s._fecha_termino || (s.hora_termino ? s.hora_termino.substring(0,10) : '—')}</td>
+    <td style="white-space:nowrap" onclick="event.stopPropagation()">
+      <span id="asig-view-${i}" onmouseenter="activarEdicionAsig(${i})" onclick="activarEdicionAsig(${i})" style="cursor:pointer">${s.fecha||'—'}</span>
+      <input type="date" id="asig-input-${i}" value="${s.fecha||''}" style="display:none;width:120px;background:var(--bg);border:1px solid var(--gold);border-radius:5px;padding:3px 6px;font-size:11px;color:var(--text)" onblur="guardarAsigManual(${i},this.value)" onkeydown="if(event.key==='Enter'){this.blur()}" onclick="event.stopPropagation()">
+    </td>
+    <td style="white-space:nowrap" onclick="event.stopPropagation()">
+      <span id="inicio-view-${i}" onmouseenter="activarEdicionInicio(${i})" onclick="activarEdicionInicio(${i})" style="cursor:pointer">${s.hora_inicio ? String(s.hora_inicio).substring(0,10) : '—'}</span>
+      <input type="date" id="inicio-input-${i}" value="${s.hora_inicio ? String(s.hora_inicio).substring(0,10) : ''}" style="display:none;width:120px;background:var(--bg);border:1px solid var(--gold);border-radius:5px;padding:3px 6px;font-size:11px;color:var(--text)" onblur="guardarInicioManual(${i},this.value)" onkeydown="if(event.key==='Enter'){this.blur()}" onclick="event.stopPropagation()">
+    </td>
+    <td style="white-space:nowrap" onclick="event.stopPropagation()">
+      <span id="termino-view-${i}" onmouseenter="activarEdicionTermino(${i})" onclick="activarEdicionTermino(${i})" style="cursor:pointer">${s._fecha_termino || (s.hora_termino ? s.hora_termino.substring(0,10) : '—')}</span>
+      <input type="date" id="termino-input-${i}" value="${s._fecha_termino || (s.hora_termino ? String(s.hora_termino).substring(0,10) : '')}" style="display:none;width:120px;background:var(--bg);border:1px solid var(--gold);border-radius:5px;padding:3px 6px;font-size:11px;color:var(--text)" onblur="guardarTerminoManual(${i},this.value)" onkeydown="if(event.key==='Enter'){this.blur()}" onclick="event.stopPropagation()">
+    </td>
     <td style="font-family:'DM Sans',sans-serif;font-weight:700">${s.patente||'—'}</td>
     <td>${s.conductor||'—'}</td>
     <td>${s.cliente||'—'}</td>
