@@ -1,0 +1,15 @@
+Transferencia 1 - Pago 1 a Factura 9
+Cuenta Origen: 0213805450
+Destinatario: GLOBAL SOLUTIONS SPA, RUT 78.303.134-5
+Banco: Banco Santander-Santiago, Cuenta 000037767310
+Monto: $350.000
+Id Transacción: msos8vzq-32634812
+
+Transferencia 2 - Pago 2 y Final a Factura 9
+Cuenta Origen: 0213805450
+Destinatario: GLOBAL SOLUTIONS SPA, RUT 78.303.134-5
+Banco: Banco Santander-Santiago, Cuenta 000037767310
+Monto: $436.352
+Id Transacción: msqrp8li-34192820
+
+Total: $786.352 = Factura 9 completa (Inversiones y Asesorías Citrus Limitada)
