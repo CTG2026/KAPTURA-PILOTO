@@ -2706,7 +2706,6 @@ function _valorCampoFiltro(s, campo) {
     return s[campo] || '';
   } catch(e) { return ''; }
 }
-
 function _serviciosBaseParaFiltros() {
   try {
     const fecha = document.getElementById('filtro-fecha')?.value;
@@ -2727,7 +2726,8 @@ function abrirFiltroColumna(campo, ev) {
     if(pop.style.display==='block' && pop.dataset.campo===campo) { pop.style.display='none'; return; }
 
     const base = _serviciosBaseParaFiltros();
-    const valores = Array.from(new Set(base.map(s => _valorCampoFiltro(s, campo)).filter(v=>v))).sort();
+    let valores = Array.from(new Set(base.map(s => _valorCampoFiltro(s, campo)).filter(v=>v))).sort();
+    if (campo === 'estado') valores = [...valores, 'No Liquidado'];
     const seleccionados = _filtrosColumna[campo] || [];
 
     pop.innerHTML = `
@@ -2844,7 +2844,15 @@ function renderServicios() {
     svcs = svcs.filter(s => {
       for(const campo of ['patente','conductor','cliente','origen','destino','guia','estado']) {
         const activos = _filtrosColumna[campo];
-        if(activos && activos.length && !activos.includes(_valorCampoFiltro(s, campo))) return false;
+        if(!activos || !activos.length) continue;
+        if(campo === 'estado') {
+          const valorReal = _valorCampoFiltro(s, campo);
+          const coincideEstadoReal = activos.includes(valorReal);
+          const coincideNoLiquidado = activos.includes('No Liquidado') && !s.liquidado;
+          if(!coincideEstadoReal && !coincideNoLiquidado) return false;
+        } else if(!activos.includes(_valorCampoFiltro(s, campo))) {
+          return false;
+        }
       }
       return true;
     });
