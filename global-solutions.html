@@ -1903,7 +1903,7 @@ function renderDetalleTab() {
       + rowsOtros.map(g=>`<tr style="border-bottom:1px solid var(--border)">
           <td style="padding:7px;font-weight:700">${labelsOtros[g.categoria]||g.categoria}</td>
           <td style="padding:7px">${g.descripcion||'—'}</td>
-          <td style="padding:7px;color:var(--muted)">${g.fecha||'—'}</td>
+          <td style="padding:7px;color:var(--muted)">${fmtFecha(g.fecha)}</td>
           <td style="padding:7px;text-align:right;font-weight:700">${fmt(g.monto_neto)}</td>
         </tr>`).join(''));
   }
@@ -2806,7 +2806,7 @@ function filtrarPorKPI(tipo) {
         <div>
           <div style="font-size:12px;font-weight:800;color:var(--gold)">${s.servicio_id||'—'} <span style="color:var(--text);font-weight:700">· ${s.patente||'—'} · ${s.conductor||'—'}</span></div>
           <div style="font-size:11px;color:var(--muted);margin-top:2px">${s.cliente||'—'} · ${s.origen||'—'} → ${dest}</div>
-          <div style="font-size:10px;color:var(--muted);margin-top:2px">📅 ${s.fecha||'—'} · Guía ${guiasTxt}</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:2px">📅 ${fmtFecha(s.fecha)} · Guía ${guiasTxt}</div>
         </div>
         ${pillHTML(s.estado)}
       </div>`;
@@ -2973,7 +2973,7 @@ function cardHTML(s,i) {
       <div>
         <div style="display:flex;align-items:center;gap:8px">
           <div class="svc-id" ${s.estado==='cerrado'&&_sessionUsuario?.rol!=='despachador'?`onclick="event.stopPropagation();editarServicioCerrado(${i})" title="Editar servicio" style="cursor:pointer;text-decoration:underline dotted"`:''}>${s.servicio_id||'—'}</div>
-          <div style="font-size:10px;color:var(--muted);font-weight:600">${s.fecha||s.created_at?.split('T')[0]||'—'}</div>
+          <div style="font-size:10px;color:var(--muted);font-weight:600">${fmtFecha(s.fecha||s.created_at)}</div>
         </div>
         <div class="svc-pat">${s.patente||'—'} · ${s.conductor||'—'}</div>
         <div class="svc-line" style="color:var(--g400)">${s.cliente||'—'}</div>
@@ -3211,15 +3211,15 @@ function filaHTML(s,i) {
   return `<tr onclick="${clickFila}" style="cursor:pointer" class="${claseFila}">
     <td style="font-family:'DM Sans',sans-serif;font-weight:800;color:var(--navy);white-space:nowrap;${s.estado==='cerrado'?'cursor:pointer;text-decoration:underline dotted':''}" ${s.estado==='cerrado'&&_sessionUsuario?.rol!=='despachador'?`onclick="event.stopPropagation();editarServicioCerrado(${i})" title="Editar servicio"`:''}>${s.servicio_id||'—'}</td>
     <td style="white-space:nowrap" onclick="event.stopPropagation()">
-      <span id="asig-view-${i}" onmouseenter="activarEdicionAsig(${i})" onclick="activarEdicionAsig(${i})" style="cursor:pointer">${s.fecha||'—'}</span>
+      <span id="asig-view-${i}" onmouseenter="activarEdicionAsig(${i})" onclick="activarEdicionAsig(${i})" style="cursor:pointer">${fmtFecha(s.fecha)}</span>
       <input type="date" id="asig-input-${i}" value="${s.fecha||''}" style="display:none;width:120px;background:var(--bg);border:1px solid var(--gold);border-radius:5px;padding:3px 6px;font-size:11px;color:var(--text)" onblur="guardarAsigManual(${i},this.value)" onkeydown="if(event.key==='Enter'){this.blur()}" onclick="event.stopPropagation()">
     </td>
     <td style="white-space:nowrap" onclick="event.stopPropagation()">
-      <span id="inicio-view-${i}" onmouseenter="activarEdicionInicio(${i})" onclick="activarEdicionInicio(${i})" style="cursor:pointer">${s.hora_inicio ? String(s.hora_inicio).substring(0,10) : '—'}</span>
+      <span id="inicio-view-${i}" onmouseenter="activarEdicionInicio(${i})" onclick="activarEdicionInicio(${i})" style="cursor:pointer">${fmtFecha(s.hora_inicio)}</span>
       <input type="date" id="inicio-input-${i}" value="${s.hora_inicio ? String(s.hora_inicio).substring(0,10) : ''}" style="display:none;width:120px;background:var(--bg);border:1px solid var(--gold);border-radius:5px;padding:3px 6px;font-size:11px;color:var(--text)" onblur="guardarInicioManual(${i},this.value)" onkeydown="if(event.key==='Enter'){this.blur()}" onclick="event.stopPropagation()">
     </td>
     <td style="white-space:nowrap" onclick="event.stopPropagation()">
-      <span id="termino-view-${i}" onmouseenter="activarEdicionTermino(${i})" onclick="activarEdicionTermino(${i})" style="cursor:pointer">${s._fecha_termino || (s.hora_termino ? s.hora_termino.substring(0,10) : '—')}</span>
+      <span id="termino-view-${i}" onmouseenter="activarEdicionTermino(${i})" onclick="activarEdicionTermino(${i})" style="cursor:pointer">${fmtFecha(s._fecha_termino || s.hora_termino)}</span>
       <input type="date" id="termino-input-${i}" value="${s._fecha_termino || (s.hora_termino ? String(s.hora_termino).substring(0,10) : '')}" style="display:none;width:120px;background:var(--bg);border:1px solid var(--gold);border-radius:5px;padding:3px 6px;font-size:11px;color:var(--text)" onblur="guardarTerminoManual(${i},this.value)" onkeydown="if(event.key==='Enter'){this.blur()}" onclick="event.stopPropagation()">
     </td>
     <td style="font-family:'DM Sans',sans-serif;font-weight:700">${s.patente||'—'}</td>
@@ -3702,8 +3702,8 @@ function _generarPdfServicio(s) {
     ['CONDUCTOR', s.conductor||''],
     ['PATENTE', s.patente||''],
     ['HORA PRESENTACIÓN CARGUÍO', s.hora_llegada_estimada||''],
-    ['FECHA INICIO', s.fecha||''],
-    ['FECHA TÉRMINO', fechaTermino||''],
+    ['FECHA INICIO', fmtFecha(s.fecha)],
+    ['FECHA TÉRMINO', fmtFecha(fechaTermino)],
     ['ESTADO', (s.estado||'').toUpperCase()],
   ];
   let y = 35;
@@ -3780,8 +3780,8 @@ function _enviarWhatsappServicio(s) {
   msg += `Conductor: ${s.conductor||'—'}\n`;
   msg += `Patente: ${s.patente||'—'}\n`;
   msg += `Hora Presentación Carguío: ${s.hora_llegada_estimada||'—'}\n`;
-  msg += `Fecha Inicio: ${s.fecha||'—'}\n`;
-  msg += `Fecha Término: ${fechaTermino||'—'}\n`;
+  msg += `Fecha Inicio: ${fmtFecha(s.fecha)}\n`;
+  msg += `Fecha Término: ${fmtFecha(fechaTermino)}\n`;
   msg += `Estado: ${(s.estado||'').toUpperCase()}\n\n`;
   msg += `RUTA DEL SERVICIO\n`;
   msg += `Origen: ${s.origen||'—'}\n`;
@@ -3894,7 +3894,7 @@ function abrirRegistrar(i) {
   document.getElementById('reg-sub').textContent          = `${s.patente} · ${s.conductor} · ${s.cliente}`;
   document.getElementById('reg-cliente-info').textContent = s.cliente||'—';
   document.getElementById('reg-patente-info').textContent = s.patente||'—';
-  document.getElementById('reg-fecha-inicio-info').textContent = s.fecha||'—';
+  document.getElementById('reg-fecha-inicio-info').textContent = fmtFecha(s.fecha);
   document.getElementById('reg-origen-info').textContent  = s.origen||'—';
   const pFinalReg = (s._puntos||[]).find(p=>p.tipo==='final');
   const elDestReg = document.getElementById('reg-destino-info');
@@ -4382,7 +4382,7 @@ async function irACostos() {
   const pFinalCos = (s._puntos||[]).find(p=>p.tipo==='final');
   const destinoCos = pFinalCos?.destino || s.destino || '—';
   const cosInfoEl = document.getElementById('cos-info');
-  if(cosInfoEl) cosInfoEl.textContent = `${s.fecha||'—'} · ${s.origen||'—'} → ${destinoCos}`;
+  if(cosInfoEl) cosInfoEl.textContent = `${fmtFecha(s.fecha)} · ${s.origen||'—'} → ${destinoCos}`;
   // Cargar tabla de puntos editable y hilo de observaciones
   cosPuntosDetalleRender();
   obsRenderHilo(document.getElementById('cos-obs-hilo'), obsParseHilo(s.notas||''));
@@ -5509,7 +5509,7 @@ function verEvaluacion(evalId) {
     + '<div style="background:#1A2120;border-radius:7px;padding:10px 12px"><div style="font-size:9px;font-weight:700;color:rgba(245,240,232,0.4);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:3px">Cliente</div><div style="font-size:13px;font-weight:800;color:#C9A84C">'+(e.cliente||'Cliente spot')+'</div></div>'
     + '<div style="background:#1A2120;border-radius:7px;padding:10px 12px"><div style="font-size:9px;font-weight:700;color:rgba(245,240,232,0.4);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:3px">Tramo</div><div style="font-size:13px;font-weight:800;color:#F5F0E8">'+(e.tramo||'—')+'</div></div>'
     + '<div style="background:#1A2120;border-radius:7px;padding:10px 12px"><div style="font-size:9px;font-weight:700;color:rgba(245,240,232,0.4);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:3px">KM Total</div><div style="font-size:13px;font-weight:800;color:#F5F0E8">'+((d.km_ida||0)+(d.km_vuelta||0))+' km</div></div>'
-    + '<div style="background:#1A2120;border-radius:7px;padding:10px 12px"><div style="font-size:9px;font-weight:700;color:rgba(245,240,232,0.4);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:3px">Fecha</div><div style="font-size:13px;font-weight:800;color:#F5F0E8">'+(e.fecha||'—')+'</div></div>'
+    + '<div style="background:#1A2120;border-radius:7px;padding:10px 12px"><div style="font-size:9px;font-weight:700;color:rgba(245,240,232,0.4);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:3px">Fecha</div><div style="font-size:13px;font-weight:800;color:#F5F0E8">'+fmtFecha(e.fecha)+'</div></div>'
     + '</div></div>'
     + '<div style="background:#212B2A;border:1px solid #2E3D3B;border-radius:10px;padding:16px 20px;margin-bottom:12px">'
     + '<div style="font-size:9px;font-weight:800;letter-spacing:0.15em;color:#C9A84C;text-transform:uppercase;margin-bottom:10px;border-bottom:1px solid #2E3D3B;padding-bottom:8px">Estructura de Costos</div>'
@@ -5568,7 +5568,7 @@ function verDetalleAsignacionConductor(i) {
       <div class="inf-cell"><div class="inf-lbl">Estado</div><div class="inf-val">${(s.estado||'').toUpperCase()}</div></div>
       <div class="inf-cell"><div class="inf-lbl">Patente</div><div class="inf-val">${s.patente||'—'}</div></div>
       <div class="inf-cell"><div class="inf-lbl">Cliente</div><div class="inf-val">${s.cliente||'—'}</div></div>
-      <div class="inf-cell"><div class="inf-lbl">Fecha del Servicio</div><div class="inf-val">${s.fecha||'—'}</div></div>
+      <div class="inf-cell"><div class="inf-lbl">Fecha del Servicio</div><div class="inf-val">${fmtFecha(s.fecha)}</div></div>
       <div class="inf-cell"><div class="inf-lbl">Hora Presentación Carguío</div><div class="inf-val">${s.hora_inicio_asignada||'—'}</div></div>
       <div class="inf-cell"><div class="inf-lbl">Origen</div><div class="inf-val">${s.origen||'—'}</div></div>
       <div class="inf-cell"><div class="inf-lbl">Destino Final</div><div class="inf-val">${destinoFinal||'—'}</div></div>
@@ -5599,7 +5599,8 @@ async function abrirInforme(i) {
   const ingreso  = s.ingreso_total || (tarifa + valorPts);
 
   // Get fecha termino
-  const fechaTerm = s._fecha_termino || (s.hora_termino ? s.hora_termino.substring(0,10) : '—');
+  const fechaTermRaw = s._fecha_termino || (s.hora_termino ? String(s.hora_termino).substring(0,10) : '');
+  const fechaTerm = fmtFecha(fechaTermRaw);
 
   // Calcular rendimientos
   const flotaInf = DB.flota.find(f=>f.patente===s.patente);
@@ -5637,7 +5638,7 @@ async function abrirInforme(i) {
       <div class="inf-cell"><div class="inf-lbl">Origen</div><div class="inf-val">${s.origen||'—'}</div></div>
       <div class="inf-cell"><div class="inf-lbl">Destino Final</div><div class="inf-val">${final?.destino||(s._puntos||[]).find(p=>p.tipo==='final')?.destino||s.destino||'—'}</div></div>
       ${ints.map((p,idx) => `<div class="inf-cell"><div class="inf-lbl">Punto Intermedio ${idx+1}</div><div class="inf-val">${p.destino||'—'}</div></div>`).join('')}
-      <div class="inf-cell"><div class="inf-lbl">Fecha Inicio</div><div class="inf-val">${s.fecha||'—'}</div></div>
+      <div class="inf-cell"><div class="inf-lbl">Fecha Inicio</div><div class="inf-val">${fmtFecha(s.fecha)}</div></div>
       <div class="inf-cell"><div class="inf-lbl">Fecha Término</div><div class="inf-val">${fechaTerm}</div></div>
       <div class="inf-cell"><div class="inf-lbl">Días en ruta</div><div class="inf-val">${s.dias_servicio||'—'}</div></div>
       <div class="inf-cell"><div class="inf-lbl">Salida de Base</div><div class="inf-val">${s._horasSvc?.salida_base ? s._horasSvc.salida_base.split('T')[1]?.substring(0,5) : '—'}</div></div>
@@ -5752,7 +5753,7 @@ async function abrirInforme(i) {
   try {
     const {data:eventos} = await supa.from('kaptura_gps_eventos').select('*')
       .eq('patente',s.patente).gte('fecha',s.fecha)
-      .lte('fecha',fechaTerm !== '—' ? fechaTerm : s.fecha)
+      .lte('fecha',fechaTermRaw || s.fecha)
       .order('datetime_evento',{ascending:true});
 
     if(eventos && eventos.length > 0) {
@@ -6691,6 +6692,13 @@ function cerrar(id) { document.getElementById(id).style.display = 'none'; }
 function fmt(n) {
   if(!n && n!==0) return '—';
   return '$' + Math.round(n).toLocaleString('es-CL');
+}
+function fmtFecha(iso) {
+  if(!iso) return '—';
+  const s = String(iso).substring(0,10);
+  const m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if(!m) return s;
+  return `${m[3]}/${m[2]}/${m[1]}`;
 }
 function toast(msg, dur=2800) {
   const t = document.getElementById('toast');
