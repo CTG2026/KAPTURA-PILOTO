@@ -2598,7 +2598,8 @@ function abrirFiltroColumna(campo, ev) {
     if(pop.style.display==='block' && pop.dataset.campo===campo) { pop.style.display='none'; return; }
 
     const base = _serviciosBaseParaFiltros();
-    const valores = Array.from(new Set(base.map(s => _valorCampoFiltro(s, campo)).filter(v=>v))).sort();
+    let valores = Array.from(new Set(base.map(s => _valorCampoFiltro(s, campo)).filter(v=>v))).sort();
+    if (campo === 'estado') valores = [...valores, 'Facturado', 'Factorizado', 'Pagado'];
     const seleccionados = _filtrosColumna[campo] || [];
 
     pop.innerHTML = `
@@ -2665,7 +2666,17 @@ function renderServicios() {
     svcs = svcs.filter(s => {
       for(const campo of ['patente','conductor','cliente','origen','destino','guia','estado']) {
         const activos = _filtrosColumna[campo];
-        if(activos && activos.length && !activos.includes(_valorCampoFiltro(s, campo))) return false;
+        if(!activos || !activos.length) continue;
+        if(campo === 'estado') {
+          const valorReal = _valorCampoFiltro(s, campo);
+          const coincideEstadoReal = activos.includes(valorReal);
+          const coincideFacturado   = activos.includes('Facturado')   && s.estado_facturacion==='facturado';
+          const coincideFactorizado = activos.includes('Factorizado') && s.estado_facturacion==='factorizado';
+          const coincidePagado      = activos.includes('Pagado')      && s.estado_facturacion==='pagado';
+          if(!coincideEstadoReal && !coincideFacturado && !coincideFactorizado && !coincidePagado) return false;
+        } else if(!activos.includes(_valorCampoFiltro(s, campo))) {
+          return false;
+        }
       }
       return true;
     });
@@ -2740,6 +2751,16 @@ function pillHTML(e) {
   };
   return `<span class="pill ${m[e]||'p-asignado'}">${t[e]||e}</span>`;
 }
+function pillFacturacionHTML(ef) {
+  if(!ef) return '';
+  const colores = {
+    facturado:   'background:rgba(59,130,246,0.15);color:#60A5FA;border:1px solid rgba(59,130,246,0.3)',
+    factorizado: 'background:rgba(168,85,247,0.15);color:#C084FC;border:1px solid rgba(168,85,247,0.3)',
+    pagado:      'background:rgba(34,197,94,0.15);color:#4ADE80;border:1px solid rgba(34,197,94,0.3)',
+  };
+  const etiquetas = {facturado:'Facturado', factorizado:'Factorizado', pagado:'Pagado'};
+  return `<span class="pill" style="${colores[ef]||''};margin-left:4px;font-size:9px">${etiquetas[ef]||ef}</span>`;
+}
 
 function _rutaPreview(s) {
   // Servicios ya registrados/cerrados: los puntos vienen de notas -> s._puntos
@@ -2774,7 +2795,7 @@ function cardHTML(s,i) {
         <div class="svc-line" style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.55)">FINAL: ${destinoCard}</div>
         ${rutaCard.intermedios.map((nombre,idx)=>`<div class="svc-line" style="font-size:10px;font-weight:600;color:rgba(255,255,255,0.55)">INTERMEDIO ${idx+1}: ${nombre}</div>`).join('')}
       </div>
-      ${pillHTML(s.estado)}
+      ${pillHTML(s.estado)}${pillFacturacionHTML(s.estado_facturacion)}
     </div>
     ${(()=>{
       if(!['coordinador','controller','administrador'].includes(_sessionUsuario?.rol)) return '';
@@ -2808,6 +2829,9 @@ function cardHTML(s,i) {
       ${s.estado==='ejecutado' ? `${['coordinador','controller','administrador'].includes(_sessionUsuario?.rol) ? `<button class="btn btn-green btn-sm" onclick="abrirCierre(${i})">🔒 Cierre</button>` : ''}<button class="btn btn-outline btn-sm" onclick="verServicio(${i})">✏ Ed. Registro</button>` : ''}
       ${s.estado === 'borrador' ? `<button class="btn btn-green btn-sm" onclick="abrirCierre(${i})">🔒 Cierre</button><button class="btn btn-outline btn-sm" onclick="verServicio(${i})">✏ Ed. Registro</button>` : ''}
       ${s.estado==='cerrado' ? `<button class="btn btn-sm" style="background:rgba(201,168,76,0.15);color:var(--gold);border:1px solid rgba(201,168,76,0.3)" onclick="abrirCierre(${i})">✏ Ed. Cierre</button>` : ''}
+      ${s.estado==='cerrado' && !s.estado_facturacion ? `<button class="btn btn-sm" style="background:rgba(59,130,246,0.15);color:#60A5FA;border:1px solid rgba(59,130,246,0.3)" onclick="marcarFacturacion(${i},'facturado')">💵 Marcar Facturado</button>` : ''}
+      ${s.estado==='cerrado' && s.estado_facturacion==='facturado' ? `<button class="btn btn-sm" style="background:rgba(168,85,247,0.15);color:#C084FC;border:1px solid rgba(168,85,247,0.3)" onclick="marcarFacturacion(${i},'factorizado')">🔄 Marcar Factorizado</button>` : ''}
+      ${s.estado==='cerrado' && ['facturado','factorizado'].includes(s.estado_facturacion) ? `<button class="btn btn-sm" style="background:rgba(34,197,94,0.15);color:#4ADE80;border:1px solid rgba(34,197,94,0.3)" onclick="marcarFacturacion(${i},'pagado')">✅ Marcar Pagado</button>` : ''}
       ${['confirmado','cerrado','borrador'].includes(s.estado) ? `<button class="btn btn-outline btn-sm" onclick="abrirInforme(${i})">📄 Informe</button>` : ''}
       ${(s._puntos||[]).some(p=>(p.guias||[]).length>0||p.num_guia) ? `<button class="btn btn-outline btn-sm" onclick="verGuias(${i})">🖼 Guías</button>` : ''}
       <button class="btn btn-outline btn-sm" onclick="descargarPdfServicio(${i})">📄 PDF</button>
@@ -2978,9 +3002,21 @@ function filaHTML(s,i) {
     <td style="font-weight:700" class="td-financ">${totalIng}</td>
     <td class="td-financ">${costos}</td>
     <td style="font-weight:700;color:${mColor}" class="td-financ">${margen}</td>
-    <td>${pillHTML(s.estado)}</td>
+    <td>${pillHTML(s.estado)}${pillFacturacionHTML(s.estado_facturacion)}</td>
     <td onclick="event.stopPropagation()"><button class="btn btn-outline btn-sm" onclick="abrirAcciones(${i},event)">⋮ Acciones</button></td>
   </tr>`;
+}
+
+async function marcarFacturacion(i, valor) {
+  const s = DB.servicios[i];
+  if(!s) return;
+  const {error} = await supa.from('servicios_piloto').update({estado_facturacion: valor}).eq('id', s.id);
+  if(error) { toast('⚠ Error: '+error.message); return; }
+  s.estado_facturacion = valor;
+  const etiquetas = {facturado:'Facturado', factorizado:'Factorizado', pagado:'Pagado'};
+  toast(`✓ ${s.servicio_id} marcado como ${etiquetas[valor]}`);
+  document.getElementById('popover-acciones').style.display = 'none';
+  renderServicios(); renderKPIs();
 }
 
 function abrirAcciones(i, ev) {
@@ -2997,6 +3033,9 @@ function abrirAcciones(i, ev) {
       ${s.estado==='ejecutado' ? `${['coordinador','controller','administrador'].includes(_sessionUsuario?.rol) ? `<button class="btn btn-green btn-sm" onclick="abrirCierre(${i})">🔒 Cierre</button>` : ''}<button class="btn btn-outline btn-sm" onclick="verServicio(${i})">✏ Ed. Registro</button>` : ''}
       ${s.estado === 'borrador' ? `<button class="btn btn-green btn-sm" onclick="abrirCierre(${i})">🔒 Cierre</button><button class="btn btn-outline btn-sm" onclick="verServicio(${i})">✏ Ed. Registro</button>` : ''}
       ${s.estado==='cerrado' ? `<button class="btn btn-sm" style="background:rgba(201,168,76,0.15);color:var(--gold);border:1px solid rgba(201,168,76,0.3)" onclick="abrirCierre(${i})">✏ Ed. Cierre</button>` : ''}
+      ${s.estado==='cerrado' && !s.estado_facturacion ? `<button class="btn btn-sm" style="background:rgba(59,130,246,0.15);color:#60A5FA;border:1px solid rgba(59,130,246,0.3)" onclick="marcarFacturacion(${i},'facturado')">💵 Marcar Facturado</button>` : ''}
+      ${s.estado==='cerrado' && s.estado_facturacion==='facturado' ? `<button class="btn btn-sm" style="background:rgba(168,85,247,0.15);color:#C084FC;border:1px solid rgba(168,85,247,0.3)" onclick="marcarFacturacion(${i},'factorizado')">🔄 Marcar Factorizado</button>` : ''}
+      ${s.estado==='cerrado' && ['facturado','factorizado'].includes(s.estado_facturacion) ? `<button class="btn btn-sm" style="background:rgba(34,197,94,0.15);color:#4ADE80;border:1px solid rgba(34,197,94,0.3)" onclick="marcarFacturacion(${i},'pagado')">✅ Marcar Pagado</button>` : ''}
       ${['confirmado','cerrado','borrador'].includes(s.estado) ? `<button class="btn btn-outline btn-sm" onclick="abrirInforme(${i})">📄 Informe</button>` : ''}
       ${(s._puntos||[]).some(p=>(p.guias||[]).length>0||p.num_guia) ? `<button class="btn btn-outline btn-sm" onclick="verGuias(${i})">🖼 Guías</button>` : ''}
       <button class="btn btn-outline btn-sm" onclick="descargarPdfServicio(${i})">📄 PDF</button>
