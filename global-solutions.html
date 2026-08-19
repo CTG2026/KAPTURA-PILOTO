@@ -8075,7 +8075,7 @@ async function liqSeleccionarCliente() {
     .select('servicios_ids').eq('empresa', emp);
   const idsYaLiquidados = new Set((liqsExistentes||[]).flatMap(l => l.servicios_ids||[]));
   const svcs = DB.servicios.filter(s => 
-    s.estado === 'cerrado' && 
+    ['cerrado','ejecutado'].includes(s.estado) && 
     (s.cliente||'').toLowerCase() === cliente.toLowerCase() &&
     !idsYaLiquidados.has(s.id)
   ).sort((a,b) => (a.fecha||'').localeCompare(b.fecha||''));
