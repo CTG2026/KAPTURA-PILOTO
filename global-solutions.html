@@ -455,16 +455,6 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
       <div class="sec-ttl">Liquidaciones</div>
       <button class="btn btn-navy" onclick="abrirNuevaLiquidacion()">+ Nueva Liquidación</button>
     </div>
-    <!-- Filtro estado -->
-    <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap">
-      <button class="btn btn-sm" id="liq-fil-todas" onclick="filtrarLiquidaciones('todas')" style="background:var(--gold);color:#000">Todas</button>
-      <button class="btn btn-sm btn-ghost" id="liq-fil-borrador" onclick="filtrarLiquidaciones('borrador')">Borrador</button>
-      <button class="btn btn-sm btn-ghost" id="liq-fil-emitida" onclick="filtrarLiquidaciones('emitida')">Emitidas</button>
-      <button class="btn btn-sm btn-ghost" id="liq-fil-enviada" onclick="filtrarLiquidaciones('enviada')">Enviadas</button>
-      <button class="btn btn-sm btn-ghost" id="liq-fil-en_cobro" onclick="filtrarLiquidaciones('en_cobro')">En Cobro</button>
-      <button class="btn btn-sm btn-ghost" id="liq-fil-por_cobrar" onclick="filtrarLiquidaciones('por_cobrar')">Por Cobrar</button>
-      <button class="btn btn-sm btn-ghost" id="liq-fil-cobrada" onclick="filtrarLiquidaciones('cobrada')">Cobradas</button>
-    </div>
     <!-- Lista liquidaciones -->
     <div id="liq-lista"><div class="empty">Sin liquidaciones — crea la primera con + Nueva Liquidación</div></div>
   </div>
@@ -7948,66 +7938,97 @@ async function eliminarLiquidacion(id, e) {
 function renderLiquidaciones() {
   const lista = document.getElementById('liq-lista');
   const hoy = new Date(); hoy.setHours(0,0,0,0);
-  const items = _liqFiltro === 'todas' ? _liqData
-    : _liqFiltro === 'por_cobrar' ? _liqData.filter(l => l.estado === 'emitida' && !l.factoring)
-    : _liqData.filter(l => l.estado === _liqFiltro);
-  if(!items.length) {
-    lista.innerHTML = '<div class="empty">Sin liquidaciones en este estado</div>';
+  const fmtF = d => d ? d.split('-').reverse().join('/') : null;
+
+  const RANK = {borrador:0, emitida:1, enviada:1, aprobada:1, por_cobrar:1, facturada:2, en_cobro:3, factoring:3, cobrada:4};
+
+  const especiales = _liqData.filter(l => l.estado === 'rendicion_sin_factura_propia');
+  const items = _liqData.filter(l => l.estado !== 'rendicion_sin_factura_propia');
+
+  const btnEliminarHTML = (l) => {
+    const r=_sessionUsuario?.rol, p=_sessionUsuario?.pin, em=_sessionUsuario?.empresa;
+    const ok = r==='admin_kaptura' || (r==='coordinador' && p==='1996' && em==='flota_297221') || (r==='coordinador' && p==='0101' && em==='global_solutions');
+    return ok ? `<button onclick="eliminarLiquidacion('${l.id}',event)" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:var(--danger);border-radius:5px;padding:3px 8px;font-size:9px;cursor:pointer;font-weight:700;white-space:nowrap">✕ Eliminar</button>` : '';
+  };
+
+  const celda = (reached, fecha, na) => {
+    if(na) return `<td style="text-align:center;color:var(--muted);opacity:0.4">—</td>`;
+    if(!reached) return `<td style="text-align:center;color:var(--muted);opacity:0.4">—</td>`;
+    if(fecha) return `<td style="text-align:center;font-size:11px;font-weight:800;color:#7EA87E">✓ ${fmtF(fecha)}</td>`;
+    return `<td style="text-align:center;font-size:10px;font-weight:700;color:#BA7517">✓ sin fecha</td>`;
+  };
+
+  let html = '';
+
+  if(!items.length && !especiales.length) {
+    lista.innerHTML = '<div class="empty">Sin liquidaciones — crea la primera con + Nueva Liquidación</div>';
     return;
   }
-  lista.innerHTML = items.map(l => {
-    // Calcular semáforo de vencimiento
-    const cobrada = ['cobrada','factoring'].includes(l.estado);
-    let lineColor = '#2E3D3B'; // default borde
-    let badgeTxt = (l.estado||'').replace('_',' ').toUpperCase();
-    let badgeBg  = 'rgba(245,240,232,0.1)';
-    let badgeCol = 'var(--muted)';
-    let vencTxt  = '';
-    let vencCol  = 'var(--muted)';
-    let vencLbl  = l.fecha_vencimiento ? ('Vence el') : '';
-    let vencFmt  = l.fecha_vencimiento ? l.fecha_vencimiento.split('-').reverse().join('/') : '—';
 
-    if(cobrada) {
-      lineColor = '#3B6D11'; badgeTxt = 'PAGADA'; badgeBg = 'rgba(59,109,17,0.2)'; badgeCol = '#7EA87E';
-      vencLbl = 'Pagada el'; vencFmt = l.fecha_pago ? l.fecha_pago.split('-').reverse().join('/') : '—';
-      vencCol = '#7EA87E';
-    } else if(l.fecha_vencimiento) {
-      const venc = new Date(l.fecha_vencimiento); venc.setHours(0,0,0,0);
-      const dias = Math.round((venc - hoy) / 864e5);
-      if(dias < 0) {
-        lineColor = '#E24B4A'; badgeTxt = 'VENCIDA HACE '+(Math.abs(dias))+' DÍAS';
-        badgeBg = 'rgba(226,75,74,0.2)'; badgeCol = '#E24B4A';
-        vencLbl = 'Venció el'; vencCol = '#E24B4A';
-      } else if(dias <= 7) {
-        lineColor = '#EF9F27'; badgeTxt = 'VENCE EN '+dias+' DÍAS';
-        badgeBg = 'rgba(239,159,39,0.2)'; badgeCol = '#EF9F27';
-        vencCol = '#EF9F27';
-      } else if(dias <= 30) {
-        lineColor = '#BA7517'; badgeTxt = 'VENCE EN '+dias+' DÍAS';
-        badgeBg = 'rgba(186,117,23,0.2)'; badgeCol = '#BA7517';
-        vencCol = '#BA7517';
-      } else {
-        lineColor = '#639922'; badgeTxt = 'AL DÍA · '+dias+' DÍAS';
-        badgeBg = 'rgba(99,153,34,0.2)'; badgeCol = '#639922';
-        vencCol = '#7EA87E';
+  if(items.length) {
+    html += `<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-family:'DM Sans',sans-serif">
+      <thead><tr style="border-bottom:2px solid var(--border)">
+        <th style="text-align:left;padding:8px;font-size:9px;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted)">Liquidación</th>
+        <th style="text-align:center;padding:8px;font-size:9px;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted)">Emitida</th>
+        <th style="text-align:center;padding:8px;font-size:9px;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted)">Facturada</th>
+        <th style="text-align:center;padding:8px;font-size:9px;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted)">En Cobro</th>
+        <th style="text-align:center;padding:8px;font-size:9px;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted)">Factorizada</th>
+        <th style="text-align:center;padding:8px;font-size:9px;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted)">Pagada</th>
+        <th style="text-align:right;padding:8px;font-size:9px;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted)">Monto</th>
+        <th style="padding:8px"></th>
+      </tr></thead><tbody>`;
+
+    html += items.map(l => {
+      const rank = RANK[l.estado] ?? 0;
+      const usaFact = !!l.factoring;
+      const r1 = rank >= 1;
+      const r2 = rank >= 2;
+      const r3 = rank >= 3 && !usaFact;
+      const r4 = rank >= 3 && usaFact;
+      const r5 = rank >= 4;
+      let vencBadge = '';
+      if(!r5 && l.fecha_vencimiento) {
+        const venc = new Date(l.fecha_vencimiento); venc.setHours(0,0,0,0);
+        const dias = Math.round((venc-hoy)/864e5);
+        const col = dias<0 ? '#E24B4A' : (dias<=7 ? '#EF9F27' : (dias<=30 ? '#BA7517' : '#639922'));
+        const txt = dias<0 ? `Vencida hace ${Math.abs(dias)}d` : `Vence en ${dias}d`;
+        vencBadge = `<div style="font-size:9px;font-weight:700;color:${col};margin-top:2px">${txt}</div>`;
       }
-    }
-    const btnElim = (()=>{const r=_sessionUsuario?.rol,p=_sessionUsuario?.pin,em=_sessionUsuario?.empresa;const ok=r==='admin_kaptura'||(r==='coordinador'&&p==='1996'&&em==='flota_297221')||(r==='coordinador'&&p==='0101'&&em==='global_solutions');return ok?`<button onclick="eliminarLiquidacion('${l.id}',event)" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:var(--danger);border-radius:5px;padding:3px 10px;font-size:10px;cursor:pointer;font-weight:700">✕ Eliminar</button>`:'';})();
-    return `<div onclick="verLiquidacion('${l.id}')" style="background:var(--surface);border:1px solid var(--border);border-left:6px solid ${lineColor};border-radius:10px;padding:12px 14px;margin-bottom:8px;cursor:pointer;display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center">
-      <div>
-        <div style="font-size:13px;font-weight:900;color:var(--gold)">${l.numero}</div>
-        <div style="font-size:11px;color:var(--muted);margin-top:2px">${l.cliente} · ${(l.servicios_ids||[]).length} servicios${l.factoring?'· Factoring':''}</div>
-        ${l.num_factura ? `<div style="font-size:10px;color:var(--gold);margin-top:2px">🧾 Factura N° ${l.num_factura}</div>` : ''}
-        <span style="font-size:9px;font-weight:800;letter-spacing:0.08em;padding:2px 8px;border-radius:4px;display:inline-block;margin-top:5px;background:${badgeBg};color:${badgeCol}">${badgeTxt}</span>
-      </div>
-      <div style="text-align:right">
-        <div style="font-size:16px;font-weight:900;color:var(--text)">$${Number(l.total||0).toLocaleString('es-CL')}</div>
-        <div style="font-size:9px;font-weight:700;letter-spacing:0.08em;color:var(--muted);margin-top:4px;text-transform:uppercase">${vencLbl}</div>
-        <div style="font-size:13px;font-weight:800;color:${vencCol}">${vencFmt}</div>
-        <div style="margin-top:6px">${btnElim}</div>
-      </div>
+      return `<tr onclick="verLiquidacion('${l.id}')" style="cursor:pointer;border-bottom:1px solid var(--border)">
+        <td style="padding:8px">
+          <div style="font-size:12px;font-weight:800;color:var(--gold)">${l.numero}</div>
+          <div style="font-size:10px;color:var(--muted)">${l.cliente}${usaFact?' · Factoring':''}${l.num_factura?' · Fact. N°'+l.num_factura:''}</div>
+          ${vencBadge}
+        </td>
+        ${celda(r1, l.fecha_emision, false)}
+        ${celda(r2, l.fecha_factura, false)}
+        ${celda(r3, l.fecha_en_cobro, usaFact)}
+        ${celda(r4, l.fecha_factorizado, !usaFact)}
+        ${celda(r5, l.fecha_pago, false)}
+        <td style="text-align:right;padding:8px;font-size:13px;font-weight:900;color:var(--text)">$${Number(l.total||0).toLocaleString('es-CL')}</td>
+        <td style="padding:8px;text-align:right" onclick="event.stopPropagation()">${btnEliminarHTML(l)}</td>
+      </tr>`;
+    }).join('');
+    html += `</tbody></table></div>`;
+  }
+
+  if(especiales.length) {
+    html += `<div style="margin-top:20px">
+      <div style="font-size:10px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">⚠ Casos especiales / Revisar (fuera del pipeline)</div>
+      ${especiales.map(l => `<div style="background:var(--surface);border:1px solid rgba(186,117,23,0.3);border-left:6px solid #BA7517;border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-size:13px;font-weight:900;color:var(--gold)">${l.numero}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">${l.cliente} · Estado no reconocido por el sistema: "${l.estado}" · sin factura ni servicios vinculados</div>
+        </div>
+        <div style="text-align:right;display:flex;align-items:center;gap:10px">
+          <div style="font-size:15px;font-weight:900;color:var(--text)">$${Number(l.total||0).toLocaleString('es-CL')}</div>
+          ${btnEliminarHTML(l)}
+        </div>
+      </div>`).join('')}
     </div>`;
-  }).join('');
+  }
+
+  lista.innerHTML = html;
 }
 
 async function abrirNuevaLiquidacion() {
@@ -8349,6 +8370,8 @@ async function liqCambiarEstado(id, nuevoEstado) {
   if(nuevoEstado === 'enviada')   extra.fecha_envio       = hoy;
   if(nuevoEstado === 'aprobada')  extra.fecha_aprobacion  = hoy;
   if(nuevoEstado === 'facturada') extra.fecha_factura     = hoy;
+  if(nuevoEstado === 'en_cobro')  extra.fecha_en_cobro    = hoy;
+  if(nuevoEstado === 'factoring') extra.fecha_factorizado = hoy;
   if(nuevoEstado === 'cobrada')   extra.fecha_pago        = hoy;
   const {error} = await supa.from('kaptura_liquidaciones').update({estado: nuevoEstado, ...extra}).eq('id', id);
   if(error) { toast('Error: '+error.message); return; }
