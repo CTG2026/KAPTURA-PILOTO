@@ -7889,6 +7889,16 @@ let _liqData = [];
 let _liqSvcsSeleccionados = [];
 let _liqClienteActual = '';
 
+function _liqGuiasLinksHTML(s) {
+  const gs = (s._puntos||[]).flatMap(p => (p.guias||[]).map(g => ({num: g.num_guia, url: g.img_url}))).filter(g => g.num);
+  if(!gs.length) return s.num_guia ? `Guía: ${s.num_guia}` : '';
+  const items = gs.map(g => g.url
+    ? `<a href="${g.url}" target="_blank" style="color:var(--gold);text-decoration:underline">N° ${g.num} 📎</a>`
+    : `N° ${g.num} (sin foto)`
+  ).join(' · ');
+  return 'Guía: '+items;
+}
+
 function _liqGuiasTxt(s) {
   const gs = (s._puntos||[]).flatMap(p => (p.guias||[]).map(g => g.num_guia)).filter(Boolean);
   return gs.length ? gs.join(' · ') : (s.num_guia || '');
@@ -8217,7 +8227,7 @@ async function verLiquidacion(id) {
           <div><span style="font-weight:800;color:var(--gold)">${s.servicio_id}</span> <span style="font-size:11px;color:var(--muted)">${s.fecha||''} · ${s.origen||''} → ${s.destino||''}</span></div>
           <span style="font-weight:800;color:var(--text)">$${Number(s.ingreso_total||s.tarifa_neta||0).toLocaleString('es-CL')}</span>
         </div>
-        ${s.num_guia ? `<div style="font-size:10px;color:var(--muted);margin-top:3px">Guía: ${s.num_guia}</div>` : ''}
+        ${_liqGuiasLinksHTML(s) ? `<div style="font-size:10px;color:var(--muted);margin-top:3px">${_liqGuiasLinksHTML(s)}</div>` : ''}
       </div>`).join('')}
     ${liq.pdf_sii_url ? `<div style="margin-top:10px"><a href="${liq.pdf_sii_url}" target="_blank" style="color:var(--gold);font-size:12px;font-weight:700">📄 Ver Factura SII adjunta</a></div>` : ''}`;
 
