@@ -2981,7 +2981,7 @@ function cardHTML(s,i) {
         </div>
         <div class="svc-pat">${s.patente||'—'} · ${s.conductor||'—'}</div>
         <div class="svc-line" style="color:var(--g400)">${s.cliente||'—'}</div>
-        <div class="svc-line" style="font-weight:700;color:rgba(245,240,232,0.85)">Origen: ${s.origen||'—'}${(()=>{const gs=(s._puntos||[]).flatMap(p=>(p.guias||[]).map(g=>g.num_guia)).filter(Boolean);const guiaTxt=gs.length?gs.join(' · '):(s.num_guia||'');return guiaTxt?` <span style="color:var(--gold)">— Guía ${guiaTxt}</span>`:'';})()}</div>
+        <div class="svc-line" style="font-weight:700;color:rgba(245,240,232,0.85)">Origen: ${s.origen||'—'}${(()=>{const gs=(s._puntos||[]).flatMap(p=>(p.guias||[]).map(g=>g.num_guia)).filter(Boolean);const guiaTxt=s.guia_override||(gs.length?gs.join(' · '):(s.num_guia||''));return guiaTxt?` <span style="color:var(--gold)">— Guía ${guiaTxt}</span>`:'';})()}</div>
         <div class="svc-line" style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.55)">FINAL: ${destinoCard}</div>
         ${rutaCard.intermedios.map((nombre,idx)=>`<div class="svc-line" style="font-size:10px;font-weight:600;color:rgba(255,255,255,0.55)">INTERMEDIO ${idx+1}: ${nombre}</div>`).join('')}
       </div>
@@ -3038,6 +3038,29 @@ function activarEdicionTarifa(i) {
   const input = document.getElementById('tarifa-input-'+i);
   if(view) view.style.display = 'none';
   if(input) { input.style.display = 'inline-block'; input.focus(); input.select(); }
+}
+
+function activarEdicionGuia(i) {
+  const view = document.getElementById('guia-view-'+i);
+  const input = document.getElementById('guia-input-'+i);
+  if(view) view.style.display = 'none';
+  if(input) { input.style.display = 'inline-block'; input.focus(); input.select(); }
+}
+
+async function guardarGuiaManual(i, val) {
+  const view = document.getElementById('guia-view-'+i);
+  const input = document.getElementById('guia-input-'+i);
+  const s = DB.servicios[i];
+  if(!s) return;
+  const nuevoValor = val.trim();
+  if(input) input.style.display = 'none';
+  if(view) view.style.display = 'inline';
+  if(nuevoValor === (s.guia_override||'')) return;
+  const {error} = await supa.from('servicios_piloto').update({guia_override: nuevoValor||null}).eq('id', s.id);
+  if(error) { toast('⚠ Error al guardar guía: '+error.message); return; }
+  s.guia_override = nuevoValor||null;
+  toast(`✓ Guía de ${s.servicio_id} actualizada`);
+  renderServicios();
 }
 
 async function guardarTarifaManual(i, val) {
@@ -3200,7 +3223,7 @@ function filaHTML(s,i) {
   const destino   = pFinal?.destino || s.destino || '—';
   // Join all guia numbers with dash separator
   const allGuias = [...new Set((s._puntos||[]).flatMap(p=>(p.guias||[]).map(g=>g.num_guia)).filter(Boolean))];
-  const guia = allGuias.length > 0 ? allGuias.join(' — ') : (s.num_guia ? s.num_guia.replace(/,/g,' — ') : '—');
+  const guia = s.guia_override ? s.guia_override : (allGuias.length > 0 ? allGuias.join(' — ') : (s.num_guia ? s.num_guia.replace(/,/g,' — ') : '—'));
   const ptsVal      = pInts.reduce((a,p)=>a+(p.valor||0),0);
   const tarifaFinal = pFinal?.valor || 0;
   const tarifaTotal = s.tarifa_neta || (tarifaFinal + ptsVal) || 0;
@@ -3234,7 +3257,10 @@ function filaHTML(s,i) {
     <td>${s.cliente||'—'}</td>
     <td>${s.origen||'—'}</td>
     <td style="font-weight:700">${destinoCelda}</td>
-    <td style="font-size:12px;font-weight:700;color:var(--text)">${guia}</td>
+    <td style="font-size:12px;font-weight:700;color:var(--text)" onclick="event.stopPropagation()">
+      <span id="guia-view-${i}" onmouseenter="activarEdicionGuia(${i})" onclick="activarEdicionGuia(${i})" style="cursor:pointer">${guia}</span>
+      <input type="text" id="guia-input-${i}" value="${(s.guia_override||(allGuias.length>0?allGuias.join(' — '):s.num_guia)||'').replace(/"/g,'&quot;')}" placeholder="N° guía" style="display:none;width:120px;background:var(--bg);border:1px solid var(--gold);border-radius:5px;padding:3px 6px;font-size:11px;color:var(--text)" onblur="guardarGuiaManual(${i},this.value)" onkeydown="if(event.key==='Enter'){this.blur()}" onclick="event.stopPropagation()">
+    </td>
     <td style="font-weight:700;color:var(--green)" class="td-financ" onclick="event.stopPropagation()">
       <span id="tarifa-view-${i}" onmouseenter="activarEdicionTarifa(${i})" onclick="activarEdicionTarifa(${i})" style="cursor:pointer">${tarifa}</span>
       <input type="text" id="tarifa-input-${i}" value="${tarifaTotal||''}" style="display:none;width:90px;background:var(--bg);border:1px solid var(--gold);border-radius:5px;padding:3px 6px;font-size:11px;color:var(--text);text-align:right" onblur="guardarTarifaManual(${i},this.value)" onkeydown="if(event.key==='Enter'){this.blur()}" onclick="event.stopPropagation()">
