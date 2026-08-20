@@ -13,6 +13,7 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -4065,7 +4066,7 @@ function puntosHTML(p, pi, activeIdx) {
       </label>
       <label style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;background:rgba(201,168,76,0.1);border:1px dashed var(--gold);border-radius:8px;padding:10px 6px;cursor:pointer;font-size:10px;color:var(--gold);text-align:center">
         🖼️<span>Adjuntar</span>
-        <input type="file" accept="image/*" style="display:none" onchange="procesarGuia(this,${pi})">
+        <input type="file" accept="image/*,application/pdf" style="display:none" onchange="procesarGuia(this,${pi})">
       </label>
     </div>
 
@@ -4183,13 +4184,28 @@ async function procesarGuia(input, pi) {
   const file = input.files[0];
   puntosData[pi].procesando = true; renderPuntos();
   try {
-    // Leer como base64 via FileReader
-    const dataUrl = await new Promise((res,rej) => {
-      const r = new FileReader();
-      r.onload = () => res(r.result);
-      r.onerror = rej;
-      r.readAsDataURL(file);
-    });
+    let dataUrl;
+    if (file.type === 'application/pdf') {
+      // Convertir la primera pagina del PDF a imagen usando pdf.js
+      const arrayBuffer = await file.arrayBuffer();
+      if (!window.pdfjsLib) { throw new Error('Librería de lectura de PDF no cargó, intenta con una foto/imagen en su lugar'); }
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      const pdf = await window.pdfjsLib.getDocument({data: arrayBuffer}).promise;
+      const page = await pdf.getPage(1);
+      const viewport = page.getViewport({scale: 2});
+      const canvas = document.createElement('canvas');
+      canvas.width = viewport.width; canvas.height = viewport.height;
+      await page.render({canvasContext: canvas.getContext('2d'), viewport}).promise;
+      dataUrl = canvas.toDataURL('image/jpeg', 0.90);
+    } else {
+      // Leer como base64 via FileReader
+      dataUrl = await new Promise((res,rej) => {
+        const r = new FileReader();
+        r.onload = () => res(r.result);
+        r.onerror = rej;
+        r.readAsDataURL(file);
+      });
+    }
     // Comprimir imagen
     const b64 = await new Promise((res,rej) => {
       const img = new Image();
