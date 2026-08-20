@@ -3901,6 +3901,8 @@ async function procesarGuia(input, pi) {
     }
 
     if(json?.num_guia) {
+      // Quitar ceros a la izquierda (ej "0000024526" -> "24526")
+      json.num_guia = String(json.num_guia).replace(/^0+(?=\d)/, '');
       // Subir imagen a Supabase Storage
       let imgUrl = null;
       try {
