@@ -8267,6 +8267,7 @@ async function verLiquidacion(id) {
       }).join('');
       return `<div style="background:var(--bg);border-radius:8px;padding:12px;margin-bottom:14px;border:1px solid var(--border)">
         <div style="font-size:10px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold);margin-bottom:6px">Avance de la liquidación</div>
+        ${liq.factura_dato_pendiente ? `<div style="background:rgba(239,159,39,0.15);border:1px solid rgba(239,159,39,0.4);color:#EF9F27;border-radius:6px;padding:8px 10px;margin-bottom:8px;font-size:11px;font-weight:700">⚠ Factura adjunta, pero no se pudo leer el N° automáticamente — <a href="#" onclick="liqEditarFactura('${id}');return false" style="color:#EF9F27;text-decoration:underline">completar a mano</a></div>` : ''}
         ${filas}
         <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;opacity:0.4">
           <span style="font-size:11px;font-weight:700">${naLabel}</span>
@@ -8289,8 +8290,26 @@ async function verLiquidacion(id) {
   document.getElementById('ver-liq-ftr').innerHTML =
     `<button class="btn btn-ghost" onclick="cerrar('modal-ver-liq')">Cerrar</button>
      <button class="btn btn-outline" onclick="liqAdjuntarSII('${id}')">📎 Adjuntar Factura SII</button>
+     <button class="btn btn-outline" onclick="liqEditarFactura('${id}')">✏️ Corregir N° Factura</button>
      <button class="btn btn-outline" onclick="liqImprimir('${id}')">🖨️ Vista Previa</button>`;
   document.getElementById('modal-ver-liq').style.display = 'flex';
+}
+
+async function liqEditarFactura(id) {
+  const liq = _liqData.find(l => l.id === id);
+  const numFact = prompt('N° de Factura SII:', liq?.num_factura || '');
+  if(!numFact) return;
+  const fecha = prompt('Fecha de emisión (YYYY-MM-DD):', liq?.fecha_factura || new Date().toISOString().split('T')[0]);
+  if(!fecha) return;
+  const extra = {num_factura: numFact, fecha_factura: fecha, factura_dato_pendiente: false};
+  // Si aún no había avanzado a "facturada" o más allá, la deja como mínimo en "facturada"
+  const RANK = {borrador:0, emitida:1, enviada:1, aprobada:1, por_cobrar:1, facturada:2, en_cobro:3, factoring:3, cobrada:4};
+  if((RANK[liq?.estado] ?? 0) < 2) extra.estado = 'facturada';
+  const {error} = await supa.from('kaptura_liquidaciones').update(extra).eq('id', id);
+  if(error) { toast('Error: '+error.message); return; }
+  toast('✓ N° de factura corregido');
+  cerrar('modal-ver-liq');
+  await cargarLiquidaciones();
 }
 
 async function liqMarcarEtapa(id, etapa) {
@@ -8493,16 +8512,24 @@ async function liqAdjuntarSII(id) {
             await supa.from('kaptura_liquidaciones').update({
               num_factura: parsed.num_factura,
               fecha_factura: parsed.fecha_factura || null,
-              estado: 'facturada'
+              estado: 'facturada',
+              factura_dato_pendiente: false
             }).eq('id', id);
             toast('✓ Factura N°'+parsed.num_factura+' detectada automáticamente');
+          } else {
+            await supa.from('kaptura_liquidaciones').update({factura_dato_pendiente: true}).eq('id', id);
+            toast('⚠ No se pudo leer el N° de factura — completar a mano');
           }
-        } catch(e) { toast('✓ Factura adjuntada (lectura manual requerida)'); }
+        } catch(e) {
+          await supa.from('kaptura_liquidaciones').update({factura_dato_pendiente: true}).eq('id', id);
+          toast('⚠ Factura adjuntada — no se pudo leer automático, completar a mano');
+        }
         await cargarLiquidaciones();
         verLiquidacion(id);
       };
       reader.readAsDataURL(file);
     } catch(e) {
+      await supa.from('kaptura_liquidaciones').update({factura_dato_pendiente: true}).eq('id', id);
       await cargarLiquidaciones();
       verLiquidacion(id);
     }
