@@ -696,6 +696,20 @@ textarea.inp{text-transform:uppercase}.inp.pend{background:var(--gold);outline:2
         </table>
       </div>
       <div style="font-size:11px;color:var(--muted);margin-top:10px" id="inf-cons-cxc-nota"></div>
+
+      <div style="font-family:'DM Sans',sans-serif;font-size:13px;font-weight:900;letter-spacing:0.05em;color:#C9A84C;margin-bottom:8px;margin-top:24px">PAGADO — CUENTAS COBRADAS (por cliente)</div>
+      <div style="background:var(--surface);border-radius:12px;overflow:hidden;border:1.5px solid #2A2A2A;overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse">
+          <thead><tr style="background:#1A2120">
+            <th style="padding:8px 14px;text-align:left;font-size:10px;font-weight:800;color:#C9A84C">CLIENTE</th>
+            <th style="padding:8px 14px;text-align:left;font-size:10px;font-weight:800;color:#C9A84C">REFERENCIA</th>
+            <th style="padding:8px 14px;text-align:right;font-size:10px;font-weight:800;color:#C9A84C">MONTO PAGADO</th>
+            <th style="padding:8px 14px;text-align:left;font-size:10px;font-weight:800;color:#C9A84C">VÍA / FECHA</th>
+          </tr></thead>
+          <tbody id="inf-cons-pagado-body"></tbody>
+        </table>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:10px" id="inf-cons-pagado-nota"></div>
     </div>
   </div>
 
@@ -6472,7 +6486,7 @@ async function abrirFlujoCajaReal() {
 }
 
 // ══ FLUJO DE CAJA — PRÓXIMOS 7 DÍAS (proyectado, solo días hábiles) — PARAMETRIZADA ══
-async function renderFlujoProyectado(headId, bodyId, notaId, cxcBodyId, cxcNotaId) {
+async function renderFlujoProyectado(headId, bodyId, notaId, cxcBodyId, cxcNotaId, pagadoBodyId, pagadoNotaId) {
   document.getElementById(notaId).textContent = 'Cargando...';
 
   const hoy = new Date();
@@ -6483,9 +6497,10 @@ async function renderFlujoProyectado(headId, bodyId, notaId, cxcBodyId, cxcNotaI
   }
   const mesKey = dias[0].slice(0,7);
 
-  const [{data:presu, error:e1}, {data:cxc, error:e2}] = await Promise.all([
+  const [{data:presu, error:e1}, {data:cxc, error:e2}, {data:cobrado, error:e4}] = await Promise.all([
     supa.from('kaptura_presupuesto').select('*').eq('empresa','global_solutions').eq('mes',mesKey),
-    supa.from('kaptura_cuentas_por_cobrar').select('*').eq('empresa','global_solutions').in('estado',['pendiente','programado'])
+    supa.from('kaptura_cuentas_por_cobrar').select('*').eq('empresa','global_solutions').in('estado',['pendiente','programado']),
+    supa.from('kaptura_cuentas_por_cobrar').select('*').eq('empresa','global_solutions').eq('estado','pagado')
   ]);
   if(e1){ document.getElementById(notaId).textContent = 'Error presupuesto: '+e1.message; return; }
 
@@ -6571,6 +6586,38 @@ async function renderFlujoProyectado(headId, bodyId, notaId, cxcBodyId, cxcNotaI
   </tr>`;
   cxcBody.innerHTML = filas || '<tr><td colspan="4" style="padding:14px;color:var(--muted);font-size:12px">Sin cuentas por cobrar ni por facturar pendientes.</td></tr>';
   if(cxcNotaId) document.getElementById(cxcNotaId).textContent = `CxC: solo facturas ya emitidas, estado pendiente/programado. CxF: servicios_piloto ejecutados sin factura (kaptura_cuentas_por_facturar, estado pendiente_facturar).`;
+
+  if(!pagadoBodyId) return;
+  const porCliente = {};
+  (cobrado||[]).forEach(c => {
+    const cli = c.cliente || '—';
+    if(!porCliente[cli]) porCliente[cli] = [];
+    porCliente[cli].push(c);
+  });
+  let filasPagado = '';
+  Object.entries(porCliente).sort((a,b) => a[0].localeCompare(b[0])).forEach(([cli, regs]) => {
+    regs.sort((a,b) => (a.fecha_pago_real||'').localeCompare(b.fecha_pago_real||''));
+    regs.forEach(c => {
+      const via = c.via_cobro === 'factoring' ? `Factoring${c.entidad_factoring?' ('+c.entidad_factoring+')':''}`
+                : c.via_cobro === 'directo_via_tercero' ? 'Directo (cta. de tercero)'
+                : 'Directo';
+      filasPagado += `<tr style="border-top:1px solid #2A2A2A">
+        <td style="padding:8px 14px;font-size:12px;color:#F5F0E8">${cli}</td>
+        <td style="padding:8px 14px;font-size:11px;color:var(--muted)">${c.liquidacion_numero||'—'}</td>
+        <td style="padding:8px 14px;text-align:right;font-size:12px;font-weight:700;color:#7EA87E">${fmt(Number(c.monto_pagado_real||c.monto_esperado)||0)}</td>
+        <td style="padding:8px 14px;font-size:11px;color:var(--muted)">${via}${c.fecha_pago_real?' · '+c.fecha_pago_real.split('-').reverse().join('/'):''}</td>
+      </tr>`;
+    });
+    const totalCliente = regs.reduce((a,c) => a+(Number(c.monto_pagado_real||c.monto_esperado)||0), 0);
+    filasPagado += `<tr style="background:var(--bg)">
+      <td colspan="2" style="padding:6px 14px;font-size:11px;font-weight:800;color:#C9A84C">Subtotal ${cli}</td>
+      <td style="padding:6px 14px;text-align:right;font-size:11px;font-weight:800;color:#C9A84C">${fmt(totalCliente)}</td>
+      <td></td>
+    </tr>`;
+  });
+  const totalPagadoMes = (cobrado||[]).filter(c => (c.fecha_pago_real||'').slice(0,7)===mesKey).reduce((a,c)=>a+(Number(c.monto_pagado_real||c.monto_esperado)||0),0);
+  document.getElementById(pagadoBodyId).innerHTML = filasPagado || '<tr><td colspan="4" style="padding:14px;color:var(--muted);font-size:12px">Sin cuentas pagadas registradas.</td></tr>';
+  if(pagadoNotaId) document.getElementById(pagadoNotaId).textContent = `Fuente: kaptura_cuentas_por_cobrar (estado=pagado), agrupado por cliente, todo el historial. Pagado en ${mesKey}: ${fmt(totalPagadoMes)}.`;
 }
 
 async function abrirFlujoCajaProyectado() {
@@ -6591,7 +6638,7 @@ async function abrirFlujoCajaConsolidado() {
   document.getElementById('inf-consolidado-container').style.display = 'block';
   await Promise.all([
     renderFlujoReal('inf-cons-real-head','inf-cons-real-body','inf-cons-real-nota','inf-cons-alertas'),
-    renderFlujoProyectado('inf-cons-proy-head','inf-cons-proy-body','inf-cons-proy-nota','inf-cons-cxc-body','inf-cons-cxc-nota')
+    renderFlujoProyectado('inf-cons-proy-head','inf-cons-proy-body','inf-cons-proy-nota','inf-cons-cxc-body','inf-cons-cxc-nota','inf-cons-pagado-body','inf-cons-pagado-nota')
   ]);
 }
 
