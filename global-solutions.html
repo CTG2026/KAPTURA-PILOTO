@@ -3570,7 +3570,10 @@ function checkOtroCliente() {
       + destinos.map(function(d){ return '<option value="'+d+'">'+d+'</option>'; }).join('')
       + '<option value="__otro__">✏ Otro destino...</option>';
     document.getElementById('wrap-asig-destino-custom').style.display = 'none';
-  } else if(!clienteVal || clienteVal === '__otro__') {
+  } else if(clienteVal === '__otro__') {
+    // Cliente nuevo: no hay destinos conocidos, pero se debe poder ingresar uno manual
+    if(selDest) selDest.innerHTML = '<option value="">Selecciona destino...</option><option value="__otro__">✏ Otro destino...</option>';
+  } else if(!clienteVal) {
     if(selDest) selDest.innerHTML = '<option value="">Selecciona cliente primero...</option>';
   }
   // Refrescar la lista de destinos disponibles en los puntos intermedios ya agregados
@@ -3654,8 +3657,8 @@ async function guardarAsignacion() {
   const fecha     = document.getElementById('asig-fecha').value;
   if(!patente||!conductor||!cliente||!origen||!fecha) { toast('⚠ Completa todos los campos'); return; }
   if(clienteSel === '__otro__' && clienteNew) {
-    await supa.from('kaptura_clientes').insert({nombre:clienteNew, condicion_pago:'30 días'});
-    DB.clientes.push({nombre:clienteNew});
+    await supa.from('kaptura_clientes').insert({nombre:clienteNew, condicion_pago:'30 días', empresa: DB._empresa||'global_solutions', activo:true});
+    DB.clientes.push({nombre:clienteNew, empresa: DB._empresa||'global_solutions', activo:true});
   }
   const puntoInicio   = document.getElementById('asig-punto-inicio').value;
   // Obtener tipo desde el equipo seleccionado en DB.flota
