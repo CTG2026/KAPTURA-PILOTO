@@ -8241,6 +8241,39 @@ async function verLiquidacion(id) {
       </div>
       ${liq.factoring ? `<div style="margin-top:8px;padding:8px;background:rgba(167,139,250,0.1);border-radius:6px;border:1px solid rgba(167,139,250,0.3);font-size:11px;color:#a78bfa">Factoring ${liq.factoring_pct}% — Costo: $${Number(liq.factoring_costo||0).toLocaleString('es-CL')}</div>` : ''}
     </div>
+    ${(() => {
+      const RANK = {borrador:0, emitida:1, enviada:1, aprobada:1, por_cobrar:1, facturada:2, en_cobro:3, factoring:3, cobrada:4};
+      const rankActual = RANK[liq.estado] ?? 0;
+      const usaFact = !!liq.factoring;
+      const pasos = [
+        {clave:'emitida',  label:'Emitida',    rank:1, fecha:liq.fecha_emision},
+        {clave:'facturada',label:'Facturada',  rank:2, fecha:liq.fecha_factura},
+        {clave: usaFact?'factoring':'en_cobro', label: usaFact?'Factorizada':'En Cobro', rank:3, fecha: usaFact?liq.fecha_factorizado:liq.fecha_en_cobro},
+        {clave:'cobrada',  label:'Pagada',     rank:4, fecha:liq.fecha_pago},
+      ];
+      const naLabel = usaFact ? 'En Cobro' : 'Factorizada';
+      const siguienteIdx = pasos.findIndex(p => rankActual < p.rank);
+      const filas = pasos.map((p, idx) => {
+        const cumplido = rankActual >= p.rank;
+        const esSiguiente = idx === siguienteIdx;
+        let der;
+        if(cumplido) der = `<span style="color:#7EA87E;font-weight:800;font-size:11px">✓ ${p.fecha ? p.fecha.split('-').reverse().join('/') : 'sin fecha'}</span>`;
+        else if(esSiguiente) der = `<button class="btn btn-sm btn-navy" onclick="liqMarcarEtapa('${id}','${p.clave}')">Marcar cumplido</button>`;
+        else der = `<span style="color:var(--muted);opacity:0.5;font-size:11px">Pendiente</span>`;
+        return `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)">
+          <span style="font-size:12px;font-weight:700;color:${cumplido?'var(--text)':'var(--muted)'}">${p.label}</span>
+          ${der}
+        </div>`;
+      }).join('');
+      return `<div style="background:var(--bg);border-radius:8px;padding:12px;margin-bottom:14px;border:1px solid var(--border)">
+        <div style="font-size:10px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold);margin-bottom:6px">Avance de la liquidación</div>
+        ${filas}
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;opacity:0.4">
+          <span style="font-size:11px;font-weight:700">${naLabel}</span>
+          <span style="font-size:10px">No aplica (vía ${usaFact?'directa':'factoring'})</span>
+        </div>
+      </div>`;
+    })()}
     <div style="font-size:10px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);margin-bottom:8px">SERVICIOS INCLUIDOS</div>
     ${svcs.map(s => `
       <div style="padding:8px 10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;margin-bottom:5px">
@@ -8252,35 +8285,42 @@ async function verLiquidacion(id) {
       </div>`).join('')}
     ${liq.pdf_sii_url ? `<div style="margin-top:10px"><a href="${liq.pdf_sii_url}" target="_blank" style="color:var(--gold);font-size:12px;font-weight:700">📄 Ver Factura SII adjunta</a></div>` : ''}`;
 
-  // Botones según estado
-  const btns = {
-    borrador: `<button class="btn btn-ghost" onclick="cerrar('modal-ver-liq')">Cerrar</button>
-      <button class="btn btn-outline" onclick="liqAdjuntarSII('${id}')">📎 Adjuntar Factura</button>
-      <button class="btn btn-navy" onclick="liqCambiarEstado('${id}','emitida')">Emitir →</button>`,
-    emitida: `<button class="btn btn-ghost" onclick="cerrar('modal-ver-liq')">Cerrar</button>
-      <button class="btn btn-outline" onclick="liqAdjuntarSII('${id}')">📎 Adjuntar Factura</button>
-      <button class="btn btn-navy" onclick="liqCambiarEstado('${id}','enviada')">📤 Enviada al Cliente</button>`,
-    enviada: `<button class="btn btn-ghost" onclick="cerrar('modal-ver-liq')">Cerrar</button>
-      <button class="btn btn-outline" onclick="liqCambiarEstado('${id}','aprobada')">✓ Aprobada por Cliente</button>
-      <button class="btn btn-navy" onclick="liqCambiarEstado('${id}','facturada')">🧾 Saltar a Facturada</button>`,
-    aprobada: `<button class="btn btn-ghost" onclick="cerrar('modal-ver-liq')">Cerrar</button>
-      <button class="btn btn-outline" onclick="liqAdjuntarSII('${id}')">📎 Adjuntar Factura SII</button>
-      <button class="btn btn-navy" onclick="liqRegistrarFactura('${id}')">🧾 Registrar Factura</button>`,
-    facturada: `<button class="btn btn-ghost" onclick="cerrar('modal-ver-liq')">Cerrar</button>
-      <button class="btn btn-outline" onclick="liqAdjuntarSII('${id}')">📎 Adjuntar Factura SII</button>
-      <button class="btn btn-navy" onclick="liqCambiarEstado('${id}','en_cobro')">💰 En Cobro</button>`,
-    en_cobro: `<button class="btn btn-ghost" onclick="cerrar('modal-ver-liq')">Cerrar</button>
-      <button class="btn btn-navy" onclick="liqRegistrarPago('${id}')">✓ Registrar Pago</button>`,
-    factoring: `<button class="btn btn-ghost" onclick="cerrar('modal-ver-liq')">Cerrar</button>
-      <button class="btn btn-navy" onclick="liqCambiarEstado('${id}','cobrada')">✓ Marcar Cobrada</button>`,
-    por_cobrar: `<button class="btn btn-ghost" onclick="cerrar('modal-ver-liq')">Cerrar</button>
-      <button class="btn btn-outline" onclick="liqAdjuntarSII('${id}')">📎 Adjuntar Factura SII</button>
-      <button class="btn btn-navy" onclick="liqCambiarEstado('${id}','en_cobro')">💰 En Cobro</button>`,
-    cobrada: `<button class="btn btn-ghost" onclick="cerrar('modal-ver-liq')">Cerrar</button>`
-  };
-  document.getElementById('ver-liq-ftr').innerHTML = (btns[liq.estado] || btns.borrador) +
-    `<button class="btn btn-outline" onclick="liqImprimir('${id}')">🖨️ Vista Previa</button>`;
+  // Pie fijo: el avance de etapa ahora se hace desde el checklist de arriba (liqMarcarEtapa), no se puede saltar estados
+  document.getElementById('ver-liq-ftr').innerHTML =
+    `<button class="btn btn-ghost" onclick="cerrar('modal-ver-liq')">Cerrar</button>
+     <button class="btn btn-outline" onclick="liqAdjuntarSII('${id}')">📎 Adjuntar Factura SII</button>
+     <button class="btn btn-outline" onclick="liqImprimir('${id}')">🖨️ Vista Previa</button>`;
   document.getElementById('modal-ver-liq').style.display = 'flex';
+}
+
+async function liqMarcarEtapa(id, etapa) {
+  const hoy = new Date().toISOString().split('T')[0];
+  const extra = {estado: etapa};
+  if(etapa === 'facturada') {
+    const numFact = prompt('N° de Factura SII:');
+    if(!numFact) return;
+    extra.num_factura = numFact;
+    extra.fecha_factura = hoy;
+  } else if(etapa === 'en_cobro') {
+    extra.fecha_en_cobro = hoy;
+  } else if(etapa === 'factoring') {
+    extra.fecha_factorizado = hoy;
+  } else if(etapa === 'cobrada') {
+    const liq = _liqData.find(l => l.id === id);
+    const cliData = liq ? DB.clientes.find(c => c.nombre === liq.cliente) : null;
+    const formaSugerida = cliData?.forma_pago || '';
+    const forma = prompt('Forma de pago:' + (formaSugerida ? ' ('+formaSugerida+')' : ''), formaSugerida);
+    if(forma === null) return;
+    const obs = prompt('Observaciones (opcional):') || '';
+    extra.fecha_pago = hoy;
+    extra.forma_pago_real = forma || formaSugerida;
+    extra.obs_pago = obs;
+  }
+  const {error} = await supa.from('kaptura_liquidaciones').update(extra).eq('id', id);
+  if(error) { toast('Error: '+error.message); return; }
+  toast('✓ Etapa marcada: '+etapa.replace('_',' ').toUpperCase());
+  cerrar('modal-ver-liq');
+  await cargarLiquidaciones();
 }
 
 function liqImprimir(id) {
