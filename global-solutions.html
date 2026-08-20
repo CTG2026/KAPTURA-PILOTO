@@ -3673,7 +3673,19 @@ async function guardarAsignacion() {
   if (_asigEditIdx >= 0 && DB.servicios[_asigEditIdx]) {
     // ══ MODO EDICIÓN — UPDATE sobre el servicio existente, nunca crear uno nuevo ══
     const svcOriginal = DB.servicios[_asigEditIdx];
-    const cambios = { patente, conductor, cliente, origen, destino: destino||null, fecha, puntos_entrega:puntosAsig.length, punto_inicio:puntoInicio, tipo_operacion:tipoOperacion, tipo_servicio:tipoServicio, puntos_asignados: puntosAsigStr, hora_inicio_asignada: horaInicio, hora_llegada_estimada: horaLlegada, notas: _asigNotasBuffer||svcOriginal.notas||null };
+    // Mantener sincronizado el destino del punto "final" dentro de notas/_PUNTOS con el destino elegido en el formulario
+    let notasSync = _asigNotasBuffer || svcOriginal.notas || null;
+    if (notasSync && destino) {
+      try {
+        const puntosExist = (svcOriginal._puntos && svcOriginal._puntos.length) ? [...svcOriginal._puntos] : null;
+        if (puntosExist) {
+          const puntosNuevos = puntosExist.map(p => p.tipo==='final' ? {...p, destino: destino.toUpperCase()} : p);
+          const notasBase = notasSync.split('|_PUNTOS:')[0].split('_PUNTOS:')[0];
+          notasSync = `${notasBase}|_PUNTOS:${JSON.stringify(puntosNuevos)}`;
+        }
+      } catch(e) { console.warn('No se pudo sincronizar destino en notas:', e); }
+    }
+    const cambios = { patente, conductor, cliente, origen, destino: destino||null, fecha, puntos_entrega:puntosAsig.length, punto_inicio:puntoInicio, tipo_operacion:tipoOperacion, tipo_servicio:tipoServicio, puntos_asignados: puntosAsigStr, hora_inicio_asignada: horaInicio, hora_llegada_estimada: horaLlegada, notas: notasSync };
     const {data:actualizado, error} = await supa.from('servicios_piloto').update(cambios).eq('id', svcOriginal.id).select();
     if(error) { toast('Error: '+error.message); return; }
     const svcActualizado = actualizado?.[0] || {...svcOriginal, ...cambios};
