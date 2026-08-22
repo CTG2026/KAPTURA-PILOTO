@@ -4315,6 +4315,7 @@ async function procesarGuia(input, pi) {
       json.num_guia = String(json.num_guia).replace(/^0+(?=\d)/, '');
       // Subir imagen a Supabase Storage
       let imgUrl = null;
+      let imgUrlOriginal = null;
       try {
         const svc = DB.servicios[svcActivoIdx];
         const fileName = `guias/${svc.servicio_id}_punto${pi}_${json.num_guia}_${Date.now()}.jpg`;
@@ -4324,9 +4325,19 @@ async function procesarGuia(input, pi) {
           const {data:urlData} = supa.storage.from('kaptura-guias').getPublicUrl(fileName);
           imgUrl = urlData?.publicUrl || null;
         }
+        // Subir tambien el archivo ORIGINAL sin comprimir/convertir, para poder descargarlo tal cual se subio
+        try {
+          const extOriginal = (file.name.split('.').pop() || (file.type==='application/pdf'?'pdf':'jpg')).toLowerCase();
+          const fileNameOriginal = `guias/${svc.servicio_id}_punto${pi}_${json.num_guia}_${Date.now()}_original.${extOriginal}`;
+          const {data:upOriginal} = await supa.storage.from('kaptura-guias').upload(fileNameOriginal, file, {upsert:true, contentType: file.type||'application/octet-stream'});
+          if(upOriginal) {
+            const {data:urlOriginal} = supa.storage.from('kaptura-guias').getPublicUrl(fileNameOriginal);
+            imgUrlOriginal = urlOriginal?.publicUrl || null;
+          }
+        } catch(e) { console.warn('Storage upload original failed:', e.message); }
       } catch(e) { console.warn('Storage upload failed:', e.message); }
       if(!puntosData[pi].guias) puntosData[pi].guias = [];
-      puntosData[pi].guias.push({num_guia:json.num_guia, fecha_guia:json.fecha_emision||'', img_url:imgUrl, descripcion_mercaderia:json.descripcion_mercaderia||''});
+      puntosData[pi].guias.push({num_guia:json.num_guia, fecha_guia:json.fecha_emision||'', img_url:imgUrl, img_url_original:imgUrlOriginal, descripcion_mercaderia:json.descripcion_mercaderia||''});
       puntosData[pi] = {...puntosData[pi], capturada:true, procesando:false, num_guia:puntosData[pi].guias.map(g=>g.num_guia).join(',')};
       // Buscar tarifa automática del tarifario (misma logica centralizada que buscarValor, respeta destino/vigencia/tipo)
       buscarValor(pi);
@@ -6863,6 +6874,26 @@ function toast(msg, dur=2800) {
 }
 
 // Ver guías de un servicio en modal
+async function descargarGuiaOriginal(url, nombreGuia) {
+  try {
+    toast('⏳ Descargando...');
+    const resp = await fetch(url);
+    if(!resp.ok) throw new Error('No se pudo descargar el archivo');
+    const blob = await resp.blob();
+    const ext = url.split('.').pop().split('?')[0] || 'jpg';
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `Guia_${nombreGuia}.${ext}`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(a.href);
+    toast('✓ Descarga iniciada');
+  } catch(e) {
+    toast('⚠ Error al descargar: '+e.message);
+  }
+}
+
 function verGuias(i) {
   const s = DB.servicios[i];
   const puntos = s._puntos || [];
@@ -6893,6 +6924,10 @@ function verGuias(i) {
           ${g.img_url
             ? `<button class="btn btn-outline btn-sm" style="margin-top:6px" onclick="window.open('${g.img_url}','_blank')">👁 Ver foto</button>`
             : `<div style="font-size:10px;color:#8C96B0;margin-top:4px">Sin foto disponible</div>`
+          }
+          ${g.img_url_original
+            ? `<button class="btn btn-outline btn-sm" style="margin-top:6px;margin-left:4px" onclick="descargarGuiaOriginal('${g.img_url_original}','${g.num_guia||'guia'}')">⬇ Descargar Original</button>`
+            : ''
           }
         </div>
       </div>`;
