@@ -2200,8 +2200,47 @@ async function procesarGPS(input) {
     const ws = wb.Sheets[wb.SheetNames[0]];
     const rows = XLSX.utils.sheet_to_json(ws, {header:1, raw:false});
 
-    // Validar columnas esperadas
+    // Validar columnas esperadas — detectar formato: antiguo (Flespi) o nuevo (Bermann GPS)
     const header = rows[0]?.map(h=>(h||'').toString().trim());
+    const esBermann = header?.includes('Patente') && header?.includes('Evento') && header?.includes('Fecha');
+
+    let records = [];
+
+    if (esBermann) {
+      // ══ FORMATO NUEVO — Bermann GPS ══
+      const colPatente  = header.indexOf('Patente');
+      const colEvento   = header.indexOf('Evento');
+      const colFecha    = header.indexOf('Fecha');
+      const colDireccion= header.indexOf('Dirección');
+      const colDistancia= header.indexOf('Distancia');
+      const colVelocidad= header.indexOf('Velocidad');
+      const colTDetencion = header.indexOf('T. Detención');
+
+      const mapaEvento = {'movimiento':'trip', 'detenido':'stop', 'encendido':'geofence', 'apagado':'geofence'};
+
+      for(let i = 1; i < rows.length; i++) {
+        const row = rows[i];
+        if(!row[colPatente] || !row[colFecha] || !row[colEvento]) continue;
+        // Fecha "21/08/2026 20:28:48"
+        const fechaStr = (row[colFecha]||'').toString().trim();
+        const [datePart, timePart] = fechaStr.split(' ');
+        if(!datePart || !timePart) continue;
+        const [d,m,y] = datePart.split('/');
+        const fecha = `${y}-${m}-${d}`;
+        const datetime_evento = `${y}-${m}-${d}T${timePart}`;
+        const patente = (row[colPatente]||'').toString().trim().toUpperCase().replace(/-/g,'');
+        const eventoOrig = (row[colEvento]||'').toString().trim().toLowerCase();
+        const evento = mapaEvento[eventoOrig] || eventoOrig;
+        const address = (row[colDireccion]||'').toString().trim();
+        const km_tramo = colDistancia >= 0 && row[colDistancia] !== '' && row[colDistancia] != null ? parseFloat(row[colDistancia]) : null;
+        const speed_avg = colVelocidad >= 0 && row[colVelocidad] !== '' && row[colVelocidad] != null ? parseFloat(row[colVelocidad]) : null;
+        // Para paradas, usar T. Detencion (tiempo acumulado detenido) como duracion; para movimiento, sin duracion especifica
+        const duracion = evento === 'stop' && colTDetencion >= 0 ? (row[colTDetencion]||'').toString().trim() : '';
+        if(!patente || !fecha || !evento) continue;
+        records.push({patente, fecha, datetime_evento, evento, duracion, address, km_tramo, speed_max:null, speed_avg});
+      }
+    } else {
+    // ══ FORMATO ANTIGUO — Flespi ══
     const colTime    = header?.indexOf('Time (America/Santiago)');
     const colUnit    = header?.indexOf('Unit');
     const colEvent   = header?.indexOf('Event');
@@ -2218,7 +2257,6 @@ async function procesarGPS(input) {
     }
 
     // Procesar filas
-    const records = [];
     for(let i = 1; i < rows.length; i++) {
       const row = rows[i];
       if(!row[colTime] || !row[colUnit] || !row[colEvent]) continue;
@@ -2240,6 +2278,7 @@ async function procesarGPS(input) {
       if(!patente || !fecha || !evento) continue;
       records.push({patente, fecha, datetime_evento, evento, duracion, address, km_tramo, speed_max, speed_avg});
     }
+    } // cierre del else (formato antiguo)
 
     if(records.length === 0) {
       status.textContent = '⚠ Sin registros válidos en el archivo';
