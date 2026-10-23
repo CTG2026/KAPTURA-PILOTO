@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#0E0E0E">
+<title>Registro de servicios · TM</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<style>
+:root{--bg:#0E0E0E;--surface:#181818;--surface2:#222;--border:#2E2E2E;--text:#F2F2F2;--muted:#9A9A9A;--gold:#F5B800;--green:#2ECC71;--danger:#FF5A5A}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{background:var(--bg);color:var(--text);font-family:'DM Sans',system-ui,sans-serif;min-height:100%}
+body{padding:16px 16px 40px;max-width:520px;margin:0 auto}
+.hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.brand{font-weight:900;letter-spacing:.12em;font-size:13px;color:var(--gold)}
+.link{background:none;border:none;color:var(--muted);font-size:13px;font-family:inherit;text-decoration:underline;cursor:pointer}
+.screen{display:none}.screen.on{display:block}
+h1{font-size:26px;font-weight:900;margin-bottom:6px}
+.sub{color:var(--muted);font-size:14px;margin-bottom:22px}
+.pin-box{display:flex;gap:10px;justify-content:center;margin:26px 0}
+.pin-box span{width:52px;height:62px;border-radius:12px;background:var(--surface);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900}
+.pin-box span.f{border-color:var(--gold)}
+.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.pad button{height:64px;border-radius:14px;border:none;background:var(--surface);color:var(--text);font-size:26px;font-weight:800;font-family:inherit}
+.pad button:active{background:var(--surface2)}
+.err{color:var(--danger);text-align:center;font-size:14px;min-height:20px;margin-bottom:8px}
+.big{width:100%;border:none;border-radius:18px;padding:26px 16px;font-size:22px;font-weight:900;font-family:inherit;background:var(--gold);color:#000;letter-spacing:.03em}
+.big:disabled{opacity:.4}
+.btn2{width:100%;border:2px solid var(--border);border-radius:14px;padding:16px;font-size:16px;font-weight:800;font-family:inherit;background:var(--surface);color:var(--text);margin-top:12px}
+.wa{background:#25D366;color:#fff;border:none}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:14px}
+.lbl{font-size:12px;font-weight:800;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin-bottom:10px}
+.thumbs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.thumbs div{position:relative}
+.thumbs img{width:78px;height:78px;object-fit:cover;border-radius:10px;border:1px solid var(--border)}
+.thumbs b{position:absolute;top:-6px;right:-6px;background:var(--danger);color:#fff;border-radius:50%;width:22px;height:22px;font-size:13px;display:flex;align-items:center;justify-content:center}
+.opts{display:flex;flex-direction:column;gap:8px}
+.opt{border:2px solid var(--border);background:var(--surface2);color:var(--text);border-radius:12px;padding:14px;text-align:left;font-size:16px;font-weight:700;font-family:inherit}
+.opt.sel{border-color:var(--gold);background:#2a2300}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:2px solid var(--border);background:var(--surface2);color:var(--text);border-radius:30px;padding:10px 14px;font-size:14px;font-weight:700;font-family:inherit}
+.chip.sel{border-color:var(--gold);background:#2a2300}
+.extra{display:none;margin-top:10px;gap:8px;flex-wrap:wrap}
+.extra.on{display:flex}
+input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:12px;font-size:16px;font-family:inherit}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%}
+.mini{font-size:12px;color:var(--muted);margin-top:6px}
+.ok{font-size:64px;text-align:center;margin:10px 0}
+.pend{background:#2a1a00;border:1px solid var(--gold);color:var(--gold);border-radius:12px;padding:10px 12px;font-size:13px;margin-bottom:14px;display:none}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--gold);color:#000;padding:12px 18px;border-radius:10px;font-weight:800;font-size:14px;opacity:0;transition:opacity .3s;pointer-events:none;max-width:90vw;text-align:center}
+.toast.on{opacity:1}
+</style>
+</head>
+<body>
+<div class="hdr"><div class="brand">KAPTURA · TM</div><button class="link" id="btn-salir" style="display:none" onclick="salir()">Salir</button></div>
+<div class="pend" id="pend"></div>
+
+<!-- 1. PIN -->
+<section class="screen on" id="s-pin">
+  <h1>Ingresa tu PIN</h1>
+  <div class="sub">Registro de servicios · Transportes Madrid</div>
+  <div class="pin-box"><span></span><span></span><span></span><span></span></div>
+  <div class="err" id="pin-err"></div>
+  <div class="pad" id="pad"></div>
+</section>
+
+<!-- 2. INICIO -->
+<section class="screen" id="s-home">
+  <h1 id="saludo">Hola</h1>
+  <div class="sub" id="sub-equipo"></div>
+  <button class="big" onclick="nuevoRegistro()">📷 REGISTRAR SERVICIO</button>
+</section>
+
+<!-- 3. REGISTRO -->
+<section class="screen" id="s-reg">
+  <div class="card">
+    <div class="lbl">1 · Fotos de las guías</div>
+    <div class="thumbs" id="thumbs"></div>
+    <button class="btn2" id="btn-foto" onclick="document.getElementById('cam').click()">📷 Sacar foto</button>
+    <input type="file" id="cam" accept="image/*" capture="environment" style="display:none" onchange="onFoto(this)">
+  </div>
+  <div class="card">
+    <div class="lbl">2 · Servicio</div>
+    <div class="opts" id="opts"></div>
+  </div>
+  <div class="card">
+    <div class="lbl">3 · Equipo</div>
+    <div class="row2">
+      <select id="patente"></select>
+      <select id="acoplado"></select>
+    </div>
+  </div>
+  <div class="card">
+    <div class="lbl">4 · Extras (si hubo)</div>
+    <div class="chips" id="chips"></div>
+    <div class="extra" id="x-trasp"><div class="row2"><input type="number" inputmode="numeric" id="trasp-pallets" placeholder="N° pallets"><input type="number" inputmode="numeric" id="trasp-monto" placeholder="$ pagado"></div></div>
+    <div class="extra" id="x-trasv"><input type="number" inputmode="numeric" id="trasv-monto" placeholder="Trasvasije: $ pagado"></div>
+    <div class="extra" id="x-espera"><input type="number" inputmode="decimal" id="espera-horas" placeholder="Horas de espera"></div>
+    <div class="extra" id="x-peaje"><input type="number" inputmode="numeric" id="peaje-monto" placeholder="Peaje en efectivo: $"></div>
+    <div class="extra" id="x-reemp"><input type="text" id="reemp-patente" placeholder="Patente del acoplado de reemplazo" style="text-transform:uppercase"></div>
+  </div>
+  <div class="card">
+    <div class="lbl">5 · Observación (opcional)</div>
+    <textarea id="obs" rows="2" placeholder="Algo más que contar"></textarea>
+  </div>
+  <div class="err" id="reg-err"></div>
+  <button class="big" id="btn-guardar" onclick="guardar()">GUARDAR</button>
+  <button class="btn2" onclick="ir('s-home')">← Volver</button>
+</section>
+
+<!-- 4. LISTO -->
+<section class="screen" id="s-ok">
+  <div class="ok">✅</div>
+  <h1 style="text-align:center">Servicio registrado</h1>
+  <div class="sub" style="text-align:center" id="ok-sub"></div>
+  <button class="big wa" onclick="avisarWhatsApp()">💬 Avisar en "Servicios TM"</button>
+  <button class="btn2" onclick="ir('s-home')">Volver al inicio</button>
+</section>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══ CONFIGURACIÓN PILOTO TM (editar aquí) ═══
+const SUPA_URL='https://aqunzrukuruwzwywnurq.supabase.co';
+const SUPA_KEY='sb_publishable_70t9UxFlcqYDj7AMybsrHg__IMGNA8C';
+const EMPRESA='transportes_madrid';
+const BUCKET='kaptura-guias';
+const USUARIOS={
+  '0001':{nombre:'Carlos Torres',rol:'administrador',patente:'',acoplado:''},
+  '0002':{nombre:'Claudio Madrid Correa',rol:'coordinador',patente:'ZV7780',acoplado:'JB6234'},
+  '0003':{nombre:'Esteban Acevedo Toro',rol:'conductor',patente:'DSBZ64',acoplado:'JN4847'},
+  '0004':{nombre:'Cristóbal Núñez González',rol:'conductor',patente:'CWVH32-9',acoplado:''},
+  '0005':{nombre:'Víctor Medina',rol:'conductor',patente:'ZV7780',acoplado:'JB6234'}
+};
+// servicio = nombre exacto del sistema TM (hoja Servicios reales)
+const SERVICIOS=[
+  {txt:'Coltauco → Chillán (Cencosud)',servicio:'Planta EBLOOMS → Chillán (Cencosud)',cliente:'EBLOOMS',origen:'COLTAUCO',destino:'CHILLÁN',tarifa:576000},
+  {txt:'Coltauco → Santiago supermercados',servicio:'Planta EBLOOMS → Supermercados Santiago (Temporada Baja)',cliente:'EBLOOMS',origen:'COLTAUCO',destino:'SANTIAGO',tarifa:407000,retorno:true},
+  {txt:'Coltauco → Santiago centros de distribución',servicio:'Planta EBLOOMS → Santiago centros distribución',cliente:'EBLOOMS',origen:'COLTAUCO',destino:'SANTIAGO',tarifa:407000,retorno:true},
+  {txt:'Chillán → Santiago',servicio:'CHILLÁN → SANTIAGO',cliente:'Alimentos Valle Central',origen:'CHILLÁN',destino:'SANTIAGO',tarifa:280000},
+  {txt:'Chillán → Concepción',servicio:'CHILLÁN → CONCEPCIÓN',cliente:'Alimentos Valle Central',origen:'CHILLÁN',destino:'CONCEPCIÓN',tarifa:350000},
+  {txt:'Chillán → Los Ángeles → Victoria → Temuco',servicio:'CHILLÁN → LOS ÁNGELES → VICTORIA → TEMUCO',cliente:'Alimentos Valle Central',origen:'CHILLÁN',destino:'TEMUCO',tarifa:570000},
+  {txt:'Chillán → Los Ángeles → Temuco',servicio:'CHILLÁN → LOS ÁNGELES → TEMUCO',cliente:'Alimentos Valle Central',origen:'CHILLÁN',destino:'TEMUCO',tarifa:570000},
+  {txt:'Chillán → Temuco',servicio:'CHILLÁN → TEMUCO',cliente:'Alimentos Valle Central',origen:'CHILLÁN',destino:'TEMUCO',tarifa:570000},
+  {txt:'Chillán → Victoria',servicio:'CHILLÁN → VICTORIA',cliente:'Alimentos Valle Central',origen:'CHILLÁN',destino:'VICTORIA',tarifa:470000},
+  {txt:'Chillán → Los Ángeles',servicio:'CHILLÁN → LOS ÁNGELES',cliente:'Alimentos Valle Central',origen:'CHILLÁN',destino:'LOS ÁNGELES',tarifa:350000},
+  {txt:'Chillán → San Fernando',servicio:'CHILLÁN → SAN FERNANDO',cliente:'Alimentos Valle Central',origen:'CHILLÁN',destino:'SAN FERNANDO',tarifa:200000},
+  {txt:'Chillán → Rancagua',servicio:'CHILLÁN → RANCAGUA',cliente:'Alimentos Valle Central',origen:'CHILLÁN',destino:'RANCAGUA',tarifa:200000},
+  {txt:'Chillán → San Fernando → Rancagua',servicio:'CHILLÁN → SAN FERNANDO → RANCAGUA',cliente:'Alimentos Valle Central',origen:'CHILLÁN',destino:'RANCAGUA',tarifa:200000},
+  {txt:'Otro (escribir en observación)',servicio:'SPOT – viaje puntual (escriba la tarifa en Servicios reales)',cliente:'',origen:'',destino:'',tarifa:0}
+];
+const PATENTES=['DSBZ64','ZV7780','CWVH32-9','DZZW14','XJ3908'];
+const ACOPLADOS=['','JN4847','JB6234'];
+const EXTRAS=[{id:'trasp',txt:'Traspaleteo'},{id:'trasv',txt:'Trasvasije'},{id:'retorno',txt:'Retorno'},{id:'espera',txt:'Espera'},{id:'peaje',txt:'Peaje efectivo'},{id:'reemp',txt:'Acoplado reemplazo'}];
+
+// ═══ ESTADO ═══
+let supa=null; try{ supa=window.supabase.createClient(SUPA_URL,SUPA_KEY); }catch(e){}
+let pin='', user=null, fotos=[], svcSel=null, extrasSel=new Set(), ultimo=null;
+
+function $(id){return document.getElementById(id)}
+function toast(t){const e=$('toast');e.textContent=t;e.classList.add('on');setTimeout(()=>e.classList.remove('on'),2800)}
+function ir(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));$(id).classList.add('on');window.scrollTo(0,0)}
+function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);if(v===null)localStorage.removeItem(k);else localStorage.setItem(k,v)}catch(e){return null}}
+function fmt$(n){return '$'+Math.round(n||0).toLocaleString('es-CL')}
+function hoyISO(d){d=d||new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+
+// ═══ PIN ═══
+(function(){
+  const pad=$('pad');
+  ['1','2','3','4','5','6','7','8','9','','0','⌫'].forEach(k=>{
+    const b=document.createElement('button');b.textContent=k;if(!k){b.style.visibility='hidden'}
+    b.onclick=()=>{ if(k==='⌫')pin=pin.slice(0,-1); else if(pin.length<4)pin+=k; pintarPin(); if(pin.length===4)entrar(); };
+    pad.appendChild(b);
+  });
+})();
+function pintarPin(){document.querySelectorAll('.pin-box span').forEach((s,i)=>{s.textContent=pin[i]?'•':'';s.classList.toggle('f',!!pin[i])});$('pin-err').textContent=''}
+function entrar(p){
+  p=p||pin; const u=USUARIOS[p];
+  if(!u){$('pin-err').textContent='PIN no registrado';pin='';setTimeout(pintarPin,600);return}
+  user={pin:p,...u}; ls('tm_pin',p);
+  $('saludo').textContent='Hola '+u.nombre.split(' ')[0];
+  $('sub-equipo').textContent=u.patente?('Equipo: '+u.patente+(u.acoplado?' / '+u.acoplado:'')):'';
+  $('btn-salir').style.display='block'; ir('s-home'); revisarPendientes();
+}
+function salir(){ls('tm_pin',null);user=null;pin='';pintarPin();$('btn-salir').style.display='none';ir('s-pin')}
+
+// ═══ REGISTRO ═══
+function nuevoRegistro(){
+  fotos=[];svcSel=null;extrasSel=new Set();$('obs').value='';$('reg-err').textContent='';
+  ['trasp-pallets','trasp-monto','trasv-monto','espera-horas','peaje-monto','reemp-patente'].forEach(i=>$(i).value='');
+  pintarFotos(); pintarServicios(); pintarEquipo(); pintarExtras(); ir('s-reg');
+  setTimeout(()=>$('cam').click(),250);
+}
+function pintarFotos(){
+  const t=$('thumbs');t.innerHTML='';
+  fotos.forEach((f,i)=>{const d=document.createElement('div');d.innerHTML='<img src="'+f.url+'"><b>✕</b>';d.querySelector('b').onclick=()=>{fotos.splice(i,1);pintarFotos()};t.appendChild(d)});
+  $('btn-foto').textContent=fotos.length?'📷 + Otra foto':'📷 Sacar foto';
+}
+async function onFoto(inp){
+  const f=inp.files&&inp.files[0]; inp.value=''; if(!f)return;
+  try{const blob=await comprimir(f);fotos.push({blob,url:URL.createObjectURL(blob)});pintarFotos()}catch(e){toast('No se pudo leer la foto')}
+}
+function comprimir(file){
+  return new Promise((res,rej)=>{
+    const img=new Image();const u=URL.createObjectURL(file);
+    img.onload=()=>{const M=1600;let w=img.width,h=img.height;if(Math.max(w,h)>M){const r=M/Math.max(w,h);w=Math.round(w*r);h=Math.round(h*r)}
+      const c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);
+      c.toBlob(b=>b?res(b):rej(),'image/jpeg',0.72);URL.revokeObjectURL(u)};
+    img.onerror=rej;img.src=u;
+  });
+}
+function pintarServicios(){
+  const o=$('opts');o.innerHTML='';
+  const freq=JSON.parse(ls('tm_freq_'+user.pin)||'{}');
+  const lista=[...SERVICIOS].sort((a,b)=>(freq[b.servicio]||0)-(freq[a.servicio]||0));
+  lista.forEach(s=>{const b=document.createElement('button');b.className='opt';b.textContent=s.txt;
+    b.onclick=()=>{svcSel=s;document.querySelectorAll('.opt').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');pintarExtras()};o.appendChild(b)});
+}
+function pintarEquipo(){
+  const last=JSON.parse(ls('tm_equipo_'+user.pin)||'null');
+  const p=last?last.patente:user.patente, a=last?last.acoplado:user.acoplado;
+  $('patente').innerHTML=PATENTES.map(x=>'<option'+(x===p?' selected':'')+'>'+x+'</option>').join('');
+  $('acoplado').innerHTML=ACOPLADOS.map(x=>'<option value="'+x+'"'+(x===a?' selected':'')+'>'+(x||'Sin acoplado')+'</option>').join('');
+}
+function pintarExtras(){
+  const c=$('chips');c.innerHTML='';
+  EXTRAS.forEach(x=>{ if(x.id==='retorno'&&!(svcSel&&svcSel.retorno)){extrasSel.delete('retorno');return}
+    const b=document.createElement('button');b.className='chip'+(extrasSel.has(x.id)?' sel':'');b.textContent=x.txt;
+    b.onclick=()=>{extrasSel.has(x.id)?extrasSel.delete(x.id):extrasSel.add(x.id);pintarExtras()};c.appendChild(b)});
+  ['trasp','trasv','espera','peaje','reemp'].forEach(id=>$('x-'+id).classList.toggle('on',extrasSel.has(id)));
+}
+function leerExtras(){
+  const n=id=>Number($(id).value)||0, e={};
+  if(extrasSel.has('trasp'))e.traspaleteo={pallets:n('trasp-pallets'),monto_pagado:n('trasp-monto')};
+  if(extrasSel.has('trasv'))e.trasvasije={monto_pagado:n('trasv-monto')};
+  if(extrasSel.has('retorno'))e.retorno=true;
+  if(extrasSel.has('espera'))e.espera={horas:n('espera-horas')};
+  if(extrasSel.has('peaje'))e.peaje_efectivo={monto:n('peaje-monto')};
+  if(extrasSel.has('reemp'))e.acoplado_reemplazo=($('reemp-patente').value||'').toUpperCase().trim();
+  return e;
+}
+function textoExtras(e){
+  const t=[];
+  if(e.traspaleteo)t.push('Traspaleteo '+e.traspaleteo.pallets+' pallets ('+fmt$(e.traspaleteo.monto_pagado)+')');
+  if(e.trasvasije)t.push('Trasvasije ('+fmt$(e.trasvasije.monto_pagado)+')');
+  if(e.retorno)t.push('Retorno');
+  if(e.espera)t.push('Espera '+e.espera.horas+' h');
+  if(e.peaje_efectivo)t.push('Peaje efectivo '+fmt$(e.peaje_efectivo.monto));
+  if(e.acoplado_reemplazo)t.push('Acoplado reemplazo '+e.acoplado_reemplazo);
+  return t.join(' · ');
+}
+
+// ═══ GUARDAR ═══
+async function guardar(){
+  const err=$('reg-err');
+  if(!fotos.length){err.textContent='Falta la foto de la guía';return}
+  if(!svcSel){err.textContent='Elige el servicio';return}
+  const ex=leerExtras();
+  if(ex.traspaleteo&&!ex.traspaleteo.pallets){err.textContent='Indica los pallets del traspaleteo';return}
+  if(extrasSel.has('reemp')&&!ex.acoplado_reemplazo){err.textContent='Indica la patente del acoplado de reemplazo';return}
+  if(svcSel.tarifa===0&&!$('obs').value.trim()){err.textContent='En "Otro" escribe el servicio en la observación';return}
+  err.textContent='';
+  const ahora=new Date(), id='TM-'+hoyISO(ahora).replace(/-/g,'')+'-'+String(ahora.getHours()).padStart(2,'0')+String(ahora.getMinutes()).padStart(2,'0')+String(ahora.getSeconds()).padStart(2,'0')+'-'+user.pin;
+  const reg={
+    servicio_id:id, patente:$('patente').value, conductor:user.nombre, cliente:svcSel.cliente||null,
+    origen:svcSel.origen||null, destino:svcSel.destino||null, fecha:hoyISO(ahora), estado:'registrado',
+    empresa:EMPRESA, modo:'registro_tm', tarifa_neta:svcSel.tarifa||null,
+    notas:JSON.stringify({servicio_sistema:svcSel.servicio, acoplado:$('acoplado').value||null, extras:ex, observacion:$('obs').value.trim()||null, pin:user.pin, registrado:ahora.toISOString(), fotos:[]})
+  };
+  ls('tm_equipo_'+user.pin,JSON.stringify({patente:reg.patente,acoplado:$('acoplado').value}));
+  const freq=JSON.parse(ls('tm_freq_'+user.pin)||'{}');freq[svcSel.servicio]=(freq[svcSel.servicio]||0)+1;ls('tm_freq_'+user.pin,JSON.stringify(freq));
+  ultimo={reg,ex,svc:svcSel,nfotos:fotos.length,ahora};
+  const btn=$('btn-guardar');btn.disabled=true;btn.textContent='Guardando…';
+  let enviado=false;
+  try{ enviado=await enviar(reg,fotos.map(f=>f.blob)); }catch(e){ enviado=false; }
+  if(!enviado){ await encolar(reg,fotos.map(f=>f.blob)); }
+  btn.disabled=false;btn.textContent='GUARDAR';
+  $('ok-sub').textContent=enviado?(svcSel.txt+' · '+fotos.length+' foto(s)'):'Sin señal: quedó guardado en el celular y se enviará solo cuando vuelva la conexión.';
+  ir('s-ok'); revisarPendientes();
+}
+async function enviar(reg,blobs){
+  if(!supa||!navigator.onLine)return false;
+  const notas=JSON.parse(reg.notas); notas.fotos=[];
+  for(let i=0;i<blobs.length;i++){
+    const path='tm/'+reg.fecha.slice(0,7)+'/'+reg.servicio_id+'_'+(i+1)+'_'+Math.random().toString(36).slice(2,10)+'.jpg';
+    const {error}=await supa.storage.from(BUCKET).upload(path,blobs[i],{contentType:'image/jpeg',upsert:false});
+    if(error)throw error;
+    notas.fotos.push(supa.storage.from(BUCKET).getPublicUrl(path).data.publicUrl);
+  }
+  const fila={...reg,notas:JSON.stringify(notas)};
+  const {error}=await supa.from('servicios_piloto').insert(fila);
+  if(error)throw error;
+  return true;
+}
+
+// ═══ COLA SIN SEÑAL (IndexedDB) ═══
+function db(){return new Promise((res,rej)=>{const r=indexedDB.open('tm_registro',1);r.onupgradeneeded=()=>r.result.createObjectStore('cola',{keyPath:'servicio_id'});r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}
+async function encolar(reg,blobs){try{const d=await db();await new Promise((res,rej)=>{const t=d.transaction('cola','readwrite');t.objectStore('cola').put({...reg,blobs});t.oncomplete=res;t.onerror=()=>rej(t.error)})}catch(e){toast('No se pudo guardar en el celular')}}
+async function cola(){try{const d=await db();return await new Promise((res,rej)=>{const r=d.transaction('cola').objectStore('cola').getAll();r.onsuccess=()=>res(r.result||[]);r.onerror=()=>rej(r.error)})}catch(e){return[]}}
+async function sacar(id){const d=await db();await new Promise(res=>{const t=d.transaction('cola','readwrite');t.objectStore('cola').delete(id);t.oncomplete=res})}
+let _sync=false;
+async function revisarPendientes(){
+  if(_sync)return;_sync=true;
+  try{
+    let pend=await cola();
+    for(const p of pend){ const {blobs,...reg}=p; try{ if(await enviar(reg,blobs)) await sacar(reg.servicio_id) }catch(e){} }
+    pend=await cola();
+    const el=$('pend');el.style.display=pend.length?'block':'none';
+    el.textContent=pend.length?('⏳ '+pend.length+' registro(s) esperando señal para enviarse'):'';
+  }finally{_sync=false}
+}
+window.addEventListener('online',revisarPendientes);
+setInterval(revisarPendientes,60000);
+
+// ═══ WHATSAPP ═══
+function avisarWhatsApp(){
+  if(!ultimo)return;
+  const {reg,ex,svc,nfotos,ahora}=ultimo, notas=JSON.parse(reg.notas);
+  const f=String(ahora.getDate()).padStart(2,'0')+'-'+String(ahora.getMonth()+1).padStart(2,'0')+'-'+ahora.getFullYear()+' '+String(ahora.getHours()).padStart(2,'0')+':'+String(ahora.getMinutes()).padStart(2,'0');
+  const l=['✅ SERVICIO REGISTRADO','Conductor: '+reg.conductor,'Fecha: '+f,'Servicio: '+svc.txt,'Equipo: '+reg.patente+(notas.acoplado?' / '+notas.acoplado:''),'Guías: '+nfotos+' foto'+(nfotos===1?'':'s')];
+  const t=textoExtras(ex); if(t)l.push('Extras: '+t);
+  if(notas.observacion)l.push('Obs.: '+notas.observacion);
+  window.location.href='https://wa.me/?text='+encodeURIComponent(l.join('\n'));
+}
+
+// ═══ INICIO ═══
+const guardado=ls('tm_pin'); if(guardado&&USUARIOS[guardado])entrar(guardado);
+</script>
+</body>
+</html>
