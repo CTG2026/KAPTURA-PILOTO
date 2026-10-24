@@ -14,6 +14,7 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
 <style>
 :root{--bg:#0E0E0E;--surface:#181818;--surface2:#222;--border:#2E2E2E;--text:#F2F2F2;--muted:#9A9A9A;--gold:#F5B800;--green:#2ECC71;--danger:#FF5A5A}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -41,6 +42,7 @@ h1{font-size:26px;font-weight:900;margin-bottom:6px}
 .thumbs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
 .thumbs div{position:relative}
 .thumbs img{width:78px;height:78px;object-fit:cover;border-radius:10px;border:1px solid var(--border)}
+.gl{display:flex;gap:10px;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:8px;margin-bottom:8px}.gl img{width:64px;height:64px;object-fit:cover;border-radius:8px}.gl .gi{flex:1;min-width:0}.gl .gi label{font-size:12px;color:var(--muted);display:block;margin-bottom:3px}.gl .gi input{width:100%;font-size:20px;font-weight:900;letter-spacing:1px;padding:8px;border-radius:8px;border:2px solid var(--border);background:#000;color:var(--text);font-family:inherit}.gl .gi input.err{border-color:var(--danger)}.gl .gi .msg{font-size:12px;margin-top:4px;color:var(--muted)}.gl .gi .msg.err{color:var(--danger);font-weight:700}.gl .x{background:var(--danger);color:#fff;border:0;border-radius:50%;width:28px;height:28px;font-size:14px;flex:none}
 .thumbs b{position:absolute;top:-6px;right:-6px;background:var(--danger);color:#fff;border-radius:50%;width:22px;height:22px;font-size:13px;display:flex;align-items:center;justify-content:center}
 .opts{display:flex;flex-direction:column;gap:8px}
 .opt{border:2px solid var(--border);background:var(--surface2);color:var(--text);border-radius:12px;padding:14px;text-align:left;font-size:16px;font-weight:700;font-family:inherit}
@@ -217,14 +219,63 @@ function nuevoRegistro(){
   pintarFotos(); pintarServicios(); pintarEquipo(); pintarExtras(); ir('s-reg');
 }
 function pintarFotos(){
-  const t=$('thumbs');t.innerHTML='';
-  fotos.forEach((f,i)=>{const d=document.createElement('div');d.innerHTML='<img src="'+f.url+'"><b>✕</b>';d.querySelector('b').onclick=()=>{fotos.splice(i,1);pintarFotos()};t.appendChild(d)});
+  const t=$('thumbs');t.innerHTML='';t.style.display='block';
+  fotos.forEach((f,i)=>{const d=document.createElement('div');d.className='gl';
+    const msg=f.estado==='leyendo'?'Leyendo número…':f.estado==='no'&&!f.num?'Número de guía no leído. Tome una nueva foto o ingrese el número manualmente.':f.estado==='ok'?'Leído de la foto. Verifique que coincida con el papel.':'';
+    const err=f.estado==='no'&&!f.num;
+    d.innerHTML='<img src="'+f.url+'"><div class="gi"><label>N° guía / factura</label><input inputmode="numeric" class="'+(err?'err':'')+'" value="'+(f.num||'')+'" placeholder="'+(f.estado==='leyendo'?'…':'Escriba el N°')+'"><div class="msg'+(err?' err':'')+'">'+msg+'</div></div><button class="x">✕</button>';
+    d.querySelector('input').oninput=e=>{f.num=e.target.value.replace(/\D/g,'');if(f.num!==e.target.value)e.target.value=f.num;e.target.classList.toggle('err',!f.num&&f.estado==='no')};
+    d.querySelector('.x').onclick=()=>{fotos.splice(i,1);pintarFotos()};t.appendChild(d)});
   $('btn-foto').textContent=fotos.length?'📷 Otra foto':'📷 Tomar foto';
 }
 async function onFoto(inp){
   const fs=[...(inp.files||[])]; inp.value=''; if(!fs.length)return;
-  for(const f of fs){try{const blob=await comprimir(f);fotos.push({blob,url:URL.createObjectURL(blob)})}catch(e){toast('No se pudo leer una foto')}}
+  const nuevas=[];
+  for(const f of fs){try{const blob=await comprimir(f);const o={blob,url:URL.createObjectURL(blob),num:'',estado:'leyendo',file:f};fotos.push(o);nuevas.push(o)}catch(e){toast('No se pudo leer una foto')}}
   pintarFotos();
+  for(const o of nuevas){o.num=await leerNumero(o.file)||'';o.estado=o.num?'ok':'no';delete o.file;if(fotos.includes(o))pintarFotos()}
+}
+// ═══ LECTURA DEL N° DE GUÍA / FACTURA (en el celular) ═══
+let ocrW=null;
+async function ocrWorker(){
+  if(ocrW)return ocrW;
+  ocrW=Tesseract.createWorker('eng',1,{workerPath:'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/worker.min.js',corePath:'https://cdn.jsdelivr.net/npm/tesseract.js-core@5.1.1',langPath:'https://cdn.jsdelivr.net/npm/@tesseract.js-data/eng@1.0.0/4.0.0_best_int'});
+  return ocrW;
+}
+function prepararOCR(file){
+  return new Promise((res,rej)=>{const img=new Image(),u=URL.createObjectURL(file);
+    img.onload=()=>{const M=2000,r=M/Math.max(img.width,img.height),w=Math.round(img.width*r),h=Math.round(img.height*r);
+      const c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');x.drawImage(img,0,0,w,h);
+      const d=x.getImageData(0,0,w,h),p=d.data,hist=new Array(256).fill(0),g=new Uint8ClampedArray(w*h);
+      for(let i=0,j=0;i<p.length;i+=4,j++){const v=(p[i]*299+p[i+1]*587+p[i+2]*114)/1000|0;g[j]=v;hist[v]++}
+      let lo=0,hi=255,acc=0,cut=w*h*0.02;for(;lo<255&&(acc+=hist[lo])<cut;lo++);acc=0;for(;hi>0&&(acc+=hist[hi])<cut;hi--);
+      const k=255/Math.max(1,hi-lo);for(let i=0,j=0;i<p.length;i+=4,j++){const v=Math.max(0,Math.min(255,(g[j]-lo)*k));p[i]=p[i+1]=p[i+2]=v}
+      x.putImageData(d,0,0);URL.revokeObjectURL(u);res(c)};
+    img.onerror=rej;img.src=u});
+}
+async function leerNumero(file){
+  try{
+    if(!window.Tesseract)return null;
+    const w=await ocrWorker(),c=await prepararOCR(file);
+    const {data}=await w.recognize(c,{},{blocks:true});
+    const words=[];(data.blocks||[]).forEach(b=>b.paragraphs.forEach(p=>p.lines.forEach(l=>l.words.forEach(x=>words.push(x)))));
+    const anc=words.filter(x=>/FACTUR|ELECTR|GU[IÍ]A/i.test(x.text));
+    const nums=words.map(x=>({x,m:x.text.match(/^\D{0,3}([1-9]\d{5})\D{0,2}$/)})).filter(o=>o.m);
+    let best=null,bd=1e9,ba=null;
+    for(const a of anc){const h=a.bbox.y1-a.bbox.y0,ax=(a.bbox.x0+a.bbox.x1)/2;
+      for(const o of nums){const b=o.x.bbox,dy=b.y0-a.bbox.y0,dx=Math.abs((b.x0+b.x1)/2-ax);
+        if(dy>0&&dy<6*h&&dx<12*h){const d=dy+dx*0.5;if(d<bd){bd=d;best=o.m[1];ba=a}}}}
+    // segunda lectura solo de números en el recuadro; se acepta si ambas lecturas coinciden
+    const lista=ba?[ba]:anc, vistos=[];
+    for(const a of lista.slice(0,3)){const h=a.bbox.y1-a.bbox.y0;
+      await w.setParameters({tessedit_char_whitelist:'0123456789'});
+      const r=await w.recognize(c,{rectangle:{left:Math.max(0,a.bbox.x0-6*h),top:a.bbox.y1,width:Math.min(18*h,c.width),height:4*h}});
+      await w.setParameters({tessedit_char_whitelist:''});
+      const ms=[...r.data.text.matchAll(/(?:^|\D)([1-9]\d{5})(?=\D|$)/g)].map(m=>m[1]);vistos.push(...ms);
+      if(best&&ms.includes(best))return best;}
+    if(!best&&vistos.length&&new Set(vistos).size===1)return null;
+  }catch(e){console.log('ocr',e)}
+  return null;
 }
 function comprimir(file){
   return new Promise((res,rej)=>{
@@ -280,6 +331,9 @@ function textoExtras(e){
 async function guardar(){
   const err=$('reg-err');
   if(!fotos.length){err.textContent='Falta la foto de la guía';return}
+  if(fotos.some(f=>f.estado==='leyendo')){err.textContent='Espera: se está leyendo el número de la guía';return}
+  const sinNum=fotos.findIndex(f=>!f.num);
+  if(sinNum>=0){err.textContent='Falta el N° de guía en la foto '+(sinNum+1)+': tome una nueva foto o ingrese el número';return}
   if(!svcSel){err.textContent='Elige el servicio';return}
   const ex=leerExtras();
   if(ex.traspaleteo&&!ex.traspaleteo.pallets){err.textContent='Indica los pallets del traspaleteo';return}
@@ -291,7 +345,7 @@ async function guardar(){
     servicio_id:id, patente:$('patente').value, conductor:user.nombre, cliente:svcSel.cliente||null,
     origen:svcSel.origen||null, destino:svcSel.destino||null, fecha:hoyISO(ahora), estado:'registrado',
     empresa:EMPRESA, modo:'registro_tm', tarifa_neta:svcSel.tarifa||null,
-    notas:JSON.stringify({servicio_sistema:svcSel.servicio, acoplado:$('acoplado').value||null, extras:ex, observacion:$('obs').value.trim()||null, pin:user.pin, registrado:ahora.toISOString(), fotos:[]})
+    notas:JSON.stringify({servicio_sistema:svcSel.servicio, acoplado:$('acoplado').value||null, extras:ex, observacion:$('obs').value.trim()||null, guias:fotos.map(f=>f.num), pin:user.pin, registrado:ahora.toISOString(), fotos:[]})
   };
   ls('tm_equipo_'+user.pin,JSON.stringify({patente:reg.patente,acoplado:$('acoplado').value}));
   const freq=JSON.parse(ls('tm_freq_'+user.pin)||'{}');freq[svcSel.servicio]=(freq[svcSel.servicio]||0)+1;ls('tm_freq_'+user.pin,JSON.stringify(freq));
@@ -343,7 +397,7 @@ function avisarWhatsApp(){
   if(!ultimo)return;
   const {reg,ex,svc,nfotos,ahora}=ultimo, notas=JSON.parse(reg.notas);
   const f=String(ahora.getDate()).padStart(2,'0')+'-'+String(ahora.getMonth()+1).padStart(2,'0')+'-'+ahora.getFullYear()+' '+String(ahora.getHours()).padStart(2,'0')+':'+String(ahora.getMinutes()).padStart(2,'0');
-  const l=['✅ SERVICIO REGISTRADO','Conductor: '+reg.conductor,'Fecha: '+f,'Servicio: '+svc.txt,'Equipo: '+reg.patente+(notas.acoplado?' / '+notas.acoplado:''),'Guías: '+nfotos+' foto'+(nfotos===1?'':'s')];
+  const l=['✅ SERVICIO REGISTRADO','Conductor: '+reg.conductor,'Fecha: '+f,'Servicio: '+svc.txt,'Equipo: '+reg.patente+(notas.acoplado?' / '+notas.acoplado:''),'Guías: '+((notas.guias||[]).join(' - ')||nfotos+' foto'+(nfotos===1?'':'s'))];
   const t=textoExtras(ex); if(t)l.push('Extras: '+t);
   if(notas.observacion)l.push('Obs.: '+notas.observacion);
   window.location.href='https://wa.me/?text='+encodeURIComponent(l.join('\n'));
@@ -366,7 +420,7 @@ async function verRegistros(){
   $('btn-xls').disabled=!filas.length;
   $('lista').innerHTML=filas.map(r=>{const n=r._n,ex=textoExtras(n.extras||{});
     return '<div class="reg"><div class="t">'+r.fecha.split('-').reverse().join('-')+' · '+(n.servicio_sistema||((r.origen||'')+' → '+(r.destino||'')))+'</div>'+
-    '<div>'+r.conductor+' · '+r.patente+(n.acoplado?' / '+n.acoplado:'')+'</div>'+
+    '<div>'+r.conductor+' · '+r.patente+(n.acoplado?' / '+n.acoplado:'')+'</div>'+((n.guias||[]).length?'<div><b>Guías: '+n.guias.join(' - ')+'</b></div>':'')+
     (ex?'<div class="m">Extras: '+ex+'</div>':'')+(n.observacion?'<div class="m">Obs.: '+n.observacion+'</div>':'')+
     '<div class="fx">'+(n.fotos||[]).map(u=>'<a href="'+u+'" target="_blank"><img src="'+u+'"></a>').join('')+'</div></div>'}).join('');
 }
@@ -379,7 +433,7 @@ function descargarExcel(){
     const acop=e.acoplado_reemplazo||n.acoplado||'';
     const obs=[n.observacion,e.trasvasije?'Trasvasije $'+fmt(e.trasvasije.monto_pagado||0):null,e.espera?'Espera '+e.espera.horas+' h':null,e.peaje_efectivo?'Peaje efectivo $'+fmt(e.peaje_efectivo.monto||0):null,e.acoplado_reemplazo?'Acoplado de reemplazo '+e.acoplado_reemplazo+' (costo por confirmar)':null,e.traspaleteo?'Traspaleteo pagado $'+fmt(e.traspaleteo.monto_pagado||0):null,'Registro Kaptura'].filter(Boolean).join(' · ');
     const [y,m,d]=r.fecha.split('-').map(Number);
-    return [(Date.UTC(y,m-1,d)-Date.UTC(1899,11,30))/86400000,r.patente,acop,sv,r.conductor,'','','',e.espera?'Sí':'',e.retorno?(esSuper?'Retorno supermercado':'Sí'):(esSuper?'No':''),'',obs,e.traspaleteo?e.traspaleteo.pallets:'',(n.fotos||[]).join(' '),r.servicio_id,n.registrado?new Date(n.registrado).toLocaleString('es-CL'):''];});
+    return [(Date.UTC(y,m-1,d)-Date.UTC(1899,11,30))/86400000,r.patente,acop,sv,r.conductor,'',(n.guias||[]).join(' - '),'',e.espera?'Sí':'',e.retorno?(esSuper?'Retorno supermercado':'Sí'):(esSuper?'No':''),'',obs,e.traspaleteo?e.traspaleteo.pallets:'',(n.fotos||[]).join(' '),r.servicio_id,n.registrado?new Date(n.registrado).toLocaleString('es-CL'):''];});
   const ws=XLSX.utils.aoa_to_sheet([head,...rows]);
   ws['!cols']=[{wch:11},{wch:12},{wch:12},{wch:48},{wch:26},{wch:10},{wch:10},{wch:10},{wch:8},{wch:20},{wch:12},{wch:60},{wch:10},{wch:40},{wch:28},{wch:20}];
   for(let i=2;i<=rows.length+1;i++){const c=ws['A'+i];if(c){c.t='n';c.z='dd-mm-yyyy'}}
