@@ -87,8 +87,12 @@ input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--bor
   <div class="card">
     <div class="lbl">1 · Fotos de las guías</div>
     <div class="thumbs" id="thumbs"></div>
-    <button class="btn2" id="btn-foto" onclick="document.getElementById('cam').click()">📷 Sacar foto</button>
+    <div class="row2">
+      <button class="btn2" id="btn-foto" onclick="document.getElementById('cam').click()">📷 Tomar foto</button>
+      <button class="btn2" onclick="document.getElementById('gal').click()">🖼 Subir de galería</button>
+    </div>
     <input type="file" id="cam" accept="image/*" capture="environment" style="display:none" onchange="onFoto(this)">
+    <input type="file" id="gal" accept="image/*" multiple style="display:none" onchange="onFoto(this)">
   </div>
   <div class="card">
     <div class="lbl">2 · Servicio</div>
@@ -211,16 +215,16 @@ function nuevoRegistro(){
   fotos=[];svcSel=null;extrasSel=new Set();$('obs').value='';$('reg-err').textContent='';
   ['trasp-pallets','trasp-monto','trasv-monto','espera-horas','peaje-monto','reemp-patente'].forEach(i=>$(i).value='');
   pintarFotos(); pintarServicios(); pintarEquipo(); pintarExtras(); ir('s-reg');
-  setTimeout(()=>$('cam').click(),250);
 }
 function pintarFotos(){
   const t=$('thumbs');t.innerHTML='';
   fotos.forEach((f,i)=>{const d=document.createElement('div');d.innerHTML='<img src="'+f.url+'"><b>✕</b>';d.querySelector('b').onclick=()=>{fotos.splice(i,1);pintarFotos()};t.appendChild(d)});
-  $('btn-foto').textContent=fotos.length?'📷 + Otra foto':'📷 Sacar foto';
+  $('btn-foto').textContent=fotos.length?'📷 Otra foto':'📷 Tomar foto';
 }
 async function onFoto(inp){
-  const f=inp.files&&inp.files[0]; inp.value=''; if(!f)return;
-  try{const blob=await comprimir(f);fotos.push({blob,url:URL.createObjectURL(blob)});pintarFotos()}catch(e){toast('No se pudo leer la foto')}
+  const fs=[...(inp.files||[])]; inp.value=''; if(!fs.length)return;
+  for(const f of fs){try{const blob=await comprimir(f);fotos.push({blob,url:URL.createObjectURL(blob)})}catch(e){toast('No se pudo leer una foto')}}
+  pintarFotos();
 }
 function comprimir(file){
   return new Promise((res,rej)=>{
