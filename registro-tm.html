@@ -58,7 +58,7 @@ input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--bor
 .ok{font-size:64px;text-align:center;margin:10px 0}
 .pend{background:#2a1a00;border:1px solid var(--gold);color:var(--gold);border-radius:12px;padding:10px 12px;font-size:13px;margin-bottom:14px;display:none}
 .seg{display:flex;gap:6px;margin-bottom:14px}.seg button{flex:1;border:2px solid var(--border);background:var(--surface);color:var(--text);border-radius:10px;padding:10px;font-weight:800;font-family:inherit;font-size:14px}.seg button.sel{border-color:var(--gold);background:#2a2300}
-.reg{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:12px;margin-bottom:10px;font-size:14px;line-height:1.45}.reg .t{font-weight:900;font-size:15px}.reg .m{color:var(--muted);font-size:13px}.reg .fx{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}.reg .fx a img{width:56px;height:56px;object-fit:cover;border-radius:8px;border:1px solid var(--border)}
+.reg{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:12px;margin-bottom:10px;font-size:14px;line-height:1.45}.reg{position:relative}.reg .t{font-weight:900;font-size:15px;padding-right:34px}.reg .del{position:absolute;top:8px;right:8px;background:var(--danger);color:#fff;border:0;border-radius:50%;width:28px;height:28px;font-size:14px}.reg .cf{display:flex;gap:8px;align-items:center;margin-top:8px;color:var(--danger);font-weight:800}.reg .cf button{border:0;border-radius:8px;padding:8px 14px;font-weight:800;font-family:inherit}.reg .m{color:var(--muted);font-size:13px}.reg .fx{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}.reg .fx a img{width:56px;height:56px;object-fit:cover;border-radius:8px;border:1px solid var(--border)}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--gold);color:#000;padding:12px 18px;border-radius:10px;font-weight:800;font-size:14px;opacity:0;transition:opacity .3s;pointer-events:none;max-width:90vw;text-align:center}
 .toast.on{opacity:1}
 </style>
@@ -413,18 +413,31 @@ async function verRegistros(){
   const pend=await cola();
   if(!supa){$('list-sub').textContent='Sin conexión con la base de datos.'+(pend.length?' '+pend.length+' registro(s) en este celular esperando señal.':'');return}
   $('list-sub').textContent='Cargando…';
-  const {data,error}=await supa.from('servicios_piloto').select('*').eq('empresa',EMPRESA).eq('modo','registro_tm').gte('fecha',desde()).order('fecha',{ascending:false}).order('servicio_id',{ascending:false});
+  const {data,error}=await supa.from('servicios_piloto').select('*').eq('empresa',EMPRESA).eq('modo','registro_tm').neq('estado','anulado').gte('fecha',desde()).order('fecha',{ascending:false}).order('servicio_id',{ascending:false});
   if(error){$('list-sub').textContent='Error al leer: '+error.message;return}
   filas=(data||[]).map(r=>({...r,_n:parseNotas(r.notas)}));
   $('list-sub').textContent=filas.length+' registro(s) desde el '+desde().split('-').reverse().join('-')+(pend.length?' · '+pend.length+' en este celular esperando señal':'');
   $('btn-xls').disabled=!filas.length;
-  $('lista').innerHTML=filas.map(r=>{const n=r._n,ex=textoExtras(n.extras||{});
-    return '<div class="reg"><div class="t">'+r.fecha.split('-').reverse().join('-')+' · '+(n.servicio_sistema||((r.origen||'')+' → '+(r.destino||'')))+'</div>'+
+  $('lista').innerHTML=filas.map((r,i)=>{const n=r._n,ex=textoExtras(n.extras||{});
+    return '<div class="reg" data-i="'+i+'"><button class="del" onclick="pedirBorrar('+i+')">✕</button><div class="t">'+r.fecha.split('-').reverse().join('-')+' · '+(n.servicio_sistema||((r.origen||'')+' → '+(r.destino||'')))+'</div>'+
     '<div>'+r.conductor+' · '+r.patente+(n.acoplado?' / '+n.acoplado:'')+'</div>'+((n.guias||[]).length?'<div><b>Guías: '+n.guias.join(' - ')+'</b></div>':'')+
     (ex?'<div class="m">Extras: '+ex+'</div>':'')+(n.observacion?'<div class="m">Obs.: '+n.observacion+'</div>':'')+
     '<div class="fx">'+(n.fotos||[]).map(u=>'<a href="'+u+'" target="_blank"><img src="'+u+'"></a>').join('')+'</div></div>'}).join('');
 }
 function fmt(n){return Number(n||0).toLocaleString('es-CL')}
+function pedirBorrar(i){
+  const card=document.querySelector('.reg[data-i="'+i+'"]');if(!card||card.querySelector('.cf'))return;
+  const d=document.createElement('div');d.className='cf';
+  d.innerHTML='¿Borrar este servicio? <button style="background:var(--danger);color:#fff">Sí, borrar</button><button>No</button>';
+  const [si,no]=d.querySelectorAll('button');no.onclick=()=>d.remove();si.onclick=()=>borrarRegistro(i,si);card.appendChild(d);
+}
+async function borrarRegistro(i,btn){
+  const r=filas[i];if(!r||!supa)return;btn.disabled=true;btn.textContent='Borrando…';
+  let ok=false;
+  try{const {data,error}=await supa.from('servicios_piloto').delete().eq('servicio_id',r.servicio_id).eq('empresa',EMPRESA).select('servicio_id');ok=!error&&data&&data.length>0}catch(e){}
+  if(!ok){try{const {data,error}=await supa.from('servicios_piloto').update({estado:'anulado'}).eq('servicio_id',r.servicio_id).eq('empresa',EMPRESA).select('servicio_id');ok=!error&&data&&data.length>0}catch(e){}}
+  if(ok){toast('Servicio borrado');verRegistros()}else{btn.disabled=false;btn.textContent='Sí, borrar';toast('No se pudo borrar. Revise la conexión.')}
+}
 function descargarExcel(){
   if(!filas.length||!window.XLSX){toast('No se pudo generar el Excel');return}
   const head=['Fecha','Patente tracto / camión','Patente acoplado / thermo','Servicio','Conductor','Peoneta','N° guía','N° factura (folio)','¿Hubo espera?','¿Retorno?','Tarifa distinta ($ neto, solo si cambia)','Observaciones','Pallets traspaleteados','Fotos de guías (links)','ID registro Kaptura','Registrado (fecha y hora)'];
