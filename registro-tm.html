@@ -207,7 +207,6 @@ function entrar(p){
   if(!u){$('pin-err').textContent='PIN no registrado';pin='';setTimeout(pintarPin,600);return}
   user={pin:p,...u}; ls('tm_pin',p);
   $('saludo').textContent='Hola '+u.nombre.split(' ')[0];
-  $('sub-equipo').textContent=u.patente?('Equipo: '+u.patente+(u.acoplado?' / '+u.acoplado:'')):'';
   $('btn-salir').style.display='block'; $('btn-ver').style.display=(u.rol==='administrador'||u.rol==='coordinador')?'block':'none'; ir('s-home'); revisarPendientes();
 }
 function salir(){ls('tm_pin',null);user=null;pin='';pintarPin();$('btn-salir').style.display='none';ir('s-pin')}
@@ -294,10 +293,8 @@ function pintarServicios(){
     b.onclick=()=>{svcSel=s;document.querySelectorAll('.opt').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');pintarExtras()};o.appendChild(b)});
 }
 function pintarEquipo(){
-  const last=JSON.parse(ls('tm_equipo_'+user.pin)||'null');
-  const p=last?last.patente:user.patente, a=last?last.acoplado:user.acoplado;
-  $('patente').innerHTML=PATENTES.map(x=>'<option'+(x===p?' selected':'')+'>'+x+'</option>').join('');
-  $('acoplado').innerHTML=ACOPLADOS.map(x=>'<option value="'+x+'"'+(x===a?' selected':'')+'>'+(x||'Sin acoplado')+'</option>').join('');
+  $('patente').innerHTML='<option value="" selected>Elige patente</option>'+PATENTES.map(x=>'<option>'+x+'</option>').join('');
+  $('acoplado').innerHTML='<option value="?" selected>Elige acoplado</option>'+ACOPLADOS.map(x=>'<option value="'+x+'">'+(x||'Sin acoplado')+'</option>').join('');
 }
 function pintarExtras(){
   const c=$('chips');c.innerHTML='';
@@ -335,6 +332,8 @@ async function guardar(){
   const sinNum=fotos.findIndex(f=>!f.num);
   if(sinNum>=0){err.textContent='Falta el N° de guía en la foto '+(sinNum+1)+': tome una nueva foto o ingrese el número';return}
   if(!svcSel){err.textContent='Elige el servicio';return}
+  if(!$('patente').value){err.textContent='Elige la patente del camión';return}
+  if($('acoplado').value==='?'){err.textContent='Elige el acoplado (o "Sin acoplado")';return}
   const ex=leerExtras();
   if(ex.traspaleteo&&!ex.traspaleteo.pallets){err.textContent='Indica los pallets del traspaleteo';return}
   if(extrasSel.has('reemp')&&!ex.acoplado_reemplazo){err.textContent='Indica la patente del acoplado de reemplazo';return}
@@ -347,7 +346,6 @@ async function guardar(){
     empresa:EMPRESA, modo:'registro_tm', tarifa_neta:svcSel.tarifa||null,
     notas:JSON.stringify({servicio_sistema:svcSel.servicio, acoplado:$('acoplado').value||null, extras:ex, observacion:$('obs').value.trim()||null, guias:fotos.map(f=>f.num), pin:user.pin, registrado:ahora.toISOString(), fotos:[]})
   };
-  ls('tm_equipo_'+user.pin,JSON.stringify({patente:reg.patente,acoplado:$('acoplado').value}));
   const freq=JSON.parse(ls('tm_freq_'+user.pin)||'{}');freq[svcSel.servicio]=(freq[svcSel.servicio]||0)+1;ls('tm_freq_'+user.pin,JSON.stringify(freq));
   ultimo={reg,ex,svc:svcSel,nfotos:fotos.length,ahora};
   const btn=$('btn-guardar');btn.disabled=true;btn.textContent='Guardando…';
