@@ -136,7 +136,7 @@ input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--bor
 
 <!-- 5. VER REGISTROS (admin / coordinador) -->
 <section class="screen" id="s-list">
-  <h1>Registros TM</h1>
+  <h1 id="list-h">Registros TM</h1>
   <div class="seg" id="seg"><button data-r="hoy">Hoy</button><button data-r="7" class="sel">7 días</button><button data-r="mes">Mes</button></div>
   <div class="sub" id="list-sub">Cargando…</div>
   <button class="big" id="btn-xls" onclick="descargarExcel()" disabled>⬇ Descargar Excel</button>
@@ -207,7 +207,7 @@ function entrar(p){
   if(!u){$('pin-err').textContent='PIN no registrado';pin='';setTimeout(pintarPin,600);return}
   user={pin:p,...u}; ls('tm_pin',p);
   $('saludo').textContent='Hola '+u.nombre.split(' ')[0];
-  $('btn-salir').style.display='block'; $('btn-ver').style.display=(u.rol==='administrador'||u.rol==='coordinador')?'block':'none'; ir('s-home'); revisarPendientes();
+  $('btn-salir').style.display='block'; $('btn-ver').style.display='block';$('btn-ver').textContent=esAdmin()?'📋 Ver registros y descargar Excel':'📋 Mis registros'; ir('s-home'); revisarPendientes();
 }
 function salir(){ls('tm_pin',null);user=null;pin='';pintarPin();$('btn-salir').style.display='none';ir('s-pin')}
 
@@ -402,22 +402,25 @@ function avisarWhatsApp(){
 }
 
 // ═══ VER REGISTROS + EXCEL ═══
+function esAdmin(){return user&&(user.rol==='administrador'||user.rol==='coordinador')}
 let rango='7', filas=[];
 document.querySelectorAll('#seg button').forEach(b=>b.onclick=()=>{rango=b.dataset.r;document.querySelectorAll('#seg button').forEach(x=>x.classList.toggle('sel',x===b));verRegistros()});
 function desde(){const d=new Date();if(rango==='hoy')return hoyISO(d);if(rango==='mes')return hoyISO(new Date(d.getFullYear(),d.getMonth(),1));d.setDate(d.getDate()-6);return hoyISO(d)}
 function parseNotas(n){try{return JSON.parse(n||'{}')}catch(e){return{observacion:n}}}
 async function verRegistros(){
-  ir('s-list'); $('lista').innerHTML=''; $('btn-xls').disabled=true;
+  ir('s-list'); $('lista').innerHTML=''; $('btn-xls').disabled=true; $('btn-xls').style.display=esAdmin()?'block':'none'; $('list-h').textContent=esAdmin()?'Registros TM':'Mis registros';
   const pend=await cola();
   if(!supa){$('list-sub').textContent='Sin conexión con la base de datos.'+(pend.length?' '+pend.length+' registro(s) en este celular esperando señal.':'');return}
   $('list-sub').textContent='Cargando…';
-  const {data,error}=await supa.from('servicios_piloto').select('*').eq('empresa',EMPRESA).eq('modo','registro_tm').neq('estado','anulado').gte('fecha',desde()).order('fecha',{ascending:false}).order('servicio_id',{ascending:false});
+  let q=supa.from('servicios_piloto').select('*').eq('empresa',EMPRESA);
+  if(!esAdmin())q=q.eq('conductor',user.nombre);
+  const {data,error}=await q.eq('modo','registro_tm').neq('estado','anulado').gte('fecha',desde()).order('fecha',{ascending:false}).order('servicio_id',{ascending:false});
   if(error){$('list-sub').textContent='Error al leer: '+error.message;return}
   filas=(data||[]).map(r=>({...r,_n:parseNotas(r.notas)}));
   $('list-sub').textContent=filas.length+' registro(s) desde el '+desde().split('-').reverse().join('-')+(pend.length?' · '+pend.length+' en este celular esperando señal':'');
   $('btn-xls').disabled=!filas.length;
   $('lista').innerHTML=filas.map((r,i)=>{const n=r._n,ex=textoExtras(n.extras||{});
-    return '<div class="reg" data-i="'+i+'"><button class="del" onclick="pedirBorrar('+i+')">✕</button><div class="t">'+r.fecha.split('-').reverse().join('-')+' · '+(n.servicio_sistema||((r.origen||'')+' → '+(r.destino||'')))+'</div>'+
+    return '<div class="reg" data-i="'+i+'">'+(esAdmin()?'<button class="del" onclick="pedirBorrar('+i+')">✕</button>':'')+'<div class="t">'+r.fecha.split('-').reverse().join('-')+' · '+(n.servicio_sistema||((r.origen||'')+' → '+(r.destino||'')))+'</div>'+
     '<div>'+r.conductor+' · '+r.patente+(n.acoplado?' / '+n.acoplado:'')+'</div>'+((n.guias||[]).length?'<div><b>Guías: '+n.guias.join(' - ')+'</b></div>':'')+
     (ex?'<div class="m">Extras: '+ex+'</div>':'')+(n.observacion?'<div class="m">Obs.: '+n.observacion+'</div>':'')+
     '<div class="fx">'+(n.fotos||[]).map(u=>'<a href="'+u+'" target="_blank"><img src="'+u+'"></a>').join('')+'</div></div>'}).join('');
@@ -430,7 +433,7 @@ function pedirBorrar(i){
   const [si,no]=d.querySelectorAll('button');no.onclick=()=>d.remove();si.onclick=()=>borrarRegistro(i,si);card.appendChild(d);
 }
 async function borrarRegistro(i,btn){
-  const r=filas[i];if(!r||!supa)return;btn.disabled=true;btn.textContent='Borrando…';
+  const r=filas[i];if(!r||!supa||!esAdmin())return;btn.disabled=true;btn.textContent='Borrando…';
   let ok=false;
   try{const {data,error}=await supa.from('servicios_piloto').delete().eq('servicio_id',r.servicio_id).eq('empresa',EMPRESA).select('servicio_id');ok=!error&&data&&data.length>0}catch(e){}
   if(!ok){try{const {data,error}=await supa.from('servicios_piloto').update({estado:'anulado'}).eq('servicio_id',r.servicio_id).eq('empresa',EMPRESA).select('servicio_id');ok=!error&&data&&data.length>0}catch(e){}}
