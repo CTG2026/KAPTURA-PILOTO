@@ -13,6 +13,7 @@
 <meta name="apple-mobile-web-app-title" content="KAPTURA">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 :root{--bg:#0E0E0E;--surface:#181818;--surface2:#222;--border:#2E2E2E;--text:#F2F2F2;--muted:#9A9A9A;--gold:#F5B800;--green:#2ECC71;--danger:#FF5A5A}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -54,6 +55,8 @@ input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--bor
 .mini{font-size:12px;color:var(--muted);margin-top:6px}
 .ok{font-size:64px;text-align:center;margin:10px 0}
 .pend{background:#2a1a00;border:1px solid var(--gold);color:var(--gold);border-radius:12px;padding:10px 12px;font-size:13px;margin-bottom:14px;display:none}
+.seg{display:flex;gap:6px;margin-bottom:14px}.seg button{flex:1;border:2px solid var(--border);background:var(--surface);color:var(--text);border-radius:10px;padding:10px;font-weight:800;font-family:inherit;font-size:14px}.seg button.sel{border-color:var(--gold);background:#2a2300}
+.reg{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:12px;margin-bottom:10px;font-size:14px;line-height:1.45}.reg .t{font-weight:900;font-size:15px}.reg .m{color:var(--muted);font-size:13px}.reg .fx{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}.reg .fx a img{width:56px;height:56px;object-fit:cover;border-radius:8px;border:1px solid var(--border)}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--gold);color:#000;padding:12px 18px;border-radius:10px;font-weight:800;font-size:14px;opacity:0;transition:opacity .3s;pointer-events:none;max-width:90vw;text-align:center}
 .toast.on{opacity:1}
 </style>
@@ -76,6 +79,7 @@ input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--bor
   <h1 id="saludo">Hola</h1>
   <div class="sub" id="sub-equipo"></div>
   <button class="big" onclick="nuevoRegistro()">📷 REGISTRAR SERVICIO</button>
+  <button class="btn2" id="btn-ver" style="display:none" onclick="verRegistros()">📋 Ver registros y descargar Excel</button>
 </section>
 
 <!-- 3. REGISTRO -->
@@ -122,6 +126,17 @@ input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--bor
   <div class="sub" style="text-align:center" id="ok-sub"></div>
   <button class="big wa" onclick="avisarWhatsApp()">💬 Avisar en "Servicios TM"</button>
   <button class="btn2" onclick="ir('s-home')">Volver al inicio</button>
+</section>
+
+<!-- 5. VER REGISTROS (admin / coordinador) -->
+<section class="screen" id="s-list">
+  <h1>Registros TM</h1>
+  <div class="seg" id="seg"><button data-r="hoy">Hoy</button><button data-r="7" class="sel">7 días</button><button data-r="mes">Mes</button></div>
+  <div class="sub" id="list-sub">Cargando…</div>
+  <button class="big" id="btn-xls" onclick="descargarExcel()" disabled>⬇ Descargar Excel</button>
+  <div style="height:14px"></div>
+  <div id="lista"></div>
+  <button class="btn2" onclick="ir('s-home')">← Volver</button>
 </section>
 
 <div class="toast" id="toast"></div>
@@ -187,7 +202,7 @@ function entrar(p){
   user={pin:p,...u}; ls('tm_pin',p);
   $('saludo').textContent='Hola '+u.nombre.split(' ')[0];
   $('sub-equipo').textContent=u.patente?('Equipo: '+u.patente+(u.acoplado?' / '+u.acoplado:'')):'';
-  $('btn-salir').style.display='block'; ir('s-home'); revisarPendientes();
+  $('btn-salir').style.display='block'; $('btn-ver').style.display=(u.rol==='administrador'||u.rol==='coordinador')?'block':'none'; ir('s-home'); revisarPendientes();
 }
 function salir(){ls('tm_pin',null);user=null;pin='';pintarPin();$('btn-salir').style.display='none';ir('s-pin')}
 
@@ -328,6 +343,44 @@ function avisarWhatsApp(){
   const t=textoExtras(ex); if(t)l.push('Extras: '+t);
   if(notas.observacion)l.push('Obs.: '+notas.observacion);
   window.location.href='https://wa.me/?text='+encodeURIComponent(l.join('\n'));
+}
+
+// ═══ VER REGISTROS + EXCEL ═══
+let rango='7', filas=[];
+document.querySelectorAll('#seg button').forEach(b=>b.onclick=()=>{rango=b.dataset.r;document.querySelectorAll('#seg button').forEach(x=>x.classList.toggle('sel',x===b));verRegistros()});
+function desde(){const d=new Date();if(rango==='hoy')return hoyISO(d);if(rango==='mes')return hoyISO(new Date(d.getFullYear(),d.getMonth(),1));d.setDate(d.getDate()-6);return hoyISO(d)}
+function parseNotas(n){try{return JSON.parse(n||'{}')}catch(e){return{observacion:n}}}
+async function verRegistros(){
+  ir('s-list'); $('lista').innerHTML=''; $('btn-xls').disabled=true;
+  const pend=await cola();
+  if(!supa){$('list-sub').textContent='Sin conexión con la base de datos.'+(pend.length?' '+pend.length+' registro(s) en este celular esperando señal.':'');return}
+  $('list-sub').textContent='Cargando…';
+  const {data,error}=await supa.from('servicios_piloto').select('*').eq('empresa',EMPRESA).eq('modo','registro_tm').gte('fecha',desde()).order('fecha',{ascending:false}).order('servicio_id',{ascending:false});
+  if(error){$('list-sub').textContent='Error al leer: '+error.message;return}
+  filas=(data||[]).map(r=>({...r,_n:parseNotas(r.notas)}));
+  $('list-sub').textContent=filas.length+' registro(s) desde el '+desde().split('-').reverse().join('-')+(pend.length?' · '+pend.length+' en este celular esperando señal':'');
+  $('btn-xls').disabled=!filas.length;
+  $('lista').innerHTML=filas.map(r=>{const n=r._n,ex=textoExtras(n.extras||{});
+    return '<div class="reg"><div class="t">'+r.fecha.split('-').reverse().join('-')+' · '+(n.servicio_sistema||((r.origen||'')+' → '+(r.destino||'')))+'</div>'+
+    '<div>'+r.conductor+' · '+r.patente+(n.acoplado?' / '+n.acoplado:'')+'</div>'+
+    (ex?'<div class="m">Extras: '+ex+'</div>':'')+(n.observacion?'<div class="m">Obs.: '+n.observacion+'</div>':'')+
+    '<div class="fx">'+(n.fotos||[]).map(u=>'<a href="'+u+'" target="_blank"><img src="'+u+'"></a>').join('')+'</div></div>'}).join('');
+}
+function fmt(n){return Number(n||0).toLocaleString('es-CL')}
+function descargarExcel(){
+  if(!filas.length||!window.XLSX){toast('No se pudo generar el Excel');return}
+  const head=['Fecha','Patente tracto / camión','Patente acoplado / thermo','Servicio','Conductor','Peoneta','N° guía','N° factura (folio)','¿Hubo espera?','¿Retorno?','Tarifa distinta ($ neto, solo si cambia)','Observaciones','Pallets traspaleteados','Fotos de guías (links)','ID registro Kaptura','Registrado (fecha y hora)'];
+  const rows=[...filas].reverse().map(r=>{const n=r._n,e=n.extras||{};
+    const sv=n.servicio_sistema||'', esSuper=/Supermercados/.test(sv);
+    const acop=e.acoplado_reemplazo||n.acoplado||'';
+    const obs=[n.observacion,e.trasvasije?'Trasvasije $'+fmt(e.trasvasije.monto_pagado||0):null,e.espera?'Espera '+e.espera.horas+' h':null,e.peaje_efectivo?'Peaje efectivo $'+fmt(e.peaje_efectivo.monto||0):null,e.acoplado_reemplazo?'Acoplado de reemplazo '+e.acoplado_reemplazo+' (costo por confirmar)':null,e.traspaleteo?'Traspaleteo pagado $'+fmt(e.traspaleteo.monto_pagado||0):null,'Registro Kaptura'].filter(Boolean).join(' · ');
+    const [y,m,d]=r.fecha.split('-').map(Number);
+    return [(Date.UTC(y,m-1,d)-Date.UTC(1899,11,30))/86400000,r.patente,acop,sv,r.conductor,'','','',e.espera?'Sí':'',e.retorno?(esSuper?'Retorno supermercado':'Sí'):(esSuper?'No':''),'',obs,e.traspaleteo?e.traspaleteo.pallets:'',(n.fotos||[]).join(' '),r.servicio_id,n.registrado?new Date(n.registrado).toLocaleString('es-CL'):''];});
+  const ws=XLSX.utils.aoa_to_sheet([head,...rows]);
+  ws['!cols']=[{wch:11},{wch:12},{wch:12},{wch:48},{wch:26},{wch:10},{wch:10},{wch:10},{wch:8},{wch:20},{wch:12},{wch:60},{wch:10},{wch:40},{wch:28},{wch:20}];
+  for(let i=2;i<=rows.length+1;i++){const c=ws['A'+i];if(c){c.t='n';c.z='dd-mm-yyyy'}}
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Servicios Kaptura');
+  XLSX.writeFile(wb,'Servicios_Kaptura_TM_'+hoyISO()+'.xlsx');
 }
 
 // ═══ INICIO ═══
