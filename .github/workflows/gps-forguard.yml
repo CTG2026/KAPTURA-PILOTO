@@ -1,7 +1,7 @@
 name: GPS Forguard → Kaptura
 on:
   schedule:
-    - cron: '*/30 * * * *'
+    - cron: '7,37 * * * *'
   push:
     branches: [main]
     paths: ['scripts/gps-forguard.mjs', '.github/workflows/gps-forguard.yml']
