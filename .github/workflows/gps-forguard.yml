@@ -1,0 +1,24 @@
+name: GPS Forguard → Kaptura
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+    inputs:
+      dias:
+        description: 'Días hacia atrás a leer'
+        default: '3'
+jobs:
+  leer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: node scripts/gps-forguard.mjs
+        env:
+          FORGUARD_TOKEN: ${{ secrets.FORGUARD_TOKEN }}
+          SUPA_URL: https://aqunzrukuruwzwywnurq.supabase.co
+          SUPA_KEY: sb_publishable_70t9UxFlcqYDj7AMybsrHg__IMGNA8C
+          DIAS: ${{ github.event.inputs.dias || '3' }}
