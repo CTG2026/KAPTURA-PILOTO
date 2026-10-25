@@ -1,5 +1,5 @@
 // Lee viajes y paradas de los GPS de Forguard (GPS-Trace) y los guarda en Supabase (tabla gps_viajes).
-// Corre en GitHub Actions cada 30 minutos. No imprime datos sensibles.
+// Corre en GitHub Actions cada 30 minutos. No imprime datos sensibles. (v2)
 const TOKEN = process.env.FORGUARD_TOKEN;
 const SUPA_URL = process.env.SUPA_URL;
 const SUPA_KEY = process.env.SUPA_KEY;
