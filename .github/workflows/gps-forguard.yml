@@ -24,4 +24,4 @@ jobs:
           FORGUARD_TOKEN: ${{ secrets.FORGUARD_TOKEN }}
           SUPA_URL: https://aqunzrukuruwzwywnurq.supabase.co
           SUPA_KEY: sb_publishable_70t9UxFlcqYDj7AMybsrHg__IMGNA8C
-          DIAS: ${{ github.event.inputs.dias || '3' }}
+          DIAS: ${{ github.event.inputs.dias || (github.event_name == 'push' && '35') || '3' }}
