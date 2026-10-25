@@ -3,7 +3,7 @@
 const TOKEN = process.env.FORGUARD_TOKEN;
 const SUPA_URL = process.env.SUPA_URL;
 const SUPA_KEY = process.env.SUPA_KEY;
-const DIAS = Number(process.env.DIAS || 3);
+const DIAS = Number(process.env.DIAS || 3); // días hacia atrás en cada lectura
 const EMPRESA = process.env.EMPRESA || 'transportes_madrid';
 
 

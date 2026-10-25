@@ -2,6 +2,9 @@ name: GPS Forguard → Kaptura
 on:
   schedule:
     - cron: '*/30 * * * *'
+  push:
+    branches: [main]
+    paths: ['scripts/gps-forguard.mjs', '.github/workflows/gps-forguard.yml']
   workflow_dispatch:
     inputs:
       dias:
