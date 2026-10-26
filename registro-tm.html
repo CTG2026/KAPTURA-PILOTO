@@ -528,7 +528,7 @@ async function lugar(lat,lon){
 // Geocercas: al entrar el camión, el cliente empieza a ver su servicio en el Reporte GPS
 const GEOCERCAS=[{nombre:'Planta EBLOOMS',cliente:'EBLOOMS',lat:-34.23852,lon:-71.01362,radio:300}];
 const enGeo=(lat,lon)=>lat==null?null:GEOCERCAS.find(g=>Math.hypot((lat-g.lat)*111320,(lon-g.lon)*111320*Math.cos(g.lat*Math.PI/180))<=g.radio)||null;
-async function lugarG(lat,lon){const g=enGeo(lat,lon);return g?'📍 '+g.nombre:await lugar(lat,lon)}
+async function lugarG(lat,lon){const g=enGeo(lat,lon);return g?g.nombre:await lugar(lat,lon)}
 function diaRango(dia){const ini=new Date(dia+'T00:00:00-03:00');return [ini.toISOString(),new Date(ini.getTime()+86400000).toISOString()]}
 async function verGPS(){
   ir('s-gps'); const inp=$('gps-dia');
@@ -562,7 +562,9 @@ async function cargarGPS(){
     const km=vj.reduce((t,x)=>t+(+x.km||0),0), cond=vj.reduce((t,x)=>t+(x.duracion_s||0),0);
     const paradas=e.filter(x=>x.tipo==='parada'&&ini&&new Date(x.inicio)>=new Date(ini)&&new Date(x.inicio)<new Date(fin));
     const esp=paradas.reduce((t,x)=>t+(x.duracion_s||0),0), vmax=Math.max(0,...vj.map(x=>+x.vel_max||0));
-    let filas='<tr><td>—</td><td>'+hhmm(ini)+'</td><td>Salida: '+(vj[0]?await lugarG(vj[0].lat_ini,vj[0].lon_ini):'—')+'</td><td></td></tr>';
+    const s0=vj[0]?e.find(x=>x.tipo==='parada'&&x.fin&&Math.abs(new Date(x.fin)-new Date(vj[0].inicio))<180000&&enGeo(x.lat_ini,x.lon_ini)):null;
+    let filas=s0?'<tr><td>'+hhmm(s0.inicio)+'</td><td>'+hhmm(s0.fin)+'</td><td>'+enGeo(s0.lat_ini,s0.lon_ini).nombre+'</td><td>'+durTxt(s0.duracion_s)+'</td></tr>'
+      :'<tr><td>—</td><td>'+hhmm(ini)+'</td><td>Salida: '+(vj[0]?await lugarG(vj[0].lat_ini,vj[0].lon_ini):'—')+'</td><td></td></tr>';
     for(const x of paradas){
       const ul=uls.find(u=>{if(!u.hora)return false;const t=new Date(dia+'T'+u.hora+':00-03:00');return t>=new Date(x.inicio)-600000&&t<=new Date(x.fin||x.inicio).getTime()+600000});
       filas+='<tr><td>'+hhmm(x.inicio)+'</td><td>'+hhmm(x.fin)+'</td><td>'+(ul?'<span class="ul">'+ul.local+' '+(ul.nombre||'')+(ul.nro?' · Doc. '+ul.nro:'')+'</span><br>':'')+await lugarG(x.lat_ini,x.lon_ini)+'</td><td>'+durTxt(x.duracion_s)+'</td></tr>';
