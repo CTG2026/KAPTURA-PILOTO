@@ -525,6 +525,10 @@ async function lugar(lat,lon){
     const a=r.address||{};const t=[a.road||a.pedestrian||a.neighbourhood,a.suburb||a.city_district||a.town||a.village||a.city].filter(Boolean).join(', ');geoCache[k]=t||'—';}catch(e){geoCache[k]='—'}
   await new Promise(r=>setTimeout(r,1100)); return geoCache[k];
 }
+// Geocercas: al entrar el camión, el cliente empieza a ver su servicio en el Reporte GPS
+const GEOCERCAS=[{nombre:'Planta EBLOOMS',cliente:'EBLOOMS',lat:-34.23852,lon:-71.01362,radio:300}];
+const enGeo=(lat,lon)=>lat==null?null:GEOCERCAS.find(g=>Math.hypot((lat-g.lat)*111320,(lon-g.lon)*111320*Math.cos(g.lat*Math.PI/180))<=g.radio)||null;
+async function lugarG(lat,lon){const g=enGeo(lat,lon);return g?'📍 '+g.nombre:await lugar(lat,lon)}
 function diaRango(dia){const ini=new Date(dia+'T00:00:00-03:00');return [ini.toISOString(),new Date(ini.getTime()+86400000).toISOString()]}
 async function verGPS(){
   ir('s-gps'); const inp=$('gps-dia');
@@ -541,7 +545,8 @@ async function cargarGPS(){
   let q=supa.from('servicios_piloto').select('*').eq('empresa',EMPRESA).eq('modo','registro_tm').neq('estado','anulado').eq('fecha',dia);
   if(esCliente())q=q.eq('cliente',user.cliente);
   const {data:svs}=await q; const servs=(svs||[]).map(r=>({...r,_n:parseNotas(r.notas)}));
-  const pats=[...new Set((ev||[]).map(e=>e.patente))].filter(p=>!esCliente()||servs.some(s=>PAT_GPS(s.patente)===PAT_GPS(p)));
+  const geoE=(p)=>(ev||[]).filter(x=>x.patente===p&&x.tipo==='parada'&&enGeo(x.lat_ini,x.lon_ini)&&(!esCliente()||enGeo(x.lat_ini,x.lon_ini).cliente===user.cliente));
+  const pats=[...new Set((ev||[]).map(e=>e.patente))].filter(p=>!esCliente()||servs.some(s=>PAT_GPS(s.patente)===PAT_GPS(p))||geoE(p).length);
   let ult='';
   try{const {data:u}=await supa.from('gps_viajes').select('*').order('inicio',{ascending:false}).limit(1);
     if(u&&u[0]){const x=u[0],fd=t=>new Date(t).toLocaleString('es-CL',{timeZone:'America/Santiago',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
@@ -550,16 +555,17 @@ async function cargarGPS(){
   $('gps-sub').textContent='Leyendo direcciones…';
   let html='';
   for(const p of pats){
-    const e=(ev||[]).filter(x=>x.patente===p), vj=e.filter(x=>x.tipo==='viaje'), sv=servs.filter(s=>PAT_GPS(s.patente)===PAT_GPS(p));
+    const ge=geoE(p), desde=esCliente()&&ge.length?new Date(ge[0].inicio):null;
+    const e=(ev||[]).filter(x=>x.patente===p&&(!desde||new Date(x.inicio)>=desde)), vj=e.filter(x=>x.tipo==='viaje'), sv=servs.filter(s=>PAT_GPS(s.patente)===PAT_GPS(p));
     const uls=sv.flatMap(s=>s._n.unidades_logisticas||[]);
     const ini=vj.length?vj[0].inicio:null, fin=vj.length?(vj[vj.length-1].fin||vj[vj.length-1].inicio):null;
     const km=vj.reduce((t,x)=>t+(+x.km||0),0), cond=vj.reduce((t,x)=>t+(x.duracion_s||0),0);
     const paradas=e.filter(x=>x.tipo==='parada'&&ini&&new Date(x.inicio)>=new Date(ini)&&new Date(x.inicio)<new Date(fin));
     const esp=paradas.reduce((t,x)=>t+(x.duracion_s||0),0), vmax=Math.max(0,...vj.map(x=>+x.vel_max||0));
-    let filas='<tr><td>—</td><td>'+hhmm(ini)+'</td><td>Salida: '+(vj[0]?await lugar(vj[0].lat_ini,vj[0].lon_ini):'—')+'</td><td></td></tr>';
+    let filas='<tr><td>—</td><td>'+hhmm(ini)+'</td><td>Salida: '+(vj[0]?await lugarG(vj[0].lat_ini,vj[0].lon_ini):'—')+'</td><td></td></tr>';
     for(const x of paradas){
       const ul=uls.find(u=>{if(!u.hora)return false;const t=new Date(dia+'T'+u.hora+':00-03:00');return t>=new Date(x.inicio)-600000&&t<=new Date(x.fin||x.inicio).getTime()+600000});
-      filas+='<tr><td>'+hhmm(x.inicio)+'</td><td>'+hhmm(x.fin)+'</td><td>'+(ul?'<span class="ul">'+ul.local+' '+(ul.nombre||'')+(ul.nro?' · Doc. '+ul.nro:'')+'</span><br>':'')+await lugar(x.lat_ini,x.lon_ini)+'</td><td>'+durTxt(x.duracion_s)+'</td></tr>';
+      filas+='<tr><td>'+hhmm(x.inicio)+'</td><td>'+hhmm(x.fin)+'</td><td>'+(ul?'<span class="ul">'+ul.local+' '+(ul.nombre||'')+(ul.nro?' · Doc. '+ul.nro:'')+'</span><br>':'')+await lugarG(x.lat_ini,x.lon_ini)+'</td><td>'+durTxt(x.duracion_s)+'</td></tr>';
     }
     const uv=vj[vj.length-1], ruta=uv&&uv.en_curso;
     filas+=ruta?'<tr><td>—</td><td>—</td><td><b>🚚 En ruta</b> · posición a las '+hhmm(fin)+': '+await lugar(uv.lat_fin,uv.lon_fin)+'</td><td></td></tr>'
@@ -569,8 +575,9 @@ async function cargarGPS(){
       al.push('Excesos de velocidad (más de 90 km/h): '+exc.length+'<br>Último: '+Math.round(z.vel_max)+' km/h · tramo de '+hhmm(z.inicio)+' a '+hhmm(z.fin)+' · '+await lugar(z.lat_fin,z.lon_fin));}
     const jor=ini&&fin?(new Date(fin)-new Date(ini))/1000:0; if(jor>12*3600)al.push('Jornada de '+durTxt(jor));
     paradas.filter(x=>x.duracion_s>3600).forEach(x=>al.push('Espera de '+durTxt(x.duracion_s)+' desde las '+hhmm(x.inicio)));
-    html+='<div class="gps"><div class="t">'+p+' · '+dia.split('-').reverse().join('-')+'</div>'+
-      (sv.length?sv.map(s=>'<div class="m">'+SVC_VER(s._n.servicio_sistema)+' · '+s.conductor+((s._n.guias||[]).length?' · Guías '+s._n.guias.join(' - '):'')+(s._n.factura_salida?' · Factura '+s._n.factura_salida:'')+(s._n.peoneta?' + '+s._n.peoneta:'')+'</div>').join(''):'<div class="m">Sin servicio registrado en Kaptura</div>')+
+    const geoTxt=ge.map(x=>{const g=enGeo(x.lat_ini,x.lon_ini);return '<div class="m">🟢 Entró a '+g.nombre+' '+hhmm(x.inicio)+(x.fin?' · 🔴 Salió '+hhmm(x.fin)+' ('+durTxt(x.duracion_s)+' en planta)':' · 🟡 En planta')+'</div>'}).join('');
+    html+='<div class="gps"><div class="t">'+p+' · '+dia.split('-').reverse().join('-')+'</div>'+geoTxt+
+      (sv.length?sv.map(s=>'<div class="m">'+SVC_VER(s._n.servicio_sistema)+' · '+s.conductor+((s._n.guias||[]).length?' · Guías '+s._n.guias.join(' - '):'')+(s._n.factura_salida?' · Factura '+s._n.factura_salida:'')+(s._n.peoneta?' + '+s._n.peoneta:'')+'</div>').join(''):'<div class="m">'+(ge.length?'Servicio en curso (detectado al entrar a planta)':'Sin servicio registrado en Kaptura')+'</div>')+
       '<table><tr><th>Llega</th><th>Sale</th><th>Lugar</th><th>Espera</th></tr>'+filas+'</table>'+
       '<div class="kpi"><div>Km<b>'+Math.round(km)+'</b></div><div>Jornada<b>'+durTxt(jor)+'</b></div><div>Conducción<b>'+durTxt(cond)+'</b></div><div>Esperas<b>'+durTxt(esp)+'</b></div>'+(esCliente()?'':'<div>Vel. máx.<b>'+Math.round(vmax)+' km/h</b></div><div>Tramos<b>'+vj.length+'</b></div>')+'</div>'+
       (!esCliente()&&al.length?'<div class="al">⚠ '+al.join('<br>⚠ ')+'</div>':'')+'</div>';
