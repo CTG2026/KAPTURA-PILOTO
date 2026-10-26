@@ -577,7 +577,7 @@ async function cargarGPS(){
     paradas.filter(x=>x.duracion_s>3600).forEach(x=>al.push('Espera de '+durTxt(x.duracion_s)+' desde las '+hhmm(x.inicio)));
     const geoTxt=ge.map(x=>{const g=enGeo(x.lat_ini,x.lon_ini);return '<div class="m">🟢 Entró a '+g.nombre+' '+hhmm(x.inicio)+(x.fin?' · 🔴 Salió '+hhmm(x.fin)+' ('+durTxt(x.duracion_s)+' en planta)':' · 🟡 En planta')+'</div>'}).join('');
     html+='<div class="gps"><div class="t">'+p+' · '+dia.split('-').reverse().join('-')+'</div>'+geoTxt+
-      (sv.length?sv.map(s=>'<div class="m">'+SVC_VER(s._n.servicio_sistema)+' · '+s.conductor+((s._n.guias||[]).length?' · Guías '+s._n.guias.join(' - '):'')+(s._n.factura_salida?' · Factura '+s._n.factura_salida:'')+(s._n.peoneta?' + '+s._n.peoneta:'')+'</div>').join(''):'<div class="m">'+(ge.length?'Servicio en curso (detectado al entrar a planta)':'Sin servicio registrado en Kaptura')+'</div>')+
+      (sv.length?sv.map(s=>'<div class="m">'+SVC_VER(s._n.servicio_sistema)+' · '+s.conductor+((s._n.guias||[]).length?' · Guías '+s._n.guias.join(' - '):'')+(s._n.factura_salida?' · Factura '+s._n.factura_salida:'')+(s._n.peoneta?' + '+s._n.peoneta:'')+'</div>').join(''):'<div class="m">'+(ge.length?'Servicio en curso':'Sin servicio registrado en Kaptura')+'</div>')+
       '<table><tr><th>Llega</th><th>Sale</th><th>Lugar</th><th>Espera</th></tr>'+filas+'</table>'+
       '<div class="kpi"><div>Km<b>'+Math.round(km)+'</b></div><div>Jornada<b>'+durTxt(jor)+'</b></div><div>Conducción<b>'+durTxt(cond)+'</b></div><div>Esperas<b>'+durTxt(esp)+'</b></div>'+(esCliente()?'':'<div>Vel. máx.<b>'+Math.round(vmax)+' km/h</b></div><div>Tramos<b>'+vj.length+'</b></div>')+'</div>'+
       (!esCliente()&&al.length?'<div class="al">⚠ '+al.join('<br>⚠ ')+'</div>':'')+'</div>';
