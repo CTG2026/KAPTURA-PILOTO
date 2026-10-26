@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <meta name="theme-color" content="#0E0E0E">
-<title>KAPTURA · Registro TM</title>
+<title>KAPTURA · Transportes Madrid</title>
 <link rel="manifest" href="manifest-tm.webmanifest">
 <link rel="icon" type="image/png" sizes="192x192" href="kaptura-icon-192.png">
 <link rel="apple-touch-icon" sizes="180x180" href="kaptura-icon-180.png">
@@ -67,7 +67,7 @@ input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--bor
 </style>
 </head>
 <body>
-<div class="hdr"><div class="brand">KAPTURA · TM</div><button class="link" id="btn-salir" style="display:none" onclick="salir()">Salir</button></div>
+<div class="hdr"><div class="brand">KAPTURA · TRANSPORTES MADRID</div><button class="link" id="btn-salir" style="display:none" onclick="salir()">Salir</button></div>
 <div class="pend" id="pend"></div>
 
 <!-- 1. PIN -->
@@ -142,7 +142,7 @@ input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--bor
 
 <!-- 5. VER REGISTROS (admin / coordinador) -->
 <section class="screen" id="s-list">
-  <h1 id="list-h">Registros TM</h1>
+  <h1 id="list-h">Registros Transportes Madrid</h1>
   <div class="seg" id="seg"><button data-r="hoy">Hoy</button><button data-r="7" class="sel">7 días</button><button data-r="mes">Mes</button></div>
   <div class="sub" id="list-sub">Cargando…</div>
   <button class="big" id="btn-xls" onclick="descargarExcel()" disabled>⬇ Descargar Excel</button>
@@ -447,7 +447,7 @@ document.querySelectorAll('#seg button').forEach(b=>b.onclick=()=>{rango=b.datas
 function desde(){const d=new Date();if(rango==='hoy')return hoyISO(d);if(rango==='mes')return hoyISO(new Date(d.getFullYear(),d.getMonth(),1));d.setDate(d.getDate()-6);return hoyISO(d)}
 function parseNotas(n){try{return JSON.parse(n||'{}')}catch(e){return{observacion:n}}}
 async function verRegistros(){
-  ir('s-list'); $('lista').innerHTML=''; $('btn-xls').disabled=true; $('btn-xls').style.display=esAdmin()?'block':'none'; $('list-h').textContent=esAdmin()?'Registros TM':esCliente()?'Servicios '+user.cliente:'Mis registros';
+  ir('s-list'); $('lista').innerHTML=''; $('btn-xls').disabled=true; $('btn-xls').style.display=esAdmin()?'block':'none'; $('list-h').textContent=esAdmin()?'Registros Transportes Madrid':esCliente()?'Servicios '+user.cliente:'Mis registros';
   const pend=await cola();
   if(!supa){$('list-sub').textContent='Sin conexión con la base de datos.'+(pend.length?' '+pend.length+' registro(s) en este celular esperando señal.':'');return}
   $('list-sub').textContent='Cargando…';
