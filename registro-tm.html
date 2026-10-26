@@ -84,7 +84,7 @@ input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--bor
   <h1 id="saludo">Hola</h1>
   <div class="sub" id="sub-equipo"></div>
   <button class="big" id="btn-reg" onclick="nuevoRegistro()">📷 REGISTRAR SERVICIO</button>
-  <button class="btn2" id="btn-ver" style="display:none" onclick="verRegistros()">📋 Ver registros y descargar Excel</button>
+  <button class="btn2" id="btn-ver" style="display:none" onclick="abrirRegistros()">📋 Ver registros y descargar Excel</button>
   <button class="btn2" id="btn-gps" style="display:none" onclick="verGPS()">🛰 Reporte GPS del día</button>
   <button class="btn2" id="btn-prof" style="display:none" onclick="verProforma()">🧾 Proforma EBLOOMS</button>
 </section>
@@ -143,7 +143,7 @@ input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--bor
 <!-- 5. VER REGISTROS (admin / coordinador) -->
 <section class="screen" id="s-list">
   <h1 id="list-h">Registros Transportes Madrid</h1>
-  <div class="seg" id="seg"><button data-r="hoy">Hoy</button><button data-r="7" class="sel">7 días</button><button data-r="mes">Mes</button></div>
+  <div class="seg" id="seg"><button data-r="hoy" class="sel">Hoy</button><button data-r="7">7 días</button><button data-r="mes">Mes</button></div>
   <div class="sub" id="list-sub">Cargando…</div>
   <button class="big" id="btn-xls" onclick="descargarExcel()" disabled>⬇ Descargar Excel</button>
   <div style="height:14px"></div>
@@ -442,7 +442,8 @@ function avisarWhatsApp(){
 const SVC_VER=t=>String(t||'').replace(/\s*\(Temporada (Baja|Alta)\)/i,'');
 function esAdmin(){return user&&(user.rol==='administrador'||user.rol==='coordinador')}
 function esCliente(){return user&&user.rol==='cliente'}
-let rango='7', filas=[];
+let rango='hoy', filas=[];
+function abrirRegistros(){rango='hoy';document.querySelectorAll('#seg button').forEach(x=>x.classList.toggle('sel',x.dataset.r==='hoy'));verRegistros()}
 document.querySelectorAll('#seg button').forEach(b=>b.onclick=()=>{rango=b.dataset.r;document.querySelectorAll('#seg button').forEach(x=>x.classList.toggle('sel',x===b));verRegistros()});
 function desde(){const d=new Date();if(rango==='hoy')return hoyISO(d);if(rango==='mes')return hoyISO(new Date(d.getFullYear(),d.getMonth(),1));d.setDate(d.getDate()-6);return hoyISO(d)}
 function parseNotas(n){try{return JSON.parse(n||'{}')}catch(e){return{observacion:n}}}
