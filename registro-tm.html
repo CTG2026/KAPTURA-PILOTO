@@ -528,8 +528,9 @@ async function lugar(lat,lon){
 function diaRango(dia){const ini=new Date(dia+'T00:00:00-03:00');return [ini.toISOString(),new Date(ini.getTime()+86400000).toISOString()]}
 async function verGPS(){
   ir('s-gps'); const inp=$('gps-dia');
-  if(!inp.value){const d=new Date();d.setDate(d.getDate()-1);inp.value=hoyISO(d);inp.onchange=cargarGPS}
+  if(!inp.value){inp.value=hoyISO();inp.onchange=cargarGPS}
   cargarGPS();
+  clearInterval(window._gpsT);window._gpsT=setInterval(()=>{if($('s-gps').classList.contains('on')&&!document.hidden&&$('gps-dia').value===hoyISO())cargarGPS()},180000);
 }
 async function cargarGPS(){
   const dia=$('gps-dia').value; $('gps-lista').innerHTML=''; $('gps-sub').textContent='Cargando…';
