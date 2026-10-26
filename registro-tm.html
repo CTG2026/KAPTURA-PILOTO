@@ -472,7 +472,7 @@ function avisoCliente(i){
   const pat=String(r.patente||'').replace(/-\d$/,'');
   const uls=(n.unidades_logisticas||[]).slice().sort((a,b)=>(a.hora||'').localeCompare(b.hora||''));
   const tot={};uls.forEach(u=>(u.items||[]).forEach(it=>{const k=/pallet/i.test(it.desc)?'pallets':'cajas';tot[k]=(tot[k]||0)+(+it.cant||0)}));
-  const L=['🟡 *KAPTURA · Transportes Madrid*','_Notificación automática de servicio_','━━━━━━━━━━━━━━━━━━','✅ *SERVICIO COMPLETADO*',
+  const L=['🟤 *KAPTURA · Transportes Madrid*','_Notificación automática de servicio_','━━━━━━━━━━━━━━━━━━','✅ *SERVICIO COMPLETADO*',
     '📅 '+r.fecha.split('-').reverse().join('-')+' · '+SVC_VER(n.servicio_sistema),
     '🚚 '+pat+' · Conductor: '+r.conductor.split(' ').slice(0,2).join(' ')+(n.peoneta?' · Peoneta: '+n.peoneta:'')];
   if(n.factura_salida)L.push('🧾 Factura de salida: '+n.factura_salida);
