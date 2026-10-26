@@ -541,7 +541,11 @@ async function cargarGPS(){
   if(esCliente())q=q.eq('cliente',user.cliente);
   const {data:svs}=await q; const servs=(svs||[]).map(r=>({...r,_n:parseNotas(r.notas)}));
   const pats=[...new Set((ev||[]).map(e=>e.patente))].filter(p=>!esCliente()||servs.some(s=>PAT_GPS(s.patente)===PAT_GPS(p)));
-  if(!pats.length){$('gps-sub').textContent='Sin viajes GPS para '+dia.split('-').reverse().join('-')+'.';return}
+  let ult='';
+  try{const {data:u}=await supa.from('gps_viajes').select('*').order('inicio',{ascending:false}).limit(1);
+    if(u&&u[0]){const x=u[0],fd=t=>new Date(t).toLocaleString('es-CL',{timeZone:'America/Santiago',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+      ult='Último dato GPS: '+fd(x.actualizado)+(esCliente()?'':' · '+x.patente+(x.tipo==='parada'&&!x.fin?' detenido desde '+fd(x.inicio)+' en '+await lugar(x.lat_ini,x.lon_ini):' en movimiento desde '+fd(x.inicio)));}}catch(e){}
+  if(!pats.length){$('gps-sub').innerHTML='Sin viajes GPS para '+dia.split('-').reverse().join('-')+'.'+(ult?'<br>'+ult:'');return}
   $('gps-sub').textContent=pats.length+' camión(es) con GPS · leyendo direcciones…';
   let html='';
   for(const p of pats){
@@ -567,7 +571,7 @@ async function cargarGPS(){
       (!esCliente()&&al.length?'<div class="al">⚠ '+al.join('<br>⚠ ')+'</div>':'')+'</div>';
     $('gps-lista').innerHTML=html;
   }
-  $('gps-sub').textContent=pats.length+' camión(es) con GPS';
+  $('gps-sub').innerHTML=pats.length+' camión(es) con GPS'+(ult?'<br>'+ult:'');
 }
 
 // ═══ PROFORMA EBLOOMS ═══
