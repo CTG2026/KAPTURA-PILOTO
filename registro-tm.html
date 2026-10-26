@@ -85,7 +85,7 @@ input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--bor
   <div class="sub" id="sub-equipo"></div>
   <button class="big" id="btn-reg" onclick="nuevoRegistro()">📷 REGISTRAR SERVICIO</button>
   <button class="btn2" id="btn-ver" style="display:none" onclick="abrirRegistros()">📋 Ver registros y descargar Excel</button>
-  <button class="btn2" id="btn-gps" style="display:none" onclick="verGPS()">🛰 Reporte GPS del día</button>
+  <button class="btn2" id="btn-gps" style="display:none" onclick="gpsPat=null;gpsVolver='s-home';$('gps-dia').value='';verGPS()">🛰 Reporte GPS del día</button>
   <button class="btn2" id="btn-prof" style="display:none" onclick="verProforma()">🧾 Proforma EBLOOMS</button>
 </section>
 
@@ -157,7 +157,7 @@ input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--bor
   <input type="date" id="gps-dia" style="width:100%;font-size:18px;padding:10px;border-radius:10px;border:2px solid var(--border);background:var(--surface);color:var(--text);margin-bottom:12px">
   <div class="sub" id="gps-sub">Cargando…</div>
   <div id="gps-lista"></div>
-  <button class="btn2" onclick="ir('s-home')">← Volver</button>
+  <button class="btn2" onclick="ir(gpsVolver)">← Volver</button>
 </section>
 
 <!-- 7. PROFORMA EBLOOMS -->
@@ -464,7 +464,7 @@ async function verRegistros(){
     return '<div class="reg" data-i="'+i+'">'+(esAdmin()?'<button class="del" onclick="pedirBorrar('+i+')">✕</button>':'')+'<div class="t">'+r.fecha.split('-').reverse().join('-')+' · '+SVC_VER(n.servicio_sistema||((r.origen||'')+' → '+(r.destino||'')))+'</div>'+
     '<div>'+r.conductor+(n.peoneta?' + '+n.peoneta:'')+' · '+r.patente+(n.acoplado?' / '+n.acoplado:'')+'</div>'+((n.guias||[]).length?'<div><b>Guías: '+n.guias.join(' - ')+'</b></div>':'')+(n.factura_salida?'<div><b>Factura salida: '+n.factura_salida+'</b></div>':'')+
     (ex&&!esCliente()?'<div class="m">Extras: '+ex+'</div>':'')+(n.observacion&&!esCliente()?'<div class="m">Obs.: '+n.observacion+'</div>':'')+
-    (n.unidades_logisticas||[]).map(u=>'<div class="m"><span class="ul">'+u.local+' '+(u.nombre||'')+'</span> · '+(u.hora||'')+(u.nro?' · Doc. '+u.nro:'')+' · '+(u.items||[]).map(i=>i.cant+' '+i.desc.toLowerCase()).join(', ')+'</div>').join('')+(n.carga_manual?'<div class="m">Carga manual ('+n.carga_manual+')</div>':'')+(user&&user.rol==='administrador'?'<button class="btn2" style="margin-top:8px;padding:10px;font-size:14px" onclick="avisoCliente('+i+')">📤 Enviar aviso al cliente</button>':'')+'<div class="fx">'+(n.fotos||[]).concat((n.unidades_logisticas||[]).map(u=>u.foto).filter(Boolean)).map(u=>'<a href="'+u+'" target="_blank"><img src="'+u+'"></a>').join('')+'</div></div>'}).join('');
+    (n.unidades_logisticas||[]).map(u=>'<div class="m"><span class="ul">'+u.local+' '+(u.nombre||'')+'</span> · '+(u.hora||'')+(u.nro?' · Doc. '+u.nro:'')+' · '+(u.items||[]).map(i=>i.cant+' '+i.desc.toLowerCase()).join(', ')+'</div>').join('')+(n.carga_manual?'<div class="m">Carga manual ('+n.carga_manual+')</div>':'')+'<button class="btn2" style="margin-top:8px;padding:10px;font-size:14px" onclick="gpsServicio('+i+')">🛰 Ver recorrido GPS</button>'+(user&&user.rol==='administrador'?'<button class="btn2" style="margin-top:8px;padding:10px;font-size:14px" onclick="avisoCliente('+i+')">📤 Enviar aviso al cliente</button>':'')+'<div class="fx">'+(n.fotos||[]).concat((n.unidades_logisticas||[]).map(u=>u.foto).filter(Boolean)).map(u=>'<a href="'+u+'" target="_blank"><img src="'+u+'"></a>').join('')+'</div></div>'}).join('');
 }
 function fmt(n){return Number(n||0).toLocaleString('es-CL')}
 function avisoCliente(i){
@@ -538,6 +538,8 @@ const GEOCERCAS=[{nombre:'Planta EBLOOMS',cliente:'EBLOOMS',tipo:'planta',lat:-3
 const enGeo=(lat,lon)=>lat==null?null:GEOCERCAS.find(g=>Math.hypot((lat-g.lat)*111320,(lon-g.lon)*111320*Math.cos(g.lat*Math.PI/180))<=g.radio)||null;
 async function lugarG(lat,lon){const g=enGeo(lat,lon);return g?g.nombre:await lugar(lat,lon)}
 function diaRango(dia){const ini=new Date(dia+'T00:00:00-03:00');return [ini.toISOString(),new Date(ini.getTime()+86400000).toISOString()]}
+let gpsPat=null, gpsVolver='s-home';
+function gpsServicio(i){const r=filas[i];if(!r)return;gpsPat=PAT_GPS(r.patente);gpsVolver='s-list';$('gps-dia').value=r.fecha;$('gps-dia').onchange=cargarGPS;verGPS()}
 async function verGPS(){
   ir('s-gps'); const inp=$('gps-dia');
   if(!inp.value){inp.value=hoyISO();inp.onchange=cargarGPS}
@@ -554,7 +556,7 @@ async function cargarGPS(){
   if(esCliente())q=q.eq('cliente',user.cliente);
   const {data:svs}=await q; const servs=(svs||[]).map(r=>({...r,_n:parseNotas(r.notas)}));
   const geoE=(p)=>(ev||[]).filter(x=>{const g=x.patente===p&&x.tipo==='parada'&&enGeo(x.lat_ini,x.lon_ini);return g&&g.tipo==='planta'&&(!esCliente()||g.cliente===user.cliente)});
-  const pats=[...new Set((ev||[]).map(e=>e.patente))].filter(p=>!esCliente()||servs.some(s=>PAT_GPS(s.patente)===PAT_GPS(p))||geoE(p).length);
+  const pats=[...new Set((ev||[]).map(e=>e.patente))].filter(p=>!gpsPat||PAT_GPS(p)===gpsPat).filter(p=>!esCliente()||servs.some(s=>PAT_GPS(s.patente)===PAT_GPS(p))||geoE(p).length);
   let ult='';
   try{const {data:u}=await supa.from('gps_viajes').select('*').order('inicio',{ascending:false}).limit(1);
     if(u&&u[0]){const x=u[0],fd=t=>new Date(t).toLocaleString('es-CL',{timeZone:'America/Santiago',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
