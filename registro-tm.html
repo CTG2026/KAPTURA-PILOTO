@@ -106,6 +106,7 @@ input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--bor
       <select id="patente"></select>
       <select id="acoplado"></select>
     </div>
+    <div id="peo-box" style="display:none;margin-top:8px"><select id="peoneta" style="width:100%"></select></div>
   </div>
   <div class="card">
     <div class="lbl">4 · Extras (si hubo)</div>
@@ -179,6 +180,8 @@ const SERVICIOS=[
   {txt:'Otro (escribir en observación)',servicio:'SPOT – viaje puntual (escriba la tarifa en Servicios reales)',cliente:'',origen:'',destino:'',tarifa:0}
 ];
 const PATENTES=['DSBZ64','ZV7780','CWVH32-9','DZZW14','XJ3908'];
+// peonetas por patente (afurgonados)
+const PEONETAS={'CWVH32-9':['Marcelo González']};
 const ACOPLADOS=['','JN4847','JB6234'];
 const EXTRAS=[{id:'trasp',txt:'Traspaleteo'},{id:'trasv',txt:'Trasvasije'},{id:'retorno',txt:'Retorno'},{id:'espera',txt:'Espera'},{id:'peaje',txt:'Peaje efectivo'},{id:'reemp',txt:'Acoplado reemplazo'}];
 
@@ -297,7 +300,14 @@ function pintarServicios(){
 function pintarEquipo(){
   $('patente').innerHTML='<option value="" selected>Elige patente</option>'+PATENTES.map(x=>'<option>'+x+'</option>').join('');
   $('acoplado').innerHTML='<option value="?" selected>Elige acoplado</option>'+ACOPLADOS.map(x=>'<option value="'+x+'">'+(x||'Sin acoplado')+'</option>').join('');
+  pintarPeoneta();
 }
+function pintarPeoneta(){
+  const lista=PEONETAS[$('patente').value]||[];
+  $('peo-box').style.display=lista.length?'block':'none';
+  $('peoneta').innerHTML='<option value="?" selected>Elige peoneta</option>'+lista.map(x=>'<option>'+x+'</option>').join('')+'<option value="">Sin peoneta</option>';
+}
+$('patente').addEventListener('change',pintarPeoneta);
 function pintarExtras(){
   const c=$('chips');c.innerHTML='';
   EXTRAS.forEach(x=>{ if(x.id==='retorno'&&!(svcSel&&svcSel.retorno)){extrasSel.delete('retorno');return}
@@ -335,6 +345,7 @@ async function guardar(){
   if(sinNum>=0){err.textContent='Falta el N° de guía en la foto '+(sinNum+1)+': tome una nueva foto o ingrese el número';return}
   if(!svcSel){err.textContent='Elige el servicio';return}
   if(!$('patente').value){err.textContent='Elige la patente del camión';return}
+  if($('peo-box').style.display!=='none'&&$('peoneta').value==='?'){err.textContent='Elige el peoneta (o "Sin peoneta")';return}
   if($('acoplado').value==='?'){err.textContent='Elige el acoplado (o "Sin acoplado")';return}
   const ex=leerExtras();
   if(ex.traspaleteo&&!ex.traspaleteo.pallets){err.textContent='Indica los pallets del traspaleteo';return}
@@ -346,7 +357,7 @@ async function guardar(){
     servicio_id:id, patente:$('patente').value, conductor:user.nombre, cliente:svcSel.cliente||null,
     origen:svcSel.origen||null, destino:svcSel.destino||null, fecha:hoyISO(ahora), estado:'registrado',
     empresa:EMPRESA, modo:'registro_tm', tarifa_neta:svcSel.tarifa||null,
-    notas:JSON.stringify({servicio_sistema:svcSel.servicio, acoplado:$('acoplado').value||null, extras:ex, observacion:$('obs').value.trim()||null, guias:fotos.map(f=>f.num), pin:user.pin, registrado:ahora.toISOString(), fotos:[]})
+    notas:JSON.stringify({servicio_sistema:svcSel.servicio, acoplado:$('acoplado').value||null, peoneta:($('peo-box').style.display!=='none'&&$('peoneta').value)||null, extras:ex, observacion:$('obs').value.trim()||null, guias:fotos.map(f=>f.num), pin:user.pin, registrado:ahora.toISOString(), fotos:[]})
   };
   const freq=JSON.parse(ls('tm_freq_'+user.pin)||'{}');freq[svcSel.servicio]=(freq[svcSel.servicio]||0)+1;ls('tm_freq_'+user.pin,JSON.stringify(freq));
   ultimo={reg,ex,svc:svcSel,nfotos:fotos.length,ahora};
@@ -397,7 +408,7 @@ function avisarWhatsApp(){
   if(!ultimo)return;
   const {reg,ex,svc,nfotos,ahora}=ultimo, notas=JSON.parse(reg.notas);
   const f=String(ahora.getDate()).padStart(2,'0')+'-'+String(ahora.getMonth()+1).padStart(2,'0')+'-'+ahora.getFullYear()+' '+String(ahora.getHours()).padStart(2,'0')+':'+String(ahora.getMinutes()).padStart(2,'0');
-  const l=['✅ SERVICIO REGISTRADO','Conductor: '+reg.conductor,'Fecha: '+f,'Servicio: '+svc.txt,'Equipo: '+reg.patente+(notas.acoplado?' / '+notas.acoplado:''),'Guías: '+((notas.guias||[]).join(' - ')||nfotos+' foto'+(nfotos===1?'':'s'))];
+  const l=['✅ SERVICIO REGISTRADO','Conductor: '+reg.conductor,'Fecha: '+f,'Servicio: '+svc.txt,'Equipo: '+reg.patente+(notas.acoplado?' / '+notas.acoplado:'')+(notas.peoneta?' · Peoneta: '+notas.peoneta:''),'Guías: '+((notas.guias||[]).join(' - ')||nfotos+' foto'+(nfotos===1?'':'s'))];
   const t=textoExtras(ex); if(t)l.push('Extras: '+t);
   if(notas.observacion)l.push('Obs.: '+notas.observacion);
   window.location.href='https://wa.me/?text='+encodeURIComponent(l.join('\n'));
@@ -425,7 +436,7 @@ async function verRegistros(){
   $('btn-xls').disabled=!filas.length;
   $('lista').innerHTML=filas.map((r,i)=>{const n=r._n,ex=textoExtras(n.extras||{});
     return '<div class="reg" data-i="'+i+'">'+(esAdmin()?'<button class="del" onclick="pedirBorrar('+i+')">✕</button>':'')+'<div class="t">'+r.fecha.split('-').reverse().join('-')+' · '+(n.servicio_sistema||((r.origen||'')+' → '+(r.destino||'')))+'</div>'+
-    '<div>'+r.conductor+' · '+r.patente+(n.acoplado?' / '+n.acoplado:'')+'</div>'+((n.guias||[]).length?'<div><b>Guías: '+n.guias.join(' - ')+'</b></div>':'')+
+    '<div>'+r.conductor+(n.peoneta?' + '+n.peoneta:'')+' · '+r.patente+(n.acoplado?' / '+n.acoplado:'')+'</div>'+((n.guias||[]).length?'<div><b>Guías: '+n.guias.join(' - ')+'</b></div>':'')+
     (ex&&!esCliente()?'<div class="m">Extras: '+ex+'</div>':'')+(n.observacion&&!esCliente()?'<div class="m">Obs.: '+n.observacion+'</div>':'')+
     '<div class="fx">'+(n.fotos||[]).map(u=>'<a href="'+u+'" target="_blank"><img src="'+u+'"></a>').join('')+'</div></div>'}).join('');
 }
@@ -451,7 +462,7 @@ function descargarExcel(){
     const acop=e.acoplado_reemplazo||n.acoplado||'';
     const obs=[n.observacion,e.trasvasije?'Trasvasije $'+fmt(e.trasvasije.monto_pagado||0):null,e.espera?'Espera '+e.espera.horas+' h':null,e.peaje_efectivo?'Peaje efectivo $'+fmt(e.peaje_efectivo.monto||0):null,e.acoplado_reemplazo?'Acoplado de reemplazo '+e.acoplado_reemplazo+' (costo por confirmar)':null,e.traspaleteo?'Traspaleteo pagado $'+fmt(e.traspaleteo.monto_pagado||0):null,'Registro Kaptura'].filter(Boolean).join(' · ');
     const [y,m,d]=r.fecha.split('-').map(Number);
-    return [(Date.UTC(y,m-1,d)-Date.UTC(1899,11,30))/86400000,r.patente,acop,sv,r.conductor,'',(n.guias||[]).join(' - '),'',e.espera?'Sí':'',e.retorno?(esSuper?'Retorno supermercado':'Sí'):(esSuper?'No':''),'',obs,e.traspaleteo?e.traspaleteo.pallets:'',(n.fotos||[]).join(' '),r.servicio_id,n.registrado?new Date(n.registrado).toLocaleString('es-CL'):''];});
+    return [(Date.UTC(y,m-1,d)-Date.UTC(1899,11,30))/86400000,r.patente,acop,sv,r.conductor,n.peoneta?n.peoneta+' (peoneta)':'',(n.guias||[]).join(' - '),'',e.espera?'Sí':'',e.retorno?(esSuper?'Retorno supermercado':'Sí'):(esSuper?'No':''),'',obs,e.traspaleteo?e.traspaleteo.pallets:'',(n.fotos||[]).join(' '),r.servicio_id,n.registrado?new Date(n.registrado).toLocaleString('es-CL'):''];});
   const ws=XLSX.utils.aoa_to_sheet([head,...rows]);
   ws['!cols']=[{wch:11},{wch:12},{wch:12},{wch:48},{wch:26},{wch:10},{wch:10},{wch:10},{wch:8},{wch:20},{wch:12},{wch:60},{wch:10},{wch:40},{wch:28},{wch:20}];
   for(let i=2;i<=rows.length+1;i++){const c=ws['A'+i];if(c){c.t='n';c.z='dd-mm-yyyy'}}
