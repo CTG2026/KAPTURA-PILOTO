@@ -561,7 +561,9 @@ async function cargarGPS(){
       const ul=uls.find(u=>{if(!u.hora)return false;const t=new Date(dia+'T'+u.hora+':00-03:00');return t>=new Date(x.inicio)-600000&&t<=new Date(x.fin||x.inicio).getTime()+600000});
       filas+='<tr><td>'+hhmm(x.inicio)+'</td><td>'+hhmm(x.fin)+'</td><td>'+(ul?'<span class="ul">'+ul.local+' '+(ul.nombre||'')+(ul.nro?' · Doc. '+ul.nro:'')+'</span><br>':'')+await lugar(x.lat_ini,x.lon_ini)+'</td><td>'+durTxt(x.duracion_s)+'</td></tr>';
     }
-    filas+='<tr><td>'+hhmm(fin)+'</td><td>—</td><td>Fin: '+(vj.length?await lugar(vj[vj.length-1].lat_fin,vj[vj.length-1].lon_fin):'—')+'</td><td></td></tr>';
+    const uv=vj[vj.length-1], ruta=uv&&uv.en_curso;
+    filas+=ruta?'<tr><td>—</td><td>—</td><td><b>🚚 En ruta</b> · posición a las '+hhmm(fin)+': '+await lugar(uv.lat_fin,uv.lon_fin)+'</td><td></td></tr>'
+      :'<tr><td>'+hhmm(fin)+'</td><td>—</td><td>Fin: '+(vj.length?await lugar(uv.lat_fin,uv.lon_fin):'—')+'</td><td></td></tr>';
     const al=[]; if(vmax>90)al.push('Exceso de velocidad: '+Math.round(vmax)+' km/h');
     const jor=ini&&fin?(new Date(fin)-new Date(ini))/1000:0; if(jor>12*3600)al.push('Jornada de '+durTxt(jor));
     paradas.filter(x=>x.duracion_s>3600).forEach(x=>al.push('Espera de '+durTxt(x.duracion_s)+' desde las '+hhmm(x.inicio)));
