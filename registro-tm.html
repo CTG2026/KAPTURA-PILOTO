@@ -572,7 +572,9 @@ async function cargarGPS(){
     const s0=vj[0]?e.find(x=>x.tipo==='parada'&&x.fin&&Math.abs(new Date(x.fin)-new Date(vj[0].inicio))<180000&&(enGeo(x.lat_ini,x.lon_ini)||{}).tipo==='planta'):null;
     let filas=s0?'<tr><td>'+hhmm(s0.inicio)+'</td><td>'+hhmm(s0.fin)+'</td><td>'+enGeo(s0.lat_ini,s0.lon_ini).nombre+'</td><td>'+durTxt(s0.duracion_s)+'</td></tr>'
       :'<tr><td>—</td><td>'+hhmm(ini)+'</td><td>Salida: '+(vj[0]?await lugarG(vj[0].lat_ini,vj[0].lon_ini):'—')+'</td><td></td></tr>';
-    for(const x of paradas){
+    const pm=[];for(const x of paradas){const g=enGeo(x.lat_ini,x.lon_ini),u=pm[pm.length-1];
+      if(g&&u&&u._g===g){u.fin=x.fin;u.duracion_s=(new Date(x.fin||x.inicio)-new Date(u.inicio))/1000}else pm.push({...x,_g:g})}
+    for(const x of pm){
       const ul=uls.find(u=>{if(!u.hora)return false;const t=new Date(dia+'T'+u.hora+':00-03:00');return t>=new Date(x.inicio)-600000&&t<=new Date(x.fin||x.inicio).getTime()+600000});
       filas+='<tr><td>'+hhmm(x.inicio)+'</td><td>'+hhmm(x.fin)+'</td><td>'+(ul?'<span class="ul">'+ul.local+' '+(ul.nombre||'')+(ul.nro?' · Doc. '+ul.nro:'')+'</span><br>':'')+await lugarG(x.lat_ini,x.lon_ini)+'</td><td>'+durTxt(x.duracion_s)+'</td></tr>';
     }
