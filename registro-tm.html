@@ -83,6 +83,8 @@ input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--bor
 <section class="screen" id="s-home">
   <h1 id="saludo">Hola</h1>
   <div class="sub" id="sub-equipo"></div>
+  <button class="big" id="btn-ent" style="display:none;background:#1f7a3a;color:#fff;margin-bottom:12px" onclick="entregue()">📦 ENTREGUÉ AQUÍ</button>
+  <input type="file" id="cam-ent" accept="image/*" capture="environment" style="display:none" onchange="onFotoEnt(this)">
   <button class="big" id="btn-reg" onclick="nuevoRegistro()">📷 REGISTRAR SERVICIO</button>
   <button class="btn2" id="btn-ver" style="display:none" onclick="abrirRegistros()">📋 Ver registros y descargar Excel</button>
   <button class="btn2" id="btn-gps" style="display:none" onclick="gpsPat=null;gpsVolver='s-home';$('gps-dia').value='';verGPS()">🛰 Reporte GPS del día</button>
@@ -152,6 +154,14 @@ input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--bor
 </section>
 
 <!-- 6. REPORTE GPS -->
+<section class="screen" id="s-ent">
+  <h1>Entrega</h1>
+  <div class="card"><img id="ent-img" alt="" style="width:100%;border-radius:12px;max-height:42vh;object-fit:contain">
+    <div id="ent-local" style="font-size:20px;font-weight:800;margin-top:12px">📍 Buscando ubicación…</div></div>
+  <button class="btn2" id="ent-pend" onclick="togglePend()">⏳ Quedó pendiente</button>
+  <button class="big" id="ent-ok" style="margin-top:14px" onclick="guardarEnt(this)">✅ GUARDAR ENTREGA</button>
+  <button class="btn2" onclick="ir('s-home')">Cancelar</button>
+</section>
 <section class="screen" id="s-gps">
   <h1>Reporte GPS</h1>
   <input type="date" id="gps-dia" style="width:100%;font-size:18px;padding:10px;border-radius:10px;border:2px solid var(--border);background:var(--surface);color:var(--text);margin-bottom:12px">
@@ -235,7 +245,7 @@ function entrar(p){
   if(!u){$('pin-err').textContent='PIN no registrado';pin='';setTimeout(pintarPin,600);return}
   user={pin:p,...u}; ls('tm_pin',p);
   $('saludo').textContent='Hola '+u.nombre.split(' ')[0];
-  $('btn-salir').style.display='block'; $('btn-ver').style.display='block';$('btn-ver').textContent=esAdmin()?'📋 Ver registros y descargar Excel':esCliente()?'📋 Ver mis servicios':'📋 Mis registros';$('btn-reg').style.display=esCliente()?'none':'block';const vg=(esAdmin()||esCliente())?'block':'none';$('btn-gps').style.display=vg;$('btn-prof').style.display=vg; ir('s-home'); revisarPendientes();
+  $('btn-salir').style.display='block'; $('btn-ver').style.display='block';$('btn-ver').textContent=esAdmin()?'📋 Ver registros y descargar Excel':esCliente()?'📋 Ver mis servicios':'📋 Mis registros';$('btn-reg').style.display=esCliente()?'none':'block';$('btn-ent').style.display=esCliente()?'none':'block';const vg=(esAdmin()||esCliente())?'block':'none';$('btn-gps').style.display=vg;$('btn-prof').style.display=vg; ir('s-home'); revisarPendientes();
 }
 function salir(){ls('tm_pin',null);user=null;pin='';pintarPin();$('btn-salir').style.display='none';ir('s-pin')}
 
@@ -537,6 +547,40 @@ const GEOCERCAS=[{nombre:'Planta EBLOOMS',cliente:'EBLOOMS',tipo:'planta',lat:-3
   {nombre:'Jumbo Av. Portales (San Bernardo)',cliente:'EBLOOMS',tipo:'local',lat:-33.63430,lon:-70.70900,radio:200}];
 const enGeo=(lat,lon)=>lat==null?null:GEOCERCAS.find(g=>Math.hypot((lat-g.lat)*111320,(lon-g.lon)*111320*Math.cos(g.lat*Math.PI/180))<=g.radio)||null;
 async function lugarG(lat,lon){const g=enGeo(lat,lon);return g?g.nombre:await lugar(lat,lon)}
+// ═══ ENTREGAS (botón del conductor: foto + ubicación del celular) ═══
+let entPos=null, entFoto=null, entPend=false;
+function geoCerca(lat,lon,acc){let best=null,bd=1e9;for(const g of GEOCERCAS){const d=Math.hypot((lat-g.lat)*111320,(lon-g.lon)*111320*Math.cos(g.lat*Math.PI/180));if(d<=g.radio+Math.min(acc||0,150)&&d<bd){bd=d;best=g}}return best}
+function entregue(){
+  entPos=null;entPend=false;
+  if(navigator.geolocation)navigator.geolocation.getCurrentPosition(p=>{entPos=p;pintarEnt()},e=>{entPos={err:1};pintarEnt()},{enableHighAccuracy:true,timeout:20000,maximumAge:60000});
+  else entPos={err:1};
+  $('cam-ent').value='';$('cam-ent').click();
+}
+function onFotoEnt(inp){const f=inp.files&&inp.files[0];if(!f)return;entFoto=f;$('ent-img').src=URL.createObjectURL(f);entPend=false;pintarPend();ir('s-ent');pintarEnt()}
+function togglePend(){entPend=!entPend;pintarPend()}
+function pintarPend(){const b=$('ent-pend');b.textContent=entPend?'⏳ PENDIENTE (tocar para quitar)':'⏳ Quedó pendiente';b.style.background=entPend?'#c77d00':'';b.style.color=entPend?'#fff':''}
+async function pintarEnt(){
+  if(!$('s-ent').classList.contains('on'))return;const el=$('ent-local');
+  if(!entPos){el.textContent='📍 Buscando ubicación…';return}
+  if(entPos.err){el.textContent='📍 Sin ubicación (se guarda igual)';return}
+  const c=entPos.coords,g=geoCerca(c.latitude,c.longitude,c.accuracy);
+  el.textContent='📍 '+(g?g.nombre:await lugar(c.latitude,c.longitude));
+}
+async function guardarEnt(btn){
+  if(!supa||!entFoto)return;btn.disabled=true;btn.textContent='Guardando…';
+  try{
+    const ahora=new Date(),fecha=hoyISO(ahora),hora=String(ahora.getHours()).padStart(2,'0')+':'+String(ahora.getMinutes()).padStart(2,'0');
+    let foto=null;try{const b=await comprimir(entFoto);const path='tm/'+fecha.slice(0,7)+'/ent_'+Date.now()+'_'+user.pin+'.jpg';
+      const up=await supa.storage.from(BUCKET).upload(path,b,{contentType:'image/jpeg',upsert:false});if(!up.error)foto=supa.storage.from(BUCKET).getPublicUrl(path).data.publicUrl}catch(e){}
+    const c=entPos&&entPos.coords,g=c?geoCerca(c.latitude,c.longitude,c.accuracy):null;
+    const local=g?g.nombre:(c?await lugar(c.latitude,c.longitude):'Sin ubicación');
+    const {error}=await supa.from('entregas').insert({empresa:EMPRESA,fecha,hora,conductor:user.nombre,local,cliente:g?g.cliente:null,lat:c?c.latitude:null,lon:c?c.longitude:null,precision_m:c?Math.round(c.accuracy):null,foto,estado:entPend?'pendiente':'entregado'});
+    if(error)throw error;
+    toast((entPend?'⏳ Pendiente: ':'✅ Entrega guardada: ')+local+' '+hora);ir('s-home');
+  }catch(e){toast('No se pudo guardar. Revise la señal e intente de nuevo.')}
+  btn.disabled=false;btn.textContent='✅ GUARDAR ENTREGA';
+}
+const entTxt=e=>(e.estado==='pendiente'?'⏳ Pendiente ':'✅ Entregado ')+e.hora+(e.foto?' <a href="'+e.foto+'" target="_blank">📷</a>':'');
 function diaRango(dia){const ini=new Date(dia+'T00:00:00-03:00');return [ini.toISOString(),new Date(ini.getTime()+86400000).toISOString()]}
 let gpsPat=null, gpsVolver='s-home';
 function gpsServicio(i){const r=filas[i];if(!r)return;gpsPat=PAT_GPS(r.patente);gpsVolver='s-list';$('gps-dia').value=r.fecha;$('gps-dia').onchange=cargarGPS;verGPS()}
@@ -554,6 +598,8 @@ async function cargarGPS(){
   if(error){$('gps-sub').textContent='Error: '+error.message;return}
   let q=supa.from('servicios_piloto').select('*').eq('empresa',EMPRESA).eq('modo','registro_tm').neq('estado','anulado').eq('fecha',dia);
   if(esCliente())q=q.eq('cliente',user.cliente);
+  let ents=[];try{const r=await supa.from('entregas').select('*').eq('empresa',EMPRESA).eq('fecha',dia).order('ts');ents=(r.data||[]).filter(e=>!esCliente()||!e.cliente||e.cliente===user.cliente)}catch(e){}
+  const usadas=new Set();
   const {data:svs}=await q; const servs=(svs||[]).map(r=>({...r,_n:parseNotas(r.notas)}));
   const geoE=(p)=>(ev||[]).filter(x=>{const g=x.patente===p&&x.tipo==='parada'&&enGeo(x.lat_ini,x.lon_ini);return g&&g.tipo==='planta'&&(!esCliente()||g.cliente===user.cliente)});
   const pats=[...new Set((ev||[]).map(e=>e.patente))].filter(p=>!gpsPat||PAT_GPS(p)===gpsPat).filter(p=>!esCliente()||servs.some(s=>PAT_GPS(s.patente)===PAT_GPS(p))||geoE(p).length);
@@ -579,7 +625,8 @@ async function cargarGPS(){
       if(g&&u&&u._g===g&&new Date(x.inicio)-new Date(u.fin||u.inicio)<15*60000){u.fin=x.fin;u.duracion_s=(new Date(x.fin||x.inicio)-new Date(u.inicio))/1000}else pm.push({...x,_g:g})}
     for(const x of pm){
       const ul=uls.find(u=>{if(!u.hora)return false;const t=new Date(dia+'T'+u.hora+':00-03:00');return t>=new Date(x.inicio)-600000&&t<=new Date(x.fin||x.inicio).getTime()+600000});
-      filas+='<tr><td>'+hhmm(x.inicio)+'</td><td>'+hhmm(x.fin)+'</td><td>'+(ul?'<span class="ul">'+ul.local+' '+(ul.nombre||'')+(ul.nro?' · Doc. '+ul.nro:'')+'</span><br>':'')+await lugarG(x.lat_ini,x.lon_ini)+'</td><td>'+durTxt(x.duracion_s)+'</td></tr>';
+      const en=ents.filter(z=>!usadas.has(z.id)&&new Date(z.ts)>=new Date(x.inicio).getTime()-900000&&new Date(z.ts)<=new Date(x.fin||Date.now()).getTime()+900000&&(z.lat==null||Math.hypot((z.lat-x.lat_ini)*111320,(z.lon-x.lon_ini)*92300)<600));en.forEach(z=>usadas.add(z.id));
+      filas+='<tr><td>'+hhmm(x.inicio)+'</td><td>'+hhmm(x.fin)+'</td><td>'+(ul?'<span class="ul">'+ul.local+' '+(ul.nombre||'')+(ul.nro?' · Doc. '+ul.nro:'')+'</span><br>':'')+await lugarG(x.lat_ini,x.lon_ini)+(en.length?'<br>'+en.map(entTxt).join(' · '):'')+'</td><td>'+durTxt(x.duracion_s)+'</td></tr>';
     }
     const uv=vj[vj.length-1], ruta=uv&&uv.en_curso;
     filas+=ruta?'<tr><td>—</td><td>—</td><td><b>🚚 En ruta</b> · posición a las '+hhmm(fin)+': '+await lugarG(uv.lat_fin,uv.lon_fin)+'</td><td></td></tr>'
@@ -592,6 +639,7 @@ async function cargarGPS(){
     const geoTxt=ge.map(x=>{const g=enGeo(x.lat_ini,x.lon_ini);return '<div class="m">🟢 Entró a '+g.nombre+' '+hhmm(x.inicio)+(x.fin?' · 🔴 Salió '+hhmm(x.fin)+' ('+durTxt(x.duracion_s)+' en planta)':' · 🟡 En planta')+'</div>'}).join('');
     html+='<div class="gps"><div class="t">'+p+' · '+dia.split('-').reverse().join('-')+'</div>'+geoTxt+
       (sv.length?sv.map(s=>'<div class="m">'+SVC_VER(s._n.servicio_sistema)+' · '+s.conductor+((s._n.guias||[]).length?' · Guías '+s._n.guias.join(' - '):'')+(s._n.factura_salida?' · Factura '+s._n.factura_salida:'')+(s._n.peoneta?' + '+s._n.peoneta:'')+'</div>').join(''):'<div class="m">'+(ge.length?(dia===hoyISO()?'Servicio en curso':'Servicio realizado'):'Sin servicio registrado en Kaptura')+'</div>')+
+      (()=>{const rest=ents.filter(z=>!usadas.has(z.id));return rest.length?'<div class="m">📦 Entregas registradas: '+rest.map(z=>z.local+' · '+entTxt(z)).join(' | ')+'</div>':''})()+
       '<table><tr><th>Llega</th><th>Sale</th><th>Lugar</th><th>Espera</th></tr>'+filas+'</table>'+
       '<div class="kpi"><div>Km<b>'+Math.round(km)+'</b></div><div>Jornada<b>'+durTxt(jor)+'</b></div><div>Conducción<b>'+durTxt(cond)+'</b></div><div>Esperas<b>'+durTxt(esp)+'</b></div>'+(esCliente()?'':'<div>Vel. máx.<b>'+Math.round(vmax)+' km/h</b></div><div>Tramos<b>'+vj.length+'</b></div>')+'</div>'+
       (!esCliente()&&al.length?'<div class="al">⚠ '+al.join('<br>⚠ ')+'</div>':'')+'</div>';
