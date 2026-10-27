@@ -394,7 +394,12 @@ function textoExtras(e){
 }
 
 // ═══ GUARDAR ═══
+let guardando=false;
 async function guardar(){
+  if(guardando)return; guardando=true; $('btn-guardar').disabled=true;
+  try{await guardar2()}finally{guardando=false;$('btn-guardar').disabled=false;$('btn-guardar').textContent='GUARDAR'}
+}
+async function guardar2(){
   const err=$('reg-err');
   let entsHoy=[];try{const r=await supa.from('entregas').select('local,hora,estado,foto').eq('empresa',EMPRESA).eq('fecha',hoyISO()).eq('conductor',user.nombre).neq('estado','prueba').order('ts');entsHoy=r.data||[]}catch(e){}
   if(!fotos.length&&!entsHoy.length){err.textContent='Falta la foto de la guía (o registre sus entregas con 📦 Entregué aquí)';return}
@@ -443,6 +448,8 @@ async function enviar(reg,blobs){
   }
   (notas.entregas||[]).forEach(e=>{if(e.foto)notas.fotos.push(e.foto)});
   const fila={...reg,notas:JSON.stringify(notas)};
+  const {data:ya}=await supa.from('servicios_piloto').select('id').eq('servicio_id',reg.servicio_id).limit(1);
+  if(ya&&ya.length)return true; // ya estaba guardado (evita duplicados)
   const {error}=await supa.from('servicios_piloto').insert(fila);
   if(error)throw error;
   return true;
