@@ -519,7 +519,7 @@ async function avisoCliente(i){
     for(const x of sel){
       const ez=(en||[]).filter(z=>new Date(z.ts)>=new Date(x.inicio).getTime()-900000&&new Date(z.ts)<=new Date(x.fin||x.inicio).getTime()+900000);
       const ul=uls.find(u=>{if(!u.hora)return false;const t=new Date(r.fecha+'T'+u.hora+':00-03:00');return t>=new Date(x.inicio)-600000&&t<=new Date(x.fin||x.inicio).getTime()+600000});
-      puntos.push({ic:x._g.tipo==='planta'?'🏭':'🛒',nom:x._g.nombre,h:hhmm(x.inicio)+' → '+(x.fin?hhmm(x.fin):'…')+' · '+durTxt(x.duracion_s),ez,ul});
+      puntos.push({ic:x._g.tipo==='planta'?'🏭':'📍',nom:x._g.nombre,h:hhmm(x.inicio)+' → '+(x.fin?hhmm(x.fin):'…')+' · '+durTxt(x.duracion_s),ez,ul});
       if(x._g.tipo!=='planta')esp+=x.duracion_s||0;
     }
     if(sel.length){const fin=new Date(sel[sel.length-1].fin||sel[sel.length-1].inicio);km=e.filter(x=>x.tipo==='viaje'&&(!desde||new Date(x.inicio)>=desde)&&new Date(x.inicio)<fin).reduce((t,x)=>t+(+x.km||0),0)}
@@ -674,7 +674,7 @@ async function cargarGPS(){
     const esp=paradas.reduce((t,x)=>t+(x.duracion_s||0),0), vmax=Math.max(0,...vj.map(x=>+x.vel_max||0));
     const s0=vj[0]?e.find(x=>x.tipo==='parada'&&x.fin&&Math.abs(new Date(x.fin)-new Date(vj[0].inicio))<180000&&(enGeo(x.lat_ini,x.lon_ini)||{}).tipo==='planta'):null;
     const pcard=(ic,nom,h,ex)=>'<div class="pc"><b>'+ic+' '+nom+'</b><div class="h">'+h+'</div>'+(ex||'')+'</div>';
-    const icono=g=>g?(g.tipo==='planta'?'🏭':'🛒'):'📍';
+    const icono=g=>g?(g.tipo==='planta'?'🏭':'📍'):'📍';
     let filas=s0?pcard('🏭',enGeo(s0.lat_ini,s0.lon_ini).nombre,hhmm(s0.inicio)+' → '+hhmm(s0.fin)+' · '+durTxt(s0.duracion_s))
       :pcard('🚩','Salida: '+(vj[0]?await lugarG(vj[0].lat_ini,vj[0].lon_ini):'—'),hhmm(ini));
     const pm=[];for(const x of paradas){const g=enGeo(x.lat_ini,x.lon_ini),u=pm[pm.length-1];
