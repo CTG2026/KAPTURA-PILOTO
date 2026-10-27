@@ -84,9 +84,9 @@ input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--bor
   <h1 id="saludo">Hola</h1>
   <div class="sub" id="sub-equipo"></div>
   <button class="big" id="btn-ent" style="display:none;background:#1f7a3a;color:#fff;margin-bottom:12px" onclick="entregue()">📦 ENTREGUÉ AQUÍ</button>
-  <button class="btn2" id="btn-misent" style="display:none;margin-bottom:12px" onclick="misEntregas()">📦 Mis entregas de hoy</button>
   <input type="file" id="cam-ent" accept="image/*" capture="environment" style="display:none" onchange="onFotoEnt(this)">
   <button class="big" id="btn-reg" onclick="nuevoRegistro()">📷 REGISTRAR SERVICIO</button>
+  <button class="btn2" id="btn-misent" style="display:none" onclick="misEntregas()">📦 Mis entregas de hoy</button>
   <button class="btn2" id="btn-ver" style="display:none" onclick="abrirRegistros()">📋 Ver registros y descargar Excel</button>
   <button class="btn2" id="btn-gps" style="display:none" onclick="gpsPat=null;gpsVolver='s-home';$('gps-dia').value='';verGPS()">🛰 Reporte GPS del día</button>
   <button class="btn2" id="btn-prof" style="display:none" onclick="verProforma()">🧾 Proforma EBLOOMS</button>
@@ -425,9 +425,16 @@ async function guardar(){
   $('ok-sub').textContent=enviado?(svcSel.txt+' · '+fotos.length+' foto(s)'):'Sin señal: quedó guardado en el celular y se enviará solo cuando vuelva la conexión.';
   ir('s-ok'); revisarPendientes();
 }
+async function sigCodigo(){
+  const {data,error}=await supa.from('servicios_piloto').select('notas').eq('empresa',EMPRESA).eq('modo','registro_tm');
+  if(error)throw error;
+  let mx=0;(data||[]).forEach(r=>{const c=(parseNotas(r.notas).codigo||'').match(/^TM(\d+)$/);if(c)mx=Math.max(mx,+c[1])});
+  return 'TM'+String(mx+1).padStart(2,'0');
+}
 async function enviar(reg,blobs){
   if(!supa||!navigator.onLine)return false;
   const notas=JSON.parse(reg.notas); notas.fotos=[];
+  if(!notas.codigo)notas.codigo=await sigCodigo();
   for(let i=0;i<blobs.length;i++){
     const path='tm/'+reg.fecha.slice(0,7)+'/'+reg.servicio_id+'_'+(i+1)+'_'+Math.random().toString(36).slice(2,10)+'.jpg';
     const {error}=await supa.storage.from(BUCKET).upload(path,blobs[i],{contentType:'image/jpeg',upsert:false});
@@ -494,7 +501,7 @@ async function verRegistros(){
   $('list-sub').textContent=filas.length+' registro(s) desde el '+desde().split('-').reverse().join('-')+(pend.length?' · '+pend.length+' en este celular esperando señal':'');
   $('btn-xls').disabled=!filas.length;
   $('lista').innerHTML=filas.map((r,i)=>{const n=r._n,ex=textoExtras(n.extras||{});
-    return '<div class="reg" data-i="'+i+'">'+(esAdmin()?'<button class="del" onclick="pedirBorrar('+i+')">✕</button>':'')+'<div class="t">'+r.fecha.split('-').reverse().join('-')+' · '+SVC_VER(n.servicio_sistema||((r.origen||'')+' → '+(r.destino||'')))+'</div>'+
+    return '<div class="reg" data-i="'+i+'">'+(esAdmin()?'<button class="del" onclick="pedirBorrar('+i+')">✕</button>':'')+'<div class="t">'+(n.codigo?'<span class="ul">'+n.codigo+'</span> · ':'')+r.fecha.split('-').reverse().join('-')+' · '+SVC_VER(n.servicio_sistema||((r.origen||'')+' → '+(r.destino||'')))+'</div>'+
     '<div>'+r.conductor+(n.peoneta?' + '+n.peoneta:'')+' · '+r.patente+(n.acoplado?' / '+n.acoplado:'')+'</div>'+((n.guias||[]).length?'<div><b>Guías: '+n.guias.join(' - ')+'</b></div>':'')+(n.factura_salida?'<div><b>Factura salida: '+n.factura_salida+'</b></div>':'')+
     (ex&&!esCliente()?'<div class="m">Extras: '+ex+'</div>':'')+(n.observacion&&!esCliente()?'<div class="m">Obs.: '+n.observacion+'</div>':'')+
     (n.unidades_logisticas||[]).map(u=>'<div class="m"><span class="ul">'+u.local+' '+(u.nombre||'')+'</span> · '+(u.hora||'')+(u.nro?' · Doc. '+u.nro:'')+' · '+(u.items||[]).map(i=>i.cant+' '+i.desc.toLowerCase()).join(', ')+'</div>').join('')+(n.carga_manual?'<div class="m">Carga manual ('+n.carga_manual+')</div>':'')+'<button class="btn2" style="margin-top:8px;padding:10px;font-size:14px" onclick="gpsServicio('+i+')">🛰 Ver recorrido GPS</button>'+(user&&user.rol==='administrador'?'<button class="btn2" style="margin-top:8px;padding:10px;font-size:14px" onclick="avisoCliente('+i+')">📤 Enviar aviso al cliente</button>':'')+'<div class="fx">'+(n.fotos||[]).concat((n.unidades_logisticas||[]).map(u=>u.foto).filter(Boolean)).map(u=>'<a href="'+u+'" target="_blank"><img src="'+u+'"></a>').join('')+'</div></div>'}).join('');
@@ -529,9 +536,11 @@ async function avisoCliente(i){
     }
     if(sel.length){const fin=new Date(sel[sel.length-1].fin||sel[sel.length-1].inicio);km=e.filter(x=>x.tipo==='viaje'&&(!desde||new Date(x.inicio)>=desde)&&new Date(x.inicio)<fin).reduce((t,x)=>t+(+x.km||0),0)}
   }catch(err){}
-  const L=['🟡 *KAPTURA · Transportes Madrid*','_Notificación automática de servicio_','━━━━━━━━━━━━━━━━━━','✅ *SERVICIO COMPLETADO*',
+  const L0=['🟡 *KAPTURA · Transportes Madrid*','_Notificación automática de servicio_','━━━━━━━━━━━━━━━━━━','✅ *SERVICIO COMPLETADO*',
     '📅 '+r.fecha.split('-').reverse().join('-')+' · '+SVC_VER(n.servicio_sistema),
+    (n.codigo?'🔖 Servicio '+n.codigo:null),
     '🚚 '+pat+' · Conductor: '+r.conductor.split(' ').slice(0,2).join(' ')+(n.peoneta?' · Peoneta: '+n.peoneta:'')];
+  const L=L0.filter(x=>x!==null);
   if(n.factura_salida)L.push('🧾 Factura de salida: '+n.factura_salida);
   if((n.guias||[]).length)L.push('🧾 Guías: '+n.guias.join(' - '));
   if(puntos.length){L.push('','📍 *Recorrido y entregas:*');
@@ -563,16 +572,16 @@ async function borrarRegistro(i,btn){
 }
 function descargarExcel(){
   if(!filas.length||!window.XLSX){toast('No se pudo generar el Excel');return}
-  const head=['Fecha','Patente tracto / camión','Patente acoplado / thermo','Servicio','Conductor','Peoneta','N° guía','N° factura (folio)','¿Hubo espera?','¿Retorno?','Tarifa distinta ($ neto, solo si cambia)','Observaciones','Pallets traspaleteados','Fotos de guías (links)','ID registro Kaptura','Registrado (fecha y hora)'];
+  const head=['Código','Fecha','Patente tracto / camión','Patente acoplado / thermo','Servicio','Conductor','Peoneta','N° guía','N° factura (folio)','¿Hubo espera?','¿Retorno?','Tarifa distinta ($ neto, solo si cambia)','Observaciones','Pallets traspaleteados','Fotos de guías (links)','ID registro Kaptura','Registrado (fecha y hora)'];
   const rows=[...filas].reverse().map(r=>{const n=r._n,e=n.extras||{};
     const sv=n.servicio_sistema||'', esSuper=/Supermercados/.test(sv);
     const acop=e.acoplado_reemplazo||n.acoplado||'';
     const obs=[n.observacion,e.trasvasije?'Trasvasije $'+fmt(e.trasvasije.monto_pagado||0):null,e.espera?'Espera '+e.espera.horas+' h':null,e.peaje_efectivo?'Peaje efectivo $'+fmt(e.peaje_efectivo.monto||0):null,e.acoplado_reemplazo?'Acoplado de reemplazo '+e.acoplado_reemplazo+' (costo por confirmar)':null,e.traspaleteo?'Traspaleteo pagado $'+fmt(e.traspaleteo.monto_pagado||0):null,'Registro Kaptura'].filter(Boolean).join(' · ');
     const [y,m,d]=r.fecha.split('-').map(Number);
-    return [(Date.UTC(y,m-1,d)-Date.UTC(1899,11,30))/86400000,r.patente,acop,sv,r.conductor,n.peoneta?n.peoneta+' (peoneta)':'',(n.guias||[]).join(' - '),'',e.espera?'Sí':'',e.retorno?(esSuper?'Retorno supermercado':'Sí'):(esSuper?'No':''),'',obs,e.traspaleteo?e.traspaleteo.pallets:'',(n.fotos||[]).join(' '),r.servicio_id,n.registrado?new Date(n.registrado).toLocaleString('es-CL'):''];});
+    return [n.codigo||'',(Date.UTC(y,m-1,d)-Date.UTC(1899,11,30))/86400000,r.patente,acop,sv,r.conductor,n.peoneta?n.peoneta+' (peoneta)':'',(n.guias||[]).join(' - '),'',e.espera?'Sí':'',e.retorno?(esSuper?'Retorno supermercado':'Sí'):(esSuper?'No':''),'',obs,e.traspaleteo?e.traspaleteo.pallets:'',(n.fotos||[]).join(' '),r.servicio_id,n.registrado?new Date(n.registrado).toLocaleString('es-CL'):''];});
   const ws=XLSX.utils.aoa_to_sheet([head,...rows]);
-  ws['!cols']=[{wch:11},{wch:12},{wch:12},{wch:48},{wch:26},{wch:10},{wch:10},{wch:10},{wch:8},{wch:20},{wch:12},{wch:60},{wch:10},{wch:40},{wch:28},{wch:20}];
-  for(let i=2;i<=rows.length+1;i++){const c=ws['A'+i];if(c){c.t='n';c.z='dd-mm-yyyy'}}
+  ws['!cols']=[{wch:7},{wch:11},{wch:12},{wch:12},{wch:48},{wch:26},{wch:10},{wch:10},{wch:10},{wch:8},{wch:20},{wch:12},{wch:60},{wch:10},{wch:40},{wch:28},{wch:20}];
+  for(let i=2;i<=rows.length+1;i++){const c=ws['B'+i];if(c){c.t='n';c.z='dd-mm-yyyy'}}
   const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Servicios Kaptura');
   XLSX.writeFile(wb,'Servicios_Kaptura_TM_'+hoyISO()+'.xlsx');
 }
@@ -726,6 +735,13 @@ function verProforma(){
   if(!sel.options.length){sel.innerHTML=quincenas().map(x=>'<option value="'+x.y+'-'+x.m+'-'+x.q+'">'+(x.q===1?'1ra':'2da')+' quincena '+MESES[x.m]+' '+x.y+'</option>').join('');sel.onchange=cargarProforma}
   cargarProforma();
 }
+async function puntosGPS(ev,fecha,patente){
+  const pat=PAT_GPS(patente),[a,b]=diaRango(fecha);
+  const par=(ev||[]).filter(x=>x.tipo==='parada'&&PAT_GPS(x.patente)===pat&&x.inicio>=a&&x.inicio<b).sort((x,y)=>x.inicio.localeCompare(y.inicio));
+  const i0=par.findIndex(x=>(enGeo(x.lat_ini,x.lon_ini)||{}).tipo==='planta');
+  const out=[];for(const x of par.slice(i0>=0?i0:0)){const g=enGeo(x.lat_ini,x.lon_ini);if(g&&g.tipo==='local'&&out[out.length-1]!==g.nombre)out.push(g.nombre)}
+  return out;
+}
 async function cargarProforma(){
   const [y,m,q]=$('prof-q').value.split('-').map(Number); const d1=q===1?1:16, d2=q===1?15:new Date(y,m+1,0).getDate();
   const desde=y+'-'+String(m+1).padStart(2,'0')+'-'+String(d1).padStart(2,'0'), hasta=y+'-'+String(m+1).padStart(2,'0')+'-'+String(d2).padStart(2,'0');
@@ -734,8 +750,11 @@ async function cargarProforma(){
   if(!supa){$('prof-sub').textContent='Sin conexión con la base de datos.';return}
   const {data,error}=await supa.from('servicios_piloto').select('*').eq('empresa',EMPRESA).eq('modo','registro_tm').neq('estado','anulado').eq('cliente','EBLOOMS').gte('fecha',desde).lte('fecha',hasta).order('fecha');
   if(error){$('prof-sub').textContent='Error: '+error.message;return}
+  let evq=[];if((data||[]).length){const [a]=diaRango(desde),[,b]=diaRango(hasta);const r2=await supa.from('gps_viajes').select('patente,tipo,inicio,fin,lat_ini,lon_ini').eq('tipo','parada').gte('inicio',a).lt('inicio',b);evq=r2.data||[]}
+  const gpsLocs={};for(const r of (data||[]))gpsLocs[r.servicio_id]=(await puntosGPS(evq,r.fecha,r.patente)).map(x=>x.replace(/^Jumbo\s+/i,'').replace(/^(J\d+)\s+Jumbo\s+/i,'$1 '));
   profFilas=(data||[]).map(r=>{const n=parseNotas(r.notas),sv=n.servicio_sistema||'',ex=n.extras||{};
-    const locs=(n.unidades_logisticas||[]).slice().sort((a,b)=>(a.hora||'').localeCompare(b.hora||'')).map(u=>u.local+' '+(u.nombre||'').replace(/^JUMBO\s*/i,'').replace(/\b\w/g,c=>c.toUpperCase()).replace(/\B\w+/g,w=>w.toLowerCase()));
+    let locs=(n.unidades_logisticas||[]).slice().sort((a,b)=>(a.hora||'').localeCompare(b.hora||'')).map(u=>u.local+' '+(u.nombre||'').replace(/^JUMBO\s*/i,'').replace(/\b\w/g,c=>c.toUpperCase()).replace(/\B\w+/g,w=>w.toLowerCase()));
+    if(!locs.length)locs=gpsLocs[r.servicio_id]||[];
     let dst=['','','','',''];
     if(/Chill/i.test(sv)){dst=['N794'+(ex.pallets?' '+ex.pallets+' PALLET':''),'','CHILLAN','','']}
     else{dst=[locs[0]||'',locs[1]||'',locs[2]||'',locs.slice(3).join('/'),'']}
