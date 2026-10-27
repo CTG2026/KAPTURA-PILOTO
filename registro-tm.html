@@ -255,7 +255,7 @@ function entrar(p){
   if(!u){$('pin-err').textContent='PIN no registrado';pin='';setTimeout(pintarPin,600);return}
   user={pin:p,...u}; ls('tm_pin',p);
   $('saludo').textContent='Hola '+u.nombre.split(' ')[0];
-  $('btn-salir').style.display='block'; $('btn-ver').style.display='block';$('btn-ver').textContent=esAdmin()?'📋 Ver registros y descargar Excel':esCliente()?'📋 Ver mis servicios':'📋 Mis registros';$('btn-reg').style.display=esCliente()?'none':'block';$('btn-ent').style.display=esCliente()?'none':'block';$('btn-misent').style.display=(esCliente()||esAdmin())?'none':'block';contarEnt();const vg=(esAdmin()||esCliente())?'block':'none';$('btn-gps').style.display=vg;$('btn-prof').style.display=vg; ir('s-home'); revisarPendientes();
+  $('btn-salir').style.display='block'; $('btn-ver').style.display='block';$('btn-ver').textContent=esAdmin()?'📋 Ver registros y descargar Excel':esCliente()?'📋 Ver mis servicios':'📋 Mis registros';$('btn-reg').style.display=esCliente()?'none':'block';$('btn-ent').style.display=esCliente()?'none':'block';$('btn-misent').style.display=esCliente()?'none':'block';contarEnt();const vg=(esAdmin()||esCliente())?'block':'none';$('btn-gps').style.display=vg;$('btn-prof').style.display=vg; ir('s-home'); revisarPendientes();
 }
 function salir(){ls('tm_pin',null);user=null;pin='';pintarPin();$('btn-salir').style.display='none';ir('s-pin')}
 
@@ -651,12 +651,12 @@ async function guardarEnt(btn){
   }catch(e){toast('No se pudo guardar. Revise la señal e intente de nuevo.')}
   btn.disabled=false;btn.textContent='✅ GUARDAR ENTREGA';
 }
-async function entHoy(){try{const r=await supa.from('entregas').select('*').eq('empresa',EMPRESA).eq('fecha',hoyISO()).eq('conductor',user.nombre).neq('estado','prueba').order('ts');return r.data||[]}catch(e){return []}}
-async function contarEnt(){if(!user||esCliente()||!supa)return;const n=(await entHoy()).length;$('btn-misent').textContent='📦 Mis entregas de hoy'+(n?' ('+n+')':'')}
+async function entHoy(todos){try{let q=supa.from('entregas').select('*').eq('empresa',EMPRESA).eq('fecha',hoyISO()).neq('estado','prueba');if(!(todos&&esAdmin()))q=q.eq('conductor',user.nombre);const r=await q.order('ts');return r.data||[]}catch(e){return []}}
+async function contarEnt(){if(!user||esCliente()||!supa)return;const n=(await entHoy(true)).length;$('btn-misent').textContent=(esAdmin()?'📦 Entregas de hoy':'📦 Mis entregas de hoy')+(n?' ('+n+')':'')}
 async function misEntregas(){
   ir('s-misent');$('misent-lista').innerHTML='';$('misent-sub').textContent='Cargando…';
-  const es=await entHoy();$('misent-sub').textContent=es.length?es.length+' entrega(s) guardada(s)':'Todavía no hay entregas hoy.';
-  $('misent-lista').innerHTML=es.map(e=>'<div class="gl">'+(e.foto?'<a href="'+e.foto+'" target="_blank"><img src="'+e.foto+'"></a>':'')+'<div class="gi"><b>'+e.hora+' · '+e.local+'</b><div class="msg">'+(e.estado==='pendiente'?'⏳ Pendiente':'✅ Entregado')+(e.obs?' · Guía N° '+e.obs:' · sin N° de guía')+'</div></div></div>').join('');
+  $('s-misent').querySelector('h1').textContent=esAdmin()?'Entregas de hoy':'Mis entregas de hoy';const es=await entHoy(true);$('misent-sub').textContent=es.length?es.length+' entrega(s) guardada(s)':'Todavía no hay entregas hoy.';
+  $('misent-lista').innerHTML=es.map(e=>'<div class="gl">'+(e.foto?'<a href="'+e.foto+'" target="_blank"><img src="'+e.foto+'"></a>':'')+'<div class="gi"><b>'+e.hora+' · '+e.local+'</b>'+(esAdmin()?'<div class="msg">'+e.conductor+'</div>':'')+'<div class="msg">'+(e.estado==='pendiente'?'⏳ Pendiente':'✅ Entregado')+(e.obs?' · Guía N° '+e.obs:' · sin N° de guía')+'</div></div></div>').join('');
 }
 // Fotos del registro final con su hora de captura: se tratan como entregas para que el reporte y el aviso queden iguales
 const fotosComoEnt=(r)=>{const n=r._n||{};return (n.fotos_ts||[]).map((t,k)=>t?{id:'rf'+r.servicio_id+k,ts:t,hora:hhmm(t),foto:(n.fotos||[])[k]||null,estado:'entregado',lat:null,lon:null,cliente:r.cliente}:null).filter(Boolean)};
