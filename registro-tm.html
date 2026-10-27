@@ -385,7 +385,8 @@ function textoExtras(e){
 // ═══ GUARDAR ═══
 async function guardar(){
   const err=$('reg-err');
-  if(!fotos.length){err.textContent='Falta la foto de la guía';return}
+  let entsHoy=[];try{const r=await supa.from('entregas').select('local,hora,estado,foto').eq('empresa',EMPRESA).eq('fecha',hoyISO()).eq('conductor',user.nombre).order('ts');entsHoy=r.data||[]}catch(e){}
+  if(!fotos.length&&!entsHoy.length){err.textContent='Falta la foto de la guía (o registre sus entregas con 📦 Entregué aquí)';return}
   if(!svcSel){err.textContent='Elige el servicio';return}
   if(!$('patente').value){err.textContent='Elige la patente del camión';return}
   if($('peo-box').style.display!=='none'&&$('peoneta').value==='?'){err.textContent='Elige el peoneta (o "Sin peoneta")';return}
@@ -400,7 +401,7 @@ async function guardar(){
     servicio_id:id, patente:$('patente').value, conductor:user.nombre, cliente:svcSel.cliente||null,
     origen:svcSel.origen||null, destino:svcSel.destino||null, fecha:hoyISO(ahora), estado:'registrado',
     empresa:EMPRESA, modo:'registro_tm', tarifa_neta:svcSel.tarifa||null,
-    notas:JSON.stringify({servicio_sistema:svcSel.servicio, acoplado:$('acoplado').value||null, peoneta:($('peo-box').style.display!=='none'&&$('peoneta').value)||null, extras:ex, observacion:$('obs').value.trim()||null, guias:fotos.map(f=>f.num).filter(Boolean), pin:user.pin, registrado:ahora.toISOString(), fotos:[]})
+    notas:JSON.stringify({servicio_sistema:svcSel.servicio, acoplado:$('acoplado').value||null, peoneta:($('peo-box').style.display!=='none'&&$('peoneta').value)||null, extras:ex, observacion:$('obs').value.trim()||null, guias:fotos.map(f=>f.num).filter(Boolean), entregas:entsHoy, pin:user.pin, registrado:ahora.toISOString(), fotos:[]})
   };
   const freq=JSON.parse(ls('tm_freq_'+user.pin)||'{}');freq[svcSel.servicio]=(freq[svcSel.servicio]||0)+1;ls('tm_freq_'+user.pin,JSON.stringify(freq));
   ultimo={reg,ex,svc:svcSel,nfotos:fotos.length,ahora};
@@ -422,6 +423,7 @@ async function enviar(reg,blobs){
     if(error)throw error;
     notas.fotos.push(supa.storage.from(BUCKET).getPublicUrl(path).data.publicUrl);
   }
+  (notas.entregas||[]).forEach(e=>{if(e.foto)notas.fotos.push(e.foto)});
   const fila={...reg,notas:JSON.stringify(notas)};
   const {error}=await supa.from('servicios_piloto').insert(fila);
   if(error)throw error;
