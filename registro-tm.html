@@ -496,24 +496,52 @@ async function verRegistros(){
     (n.unidades_logisticas||[]).map(u=>'<div class="m"><span class="ul">'+u.local+' '+(u.nombre||'')+'</span> · '+(u.hora||'')+(u.nro?' · Doc. '+u.nro:'')+' · '+(u.items||[]).map(i=>i.cant+' '+i.desc.toLowerCase()).join(', ')+'</div>').join('')+(n.carga_manual?'<div class="m">Carga manual ('+n.carga_manual+')</div>':'')+'<button class="btn2" style="margin-top:8px;padding:10px;font-size:14px" onclick="gpsServicio('+i+')">🛰 Ver recorrido GPS</button>'+(user&&user.rol==='administrador'?'<button class="btn2" style="margin-top:8px;padding:10px;font-size:14px" onclick="avisoCliente('+i+')">📤 Enviar aviso al cliente</button>':'')+'<div class="fx">'+(n.fotos||[]).concat((n.unidades_logisticas||[]).map(u=>u.foto).filter(Boolean)).map(u=>'<a href="'+u+'" target="_blank"><img src="'+u+'"></a>').join('')+'</div></div>'}).join('');
 }
 function fmt(n){return Number(n||0).toLocaleString('es-CL')}
-function avisoCliente(i){
+async function avisoCliente(i){
   if(!(user&&user.rol==='administrador'))return;
   const r=filas[i]; if(!r)return; const n=r._n;
-  const pat=String(r.patente||'').replace(/-\d$/,'');
+  const pat=PAT_GPS(r.patente);
   const uls=(n.unidades_logisticas||[]).slice().sort((a,b)=>(a.hora||'').localeCompare(b.hora||''));
   const tot={};uls.forEach(u=>(u.items||[]).forEach(it=>{const k=/pallet/i.test(it.desc)?'pallets':'cajas';tot[k]=(tot[k]||0)+(+it.cant||0)}));
+  const win=window.open('','_blank');
+  // Puntos del recorrido (GPS): desde la planta hasta el último local
+  let puntos=[],km=0,esp=0;
+  try{
+    const [a,b]=diaRango(r.fecha);
+    const {data:ev}=await supa.from('gps_viajes').select('*').gte('inicio',a).lt('inicio',b).order('inicio');
+    const e=(ev||[]).filter(x=>PAT_GPS(x.patente)===pat);
+    const par=e.filter(x=>x.tipo==='parada'), i0=par.findIndex(x=>(enGeo(x.lat_ini,x.lon_ini)||{}).tipo==='planta');
+    const desde=i0>=0?new Date(par[i0].inicio):null;
+    const pm=[];for(const x of par.filter(x=>!desde||new Date(x.inicio)>=desde)){const g=enGeo(x.lat_ini,x.lon_ini),u=pm[pm.length-1];
+      if(g&&u&&u._g===g&&new Date(x.inicio)-new Date(u.fin||u.inicio)<15*60000){u.fin=x.fin;u.duracion_s=(new Date(x.fin||x.inicio)-new Date(u.inicio))/1000}else pm.push({...x,_g:g})}
+    let ult=-1;pm.forEach((x,k)=>{if(x._g)ult=k});
+    const sel=pm.slice(0,ult+1).filter(x=>x._g);
+    const {data:en}=await supa.from('entregas').select('*').eq('empresa',EMPRESA).eq('fecha',r.fecha).neq('estado','prueba');
+    for(const x of sel){
+      const ez=(en||[]).filter(z=>new Date(z.ts)>=new Date(x.inicio).getTime()-900000&&new Date(z.ts)<=new Date(x.fin||x.inicio).getTime()+900000);
+      const ul=uls.find(u=>{if(!u.hora)return false;const t=new Date(r.fecha+'T'+u.hora+':00-03:00');return t>=new Date(x.inicio)-600000&&t<=new Date(x.fin||x.inicio).getTime()+600000});
+      puntos.push({ic:x._g.tipo==='planta'?'🏭':'🛒',nom:x._g.nombre,h:hhmm(x.inicio)+' → '+(x.fin?hhmm(x.fin):'…')+' · '+durTxt(x.duracion_s),ez,ul});
+      if(x._g.tipo!=='planta')esp+=x.duracion_s||0;
+    }
+    if(sel.length){const fin=new Date(sel[sel.length-1].fin||sel[sel.length-1].inicio);km=e.filter(x=>x.tipo==='viaje'&&(!desde||new Date(x.inicio)>=desde)&&new Date(x.inicio)<fin).reduce((t,x)=>t+(+x.km||0),0)}
+  }catch(err){}
   const L=['🟡 *KAPTURA · Transportes Madrid*','_Notificación automática de servicio_','━━━━━━━━━━━━━━━━━━','✅ *SERVICIO COMPLETADO*',
     '📅 '+r.fecha.split('-').reverse().join('-')+' · '+SVC_VER(n.servicio_sistema),
     '🚚 '+pat+' · Conductor: '+r.conductor.split(' ').slice(0,2).join(' ')+(n.peoneta?' · Peoneta: '+n.peoneta:'')];
   if(n.factura_salida)L.push('🧾 Factura de salida: '+n.factura_salida);
   if((n.guias||[]).length)L.push('🧾 Guías: '+n.guias.join(' - '));
-  if(uls.length){L.push('','🏬 *Entregas confirmadas:*');
-    uls.forEach(u=>{L.push('• '+(u.hora||'')+' · '+u.local+' '+(u.nombre||'').replace(/\b\w+/g,w=>w.charAt(0)+w.slice(1).toLowerCase())+(u.nro?' · Doc. Unidades logísticas '+u.nro:''));
-      (u.items||[]).forEach(it=>L.push('   • '+it.cant+' '+it.desc.toLowerCase()))});
-    L.push('','📦 Total recibido: '+[tot.cajas?tot.cajas+' cajas':'',tot.pallets?tot.pallets+' pallets':''].filter(Boolean).join(' · '));}
+  if(puntos.length){L.push('','📍 *Recorrido y entregas:*');
+    puntos.forEach(p=>{L.push(p.ic+' *'+p.nom+'*','     '+p.h);
+      if(p.ul)L.push('     📄 Doc. Unidades logísticas '+(p.ul.nro||'')+': '+(p.ul.items||[]).map(it=>it.cant+' '+it.desc.toLowerCase()).join(' · '));
+      p.ez.forEach(z=>L.push('     '+(z.estado==='pendiente'?'⏳ Pendiente ':'✅ Entregado ')+z.hora))});
+    L.push('','📏 Km recorridos: '+Math.round(km)+' · ⏱ Esperas en locales: '+durTxt(esp));
+  }else if(uls.length){L.push('','🏬 *Entregas confirmadas:*');
+    uls.forEach(u=>{L.push('• '+(u.hora||'')+' · '+u.local+' '+(u.nombre||'')+(u.nro?' · Doc. Unidades logísticas '+u.nro:''));(u.items||[]).forEach(it=>L.push('   • '+it.cant+' '+it.desc.toLowerCase()))});}
+  if(tot.cajas||tot.pallets)L.push('📦 Total recibido: '+[tot.cajas?tot.cajas+' cajas':'',tot.pallets?tot.pallets+' pallets':''].filter(Boolean).join(' · '));
   if(n.observacion_cliente)L.push('📝 '+n.observacion_cliente);
   L.push('━━━━━━━━━━━━━━━━━━','_Mensaje generado automáticamente por Kaptura, sistema de gestión de Transportes Madrid._');
-  window.open('https://wa.me/?text='+encodeURIComponent(L.join('\n')),'_blank');
+  const url='https://wa.me/?text='+encodeURIComponent(L.join('\n'));
+  if(win)win.location.href=url;else location.href=url;
+  window._ultimoAviso=L.join('\n');
 }
 function pedirBorrar(i){
   const card=document.querySelector('.reg[data-i="'+i+'"]');if(!card||card.querySelector('.cf'))return;
@@ -633,7 +661,7 @@ async function cargarGPS(){
   try{const {data:u}=await supa.from('gps_viajes').select('*').order('inicio',{ascending:false}).limit(1);
     if(u&&u[0]){const x=u[0],fd=t=>new Date(t).toLocaleString('es-CL',{timeZone:'America/Santiago',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
       ult='Último dato GPS: '+fd(x.actualizado)+(esCliente()?'':' · '+x.patente+(x.tipo==='parada'&&!x.fin?' detenido desde '+fd(x.inicio)+' en '+await lugar(x.lat_ini,x.lon_ini):' en movimiento desde '+fd(x.inicio)));}}catch(e){}
-  if(!pats.length){$('gps-sub').innerHTML='Sin viajes GPS para '+dia.split('-').reverse().join('-')+'.'+(ult?'<br>'+ult:'');return}
+  if(!pats.length){$('gps-sub').textContent='Sin viajes GPS para '+dia.split('-').reverse().join('-')+'.';return}
   $('gps-sub').textContent='Leyendo direcciones…';
   let html='';
   for(const p of pats){
@@ -674,7 +702,7 @@ async function cargarGPS(){
       (esAdmin()&&al.length?'<div class="al">⚠ '+al.join('<br>⚠ ')+'</div>':'')+'</div>';
     $('gps-lista').innerHTML=html;
   }
-  $('gps-sub').innerHTML=ult;
+  $('gps-sub').textContent='';
 }
 
 // ═══ PROFORMA EBLOOMS ═══
