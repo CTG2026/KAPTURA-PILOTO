@@ -32,7 +32,7 @@ h1{font-size:26px;font-weight:900;margin-bottom:6px}
 .pad{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
 .pad button{height:64px;border-radius:14px;border:none;background:var(--surface);color:var(--text);font-size:26px;font-weight:800;font-family:inherit}
 .pad button:active{background:var(--surface2)}
-.err{color:var(--danger);text-align:center;font-size:14px;min-height:20px;margin-bottom:8px}
+.err{color:var(--danger);text-align:center;font-size:17px;font-weight:700;min-height:20px;margin-bottom:8px}
 .big{width:100%;border:none;border-radius:18px;padding:26px 16px;font-size:22px;font-weight:900;font-family:inherit;background:var(--gold);color:#000;letter-spacing:.03em}
 .big:disabled{opacity:.4}
 .btn2{width:100%;border:2px solid var(--border);border-radius:14px;padding:16px;font-size:16px;font-weight:800;font-family:inherit;background:var(--surface);color:var(--text);margin-top:12px}
@@ -224,6 +224,7 @@ const PATENTES=['DSBZ64','ZV7780','CWVH32-9','DZZW14','XJ3908'];
 // peonetas por patente (afurgonados)
 const PEONETAS={'CWVH32-9':['Marcelo González']};
 const ACOPLADOS=['','JN4847','JB6234'];
+const TRACTOS=['DSBZ64','ZV7780']; // solo los tractos llevan acoplado
 const EXTRAS=[{id:'trasp',txt:'Traspaleteo'},{id:'trasv',txt:'Trasvasije'},{id:'retorno',txt:'Retorno'},{id:'espera',txt:'Espera'},{id:'peaje',txt:'Peaje efectivo'},{id:'reemp',txt:'Acoplado reemplazo'}];
 
 // ═══ ESTADO ═══
@@ -260,15 +261,15 @@ function salir(){ls('tm_pin',null);user=null;pin='';pintarPin();$('btn-salir').s
 // Borrador: las fotos quedan guardadas en el celular hasta registrar el servicio
 function bdb(){return new Promise((res,rej)=>{const r=indexedDB.open('tm_borrador',1);r.onupgradeneeded=()=>r.result.createObjectStore('fotos',{keyPath:'k',autoIncrement:true});r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}
 async function bOp(modo,fn){try{const d=await bdb();return await new Promise((res,rej)=>{const t=d.transaction('fotos',modo),st=t.objectStore('fotos'),r=fn(st);t.oncomplete=()=>res(r&&r.result);t.onerror=()=>rej(t.error)})}catch(e){return null}}
-const bAdd=(blob,num)=>bOp('readwrite',st=>st.add({pin:user.pin,blob,num:num||'',ts:Date.now()}));
-const bUpd=(f)=>f.k!=null&&bOp('readwrite',st=>st.put({k:f.k,pin:user.pin,blob:f.blob,num:f.num||'',ts:Date.now()}));
+const bAdd=(blob,num,ft)=>bOp('readwrite',st=>st.add({pin:user.pin,blob,num:num||'',ts:Date.now(),ft:ft||Date.now()}));
+const bUpd=(f)=>f.k!=null&&bOp('readwrite',st=>st.put({k:f.k,pin:user.pin,blob:f.blob,num:f.num||'',ts:Date.now(),ft:f.ts||Date.now()}));
 const bDel=(k)=>k!=null&&bOp('readwrite',st=>st.delete(k));
 const bTodas=()=>bOp('readonly',st=>st.getAll());
 async function bLimpiar(){const t=await bTodas()||[];for(const x of t)if(x.pin===user.pin)await bDel(x.k)}
 async function nuevoRegistro(){
   if(esCliente())return;
   fotos=[];const guard=(await bTodas()||[]).filter(x=>x.pin===user.pin).sort((a,b)=>a.ts-b.ts);
-  guard.forEach(x=>fotos.push({k:x.k,blob:x.blob,url:URL.createObjectURL(x.blob),num:x.num||'',estado:x.num?'ok':'no'}));
+  guard.forEach(x=>fotos.push({k:x.k,blob:x.blob,url:URL.createObjectURL(x.blob),num:x.num||'',estado:x.num?'ok':'no',ts:x.ft||x.ts}));
   if(guard.length)toast('Se recuperaron '+guard.length+' foto(s) guardadas');
   svcSel=null;extrasSel=new Set();$('obs').value='';$('reg-err').textContent='';
   ['trasp-pallets','trasp-monto','trasv-monto','espera-horas','peaje-monto','reemp-patente'].forEach(i=>$(i).value='');
@@ -288,7 +289,7 @@ function pintarFotos(){
 async function onFoto(inp){
   const fs=[...(inp.files||[])]; inp.value=''; if(!fs.length)return;
   const nuevas=[];
-  for(const f of fs){try{const blob=await comprimir(f);const o={blob,url:URL.createObjectURL(blob),num:'',estado:'leyendo',file:f};o.k=await bAdd(blob,'');fotos.push(o);nuevas.push(o)}catch(e){toast('No se pudo leer una foto')}}
+  for(const f of fs){try{const blob=await comprimir(f);const o={blob,url:URL.createObjectURL(blob),num:'',estado:'leyendo',file:f,ts:f.lastModified||Date.now()};o.k=await bAdd(blob,'',o.ts);fotos.push(o);nuevas.push(o)}catch(e){toast('No se pudo leer una foto')}}
   pintarFotos();
   for(const o of nuevas){const n=await leerNumero(o.file)||'';if(!o.num)o.num=n;o.estado=o.num?'ok':'no';delete o.file;if(fotos.includes(o)){bUpd(o);pintarFotos()}}
 }
@@ -356,6 +357,9 @@ function pintarEquipo(){
   pintarPeoneta();
 }
 function pintarPeoneta(){
+  const esTracto=TRACTOS.includes($('patente').value);
+  $('acoplado').style.display=esTracto?'':'none';
+  if(!esTracto)$('acoplado').value='';else if($('acoplado').value==='')$('acoplado').value='?';
   const lista=PEONETAS[$('patente').value]||[];
   $('peo-box').style.display=lista.length?'block':'none';
   $('peoneta').innerHTML='<option value="?" selected>Elige peoneta</option>'+lista.map(x=>'<option>'+x+'</option>').join('')+'<option value="">Sin peoneta</option>';
@@ -408,7 +412,7 @@ async function guardar(){
     servicio_id:id, patente:$('patente').value, conductor:user.nombre, cliente:svcSel.cliente||null,
     origen:svcSel.origen||null, destino:svcSel.destino||null, fecha:hoyISO(ahora), estado:'registrado',
     empresa:EMPRESA, modo:'registro_tm', tarifa_neta:svcSel.tarifa||null,
-    notas:JSON.stringify({servicio_sistema:svcSel.servicio, acoplado:$('acoplado').value||null, peoneta:($('peo-box').style.display!=='none'&&$('peoneta').value)||null, extras:ex, observacion:$('obs').value.trim()||null, guias:fotos.map(f=>f.num).filter(Boolean), entregas:entsHoy, pin:user.pin, registrado:ahora.toISOString(), fotos:[]})
+    notas:JSON.stringify({servicio_sistema:svcSel.servicio, acoplado:$('acoplado').value||null, peoneta:($('peo-box').style.display!=='none'&&$('peoneta').value)||null, extras:ex, observacion:$('obs').value.trim()||null, guias:fotos.map(f=>f.num).filter(Boolean), fotos_ts:fotos.map(f=>f.ts?new Date(f.ts).toISOString():null), entregas:entsHoy, pin:user.pin, registrado:ahora.toISOString(), fotos:[]})
   };
   const freq=JSON.parse(ls('tm_freq_'+user.pin)||'{}');freq[svcSel.servicio]=(freq[svcSel.servicio]||0)+1;ls('tm_freq_'+user.pin,JSON.stringify(freq));
   ultimo={reg,ex,svc:svcSel,nfotos:fotos.length,ahora};
@@ -515,7 +519,8 @@ async function avisoCliente(i){
       if(g&&u&&u._g===g&&new Date(x.inicio)-new Date(u.fin||u.inicio)<15*60000){u.fin=x.fin;u.duracion_s=(new Date(x.fin||x.inicio)-new Date(u.inicio))/1000}else pm.push({...x,_g:g})}
     let ult=-1;pm.forEach((x,k)=>{if(x._g)ult=k});
     const sel=pm.slice(0,ult+1).filter(x=>x._g);
-    const {data:en}=await supa.from('entregas').select('*').eq('empresa',EMPRESA).eq('fecha',r.fecha).neq('estado','prueba');
+    const {data:en0}=await supa.from('entregas').select('*').eq('empresa',EMPRESA).eq('fecha',r.fecha).neq('estado','prueba');
+    const en=(en0||[]).slice();{const ya=new Set(en.map(e=>e.foto));fotosComoEnt(r).forEach(e=>{if(!ya.has(e.foto))en.push(e)})}
     for(const x of sel){
       const ez=(en||[]).filter(z=>new Date(z.ts)>=new Date(x.inicio).getTime()-900000&&new Date(z.ts)<=new Date(x.fin||x.inicio).getTime()+900000);
       const ul=uls.find(u=>{if(!u.hora)return false;const t=new Date(r.fecha+'T'+u.hora+':00-03:00');return t>=new Date(x.inicio)-600000&&t<=new Date(x.fin||x.inicio).getTime()+600000});
@@ -634,6 +639,8 @@ async function misEntregas(){
   const es=await entHoy();$('misent-sub').textContent=es.length?es.length+' entrega(s) guardada(s)':'Todavía no hay entregas hoy.';
   $('misent-lista').innerHTML=es.map(e=>'<div class="gl">'+(e.foto?'<a href="'+e.foto+'" target="_blank"><img src="'+e.foto+'"></a>':'')+'<div class="gi"><b>'+e.hora+' · '+e.local+'</b><div class="msg">'+(e.estado==='pendiente'?'⏳ Pendiente':'✅ Entregado')+'</div></div></div>').join('');
 }
+// Fotos del registro final con su hora de captura: se tratan como entregas para que el reporte y el aviso queden iguales
+const fotosComoEnt=(r)=>{const n=r._n||{};return (n.fotos_ts||[]).map((t,k)=>t?{id:'rf'+r.servicio_id+k,ts:t,hora:hhmm(t),foto:(n.fotos||[])[k]||null,estado:'entregado',lat:null,lon:null,cliente:r.cliente}:null).filter(Boolean)};
 const entTxt=e=>(e.estado==='pendiente'?'⏳ Pendiente ':'✅ Entregado ')+e.hora+(e.foto?' <a href="'+e.foto+'" target="_blank">📷</a>':'');
 function diaRango(dia){const ini=new Date(dia+'T00:00:00-03:00');return [ini.toISOString(),new Date(ini.getTime()+86400000).toISOString()]}
 let gpsPat=null, gpsVolver='s-home';
@@ -655,6 +662,7 @@ async function cargarGPS(){
   let ents=[];try{const r=await supa.from('entregas').select('*').eq('empresa',EMPRESA).eq('fecha',dia).neq('estado','prueba').order('ts');ents=(r.data||[]).filter(e=>!esCliente()||!e.cliente||e.cliente===user.cliente)}catch(e){}
   const usadas=new Set();
   const {data:svs}=await q; const servs=(svs||[]).map(r=>({...r,_n:parseNotas(r.notas)}));
+  servs.forEach(r=>{const ya=new Set(ents.map(e=>e.foto));fotosComoEnt(r).forEach(e=>{if(!ya.has(e.foto))ents.push(e)})});
   const geoE=(p)=>(ev||[]).filter(x=>{const g=x.patente===p&&x.tipo==='parada'&&enGeo(x.lat_ini,x.lon_ini);return g&&g.tipo==='planta'&&(!esCliente()||g.cliente===user.cliente)});
   const pats=[...new Set((ev||[]).map(e=>e.patente))].filter(p=>!gpsPat||PAT_GPS(p)===gpsPat).filter(p=>!esCliente()||servs.some(s=>PAT_GPS(s.patente)===PAT_GPS(p))||geoE(p).length);
   let ult='';
