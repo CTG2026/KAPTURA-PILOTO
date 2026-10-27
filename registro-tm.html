@@ -13,7 +13,7 @@
 <meta name="apple-mobile-web-app-title" content="KAPTURA">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
 <style>
 :root{--bg:#0E0E0E;--surface:#181818;--surface2:#222;--border:#2E2E2E;--text:#F2F2F2;--muted:#9A9A9A;--gold:#F5B800;--green:#2ECC71;--danger:#FF5A5A}
@@ -595,6 +595,7 @@ function descargarExcel(){
   const ws=XLSX.utils.aoa_to_sheet([head,...rows]);
   ws['!cols']=[{wch:7},{wch:11},{wch:12},{wch:12},{wch:48},{wch:26},{wch:10},{wch:10},{wch:10},{wch:8},{wch:20},{wch:12},{wch:60},{wch:10},{wch:40},{wch:28},{wch:20}];
   for(let i=2;i<=rows.length+1;i++){const c=ws['B'+i];if(c){c.t='n';c.z='dd-mm-yyyy'}}
+  estiloXLS(ws,rows.length,head.length,0);
   const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Servicios Kaptura');
   XLSX.writeFile(wb,'Servicios_Kaptura_TM_'+hoyISO()+'.xlsx');
 }
@@ -614,11 +615,11 @@ async function lugar(lat,lon){
 const GEOCERCAS=[{nombre:'Planta EBLOOMS',cliente:'EBLOOMS',tipo:'planta',lat:-34.23852,lon:-71.01362,radio:300},
   // Locales de entrega EBLOOMS: armados con el historial GPS (paradas repetidas) y la tienda más cercana. 'ok' = confirmado
   {nombre:'J501 Jumbo Bilbao',cliente:'EBLOOMS',tipo:'local',ok:true,lat:-33.43032,lon:-70.57974,radio:150},
-  {nombre:'Jumbo La Reina',cliente:'EBLOOMS',tipo:'local',lat:-33.42735,lon:-70.53886,radio:150},
-  {nombre:'Jumbo Presidente Kennedy 9001',cliente:'EBLOOMS',tipo:'local',lat:-33.39250,lon:-70.54560,radio:200},
-  {nombre:'Jumbo La Dehesa',cliente:'EBLOOMS',tipo:'local',lat:-33.35690,lon:-70.51530,radio:200},
-  {nombre:'Jumbo Lo Castillo',cliente:'EBLOOMS',tipo:'local',lat:-33.39958,lon:-70.59293,radio:150},
-  {nombre:'Jumbo Av. Portales (San Bernardo)',cliente:'EBLOOMS',tipo:'local',lat:-33.63430,lon:-70.70900,radio:200}];
+  {nombre:'J512 Jumbo La Reina',ok:true,cliente:'EBLOOMS',tipo:'local',lat:-33.42735,lon:-70.53886,radio:150},
+  {nombre:'J502 Jumbo Kennedy',ok:true,cliente:'EBLOOMS',tipo:'local',lat:-33.39250,lon:-70.54560,radio:200},
+  {nombre:'J514 Jumbo La Dehesa',ok:true,cliente:'EBLOOMS',tipo:'local',lat:-33.35690,lon:-70.51530,radio:200},
+  {nombre:'J810 Jumbo Lo Castillo',ok:true,cliente:'EBLOOMS',tipo:'local',lat:-33.39958,lon:-70.59293,radio:150},
+  {nombre:'J843 Jumbo San Bernardo',ok:true,cliente:'EBLOOMS',tipo:'local',lat:-33.63430,lon:-70.70900,radio:200}];
 const enGeo=(lat,lon)=>lat==null?null:GEOCERCAS.find(g=>Math.hypot((lat-g.lat)*111320,(lon-g.lon)*111320*Math.cos(g.lat*Math.PI/180))<=g.radio)||null;
 async function lugarG(lat,lon){const g=enGeo(lat,lon);return g?g.nombre:await lugar(lat,lon)}
 // ═══ ENTREGAS (botón del conductor: foto + ubicación del celular) ═══
@@ -781,13 +782,22 @@ async function cargarProforma(){
   $('prof-sub').textContent=profFilas.length+' viaje(s) · total $'+tot.toLocaleString('es-CL')+' neto';
   $('btn-prof-xls').disabled=!profFilas.length;
 }
+function estiloXLS(ws,nFilas,nCols,filaTot){
+  const L=c=>XLSX.utils.encode_col(c), bd={style:'thin',color:{rgb:'DDDDDD'}}, B={top:bd,bottom:bd,left:bd,right:bd};
+  for(let c=0;c<nCols;c++){
+    const h=ws[L(c)+'1'];if(h)h.s={fill:{fgColor:{rgb:'1F3A5F'}},font:{bold:true,color:{rgb:'FFFFFF'}},border:B,alignment:{vertical:'center'}};
+    for(let r=2;r<=nFilas+1;r++){const x=ws[L(c)+r];if(x)x.s={...(x.s||{}),border:B,...(x.z?{numFmt:x.z}:{})}}
+    if(filaTot){const t=ws[L(c)+filaTot]||(ws[L(c)+filaTot]={t:'s',v:''});t.s={fill:{fgColor:{rgb:'EEF2F7'}},font:{bold:true},border:B,numFmt:t.z}}
+  }
+}
 function descargarProforma(){
   if(!profFilas.length||!window.XLSX)return;
   const head=['Factura','Canal','Semana','Transporte','Fecha Origen','Origen','Destino 1','Destino 2','Destino 3','Retorno','Destino 5','Patente','RUT','Chofer','Precio'];
   const rows=profFilas.map(f=>{const c=f.cells.slice();const [y,m,d]=f.fecha.split('-').map(Number);c[4]=(Date.UTC(y,m-1,d)-Date.UTC(1899,11,30))/86400000;return c});
   const ws=XLSX.utils.aoa_to_sheet([head,...rows]);
   for(let i=2;i<=rows.length+1;i++){ws['E'+i].t='n';ws['E'+i].z='dd-mm-yyyy';ws['O'+i].z='#,##0'}
-  const t=rows.length+3; ws['O'+t]={t:'n',f:'SUM(O2:O'+(rows.length+1)+')',v:rows.reduce((a,r)=>a+r[14],0),z:'#,##0'}; ws['!ref']='A1:O'+t;
+  const t=rows.length+3; ws['O'+t]={t:'n',f:'SUM(O2:O'+(rows.length+1)+')',v:rows.reduce((a,r)=>a+r[14],0),z:'#,##0'}; ws['A'+t]={t:'s',v:'Total '+profTit}; ws['!ref']='A1:O'+t;
+  estiloXLS(ws,rows.length,15,t);
   ws['!cols']=[{wch:20},{wch:8},{wch:8},{wch:18},{wch:12},{wch:20},{wch:20},{wch:18},{wch:18},{wch:22},{wch:16},{wch:9},{wch:12},{wch:18},{wch:10}];
   const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,profTit.slice(0,31));
   XLSX.writeFile(wb,'PROFORMA_Transporte_Madrid_'+profTit.replace(/\s+/g,'_')+'_'+$('prof-q').value.split('-')[0]+'.xlsx');
