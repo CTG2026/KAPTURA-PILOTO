@@ -449,7 +449,10 @@ async function enviar(reg,blobs){
     if(error)throw error;
     notas.fotos.push(supa.storage.from(BUCKET).getPublicUrl(path).data.publicUrl);
   }
-  (notas.entregas||[]).forEach(e=>{if(e.foto)notas.fotos.push(e.foto)});
+  const minF=(notas.fotos_ts||[]).filter(Boolean).map(t=>{const h=hhmm(t).split(':');return +h[0]*60+ +h[1]});
+  (notas.entregas||[]).forEach(e=>{if(!e.foto)return;const h=(e.hora||'').split(':'),m=+h[0]*60+ +h[1];
+    if(minF.some(x=>Math.abs(x-m)<=5))return; // misma guía fotografiada en el registro: no repetir
+    notas.fotos.push(e.foto)});
   const fila={...reg,notas:JSON.stringify(notas)};
   const {data:ya}=await supa.from('servicios_piloto').select('id').eq('servicio_id',reg.servicio_id).limit(1);
   if(ya&&ya.length)return true; // ya estaba guardado (evita duplicados)
