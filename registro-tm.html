@@ -61,7 +61,7 @@ input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--bor
 .reg{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:12px;margin-bottom:10px;font-size:14px;line-height:1.45}.reg{position:relative}.reg .t{font-weight:900;font-size:15px;padding-right:34px}.reg .del{position:absolute;top:8px;right:8px;background:var(--danger);color:#fff;border:0;border-radius:50%;width:28px;height:28px;font-size:14px}.reg .cf{display:flex;gap:8px;align-items:center;margin-top:8px;color:var(--danger);font-weight:800}.reg .cf button{border:0;border-radius:8px;padding:8px 14px;font-weight:800;font-family:inherit}.reg .m{color:var(--muted);font-size:13px}.reg .fx{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}.reg .fx a img{width:56px;height:56px;object-fit:cover;border-radius:8px;border:1px solid var(--border)}
 .tblw{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--border);border-radius:12px;margin-bottom:12px}
 .tbl{border-collapse:collapse;font-size:12px;min-width:100%;background:#fff;color:#111}.tbl th{background:#1f3a5f;color:#fff;padding:6px 8px;text-align:left;white-space:nowrap}.tbl td{padding:6px 8px;border-bottom:1px solid #ddd;white-space:nowrap}.tbl td.n{text-align:right}.tbl tr.tot td{font-weight:900;background:#eef2f7}
-.gps{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:12px;margin-bottom:12px;font-size:14px}.gps .t{font-weight:900;font-size:15px;margin-bottom:2px}.gps .m{color:var(--muted);font-size:13px}.gps table{width:100%;border-collapse:collapse;margin:8px 0;font-size:13px}.gps td,.gps th{padding:5px 4px;border-bottom:1px solid var(--border);text-align:left;vertical-align:top}.gps th{color:var(--muted);font-weight:700}.gps .kpi{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px}.gps .kpi div{background:#000;border-radius:8px;padding:6px 8px}.gps .kpi b{display:block;font-size:16px}.gps .al{color:var(--danger);font-weight:800;font-size:13px;margin-top:6px}.ul{color:var(--gold);font-weight:800}
+.pc{border-left:3px solid var(--gold);padding:6px 10px;margin:8px 0}.pc>b{font-size:15px}.pc .h{color:var(--muted);font-size:13px}.pc .e{font-size:13px;margin-top:2px}.gps{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:12px;margin-bottom:12px;font-size:14px}.gps .t{font-weight:900;font-size:15px;margin-bottom:2px}.gps .m{color:var(--muted);font-size:13px}.gps table{width:100%;border-collapse:collapse;margin:8px 0;font-size:13px}.gps td,.gps th{padding:5px 4px;border-bottom:1px solid var(--border);text-align:left;vertical-align:top}.gps th{color:var(--muted);font-weight:700}.gps .kpi{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px}.gps .kpi div{background:#000;border-radius:8px;padding:6px 8px}.gps .kpi b{display:block;font-size:16px}.gps .al{color:var(--danger);font-weight:800;font-size:13px;margin-top:6px}.ul{color:var(--gold);font-weight:800}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--gold);color:#000;padding:12px 18px;border-radius:10px;font-weight:800;font-size:14px;opacity:0;transition:opacity .3s;pointer-events:none;max-width:90vw;text-align:center}
 .toast.on{opacity:1}
 </style>
@@ -84,6 +84,7 @@ input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--bor
   <h1 id="saludo">Hola</h1>
   <div class="sub" id="sub-equipo"></div>
   <button class="big" id="btn-ent" style="display:none;background:#1f7a3a;color:#fff;margin-bottom:12px" onclick="entregue()">📦 ENTREGUÉ AQUÍ</button>
+  <button class="btn2" id="btn-misent" style="display:none;margin-bottom:12px" onclick="misEntregas()">📦 Mis entregas de hoy</button>
   <input type="file" id="cam-ent" accept="image/*" capture="environment" style="display:none" onchange="onFotoEnt(this)">
   <button class="big" id="btn-reg" onclick="nuevoRegistro()">📷 REGISTRAR SERVICIO</button>
   <button class="btn2" id="btn-ver" style="display:none" onclick="abrirRegistros()">📋 Ver registros y descargar Excel</button>
@@ -154,6 +155,12 @@ input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--bor
 </section>
 
 <!-- 6. REPORTE GPS -->
+<section class="screen" id="s-misent">
+  <h1>Mis entregas de hoy</h1>
+  <div class="sub" id="misent-sub">Cargando…</div>
+  <div id="misent-lista"></div>
+  <button class="btn2" onclick="ir('s-home');contarEnt()">← Volver</button>
+</section>
 <section class="screen" id="s-ent">
   <h1>Entrega</h1>
   <div class="card"><img id="ent-img" alt="" style="width:100%;border-radius:12px;max-height:42vh;object-fit:contain">
@@ -245,7 +252,7 @@ function entrar(p){
   if(!u){$('pin-err').textContent='PIN no registrado';pin='';setTimeout(pintarPin,600);return}
   user={pin:p,...u}; ls('tm_pin',p);
   $('saludo').textContent='Hola '+u.nombre.split(' ')[0];
-  $('btn-salir').style.display='block'; $('btn-ver').style.display='block';$('btn-ver').textContent=esAdmin()?'📋 Ver registros y descargar Excel':esCliente()?'📋 Ver mis servicios':'📋 Mis registros';$('btn-reg').style.display=esCliente()?'none':'block';$('btn-ent').style.display=esCliente()?'none':'block';const vg=(esAdmin()||esCliente())?'block':'none';$('btn-gps').style.display=vg;$('btn-prof').style.display=vg; ir('s-home'); revisarPendientes();
+  $('btn-salir').style.display='block'; $('btn-ver').style.display='block';$('btn-ver').textContent=esAdmin()?'📋 Ver registros y descargar Excel':esCliente()?'📋 Ver mis servicios':'📋 Mis registros';$('btn-reg').style.display=esCliente()?'none':'block';$('btn-ent').style.display=esCliente()?'none':'block';$('btn-misent').style.display=esCliente()?'none':'block';contarEnt();const vg=(esAdmin()||esCliente())?'block':'none';$('btn-gps').style.display=vg;$('btn-prof').style.display=vg; ir('s-home'); revisarPendientes();
 }
 function salir(){ls('tm_pin',null);user=null;pin='';pintarPin();$('btn-salir').style.display='none';ir('s-pin')}
 
@@ -588,9 +595,16 @@ async function guardarEnt(btn){
     const local=g?g.nombre:(c?await lugar(c.latitude,c.longitude):'Sin ubicación');
     const {error}=await supa.from('entregas').insert({empresa:EMPRESA,fecha,hora,conductor:user.nombre,local,cliente:g?g.cliente:null,lat:c?c.latitude:null,lon:c?c.longitude:null,precision_m:c?Math.round(c.accuracy):null,foto,estado:entPend?'pendiente':'entregado'});
     if(error)throw error;
-    toast((entPend?'⏳ Pendiente: ':'✅ Entrega guardada: ')+local+' '+hora);ir('s-home');
+    toast((entPend?'⏳ Pendiente: ':'✅ Entrega guardada: ')+local+' '+hora);ir('s-home');contarEnt();
   }catch(e){toast('No se pudo guardar. Revise la señal e intente de nuevo.')}
   btn.disabled=false;btn.textContent='✅ GUARDAR ENTREGA';
+}
+async function entHoy(){try{const r=await supa.from('entregas').select('*').eq('empresa',EMPRESA).eq('fecha',hoyISO()).eq('conductor',user.nombre).order('ts');return r.data||[]}catch(e){return []}}
+async function contarEnt(){if(!user||esCliente()||!supa)return;const n=(await entHoy()).length;$('btn-misent').textContent='📦 Mis entregas de hoy'+(n?' ('+n+')':'')}
+async function misEntregas(){
+  ir('s-misent');$('misent-lista').innerHTML='';$('misent-sub').textContent='Cargando…';
+  const es=await entHoy();$('misent-sub').textContent=es.length?es.length+' entrega(s) guardada(s)':'Todavía no hay entregas hoy.';
+  $('misent-lista').innerHTML=es.map(e=>'<div class="gl">'+(e.foto?'<a href="'+e.foto+'" target="_blank"><img src="'+e.foto+'"></a>':'')+'<div class="gi"><b>'+e.hora+' · '+e.local+'</b><div class="msg">'+(e.estado==='pendiente'?'⏳ Pendiente':'✅ Entregado')+'</div></div></div>').join('');
 }
 const entTxt=e=>(e.estado==='pendiente'?'⏳ Pendiente ':'✅ Entregado ')+e.hora+(e.foto?' <a href="'+e.foto+'" target="_blank">📷</a>':'');
 function diaRango(dia){const ini=new Date(dia+'T00:00:00-03:00');return [ini.toISOString(),new Date(ini.getTime()+86400000).toISOString()]}
@@ -631,18 +645,21 @@ async function cargarGPS(){
     const paradas=e.filter(x=>x.tipo==='parada'&&ini&&new Date(x.inicio)>=new Date(ini)&&new Date(x.inicio)<new Date(fin));
     const esp=paradas.reduce((t,x)=>t+(x.duracion_s||0),0), vmax=Math.max(0,...vj.map(x=>+x.vel_max||0));
     const s0=vj[0]?e.find(x=>x.tipo==='parada'&&x.fin&&Math.abs(new Date(x.fin)-new Date(vj[0].inicio))<180000&&(enGeo(x.lat_ini,x.lon_ini)||{}).tipo==='planta'):null;
-    let filas=s0?'<tr><td>'+hhmm(s0.inicio)+'</td><td>'+hhmm(s0.fin)+'</td><td>'+enGeo(s0.lat_ini,s0.lon_ini).nombre+'</td><td>'+durTxt(s0.duracion_s)+'</td></tr>'
-      :'<tr><td>—</td><td>'+hhmm(ini)+'</td><td>Salida: '+(vj[0]?await lugarG(vj[0].lat_ini,vj[0].lon_ini):'—')+'</td><td></td></tr>';
+    const pcard=(ic,nom,h,ex)=>'<div class="pc"><b>'+ic+' '+nom+'</b><div class="h">'+h+'</div>'+(ex||'')+'</div>';
+    const icono=g=>g?(g.tipo==='planta'?'🏭':'🛒'):'📍';
+    let filas=s0?pcard('🏭',enGeo(s0.lat_ini,s0.lon_ini).nombre,hhmm(s0.inicio)+' → '+hhmm(s0.fin)+' · '+durTxt(s0.duracion_s))
+      :pcard('🚩','Salida: '+(vj[0]?await lugarG(vj[0].lat_ini,vj[0].lon_ini):'—'),hhmm(ini));
     const pm=[];for(const x of paradas){const g=enGeo(x.lat_ini,x.lon_ini),u=pm[pm.length-1];
       if(g&&u&&u._g===g&&new Date(x.inicio)-new Date(u.fin||u.inicio)<15*60000){u.fin=x.fin;u.duracion_s=(new Date(x.fin||x.inicio)-new Date(u.inicio))/1000}else pm.push({...x,_g:g})}
     for(const x of pm){
       const ul=uls.find(u=>{if(!u.hora)return false;const t=new Date(dia+'T'+u.hora+':00-03:00');return t>=new Date(x.inicio)-600000&&t<=new Date(x.fin||x.inicio).getTime()+600000});
       const en=ents.filter(z=>!usadas.has(z.id)&&new Date(z.ts)>=new Date(x.inicio).getTime()-900000&&new Date(z.ts)<=new Date(x.fin||Date.now()).getTime()+900000&&(z.lat==null||Math.hypot((z.lat-x.lat_ini)*111320,(z.lon-x.lon_ini)*92300)<600));en.forEach(z=>usadas.add(z.id));
-      filas+='<tr><td>'+hhmm(x.inicio)+'</td><td>'+hhmm(x.fin)+'</td><td>'+(ul?'<span class="ul">'+ul.local+' '+(ul.nombre||'')+(ul.nro?' · Doc. '+ul.nro:'')+'</span><br>':'')+await lugarG(x.lat_ini,x.lon_ini)+(en.length?'<br>'+en.map(entTxt).join(' · '):'')+'</td><td>'+durTxt(x.duracion_s)+'</td></tr>';
+      filas+=pcard(icono(x._g),await lugarG(x.lat_ini,x.lon_ini),hhmm(x.inicio)+' → '+(x.fin?hhmm(x.fin):'…')+' · '+durTxt(x.duracion_s),
+        (ul?'<div class="e"><span class="ul">'+ul.local+' '+(ul.nombre||'')+(ul.nro?' · Doc. '+ul.nro:'')+'</span></div>':'')+en.map(z=>'<div class="e">'+entTxt(z)+'</div>').join(''));
     }
     const uv=vj[vj.length-1], ruta=uv&&uv.en_curso;
-    filas+=ruta?'<tr><td>—</td><td>—</td><td><b>🚚 En ruta</b> · posición a las '+hhmm(fin)+': '+await lugarG(uv.lat_fin,uv.lon_fin)+'</td><td></td></tr>'
-      :'<tr><td>'+hhmm(fin)+'</td><td>—</td><td>Fin: '+(vj.length?await lugarG(uv.lat_fin,uv.lon_fin):'—')+'</td><td></td></tr>';
+    filas+=ruta?pcard('🚚','En ruta','posición a las '+hhmm(fin)+': '+await lugarG(uv.lat_fin,uv.lon_fin))
+      :pcard('🏁','Fin: '+(vj.length?await lugarG(uv.lat_fin,uv.lon_fin):'—'),hhmm(fin));
     const al=[], exc=vj.filter(x=>(+x.vel_max||0)>90);
     if(exc.length){const z=exc[exc.length-1];
       al.push('Excesos de velocidad (más de 90 km/h): '+exc.length+'<br>Último: '+Math.round(z.vel_max)+' km/h · tramo de '+hhmm(z.inicio)+' a '+hhmm(z.fin)+' · '+await lugar(z.lat_fin,z.lon_fin));}
@@ -652,9 +669,9 @@ async function cargarGPS(){
     html+='<div class="gps"><div class="t">'+p+' · '+dia.split('-').reverse().join('-')+'</div>'+geoTxt+
       (sv.length?sv.map(s=>'<div class="m">'+SVC_VER(s._n.servicio_sistema)+' · '+s.conductor+((s._n.guias||[]).length?' · Guías '+s._n.guias.join(' - '):'')+(s._n.factura_salida?' · Factura '+s._n.factura_salida:'')+(s._n.peoneta?' + '+s._n.peoneta:'')+'</div>').join(''):'<div class="m">'+(ge.length?(dia===hoyISO()?'Servicio en curso':'Servicio realizado'):'Sin servicio registrado en Kaptura')+'</div>')+
       (()=>{const rest=ents.filter(z=>!usadas.has(z.id));return rest.length?'<div class="m">📦 Entregas registradas: '+rest.map(z=>z.local+' · '+entTxt(z)).join(' | ')+'</div>':''})()+
-      '<table><tr><th>Llega</th><th>Sale</th><th>Lugar</th><th>Espera</th></tr>'+filas+'</table>'+
-      '<div class="kpi"><div>Km<b>'+Math.round(km)+'</b></div><div>Jornada<b>'+durTxt(jor)+'</b></div><div>Conducción<b>'+durTxt(cond)+'</b></div><div>Esperas<b>'+durTxt(esp)+'</b></div>'+(esCliente()?'':'<div>Vel. máx.<b>'+Math.round(vmax)+' km/h</b></div><div>Tramos<b>'+vj.length+'</b></div>')+'</div>'+
-      (!esCliente()&&al.length?'<div class="al">⚠ '+al.join('<br>⚠ ')+'</div>':'')+'</div>';
+      filas+
+      '<div class="kpi"><div>Km<b>'+Math.round(km)+'</b></div><div>Esperas<b>'+durTxt(esp)+'</b></div>'+(esAdmin()?'<div>Jornada<b>'+durTxt(jor)+'</b></div><div>Conducción<b>'+durTxt(cond)+'</b></div><div>Vel. máx.<b>'+Math.round(vmax)+' km/h</b></div><div>Tramos<b>'+vj.length+'</b></div>':'')+'</div>'+
+      (esAdmin()&&al.length?'<div class="al">⚠ '+al.join('<br>⚠ ')+'</div>':'')+'</div>';
     $('gps-lista').innerHTML=html;
   }
   $('gps-sub').innerHTML=ult;
