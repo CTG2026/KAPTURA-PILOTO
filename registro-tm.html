@@ -250,28 +250,40 @@ function entrar(p){
 function salir(){ls('tm_pin',null);user=null;pin='';pintarPin();$('btn-salir').style.display='none';ir('s-pin')}
 
 // ═══ REGISTRO ═══
-function nuevoRegistro(){
+// Borrador: las fotos quedan guardadas en el celular hasta registrar el servicio
+function bdb(){return new Promise((res,rej)=>{const r=indexedDB.open('tm_borrador',1);r.onupgradeneeded=()=>r.result.createObjectStore('fotos',{keyPath:'k',autoIncrement:true});r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}
+async function bOp(modo,fn){try{const d=await bdb();return await new Promise((res,rej)=>{const t=d.transaction('fotos',modo),st=t.objectStore('fotos'),r=fn(st);t.oncomplete=()=>res(r&&r.result);t.onerror=()=>rej(t.error)})}catch(e){return null}}
+const bAdd=(blob,num)=>bOp('readwrite',st=>st.add({pin:user.pin,blob,num:num||'',ts:Date.now()}));
+const bUpd=(f)=>f.k!=null&&bOp('readwrite',st=>st.put({k:f.k,pin:user.pin,blob:f.blob,num:f.num||'',ts:Date.now()}));
+const bDel=(k)=>k!=null&&bOp('readwrite',st=>st.delete(k));
+const bTodas=()=>bOp('readonly',st=>st.getAll());
+async function bLimpiar(){const t=await bTodas()||[];for(const x of t)if(x.pin===user.pin)await bDel(x.k)}
+async function nuevoRegistro(){
   if(esCliente())return;
-  fotos=[];svcSel=null;extrasSel=new Set();$('obs').value='';$('reg-err').textContent='';
+  fotos=[];const guard=(await bTodas()||[]).filter(x=>x.pin===user.pin).sort((a,b)=>a.ts-b.ts);
+  guard.forEach(x=>fotos.push({k:x.k,blob:x.blob,url:URL.createObjectURL(x.blob),num:x.num||'',estado:x.num?'ok':'no'}));
+  if(guard.length)toast('Se recuperaron '+guard.length+' foto(s) guardadas');
+  svcSel=null;extrasSel=new Set();$('obs').value='';$('reg-err').textContent='';
   ['trasp-pallets','trasp-monto','trasv-monto','espera-horas','peaje-monto','reemp-patente'].forEach(i=>$(i).value='');
   pintarFotos(); pintarServicios(); pintarEquipo(); pintarExtras(); ir('s-reg');
 }
 function pintarFotos(){
   const t=$('thumbs');t.innerHTML='';t.style.display='block';
   fotos.forEach((f,i)=>{const d=document.createElement('div');d.className='gl';
-    const msg=f.estado==='leyendo'?'Leyendo número…':f.estado==='no'&&!f.num?'Número de guía no leído. Tome una nueva foto o ingrese el número manualmente.':f.estado==='ok'?'Leído de la foto. Verifique que coincida con el papel.':'';
-    const err=f.estado==='no'&&!f.num;
+    const msg=f.estado==='leyendo'?'Leyendo número…':f.estado==='no'&&!f.num?'Número no leído (opcional). Puede escribirlo si lo ve.':f.estado==='ok'?'Leído de la foto. Verifique que coincida con el papel.':'';
+    const err=false;
     d.innerHTML='<img src="'+f.url+'"><div class="gi"><label>N° guía / factura</label><input inputmode="numeric" class="'+(err?'err':'')+'" value="'+(f.num||'')+'" placeholder="'+(f.estado==='leyendo'?'…':'Escriba el N°')+'"><div class="msg'+(err?' err':'')+'">'+msg+'</div></div><button class="x">✕</button>';
-    d.querySelector('input').oninput=e=>{f.num=e.target.value.replace(/\D/g,'');if(f.num!==e.target.value)e.target.value=f.num;e.target.classList.toggle('err',!f.num&&f.estado==='no')};
-    d.querySelector('.x').onclick=()=>{fotos.splice(i,1);pintarFotos()};t.appendChild(d)});
+    d.querySelector('input').oninput=e=>{f.num=e.target.value.replace(/\D/g,'');if(f.num!==e.target.value)e.target.value=f.num;bUpd(f)};
+    d.querySelector('.x').onclick=()=>{bDel(f.k);fotos.splice(i,1);pintarFotos()};t.appendChild(d)});
+  if(fotos.length){const n=document.createElement('div');n.className='sub';n.style.marginTop='4px';n.textContent='💾 Las fotos quedan guardadas en este celular hasta registrar el servicio.';t.appendChild(n)}
   $('btn-foto').textContent=fotos.length?'📷 Otra foto':'📷 Tomar foto';
 }
 async function onFoto(inp){
   const fs=[...(inp.files||[])]; inp.value=''; if(!fs.length)return;
   const nuevas=[];
-  for(const f of fs){try{const blob=await comprimir(f);const o={blob,url:URL.createObjectURL(blob),num:'',estado:'leyendo',file:f};fotos.push(o);nuevas.push(o)}catch(e){toast('No se pudo leer una foto')}}
+  for(const f of fs){try{const blob=await comprimir(f);const o={blob,url:URL.createObjectURL(blob),num:'',estado:'leyendo',file:f};o.k=await bAdd(blob,'');fotos.push(o);nuevas.push(o)}catch(e){toast('No se pudo leer una foto')}}
   pintarFotos();
-  for(const o of nuevas){o.num=await leerNumero(o.file)||'';o.estado=o.num?'ok':'no';delete o.file;if(fotos.includes(o))pintarFotos()}
+  for(const o of nuevas){const n=await leerNumero(o.file)||'';if(!o.num)o.num=n;o.estado=o.num?'ok':'no';delete o.file;if(fotos.includes(o)){bUpd(o);pintarFotos()}}
 }
 // ═══ LECTURA DEL N° DE GUÍA / FACTURA (en el celular) ═══
 let ocrW=null;
@@ -374,9 +386,6 @@ function textoExtras(e){
 async function guardar(){
   const err=$('reg-err');
   if(!fotos.length){err.textContent='Falta la foto de la guía';return}
-  if(fotos.some(f=>f.estado==='leyendo')){err.textContent='Espera: se está leyendo el número de la guía';return}
-  const sinNum=fotos.findIndex(f=>!f.num);
-  if(sinNum>=0){err.textContent='Falta el N° de guía en la foto '+(sinNum+1)+': tome una nueva foto o ingrese el número';return}
   if(!svcSel){err.textContent='Elige el servicio';return}
   if(!$('patente').value){err.textContent='Elige la patente del camión';return}
   if($('peo-box').style.display!=='none'&&$('peoneta').value==='?'){err.textContent='Elige el peoneta (o "Sin peoneta")';return}
@@ -391,7 +400,7 @@ async function guardar(){
     servicio_id:id, patente:$('patente').value, conductor:user.nombre, cliente:svcSel.cliente||null,
     origen:svcSel.origen||null, destino:svcSel.destino||null, fecha:hoyISO(ahora), estado:'registrado',
     empresa:EMPRESA, modo:'registro_tm', tarifa_neta:svcSel.tarifa||null,
-    notas:JSON.stringify({servicio_sistema:svcSel.servicio, acoplado:$('acoplado').value||null, peoneta:($('peo-box').style.display!=='none'&&$('peoneta').value)||null, extras:ex, observacion:$('obs').value.trim()||null, guias:fotos.map(f=>f.num), pin:user.pin, registrado:ahora.toISOString(), fotos:[]})
+    notas:JSON.stringify({servicio_sistema:svcSel.servicio, acoplado:$('acoplado').value||null, peoneta:($('peo-box').style.display!=='none'&&$('peoneta').value)||null, extras:ex, observacion:$('obs').value.trim()||null, guias:fotos.map(f=>f.num).filter(Boolean), pin:user.pin, registrado:ahora.toISOString(), fotos:[]})
   };
   const freq=JSON.parse(ls('tm_freq_'+user.pin)||'{}');freq[svcSel.servicio]=(freq[svcSel.servicio]||0)+1;ls('tm_freq_'+user.pin,JSON.stringify(freq));
   ultimo={reg,ex,svc:svcSel,nfotos:fotos.length,ahora};
@@ -399,6 +408,7 @@ async function guardar(){
   let enviado=false;
   try{ enviado=await enviar(reg,fotos.map(f=>f.blob)); }catch(e){ enviado=false; }
   if(!enviado){ await encolar(reg,fotos.map(f=>f.blob)); }
+  await bLimpiar();
   btn.disabled=false;btn.textContent='GUARDAR';
   $('ok-sub').textContent=enviado?(svcSel.txt+' · '+fotos.length+' foto(s)'):'Sin señal: quedó guardado en el celular y se enviará solo cuando vuelva la conexión.';
   ir('s-ok'); revisarPendientes();
