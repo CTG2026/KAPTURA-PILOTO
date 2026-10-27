@@ -530,10 +530,10 @@ async function lugar(lat,lon){
 const GEOCERCAS=[{nombre:'Planta EBLOOMS',cliente:'EBLOOMS',tipo:'planta',lat:-34.23852,lon:-71.01362,radio:300},
   // Locales de entrega EBLOOMS: armados con el historial GPS (paradas repetidas) y la tienda más cercana. 'ok' = confirmado
   {nombre:'J501 Jumbo Bilbao',cliente:'EBLOOMS',tipo:'local',ok:true,lat:-33.43032,lon:-70.57974,radio:150},
-  {nombre:'Jumbo Francisco Bilbao 8750',cliente:'EBLOOMS',tipo:'local',lat:-33.42735,lon:-70.53886,radio:150},
+  {nombre:'Jumbo La Reina',cliente:'EBLOOMS',tipo:'local',lat:-33.42735,lon:-70.53886,radio:150},
   {nombre:'Jumbo Presidente Kennedy 9001',cliente:'EBLOOMS',tipo:'local',lat:-33.39250,lon:-70.54560,radio:200},
   {nombre:'Jumbo La Dehesa',cliente:'EBLOOMS',tipo:'local',lat:-33.35690,lon:-70.51530,radio:200},
-  {nombre:'Jumbo Eduardo Marquina',cliente:'EBLOOMS',tipo:'local',lat:-33.39958,lon:-70.59293,radio:150},
+  {nombre:'Jumbo Lo Castillo',cliente:'EBLOOMS',tipo:'local',lat:-33.39958,lon:-70.59293,radio:150},
   {nombre:'Jumbo Av. Portales (San Bernardo)',cliente:'EBLOOMS',tipo:'local',lat:-33.63430,lon:-70.70900,radio:200}];
 const enGeo=(lat,lon)=>lat==null?null:GEOCERCAS.find(g=>Math.hypot((lat-g.lat)*111320,(lon-g.lon)*111320*Math.cos(g.lat*Math.PI/180))<=g.radio)||null;
 async function lugarG(lat,lon){const g=enGeo(lat,lon);return g?g.nombre:await lugar(lat,lon)}
@@ -582,8 +582,8 @@ async function cargarGPS(){
       filas+='<tr><td>'+hhmm(x.inicio)+'</td><td>'+hhmm(x.fin)+'</td><td>'+(ul?'<span class="ul">'+ul.local+' '+(ul.nombre||'')+(ul.nro?' · Doc. '+ul.nro:'')+'</span><br>':'')+await lugarG(x.lat_ini,x.lon_ini)+'</td><td>'+durTxt(x.duracion_s)+'</td></tr>';
     }
     const uv=vj[vj.length-1], ruta=uv&&uv.en_curso;
-    filas+=ruta?'<tr><td>—</td><td>—</td><td><b>🚚 En ruta</b> · posición a las '+hhmm(fin)+': '+await lugar(uv.lat_fin,uv.lon_fin)+'</td><td></td></tr>'
-      :'<tr><td>'+hhmm(fin)+'</td><td>—</td><td>Fin: '+(vj.length?await lugar(uv.lat_fin,uv.lon_fin):'—')+'</td><td></td></tr>';
+    filas+=ruta?'<tr><td>—</td><td>—</td><td><b>🚚 En ruta</b> · posición a las '+hhmm(fin)+': '+await lugarG(uv.lat_fin,uv.lon_fin)+'</td><td></td></tr>'
+      :'<tr><td>'+hhmm(fin)+'</td><td>—</td><td>Fin: '+(vj.length?await lugarG(uv.lat_fin,uv.lon_fin):'—')+'</td><td></td></tr>';
     const al=[], exc=vj.filter(x=>(+x.vel_max||0)>90);
     if(exc.length){const z=exc[exc.length-1];
       al.push('Excesos de velocidad (más de 90 km/h): '+exc.length+'<br>Último: '+Math.round(z.vel_max)+' km/h · tramo de '+hhmm(z.inicio)+' a '+hhmm(z.fin)+' · '+await lugar(z.lat_fin,z.lon_fin));}
