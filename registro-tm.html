@@ -511,13 +511,17 @@ async function verRegistros(){
   const {data,error}=await q.eq('modo','registro_tm').neq('estado','anulado').gte('fecha',desde()).order('fecha',{ascending:false}).order('servicio_id',{ascending:false});
   if(error){$('list-sub').textContent='Error al leer: '+error.message;return}
   filas=(data||[]).map(r=>({...r,_n:parseNotas(r.notas)}));
+  // Entregas en vivo: todas las del conductor ese día (también las hechas después de registrar)
+  try{const {data:ev}=await supa.from('entregas').select('*').eq('empresa',EMPRESA).gte('fecha',desde()).neq('estado','prueba').order('ts');
+    filas.forEach(r=>{const vivas=(ev||[]).filter(e=>e.fecha===r.fecha&&e.conductor===r.conductor);const fs=new Set(vivas.map(e=>e.foto));
+      r._ents=vivas.concat((r._n.entregas||[]).filter(e=>!fs.has(e.foto)))})}catch(e){}
   $('list-sub').textContent=filas.length+' registro(s) desde el '+desde().split('-').reverse().join('-')+(pend.length?' · '+pend.length+' en este celular esperando señal':'');
   $('btn-xls').disabled=!filas.length;
   $('lista').innerHTML=filas.map((r,i)=>{const n=r._n,ex=textoExtras(n.extras||{});
     return '<div class="reg" data-i="'+i+'">'+(esAdmin()?'<button class="del" onclick="pedirBorrar('+i+')">✕</button>':'')+'<div class="t">'+(n.codigo?'<span class="ul">'+n.codigo+'</span> · ':'')+r.fecha.split('-').reverse().join('-')+' · '+SVC_VER(n.servicio_sistema||((r.origen||'')+' → '+(r.destino||'')))+'</div>'+
     '<div>'+r.conductor+(n.peoneta?' + '+n.peoneta:'')+' · '+r.patente+(n.acoplado?' / '+n.acoplado:'')+'</div>'+((n.guias||[]).length?'<div><b>Guías: '+n.guias.join(' - ')+'</b></div>':'')+(n.factura_salida?'<div><b>Factura salida: '+n.factura_salida+'</b></div>':'')+
     (ex&&!esCliente()?'<div class="m">Extras: '+ex+'</div>':'')+(n.observacion&&!esCliente()?'<div class="m">Obs.: '+n.observacion+'</div>':'')+
-    (n.entregas||[]).map(e=>'<div class="m">📦 '+e.hora+' · '+e.local+' · '+(e.estado==='pendiente'?'⏳ Pendiente':'✅ Entregado')+(e.obs?' · Guía '+e.obs:'')+'</div>').join('')+(n.unidades_logisticas||[]).map(u=>'<div class="m"><span class="ul">'+u.local+' '+(u.nombre||'')+'</span> · '+(u.hora||'')+(u.nro?' · Doc. '+u.nro:'')+' · '+(u.items||[]).map(i=>i.cant+' '+i.desc.toLowerCase()).join(', ')+'</div>').join('')+(n.carga_manual?'<div class="m">Carga manual ('+n.carga_manual+')</div>':'')+'<button class="btn2" style="margin-top:8px;padding:10px;font-size:14px" onclick="gpsServicio('+i+')">🛰 Ver recorrido GPS</button>'+(user&&user.rol==='administrador'?'<button class="btn2" style="margin-top:8px;padding:10px;font-size:14px" onclick="avisoCliente('+i+')">📤 Enviar aviso al cliente</button>':'')+'<div class="fx">'+(n.fotos||[]).concat((n.unidades_logisticas||[]).map(u=>u.foto).filter(Boolean)).map(u=>'<a href="'+u+'" target="_blank"><img src="'+u+'"></a>').join('')+'</div></div>'}).join('');
+    (r._ents||n.entregas||[]).map(e=>'<div class="m">📦 '+e.hora+' · '+e.local+' · '+(e.estado==='pendiente'?'⏳ Pendiente':'✅ Entregado')+(e.obs?' · Guía '+e.obs:'')+'</div>').join('')+(n.unidades_logisticas||[]).map(u=>'<div class="m"><span class="ul">'+u.local+' '+(u.nombre||'')+'</span> · '+(u.hora||'')+(u.nro?' · Doc. '+u.nro:'')+' · '+(u.items||[]).map(i=>i.cant+' '+i.desc.toLowerCase()).join(', ')+'</div>').join('')+(n.carga_manual?'<div class="m">Carga manual ('+n.carga_manual+')</div>':'')+'<button class="btn2" style="margin-top:8px;padding:10px;font-size:14px" onclick="gpsServicio('+i+')">🛰 Ver recorrido GPS</button>'+(user&&user.rol==='administrador'?'<button class="btn2" style="margin-top:8px;padding:10px;font-size:14px" onclick="avisoCliente('+i+')">📤 Enviar aviso al cliente</button>':'')+'<div class="fx">'+(n.fotos||[]).concat((n.unidades_logisticas||[]).map(u=>u.foto).filter(Boolean)).map(u=>'<a href="'+u+'" target="_blank"><img src="'+u+'"></a>').join('')+'</div></div>'}).join('');
 }
 function fmt(n){return Number(n||0).toLocaleString('es-CL')}
 async function avisoCliente(i){
@@ -614,6 +618,7 @@ async function lugar(lat,lon){
 // Geocercas: al entrar el camión, el cliente empieza a ver su servicio en el Reporte GPS
 const GEOCERCAS=[{nombre:'Planta EBLOOMS',cliente:'EBLOOMS',tipo:'planta',lat:-34.23852,lon:-71.01362,radio:300},
   // Locales de entrega EBLOOMS: armados con el historial GPS (paradas repetidas) y la tienda más cercana. 'ok' = confirmado
+  {nombre:'N794 CD Chillán (Cencosud)',cliente:'EBLOOMS',tipo:'local',ok:true,lat:-36.68907,lon:-72.25390,radio:300},
   {nombre:'J501 Jumbo Bilbao',cliente:'EBLOOMS',tipo:'local',ok:true,lat:-33.43032,lon:-70.57974,radio:150},
   {nombre:'J512 Jumbo La Reina',ok:true,cliente:'EBLOOMS',tipo:'local',lat:-33.42735,lon:-70.53886,radio:150},
   {nombre:'J502 Jumbo Kennedy',ok:true,cliente:'EBLOOMS',tipo:'local',lat:-33.39250,lon:-70.54560,radio:200},
