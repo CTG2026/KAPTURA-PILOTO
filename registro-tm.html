@@ -521,7 +521,7 @@ async function verRegistros(){
     return '<div class="reg" data-i="'+i+'">'+(esAdmin()?'<button class="del" onclick="pedirBorrar('+i+')">✕</button>':'')+'<div class="t">'+(n.codigo?'<span class="ul">'+n.codigo+'</span> · ':'')+r.fecha.split('-').reverse().join('-')+' · '+SVC_VER(n.servicio_sistema||((r.origen||'')+' → '+(r.destino||'')))+'</div>'+
     '<div>'+r.conductor+(n.peoneta?' + '+n.peoneta:'')+' · '+r.patente+(n.acoplado?' / '+n.acoplado:'')+'</div>'+((n.guias||[]).length?'<div><b>Guías: '+n.guias.join(' - ')+'</b></div>':'')+(n.factura_salida?'<div><b>Factura salida: '+n.factura_salida+'</b></div>':'')+
     (ex&&!esCliente()?'<div class="m">Extras: '+ex+'</div>':'')+(n.observacion&&!esCliente()?'<div class="m">Obs.: '+n.observacion+'</div>':'')+
-    (r._ents||n.entregas||[]).map(e=>'<div class="m">📦 '+e.hora+' · '+e.local+' · '+(e.estado==='pendiente'?'⏳ Pendiente':'✅ Entregado')+(e.obs?' · Guía '+e.obs:'')+'</div>').join('')+(n.unidades_logisticas||[]).map(u=>'<div class="m"><span class="ul">'+u.local+' '+(u.nombre||'')+'</span> · '+(u.hora||'')+(u.nro?' · Doc. '+u.nro:'')+' · '+(u.items||[]).map(i=>i.cant+' '+i.desc.toLowerCase()).join(', ')+'</div>').join('')+(n.carga_manual?'<div class="m">Carga manual ('+n.carga_manual+')</div>':'')+'<button class="btn2" style="margin-top:8px;padding:10px;font-size:14px" onclick="gpsServicio('+i+')">🛰 Ver recorrido GPS</button>'+(user&&user.rol==='administrador'?'<button class="btn2" style="margin-top:8px;padding:10px;font-size:14px" onclick="avisoCliente('+i+')">📤 Enviar aviso al cliente</button>':'')+'<div class="fx">'+(n.fotos||[]).concat((n.unidades_logisticas||[]).map(u=>u.foto).filter(Boolean)).map(u=>'<a href="'+u+'" target="_blank"><img src="'+u+'"></a>').join('')+'</div></div>'}).join('');
+    (r._ents||n.entregas||[]).map(e=>'<div class="m">📦 '+e.hora+' · '+e.local+' · '+(e.estado==='pendiente'?'⏳ Pendiente':'✅ Entregado')+(e.obs?' · Guía '+e.obs:'')+'</div>').join('')+(n.unidades_logisticas||[]).map(u=>'<div class="m"><span class="ul">'+u.local+' '+(u.nombre||'')+'</span> · '+(u.hora||'')+(u.nro?' · Doc. '+u.nro:'')+' · '+(u.items||[]).map(i=>i.cant+' '+i.desc.toLowerCase()).join(', ')+'</div>').join('')+(n.carga_manual?'<div class="m">Carga manual ('+n.carga_manual+')</div>':'')+'<button class="btn2" style="margin-top:8px;padding:10px;font-size:14px" onclick="gpsServicio('+i+')">🛰 Ver recorrido GPS</button>'+(user&&user.rol==='administrador'?'<button class="btn2" style="margin-top:8px;padding:10px;font-size:14px" onclick="avisoCliente('+i+')">📤 Enviar aviso al cliente</button>':'')+'<div class="fx">'+[...new Set((n.fotos||[]).concat((n.unidades_logisticas||[]).map(u=>u.foto),(r._ents||[]).map(e=>e.foto)).filter(Boolean))].map(u=>'<a href="'+u+'" target="_blank"><img src="'+u+'"></a>').join('')+'</div></div>'}).join('');
 }
 function fmt(n){return Number(n||0).toLocaleString('es-CL')}
 async function avisoCliente(i){
@@ -645,9 +645,12 @@ async function pintarEnt(){
   if(entPos.err){el.textContent='📍 Sin ubicación (se guarda igual)';return}
   const c=entPos.coords,g=geoCerca(c.latitude,c.longitude,c.accuracy);
   el.textContent='📍 '+(g?g.nombre:await lugar(c.latitude,c.longitude));
+  if(g&&g.tipo==='planta'){el.textContent+=' · ⚠ No es un punto de entrega';$('ent-ok').disabled=true}else $('ent-ok').disabled=false;
 }
 async function guardarEnt(btn){
-  if(!supa||!entFoto)return;btn.disabled=true;btn.textContent='Guardando…';
+  if(!supa||!entFoto)return;
+  {const c=entPos&&entPos.coords,g=c?geoCerca(c.latitude,c.longitude,c.accuracy):null;
+   if(g&&g.tipo==='planta'){toast('Está en '+g.nombre+': aquí no se entrega. La guía de salida va en REGISTRAR SERVICIO.');return}}btn.disabled=true;btn.textContent='Guardando…';
   try{
     const ahora=new Date(),fecha=hoyISO(ahora),hora=String(ahora.getHours()).padStart(2,'0')+':'+String(ahora.getMinutes()).padStart(2,'0');
     let foto=null;try{const b=await comprimir(entFoto);const path='tm/'+fecha.slice(0,7)+'/ent_'+Date.now()+'_'+user.pin+'.jpg';
