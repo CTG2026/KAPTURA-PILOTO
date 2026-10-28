@@ -87,7 +87,7 @@ input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--bor
   <input type="file" id="cam-ent" accept="image/*" capture="environment" style="display:none" onchange="onFotoEnt(this)">
   <button class="big" id="btn-reg" onclick="nuevoRegistro()">📷 REGISTRAR SERVICIO</button>
   <button class="btn2" id="btn-misent" style="display:none" onclick="misEntregas()">📦 Mis entregas de hoy</button>
-  <button class="btn2" id="btn-ver" style="display:none" onclick="abrirRegistros()">📋 Ver registros y descargar Excel</button>
+  <button class="btn2" id="btn-ver" style="display:none" onclick="abrirRegistros()">📋 Servicios registrados</button>
   <button class="btn2" id="btn-gps" style="display:none" onclick="gpsPat=null;gpsVolver='s-home';$('gps-dia').value='';verGPS()">🛰 Reporte GPS del día</button>
   <button class="btn2" id="btn-prof" style="display:none" onclick="verProforma()">🧾 Proforma EBLOOMS</button>
 </section>
@@ -145,7 +145,7 @@ input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--bor
 
 <!-- 5. VER REGISTROS (admin / coordinador) -->
 <section class="screen" id="s-list">
-  <h1 id="list-h">Registros Transportes Madrid</h1>
+  <h1 id="list-h">Servicios registrados – Transportes Madrid</h1>
   <div class="seg" id="seg"><button data-r="hoy" class="sel">Hoy</button><button data-r="7">7 días</button><button data-r="mes">Mes</button></div>
   <div class="sub" id="list-sub">Cargando…</div>
   <button class="big" id="btn-xls" onclick="descargarExcel()" disabled>⬇ Descargar Excel</button>
@@ -255,7 +255,7 @@ function entrar(p){
   if(!u){$('pin-err').textContent='PIN no registrado';pin='';setTimeout(pintarPin,600);return}
   user={pin:p,...u}; ls('tm_pin',p);
   $('saludo').textContent='Hola '+u.nombre.split(' ')[0];
-  $('btn-salir').style.display='block'; $('btn-ver').style.display='block';$('btn-ver').textContent=esAdmin()?'📋 Ver registros y descargar Excel':esCliente()?'📋 Ver mis servicios':'📋 Mis registros';$('btn-reg').style.display=esCliente()?'none':'block';$('btn-ent').style.display=esCliente()?'none':'block';$('btn-misent').style.display=esCliente()?'none':'block';contarEnt();const vg=(esAdmin()||esCliente())?'block':'none';$('btn-gps').style.display=vg;$('btn-prof').style.display=vg; ir('s-home'); revisarPendientes();
+  $('btn-salir').style.display='block'; $('btn-ver').style.display='block';$('btn-ver').textContent=esAdmin()?'📋 Servicios registrados':esCliente()?'📋 Ver mis servicios':'📋 Mis servicios registrados';$('btn-reg').style.display=esCliente()?'none':'block';$('btn-ent').style.display=esCliente()?'none':'block';$('btn-misent').style.display=esCliente()?'none':'block';contarEnt();const vg=(esAdmin()||esCliente())?'block':'none';$('btn-gps').style.display=vg;$('btn-prof').style.display=vg; ir('s-home'); revisarPendientes();
 }
 function salir(){ls('tm_pin',null);user=null;pin='';pintarPin();$('btn-salir').style.display='none';ir('s-pin')}
 
@@ -501,7 +501,7 @@ document.querySelectorAll('#seg button').forEach(b=>b.onclick=()=>{rango=b.datas
 function desde(){const d=new Date();if(rango==='hoy')return hoyISO(d);if(rango==='mes')return hoyISO(new Date(d.getFullYear(),d.getMonth(),1));d.setDate(d.getDate()-6);return hoyISO(d)}
 function parseNotas(n){try{return JSON.parse(n||'{}')}catch(e){return{observacion:n}}}
 async function verRegistros(){
-  ir('s-list'); $('lista').innerHTML=''; $('btn-xls').disabled=true; $('btn-xls').style.display=esAdmin()?'block':'none'; $('list-h').textContent=esAdmin()?'Registros Transportes Madrid':esCliente()?'Servicios '+user.cliente:'Mis registros';
+  ir('s-list'); $('lista').innerHTML=''; $('btn-xls').disabled=true; $('btn-xls').style.display=esAdmin()?'block':'none'; $('list-h').textContent=esAdmin()?'Servicios registrados – Transportes Madrid':esCliente()?'Servicios '+user.cliente:'Mis servicios registrados';
   const pend=await cola();
   if(!supa){$('list-sub').textContent='Sin conexión con la base de datos.'+(pend.length?' '+pend.length+' registro(s) en este celular esperando señal.':'');return}
   $('list-sub').textContent='Cargando…';
