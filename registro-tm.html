@@ -20,6 +20,7 @@
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{background:var(--bg);color:var(--text);font-family:'DM Sans',system-ui,sans-serif;min-height:100%}
 body{padding:16px 16px 40px;max-width:520px;margin:0 auto}
+@media (min-width:1024px){body:has(#s-prof.on){max-width:none}body:has(#s-prof.on) #prof-tbl td{white-space:normal}body:has(#s-prof.on) #prof-tbl td:nth-child(5),body:has(#s-prof.on) #prof-tbl td:nth-child(12),body:has(#s-prof.on) #prof-tbl td:nth-child(13),body:has(#s-prof.on) #prof-tbl td:nth-child(15){white-space:nowrap}}
 .hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
 .brand{font-weight:900;letter-spacing:.12em;font-size:13px;color:var(--gold)}
 .link{background:none;border:none;color:var(--muted);font-size:13px;font-family:inherit;text-decoration:underline;cursor:pointer}
