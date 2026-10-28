@@ -167,7 +167,7 @@ input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--bor
     <div id="ent-local" style="font-size:20px;font-weight:800;margin-top:12px">📍 Buscando ubicación…</div>
     <div class="lbl" style="margin-top:10px">N° guía / documento (opcional)</div>
     <input id="ent-nro" inputmode="numeric" placeholder="Leyendo número…" style="width:100%;font-size:20px;padding:10px;border-radius:10px;border:2px solid var(--border);background:var(--surface);color:var(--text)"></div>
-  <button class="btn2" id="ent-pend" onclick="togglePend()">⏳ Quedó pendiente</button>
+  <button class="btn2" id="ent-pend" onclick="togglePend()">📄 IFCO pendiente</button>
   <button class="big" id="ent-ok" style="margin-top:14px" onclick="guardarEnt(this)">✅ GUARDAR ENTREGA</button>
   <button class="btn2" onclick="ir('s-home')">Cancelar</button>
 </section>
@@ -404,7 +404,7 @@ async function guardar(){
 }
 async function guardar2(){
   const err=$('reg-err');
-  let entsHoy=[];try{const r=await supa.from('entregas').select('local,hora,estado,foto,obs').eq('empresa',EMPRESA).eq('fecha',hoyISO()).eq('conductor',user.nombre).neq('estado','prueba').order('ts');entsHoy=r.data||[]}catch(e){}
+  let entsHoy=[];try{const r=await supa.from('entregas').select('local,hora,estado,foto,obs,ifco_pendiente,ifco_recibido').eq('empresa',EMPRESA).eq('fecha',hoyISO()).eq('conductor',user.nombre).neq('estado','prueba').order('ts');entsHoy=r.data||[]}catch(e){}
   if(!fotos.length&&!entsHoy.length){err.textContent='Falta la foto de la guía (o registre sus entregas con 📦 Entregué aquí)';return}
   if(!svcSel){err.textContent='Elige el servicio';return}
   if(!$('patente').value){err.textContent='Elige la patente del camión';return}
@@ -521,7 +521,7 @@ async function verRegistros(){
     return '<div class="reg" data-i="'+i+'">'+(esAdmin()?'<button class="del" onclick="pedirBorrar('+i+')">✕</button>':'')+'<div class="t">'+(n.codigo?'<span class="ul">'+n.codigo+'</span> · ':'')+r.fecha.split('-').reverse().join('-')+' · '+SVC_VER(n.servicio_sistema||((r.origen||'')+' → '+(r.destino||'')))+'</div>'+
     '<div>'+r.conductor+(n.peoneta?' + '+n.peoneta:'')+' · '+r.patente+(n.acoplado?' / '+n.acoplado:'')+'</div>'+((n.guias||[]).length?'<div><b>Guías: '+n.guias.join(' - ')+'</b></div>':'')+(n.factura_salida?'<div><b>Factura salida: '+n.factura_salida+'</b></div>':'')+
     (ex&&!esCliente()?'<div class="m">Extras: '+ex+'</div>':'')+(n.observacion&&!esCliente()?'<div class="m">Obs.: '+n.observacion+'</div>':'')+
-    (r._ents||n.entregas||[]).map(e=>'<div class="m">📦 '+e.hora+' · '+e.local+' · '+(e.estado==='pendiente'?'⏳ Pendiente':'✅ Entregado')+(e.obs?' · Guía '+e.obs:'')+'</div>').join('')+(n.unidades_logisticas||[]).map(u=>'<div class="m"><span class="ul">'+u.local+' '+(u.nombre||'')+'</span> · '+(u.hora||'')+(u.nro?' · Doc. '+u.nro:'')+' · '+(u.items||[]).map(i=>i.cant+' '+i.desc.toLowerCase()).join(', ')+'</div>').join('')+(n.carga_manual?'<div class="m">Carga manual ('+n.carga_manual+')</div>':'')+'<button class="btn2" style="margin-top:8px;padding:10px;font-size:14px" onclick="gpsServicio('+i+')">🛰 Ver recorrido GPS</button>'+(user&&user.rol==='administrador'?'<button class="btn2" style="margin-top:8px;padding:10px;font-size:14px" onclick="avisoCliente('+i+')">📤 Enviar aviso al cliente</button>':'')+'<div class="fx">'+[...new Set((n.fotos||[]).concat((n.unidades_logisticas||[]).map(u=>u.foto),(r._ents||[]).map(e=>e.foto)).filter(Boolean))].map(u=>'<a href="'+u+'" target="_blank"><img src="'+u+'"></a>').join('')+'</div></div>'}).join('');
+    (r._ents||n.entregas||[]).map(e=>'<div class="m">📦 '+e.hora+' · '+e.local+' · '+(e.estado==='pendiente'?'⏳ Pendiente':'✅ Entregado')+((e.ifco_pendiente&&!e.ifco_recibido)?' · 📄 IFCO pendiente':'')+(e.obs?' · Guía '+e.obs:'')+'</div>').join('')+(n.unidades_logisticas||[]).map(u=>'<div class="m"><span class="ul">'+u.local+' '+(u.nombre||'')+'</span> · '+(u.hora||'')+(u.nro?' · Doc. '+u.nro:'')+' · '+(u.items||[]).map(i=>i.cant+' '+i.desc.toLowerCase()).join(', ')+'</div>').join('')+(n.carga_manual?'<div class="m">Carga manual ('+n.carga_manual+')</div>':'')+'<button class="btn2" style="margin-top:8px;padding:10px;font-size:14px" onclick="gpsServicio('+i+')">🛰 Ver recorrido GPS</button>'+(user&&user.rol==='administrador'?'<button class="btn2" style="margin-top:8px;padding:10px;font-size:14px" onclick="avisoCliente('+i+')">📤 Enviar aviso al cliente</button>':'')+'<div class="fx">'+[...new Set((n.fotos||[]).concat((n.unidades_logisticas||[]).map(u=>u.foto),(r._ents||[]).map(e=>e.foto)).filter(Boolean))].map(u=>'<a href="'+u+'" target="_blank"><img src="'+u+'"></a>').join('')+'</div></div>'}).join('');
 }
 function fmt(n){return Number(n||0).toLocaleString('es-CL')}
 async function avisoCliente(i){
@@ -563,7 +563,7 @@ async function avisoCliente(i){
   if(puntos.length){L.push('','📍 *Recorrido y entregas:*');
     puntos.forEach(p=>{L.push(p.ic+' *'+p.nom+'*','     '+p.h);
       if(p.ul)L.push('     📄 Doc. Unidades logísticas '+(p.ul.nro||'')+': '+(p.ul.items||[]).map(it=>it.cant+' '+it.desc.toLowerCase()).join(' · '));
-      p.ez.forEach(z=>L.push('     '+(z.estado==='pendiente'?'⏳ Pendiente ':'✅ Entregado ')+z.hora))});
+      p.ez.forEach(z=>L.push('     '+(z.estado==='pendiente'?'⏳ Pendiente ':'✅ Entregado ')+z.hora+((z.ifco_pendiente&&!z.ifco_recibido)?' · 📄 IFCO pendiente':'')))});
     L.push('','📏 Km recorridos: '+Math.round(km)+' · ⏱ Esperas en locales: '+durTxt(esp));
   }else if(uls.length){L.push('','🏬 *Entregas confirmadas:*');
     uls.forEach(u=>{L.push('• '+(u.hora||'')+' · '+u.local+' '+(u.nombre||'')+(u.nro?' · Doc. Unidades logísticas '+u.nro:''));(u.items||[]).forEach(it=>L.push('   • '+it.cant+' '+it.desc.toLowerCase()))});}
@@ -638,7 +638,7 @@ function entregue(){
 }
 function onFotoEnt(inp){const f=inp.files&&inp.files[0];if(!f)return;entFoto=f;$('ent-nro').value='';$('ent-nro').placeholder='Leyendo número…';leerNumero(f).then(n=>{if(entFoto===f&&!$('ent-nro').value&&n)$('ent-nro').value=n;$('ent-nro').placeholder='Escriba el N° si lo ve'});$('ent-img').src=URL.createObjectURL(f);entPend=false;pintarPend();ir('s-ent');pintarEnt()}
 function togglePend(){entPend=!entPend;pintarPend()}
-function pintarPend(){const b=$('ent-pend');b.textContent=entPend?'⏳ PENDIENTE (tocar para quitar)':'⏳ Quedó pendiente';b.style.background=entPend?'#c77d00':'';b.style.color=entPend?'#fff':''}
+function pintarPend(){const b=$('ent-pend');b.textContent=entPend?'📄 IFCO PENDIENTE (tocar para quitar)':'📄 IFCO pendiente';b.style.background=entPend?'#c77d00':'';b.style.color=entPend?'#fff':''}
 async function pintarEnt(){
   if(!$('s-ent').classList.contains('on'))return;const el=$('ent-local');
   if(!entPos){el.textContent='📍 Buscando ubicación…';return}
@@ -657,9 +657,9 @@ async function guardarEnt(btn){
       const up=await supa.storage.from(BUCKET).upload(path,b,{contentType:'image/jpeg',upsert:false});if(!up.error)foto=supa.storage.from(BUCKET).getPublicUrl(path).data.publicUrl}catch(e){}
     const c=entPos&&entPos.coords,g=c?geoCerca(c.latitude,c.longitude,c.accuracy):null;
     const local=g?g.nombre:(c?await lugar(c.latitude,c.longitude):'Sin ubicación');
-    const {error}=await supa.from('entregas').insert({empresa:EMPRESA,fecha,hora,conductor:user.nombre,local,cliente:g?g.cliente:null,lat:c?c.latitude:null,lon:c?c.longitude:null,precision_m:c?Math.round(c.accuracy):null,foto,estado:entPend?'pendiente':'entregado',obs:($('ent-nro').value||'').replace(/\D/g,'')||null});
+    const {error}=await supa.from('entregas').insert({empresa:EMPRESA,fecha,hora,conductor:user.nombre,local,cliente:g?g.cliente:null,lat:c?c.latitude:null,lon:c?c.longitude:null,precision_m:c?Math.round(c.accuracy):null,foto,estado:'entregado',ifco_pendiente:entPend,obs:($('ent-nro').value||'').replace(/\D/g,'')||null});
     if(error)throw error;
-    toast((entPend?'⏳ Pendiente: ':'✅ Entrega guardada: ')+local+' '+hora);ir('s-home');contarEnt();
+    toast((entPend?'📄 Entregado · IFCO pendiente: ':'✅ Entrega guardada: ')+local+' '+hora);ir('s-home');contarEnt();
   }catch(e){toast('No se pudo guardar. Revise la señal e intente de nuevo.')}
   btn.disabled=false;btn.textContent='✅ GUARDAR ENTREGA';
 }
@@ -668,11 +668,11 @@ async function contarEnt(){if(!user||esCliente()||!supa)return;const n=(await en
 async function misEntregas(){
   ir('s-misent');$('misent-lista').innerHTML='';$('misent-sub').textContent='Cargando…';
   $('s-misent').querySelector('h1').textContent=esAdmin()?'Entregas de hoy':'Mis entregas de hoy';const es=await entHoy(true);$('misent-sub').textContent=es.length?es.length+' entrega(s) guardada(s)':'Todavía no hay entregas hoy.';
-  $('misent-lista').innerHTML=es.map(e=>'<div class="gl">'+(e.foto?'<a href="'+e.foto+'" target="_blank"><img src="'+e.foto+'"></a>':'')+'<div class="gi"><b>'+e.hora+' · '+e.local+'</b>'+(esAdmin()?'<div class="msg">'+e.conductor+'</div>':'')+'<div class="msg">'+(e.estado==='pendiente'?'⏳ Pendiente':'✅ Entregado')+(e.obs?' · Guía N° '+e.obs:' · sin N° de guía')+'</div></div></div>').join('');
+  $('misent-lista').innerHTML=es.map(e=>'<div class="gl">'+(e.foto?'<a href="'+e.foto+'" target="_blank"><img src="'+e.foto+'"></a>':'')+'<div class="gi"><b>'+e.hora+' · '+e.local+'</b>'+(esAdmin()?'<div class="msg">'+e.conductor+'</div>':'')+'<div class="msg">'+(e.estado==='pendiente'?'⏳ Pendiente':'✅ Entregado')+((e.ifco_pendiente&&!e.ifco_recibido)?' · 📄 IFCO pendiente':'')+(e.obs?' · Guía N° '+e.obs:' · sin N° de guía')+'</div></div></div>').join('');
 }
 // Fotos del registro final con su hora de captura: se tratan como entregas para que el reporte y el aviso queden iguales
 const fotosComoEnt=(r)=>{const n=r._n||{};return (n.fotos_ts||[]).map((t,k)=>t?{id:'rf'+r.servicio_id+k,ts:t,hora:hhmm(t),foto:(n.fotos||[])[k]||null,estado:'entregado',lat:null,lon:null,cliente:r.cliente}:null).filter(Boolean)};
-const entTxt=e=>(e.estado==='pendiente'?'⏳ Pendiente ':'✅ Entregado ')+e.hora+(e.obs?' · Guía '+e.obs:'')+(e.foto?' <a href="'+e.foto+'" target="_blank">📷</a>':'');
+const entTxt=e=>(e.estado==='pendiente'?'⏳ Pendiente ':'✅ Entregado ')+e.hora+((e.ifco_pendiente&&!e.ifco_recibido)?' · 📄 IFCO pendiente':'')+(e.obs?' · Guía '+e.obs:'')+(e.foto?' <a href="'+e.foto+'" target="_blank">📷</a>':'');
 function diaRango(dia){const ini=new Date(dia+'T00:00:00-03:00');return [ini.toISOString(),new Date(ini.getTime()+86400000).toISOString()]}
 let gpsPat=null, gpsVolver='s-home';
 function gpsServicio(i){const r=filas[i];if(!r)return;gpsPat=PAT_GPS(r.patente);gpsVolver='s-list';$('gps-dia').value=r.fecha;$('gps-dia').onchange=cargarGPS;verGPS()}
