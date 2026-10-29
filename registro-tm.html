@@ -635,7 +635,7 @@ async function lugarG(lat,lon){const g=enGeo(lat,lon);return g?g.nombre:await lu
 let entPos=null, entFoto=null, entPend=false;
 function geoCerca(lat,lon,acc){let best=null,bd=1e9;for(const g of GEOCERCAS){const d=Math.hypot((lat-g.lat)*111320,(lon-g.lon)*111320*Math.cos(g.lat*Math.PI/180));if(d<=g.radio+Math.min(acc||0,150)&&d<bd){bd=d;best=g}}return best}
 function entregue(){
-  entPos=null;entPend=false;
+  entPos=null;entPend=false;$('ent-ok').disabled=false; // cada entrega parte habilitada; solo se bloquea si la ubicación confirma la planta
   if(navigator.geolocation)navigator.geolocation.getCurrentPosition(p=>{entPos=p;pintarEnt()},e=>{entPos={err:1};pintarEnt()},{enableHighAccuracy:true,timeout:20000,maximumAge:60000});
   else entPos={err:1};
   $('cam-ent').value='';$('cam-ent').click();
@@ -645,8 +645,8 @@ function togglePend(){entPend=!entPend;pintarPend()}
 function pintarPend(){const b=$('ent-pend');b.textContent=entPend?'📄 IFCO PENDIENTE (tocar para quitar)':'📄 IFCO pendiente';b.style.background=entPend?'#c77d00':'';b.style.color=entPend?'#fff':''}
 async function pintarEnt(){
   if(!$('s-ent').classList.contains('on'))return;const el=$('ent-local');
-  if(!entPos){el.textContent='📍 Buscando ubicación…';return}
-  if(entPos.err){el.textContent='📍 Sin ubicación (se guarda igual)';return}
+  if(!entPos){el.textContent='📍 Buscando ubicación…';$('ent-ok').disabled=false;return}
+  if(entPos.err){el.textContent='📍 Sin ubicación (se guarda igual)';$('ent-ok').disabled=false;return}
   const c=entPos.coords,g=geoCerca(c.latitude,c.longitude,c.accuracy);
   el.textContent='📍 '+(g?g.nombre:await lugar(c.latitude,c.longitude));
   if(g&&g.tipo==='planta'){el.textContent+=' · ⚠ No es un punto de entrega';$('ent-ok').disabled=true}else $('ent-ok').disabled=false;
