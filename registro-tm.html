@@ -501,7 +501,7 @@ function avisarWhatsApp(){
   if(!ultimo)return;
   const {reg,ex,svc,nfotos,ahora}=ultimo, notas=JSON.parse(reg.notas);
   const f=String(ahora.getDate()).padStart(2,'0')+'-'+String(ahora.getMonth()+1).padStart(2,'0')+'-'+ahora.getFullYear()+' '+String(ahora.getHours()).padStart(2,'0')+':'+String(ahora.getMinutes()).padStart(2,'0');
-  const l=['✅ SERVICIO REGISTRADO','Conductor: '+reg.conductor,'Fecha: '+f,'Servicio: '+svc.txt,'Equipo: '+reg.patente+(notas.acoplado?' / '+notas.acoplado:'')+(notas.peoneta?' · Peoneta: '+notas.peoneta:''),'Guías: '+((notas.guias||[]).join(' - ')||nfotos+' foto'+(nfotos===1?'':'s'))];
+  const l=['✅ SERVICIO REGISTRADO','Cliente: '+(reg.cliente||svc.cliente||'—'),'Conductor: '+reg.conductor,'Fecha: '+f,'Servicio: '+svc.txt,'Equipo: '+reg.patente+(notas.acoplado?' / '+notas.acoplado:'')+(notas.peoneta?' · Peoneta: '+notas.peoneta:''),'Guías: '+((notas.guias||[]).join(' - ')||nfotos+' foto'+(nfotos===1?'':'s'))];
   const t=textoExtras(ex); if(t)l.push('Extras: '+t);
   if(notas.observacion)l.push('Obs.: '+notas.observacion);
   window.location.href='https://wa.me/?text='+encodeURIComponent(l.join('\n'));
