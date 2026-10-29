@@ -417,7 +417,7 @@ async function guardar(){
 }
 async function guardar2(){
   const err=$('reg-err');
-  let entsHoy=[];try{const r=await conTope(supa.from('entregas').select('local,hora,estado,foto,obs,ifco_pendiente,ifco_recibido').eq('empresa',EMPRESA).eq('fecha',hoyISO()).eq('conductor',user.nombre).neq('estado','prueba').order('ts'),8000);entsHoy=r.data||[]}catch(e){}
+  let entsHoy=[];try{const r=await conTope(supa.from('entregas').select('local,hora,estado,foto,obs,ifco_pendiente,ifco_recibido').eq('empresa',EMPRESA).eq('fecha',hoyISO()).eq('conductor',user.nombre).neq('estado','prueba').is('servicio_id',null).order('ts'),8000);entsHoy=r.data||[]}catch(e){}
   if(!fotos.length&&!entsHoy.length){err.textContent='Falta la foto de la guía (o registre sus entregas con 📦 Entregué aquí)';return}
   if(!svcSel){err.textContent='Elige el servicio';return}
   if(!$('patente').value){err.textContent='Elige la patente del camión';return}
@@ -468,11 +468,14 @@ async function enviar(reg,blobs){
     notas.fotos.push(e.foto)});
   const fila={...reg,notas:JSON.stringify(notas)};
   const {data:ya}=await supa.from('servicios_piloto').select('id').eq('servicio_id',reg.servicio_id).limit(1);
-  if(ya&&ya.length)return true; // ya estaba guardado (evita duplicados)
+  if(ya&&ya.length){await vincularEnt(reg);return true} // ya estaba guardado (evita duplicados)
   const {error}=await supa.from('servicios_piloto').insert(fila);
   if(error)throw error;
+  await vincularEnt(reg);
   return true;
 }
+// Entregas del día aún sin servicio quedan vinculadas a este servicio
+async function vincularEnt(reg){try{await conTope(supa.from('entregas').update({servicio_id:reg.servicio_id}).eq('empresa',EMPRESA).eq('fecha',reg.fecha).eq('conductor',reg.conductor).is('servicio_id',null).neq('estado','prueba'),8000)}catch(e){}}
 
 // ═══ COLA SIN SEÑAL (IndexedDB) ═══
 function db(){return new Promise((res,rej)=>{const r=indexedDB.open('tm_registro',1);r.onupgradeneeded=()=>r.result.createObjectStore('cola',{keyPath:'servicio_id'});r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}
@@ -526,7 +529,7 @@ async function verRegistros(){
   filas=(data||[]).map(r=>({...r,_n:parseNotas(r.notas)}));
   // Entregas en vivo: todas las del conductor ese día (también las hechas después de registrar)
   try{const {data:ev}=await supa.from('entregas').select('*').eq('empresa',EMPRESA).gte('fecha',desde()).neq('estado','prueba').order('ts');
-    filas.forEach(r=>{const vivas=(ev||[]).filter(e=>e.fecha===r.fecha&&e.conductor===r.conductor);const fs=new Set(vivas.map(e=>e.foto));
+    filas.forEach(r=>{const vivas=(ev||[]).filter(e=>e.servicio_id?e.servicio_id===r.servicio_id:(e.fecha===r.fecha&&e.conductor===r.conductor));const fs=new Set(vivas.map(e=>e.foto));
       r._ents=vivas.concat((r._n.entregas||[]).filter(e=>!fs.has(e.foto)))})}catch(e){}
   $('list-sub').textContent=filas.length+' registro(s) desde el '+desde().split('-').reverse().join('-')+(pend.length?' · '+pend.length+' en este celular esperando señal':'');
   $('btn-xls').disabled=!filas.length;
@@ -557,7 +560,7 @@ async function avisoCliente(i){
     let ult=-1;pm.forEach((x,k)=>{if(x._g)ult=k});
     const sel=pm.slice(0,ult+1).filter(x=>x._g);
     const {data:en0}=await supa.from('entregas').select('*').eq('empresa',EMPRESA).eq('fecha',r.fecha).neq('estado','prueba');
-    const en=(en0||[]).slice();{const ya=new Set(en.map(e=>e.foto));fotosComoEnt(r).forEach(e=>{if(!ya.has(e.foto))en.push(e)})}
+    const en=(en0||[]).filter(z=>!z.servicio_id||z.servicio_id===r.servicio_id);{const ya=new Set(en.map(e=>e.foto));fotosComoEnt(r).forEach(e=>{if(!ya.has(e.foto))en.push(e)})}
     for(const x of sel){
       const ez=(en||[]).filter(z=>new Date(z.ts)>=new Date(x.inicio).getTime()-900000&&new Date(z.ts)<=new Date(x.fin||x.inicio).getTime()+900000);
       const ul=uls.find(u=>{if(!u.hora)return false;const t=new Date(r.fecha+'T'+u.hora+':00-03:00');return t>=new Date(x.inicio)-600000&&t<=new Date(x.fin||x.inicio).getTime()+600000});
@@ -670,7 +673,8 @@ async function guardarEnt(btn){
       const up=await supa.storage.from(BUCKET).upload(path,b,{contentType:'image/jpeg',upsert:false});if(!up.error)foto=supa.storage.from(BUCKET).getPublicUrl(path).data.publicUrl}catch(e){}
     const c=entPos&&entPos.coords,g=c?geoCerca(c.latitude,c.longitude,c.accuracy):null;
     const local=g?g.nombre:(c?await lugar(c.latitude,c.longitude):'Sin ubicación');
-    const {error}=await supa.from('entregas').insert({empresa:EMPRESA,fecha,hora,conductor:user.nombre,local,cliente:g?g.cliente:null,lat:c?c.latitude:null,lon:c?c.longitude:null,precision_m:c?Math.round(c.accuracy):null,foto,estado:'entregado',ifco_pendiente:entPend,obs:($('ent-nro').value||'').replace(/\D/g,'')||null});
+    let sid=null;try{const r=await conTope(supa.from('servicios_piloto').select('servicio_id').eq('empresa',EMPRESA).eq('modo','registro_tm').neq('estado','anulado').eq('fecha',fecha).eq('conductor',user.nombre).order('servicio_id',{ascending:false}).limit(1),6000);sid=((r.data||[])[0]||{}).servicio_id||null}catch(e){}
+    const {error}=await supa.from('entregas').insert({empresa:EMPRESA,fecha,hora,conductor:user.nombre,local,cliente:g?g.cliente:null,lat:c?c.latitude:null,lon:c?c.longitude:null,precision_m:c?Math.round(c.accuracy):null,foto,estado:'entregado',ifco_pendiente:entPend,servicio_id:sid,obs:($('ent-nro').value||'').replace(/\D/g,'')||null});
     if(error)throw error;
     toast((entPend?'📄 Entregado · IFCO pendiente: ':'✅ Entrega guardada: ')+local+' '+hora);ir('s-home');contarEnt();
   }catch(e){toast('No se pudo guardar. Revise la señal e intente de nuevo.')}
