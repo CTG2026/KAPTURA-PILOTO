@@ -672,7 +672,16 @@ async function contarEnt(){if(!user||esCliente()||!supa)return;const n=(await en
 async function misEntregas(){
   ir('s-misent');$('misent-lista').innerHTML='';$('misent-sub').textContent='Cargando…';
   $('s-misent').querySelector('h1').textContent=esAdmin()?'Entregas de hoy':'Mis entregas de hoy';const es=await entHoy(true);$('misent-sub').textContent=es.length?es.length+' entrega(s) guardada(s)':'Todavía no hay entregas hoy.';
-  $('misent-lista').innerHTML=es.map(e=>'<div class="gl">'+(e.foto?'<a href="'+e.foto+'" target="_blank"><img src="'+e.foto+'"></a>':'')+'<div class="gi"><b>'+e.hora+' · '+e.local+'</b>'+(esAdmin()?'<div class="msg">'+e.conductor+'</div>':'')+'<div class="msg">'+(e.estado==='pendiente'?'⏳ Pendiente':'✅ Entregado')+((e.ifco_pendiente&&!e.ifco_recibido)?' · 📄 IFCO pendiente':'')+(e.obs?' · Guía N° '+e.obs:' · sin N° de guía')+'</div></div></div>').join('');
+  const item=(e,sinCond)=>'<div class="gl">'+(e.foto?'<a href="'+e.foto+'" target="_blank"><img src="'+e.foto+'"></a>':'')+'<div class="gi"><b>'+e.hora+' · '+e.local+'</b>'+(esAdmin()&&!sinCond?'<div class="msg">'+e.conductor+'</div>':'')+'<div class="msg">'+(e.estado==='pendiente'?'⏳ Pendiente':'✅ Entregado')+((e.ifco_pendiente&&!e.ifco_recibido)?' · 📄 IFCO pendiente':'')+(e.obs?' · Guía N° '+e.obs:' · sin N° de guía')+'</div></div></div>';
+  if(!esAdmin()){$('misent-lista').innerHTML=es.map(e=>item(e)).join('');return}
+  // Tú y Claudio: agrupadas por conductor (y su camión/servicio del día), cada grupo ordenado por hora
+  let sv=[];try{const r=await conTope(supa.from('servicios_piloto').select('servicio_id,conductor,patente,notas').eq('empresa',EMPRESA).eq('modo','registro_tm').neq('estado','anulado').eq('fecha',hoyISO()).order('servicio_id'),8000);sv=r.data||[]}catch(e){}
+  const grupos={};es.slice().sort((a,b)=>(a.hora||'').localeCompare(b.hora||'')).forEach(e=>{(grupos[e.conductor]=grupos[e.conductor]||[]).push(e)});
+  $('misent-lista').innerHTML=Object.keys(grupos).sort((a,b)=>grupos[a][0].hora.localeCompare(grupos[b][0].hora)).map(c=>{
+    const lis=grupos[c].slice().sort((a,b)=>(a.hora||'').localeCompare(b.hora||'')),ss=sv.filter(x=>x.conductor===c);
+    const cab=ss.length?ss.map(x=>{const n=parseNotas(x.notas);return (n.codigo?n.codigo+' · ':'')+x.patente+' · '+SVC_VER(n.servicio_sistema||'')}).join(' / '):'Servicio aún no registrado';
+    return '<div class="reg" style="margin-top:12px"><div class="t"><b>'+c+'</b> · '+lis.length+' entrega(s)</div><div class="m">'+cab+'</div></div>'+lis.map(e=>item(e,true)).join('');
+  }).join('');
 }
 // Fotos del registro final con su hora de captura: se tratan como entregas para que el reporte y el aviso queden iguales
 const fotosComoEnt=(r)=>{const n=r._n||{};return (n.fotos_ts||[]).map((t,k)=>t?{id:'rf'+r.servicio_id+k,ts:t,hora:hhmm(t),foto:(n.fotos||[])[k]||null,estado:'entregado',lat:null,lon:null,cliente:r.cliente}:null).filter(Boolean)};
