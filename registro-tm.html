@@ -88,6 +88,7 @@ input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--bor
   <input type="file" id="cam-ent" accept="image/*" capture="environment" style="display:none" onchange="onFotoEnt(this)">
   <button class="big" id="btn-reg" onclick="nuevoRegistro()">📷 REGISTRAR SERVICIO</button>
   <button class="btn2" id="btn-misent" style="display:none" onclick="misEntregas()">📦 Mis entregas de hoy</button>
+  <button class="btn2" id="btn-ifco" style="display:none" onclick="verIfco()">📄 IFCO pendientes</button>
   <button class="btn2" id="btn-ver" style="display:none" onclick="abrirRegistros()">📋 Servicios registrados</button>
   <button class="btn2" id="btn-gps" style="display:none" onclick="gpsPat=null;gpsVolver='s-home';$('gps-dia').value='';verGPS()">🛰 Reporte GPS del día</button>
   <button class="btn2" id="btn-prof" style="display:none" onclick="verProforma()">🧾 Proforma EBLOOMS</button>
@@ -161,6 +162,14 @@ input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--bor
   <div class="sub" id="misent-sub">Cargando…</div>
   <div id="misent-lista"></div>
   <button class="btn2" onclick="ir('s-home');contarEnt()">← Volver</button>
+</section>
+<section class="screen" id="s-ifco">
+  <h1>IFCO pendientes</h1>
+  <div class="sub" id="ifco-sub">Cargando…</div>
+  <div id="ifco-lista"></div>
+  <button class="big" id="btn-ifco-wa" style="margin-top:12px;background:#1f7a3a;color:#fff" onclick="ifcoWhatsApp()" disabled>📤 Enviar resumen por WhatsApp</button>
+  <button class="btn2" id="btn-ifco-xls" onclick="ifcoExcel()" disabled>⬇ Descargar Excel</button>
+  <button class="btn2" onclick="ir('s-home');contarIfco()">← Volver</button>
 </section>
 <section class="screen" id="s-ent">
   <h1>Entrega</h1>
@@ -257,7 +266,7 @@ function entrar(p){
   if(!u){$('pin-err').textContent='PIN no registrado';pin='';setTimeout(pintarPin,600);return}
   user={pin:p,...u}; ls('tm_pin',p);
   $('saludo').textContent='Hola '+u.nombre.split(' ')[0];
-  $('btn-salir').style.display='block'; $('btn-ver').style.display='block';$('btn-ver').textContent=esAdmin()?'📋 Servicios registrados':esCliente()?'📋 Ver mis servicios':'📋 Mis servicios registrados';$('btn-reg').style.display=esCliente()?'none':'block';$('btn-ent').style.display=esCliente()?'none':'block';$('btn-misent').style.display=esCliente()?'none':'block';contarEnt();const vg=(esAdmin()||esCliente())?'block':'none';$('btn-gps').style.display=vg;$('btn-prof').style.display=vg; ir('s-home'); revisarPendientes();
+  $('btn-salir').style.display='block'; $('btn-ver').style.display='block';$('btn-ver').textContent=esAdmin()?'📋 Servicios registrados':esCliente()?'📋 Ver mis servicios':'📋 Mis servicios registrados';$('btn-reg').style.display=esCliente()?'none':'block';$('btn-ent').style.display=esCliente()?'none':'block';$('btn-misent').style.display=esCliente()?'none':'block';contarEnt();const vg=(esAdmin()||esCliente())?'block':'none';$('btn-gps').style.display=vg;$('btn-prof').style.display=vg;$('btn-ifco').style.display=vg;contarIfco(); ir('s-home'); revisarPendientes();
 }
 function salir(){ls('tm_pin',null);user=null;pin='';pintarPin();$('btn-salir').style.display='none';ir('s-pin')}
 
@@ -669,10 +678,11 @@ async function guardarEnt(btn){
 }
 async function entHoy(todos){try{let q=supa.from('entregas').select('*').eq('empresa',EMPRESA).eq('fecha',hoyISO()).neq('estado','prueba');if(!(todos&&esAdmin()))q=q.eq('conductor',user.nombre);const r=await q.order('ts');return r.data||[]}catch(e){return []}}
 async function contarEnt(){if(!user||esCliente()||!supa)return;const n=(await entHoy(true)).length;$('btn-misent').textContent=(esAdmin()?'📦 Entregas de hoy':'📦 Mis entregas de hoy')+(n?' ('+n+')':'')}
+let _misEnt=[];
 async function misEntregas(){
   ir('s-misent');$('misent-lista').innerHTML='';$('misent-sub').textContent='Cargando…';
-  $('s-misent').querySelector('h1').textContent=esAdmin()?'Entregas de hoy':'Mis entregas de hoy';const es=await entHoy(true);$('misent-sub').textContent=es.length?es.length+' entrega(s) guardada(s)':'Todavía no hay entregas hoy.';
-  const item=(e,sinCond)=>'<div class="gl">'+(e.foto?'<a href="'+e.foto+'" target="_blank"><img src="'+e.foto+'"></a>':'')+'<div class="gi"><b>'+e.hora+' · '+e.local+'</b>'+(esAdmin()&&!sinCond?'<div class="msg">'+e.conductor+'</div>':'')+'<div class="msg">'+(e.estado==='pendiente'?'⏳ Pendiente':'✅ Entregado')+((e.ifco_pendiente&&!e.ifco_recibido)?' · 📄 IFCO pendiente':'')+(e.obs?' · Guía N° '+e.obs:' · sin N° de guía')+'</div></div></div>';
+  $('s-misent').querySelector('h1').textContent=esAdmin()?'Entregas de hoy':'Mis entregas de hoy';const es=await entHoy(true);_misEnt=es;$('misent-sub').textContent=es.length?es.length+' entrega(s) guardada(s)':'Todavía no hay entregas hoy.';
+  const item=(e,sinCond)=>'<div class="gl">'+(e.foto?'<a href="'+e.foto+'" target="_blank"><img src="'+e.foto+'"></a>':'')+'<div class="gi"><b>'+e.hora+' · '+e.local+'</b>'+(esAdmin()&&!sinCond?'<div class="msg">'+e.conductor+'</div>':'')+'<div class="msg">'+(e.estado==='pendiente'?'⏳ Pendiente':'✅ Entregado')+((e.ifco_pendiente&&!e.ifco_recibido)?' · 📄 IFCO pendiente':'')+(e.obs?' · Guía N° '+e.obs:' · sin N° de guía')+'</div>'+((e.ifco_pendiente&&!e.ifco_recibido)?'<button class="btn2" style="margin-top:6px;padding:8px;font-size:13px" onclick="waIfco(ifcoTxt(_misEnt['+es.indexOf(e)+']))">📤 Avisar IFCO pendiente por WhatsApp</button>':'')+'</div></div>';
   if(!esAdmin()){$('misent-lista').innerHTML=es.map(e=>item(e)).join('');return}
   // Tú y Claudio: agrupadas por conductor (y su camión/servicio del día), cada grupo ordenado por hora
   let sv=[];try{const r=await conTope(supa.from('servicios_piloto').select('servicio_id,conductor,patente,notas').eq('empresa',EMPRESA).eq('modo','registro_tm').neq('estado','anulado').eq('fecha',hoyISO()).order('servicio_id'),8000);sv=r.data||[]}catch(e){}
@@ -682,6 +692,34 @@ async function misEntregas(){
     const cab=ss.length?ss.map(x=>{const n=parseNotas(x.notas);return (n.codigo?n.codigo+' · ':'')+x.patente+' · '+SVC_VER(n.servicio_sistema||'')}).join(' / '):'Servicio aún no registrado';
     return '<div class="reg" style="margin-top:12px"><div class="t"><b>'+c+'</b> · '+lis.length+' entrega(s)</div><div class="m">'+cab+'</div></div>'+lis.map(e=>item(e,true)).join('');
   }).join('');
+}
+// ═══ IFCO PENDIENTES (entregas hechas sin documento de recepción IFCO) ═══
+let ifcoFilas=[];
+const ifcoDias=f=>{const [y,m,d]=f.split('-').map(Number);return Math.max(0,Math.floor((new Date(hoyISO()+'T00:00:00')-new Date(y,m-1,d))/86400000))};
+const ifcoTxt=e=>'📄 IFCO pendiente · '+e.fecha.split('-').reverse().join('-')+' '+e.hora+' · '+e.local+(e.obs?' · Guía '+e.obs:'')+' · '+e.conductor+(e.foto?' · Foto: '+e.foto:'');
+function waIfco(t){window.open('https://wa.me/?text='+encodeURIComponent(t),'_blank')}
+async function ifcoLeer(){let q=supa.from('entregas').select('*').eq('empresa',EMPRESA).eq('ifco_pendiente',true).is('ifco_recibido',null).neq('estado','prueba');
+  if(esCliente())q=q.eq('cliente',user.cliente);const r=await conTope(q.order('fecha',{ascending:false}).order('ts',{ascending:false}),10000);return r.data||[]}
+async function contarIfco(){if(!user||!supa||!(esAdmin()||esCliente()))return;try{const n=(await ifcoLeer()).length;$('btn-ifco').textContent='📄 IFCO pendientes'+(n?' ('+n+')':'')}catch(e){}}
+async function verIfco(){
+  ir('s-ifco');$('ifco-lista').innerHTML='';$('ifco-sub').textContent='Cargando…';$('btn-ifco-wa').disabled=true;$('btn-ifco-xls').disabled=true;
+  try{ifcoFilas=await ifcoLeer()}catch(e){$('ifco-sub').textContent='No se pudo leer. Revise la señal.';return}
+  $('ifco-sub').textContent=ifcoFilas.length?ifcoFilas.length+' punto(s) de entrega sin IFCO':'No hay IFCO pendientes. ✅';
+  $('btn-ifco-wa').disabled=!ifcoFilas.length;$('btn-ifco-xls').disabled=!ifcoFilas.length;
+  $('ifco-lista').innerHTML=ifcoFilas.map((e,i)=>'<div class="gl" data-i="'+i+'">'+(e.foto?'<a href="'+e.foto+'" target="_blank"><img src="'+e.foto+'"></a>':'')+'<div class="gi"><b>'+e.fecha.split('-').reverse().join('-')+' '+e.hora+' · '+e.local+'</b><div class="msg">'+e.conductor+(e.obs?' · Guía N° '+e.obs:' · sin N° de guía')+'</div><div class="msg">⏳ '+ifcoDias(e.fecha)+' día(s) pendiente</div>'+(esAdmin()?'<button class="btn2" style="margin-top:6px;padding:8px;font-size:13px" onclick="pedirIfcoOk('+i+',this)">✅ Marcar IFCO recibido</button>':'')+'</div></div>').join('');
+}
+function pedirIfcoOk(i,b){if(!esAdmin())return;if(b.dataset.c){ifcoRecibido(i,b);return}b.dataset.c=1;b.textContent='¿Confirmar? Tocar de nuevo';b.style.background='#c77d00';b.style.color='#fff'}
+async function ifcoRecibido(i,b){const e=ifcoFilas[i];if(!e||!esAdmin())return;b.disabled=true;b.textContent='Guardando…';
+  try{const {error}=await conTope(supa.from('entregas').update({ifco_recibido:new Date().toISOString()}).eq('id',e.id),10000);if(error)throw error;toast('IFCO recibido: '+e.local);verIfco();contarIfco()}
+  catch(x){b.disabled=false;b.textContent='✅ Marcar IFCO recibido';delete b.dataset.c;b.style.background='';b.style.color='';toast('No se pudo guardar. Revise la señal.')}}
+function ifcoWhatsApp(){if(!ifcoFilas.length)return;waIfco('*IFCO pendientes – Transportes Madrid*\n'+ifcoFilas.map(e=>'• '+e.fecha.split('-').reverse().join('-')+' '+e.hora+' · '+e.local+(e.obs?' · Guía '+e.obs:'')+' · '+e.conductor+' · '+ifcoDias(e.fecha)+' día(s)'+(e.foto?'\n  '+e.foto:'')).join('\n'))}
+function ifcoExcel(){
+  if(!ifcoFilas.length||!window.XLSX)return;
+  const head=['Fecha','Hora','Local','Cliente','Conductor','N° guía','Días pendiente','Foto (link)'];
+  const rows=ifcoFilas.map(e=>{const [y,m,d]=e.fecha.split('-').map(Number);return [(Date.UTC(y,m-1,d)-Date.UTC(1899,11,30))/86400000,e.hora,e.local,e.cliente||'',e.conductor,e.obs||'',ifcoDias(e.fecha),e.foto||'']});
+  const ws=XLSX.utils.aoa_to_sheet([head,...rows]);for(let i=2;i<=rows.length+1;i++){ws['A'+i].t='n';ws['A'+i].z='dd-mm-yyyy'}
+  estiloXLS(ws,rows.length,head.length,0);ws['!cols']=[{wch:11},{wch:6},{wch:30},{wch:10},{wch:26},{wch:10},{wch:9},{wch:50}];
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'IFCO pendientes');XLSX.writeFile(wb,'IFCO_pendientes_'+hoyISO()+'.xlsx');
 }
 // Fotos del registro final con su hora de captura: se tratan como entregas para que el reporte y el aviso queden iguales
 const fotosComoEnt=(r)=>{const n=r._n||{};return (n.fotos_ts||[]).map((t,k)=>t?{id:'rf'+r.servicio_id+k,ts:t,hora:hhmm(t),foto:(n.fotos||[])[k]||null,estado:'entregado',lat:null,lon:null,cliente:r.cliente}:null).filter(Boolean)};
