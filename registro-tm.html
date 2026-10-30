@@ -790,7 +790,7 @@ async function ifcoLeer(){let q=supa.from('entregas').select('*').eq('empresa',E
 async function contarIfco(){if(!user||!supa)return;const t=(esAdmin()||esCliente())?'📄 IFCO pendientes':'📄 Mis IFCO pendientes';$('btn-ifco').textContent=t;try{const n=(await ifcoLeer()).length;$('btn-ifco').textContent=t+(n?' ('+n+')':'')}catch(e){}}
 async function verIfco(){
   ir('s-ifco');$('ifco-lista').innerHTML='';$('ifco-sub').textContent='Cargando…';$('btn-ifco-wa').disabled=true;$('btn-ifco-xls').disabled=true;
-  {const cond=!esAdmin()&&!esCliente();$('btn-ifco-xls').style.display=cond?'none':'block';$('btn-ifco-wa').style.display=cond?'none':'block'} // los conductores no descargan Excel ni el resumen
+  {const cond=!esAdmin()&&!esCliente();$('btn-ifco-xls').style.display=cond?'none':'block';$('btn-ifco-wa').style.display=(cond||esCliente())?'none':'block'} /* los conductores no descargan Excel ni el resumen; el cliente no envía resumen por WhatsApp (Carlos 30-10) */
   try{ifcoFilas=await ifcoLeer()}catch(e){$('ifco-sub').textContent='No se pudo leer. Revise la señal.';return}
   $('ifco-sub').textContent=ifcoFilas.length?ifcoFilas.length+' punto(s) de entrega sin IFCO':'No hay IFCO pendientes. ✅';
   $('btn-ifco-wa').disabled=!ifcoFilas.length;$('btn-ifco-xls').disabled=!ifcoFilas.length;
