@@ -244,6 +244,7 @@ const PATENTES=['DSBZ64','ZV7780','CWVH32-9','DZZW14','XJ3908'];
 const PEONETAS={'CWVH32-9':['Marcelo González']};
 const ACOPLADOS=['','JN4847','JB6234'];
 const TRACTOS=['DSBZ64','ZV7780']; // solo los tractos llevan acoplado
+const LIC_A5=['0003','0005']; // conductores con licencia A5: ven tractos y afurgonados; el resto solo afurgonados (Carlos 30-10)
 const EXTRAS=[{id:'trasp',txt:'Traspaleteo'},{id:'trasv',txt:'Trasvasije'},{id:'retorno',txt:'Retorno'},{id:'espera',txt:'Espera'},{id:'peaje',txt:'Peaje efectivo'},{id:'reemp',txt:'Acoplado reemplazo'}];
 
 // ═══ ESTADO ═══
@@ -372,7 +373,8 @@ function pintarServicios(){
     b.onclick=()=>{svcSel=s;document.querySelectorAll('.opt').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');pintarExtras()};o.appendChild(b)});
 }
 function pintarEquipo(){
-  $('patente').innerHTML='<option value="" selected>Elige patente</option>'+PATENTES.map(x=>'<option>'+x+'</option>').join('');
+  const pats=(user&&user.rol==='conductor'&&!LIC_A5.includes(user.pin))?PATENTES.filter(x=>!TRACTOS.includes(x)&&x!=='XJ3908'):PATENTES;
+  $('patente').innerHTML='<option value="" selected>Elige patente</option>'+pats.map(x=>'<option>'+x+'</option>').join('');
   $('acoplado').innerHTML='<option value="?" selected>Elige acoplado</option>'+ACOPLADOS.map(x=>'<option value="'+x+'">'+(x||'Sin acoplado')+'</option>').join('');
   pintarPeoneta();
 }
