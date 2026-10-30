@@ -460,6 +460,7 @@ async function sigCodigo(){
 async function enviar(reg,blobs){
   if(!supa||!navigator.onLine)return false;
   const notas=JSON.parse(reg.notas); notas.fotos=[];
+  if(!notas.diesel){try{const d0=new Date(reg.fecha+'T12:00:00-03:00');d0.setDate(d0.getDate()-30);const rc=await conTope(supa.from('combustible_cargas').select('fecha,litros,total,iva').gte('fecha',hoyISO(d0)).lte('fecha',reg.fecha).order('fecha'),6000);const pd=precioDiesel(reg.fecha,rc.data||[]);if(pd.txt!=='parámetro del Excel')notas.diesel={p:Math.round(pd.p*100)/100,txt:pd.txt,fijado:hoyISO()}}catch(e){}}
   if(!notas.codigo)notas.codigo=await sigCodigo();
   for(let i=0;i<blobs.length;i++){
     const path='tm/'+reg.fecha.slice(0,7)+'/'+reg.servicio_id+'_'+(i+1)+'_'+Math.random().toString(36).slice(2,10)+'.jpg';
@@ -488,8 +489,8 @@ const SV_COSTO={"Planta EBLOOMS → Santiago centros distribución": [250, "A", 
 let _gpsRes=[],_cargas=[];
 // Precio diésel neto (sin IVA) por litro: promedio ponderado de las cargas de los 7 días hasta la fecha del servicio (Aramco + Peumo).
 // Sin cargas en esa semana: la semana de la última carga anterior. Sin datos: parámetro del Excel.
-function precioDiesel(fecha){
-  const f=x=>new Date(x+'T12:00:00-03:00'),ant=_cargas.filter(c=>c.fecha<=fecha);if(!ant.length)return {p:COSTO.diesel,txt:'parámetro del Excel'};
+function precioDiesel(fecha,lista){
+  const f=x=>new Date(x+'T12:00:00-03:00'),ant=(lista||_cargas).filter(c=>c.fecha<=fecha);if(!ant.length)return {p:COSTO.diesel,txt:'parámetro del Excel'};
   const fin=ant.some(c=>(f(fecha)-f(c.fecha))/86400000<7)?fecha:ant[ant.length-1].fecha,ini=new Date(f(fin).getTime()-6*86400000);
   const sem=ant.filter(c=>f(c.fecha)>=ini&&c.fecha<=fin),l=sem.reduce((t,c)=>t+(+c.litros),0),n=sem.reduce((t,c)=>t+(+c.total-+c.iva),0);
   return l?{p:n/l,txt:'promedio '+sem.length+' carga(s) del '+hoyISO(ini).split('-').reverse().slice(0,2).join('-')+' al '+fin.split('-').reverse().slice(0,2).join('-')}:{p:COSTO.diesel,txt:'parámetro del Excel'};
@@ -509,7 +510,7 @@ function resultadoServicio(r){
   const n=r._n||{},e=n.extras||{},sv=SV_COSTO[n.servicio_sistema||''];if(!sv)return null;
   const g=kmGPS(r),[kmT,tipo,peaje,dias]=sv,km=g?Math.round(g.km):kmT,kmTxt=g?g.txt:'teórico de la ruta (camión sin GPS)',base=+r.tarifa_neta||0,ret=(e.retorno&&/Supermercados/.test(n.servicio_sistema))?Math.round(base*COSTO.retSuper):0,tarifa=base+ret;
   const alta=r.fecha>=COSTO.alta[0]&&r.fecha<=COSTO.alta[1];
-  const tipoC=TIPO_PAT[PAT_GPS(r.patente)]||tipo,pd=precioDiesel(r.fecha);
+  const tipoC=TIPO_PAT[PAT_GPS(r.patente)]||tipo,pd=(n.diesel&&n.diesel.p)?{p:+n.diesel.p,txt:n.diesel.txt+' · fijado el '+String(n.diesel.fijado||'').split('-').reverse().slice(0,2).join('-')}:precioDiesel(r.fecha);
   const v={combustible:km/COSTO.rend[tipoC]*pd.p,peajes:peaje,comision:tarifa*COSTO.com,asesor:tarifa*COSTO.ase,neumMant:km*(COSTO.neum+COSTO.mant),
     viaticos:tipo==='T'?COSTO.viatTracto*dias:(alta?COSTO.viatAfur*(n.peoneta?2:1):0)};
   const nDia=filas.filter(x=>x.fecha===r.fecha).length||1, fijo=COSTO.fijoMes/COSTO.diasMes/nDia;
