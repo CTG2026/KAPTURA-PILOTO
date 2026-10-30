@@ -273,8 +273,9 @@ function entrar(p){
   if(!u){$('pin-err').textContent='PIN no registrado';pin='';setTimeout(pintarPin,600);return}
   user={pin:p,...u}; ls('tm_pin',p);
   $('saludo').textContent='Hola '+u.nombre.split(' ')[0];
-  $('btn-salir').style.display='block'; $('hdr-user').textContent='👤 '+u.nombre.split(' ')[0]; $('btn-ver').style.display='block';$('btn-ver').textContent=esAdmin()?'📋 Servicios registrados':esCliente()?'📋 Ver mis servicios':'📋 Mis servicios registrados';$('btn-reg').style.display=esCliente()?'none':'block';$('btn-ent').style.display=esCliente()?'none':'block';$('btn-misent').style.display=esCliente()?'none':'block';contarEnt();const vg=(esAdmin()||esCliente())?'block':'none';$('btn-gps').style.display=vg;$('btn-prof').style.display=esCliente()?'none':vg; /* Proforma oculta para el cliente por ahora (Carlos 30-10) */ $('btn-ifco').style.display='block';contarIfco(); ir('s-home'); revisarPendientes();
+  $('btn-salir').style.display='block'; $('hdr-user').textContent='👤 '+u.nombre.split(' ')[0]; $('btn-ver').style.display='block';$('btn-ver').textContent=esAdmin()?'📋 Servicios registrados':esCliente()?'📋 Ver mis servicios':'📋 Mis servicios registrados';$('btn-reg').style.display=esCliente()?'none':'block';$('btn-ent').style.display=esCliente()?'none':'block';$('btn-misent').style.display='block';ordenHome();contarEnt();const vg=(esAdmin()||esCliente())?'block':'none';$('btn-gps').style.display=vg;$('btn-prof').style.display=esCliente()?'none':vg; /* Proforma oculta para el cliente por ahora (Carlos 30-10) */ $('btn-ifco').style.display='block';contarIfco(); ir('s-home'); revisarPendientes();
 }
+function ordenHome(){const h=$('s-home'),ids=esCliente()?['btn-ver','btn-misent','btn-ifco','btn-gps','btn-prof','btn-reg']:['btn-reg','btn-misent','btn-ifco','btn-ver','btn-gps','btn-prof'];ids.forEach(i=>h.appendChild($(i)))} /* orden de inicio del cliente: servicios, entregas, IFCO, GPS (Carlos 30-10) */
 function salir(){ls('tm_pin',null);user=null;pin='';pintarPin();$('btn-salir').style.display='none';$('hdr-user').textContent='';_dupOk=false;ir('s-pin')}
 
 // ═══ REGISTRO ═══
@@ -763,14 +764,14 @@ async function guardarEnt(btn){
   }catch(e){toast('No se pudo guardar. Revise la señal e intente de nuevo.')}
   btn.disabled=false;btn.textContent='✅ GUARDAR ENTREGA';
 }
-async function entHoy(todos){try{let q=supa.from('entregas').select('*').eq('empresa',EMPRESA).eq('fecha',hoyISO()).neq('estado','prueba');if(!(todos&&esAdmin()))q=q.eq('conductor',user.nombre);const r=await q.order('ts');return r.data||[]}catch(e){return []}}
-async function contarEnt(){if(!user||esCliente()||!supa)return;const n=(await entHoy(true)).length;$('btn-misent').textContent=(esAdmin()?'📦 Entregas de hoy':'📦 Mis entregas de hoy')+(n?' ('+n+')':'')}
+async function entHoy(todos){try{let q=supa.from('entregas').select('*').eq('empresa',EMPRESA).eq('fecha',hoyISO()).neq('estado','prueba');if(esCliente())q=q.eq('cliente',user.cliente);else if(!(todos&&esAdmin()))q=q.eq('conductor',user.nombre);const r=await q.order('ts');return r.data||[]}catch(e){return []}}
+async function contarEnt(){if(!user||!supa)return;const n=(await entHoy(true)).length;$('btn-misent').textContent=(esAdmin()?'📦 Entregas de hoy':esCliente()?'📦 Ver mis entregas':'📦 Mis entregas de hoy')+(n?' ('+n+')':'')}
 let _misEnt=[];
 async function misEntregas(){
   ir('s-misent');$('misent-lista').innerHTML='';$('misent-sub').textContent='Cargando…';
-  $('s-misent').querySelector('h1').textContent=esAdmin()?'Entregas de hoy':'Mis entregas de hoy';const es=await entHoy(true);_misEnt=es;$('misent-sub').textContent=es.length?es.length+' entrega(s) guardada(s)':'Todavía no hay entregas hoy.';
+  $('s-misent').querySelector('h1').textContent=(esAdmin()||esCliente())?'Entregas de hoy':'Mis entregas de hoy';const es=await entHoy(true);_misEnt=es;$('misent-sub').textContent=es.length?es.length+' entrega(s) guardada(s)':'Todavía no hay entregas hoy.';
   const item=(e,sinCond)=>'<div class="gl">'+(e.foto?'<a href="'+e.foto+'" target="_blank"><img src="'+e.foto+'"></a>':'')+'<div class="gi"><b>'+e.hora+' · '+e.local+'</b>'+(esAdmin()&&!sinCond?'<div class="msg">'+e.conductor+'</div>':'')+'<div class="msg">'+(e.estado==='pendiente'?'⏳ Pendiente':'✅ Entregado')+ifcoTag(e)+(e.obs?' · Guía N° '+e.obs:' · sin N° de guía')+'</div>'+((e.ifco_pendiente&&!e.ifco_recibido)?'<button class="btn2" style="margin-top:6px;padding:8px;font-size:13px" onclick="waIfco(ifcoTxt(_misEnt['+es.indexOf(e)+']))">📤 Avisar IFCO pendiente por WhatsApp</button>':'')+'</div></div>';
-  if(!esAdmin()){$('misent-lista').innerHTML=es.map(e=>item(e)).join('');return}
+  if(!esAdmin()&&!esCliente()){$('misent-lista').innerHTML=es.map(e=>item(e)).join('');return}
   // Tú y Claudio: agrupadas por conductor (y su camión/servicio del día), cada grupo ordenado por hora
   let sv=[];try{const r=await conTope(supa.from('servicios_piloto').select('servicio_id,conductor,patente,notas').eq('empresa',EMPRESA).eq('modo','registro_tm').neq('estado','anulado').eq('fecha',hoyISO()).order('servicio_id'),8000);sv=r.data||[]}catch(e){}
   const grupos={};es.slice().sort((a,b)=>(a.hora||'').localeCompare(b.hora||'')).forEach(e=>{(grupos[e.conductor]=grupos[e.conductor]||[]).push(e)});
@@ -787,7 +788,7 @@ const ifcoTxt=e=>'📄 IFCO pendiente · '+e.fecha.split('-').reverse().join('-'
 function waIfco(t){window.open('https://wa.me/?text='+encodeURIComponent(t),'_blank')}
 async function ifcoLeer(){let q=supa.from('entregas').select('*').eq('empresa',EMPRESA).eq('ifco_pendiente',true).is('ifco_recibido',null).neq('estado','prueba');
   if(esCliente())q=q.eq('cliente',user.cliente);else if(!esAdmin())q=q.eq('conductor',user.nombre);const r=await conTope(q.order('fecha',{ascending:false}).order('ts',{ascending:false}),10000);return r.data||[]}
-async function contarIfco(){if(!user||!supa)return;const t=(esAdmin()||esCliente())?'📄 IFCO pendientes':'📄 Mis IFCO pendientes';$('btn-ifco').textContent=t;try{const n=(await ifcoLeer()).length;$('btn-ifco').textContent=t+(n?' ('+n+')':'')}catch(e){}}
+async function contarIfco(){if(!user||!supa)return;const t=esCliente()?'📄 Ver IFCO pendientes':esAdmin()?'📄 IFCO pendientes':'📄 Mis IFCO pendientes';$('btn-ifco').textContent=t;try{const n=(await ifcoLeer()).length;$('btn-ifco').textContent=t+(n?' ('+n+')':'')}catch(e){}}
 async function verIfco(){
   ir('s-ifco');$('ifco-lista').innerHTML='';$('ifco-sub').textContent='Cargando…';$('btn-ifco-wa').disabled=true;$('btn-ifco-xls').disabled=true;
   {const cond=!esAdmin()&&!esCliente();$('btn-ifco-xls').style.display=cond?'none':'block';$('btn-ifco-wa').style.display=(cond||esCliente())?'none':'block'} /* los conductores no descargan Excel ni el resumen; el cliente no envía resumen por WhatsApp (Carlos 30-10) */
