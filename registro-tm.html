@@ -680,6 +680,7 @@ async function borrarRegistro(i,btn){
   if(ok){toast('Servicio borrado');verRegistros()}else{btn.disabled=false;btn.textContent='Sí, borrar';toast('No se pudo borrar. Revise la conexión.')}
 }
 function descargarExcel(){
+  if(!esAdmin())return;
   if(!filas.length||!window.XLSX){toast('No se pudo generar el Excel');return}
   const head=['Código','Fecha','Patente tracto / camión','Patente acoplado / thermo','Servicio','Conductor','Peoneta','N° guía','N° factura (folio)','¿Hubo espera?','¿Retorno?','Tarifa distinta ($ neto, solo si cambia)','Observaciones','Pallets traspaleteados','Fotos de guías (links)','ID registro Kaptura','Registrado (fecha y hora)'];
   const rows=[...filas].reverse().map(r=>{const n=r._n,e=n.extras||{};
@@ -783,6 +784,7 @@ async function ifcoLeer(){let q=supa.from('entregas').select('*').eq('empresa',E
 async function contarIfco(){if(!user||!supa)return;const t=(esAdmin()||esCliente())?'📄 IFCO pendientes':'📄 Mis IFCO pendientes';$('btn-ifco').textContent=t;try{const n=(await ifcoLeer()).length;$('btn-ifco').textContent=t+(n?' ('+n+')':'')}catch(e){}}
 async function verIfco(){
   ir('s-ifco');$('ifco-lista').innerHTML='';$('ifco-sub').textContent='Cargando…';$('btn-ifco-wa').disabled=true;$('btn-ifco-xls').disabled=true;
+  {const cond=!esAdmin()&&!esCliente();$('btn-ifco-xls').style.display=cond?'none':'block';$('btn-ifco-wa').style.display=cond?'none':'block'} // los conductores no descargan Excel ni el resumen
   try{ifcoFilas=await ifcoLeer()}catch(e){$('ifco-sub').textContent='No se pudo leer. Revise la señal.';return}
   $('ifco-sub').textContent=ifcoFilas.length?ifcoFilas.length+' punto(s) de entrega sin IFCO':'No hay IFCO pendientes. ✅';
   $('btn-ifco-wa').disabled=!ifcoFilas.length;$('btn-ifco-xls').disabled=!ifcoFilas.length;
@@ -812,7 +814,7 @@ async function ifcoRecibido(i,b){const e=ifcoFilas[i];if(!e||!(esAdmin()||(esCli
   catch(x){b.disabled=false;b.textContent=b.dataset.t||'✅ IFCO recibido';delete b.dataset.c;b.style.background='';b.style.color='';toast('No se pudo guardar. Revise la señal.')}}
 function ifcoWhatsApp(){if(!ifcoFilas.length)return;waIfco('*IFCO pendientes – Transportes Madrid*\n'+ifcoFilas.map(e=>'• '+e.fecha.split('-').reverse().join('-')+' '+e.hora+' · '+e.local+(e.obs?' · Guía '+e.obs:'')+' · '+e.conductor+' · '+ifcoDias(e.fecha)+' día(s)'+(e.foto?'\n  '+e.foto:'')).join('\n'))}
 function ifcoExcel(){
-  if(!ifcoFilas.length||!window.XLSX)return;
+  if(!ifcoFilas.length||!window.XLSX||(!esAdmin()&&!esCliente()))return;
   const head=['Fecha','Hora','Local','Cliente','Conductor','N° guía','Días pendiente','Foto (link)'];
   const rows=ifcoFilas.map(e=>{const [y,m,d]=e.fecha.split('-').map(Number);return [(Date.UTC(y,m-1,d)-Date.UTC(1899,11,30))/86400000,e.hora,e.local,e.cliente||'',e.conductor,e.obs||'',ifcoDias(e.fecha),e.foto||'']});
   const ws=XLSX.utils.aoa_to_sheet([head,...rows]);for(let i=2;i<=rows.length+1;i++){ws['A'+i].t='n';ws['A'+i].z='dd-mm-yyyy'}
