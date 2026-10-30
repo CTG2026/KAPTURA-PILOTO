@@ -213,7 +213,8 @@ const USUARIOS={
   '0003':{nombre:'Esteban Acevedo Toro',rol:'conductor',patente:'DSBZ64',acoplado:'JN4847'},
   '0004':{nombre:'Cristóbal Núñez González',rol:'conductor',patente:'CWVH32-9',acoplado:''},
   '0005':{nombre:'Víctor Medina',rol:'conductor',patente:'ZV7780',acoplado:'JB6234'},
-  '0006':{nombre:'EBLOOMS',rol:'cliente',cliente:'EBLOOMS',patente:'',acoplado:''}
+  '0006':{nombre:'EBLOOMS',rol:'cliente',cliente:'EBLOOMS',patente:'',acoplado:''},
+  '1313':{nombre:'Administración',rol:'administracion',patente:'',acoplado:''}
 };
 // servicio = nombre exacto del sistema TM (hoja Servicios reales)
 const SERVICIOS=[
@@ -478,6 +479,30 @@ async function enviar(reg,blobs){
   await vincularEnt(reg);
   return true;
 }
+// ═══ RESULTADO POR SERVICIO (solo usuario Administración 1313) ═══
+// Parámetros copiados del Excel del sistema v11.10 (Parámetros A y D, Resultados Mes) al 30-10-2026. Al cambiar el Excel, actualizar aquí.
+const COSTO={diesel:1185,rend:{A:3.5,T:2.6},com:0.10,ase:0.03,neum:20,mant:35,viatTracto:15000,viatAfur:7500,retSuper:0.397,fijoMes:4933572,diasMes:20,alta:['2026-11-15','2027-03-31']};
+const SV_COSTO={"Planta EBLOOMS → Santiago centros distribución": [250, "A", 25000, 0.5], "Ateuro: campo / huertos → planta (Coltauco)": [30, "A", 0, 0.5], "Ateuro: campo / huertos → planta (Cuncumén)": [320, "A", 25000, 1], "Planta EBLOOMS → Supermercados Santiago (Temporada Baja)": [250, "A", 25000, 1], "Planta EBLOOMS → Supermercados Santiago (Temporada Alta)": [250, "A", 25000, 1], "Planta EBLOOMS → Chillán (Cencosud)": [700, "T", 70000, 1], "CHILLÁN → LOS ÁNGELES": [250, "T", 22000, 1], "CHILLÁN → LOS ÁNGELES → TEMUCO": [570, "T", 22000, 1], "CHILLÁN → LOS ÁNGELES → VICTORIA → TEMUCO": [570, "T", 22000, 1], "CHILLÁN → CONCEPCIÓN": [200, "T", 6200, 1], "CHILLÁN → TEMUCO": [570, "T", 22000, 1], "CHILLÁN → VICTORIA": [440, "T", 22000, 1], "CHILLÁN → SAN FERNANDO": [0, "T", 0, 1], "CHILLÁN → SAN FERNANDO → RANCAGUA": [0, "T", 0, 1], "CHILLÁN → SANTIAGO CON TRASVASIJE": [200, "T", 25000, 1], "CHILLÁN → SANTIAGO · TRASVASIJE + TRASPALETEO": [200, "T", 25000, 1], "CHILLÁN → SANTIAGO": [200, "T", 25000, 1], "CHILLÁN → RANCAGUA": [0, "T", 0, 1], "CHILLÁN → TEMUCO → VICTORIA → LOS ÁNGELES": [570, "T", 22000, 1]};
+function resultadoServicio(r){
+  const n=r._n||{},e=n.extras||{},sv=SV_COSTO[n.servicio_sistema||''];if(!sv)return null;
+  const [km,tipo,peaje,dias]=sv,base=+r.tarifa_neta||0,ret=(e.retorno&&/Supermercados/.test(n.servicio_sistema))?Math.round(base*COSTO.retSuper):0,tarifa=base+ret;
+  const alta=r.fecha>=COSTO.alta[0]&&r.fecha<=COSTO.alta[1];
+  const v={combustible:km/COSTO.rend[tipo]*COSTO.diesel,peajes:peaje,comision:tarifa*COSTO.com,asesor:tarifa*COSTO.ase,neumMant:km*(COSTO.neum+COSTO.mant),
+    viaticos:tipo==='T'?COSTO.viatTracto*dias:(alta?COSTO.viatAfur*(n.peoneta?2:1):0)};
+  const nDia=filas.filter(x=>x.fecha===r.fecha).length||1, fijo=COSTO.fijoMes/COSTO.diasMes/nDia;
+  const tv=Object.values(v).reduce((a,b)=>a+b,0);
+  return {tarifa,ret,v,tv,fijo,nDia,res:tarifa-tv-fijo,km};
+}
+const fm$=x=>(x<0?'<span style="color:#ff3b30">−$'+Math.round(-x).toLocaleString('es-CL')+'</span>':'$'+Math.round(x).toLocaleString('es-CL'));
+function resultadoHTML(r){
+  const z=resultadoServicio(r);if(!z)return '<div class="m" style="margin-top:8px">📊 Sin parámetros de costo para este servicio</div>';
+  const pct=z.tarifa?Math.round(z.res/z.tarifa*1000)/10:0;
+  const fila=(t,x,b)=>'<tr><td>'+(b?'<b>'+t+'</b>':t)+'</td><td style="text-align:right">'+(b?'<b>'+fm$(x)+'</b>':fm$(x))+'</td></tr>';
+  return '<details style="margin-top:8px;border:1px solid var(--border);border-radius:10px;padding:8px"><summary><b>📊 Resultado del servicio: '+fm$(z.res)+' ('+(pct<0?'<span style="color:#ff3b30">−'+String(-pct).replace('.',',')+'%</span>':String(pct).replace('.',',')+'%')+')</b></summary>'+
+    '<table style="width:100%;font-size:14px;margin-top:6px">'+fila('TARIFA',z.tarifa,1)+fila('COSTOS VARIABLES',-z.tv,1)+fila('COSTOS FIJOS',-z.fijo,1)+fila('RESULTADO',z.res,1)+'</table>'+
+    '<div class="m" style="margin-top:6px">Detalle variables ('+z.km+' km de tabla): combustible '+fm$(z.v.combustible)+' · peajes '+fm$(z.v.peajes)+' · comisión conductor 10% '+fm$(z.v.comision)+' · comisión asesor 3% '+fm$(z.v.asesor)+' · neumáticos y mantención '+fm$(z.v.neumMant)+' · viáticos '+fm$(z.v.viaticos)+'<br>'+
+    'Fijo empresa del día $'+Math.round(COSTO.fijoMes/COSTO.diasMes).toLocaleString('es-CL')+' ÷ '+z.nDia+' servicio(s) del día'+(z.ret?'<br>Incluye retorno supermercado '+fm$(z.ret):'')+'<br><i>Esperado según parámetros del Excel (no es lo pagado real).</i></div></details>';
+}
 // Agrega las fotos (y guías) de un registro repetido al servicio que ya existe hoy
 async function agregarAServicio(sid){
   const err=$('reg-err');err.textContent='Agregando fotos…';
@@ -527,7 +552,9 @@ function avisarWhatsApp(){
 
 // ═══ VER REGISTROS + EXCEL ═══
 const SVC_VER=t=>String(t||'').replace(/\s*\(Temporada (Baja|Alta)\)/i,'');
-function esAdmin(){return user&&(user.rol==='administrador'||user.rol==='coordinador')}
+function esAdmin(){return user&&(user.rol==='administrador'||user.rol==='coordinador'||user.rol==='administracion')}
+function esAdminTotal(){return user&&(user.rol==='administrador'||user.rol==='administracion')}
+function verResultado(){return user&&user.rol==='administracion'}
 function esCliente(){return user&&user.rol==='cliente'}
 let rango='hoy', filas=[];
 function abrirRegistros(){rango='hoy';document.querySelectorAll('#seg button').forEach(x=>x.classList.toggle('sel',x.dataset.r==='hoy'));verRegistros()}
@@ -555,11 +582,11 @@ async function verRegistros(){
     return '<div class="reg" data-i="'+i+'">'+(esAdmin()?'<button class="del" onclick="pedirBorrar('+i+')">✕</button>':'')+'<div class="t">'+(n.codigo?'<span class="ul">'+n.codigo+'</span> · ':'')+r.fecha.split('-').reverse().join('-')+' · '+SVC_VER(n.servicio_sistema||((r.origen||'')+' → '+(r.destino||'')))+'</div>'+
     '<div>'+r.conductor+(n.peoneta?' + '+n.peoneta:'')+' · '+r.patente+(n.acoplado?' / '+n.acoplado:'')+'</div>'+((n.guias||[]).length?'<div><b>Guías: '+n.guias.join(' - ')+'</b></div>':'')+(n.factura_salida?'<div><b>Factura salida: '+n.factura_salida+'</b></div>':'')+
     (ex&&!esCliente()?'<div class="m">Extras: '+ex+'</div>':'')+(n.observacion&&!esCliente()?'<div class="m">Obs.: '+n.observacion+'</div>':'')+
-    (r._ents||n.entregas||[]).map(e=>'<div class="m">📦 '+e.hora+' · '+e.local+' · '+(e.estado==='pendiente'?'⏳ Pendiente':'✅ Entregado')+((e.ifco_pendiente&&!e.ifco_recibido)?' · <span class="ifco">📄 IFCO pendiente</span>':'')+(e.obs?' · Guía '+e.obs:'')+'</div>').join('')+(n.unidades_logisticas||[]).map(u=>'<div class="m"><span class="ul">'+u.local+' '+(u.nombre||'')+'</span> · '+(u.hora||'')+(u.nro?' · Doc. '+u.nro:'')+' · '+(u.items||[]).map(i=>i.cant+' '+i.desc.toLowerCase()).join(', ')+'</div>').join('')+(n.carga_manual?'<div class="m">Carga manual ('+n.carga_manual+')</div>':'')+'<button class="btn2" style="margin-top:8px;padding:10px;font-size:14px" onclick="gpsServicio('+i+')">🛰 Ver recorrido GPS</button>'+(user&&user.rol==='administrador'?'<button class="btn2" style="margin-top:8px;padding:10px;font-size:14px" onclick="avisoCliente('+i+')">📤 Enviar aviso al cliente</button>':'')+'<div class="fx">'+[...new Set((n.fotos||[]).concat((n.unidades_logisticas||[]).map(u=>u.foto),(r._ents||[]).map(e=>e.foto)).filter(Boolean))].map(u=>'<a href="'+u+'" target="_blank"><img src="'+u+'"></a>').join('')+'</div></div>'}).join('');
+    (r._ents||n.entregas||[]).map(e=>'<div class="m">📦 '+e.hora+' · '+e.local+' · '+(e.estado==='pendiente'?'⏳ Pendiente':'✅ Entregado')+((e.ifco_pendiente&&!e.ifco_recibido)?' · <span class="ifco">📄 IFCO pendiente</span>':'')+(e.obs?' · Guía '+e.obs:'')+'</div>').join('')+(n.unidades_logisticas||[]).map(u=>'<div class="m"><span class="ul">'+u.local+' '+(u.nombre||'')+'</span> · '+(u.hora||'')+(u.nro?' · Doc. '+u.nro:'')+' · '+(u.items||[]).map(i=>i.cant+' '+i.desc.toLowerCase()).join(', ')+'</div>').join('')+(n.carga_manual?'<div class="m">Carga manual ('+n.carga_manual+')</div>':'')+'<button class="btn2" style="margin-top:8px;padding:10px;font-size:14px" onclick="gpsServicio('+i+')">🛰 Ver recorrido GPS</button>'+(esAdminTotal()?'<button class="btn2" style="margin-top:8px;padding:10px;font-size:14px" onclick="avisoCliente('+i+')">📤 Enviar aviso al cliente</button>':'')+(verResultado()?resultadoHTML(r):'')+'<div class="fx">'+[...new Set((n.fotos||[]).concat((n.unidades_logisticas||[]).map(u=>u.foto),(r._ents||[]).map(e=>e.foto)).filter(Boolean))].map(u=>'<a href="'+u+'" target="_blank"><img src="'+u+'"></a>').join('')+'</div></div>'}).join('');
 }
 function fmt(n){return Number(n||0).toLocaleString('es-CL')}
 async function avisoCliente(i){
-  if(!(user&&user.rol==='administrador'))return;
+  if(!esAdminTotal())return;
   const r=filas[i]; if(!r)return; const n=r._n;
   const pat=PAT_GPS(r.patente);
   const uls=(n.unidades_logisticas||[]).slice().sort((a,b)=>(a.hora||'').localeCompare(b.hora||''));
