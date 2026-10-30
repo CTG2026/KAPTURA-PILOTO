@@ -268,7 +268,7 @@ function entrar(p){
   if(!u){$('pin-err').textContent='PIN no registrado';pin='';setTimeout(pintarPin,600);return}
   user={pin:p,...u}; ls('tm_pin',p);
   $('saludo').textContent='Hola '+u.nombre.split(' ')[0];
-  $('btn-salir').style.display='block'; $('hdr-user').textContent='👤 '+u.nombre.split(' ')[0]; $('btn-ver').style.display='block';$('btn-ver').textContent=esAdmin()?'📋 Servicios registrados':esCliente()?'📋 Ver mis servicios':'📋 Mis servicios registrados';$('btn-reg').style.display=esCliente()?'none':'block';$('btn-ent').style.display=esCliente()?'none':'block';$('btn-misent').style.display=esCliente()?'none':'block';contarEnt();const vg=(esAdmin()||esCliente())?'block':'none';$('btn-gps').style.display=vg;$('btn-prof').style.display=vg;$('btn-ifco').style.display='block';contarIfco(); ir('s-home'); revisarPendientes();
+  $('btn-salir').style.display='block'; $('hdr-user').textContent='👤 '+u.nombre.split(' ')[0]; $('btn-ver').style.display='block';$('btn-ver').textContent=esAdmin()?'📋 Servicios registrados':esCliente()?'📋 Ver mis servicios':'📋 Mis servicios registrados';$('btn-reg').style.display=esCliente()?'none':'block';$('btn-ent').style.display=esCliente()?'none':'block';$('btn-misent').style.display=esCliente()?'none':'block';contarEnt();const vg=(esAdmin()||esCliente())?'block':'none';$('btn-gps').style.display=vg;$('btn-prof').style.display=esCliente()?'none':vg; // Proforma oculta para el cliente por ahora (Carlos 30-10)$('btn-ifco').style.display='block';contarIfco(); ir('s-home'); revisarPendientes();
 }
 function salir(){ls('tm_pin',null);user=null;pin='';pintarPin();$('btn-salir').style.display='none';$('hdr-user').textContent='';_dupOk=false;ir('s-pin')}
 
@@ -904,6 +904,7 @@ function semISO(d){const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getD
 let profFilas=[], profTit='';
 function quincenas(){const o=[];const d=new Date();let y=d.getFullYear(),m=d.getMonth(),q=d.getDate()<=15?1:2;for(let i=0;i<6;i++){o.push({y,m,q});if(q===2)q=1;else{q=2;m--;if(m<0){m=11;y--}}}return o}
 function verProforma(){
+  if(esCliente())return;
   ir('s-prof'); const sel=$('prof-q');
   if(!sel.options.length){sel.innerHTML=quincenas().map(x=>'<option value="'+x.y+'-'+x.m+'-'+x.q+'">'+(x.q===1?'1ra':'2da')+' quincena '+MESES[x.m]+' '+x.y+'</option>').join('');sel.onchange=cargarProforma}
   cargarProforma();
