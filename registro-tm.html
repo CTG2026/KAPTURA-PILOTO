@@ -87,7 +87,7 @@ input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--bor
   <button class="big" id="btn-ent" style="display:none;background:#1f7a3a;color:#fff;margin-bottom:12px" onclick="entregue()">📦 ENTREGUÉ AQUÍ</button>
   <input type="file" id="cam-ent" accept="image/*" capture="environment" style="display:none" onchange="onFotoEnt(this)">
   <button class="big" id="btn-reg" onclick="nuevoRegistro()">📷 REGISTRAR SERVICIO</button>
-  <button class="btn2" id="btn-misent" style="display:none" onclick="misEntregas()">📦 Mis entregas de hoy</button>
+  <button class="btn2" id="btn-misent" style="display:none" onclick="misEntregas()">📦 Ver mis entregas - puntos</button>
   <button class="btn2" id="btn-ifco" style="display:none" onclick="verIfco()">📄 IFCO pendientes</button>
   <button class="btn2" id="btn-ver" style="display:none" onclick="abrirRegistros()">📋 Servicios registrados</button>
   <button class="btn2" id="btn-gps" style="display:none" onclick="gpsPat=null;gpsVolver='s-home';$('gps-dia').value='';verGPS()">🛰 Reporte GPS del día</button>
@@ -158,7 +158,7 @@ input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--bor
 
 <!-- 6. REPORTE GPS -->
 <section class="screen" id="s-misent">
-  <h1>Mis entregas de hoy</h1>
+  <h1>Entregas de hoy - puntos</h1>
   <div class="sub" id="misent-sub">Cargando…</div>
   <div id="misent-lista"></div>
   <button class="btn2" onclick="ir('s-home');contarEnt()">← Volver</button>
@@ -770,11 +770,11 @@ async function guardarEnt(btn){
   btn.disabled=false;btn.textContent='✅ GUARDAR ENTREGA';
 }
 async function entHoy(todos){try{let q=supa.from('entregas').select('*').eq('empresa',EMPRESA).eq('fecha',hoyISO()).neq('estado','prueba');if(esCliente())q=q.eq('cliente',user.cliente);else if(!(todos&&esAdmin()))q=q.eq('conductor',user.nombre);const r=await q.order('ts');return r.data||[]}catch(e){return []}}
-async function contarEnt(){if(!user||!supa)return;const n=(await entHoy(true)).length;$('btn-misent').textContent=(esAdmin()?'📦 Entregas de hoy':esCliente()?'📦 Ver mis entregas':'📦 Mis entregas de hoy')+(n?' ('+n+')':'')}
+async function contarEnt(){if(!user||!supa)return;const n=(await entHoy(true)).length;$('btn-misent').textContent=(esAdmin()?'📦 Ver entregas - puntos':'📦 Ver mis entregas - puntos')+' ('+n+')'}
 let _misEnt=[];
 async function misEntregas(){
   ir('s-misent');$('misent-lista').innerHTML='';$('misent-sub').textContent='Cargando…';
-  $('s-misent').querySelector('h1').textContent=(esAdmin()||esCliente())?'Entregas de hoy':'Mis entregas de hoy';const es=await entHoy(true);_misEnt=es;$('misent-sub').textContent=es.length?es.length+' entrega(s) guardada(s)':'Todavía no hay entregas hoy.';
+  $('s-misent').querySelector('h1').textContent='Entregas de hoy - puntos';const es=await entHoy(true);_misEnt=es;$('misent-sub').textContent=es.length?es.length+' entrega(s) guardada(s)':'Todavía no hay entregas hoy.';
   const item=(e,sinCond)=>'<div class="gl">'+(e.foto?'<a href="'+e.foto+'" target="_blank"><img src="'+e.foto+'"></a>':'')+'<div class="gi"><b>'+e.hora+' · '+e.local+'</b>'+(esAdmin()&&!sinCond?'<div class="msg">'+e.conductor+'</div>':'')+'<div class="msg">'+(e.estado==='pendiente'?'⏳ Pendiente':'✅ Entregado')+ifcoTag(e)+(e.obs?' · Guía N° '+e.obs:' · sin N° de guía')+'</div>'+((e.ifco_pendiente&&!e.ifco_recibido&&!esCliente())?'<button class="btn2" style="margin-top:6px;padding:8px;font-size:13px" onclick="waIfco(ifcoTxt(_misEnt['+es.indexOf(e)+']))">📤 Avisar IFCO pendiente por WhatsApp</button>':'')+'</div></div>';
   if(!esAdmin()&&!esCliente()){$('misent-lista').innerHTML=es.map(e=>item(e)).join('');return}
   // Tú y Claudio: agrupadas por conductor (y su camión/servicio del día), cada grupo ordenado por hora
