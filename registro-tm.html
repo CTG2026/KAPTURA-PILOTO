@@ -68,7 +68,7 @@ input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--bor
 </style>
 </head>
 <body>
-<div class="hdr"><div class="brand">KAPTURA · TRANSPORTES MADRID</div><button class="link" id="btn-salir" style="display:none" onclick="salir()">Salir</button></div>
+<div class="hdr"><div class="brand">KAPTURA · TRANSPORTES MADRID</div><span id="hdr-user" style="margin-left:auto;margin-right:10px;font-weight:800;font-size:14px"></span><button class="link" id="btn-salir" style="display:none" onclick="salir()">Salir</button></div>
 <div class="pend" id="pend"></div>
 
 <!-- 1. PIN -->
@@ -266,9 +266,9 @@ function entrar(p){
   if(!u){$('pin-err').textContent='PIN no registrado';pin='';setTimeout(pintarPin,600);return}
   user={pin:p,...u}; ls('tm_pin',p);
   $('saludo').textContent='Hola '+u.nombre.split(' ')[0];
-  $('btn-salir').style.display='block'; $('btn-ver').style.display='block';$('btn-ver').textContent=esAdmin()?'📋 Servicios registrados':esCliente()?'📋 Ver mis servicios':'📋 Mis servicios registrados';$('btn-reg').style.display=esCliente()?'none':'block';$('btn-ent').style.display=esCliente()?'none':'block';$('btn-misent').style.display=esCliente()?'none':'block';contarEnt();const vg=(esAdmin()||esCliente())?'block':'none';$('btn-gps').style.display=vg;$('btn-prof').style.display=vg;$('btn-ifco').style.display=vg;contarIfco(); ir('s-home'); revisarPendientes();
+  $('btn-salir').style.display='block'; $('hdr-user').textContent='👤 '+u.nombre.split(' ')[0]; $('btn-ver').style.display='block';$('btn-ver').textContent=esAdmin()?'📋 Servicios registrados':esCliente()?'📋 Ver mis servicios':'📋 Mis servicios registrados';$('btn-reg').style.display=esCliente()?'none':'block';$('btn-ent').style.display=esCliente()?'none':'block';$('btn-misent').style.display=esCliente()?'none':'block';contarEnt();const vg=(esAdmin()||esCliente())?'block':'none';$('btn-gps').style.display=vg;$('btn-prof').style.display=vg;$('btn-ifco').style.display=vg;contarIfco(); ir('s-home'); revisarPendientes();
 }
-function salir(){ls('tm_pin',null);user=null;pin='';pintarPin();$('btn-salir').style.display='none';ir('s-pin')}
+function salir(){ls('tm_pin',null);user=null;pin='';pintarPin();$('btn-salir').style.display='none';$('hdr-user').textContent='';_dupOk=false;ir('s-pin')}
 
 // ═══ REGISTRO ═══
 // Borrador: las fotos quedan guardadas en el celular hasta registrar el servicio
@@ -408,7 +408,7 @@ function textoExtras(e){
 }
 
 // ═══ GUARDAR ═══
-let guardando=false;
+let guardando=false, _dupOk=false;
 // Tope de espera: con poca señal una consulta puede quedar colgada y dejar el botón GUARDAR apagado
 const conTope=(p,ms)=>Promise.race([Promise.resolve(p),new Promise((_,rej)=>setTimeout(()=>rej(new Error('tope')),ms))]);
 async function guardar(){
@@ -428,6 +428,10 @@ async function guardar2(){
   if(extrasSel.has('reemp')&&!ex.acoplado_reemplazo){err.textContent='Indica la patente del acoplado de reemplazo';return}
   if(svcSel.tarifa===0&&!$('obs').value.trim()){err.textContent='En "Otro" escribe el servicio en la observación';return}
   err.textContent='';
+  // Bloqueo de duplicados: si este conductor ya registró hoy este mismo servicio, se ofrece agregar las fotos a ese servicio
+  if(!_dupOk&&svcSel.tarifa!==0){let dup=null;try{const r=await conTope(supa.from('servicios_piloto').select('servicio_id,notas').eq('empresa',EMPRESA).eq('modo','registro_tm').neq('estado','anulado').eq('fecha',hoyISO()).eq('conductor',user.nombre),8000);dup=(r.data||[]).find(x=>parseNotas(x.notas).servicio_sistema===svcSel.servicio)||null}catch(e){}
+    if(dup){const cod=parseNotas(dup.notas).codigo||'';err.innerHTML='⚠ Ya registraste hoy <b>'+svcSel.txt+'</b>'+(cod?' ('+cod+')':'')+'.<br>'+(fotos.length?'<button class="btn2" style="background:#1f7a3a;color:#fff" onclick="agregarAServicio(\''+dup.servicio_id+'\')">➕ Agregar '+fotos.length+' foto(s) a ese servicio</button>':'')+'<button class="btn2" onclick="_dupOk=true;guardar()">Es otro viaje distinto: registrar nuevo</button>';return}}
+  _dupOk=false;
   const ahora=new Date(), id='TM-'+hoyISO(ahora).replace(/-/g,'')+'-'+String(ahora.getHours()).padStart(2,'0')+String(ahora.getMinutes()).padStart(2,'0')+String(ahora.getSeconds()).padStart(2,'0')+'-'+user.pin;
   const reg={
     servicio_id:id, patente:$('patente').value, conductor:user.nombre, cliente:svcSel.cliente||null,
@@ -473,6 +477,20 @@ async function enviar(reg,blobs){
   if(error)throw error;
   await vincularEnt(reg);
   return true;
+}
+// Agrega las fotos (y guías) de un registro repetido al servicio que ya existe hoy
+async function agregarAServicio(sid){
+  const err=$('reg-err');err.textContent='Agregando fotos…';
+  try{
+    const {data:r0,error:e0}=await conTope(supa.from('servicios_piloto').select('servicio_id,fecha,conductor,notas').eq('servicio_id',sid).limit(1),8000);if(e0||!r0||!r0.length)throw e0||new Error('no');
+    const sv=r0[0],n=parseNotas(sv.notas);n.fotos=n.fotos||[];n.fotos_ts=n.fotos_ts||[];n.guias=n.guias||[];
+    for(let i=0;i<fotos.length;i++){const path='tm/'+sv.fecha.slice(0,7)+'/'+sid+'_a'+Date.now()+'_'+(i+1)+'.jpg';
+      const {error}=await conTope(supa.storage.from(BUCKET).upload(path,fotos[i].blob,{contentType:'image/jpeg',upsert:false}),25000);if(error)throw error;
+      n.fotos.push(supa.storage.from(BUCKET).getPublicUrl(path).data.publicUrl);n.fotos_ts.push(fotos[i].ts?new Date(fotos[i].ts).toISOString():null);if(fotos[i].num&&!n.guias.includes(fotos[i].num))n.guias.push(fotos[i].num)}
+    const {error:e1}=await conTope(supa.from('servicios_piloto').update({notas:JSON.stringify(n)}).eq('servicio_id',sid),10000);if(e1)throw e1;
+    await vincularEnt({servicio_id:sid,fecha:sv.fecha,conductor:sv.conductor});
+    await bLimpiar();_dupOk=false;$('ok-sub').textContent='Fotos agregadas a '+(n.codigo||'el servicio')+' · '+fotos.length+' foto(s)';ir('s-ok');
+  }catch(x){err.textContent='No se pudo agregar (revise la señal). Intente de nuevo.'}
 }
 // Entregas del día aún sin servicio quedan vinculadas a este servicio
 async function vincularEnt(reg){try{await conTope(supa.from('entregas').update({servicio_id:reg.servicio_id}).eq('empresa',EMPRESA).eq('fecha',reg.fecha).eq('conductor',reg.conductor).is('servicio_id',null).neq('estado','prueba'),8000)}catch(e){}}
