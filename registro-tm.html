@@ -366,12 +366,16 @@ function comprimir(file){
     img.onerror=rej;img.src=u;
   });
 }
-function pintarServicios(){
-  const o=$('opts');o.innerHTML='';
+const CLIENTES_REG=['EBLOOMS','Alimentos Valle Central','Ateuro / Zuria']; // registro: primero el cliente, luego sus servicios (Carlos 30-10)
+function pintarServicios(cli){
+  const o=$('opts');o.innerHTML='';svcSel=null;pintarExtras();
+  const btn=(t,f,cls)=>{const b=document.createElement('button');b.className=cls||'opt';b.textContent=t;b.onclick=f;o.appendChild(b);return b};
+  if(!cli){CLIENTES_REG.forEach(c=>btn(c,()=>pintarServicios(c)));btn('Otro / spot',()=>pintarServicios('Otro'));return}
+  btn('← Cambiar cliente ('+cli+')',()=>pintarServicios(),'btn2');
   const freq=JSON.parse(ls('tm_freq_'+user.pin)||'{}');
-  const lista=[...SERVICIOS].sort((a,b)=>(freq[b.servicio]||0)-(freq[a.servicio]||0));
-  lista.forEach(s=>{const b=document.createElement('button');b.className='opt';b.textContent=s.txt;
-    b.onclick=()=>{svcSel=s;document.querySelectorAll('.opt').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');pintarExtras()};o.appendChild(b)});
+  const lista=SERVICIOS.filter(s=>cli==='Otro'?!CLIENTES_REG.includes(s.cliente):s.cliente===cli).sort((a,b)=>(freq[b.servicio]||0)-(freq[a.servicio]||0));
+  lista.forEach(s=>{const b=btn(s.txt,()=>{svcSel=s;o.querySelectorAll('.opt').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');pintarExtras()})});
+  if(lista.length===1)lista.length&&o.querySelector('.opt').click();
 }
 function pintarEquipo(){
   const pats=(user&&user.rol==='conductor'&&!LIC_A5.includes(user.pin))?PATENTES.filter(x=>!TRACTOS.includes(x)&&x!=='XJ3908'):PATENTES;
