@@ -483,15 +483,27 @@ async function enviar(reg,blobs){
 // Parámetros copiados del Excel del sistema v11.10 (Parámetros A y D, Resultados Mes) al 30-10-2026. Al cambiar el Excel, actualizar aquí.
 const COSTO={diesel:1185,rend:{A:3.5,T:2.6},com:0.10,ase:0.03,neum:20,mant:35,viatTracto:15000,viatAfur:7500,retSuper:0.397,fijoMes:4933572,diasMes:20,alta:['2026-11-15','2027-03-31']};
 const SV_COSTO={"Planta EBLOOMS → Santiago centros distribución": [250, "A", 25000, 0.5], "Ateuro: campo / huertos → planta (Coltauco)": [30, "A", 0, 0.5], "Ateuro: campo / huertos → planta (Cuncumén)": [320, "A", 25000, 1], "Planta EBLOOMS → Supermercados Santiago (Temporada Baja)": [250, "A", 25000, 1], "Planta EBLOOMS → Supermercados Santiago (Temporada Alta)": [250, "A", 25000, 1], "Planta EBLOOMS → Chillán (Cencosud)": [700, "T", 70000, 1], "CHILLÁN → LOS ÁNGELES": [250, "T", 22000, 1], "CHILLÁN → LOS ÁNGELES → TEMUCO": [570, "T", 22000, 1], "CHILLÁN → LOS ÁNGELES → VICTORIA → TEMUCO": [570, "T", 22000, 1], "CHILLÁN → CONCEPCIÓN": [200, "T", 6200, 1], "CHILLÁN → TEMUCO": [570, "T", 22000, 1], "CHILLÁN → VICTORIA": [440, "T", 22000, 1], "CHILLÁN → SAN FERNANDO": [0, "T", 0, 1], "CHILLÁN → SAN FERNANDO → RANCAGUA": [0, "T", 0, 1], "CHILLÁN → SANTIAGO CON TRASVASIJE": [200, "T", 25000, 1], "CHILLÁN → SANTIAGO · TRASVASIJE + TRASPALETEO": [200, "T", 25000, 1], "CHILLÁN → SANTIAGO": [200, "T", 25000, 1], "CHILLÁN → RANCAGUA": [0, "T", 0, 1], "CHILLÁN → TEMUCO → VICTORIA → LOS ÁNGELES": [570, "T", 22000, 1]};
+let _gpsRes=[];
+// Km reales GPS: desde que sale de la planta EBLOOMS hasta que vuelve a Coltauco (o, sin planta, todos los viajes del día). null = sin GPS ese día
+function kmGPS(r){
+  const pat=PAT_GPS(r.patente),[a,b]=diaRango(r.fecha),ev=_gpsRes.filter(x=>PAT_GPS(x.patente)===pat&&x.inicio>=a&&x.inicio<b);
+  // el GPS a veces entrega un tramo dentro de otro más largo: se descartan los tramos superpuestos para no contar km dos veces
+  let fin0='';const vj=ev.filter(x=>x.tipo==='viaje').filter(x=>{if(fin0&&x.inicio<fin0)return false;fin0=x.fin||x.inicio;return true});if(!vj.length)return null;
+  const pl=GEOCERCAS.find(g=>g.tipo==='planta'),dpl=(la,lo)=>la==null?0:Math.hypot((la-pl.lat)*111320,(lo-pl.lon)*111320*Math.cos(pl.lat*Math.PI/180));
+  const sal=ev.find(x=>x.tipo==='parada'&&(enGeo(x.lat_ini,x.lon_ini)||{}).tipo==='planta');
+  if(!sal)return {km:vj.reduce((t,x)=>t+(+x.km||0),0),txt:'GPS, todos los viajes del día'};
+  let km=0,lejos=0;for(const x of vj){if(x.inicio<(sal.fin||sal.inicio))continue;km+=+x.km||0;lejos=Math.max(lejos,dpl(x.lat_fin,x.lon_fin));if(lejos>30000&&dpl(x.lat_fin,x.lon_fin)<6000)break}
+  return {km,txt:'GPS real, desde la salida de la planta EBLOOMS hasta la vuelta a Coltauco'};
+}
 function resultadoServicio(r){
   const n=r._n||{},e=n.extras||{},sv=SV_COSTO[n.servicio_sistema||''];if(!sv)return null;
-  const [km,tipo,peaje,dias]=sv,base=+r.tarifa_neta||0,ret=(e.retorno&&/Supermercados/.test(n.servicio_sistema))?Math.round(base*COSTO.retSuper):0,tarifa=base+ret;
+  const g=kmGPS(r),[kmT,tipo,peaje,dias]=sv,km=g?Math.round(g.km):kmT,kmTxt=g?g.txt:'teórico de la ruta (camión sin GPS)',base=+r.tarifa_neta||0,ret=(e.retorno&&/Supermercados/.test(n.servicio_sistema))?Math.round(base*COSTO.retSuper):0,tarifa=base+ret;
   const alta=r.fecha>=COSTO.alta[0]&&r.fecha<=COSTO.alta[1];
   const v={combustible:km/COSTO.rend[tipo]*COSTO.diesel,peajes:peaje,comision:tarifa*COSTO.com,asesor:tarifa*COSTO.ase,neumMant:km*(COSTO.neum+COSTO.mant),
     viaticos:tipo==='T'?COSTO.viatTracto*dias:(alta?COSTO.viatAfur*(n.peoneta?2:1):0)};
   const nDia=filas.filter(x=>x.fecha===r.fecha).length||1, fijo=COSTO.fijoMes/COSTO.diasMes/nDia;
   const tv=Object.values(v).reduce((a,b)=>a+b,0);
-  return {tarifa,ret,v,tv,fijo,nDia,res:tarifa-tv-fijo,km};
+  return {tarifa,ret,v,tv,fijo,nDia,res:tarifa-tv-fijo,km,kmTxt};
 }
 const fm$=x=>(x<0?'<span style="color:#ff3b30">−$'+Math.round(-x).toLocaleString('es-CL')+'</span>':'$'+Math.round(x).toLocaleString('es-CL'));
 function resultadoHTML(r){
@@ -500,7 +512,7 @@ function resultadoHTML(r){
   const fila=(t,x,b)=>'<tr><td>'+(b?'<b>'+t+'</b>':t)+'</td><td style="text-align:right">'+(b?'<b>'+fm$(x)+'</b>':fm$(x))+'</td></tr>';
   return '<details style="margin-top:8px;border:1px solid var(--border);border-radius:10px;padding:8px"><summary><b>📊 Resultado del servicio: '+fm$(z.res)+' ('+(pct<0?'<span style="color:#ff3b30">−'+String(-pct).replace('.',',')+'%</span>':String(pct).replace('.',',')+'%')+')</b></summary>'+
     '<table style="width:100%;font-size:14px;margin-top:6px">'+fila('TARIFA',z.tarifa,1)+fila('COSTOS VARIABLES',-z.tv,1)+fila('COSTOS FIJOS',-z.fijo,1)+fila('RESULTADO',z.res,1)+'</table>'+
-    '<div class="m" style="margin-top:6px">Detalle variables ('+z.km+' km de tabla): combustible '+fm$(z.v.combustible)+' · peajes '+fm$(z.v.peajes)+' · comisión conductor 10% '+fm$(z.v.comision)+' · comisión asesor 3% '+fm$(z.v.asesor)+' · neumáticos y mantención '+fm$(z.v.neumMant)+' · viáticos '+fm$(z.v.viaticos)+'<br>'+
+    '<div class="m" style="margin-top:6px">Detalle variables ('+z.km+' km, '+z.kmTxt+'): combustible '+fm$(z.v.combustible)+' · peajes '+fm$(z.v.peajes)+' · comisión conductor 10% '+fm$(z.v.comision)+' · comisión asesor 3% '+fm$(z.v.asesor)+' · neumáticos y mantención '+fm$(z.v.neumMant)+' · viáticos '+fm$(z.v.viaticos)+'<br>'+
     'Fijo empresa del día $'+Math.round(COSTO.fijoMes/COSTO.diasMes).toLocaleString('es-CL')+' ÷ '+z.nDia+' servicio(s) del día'+(z.ret?'<br>Incluye retorno supermercado '+fm$(z.ret):'')+'<br><i>Esperado según parámetros del Excel (no es lo pagado real).</i></div></details>';
 }
 // Agrega las fotos (y guías) de un registro repetido al servicio que ya existe hoy
@@ -572,6 +584,8 @@ async function verRegistros(){
   const {data,error}=await q.eq('modo','registro_tm').neq('estado','anulado').gte('fecha',desde()).order('fecha',{ascending:false}).order('servicio_id',{ascending:false});
   if(error){$('list-sub').textContent='Error al leer: '+error.message;return}
   filas=(data||[]).map(r=>({...r,_n:parseNotas(r.notas)}));
+  // GPS de los días listados (solo para el resultado económico)
+  _gpsRes=[];if(verResultado()){try{const r=await conTope(supa.from('gps_viajes').select('patente,tipo,inicio,fin,km,lat_ini,lon_ini,lat_fin,lon_fin').gte('inicio',new Date(desde()+'T00:00:00-03:00').toISOString()).order('inicio'),10000);_gpsRes=r.data||[]}catch(e){}}
   // Entregas en vivo: todas las del conductor ese día (también las hechas después de registrar)
   try{const {data:ev}=await supa.from('entregas').select('*').eq('empresa',EMPRESA).gte('fecha',desde()).neq('estado','prueba').order('ts');
     filas.forEach(r=>{const vivas=(ev||[]).filter(e=>e.servicio_id?e.servicio_id===r.servicio_id:(e.fecha===r.fecha&&e.conductor===r.conductor));const fs=new Set(vivas.map(e=>e.foto));
