@@ -233,9 +233,10 @@ const SERVICIOS=[
   {txt:'Chillán → San Fernando',servicio:'CHILLÁN → SAN FERNANDO',cliente:'Alimentos Valle Central',origen:'CHILLÁN',destino:'SAN FERNANDO',tarifa:200000},
   {txt:'Chillán → Rancagua',servicio:'CHILLÁN → RANCAGUA',cliente:'Alimentos Valle Central',origen:'CHILLÁN',destino:'RANCAGUA',tarifa:200000},
   {txt:'Chillán → San Fernando → Rancagua',servicio:'CHILLÁN → SAN FERNANDO → RANCAGUA',cliente:'Alimentos Valle Central',origen:'CHILLÁN',destino:'RANCAGUA',tarifa:200000},
-  {txt:'Ateuro: Las Petacas → Clee',servicio:'Ateuro: Las Petacas → Clee',cliente:'Ateuro / Zuria',origen:'LAS PETACAS',destino:'CLEE',tarifa:450000},
-  {txt:'Ateuro: Santa Elena Norte → Clee',servicio:'Ateuro: Santa Elena Norte → Clee',cliente:'Ateuro / Zuria',origen:'SANTA ELENA NORTE',destino:'CLEE',tarifa:650000},
-  {txt:'Ateuro: Trébol → Clee',servicio:'Ateuro: Trébol → Clee',cliente:'Ateuro / Zuria',origen:'TRÉBOL',destino:'CLEE',tarifa:450000},
+  {txt:'Ateuro: El Trébol → Clee · 66 bins',servicio:'Ateuro: El Trébol → Clee · 66 bins',cliente:'Ateuro / Zuria',origen:'EL TRÉBOL',destino:'CLEE',tarifa:450000,soloTracto:true},
+  {txt:'Ateuro: El Trébol → Clee · 20 bins',servicio:'Ateuro: El Trébol → Clee · 20 bins',cliente:'Ateuro / Zuria',origen:'EL TRÉBOL',destino:'CLEE',tarifa:350000},
+  {txt:'Ateuro: Santa Elena → Clee · 66 bins',servicio:'Ateuro: Santa Elena → Clee · 66 bins',cliente:'Ateuro / Zuria',origen:'SANTA ELENA',destino:'CLEE',tarifa:650000,soloTracto:true},
+  {txt:'Ateuro: Las Petacas → Clee · 66 bins',servicio:'Ateuro: Las Petacas → Clee · 66 bins',cliente:'Ateuro / Zuria',origen:'LAS PETACAS',destino:'CLEE',tarifa:450000,soloTracto:true},
   {txt:'Otro (escribir en observación)',servicio:'SPOT – viaje puntual (escriba la tarifa en Servicios reales)',cliente:'',origen:'',destino:'',tarifa:0}
 ];
 const PATENTES=['DSBZ64','ZV7780','CWVH32-9','DZZW14','XJ3908'];
@@ -433,6 +434,7 @@ async function guardar2(){
   if(!fotos.length&&!entsHoy.length){err.textContent='Falta la foto de la guía (o registre sus entregas con 📦 Entregué aquí)';return}
   if(!svcSel){err.textContent='Elige el servicio';return}
   if(!$('patente').value){err.textContent='Elige la patente del camión';return}
+  if(svcSel.soloTracto&&!TRACTOS.includes($('patente').value)){err.textContent='Este servicio (66 bins) es solo para tracto + thermo. Con afurgonado elige el de 20 bins';return}
   if($('peo-box').style.display!=='none'&&$('peoneta').value==='?'){err.textContent='Elige el peoneta (o "Sin peoneta")';return}
   if($('acoplado').value==='?'){err.textContent='Elige el acoplado (o "Sin acoplado")';return}
   const ex=leerExtras();
@@ -496,7 +498,7 @@ async function enviar(reg,blobs){
 const COSTO={diesel:1185,rend:{A:3.5,T:2.6},com:0.10,ase:0.03,neum:20,mant:35,viatTracto:15000,viatAfur:7500,retSuper:0.397,fijoMes:4933572,diasMes:20,alta:['2026-11-15','2027-03-31']};
 // Tipo de cada camión (rendimiento): A = afurgonado 3,5 km/l · T = tracto + thermo 2,6 km/l
 const TIPO_PAT={CWVH32:'A',DZZW14:'A',DSBZ64:'T',ZV7780:'T'};
-const SV_COSTO={"Ateuro: Las Petacas → Clee": [100, "T", 5200, 0], "Ateuro: Santa Elena Norte → Clee": [100, "T", 5200, 0], "Ateuro: Trébol → Clee": [100, "T", 5200, 0], "Planta EBLOOMS → Santiago centros distribución": [250, "A", 25000, 0.5], "Ateuro: campo / huertos → planta (Coltauco)": [30, "A", 0, 0.5], "Ateuro: campo / huertos → planta (Cuncumén)": [320, "A", 25000, 1], "Planta EBLOOMS → Supermercados Santiago (Temporada Baja)": [250, "A", 25000, 1], "Planta EBLOOMS → Supermercados Santiago (Temporada Alta)": [250, "A", 25000, 1], "Planta EBLOOMS → Chillán (Cencosud)": [700, "T", 70000, 1], "CHILLÁN → LOS ÁNGELES": [250, "T", 22000, 1], "CHILLÁN → LOS ÁNGELES → TEMUCO": [570, "T", 22000, 1], "CHILLÁN → LOS ÁNGELES → VICTORIA → TEMUCO": [570, "T", 22000, 1], "CHILLÁN → CONCEPCIÓN": [200, "T", 6200, 1], "CHILLÁN → TEMUCO": [570, "T", 22000, 1], "CHILLÁN → VICTORIA": [440, "T", 22000, 1], "CHILLÁN → SAN FERNANDO": [0, "T", 0, 1], "CHILLÁN → SAN FERNANDO → RANCAGUA": [0, "T", 0, 1], "CHILLÁN → SANTIAGO CON TRASVASIJE": [200, "T", 25000, 1], "CHILLÁN → SANTIAGO · TRASVASIJE + TRASPALETEO": [200, "T", 25000, 1], "CHILLÁN → SANTIAGO": [200, "T", 25000, 1], "CHILLÁN → RANCAGUA": [0, "T", 0, 1], "CHILLÁN → TEMUCO → VICTORIA → LOS ÁNGELES": [570, "T", 22000, 1]};
+const SV_COSTO={"Ateuro: El Trébol → Clee · 66 bins": [100, "T", 5200, 0], "Ateuro: El Trébol → Clee · 20 bins": [100, "T", 5200, 0], "Ateuro: Santa Elena → Clee · 66 bins": [100, "T", 5200, 0], "Ateuro: Las Petacas → Clee · 66 bins": [100, "T", 5200, 0], "Planta EBLOOMS → Santiago centros distribución": [250, "A", 25000, 0.5], "Ateuro: campo / huertos → planta (Coltauco)": [30, "A", 0, 0.5], "Ateuro: campo / huertos → planta (Cuncumén)": [320, "A", 25000, 1], "Planta EBLOOMS → Supermercados Santiago (Temporada Baja)": [250, "A", 25000, 1], "Planta EBLOOMS → Supermercados Santiago (Temporada Alta)": [250, "A", 25000, 1], "Planta EBLOOMS → Chillán (Cencosud)": [700, "T", 70000, 1], "CHILLÁN → LOS ÁNGELES": [250, "T", 22000, 1], "CHILLÁN → LOS ÁNGELES → TEMUCO": [570, "T", 22000, 1], "CHILLÁN → LOS ÁNGELES → VICTORIA → TEMUCO": [570, "T", 22000, 1], "CHILLÁN → CONCEPCIÓN": [200, "T", 6200, 1], "CHILLÁN → TEMUCO": [570, "T", 22000, 1], "CHILLÁN → VICTORIA": [440, "T", 22000, 1], "CHILLÁN → SAN FERNANDO": [0, "T", 0, 1], "CHILLÁN → SAN FERNANDO → RANCAGUA": [0, "T", 0, 1], "CHILLÁN → SANTIAGO CON TRASVASIJE": [200, "T", 25000, 1], "CHILLÁN → SANTIAGO · TRASVASIJE + TRASPALETEO": [200, "T", 25000, 1], "CHILLÁN → SANTIAGO": [200, "T", 25000, 1], "CHILLÁN → RANCAGUA": [0, "T", 0, 1], "CHILLÁN → TEMUCO → VICTORIA → LOS ÁNGELES": [570, "T", 22000, 1]};
 let _gpsRes=[],_cargas=[];
 // Precio diésel neto (sin IVA) por litro: promedio ponderado de las cargas de los 7 días hasta la fecha del servicio (Aramco + Peumo).
 // Sin cargas en esa semana: la semana de la última carga anterior. Sin datos: parámetro del Excel.
