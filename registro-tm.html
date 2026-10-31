@@ -262,7 +262,10 @@ let pin='', user=null, fotos=[], svcSel=null, extrasSel=new Set(), ultimo=null;
 
 function $(id){return document.getElementById(id)}
 function toast(t){const e=$('toast');e.textContent=t;e.classList.add('on');setTimeout(()=>e.classList.remove('on'),2800)}
-function ir(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));$(id).classList.add('on');window.scrollTo(0,0)}
+function ir(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));$(id).classList.add('on');window.scrollTo(0,0);if(user)uso('pantalla',id)}
+// Registro de uso de Kaptura (tabla kaptura_uso): entradas y pantallas por usuario. Pruebas internas marcadas con localStorage tm_prueba=1 (Carlos 30-10)
+function uso(accion,detalle){try{if(!supa||!user)return;const k=user.pin+'|'+accion+'|'+(detalle||'');if(uso._u===k)return;uso._u=k;
+  supa.from('kaptura_uso').insert({empresa:EMPRESA,pin:user.pin,usuario:user.nombre,rol:user.rol,accion,detalle:detalle||null,dispositivo:/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)?'teléfono':'PC',prueba:ls('tm_prueba')==='1'}).then(()=>{},()=>{})}catch(e){}}
 function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);if(v===null)localStorage.removeItem(k);else localStorage.setItem(k,v)}catch(e){return null}}
 function fmt$(n){return '$'+Math.round(n||0).toLocaleString('es-CL')}
 function hoyISO(d){d=d||new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
@@ -280,7 +283,7 @@ function pintarPin(){document.querySelectorAll('.pin-box span').forEach((s,i)=>{
 function entrar(p){
   p=p||pin; const u=USUARIOS[p];
   if(!u){$('pin-err').textContent='PIN no registrado';pin='';setTimeout(pintarPin,600);return}
-  user={pin:p,...u}; ls('tm_pin',p);
+  user={pin:p,...u}; ls('tm_pin',p); uso._u=null; uso('entrada');
   $('saludo').textContent='Hola '+u.nombre.split(' ')[0];
   $('btn-salir').style.display='block'; $('hdr-user').textContent='👤 '+u.nombre.split(' ')[0]; $('btn-ver').style.display='block';$('btn-ver').textContent=esAdmin()?'📋 Servicios registrados':esCliente()?'📋 Ver mis servicios':'📋 Mis servicios registrados';$('btn-reg').style.display=esCliente()?'none':'block';$('btn-ent').style.display=esCliente()?'none':'block';$('btn-misent').style.display='block';contarSvc();$('btn-res').style.display=verResultado()?'block':'none';ordenHome();contarEnt();const vg=(esAdmin()||esCliente())?'block':'none';$('btn-gps').style.display=vg;$('btn-prof').style.display=esCliente()?'none':vg; /* Proforma oculta para el cliente por ahora (Carlos 30-10) */ $('btn-ifco').style.display='block';contarIfco(); ir('s-home'); revisarPendientes();
 }
