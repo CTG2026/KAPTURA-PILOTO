@@ -21,6 +21,7 @@
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{background:var(--bg);color:var(--text);font-family:'DM Sans',system-ui,sans-serif;min-height:100%}
 body{padding:16px 16px 40px;max-width:520px;margin:0 auto}
+@media (pointer:fine){html{overflow-y:scroll}::-webkit-scrollbar{width:12px;height:12px}::-webkit-scrollbar-track{background:#1b1b1b}::-webkit-scrollbar-thumb{background:#8a7a3a;border-radius:6px;border:2px solid #1b1b1b}::-webkit-scrollbar-thumb:hover{background:#c9a227}html{scrollbar-color:#8a7a3a #1b1b1b}}
 @media (min-width:1024px){body:has(#s-prof.on),body:has(#s-profA.on),body:has(#s-rsv.on){max-width:none}body:has(#s-profA.on) #profA-tbl td,body:has(#s-rsv.on) #rsv-tbl td{white-space:normal}body:has(#s-prof.on) #prof-tbl td{white-space:normal}body:has(#s-prof.on) #prof-tbl td:nth-child(5),body:has(#s-prof.on) #prof-tbl td:nth-child(12),body:has(#s-prof.on) #prof-tbl td:nth-child(13),body:has(#s-prof.on) #prof-tbl td:nth-child(15){white-space:nowrap}}
 .hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
 .brand{font-weight:900;letter-spacing:.12em;font-size:13px;color:var(--gold)}
@@ -696,17 +697,18 @@ function verResumenSvc(){if(!esAdmin())return;ir('s-rsv');const sel=$('rsv-q');
 async function cargarResumenSvc(){const [y,m,q]=$('rsv-q').value.split('-').map(Number),d1=q===1?1:16,d2=q===1?15:new Date(y,m+1,0).getDate();
   const desde=y+'-'+String(m+1).padStart(2,'0')+'-'+String(d1).padStart(2,'0'),hasta=y+'-'+String(m+1).padStart(2,'0')+'-'+String(d2).padStart(2,'0');
   rsvTit=(q===1?'1ra':'2da')+' quincena '+MESES[m]+' '+y;$('rsv-tbl').innerHTML='';$('btn-rsv-xls').disabled=true;$('rsv-sub').textContent='Cargando…';
-  let sv=[],es=[];try{sv=(await conTope(supa.from('servicios_piloto').select('servicio_id,fecha,conductor,patente,notas').eq('empresa',EMPRESA).eq('modo','registro_tm').neq('estado','anulado').gte('fecha',desde).lte('fecha',hasta).order('fecha',{ascending:false}).order('servicio_id',{ascending:false}),10000)).data||[];
-    es=(await conTope(supa.from('entregas').select('fecha,conductor').eq('empresa',EMPRESA).is('servicio_id',null).neq('estado','prueba').gte('fecha',desde).lte('fecha',hasta),10000)).data||[]}catch(e){$('rsv-sub').textContent='No se pudo leer. Revise la señal.';return}
-  const hoy=hoyISO(),tarde=new Date().getHours()>=21,g={};es.filter(e=>(e.fecha<hoy||tarde)&&!sv.some(x=>x.fecha===e.fecha&&x.conductor===e.conductor)).forEach(e=>{const k=e.fecha+'|'+e.conductor;g[k]=(g[k]||0)+1});
+  let sv=[],es=[];try{sv=(await conTope(supa.from('servicios_piloto').select('servicio_id,fecha,conductor,patente,cliente,notas').eq('empresa',EMPRESA).eq('modo','registro_tm').neq('estado','anulado').gte('fecha',desde).lte('fecha',hasta).order('fecha',{ascending:false}).order('servicio_id',{ascending:false}),10000)).data||[];
+    es=(await conTope(supa.from('entregas').select('fecha,conductor,cliente').eq('empresa',EMPRESA).is('servicio_id',null).neq('estado','prueba').gte('fecha',desde).lte('fecha',hasta),10000)).data||[]}catch(e){$('rsv-sub').textContent='No se pudo leer. Revise la señal.';return}
+  const hoy=hoyISO(),tarde=new Date().getHours()>=21,g={},gc={};es.filter(e=>(e.fecha<hoy||tarde)&&!sv.some(x=>x.fecha===e.fecha&&x.conductor===e.conductor)).forEach(e=>{const k=e.fecha+'|'+e.conductor;g[k]=(g[k]||0)+1;gc[k]=e.cliente||''});
   const f=x=>x.split('-').reverse().join('-');
-  rsvFilas=sv.map(r=>{const n=parseNotas(r.notas);return {rojo:false,c:[f(r.fecha),n.codigo||'',SVC_VER(n.servicio_sistema||''),r.conductor,r.patente]}}).concat(Object.keys(g).sort().reverse().map(k=>{const [fe,c]=k.split('|');return {rojo:true,c:[f(fe),'','⚠ Servicio sin registrar ('+g[k]+' entrega(s))',c,'']}}));
-  $('rsv-tbl').innerHTML='<tr><th>Fecha</th><th>ID</th><th>Servicio</th><th>Conductor</th><th>Patente</th></tr>'+rsvFilas.map(r=>'<tr'+(r.rojo?' style="color:#ff3b30;font-weight:800"':'')+'>'+r.c.map(x=>'<td>'+x+'</td>').join('')+'</tr>').join('');
+  rsvFilas=sv.map(r=>{const n=parseNotas(r.notas);return {fecha:r.fecha,rojo:false,c:[f(r.fecha),n.codigo||'',r.cliente||'',SVC_VER(n.servicio_sistema||''),r.conductor,r.patente]}}).concat(Object.keys(g).map(k=>{const [fe,c]=k.split('|');return {fecha:fe,rojo:true,c:[f(fe),'',gc[k],'⚠ Servicio sin registrar ('+g[k]+' entrega(s))',c,'']}}))
+    .sort((a,b)=>b.fecha.localeCompare(a.fecha)||(a.rojo-b.rojo)||b.c[1].localeCompare(a.c[1])); // por fecha (más reciente primero); los sin registrar en su fecha
+  $('rsv-tbl').innerHTML='<tr><th>Fecha</th><th>ID</th><th>Cliente</th><th>Servicio</th><th>Conductor</th><th>Patente</th></tr>'+rsvFilas.map(r=>'<tr'+(r.rojo?' style="color:#ff3b30;font-weight:800"':'')+'>'+r.c.map(x=>'<td>'+x+'</td>').join('')+'</tr>').join('');
   const nS=Object.keys(g).length;$('rsv-sub').textContent=sv.length+' servicio(s) · '+rsvTit+(nS?' · '+nS+' sin registrar':'');$('btn-rsv-xls').disabled=!rsvFilas.length}
-function descargarResumenSvc(){if(!rsvFilas.length||!window.XLSX)return;const head=['Fecha','ID','Servicio','Conductor','Patente'];
-  const ws=XLSX.utils.aoa_to_sheet([head,...rsvFilas.map(r=>r.c)]);estiloXLS(ws,rsvFilas.length,5,0);
-  rsvFilas.forEach((r,i)=>{if(r.rojo)for(const c of 'ABCDE'){const x=ws[c+(i+2)];if(x)x.s={...(x.s||{}),font:{bold:true,color:{rgb:'FF3B30'}}}}});
-  ws['!cols']=[{wch:11},{wch:7},{wch:44},{wch:26},{wch:10}];const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Resumen');XLSX.writeFile(wb,'Resumen_servicios_TM_'+rsvTit.replace(/\s+/g,'_')+'.xlsx')}
+function descargarResumenSvc(){if(!rsvFilas.length||!window.XLSX)return;const head=['Fecha','ID','Cliente','Servicio','Conductor','Patente'];
+  const ws=XLSX.utils.aoa_to_sheet([head,...rsvFilas.map(r=>r.c)]);estiloXLS(ws,rsvFilas.length,6,0);
+  rsvFilas.forEach((r,i)=>{if(r.rojo)for(const c of 'ABCDEF'){const x=ws[c+(i+2)];if(x)x.s={...(x.s||{}),font:{bold:true,color:{rgb:'FF3B30'}}}}});
+  ws['!cols']=[{wch:11},{wch:7},{wch:22},{wch:44},{wch:26},{wch:10}];const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Resumen');XLSX.writeFile(wb,'Resumen_servicios_TM_'+rsvTit.replace(/\s+/g,'_')+'.xlsx')}
 // Imagen completa de una tabla (proformas y resumen) para compartir por WhatsApp o descargar (Carlos 31-10)
 async function imgTabla(id,tit,compartir){const t=$(id);if(!t||!t.rows.length||!window.html2canvas){toast('No hay datos para la imagen');return}
   const w=document.createElement('div');w.style.cssText='position:fixed;left:-10000px;top:0;background:#fff;color:#111;padding:16px;font-family:Arial,sans-serif;width:max-content';
