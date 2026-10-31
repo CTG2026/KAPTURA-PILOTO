@@ -92,6 +92,7 @@ input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--bor
   <button class="btn2" id="btn-ver" style="display:none" onclick="abrirRegistros()">📋 Servicios registrados</button>
   <button class="btn2" id="btn-gps" style="display:none" onclick="gpsPat=null;gpsVolver='s-home';$('gps-dia').value='';verGPS()">🛰 Reporte GPS del día</button>
   <button class="btn2" id="btn-prof" style="display:none" onclick="verProforma()">🧾 Proforma EBLOOMS</button>
+  <button class="btn2" id="btn-res" style="display:none" onclick="verResMes()">📊 Ver resultados del mes</button>
 </section>
 
 <!-- 3. REGISTRO -->
@@ -191,6 +192,14 @@ input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--bor
 </section>
 
 <!-- 7. PROFORMA EBLOOMS -->
+<section class="screen" id="s-res">
+  <h1 id="res-h">Resultados del mes</h1>
+  <div class="sub" id="res-sub">Cargando…</div>
+  <div id="res-tot"></div>
+  <div id="res-lista" style="margin-top:12px"></div>
+  <button class="btn2" id="res-volver" onclick="ir('s-home')">← Volver</button>
+</section>
+
 <section class="screen" id="s-prof">
   <h1>Proforma EBLOOMS</h1>
   <select id="prof-q" style="width:100%;font-size:17px;padding:10px;border-radius:10px;border:2px solid var(--border);background:var(--surface);color:var(--text);margin-bottom:12px"></select>
@@ -273,9 +282,9 @@ function entrar(p){
   if(!u){$('pin-err').textContent='PIN no registrado';pin='';setTimeout(pintarPin,600);return}
   user={pin:p,...u}; ls('tm_pin',p);
   $('saludo').textContent='Hola '+u.nombre.split(' ')[0];
-  $('btn-salir').style.display='block'; $('hdr-user').textContent='👤 '+u.nombre.split(' ')[0]; $('btn-ver').style.display='block';$('btn-ver').textContent=esAdmin()?'📋 Servicios registrados':esCliente()?'📋 Ver mis servicios':'📋 Mis servicios registrados';$('btn-reg').style.display=esCliente()?'none':'block';$('btn-ent').style.display=esCliente()?'none':'block';$('btn-misent').style.display='block';ordenHome();contarEnt();const vg=(esAdmin()||esCliente())?'block':'none';$('btn-gps').style.display=vg;$('btn-prof').style.display=esCliente()?'none':vg; /* Proforma oculta para el cliente por ahora (Carlos 30-10) */ $('btn-ifco').style.display='block';contarIfco(); ir('s-home'); revisarPendientes();
+  $('btn-salir').style.display='block'; $('hdr-user').textContent='👤 '+u.nombre.split(' ')[0]; $('btn-ver').style.display='block';$('btn-ver').textContent=esAdmin()?'📋 Servicios registrados':esCliente()?'📋 Ver mis servicios':'📋 Mis servicios registrados';$('btn-reg').style.display=esCliente()?'none':'block';$('btn-ent').style.display=esCliente()?'none':'block';$('btn-misent').style.display='block';$('btn-res').style.display=verResultado()?'block':'none';ordenHome();contarEnt();const vg=(esAdmin()||esCliente())?'block':'none';$('btn-gps').style.display=vg;$('btn-prof').style.display=esCliente()?'none':vg; /* Proforma oculta para el cliente por ahora (Carlos 30-10) */ $('btn-ifco').style.display='block';contarIfco(); ir('s-home'); revisarPendientes();
 }
-function ordenHome(){const h=$('s-home'),ids=esCliente()?['btn-ver','btn-misent','btn-ifco','btn-gps','btn-prof','btn-reg']:['btn-reg','btn-misent','btn-ifco','btn-ver','btn-gps','btn-prof'];ids.forEach(i=>h.appendChild($(i)))} /* orden de inicio del cliente: servicios, entregas, IFCO, GPS (Carlos 30-10) */
+function ordenHome(){const h=$('s-home'),ids=esCliente()?['btn-ver','btn-misent','btn-ifco','btn-gps','btn-prof','btn-reg']:['btn-reg','btn-misent','btn-ifco','btn-ver','btn-gps','btn-prof','btn-res'];ids.forEach(i=>h.appendChild($(i)))} /* orden de inicio del cliente: servicios, entregas, IFCO, GPS (Carlos 30-10) */
 function salir(){ls('tm_pin',null);user=null;pin='';pintarPin();$('btn-salir').style.display='none';$('hdr-user').textContent='';_dupOk=false;ir('s-pin')}
 
 // ═══ REGISTRO ═══
@@ -544,6 +553,40 @@ function resultadoHTML(r){
     '<div style="display:flex;justify-content:space-between;border-top:2px solid var(--border);padding:8px 0 2px"><b>RESULTADO</b><b>'+fm$(z.res)+' ('+pctTxt+')</b></div>'+
     '<div class="m" style="font-size:12px"><i>Esperado según parámetros del Excel (no es lo pagado real).</i></div></details>';
 }
+// ═══ RESULTADOS DEL MES A LA FECHA (solo Administración): todo el mes → por cliente → sus servicios (Carlos 30-10) ═══
+let _resMes=null;
+function sumaRes(rs){const t={tarifa:0,ret:0,tv:0,fijo:0,res:0,km:0,n:0,sin:0,v:{combustible:0,peajes:0,comision:0,asesor:0,neumMant:0,viaticos:0}};
+  rs.forEach(r=>{const z=resultadoServicio(r);if(!z){t.sin++;return}t.n++;['tarifa','ret','tv','fijo','res','km'].forEach(k=>t[k]+=z[k]);Object.keys(t.v).forEach(k=>t.v[k]+=z.v[k])});return t}
+function bloqueRes(t,tit){const pct=t.tarifa?Math.round(t.res/t.tarifa*1000)/10:0,pctTxt=pct<0?'<span style="color:#ff3b30">−'+String(-pct).replace('.',',')+'%</span>':String(pct).replace('.',',')+'%';
+  const it=(a,x)=>'<div style="display:flex;justify-content:space-between;font-size:13px;color:var(--muted);padding:2px 0 2px 14px"><span>'+a+'</span><span>'+fm$(x)+'</span></div>';
+  const ln=(a,x,det)=>'<details style="border-top:1px solid var(--border);padding:6px 0"><summary style="display:flex;justify-content:space-between;cursor:pointer"><b>'+a+'</b><b>'+fm$(x)+'</b></summary>'+det+'</details>';
+  return '<div style="border:1px solid var(--border);border-radius:10px;padding:8px;margin-top:8px"><div><b>📊 '+tit+': '+fm$(t.res)+' ('+pctTxt+')</b></div><div class="m" style="font-size:12px">'+t.n+' servicio(s) · '+Math.round(t.km).toLocaleString('es-CL')+' km'+(t.sin?' · '+t.sin+' sin parámetros de costo (no suman)':'')+'</div>'+
+    ln('TARIFA',t.tarifa,it('Tarifa de la ruta',t.tarifa-t.ret)+it('Retorno supermercado',t.ret))+
+    ln('COSTOS VARIABLES',-t.tv,it('Combustible',-t.v.combustible)+it('Peajes',-t.v.peajes)+it('Comisión conductor 10%',-t.v.comision)+it('Comisión asesor 3%',-t.v.asesor)+it('Neumáticos y mantención',-t.v.neumMant)+it('Viáticos',-t.v.viaticos))+
+    ln('COSTOS FIJOS',-t.fijo,it('Fijo empresa asignado a los servicios',-t.fijo))+
+    '<div style="display:flex;justify-content:space-between;border-top:2px solid var(--border);padding:8px 0 2px"><b>RESULTADO</b><b>'+fm$(t.res)+' ('+pctTxt+')</b></div>'+
+    '<div class="m" style="font-size:12px"><i>Esperado según parámetros del Excel (no es lo pagado real).</i></div></div>'}
+async function verResMes(){
+  if(!verResultado())return;ir('s-res');$('res-h').textContent='Resultados del mes';$('res-tot').innerHTML='';$('res-lista').innerHTML='';$('res-sub').textContent='Cargando…';$('res-volver').onclick=()=>ir('s-home');
+  const d=new Date(),ini=hoyISO(new Date(d.getFullYear(),d.getMonth(),1));
+  const {data,error}=await supa.from('servicios_piloto').select('*').eq('empresa',EMPRESA).eq('modo','registro_tm').neq('estado','anulado').gte('fecha',ini).order('fecha',{ascending:false}).order('servicio_id',{ascending:false});
+  if(error){$('res-sub').textContent='Error al leer: '+error.message;return}
+  filas=(data||[]).map(r=>({...r,_n:parseNotas(r.notas)}));
+  _gpsRes=[];_cargas=[];try{const d0=new Date(ini+'T12:00:00-03:00');d0.setDate(d0.getDate()-21);const rc=await conTope(supa.from('combustible_cargas').select('fecha,litros,total,iva').gte('fecha',hoyISO(d0)).order('fecha'),10000);_cargas=rc.data||[]}catch(e){}
+  try{const r=await conTope(supa.from('gps_viajes').select('patente,tipo,inicio,fin,km,lat_ini,lon_ini,lat_fin,lon_fin').gte('inicio',new Date(ini+'T00:00:00-03:00').toISOString()).order('inicio'),15000);_gpsRes=r.data||[]}catch(e){}
+  _resMes={ini,filas};resMesTodo();
+}
+function resMesTodo(){const {ini,filas:fs}=_resMes;ir('s-res');$('res-h').textContent='Resultados del mes';$('res-volver').onclick=()=>ir('s-home');
+  $('res-sub').textContent='Del '+ini.split('-').reverse().join('-')+' al '+hoyISO().split('-').reverse().join('-')+' · '+fs.length+' servicio(s)';
+  $('res-tot').innerHTML=bloqueRes(sumaRes(fs),'Resultado del mes');
+  const clis=[...new Set(CLIENTES_REG.concat(fs.map(r=>r.cliente||'Sin cliente')))];
+  $('res-lista').innerHTML='<div class="lbl" style="margin-top:8px">Ver resultados por cliente</div>'+clis.map((c,i)=>{const rs=fs.filter(r=>(r.cliente||'Sin cliente')===c);if(!rs.length&&!CLIENTES_REG.includes(c))return '';const t=sumaRes(rs);
+    return '<button class="btn2" style="margin-top:8px;display:flex;justify-content:space-between;width:100%" onclick="resMesCli('+i+')"><span>'+c+' ('+rs.length+')</span><span>'+fm$(t.res)+'</span></button>'}).join('');
+  _resMes.clis=clis}
+function resMesCli(i){const c=_resMes.clis[i],rs=_resMes.filas.filter(r=>(r.cliente||'Sin cliente')===c);
+  $('res-h').textContent='Resultados del mes · '+c;$('res-sub').textContent=rs.length+' servicio(s) del mes';$('res-volver').onclick=()=>resMesTodo();
+  $('res-tot').innerHTML=bloqueRes(sumaRes(rs),'Resultado '+c);
+  $('res-lista').innerHTML='<div class="lbl" style="margin-top:8px">Resultados de sus servicios</div>'+rs.map(r=>{const n=r._n;return '<div class="reg"><div class="t">'+(n.codigo?'<span class="ul">'+n.codigo+'</span> · ':'')+r.fecha.split('-').reverse().join('-')+' · '+SVC_VER(n.servicio_sistema||((r.origen||'')+' → '+(r.destino||'')))+'</div><div>'+r.conductor+' · '+r.patente+(n.acoplado?' / '+n.acoplado:'')+'</div>'+resultadoHTML(r)+'</div>'}).join('');window.scrollTo(0,0)}
 // Agrega las fotos (y guías) de un registro repetido al servicio que ya existe hoy
 async function agregarAServicio(sid){
   const err=$('reg-err');err.textContent='Agregando fotos…';
