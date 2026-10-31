@@ -84,6 +84,7 @@ input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--bor
 <section class="screen" id="s-home">
   <h1 id="saludo">Hola</h1>
   <div class="sub" id="sub-equipo"></div>
+  <div id="alerta-sinreg"></div>
   <button class="big" id="btn-ent" style="display:none;background:#1f7a3a;color:#fff;margin-bottom:12px" onclick="entregue()">📦 ENTREGUÉ AQUÍ</button>
   <input type="file" id="cam-ent" accept="image/*" capture="environment" style="display:none" onchange="onFotoEnt(this)">
   <button class="big" id="btn-reg" onclick="nuevoRegistro()">📷 REGISTRAR SERVICIO</button>
@@ -97,6 +98,7 @@ input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--bor
 
 <!-- 3. REGISTRO -->
 <section class="screen" id="s-reg">
+  <div id="reg-fecha" style="display:none;border:2px solid #ff3b30;border-radius:10px;padding:10px;margin-bottom:10px;font-weight:800;color:#ff3b30"></div>
   <div class="card">
     <div class="lbl">1 · Fotos de las guías</div>
     <div class="thumbs" id="thumbs"></div>
@@ -262,7 +264,7 @@ let pin='', user=null, fotos=[], svcSel=null, extrasSel=new Set(), ultimo=null;
 
 function $(id){return document.getElementById(id)}
 function toast(t){const e=$('toast');e.textContent=t;e.classList.add('on');setTimeout(()=>e.classList.remove('on'),2800)}
-function ir(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));$(id).classList.add('on');window.scrollTo(0,0);if(user)uso('pantalla',id)}
+function ir(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));$(id).classList.add('on');window.scrollTo(0,0);if(user)uso('pantalla',id);if(id==='s-home'&&user)alertaSinReg()}
 // Registro de uso de Kaptura (tabla kaptura_uso): entradas y pantallas por usuario. Pruebas internas marcadas con localStorage tm_prueba=1 (Carlos 30-10)
 function uso(accion,detalle){try{if(!supa||!user)return;const k=user.pin+'|'+accion+'|'+(detalle||'');if(uso._u===k)return;uso._u=k;
   supa.from('kaptura_uso').insert({empresa:EMPRESA,pin:user.pin,usuario:user.nombre,rol:user.rol,accion,detalle:detalle||null,dispositivo:/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)?'teléfono':'PC',prueba:ls('tm_prueba')==='1'}).then(()=>{},()=>{})}catch(e){}}
@@ -299,12 +301,14 @@ const bUpd=(f)=>f.k!=null&&bOp('readwrite',st=>st.put({k:f.k,pin:user.pin,blob:f
 const bDel=(k)=>k!=null&&bOp('readwrite',st=>st.delete(k));
 const bTodas=()=>bOp('readonly',st=>st.getAll());
 async function bLimpiar(){const t=await bTodas()||[];for(const x of t)if(x.pin===user.pin)await bDel(x.k)}
-async function nuevoRegistro(){
-  if(esCliente())return;
+let fechaReg=null; // fecha del servicio cuando se registra uno de un día anterior (aviso de servicio sin registrar)
+async function nuevoRegistro(fecha){
+  if(esCliente())return;fechaReg=(typeof fecha==='string'&&fecha)?fecha:null;
+  $('reg-fecha').style.display=fechaReg?'block':'none';$('reg-fecha').textContent=fechaReg?'⚠ Registrando el servicio del '+fechaReg.split('-').reverse().join('-')+' (sus entregas quedan asociadas)':'';
   fotos=[];const guard=(await bTodas()||[]).filter(x=>x.pin===user.pin).sort((a,b)=>a.ts-b.ts);
   guard.forEach(x=>fotos.push({k:x.k,blob:x.blob,url:URL.createObjectURL(x.blob),num:x.num||'',estado:x.num?'ok':'no',ts:x.ft||x.ts}));
   if(guard.length)toast('Se recuperaron '+guard.length+' foto(s) guardadas');
-  try{const ne=(await entHoy()).length;if(ne)setTimeout(()=>toast('Ya tiene '+ne+' entrega(s) con foto hoy: no repita esas guías'),guard.length?3000:0)}catch(e){}
+  try{const ne=fechaReg?0:(await entHoy()).length;if(ne)setTimeout(()=>toast('Ya tiene '+ne+' entrega(s) con foto hoy: no repita esas guías'),guard.length?3000:0)}catch(e){}
   svcSel=null;extrasSel=new Set();$('obs').value='';$('reg-err').textContent='';
   ['trasp-pallets','trasp-monto','trasv-monto','espera-horas','peaje-monto','reemp-patente'].forEach(i=>$(i).value='');
   pintarFotos(); pintarServicios(); pintarEquipo(); pintarExtras(); ir('s-reg');
@@ -442,7 +446,7 @@ async function guardar(){
 }
 async function guardar2(){
   const err=$('reg-err');
-  let entsHoy=[];try{const r=await conTope(supa.from('entregas').select('local,hora,estado,foto,obs,ifco_pendiente,ifco_recibido').eq('empresa',EMPRESA).eq('fecha',hoyISO()).eq('conductor',user.nombre).neq('estado','prueba').is('servicio_id',null).order('ts'),8000);entsHoy=r.data||[]}catch(e){}
+  const FR=fechaReg||hoyISO();let entsHoy=[];try{const r=await conTope(supa.from('entregas').select('local,hora,estado,foto,obs,ifco_pendiente,ifco_recibido').eq('empresa',EMPRESA).eq('fecha',FR).eq('conductor',user.nombre).neq('estado','prueba').is('servicio_id',null).order('ts'),8000);entsHoy=r.data||[]}catch(e){}
   if(!fotos.length&&!entsHoy.length){err.textContent='Falta la foto de la guía (o registre sus entregas con 📦 Entregué aquí)';return}
   if(!svcSel){err.textContent='Elige el servicio';return}
   if(!$('patente').value){err.textContent='Elige la patente del camión';return}
@@ -455,13 +459,13 @@ async function guardar2(){
   if(svcSel.tarifa===0&&!$('obs').value.trim()){err.textContent='En "Otro" escribe el servicio en la observación';return}
   err.textContent='';
   // Bloqueo de duplicados: si este conductor ya registró hoy este mismo servicio, se ofrece agregar las fotos a ese servicio
-  if(!_dupOk&&svcSel.tarifa!==0){let dup=null;try{const r=await conTope(supa.from('servicios_piloto').select('servicio_id,notas').eq('empresa',EMPRESA).eq('modo','registro_tm').neq('estado','anulado').eq('fecha',hoyISO()).eq('conductor',user.nombre),8000);dup=(r.data||[]).find(x=>parseNotas(x.notas).servicio_sistema===svcSel.servicio)||null}catch(e){}
+  if(!_dupOk&&svcSel.tarifa!==0){let dup=null;try{const r=await conTope(supa.from('servicios_piloto').select('servicio_id,notas').eq('empresa',EMPRESA).eq('modo','registro_tm').neq('estado','anulado').eq('fecha',FR).eq('conductor',user.nombre),8000);dup=(r.data||[]).find(x=>parseNotas(x.notas).servicio_sistema===svcSel.servicio)||null}catch(e){}
     if(dup){const cod=parseNotas(dup.notas).codigo||'';err.innerHTML='⚠ Ya registraste hoy <b>'+svcSel.txt+'</b>'+(cod?' ('+cod+')':'')+'.<br>'+(fotos.length?'<button class="btn2" style="background:#1f7a3a;color:#fff" onclick="agregarAServicio(\''+dup.servicio_id+'\')">➕ Agregar '+fotos.length+' foto(s) a ese servicio</button>':'')+'<button class="btn2" onclick="_dupOk=true;guardar()">Es otro viaje distinto: registrar nuevo</button>';return}}
   _dupOk=false;
   const ahora=new Date(), id='TM-'+hoyISO(ahora).replace(/-/g,'')+'-'+String(ahora.getHours()).padStart(2,'0')+String(ahora.getMinutes()).padStart(2,'0')+String(ahora.getSeconds()).padStart(2,'0')+'-'+user.pin;
   const reg={
     servicio_id:id, patente:$('patente').value, conductor:user.nombre, cliente:svcSel.cliente||null,
-    origen:svcSel.origen||null, destino:svcSel.destino||null, fecha:hoyISO(ahora), estado:'registrado',
+    origen:svcSel.origen||null, destino:svcSel.destino||null, fecha:FR, estado:'registrado',
     empresa:EMPRESA, modo:'registro_tm', tarifa_neta:svcSel.tarifa||null,
     notas:JSON.stringify({servicio_sistema:svcSel.servicio, acoplado:$('acoplado').value||null, peoneta:($('peo-box').style.display!=='none'&&$('peoneta').value)||null, extras:ex, observacion:$('obs').value.trim()||null, guias:[...new Set(fotos.map(f=>f.num).concat(entsHoy.map(e=>e.obs)).filter(Boolean))], fotos_ts:fotos.map(f=>f.ts?new Date(f.ts).toISOString():null), entregas:entsHoy, pin:user.pin, registrado:ahora.toISOString(), fotos:[]})
   };
@@ -644,6 +648,21 @@ function esAdmin(){return user&&(user.rol==='administrador'||user.rol==='coordin
 function esAdminTotal(){return user&&(user.rol==='administrador'||user.rol==='administracion')}
 function verResultado(){return user&&user.rol==='administracion'}
 function esCliente(){return user&&user.rol==='cliente'}
+// ═══ SERVICIOS SIN REGISTRAR: entregas sin servicio de días anteriores, o de hoy después de las 21:00 (Carlos 31-10) ═══
+async function alertaSinReg(){const box=$('alerta-sinreg');if(!box||!user||!supa)return;
+  try{const d0=new Date();d0.setDate(d0.getDate()-14);const hoy=hoyISO(),tarde=new Date().getHours()>=21;
+    let q=supa.from('entregas').select('fecha,conductor,cliente').eq('empresa',EMPRESA).is('servicio_id',null).neq('estado','prueba').gte('fecha',hoyISO(d0));
+    if(esCliente())q=q.eq('cliente',user.cliente);else if(!esAdmin())q=q.eq('conductor',user.nombre);
+    const es=((await conTope(q,8000)).data||[]).filter(e=>e.fecha<hoy||(e.fecha===hoy&&tarde));
+    if(!es.length){box.innerHTML='';return}
+    const fs=[...new Set(es.map(e=>e.fecha))];const sv=((await conTope(supa.from('servicios_piloto').select('fecha,conductor').eq('empresa',EMPRESA).eq('modo','registro_tm').neq('estado','anulado').in('fecha',fs),8000)).data||[]);
+    const g={};es.filter(e=>!sv.some(x=>x.fecha===e.fecha&&x.conductor===e.conductor)).forEach(e=>{const k=e.fecha+'|'+e.conductor;g[k]=(g[k]||0)+1});
+    const ks=Object.keys(g).sort();if(!ks.length){box.innerHTML='';return}
+    const st='border:2px solid #ff3b30;border-radius:12px;padding:10px;margin:8px 0 12px;color:#ff3b30;font-weight:800';
+    if(!esAdmin()&&!esCliente()){box.innerHTML=ks.map(k=>{const [f]=k.split('|');return '<div style="'+st+'">⚠ Tienes '+g[k]+' entrega(s) del '+f.split('-').reverse().join('-')+' sin servicio registrado<button class="big" style="margin-top:8px;background:#ff3b30;color:#fff" onclick="nuevoRegistro(\''+f+'\')">📷 Registrar ese servicio</button></div>'}).join('');return}
+    box.innerHTML='<div style="'+st+'">⚠ Servicios sin registrar ('+ks.length+')'+ks.map(k=>{const [f,c]=k.split('|');const t='Hola '+c.split(' ')[0]+', tienes '+g[k]+' entrega(s) del '+f.split('-').reverse().join('-')+' sin servicio registrado en Kaptura. Entra a Kaptura y toca "Registrar ese servicio". Gracias.';
+      return '<div style="color:var(--text);font-weight:600;margin-top:6px">'+c+' · '+f.split('-').reverse().join('-')+' · '+g[k]+' entrega(s)</div>'+(esAdmin()?'<button class="btn2" style="margin-top:4px;padding:8px;font-size:13px" onclick="window.open(\'https://wa.me/?text=\'+encodeURIComponent(this.dataset.t),\'_blank\')" data-t="'+t.replace(/"/g,'&quot;')+'">📤 Recordar por WhatsApp</button>':'')}).join('')+'</div>';
+  }catch(e){}}
 const ifcoCab=es=>{const a=es.filter(e=>e.ifco_pendiente&&!e.ifco_recibido),p=a.filter(e=>!e.ifco_enviado).length,v=a.length-p;return (p?' · <span class="ifco">📄 '+p+' IFCO pendiente'+(p>1?'s':'')+'</span>':'')+(v?' · <span style="color:#c77d00;font-weight:900">📤 '+v+' IFCO por confirmar</span>':'')}; // IFCO a primera vista en el título del servicio (Carlos 31-10)
 let rango='hoy', filas=[];
 function abrirRegistros(){rango='hoy';document.querySelectorAll('#seg button').forEach(x=>x.classList.toggle('sel',x.dataset.r==='hoy'));verRegistros()}
