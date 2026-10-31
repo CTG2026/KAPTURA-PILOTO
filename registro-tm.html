@@ -282,7 +282,7 @@ function entrar(p){
   if(!u){$('pin-err').textContent='PIN no registrado';pin='';setTimeout(pintarPin,600);return}
   user={pin:p,...u}; ls('tm_pin',p);
   $('saludo').textContent='Hola '+u.nombre.split(' ')[0];
-  $('btn-salir').style.display='block'; $('hdr-user').textContent='👤 '+u.nombre.split(' ')[0]; $('btn-ver').style.display='block';$('btn-ver').textContent=esAdmin()?'📋 Servicios registrados':esCliente()?'📋 Ver mis servicios':'📋 Mis servicios registrados';$('btn-reg').style.display=esCliente()?'none':'block';$('btn-ent').style.display=esCliente()?'none':'block';$('btn-misent').style.display='block';$('btn-res').style.display=verResultado()?'block':'none';ordenHome();contarEnt();const vg=(esAdmin()||esCliente())?'block':'none';$('btn-gps').style.display=vg;$('btn-prof').style.display=esCliente()?'none':vg; /* Proforma oculta para el cliente por ahora (Carlos 30-10) */ $('btn-ifco').style.display='block';contarIfco(); ir('s-home'); revisarPendientes();
+  $('btn-salir').style.display='block'; $('hdr-user').textContent='👤 '+u.nombre.split(' ')[0]; $('btn-ver').style.display='block';$('btn-ver').textContent=esAdmin()?'📋 Servicios registrados':esCliente()?'📋 Ver mis servicios':'📋 Mis servicios registrados';$('btn-reg').style.display=esCliente()?'none':'block';$('btn-ent').style.display=esCliente()?'none':'block';$('btn-misent').style.display='block';contarSvc();$('btn-res').style.display=verResultado()?'block':'none';ordenHome();contarEnt();const vg=(esAdmin()||esCliente())?'block':'none';$('btn-gps').style.display=vg;$('btn-prof').style.display=esCliente()?'none':vg; /* Proforma oculta para el cliente por ahora (Carlos 30-10) */ $('btn-ifco').style.display='block';contarIfco(); ir('s-home'); revisarPendientes();
 }
 function ordenHome(){const h=$('s-home'),ids=esCliente()?['btn-ver','btn-misent','btn-ifco','btn-gps','btn-prof','btn-reg']:['btn-reg','btn-misent','btn-ifco','btn-ver','btn-gps','btn-prof','btn-res'];ids.forEach(i=>h.appendChild($(i)))} /* orden de inicio del cliente: servicios, entregas, IFCO, GPS (Carlos 30-10) */
 function salir(){ls('tm_pin',null);user=null;pin='';pintarPin();$('btn-salir').style.display='none';$('hdr-user').textContent='';_dupOk=false;ir('s-pin')}
@@ -813,6 +813,9 @@ async function guardarEnt(btn){
   btn.disabled=false;btn.textContent='✅ GUARDAR ENTREGA';
 }
 async function entHoy(todos){try{let q=supa.from('entregas').select('*').eq('empresa',EMPRESA).eq('fecha',hoyISO()).neq('estado','prueba');if(esCliente())q=q.eq('cliente',user.cliente);else if(!(todos&&esAdmin()))q=q.eq('conductor',user.nombre);const r=await q.order('ts');return r.data||[]}catch(e){return []}}
+async function contarSvc(){if(!user||!supa)return;const t=esAdmin()?'📋 Servicios registrados':esCliente()?'📋 Ver mis servicios':'📋 Mis servicios registrados';$('btn-ver').textContent=t+' (0)';
+  try{let q=supa.from('servicios_piloto').select('servicio_id',{count:'exact',head:true}).eq('empresa',EMPRESA).eq('modo','registro_tm').neq('estado','anulado').eq('fecha',hoyISO());
+    if(esCliente())q=q.eq('cliente',user.cliente);else if(!esAdmin())q=q.eq('conductor',user.nombre);const {count}=await q;$('btn-ver').textContent=t+' ('+(count||0)+')'}catch(e){}} /* servicios de hoy: conductor los suyos, administrador toda la flota, cliente los suyos (Carlos 30-10) */
 async function contarEnt(){if(!user||!supa)return;const n=(await entHoy(true)).length;$('btn-misent').textContent=(esAdmin()?'📦 Ver entregas - puntos':'📦 Ver mis entregas - puntos')+' ('+n+')'}
 let _misEnt=[];
 async function misEntregas(){
