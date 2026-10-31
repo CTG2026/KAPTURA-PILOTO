@@ -93,6 +93,7 @@ input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--bor
   <button class="btn2" id="btn-ver" style="display:none" onclick="abrirRegistros()">📋 Servicios registrados</button>
   <button class="btn2" id="btn-gps" style="display:none" onclick="gpsPat=null;gpsVolver='s-home';$('gps-dia').value='';verGPS()">🛰 Reporte GPS del día</button>
   <button class="btn2" id="btn-prof" style="display:none" onclick="verProforma()">🧾 Proforma EBLOOMS</button>
+  <button class="btn2" id="btn-profA" style="display:none" onclick="verProformaA()">🧾 Proforma Ateuro / Zuria</button>
   <button class="btn2" id="btn-res" style="display:none" onclick="verResMes()">📊 Ver resultados del mes</button>
 </section>
 
@@ -202,6 +203,15 @@ input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--bor
   <button class="btn2" id="res-volver" onclick="ir('s-home')">← Volver</button>
 </section>
 
+<section class="screen" id="s-profA">
+  <h1>Proforma Ateuro / Zuria</h1>
+  <select id="profA-q" style="width:100%;font-size:17px;padding:10px;border-radius:10px;border:2px solid var(--border);background:var(--surface);color:var(--text);margin-bottom:12px"></select>
+  <div class="sub" id="profA-sub">Cargando…</div>
+  <div class="tblw"><table class="tbl" id="profA-tbl"></table></div>
+  <button class="big" id="btn-profA-xls" onclick="descargarProformaA()" disabled>⬇ Descargar Excel</button>
+  <button class="btn2" onclick="ir('s-home')">← Volver</button>
+</section>
+
 <section class="screen" id="s-prof">
   <h1>Proforma EBLOOMS</h1>
   <select id="prof-q" style="width:100%;font-size:17px;padding:10px;border-radius:10px;border:2px solid var(--border);background:var(--surface);color:var(--text);margin-bottom:12px"></select>
@@ -287,9 +297,9 @@ function entrar(p){
   if(!u){$('pin-err').textContent='PIN no registrado';pin='';setTimeout(pintarPin,600);return}
   user={pin:p,...u}; ls('tm_pin',p); uso._u=null; uso('entrada');
   $('saludo').textContent='Hola '+u.nombre.split(' ')[0];
-  $('btn-salir').style.display='block'; $('hdr-user').textContent='👤 '+u.nombre.split(' ')[0]; $('btn-ver').style.display='block';$('btn-ver').textContent=esAdmin()?'📋 Servicios registrados':esCliente()?'📋 Ver mis servicios':'📋 Mis servicios registrados';$('btn-reg').style.display=esCliente()?'none':'block';$('btn-ent').style.display=esCliente()?'none':'block';$('btn-misent').style.display='block';contarSvc();$('btn-res').style.display=verResultado()?'block':'none';ordenHome();contarEnt();const vg=(esAdmin()||esCliente())?'block':'none';$('btn-gps').style.display=vg;$('btn-prof').style.display=esCliente()?'none':vg; /* Proforma oculta para el cliente por ahora (Carlos 30-10) */ $('btn-ifco').style.display='block';contarIfco(); ir('s-home'); revisarPendientes();
+  $('btn-salir').style.display='block'; $('hdr-user').textContent='👤 '+u.nombre.split(' ')[0]; $('btn-ver').style.display='block';$('btn-ver').textContent=esAdmin()?'📋 Servicios registrados':esCliente()?'📋 Ver mis servicios':'📋 Mis servicios registrados';$('btn-reg').style.display=esCliente()?'none':'block';$('btn-ent').style.display=esCliente()?'none':'block';$('btn-misent').style.display='block';contarSvc();$('btn-res').style.display=verResultado()?'block':'none';$('btn-profA').style.display=esAdmin()?'block':'none';ordenHome();contarEnt();const vg=(esAdmin()||esCliente())?'block':'none';$('btn-gps').style.display=vg;$('btn-prof').style.display=esCliente()?'none':vg; /* Proforma oculta para el cliente por ahora (Carlos 30-10) */ $('btn-ifco').style.display='block';contarIfco(); ir('s-home'); revisarPendientes();
 }
-function ordenHome(){const h=$('s-home'),ids=esCliente()?['btn-ver','btn-misent','btn-ifco','btn-gps','btn-prof','btn-reg']:['btn-reg','btn-misent','btn-ifco','btn-ver','btn-gps','btn-prof','btn-res'];ids.forEach(i=>h.appendChild($(i)))} /* orden de inicio del cliente: servicios, entregas, IFCO, GPS (Carlos 30-10) */
+function ordenHome(){const h=$('s-home'),ids=esCliente()?['btn-ver','btn-misent','btn-ifco','btn-gps','btn-prof','btn-profA','btn-ent','btn-reg']:['btn-ent','btn-reg','btn-ver','btn-misent','btn-ifco','btn-gps','btn-prof','btn-profA','btn-res'];ids.forEach(i=>h.appendChild($(i)))} /* orden de inicio del cliente: servicios, entregas, IFCO, GPS (Carlos 30-10) */
 function salir(){ls('tm_pin',null);user=null;pin='';pintarPin();$('btn-salir').style.display='none';$('hdr-user').textContent='';_dupOk=false;ir('s-pin')}
 
 // ═══ REGISTRO ═══
@@ -1027,6 +1037,32 @@ async function cargarProforma(){
   $('prof-sub').textContent=profFilas.length+' viaje(s) · total $'+tot.toLocaleString('es-CL')+' neto';
   $('btn-prof-xls').disabled=!profFilas.length;
 }
+// ═══ PROFORMA ATEURO / ZURIA: formato de la planilla Zuria de la temporada pasada (Carlos 31-10) ═══
+let profAFilas=[],profATit='';
+const HEAD_A=['Fecha','N° de Guia','Transporte','Chofer','Origen ','Destino','Tipo Camión','Movimiento','Neto','Iva','Total'];
+function verProformaA(){if(!esAdmin())return;ir('s-profA');const sel=$('profA-q');
+  if(!sel.options.length){sel.innerHTML=quincenas().map(x=>'<option value="'+x.y+'-'+x.m+'-'+x.q+'">'+(x.q===1?'1ra':'2da')+' quincena '+MESES[x.m]+' '+x.y+'</option>').join('');sel.onchange=cargarProformaA}
+  cargarProformaA()}
+async function cargarProformaA(){
+  const [y,m,q]=$('profA-q').value.split('-').map(Number),d1=q===1?1:16,d2=q===1?15:new Date(y,m+1,0).getDate();
+  const desde=y+'-'+String(m+1).padStart(2,'0')+'-'+String(d1).padStart(2,'0'),hasta=y+'-'+String(m+1).padStart(2,'0')+'-'+String(d2).padStart(2,'0');
+  profATit=(q===1?'1ra':'2da')+' Quincena '+MESES[m];$('profA-tbl').innerHTML='';$('btn-profA-xls').disabled=true;$('profA-sub').textContent='Cargando…';
+  const {data,error}=await supa.from('servicios_piloto').select('*').eq('empresa',EMPRESA).eq('modo','registro_tm').neq('estado','anulado').eq('cliente','Ateuro / Zuria').gte('fecha',desde).lte('fecha',hasta).order('fecha');
+  if(error){$('profA-sub').textContent='Error: '+error.message;return}
+  profAFilas=(data||[]).map(r=>{const n=parseNotas(r.notas),sv=(n.servicio_sistema||'').replace(/^Ateuro:\s*/,'').replace(/\s*·.*$/,''),[o,d]=sv.split('→').map(x=>(x||'').trim());
+    const neto=+r.tarifa_neta||0,iva=Math.round(neto*0.19),tipo=TRACTOS.includes(r.patente)?'Thermo':'Afurgonado';
+    return {fecha:r.fecha,cells:[r.fecha.split('-').reverse().join('-'),(n.guias||[]).join(' - '),'Transportes Madrid Gaete',r.conductor,o||r.origen||'',d||r.destino||'',tipo,'Fruta',neto,iva,neto+iva]}});
+  const tn=profAFilas.reduce((t,f)=>t+f.cells[8],0),ti=profAFilas.reduce((t,f)=>t+f.cells[9],0);
+  $('profA-tbl').innerHTML='<tr>'+HEAD_A.map(h=>'<th>'+h+'</th>').join('')+'</tr>'+profAFilas.map(f=>'<tr>'+f.cells.map((c,i)=>'<td'+(i>=8?' class="n"':'')+'>'+(i>=8?Number(c).toLocaleString('es-CL'):c)+'</td>').join('')+'</tr>').join('')+
+    '<tr class="tot"><td colspan="8">Total '+profATit+'</td><td class="n">'+tn.toLocaleString('es-CL')+'</td><td class="n">'+ti.toLocaleString('es-CL')+'</td><td class="n">'+(tn+ti).toLocaleString('es-CL')+'</td></tr>';
+  $('profA-sub').textContent=profAFilas.length+' viaje(s) · neto $'+tn.toLocaleString('es-CL')+' · total $'+(tn+ti).toLocaleString('es-CL');$('btn-profA-xls').disabled=!profAFilas.length}
+function descargarProformaA(){if(!profAFilas.length||!window.XLSX)return;
+  const rows=profAFilas.map(f=>{const c=f.cells.slice();const [y,m,d]=f.fecha.split('-').map(Number);c[0]=(Date.UTC(y,m-1,d)-Date.UTC(1899,11,30))/86400000;return c});
+  const ws=XLSX.utils.aoa_to_sheet([HEAD_A,...rows]);const nR=rows.length+1;
+  for(let i=2;i<=nR;i++){ws['A'+i].t='n';ws['A'+i].z='dd-mm-yyyy';['I','J','K'].forEach(c=>ws[c+i].z='#,##0')}
+  const t=nR+1;ws['A'+t]={t:'s',v:'Total'};['I','J','K'].forEach((c,j)=>ws[c+t]={t:'n',f:'SUM('+c+'2:'+c+nR+')',v:rows.reduce((a,r)=>a+r[8+j],0),z:'#,##0'});ws['!ref']='A1:K'+t;
+  estiloXLS(ws,rows.length,11,t);ws['!cols']=[{wch:11},{wch:12},{wch:24},{wch:24},{wch:20},{wch:16},{wch:11},{wch:11},{wch:11},{wch:10},{wch:11}];
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,profATit.slice(0,31));XLSX.writeFile(wb,'PROFORMA_Zuria_Transportes_Madrid_'+profATit.replace(/\s+/g,'_')+'_'+$('profA-q').value.split('-')[0]+'.xlsx')}
 function estiloXLS(ws,nFilas,nCols,filaTot){
   const L=c=>XLSX.utils.encode_col(c), bd={style:'thin',color:{rgb:'DDDDDD'}}, B={top:bd,bottom:bd,left:bd,right:bd};
   for(let c=0;c<nCols;c++){
