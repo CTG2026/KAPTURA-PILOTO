@@ -94,6 +94,7 @@ input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--bor
   <button class="btn2" id="btn-gps" style="display:none" onclick="gpsPat=null;gpsVolver='s-home';$('gps-dia').value='';verGPS()">🛰 Reporte GPS del día</button>
   <button class="btn2" id="btn-prof" style="display:none" onclick="verProforma()">🧾 Proforma EBLOOMS</button>
   <button class="btn2" id="btn-profA" style="display:none" onclick="verProformaA()">🧾 Proforma Ateuro / Zuria</button>
+  <button class="btn2" id="btn-rsv" style="display:none" onclick="verResumenSvc()">📑 Resumen de servicios</button>
   <button class="btn2" id="btn-res" style="display:none" onclick="verResMes()">📊 Ver resultados del mes</button>
 </section>
 
@@ -204,6 +205,14 @@ input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--bor
   <button class="btn2" id="res-volver" onclick="ir('s-home')">← Volver</button>
 </section>
 
+<section class="screen" id="s-rsv">
+  <h1>Resumen de servicios</h1>
+  <div class="seg" id="seg-rsv"><button data-r="hoy">Hoy</button><button data-r="7">7 días</button><button data-r="mes" class="sel">Mes</button></div>
+  <div class="sub" id="rsv-sub">Cargando…</div>
+  <div class="tblw"><table class="tbl" id="rsv-tbl"></table></div>
+  <button class="btn2" onclick="ir('s-home')">← Volver</button>
+</section>
+
 <section class="screen" id="s-profA">
   <h1>Proforma Ateuro / Zuria</h1>
   <select id="profA-q" style="width:100%;font-size:17px;padding:10px;border-radius:10px;border:2px solid var(--border);background:var(--surface);color:var(--text);margin-bottom:12px"></select>
@@ -298,9 +307,9 @@ function entrar(p){
   if(!u){$('pin-err').textContent='PIN no registrado';pin='';setTimeout(pintarPin,600);return}
   user={pin:p,...u}; ls('tm_pin',p); uso._u=null; uso('entrada');
   $('saludo').textContent='Hola '+u.nombre.split(' ')[0];
-  $('btn-salir').style.display='block'; $('hdr-user').textContent='👤 '+u.nombre.split(' ')[0]; $('btn-ver').style.display='block';$('btn-ver').textContent=esAdmin()?'📋 Servicios registrados':esCliente()?'📋 Ver mis servicios':'📋 Mis servicios registrados';$('btn-reg').style.display=esCliente()?'none':'block';$('btn-ent').style.display=esCliente()?'none':'block';$('btn-misent').style.display='block';contarSvc();$('btn-res').style.display=verResultado()?'block':'none';$('btn-profA').style.display=esAdmin()?'block':'none';ordenHome();contarEnt();const vg=(esAdmin()||esCliente())?'block':'none';$('btn-gps').style.display=vg;$('btn-prof').style.display=esCliente()?'none':vg; /* Proforma oculta para el cliente por ahora (Carlos 30-10) */ $('btn-ifco').style.display='block';contarIfco(); ir('s-home'); revisarPendientes();
+  $('btn-salir').style.display='block'; $('hdr-user').textContent='👤 '+u.nombre.split(' ')[0]; $('btn-ver').style.display='block';$('btn-ver').textContent=esAdmin()?'📋 Servicios registrados':esCliente()?'📋 Ver mis servicios':'📋 Mis servicios registrados';$('btn-reg').style.display=esCliente()?'none':'block';$('btn-ent').style.display=esCliente()?'none':'block';$('btn-misent').style.display='block';contarSvc();$('btn-res').style.display=verResultado()?'block':'none';$('btn-profA').style.display=esAdmin()?'block':'none';$('btn-rsv').style.display=esAdmin()?'block':'none';ordenHome();contarEnt();const vg=(esAdmin()||esCliente())?'block':'none';$('btn-gps').style.display=vg;$('btn-prof').style.display=esCliente()?'none':vg; /* Proforma oculta para el cliente por ahora (Carlos 30-10) */ $('btn-ifco').style.display='block';contarIfco(); ir('s-home'); revisarPendientes();
 }
-function ordenHome(){const h=$('s-home'),ids=esCliente()?['btn-ver','btn-misent','btn-ifco','btn-gps','btn-prof','btn-profA','btn-ent','btn-reg']:['btn-ent','btn-reg','btn-ver','btn-misent','btn-ifco','btn-gps','btn-prof','btn-profA','btn-res'];ids.forEach(i=>h.appendChild($(i)))} /* orden de inicio del cliente: servicios, entregas, IFCO, GPS (Carlos 30-10) */
+function ordenHome(){const h=$('s-home'),ids=esCliente()?['btn-ver','btn-misent','btn-ifco','btn-gps','btn-prof','btn-profA','btn-ent','btn-reg']:['btn-ent','btn-reg','btn-ver','btn-misent','btn-ifco','btn-gps','btn-prof','btn-profA','btn-res','btn-rsv'];ids.forEach(i=>h.appendChild($(i)))} /* orden de inicio del cliente: servicios, entregas, IFCO, GPS (Carlos 30-10) */
 function salir(){ls('tm_pin',null);user=null;pin='';pintarPin();$('btn-salir').style.display='none';$('hdr-user').textContent='';_dupOk=false;ir('s-pin')}
 
 // ═══ REGISTRO ═══
@@ -674,6 +683,20 @@ async function alertaSinReg(){const box=$('alerta-sinreg');if(!box||!user||!supa
     box.innerHTML='<div style="'+st+'">⚠ Servicios sin registrar ('+ks.length+')'+ks.map(k=>{const [f,c]=k.split('|');const t='Hola '+c.split(' ')[0]+', tienes '+g[k]+' entrega(s) del '+f.split('-').reverse().join('-')+' sin servicio registrado en Kaptura. Entra a Kaptura y toca "Registrar ese servicio". Gracias.';
       return '<div style="color:var(--text);font-weight:600;margin-top:6px">'+c+' · '+f.split('-').reverse().join('-')+' · '+g[k]+' entrega(s)</div>'+(esAdmin()?'<button class="btn2" style="margin-top:4px;padding:8px;font-size:13px" onclick="window.open(\'https://wa.me/?text=\'+encodeURIComponent(this.dataset.t),\'_blank\')" data-t="'+t.replace(/"/g,'&quot;')+'">📤 Recordar por WhatsApp</button>':'')}).join('')+'</div>';
   }catch(e){}}
+// ═══ RESUMEN DE SERVICIOS (administradores): una fila por servicio; sin registrar al final en rojo (Carlos 31-10) ═══
+let rangoRsv='mes';
+document.querySelectorAll('#seg-rsv button').forEach(b=>b.onclick=()=>{rangoRsv=b.dataset.r;document.querySelectorAll('#seg-rsv button').forEach(x=>x.classList.toggle('sel',x===b));cargarResumenSvc()});
+function verResumenSvc(){if(!esAdmin())return;ir('s-rsv');cargarResumenSvc()}
+async function cargarResumenSvc(){const d=new Date(),desde=rangoRsv==='hoy'?hoyISO(d):rangoRsv==='mes'?hoyISO(new Date(d.getFullYear(),d.getMonth(),1)):hoyISO(new Date(d.getFullYear(),d.getMonth(),d.getDate()-6));
+  $('rsv-tbl').innerHTML='';$('rsv-sub').textContent='Cargando…';
+  let sv=[],es=[];try{sv=(await conTope(supa.from('servicios_piloto').select('servicio_id,fecha,conductor,patente,notas').eq('empresa',EMPRESA).eq('modo','registro_tm').neq('estado','anulado').gte('fecha',desde).order('fecha',{ascending:false}).order('servicio_id',{ascending:false}),10000)).data||[];
+    es=(await conTope(supa.from('entregas').select('fecha,conductor').eq('empresa',EMPRESA).is('servicio_id',null).neq('estado','prueba').gte('fecha',desde),10000)).data||[]}catch(e){$('rsv-sub').textContent='No se pudo leer. Revise la señal.';return}
+  const hoy=hoyISO(),tarde=new Date().getHours()>=21,g={};es.filter(e=>(e.fecha<hoy||tarde)&&!sv.some(x=>x.fecha===e.fecha&&x.conductor===e.conductor)).forEach(e=>{const k=e.fecha+'|'+e.conductor;g[k]=(g[k]||0)+1});
+  const f=x=>x.split('-').reverse().join('-');
+  $('rsv-tbl').innerHTML='<tr><th>Fecha</th><th>ID</th><th>Servicio</th><th>Conductor</th><th>Patente</th></tr>'+
+    sv.map(r=>{const n=parseNotas(r.notas);return '<tr><td>'+f(r.fecha)+'</td><td>'+(n.codigo||'')+'</td><td>'+SVC_VER(n.servicio_sistema||'')+'</td><td>'+r.conductor+'</td><td>'+r.patente+'</td></tr>'}).join('')+
+    Object.keys(g).sort().reverse().map(k=>{const [fe,c]=k.split('|');return '<tr style="color:#ff3b30;font-weight:800"><td>'+f(fe)+'</td><td></td><td>⚠ Servicio sin registrar ('+g[k]+' entrega(s))</td><td>'+c+'</td><td></td></tr>'}).join('');
+  const nS=Object.keys(g).length;$('rsv-sub').textContent=sv.length+' servicio(s) desde el '+f(desde)+(nS?' · '+nS+' sin registrar':'')}
 const ifcoCab=es=>{const a=es.filter(e=>e.ifco_pendiente&&!e.ifco_recibido),p=a.filter(e=>!e.ifco_enviado).length,v=a.length-p;return (p?' · <span class="ifco">📄 '+p+' IFCO pendiente'+(p>1?'s':'')+'</span>':'')+(v?' · <span style="color:#c77d00;font-weight:900">📤 '+v+' IFCO por confirmar</span>':'')}; // IFCO a primera vista en el título del servicio (Carlos 31-10)
 let rango='hoy', filas=[];
 function abrirRegistros(){rango='hoy';document.querySelectorAll('#seg button').forEach(x=>x.classList.toggle('sel',x.dataset.r==='hoy'));verRegistros()}
