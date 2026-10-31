@@ -507,6 +507,7 @@ async function enviar(reg,blobs){
 const COSTO={diesel:1185,rend:{A:3.5,T:2.6},com:0.10,ase:0.03,neum:20,mant:35,viatTracto:15000,viatAfur:7500,retSuper:0.397,fijoMes:4933572,diasMes:20,alta:['2026-11-15','2027-03-31']};
 // Tipo de cada camión (rendimiento): A = afurgonado 3,5 km/l · T = tracto + thermo 2,6 km/l
 const TIPO_PAT={CWVH32:'A',DZZW14:'A',DSBZ64:'T',ZV7780:'T'};
+const patTipo=p=>{const t=TIPO_PAT[PAT_GPS(p||'')];return p+(esAdmin()&&t?' · '+(t==='T'?'Tracto + thermo':'Afurgonado'):'')}; // tipo de equipo junto a la patente, solo administradores (Carlos 30-10)
 const SV_COSTO={"Ateuro: El Trébol → Clee · 66 bins": [100, "T", 5200, 0], "Ateuro: El Trébol → Clee · 20 bins": [100, "T", 5200, 0], "Ateuro: Santa Elena → Clee · 66 bins": [100, "T", 5200, 0], "Ateuro: Las Petacas → Clee · 66 bins": [100, "T", 5200, 0], "Planta EBLOOMS → Santiago centros distribución": [250, "A", 25000, 0.5], "Ateuro: campo / huertos → planta (Coltauco)": [30, "A", 0, 0.5], "Ateuro: campo / huertos → planta (Cuncumén)": [320, "A", 25000, 1], "Planta EBLOOMS → Supermercados Santiago (Temporada Baja)": [250, "A", 25000, 1], "Planta EBLOOMS → Supermercados Santiago (Temporada Alta)": [250, "A", 25000, 1], "Planta EBLOOMS → Chillán (Cencosud)": [700, "T", 70000, 1], "CHILLÁN → LOS ÁNGELES": [250, "T", 22000, 1], "CHILLÁN → LOS ÁNGELES → TEMUCO": [570, "T", 22000, 1], "CHILLÁN → LOS ÁNGELES → VICTORIA → TEMUCO": [570, "T", 22000, 1], "CHILLÁN → CONCEPCIÓN": [200, "T", 6200, 1], "CHILLÁN → TEMUCO": [570, "T", 22000, 1], "CHILLÁN → VICTORIA": [440, "T", 22000, 1], "CHILLÁN → SAN FERNANDO": [0, "T", 0, 1], "CHILLÁN → SAN FERNANDO → RANCAGUA": [0, "T", 0, 1], "CHILLÁN → SANTIAGO CON TRASVASIJE": [200, "T", 25000, 1], "CHILLÁN → SANTIAGO · TRASVASIJE + TRASPALETEO": [200, "T", 25000, 1], "CHILLÁN → SANTIAGO": [200, "T", 25000, 1], "CHILLÁN → RANCAGUA": [0, "T", 0, 1], "CHILLÁN → TEMUCO → VICTORIA → LOS ÁNGELES": [570, "T", 22000, 1]};
 let _gpsRes=[],_cargas=[];
 // Precio diésel neto (sin IVA) por litro: promedio ponderado de las cargas de los 7 días hasta la fecha del servicio (Aramco + Peumo).
@@ -539,7 +540,7 @@ function resultadoServicio(r){
   const tv=Object.values(v).reduce((a,b)=>a+b,0);
   return {tarifa,ret,v,tv,fijo,nDia,res:tarifa-tv-fijo,km,kmTxt,tipoC,pd};
 }
-const fm$=x=>(x<0?'<span style="color:#ff3b30">−$'+Math.round(-x).toLocaleString('es-CL')+'</span>':'$'+Math.round(x).toLocaleString('es-CL'));
+const fm$=x=>(Math.round(x)===0?'$0':x<0?'<span style="color:#ff3b30">−$'+Math.round(-x).toLocaleString('es-CL')+'</span>':'$'+Math.round(x).toLocaleString('es-CL'));
 function resultadoHTML(r){
   const z=resultadoServicio(r);if(!z)return '<div class="m" style="margin-top:8px">📊 Sin parámetros de costo para este servicio</div>';
   const pct=z.tarifa?Math.round(z.res/z.tarifa*1000)/10:0,pctTxt=pct<0?'<span style="color:#ff3b30">−'+String(-pct).replace('.',',')+'%</span>':String(pct).replace('.',',')+'%';
@@ -586,7 +587,7 @@ function resMesTodo(){const {ini,filas:fs}=_resMes;ir('s-res');$('res-h').textCo
 function resMesCli(i){const c=_resMes.clis[i],rs=_resMes.filas.filter(r=>(r.cliente||'Sin cliente')===c);
   $('res-h').textContent='Resultados del mes · '+c;$('res-sub').textContent=rs.length+' servicio(s) del mes';$('res-volver').onclick=()=>resMesTodo();
   $('res-tot').innerHTML=bloqueRes(sumaRes(rs),'Resultado '+c);
-  $('res-lista').innerHTML='<div class="lbl" style="margin-top:8px">Resultados de sus servicios</div>'+rs.map(r=>{const n=r._n;return '<div class="reg"><div class="t">'+(n.codigo?'<span class="ul">'+n.codigo+'</span> · ':'')+r.fecha.split('-').reverse().join('-')+' · '+SVC_VER(n.servicio_sistema||((r.origen||'')+' → '+(r.destino||'')))+'</div><div>'+r.conductor+' · '+r.patente+(n.acoplado?' / '+n.acoplado:'')+'</div>'+resultadoHTML(r)+'</div>'}).join('');window.scrollTo(0,0)}
+  $('res-lista').innerHTML='<div class="lbl" style="margin-top:8px">Resultados de sus servicios</div>'+rs.map(r=>{const n=r._n;return '<div class="reg"><div class="t">'+(n.codigo?'<span class="ul">'+n.codigo+'</span> · ':'')+r.fecha.split('-').reverse().join('-')+' · '+SVC_VER(n.servicio_sistema||((r.origen||'')+' → '+(r.destino||'')))+'</div><div>'+r.conductor+' · '+patTipo(r.patente)+(n.acoplado?' / '+n.acoplado:'')+'</div>'+resultadoHTML(r)+'</div>'}).join('');window.scrollTo(0,0)}
 // Agrega las fotos (y guías) de un registro repetido al servicio que ya existe hoy
 async function agregarAServicio(sid){
   const err=$('reg-err');err.textContent='Agregando fotos…';
@@ -666,7 +667,7 @@ async function verRegistros(){
   $('btn-xls').disabled=!filas.length;
   $('lista').innerHTML=filas.map((r,i)=>{const n=r._n,ex=textoExtras(n.extras||{});
     return '<div class="reg" data-i="'+i+'">'+(esAdmin()?'<button class="del" onclick="pedirBorrar('+i+')">✕</button>':'')+'<div class="t">'+(n.codigo?'<span class="ul">'+n.codigo+'</span> · ':'')+r.fecha.split('-').reverse().join('-')+' · '+SVC_VER(n.servicio_sistema||((r.origen||'')+' → '+(r.destino||'')))+'</div>'+
-    '<div>'+r.conductor+(n.peoneta?' + '+n.peoneta:'')+' · '+r.patente+(n.acoplado?' / '+n.acoplado:'')+'</div>'+((n.guias||[]).length?'<div><b>Guías: '+n.guias.join(' - ')+'</b></div>':'')+(n.factura_salida?'<div><b>Factura salida: '+n.factura_salida+'</b></div>':'')+
+    '<div>'+r.conductor+(n.peoneta?' + '+n.peoneta:'')+' · '+patTipo(r.patente)+(n.acoplado?' / '+n.acoplado:'')+'</div>'+((n.guias||[]).length?'<div><b>Guías: '+n.guias.join(' - ')+'</b></div>':'')+(n.factura_salida?'<div><b>Factura salida: '+n.factura_salida+'</b></div>':'')+
     (ex&&!esCliente()?'<div class="m">Extras: '+ex+'</div>':'')+(n.observacion&&!esCliente()?'<div class="m">Obs.: '+n.observacion+'</div>':'')+
     (r._ents||n.entregas||[]).map(e=>'<div class="m">📦 '+e.hora+' · '+e.local+' · '+(e.estado==='pendiente'?'⏳ Pendiente':'✅ Entregado')+ifcoTag(e)+(e.obs?' · Guía '+e.obs:'')+'</div>').join('')+(n.unidades_logisticas||[]).map(u=>'<div class="m"><span class="ul">'+u.local+' '+(u.nombre||'')+'</span> · '+(u.hora||'')+(u.nro?' · Doc. '+u.nro:'')+' · '+(u.items||[]).map(i=>i.cant+' '+i.desc.toLowerCase()).join(', ')+'</div>').join('')+(n.carga_manual?'<div class="m">Carga manual ('+n.carga_manual+')</div>':'')+'<button class="btn2" style="margin-top:8px;padding:10px;font-size:14px" onclick="gpsServicio('+i+')">🛰 Ver recorrido GPS</button>'+(esAdminTotal()?'<button class="btn2" style="margin-top:8px;padding:10px;font-size:14px" onclick="avisoCliente('+i+')">📤 Enviar aviso al cliente</button>':'')+(verResultado()?resultadoHTML(r):'')+'<div class="fx">'+[...new Set((n.fotos||[]).concat((n.unidades_logisticas||[]).map(u=>u.foto),(r._ents||[]).map(e=>e.foto)).filter(Boolean))].map(u=>'<a href="'+u+'" target="_blank"><img src="'+u+'"></a>').join('')+'</div></div>'}).join('');
 }
