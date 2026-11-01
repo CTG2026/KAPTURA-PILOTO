@@ -158,6 +158,7 @@ input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--bor
 <section class="screen" id="s-list">
   <h1 id="list-h">Servicios registrados – Transportes Madrid</h1>
   <div class="seg" id="seg"><button data-r="hoy" class="sel">Hoy</button><button data-r="7">7 días</button><button data-r="mes">Mes</button></div>
+  <select id="seg-mes" style="width:100%;font-size:16px;padding:8px;border-radius:10px;border:2px solid var(--border);background:var(--surface);color:var(--text);margin:8px 0 4px"></select>
   <div class="sub" id="list-sub">Cargando…</div>
   <button class="big" id="btn-xls" onclick="descargarExcel()" disabled>⬇ Descargar Excel</button>
   <div style="height:14px"></div>
@@ -169,6 +170,7 @@ input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--bor
 <section class="screen" id="s-misent">
   <h1>Entregas - puntos</h1>
   <div class="seg" id="seg-ent"><button data-r="hoy" class="sel">Hoy</button><button data-r="7">7 días</button><button data-r="mes">Mes</button></div>
+  <select id="seg-ent-mes" style="width:100%;font-size:16px;padding:8px;border-radius:10px;border:2px solid var(--border);background:var(--surface);color:var(--text);margin:8px 0 4px"></select>
   <div class="sub" id="misent-sub">Cargando…</div>
   <div id="misent-lista"></div>
   <button class="btn2" onclick="ir('s-home');contarEnt()">← Volver</button>
@@ -203,6 +205,7 @@ input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--bor
 <!-- 7. PROFORMA EBLOOMS -->
 <section class="screen" id="s-res">
   <h1 id="res-h">Resultados del mes</h1>
+  <select id="res-mes" style="width:100%;font-size:16px;padding:8px;border-radius:10px;border:2px solid var(--border);background:var(--surface);color:var(--text);margin:8px 0 4px"></select>
   <div class="sub" id="res-sub">Cargando…</div>
   <div id="res-tot"></div>
   <div id="res-lista" style="margin-top:12px"></div>
@@ -611,17 +614,17 @@ function bloqueRes(t,tit){const pct=t.tarifa?Math.round(t.res/t.tarifa*1000)/10:
     '<div style="display:flex;justify-content:space-between;border-top:2px solid var(--border);padding:8px 0 2px"><b>RESULTADO</b><b>'+fm$(t.res)+' ('+pctTxt+')</b></div>'+
     '<div class="m" style="font-size:12px"><i>Esperado según parámetros del Excel (no es lo pagado real).</i></div></div>'}
 async function verResMes(){
-  if(!verResultado())return;ir('s-res');$('res-h').textContent='Resultados del mes';$('res-tot').innerHTML='';$('res-lista').innerHTML='';$('res-sub').textContent='Cargando…';$('res-volver').onclick=()=>ir('s-home');
-  const d=new Date(),ini=hoyISO(new Date(d.getFullYear(),d.getMonth(),1));
-  const {data,error}=await supa.from('servicios_piloto').select('*').eq('empresa',EMPRESA).eq('modo','registro_tm').neq('estado','anulado').gte('fecha',ini).order('fecha',{ascending:false}).order('servicio_id',{ascending:false});
+  if(!verResultado())return;ir('s-res');llenarMeses('res-mes');$('res-mes').onchange=verResMes;$('res-h').textContent='Resultados del mes';$('res-tot').innerHTML='';$('res-lista').innerHTML='';$('res-sub').textContent='Cargando…';$('res-volver').onclick=()=>ir('s-home');
+  const ym=$('res-mes').value||mesesAtras(1)[0].v,ini=ym+'-01',fin=finMes(ym);
+  const {data,error}=await supa.from('servicios_piloto').select('*').eq('empresa',EMPRESA).eq('modo','registro_tm').neq('estado','anulado').gte('fecha',ini).lte('fecha',fin).order('fecha',{ascending:false}).order('servicio_id',{ascending:false});
   if(error){$('res-sub').textContent='Error al leer: '+error.message;return}
   filas=(data||[]).map(r=>({...r,_n:parseNotas(r.notas)}));
   _gpsRes=[];_cargas=[];try{const d0=new Date(ini+'T12:00:00-03:00');d0.setDate(d0.getDate()-21);const rc=await conTope(supa.from('combustible_cargas').select('fecha,litros,total,iva').gte('fecha',hoyISO(d0)).order('fecha'),10000);_cargas=rc.data||[]}catch(e){}
-  try{const r=await conTope(supa.from('gps_viajes').select('patente,tipo,inicio,fin,km,lat_ini,lon_ini,lat_fin,lon_fin').gte('inicio',new Date(ini+'T00:00:00-03:00').toISOString()).order('inicio'),15000);_gpsRes=r.data||[]}catch(e){}
-  _resMes={ini,filas};resMesTodo();
+  try{const r=await conTope(supa.from('gps_viajes').select('patente,tipo,inicio,fin,km,lat_ini,lon_ini,lat_fin,lon_fin').gte('inicio',new Date(ini+'T00:00:00-03:00').toISOString()).lte('inicio',new Date(fin+'T23:59:59-03:00').toISOString()).order('inicio'),15000);_gpsRes=r.data||[]}catch(e){}
+  _resMes={ini,fin,filas};resMesTodo();
 }
-function resMesTodo(){const {ini,filas:fs}=_resMes;ir('s-res');$('res-h').textContent='Resultados del mes';$('res-volver').onclick=()=>ir('s-home');
-  $('res-sub').textContent='Del '+ini.split('-').reverse().join('-')+' al '+hoyISO().split('-').reverse().join('-')+' · '+fs.length+' servicio(s)';
+function resMesTodo(){const {ini,fin,filas:fs}=_resMes;ir('s-res');$('res-h').textContent='Resultados del mes';$('res-volver').onclick=()=>ir('s-home');
+  $('res-sub').textContent='Del '+ini.split('-').reverse().join('-')+' al '+(fin<hoyISO()?fin:hoyISO()).split('-').reverse().join('-')+' · '+fs.length+' servicio(s)';
   $('res-tot').innerHTML=bloqueRes(sumaRes(fs),'Resultado del mes');
   const clis=[...new Set(CLIENTES_REG.concat(fs.map(r=>r.cliente||'Sin cliente')))];
   $('res-lista').innerHTML='<div class="lbl" style="margin-top:8px">Ver resultados por cliente</div>'+clis.map((c,i)=>{const rs=fs.filter(r=>(r.cliente||'Sin cliente')===c);if(!rs.length&&!CLIENTES_REG.includes(c))return '';const t=sumaRes(rs);
@@ -767,10 +770,17 @@ async function imgTabla(id,tit,compartir){const t=$(id);if(!t||!t.rows.length||!
     else{const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=nom;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),4000);if(compartir)toast('Este equipo no permite compartir: se descargó la imagen')}}
   catch(e){toast('No se pudo generar la imagen')}finally{w.remove()}}
 const ifcoCab=es=>{const a=es.filter(e=>e.ifco_pendiente&&!e.ifco_recibido),p=a.filter(e=>!e.ifco_enviado).length,v=a.length-p;return (p?' · <span class="ifco">📄 '+p+' IFCO pendiente'+(p>1?'s':'')+'</span>':'')+(v?' · <span style="color:#c77d00;font-weight:900">📤 '+v+' IFCO por confirmar</span>':'')}; // IFCO a primera vista en el título del servicio (Carlos 31-10)
+// ═══ MESES PASADOS (Carlos 01-11): toda vista con fechas permite elegir un mes anterior ═══
+function mesesAtras(n){const o=[],d=new Date();let y=d.getFullYear(),m=d.getMonth();for(let i=0;i<(n||24);i++){o.push({v:y+'-'+String(m+1).padStart(2,'0'),t:MESES[m]+' '+y});m--;if(m<0){m=11;y--}}return o}
+function finMes(ym){const [y,m]=ym.split('-').map(Number);return hoyISO(new Date(y,m,0))}
+function llenarMeses(id,txt0){const el=$(id);if(el.options.length)return;el.innerHTML=(txt0?'<option value="">'+txt0+'</option>':'')+mesesAtras().map(x=>'<option value="'+x.v+'">'+x.t.charAt(0).toUpperCase()+x.t.slice(1)+'</option>').join('')}
+const rangoTxt=(d,h)=>' del '+d.split('-').reverse().join('-')+' al '+h.split('-').reverse().join('-');
 let rango='hoy', filas=[];
-function abrirRegistros(){rango='hoy';document.querySelectorAll('#seg button').forEach(x=>x.classList.toggle('sel',x.dataset.r==='hoy'));verRegistros()}
-document.querySelectorAll('#seg button').forEach(b=>b.onclick=()=>{rango=b.dataset.r;document.querySelectorAll('#seg button').forEach(x=>x.classList.toggle('sel',x===b));verRegistros()});
-function desde(){const d=new Date();if(rango==='hoy')return hoyISO(d);if(rango==='mes')return hoyISO(new Date(d.getFullYear(),d.getMonth(),1));d.setDate(d.getDate()-6);return hoyISO(d)}
+function abrirRegistros(){rango='hoy';llenarMeses('seg-mes','📅 Ver un mes anterior…');$('seg-mes').value='';document.querySelectorAll('#seg button').forEach(x=>x.classList.toggle('sel',x.dataset.r==='hoy'));verRegistros()}
+document.querySelectorAll('#seg button').forEach(b=>b.onclick=()=>{rango=b.dataset.r;$('seg-mes').value='';document.querySelectorAll('#seg button').forEach(x=>x.classList.toggle('sel',x===b));verRegistros()});
+$('seg-mes').onchange=()=>{const v=$('seg-mes').value;if(!v)return;rango='m:'+v;document.querySelectorAll('#seg button').forEach(x=>x.classList.remove('sel'));verRegistros()};
+function desde(){const d=new Date();if(rango.startsWith('m:'))return rango.slice(2)+'-01';if(rango==='hoy')return hoyISO(d);if(rango==='mes')return hoyISO(new Date(d.getFullYear(),d.getMonth(),1));d.setDate(d.getDate()-6);return hoyISO(d)}
+function hasta(){return rango.startsWith('m:')?finMes(rango.slice(2)):hoyISO()}
 function parseNotas(n){try{return JSON.parse(n||'{}')}catch(e){return{observacion:n}}}
 async function verRegistros(){
   ir('s-list'); $('lista').innerHTML=''; $('btn-xls').disabled=true; $('btn-xls').style.display=esAdmin()?'block':'none'; $('list-h').textContent=esAdmin()?'Servicios registrados – Transportes Madrid':esCliente()?'Servicios '+user.cliente:'Mis servicios registrados';
@@ -780,16 +790,16 @@ async function verRegistros(){
   let q=supa.from('servicios_piloto').select('*').eq('empresa',EMPRESA);
   if(esCliente())q=q.eq('cliente',user.cliente);
   else if(!esAdmin())q=q.eq('conductor',user.nombre);
-  const {data,error}=await q.eq('modo','registro_tm').neq('estado','anulado').gte('fecha',desde()).order('fecha',{ascending:false}).order('servicio_id',{ascending:false});
+  const {data,error}=await q.eq('modo','registro_tm').neq('estado','anulado').gte('fecha',desde()).lte('fecha',hasta()).order('fecha',{ascending:false}).order('servicio_id',{ascending:false});
   if(error){$('list-sub').textContent='Error al leer: '+error.message;return}
   filas=(data||[]).map(r=>({...r,_n:parseNotas(r.notas)}));
   // GPS de los días listados (solo para el resultado económico)
-  _gpsRes=[];_cargas=[];if(verResultado()){try{const d0=new Date(desde()+'T12:00:00-03:00');d0.setDate(d0.getDate()-21);const rc=await conTope(supa.from('combustible_cargas').select('fecha,litros,total,iva').gte('fecha',hoyISO(d0)).order('fecha'),10000);_cargas=rc.data||[]}catch(e){}try{const r=await conTope(supa.from('gps_viajes').select('patente,tipo,inicio,fin,km,lat_ini,lon_ini,lat_fin,lon_fin').gte('inicio',new Date(desde()+'T00:00:00-03:00').toISOString()).order('inicio'),10000);_gpsRes=r.data||[]}catch(e){}}
+  _gpsRes=[];_cargas=[];if(verResultado()){try{const d0=new Date(desde()+'T12:00:00-03:00');d0.setDate(d0.getDate()-21);const rc=await conTope(supa.from('combustible_cargas').select('fecha,litros,total,iva').gte('fecha',hoyISO(d0)).order('fecha'),10000);_cargas=rc.data||[]}catch(e){}try{const r=await conTope(supa.from('gps_viajes').select('patente,tipo,inicio,fin,km,lat_ini,lon_ini,lat_fin,lon_fin').gte('inicio',new Date(desde()+'T00:00:00-03:00').toISOString()).lte('inicio',new Date(hasta()+'T23:59:59-03:00').toISOString()).order('inicio'),10000);_gpsRes=r.data||[]}catch(e){}}
   // Entregas en vivo: todas las del conductor ese día (también las hechas después de registrar)
-  try{const {data:ev}=await supa.from('entregas').select('*').eq('empresa',EMPRESA).gte('fecha',desde()).neq('estado','prueba').order('ts');
+  try{const {data:ev}=await supa.from('entregas').select('*').eq('empresa',EMPRESA).gte('fecha',desde()).lte('fecha',hasta()).neq('estado','prueba').order('ts');
     filas.forEach(r=>{const vivas=(ev||[]).filter(e=>e.servicio_id?e.servicio_id===r.servicio_id:(e.fecha===r.fecha&&e.conductor===r.conductor));const fs=new Set(vivas.map(e=>e.foto));
       r._ents=vivas.concat((r._n.entregas||[]).filter(e=>!fs.has(e.foto)))})}catch(e){}
-  $('list-sub').textContent=filas.length+' registro(s) desde el '+desde().split('-').reverse().join('-')+(pend.length?' · '+pend.length+' en este celular esperando señal':'');
+  $('list-sub').textContent=filas.length+' registro(s)'+(rango.startsWith('m:')?rangoTxt(desde(),hasta()):' desde el '+desde().split('-').reverse().join('-'))+(pend.length?' · '+pend.length+' en este celular esperando señal':'');
   $('btn-xls').disabled=!filas.length;
   $('lista').innerHTML=filas.map((r,i)=>{const n=r._n,ex=textoExtras(n.extras||{});
     return '<div class="reg" data-i="'+i+'">'+(esAdmin()?'<button class="del" onclick="pedirBorrar('+i+')">✕</button>':'')+'<div class="t">'+(n.codigo?'<span class="ul">'+n.codigo+'</span> · ':'')+r.fecha.split('-').reverse().join('-')+' · '+SVC_VER(n.servicio_sistema||((r.origen||'')+' → '+(r.destino||'')))+ifcoCab(r._ents||n.entregas||[])+'</div>'+
@@ -946,15 +956,17 @@ async function contarSvc(){if(!user||!supa)return;const t=esAdmin()?'📋 Servic
 async function contarEnt(){if(!user||!supa)return;const n=(await entHoy(true)).length;$('btn-misent').textContent=(esAdmin()?'📦 Ver entregas - puntos':'📦 Ver mis entregas - puntos')+' ('+n+')'}
 let _misEnt=[];
 let rangoEnt='hoy';
-function desdeEnt(){const d=new Date();if(rangoEnt==='hoy')return hoyISO(d);if(rangoEnt==='mes')return hoyISO(new Date(d.getFullYear(),d.getMonth(),1));d.setDate(d.getDate()-6);return hoyISO(d)}
-document.querySelectorAll('#seg-ent button').forEach(b=>b.onclick=()=>{rangoEnt=b.dataset.r;document.querySelectorAll('#seg-ent button').forEach(x=>x.classList.toggle('sel',x===b));cargarEntregas()});
-function misEntregas(){rangoEnt='hoy';document.querySelectorAll('#seg-ent button').forEach(x=>x.classList.toggle('sel',x.dataset.r==='hoy'));ir('s-misent');cargarEntregas()}
+function hastaEnt(){return rangoEnt.startsWith('m:')?finMes(rangoEnt.slice(2)):hoyISO()}
+function desdeEnt(){const d=new Date();if(rangoEnt.startsWith('m:'))return rangoEnt.slice(2)+'-01';if(rangoEnt==='hoy')return hoyISO(d);if(rangoEnt==='mes')return hoyISO(new Date(d.getFullYear(),d.getMonth(),1));d.setDate(d.getDate()-6);return hoyISO(d)}
+$('seg-ent-mes').onchange=()=>{const v=$('seg-ent-mes').value;if(!v)return;rangoEnt='m:'+v;document.querySelectorAll('#seg-ent button').forEach(x=>x.classList.remove('sel'));cargarEntregas()};
+document.querySelectorAll('#seg-ent button').forEach(b=>b.onclick=()=>{rangoEnt=b.dataset.r;$('seg-ent-mes').value='';document.querySelectorAll('#seg-ent button').forEach(x=>x.classList.toggle('sel',x===b));cargarEntregas()});
+function misEntregas(){rangoEnt='hoy';llenarMeses('seg-ent-mes','📅 Ver un mes anterior…');$('seg-ent-mes').value='';document.querySelectorAll('#seg-ent button').forEach(x=>x.classList.toggle('sel',x.dataset.r==='hoy'));ir('s-misent');cargarEntregas()}
 async function cargarEntregas(){ // Hoy / 7 días / Mes, igual que servicios (Carlos 31-10)
-  $('misent-lista').innerHTML='';$('misent-sub').textContent='Cargando…';const desde=desdeEnt();
-  let es=[];try{let q=supa.from('entregas').select('*').eq('empresa',EMPRESA).gte('fecha',desde).neq('estado','prueba');if(esCliente())q=q.eq('cliente',user.cliente);else if(!esAdmin())q=q.eq('conductor',user.nombre);es=(await conTope(q.order('ts'),10000)).data||[]}catch(e){}
-  _misEnt=es;$('misent-sub').textContent=es.length?es.length+' entrega(s) desde el '+desde.split('-').reverse().join('-'):(rangoEnt==='hoy'?'Todavía no hay entregas hoy.':'No hay entregas en el período.');
+  $('misent-lista').innerHTML='';$('misent-sub').textContent='Cargando…';const desde=desdeEnt(),hastaE=hastaEnt();
+  let es=[];try{let q=supa.from('entregas').select('*').eq('empresa',EMPRESA).gte('fecha',desde).lte('fecha',hastaE).neq('estado','prueba');if(esCliente())q=q.eq('cliente',user.cliente);else if(!esAdmin())q=q.eq('conductor',user.nombre);es=(await conTope(q.order('ts'),10000)).data||[]}catch(e){}
+  _misEnt=es;$('misent-sub').textContent=es.length?es.length+' entrega(s)'+(rangoEnt.startsWith('m:')?rangoTxt(desde,hastaE):' desde el '+desde.split('-').reverse().join('-')):(rangoEnt==='hoy'?'Todavía no hay entregas hoy.':'No hay entregas en el período.');
   const item=e=>'<div class="gl">'+(e.foto?'<a href="'+e.foto+'" target="_blank"><img src="'+e.foto+'"></a>':'')+'<div class="gi"><b>'+e.hora+' · '+e.local+'</b><div class="msg">'+(e.estado==='pendiente'?'⏳ Pendiente':'✅ Entregado')+ifcoTag(e)+(e.obs?' · Guía N° '+e.obs:' · sin N° de guía')+'</div>'+((e.ifco_pendiente&&!e.ifco_recibido&&!esCliente())?'<button class="btn2" style="margin-top:6px;padding:8px;font-size:13px" onclick="waIfco(ifcoTxt(_misEnt['+es.indexOf(e)+']))">📤 Avisar IFCO pendiente por WhatsApp</button>':'')+'</div></div>';
-  let sv=[];try{const r=await conTope(supa.from('servicios_piloto').select('servicio_id,fecha,conductor,patente,notas').eq('empresa',EMPRESA).eq('modo','registro_tm').neq('estado','anulado').gte('fecha',desde).order('servicio_id'),8000);sv=r.data||[]}catch(e){}
+  let sv=[];try{const r=await conTope(supa.from('servicios_piloto').select('servicio_id,fecha,conductor,patente,notas').eq('empresa',EMPRESA).eq('modo','registro_tm').neq('estado','anulado').gte('fecha',desde).lte('fecha',hastaE).order('servicio_id'),8000);sv=r.data||[]}catch(e){}
   // agrupadas por día (más reciente primero) y por conductor, con el servicio de ese día
   const g={};es.forEach(e=>{const k=e.fecha+'|'+e.conductor;(g[k]=g[k]||[]).push(e)});
   $('misent-lista').innerHTML=Object.keys(g).sort((a,b)=>{const [fa]=a.split('|'),[fb]=b.split('|');return fb.localeCompare(fa)||g[a][0].hora.localeCompare(g[b][0].hora)}).map(k=>{const [f,c]=k.split('|');
@@ -1094,7 +1106,7 @@ const PAT_PROF=p=>{p=PAT_GPS(p);return p.charAt(0)+p.slice(1).toLowerCase()};
 const MESES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
 function semISO(d){const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));const n=t.getUTCDay()||7;t.setUTCDate(t.getUTCDate()+4-n);const y=new Date(Date.UTC(t.getUTCFullYear(),0,1));return Math.ceil(((t-y)/86400000+1)/7)}
 let profFilas=[], profTit='';
-function quincenas(){const o=[];const d=new Date();let y=d.getFullYear(),m=d.getMonth(),q=d.getDate()<=15?1:2;for(let i=0;i<6;i++){o.push({y,m,q});if(q===2)q=1;else{q=2;m--;if(m<0){m=11;y--}}}return o}
+function quincenas(){const o=[];const d=new Date();let y=d.getFullYear(),m=d.getMonth(),q=d.getDate()<=15?1:2;for(let i=0;i<24;i++){o.push({y,m,q});if(q===2)q=1;else{q=2;m--;if(m<0){m=11;y--}}}return o}
 function verProforma(){
   if(esCliente())return;
   ir('s-prof'); const sel=$('prof-q');
