@@ -87,6 +87,7 @@ input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--bor
   <h1 id="saludo">Hola</h1>
   <div class="sub" id="sub-equipo"></div>
   <div id="alerta-sinreg"></div>
+  <div id="alerta-cxc"></div>
   <button class="big" id="btn-ent" style="display:none;background:#1f7a3a;color:#fff;margin-bottom:12px" onclick="entregue()">📦 ENTREGUÉ AQUÍ</button>
   <input type="file" id="cam-ent" accept="image/*" capture="environment" style="display:none" onchange="onFotoEnt(this)">
   <button class="big" id="btn-reg" onclick="nuevoRegistro()">📷 REGISTRAR SERVICIO</button>
@@ -97,6 +98,7 @@ input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--bor
   <button class="btn2" id="btn-prof" style="display:none" onclick="verProforma()">🧾 Proforma EBLOOMS</button>
   <button class="btn2" id="btn-profA" style="display:none" onclick="verProformaA()">🧾 Proforma Ateuro / Zuria</button>
   <button class="btn2" id="btn-rsv" style="display:none" onclick="verResumenSvc()">📑 Resumen de servicios</button>
+  <button class="btn2" id="btn-cxc" style="display:none" onclick="verCxc()">💰 Cuentas por cobrar</button>
   <button class="btn2" id="btn-res" style="display:none" onclick="verResMes()">📊 Ver resultados del mes</button>
 </section>
 
@@ -217,6 +219,14 @@ input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--bor
   <button class="btn2" onclick="ir('s-home')">← Volver</button>
 </section>
 
+<section class="screen" id="s-cxc">
+  <h1>Cuentas por cobrar</h1>
+  <div class="sub" id="cxc-sub">Cargando…</div>
+  <div id="cxc-box"></div>
+  <div style="display:flex;gap:8px"><button class="btn2" style="flex:1" onclick="imgTabla('cxc-tbl','Cuentas por cobrar · '+hoyISO().split('-').reverse().join('-'),true)">📤 Compartir imagen</button><button class="btn2" style="flex:1" onclick="imgTabla('cxc-tbl','Cuentas por cobrar · '+hoyISO().split('-').reverse().join('-'),false)">🖼 Descargar imagen</button></div>
+  <button class="btn2" onclick="ir('s-home')">← Volver</button>
+</section>
+
 <section class="screen" id="s-profA">
   <h1>Proforma Ateuro / Zuria</h1>
   <select id="profA-q" style="width:100%;font-size:17px;padding:10px;border-radius:10px;border:2px solid var(--border);background:var(--surface);color:var(--text);margin-bottom:12px"></select>
@@ -290,7 +300,7 @@ let pin='', user=null, fotos=[], svcSel=null, extrasSel=new Set(), ultimo=null;
 
 function $(id){return document.getElementById(id)}
 function toast(t){const e=$('toast');e.textContent=t;e.classList.add('on');setTimeout(()=>e.classList.remove('on'),2800)}
-function ir(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));$(id).classList.add('on');window.scrollTo(0,0);if(user)uso('pantalla',id);if(id==='s-home'&&user)alertaSinReg()}
+function ir(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));$(id).classList.add('on');window.scrollTo(0,0);if(user)uso('pantalla',id);if(id==='s-home'&&user){alertaSinReg();alertaCxc()}}
 // Registro de uso de Kaptura (tabla kaptura_uso): entradas y pantallas por usuario. Pruebas internas marcadas con localStorage tm_prueba=1 (Carlos 30-10)
 function uso(accion,detalle){try{if(!supa||!user)return;const k=user.pin+'|'+accion+'|'+(detalle||'');if(uso._u===k)return;uso._u=k;
   supa.from('kaptura_uso').insert({empresa:EMPRESA,pin:user.pin,usuario:user.nombre,rol:user.rol,accion,detalle:detalle||null,dispositivo:/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)?'teléfono':'PC',prueba:ls('tm_prueba')==='1'}).then(()=>{},()=>{})}catch(e){}}
@@ -313,9 +323,9 @@ function entrar(p){
   if(!u){$('pin-err').textContent='PIN no registrado';pin='';setTimeout(pintarPin,600);return}
   user={pin:p,...u}; ls('tm_pin',p); uso._u=null; uso('entrada');
   $('saludo').textContent='Hola '+u.nombre.split(' ')[0];
-  $('btn-salir').style.display='block'; $('hdr-user').textContent='👤 '+u.nombre.split(' ')[0]; $('btn-ver').style.display='block';$('btn-ver').textContent=esAdmin()?'📋 Servicios registrados':esCliente()?'📋 Ver mis servicios':'📋 Mis servicios registrados';$('btn-reg').style.display=esCliente()?'none':'block';$('btn-ent').style.display=esCliente()?'none':'block';$('btn-misent').style.display='block';contarSvc();$('btn-res').style.display=verResultado()?'block':'none';$('btn-profA').style.display=esAdmin()?'block':'none';$('btn-rsv').style.display=esAdmin()?'block':'none';ordenHome();contarEnt();const vg=(esAdmin()||esCliente())?'block':'none';$('btn-gps').style.display=vg;$('btn-prof').style.display=esCliente()?'none':vg; /* Proforma oculta para el cliente por ahora (Carlos 30-10) */ $('btn-ifco').style.display='block';contarIfco(); ir('s-home'); revisarPendientes();
+  $('btn-salir').style.display='block'; $('hdr-user').textContent='👤 '+u.nombre.split(' ')[0]; $('btn-ver').style.display='block';$('btn-ver').textContent=esAdmin()?'📋 Servicios registrados':esCliente()?'📋 Ver mis servicios':'📋 Mis servicios registrados';$('btn-reg').style.display=esCliente()?'none':'block';$('btn-ent').style.display=esCliente()?'none':'block';$('btn-misent').style.display='block';contarSvc();$('btn-res').style.display=verResultado()?'block':'none';$('btn-profA').style.display=esAdmin()?'block':'none';$('btn-rsv').style.display=esAdmin()?'block':'none';$('btn-cxc').style.display=esAdminTotal()?'block':'none';ordenHome();contarEnt();const vg=(esAdmin()||esCliente())?'block':'none';$('btn-gps').style.display=vg;$('btn-prof').style.display=esCliente()?'none':vg; /* Proforma oculta para el cliente por ahora (Carlos 30-10) */ $('btn-ifco').style.display='block';contarIfco(); ir('s-home'); revisarPendientes();
 }
-function ordenHome(){const h=$('s-home'),ids=esCliente()?['btn-ver','btn-misent','btn-ifco','btn-gps','btn-prof','btn-profA','btn-ent','btn-reg']:['btn-ent','btn-reg','btn-ver','btn-misent','btn-ifco','btn-gps','btn-prof','btn-profA','btn-res','btn-rsv'];ids.forEach(i=>h.appendChild($(i)))} /* orden de inicio del cliente: servicios, entregas, IFCO, GPS (Carlos 30-10) */
+function ordenHome(){const h=$('s-home'),ids=esCliente()?['btn-ver','btn-misent','btn-ifco','btn-gps','btn-prof','btn-profA','btn-ent','btn-reg']:['btn-ent','btn-reg','btn-ver','btn-misent','btn-ifco','btn-gps','btn-prof','btn-profA','btn-res','btn-rsv','btn-cxc'];ids.forEach(i=>h.appendChild($(i)))} /* orden de inicio del cliente: servicios, entregas, IFCO, GPS (Carlos 30-10) */
 function salir(){ls('tm_pin',null);user=null;pin='';pintarPin();$('btn-salir').style.display='none';$('hdr-user').textContent='';_dupOk=false;ir('s-pin')}
 
 // ═══ REGISTRO ═══
@@ -709,6 +719,45 @@ function descargarResumenSvc(){if(!rsvFilas.length||!window.XLSX)return;const he
   const ws=XLSX.utils.aoa_to_sheet([head,...rsvFilas.map(r=>r.c)]);estiloXLS(ws,rsvFilas.length,6,0);
   rsvFilas.forEach((r,i)=>{if(r.rojo)for(const c of 'ABCDEF'){const x=ws[c+(i+2)];if(x)x.s={...(x.s||{}),font:{bold:true,color:{rgb:'FF3B30'}}}}});
   ws['!cols']=[{wch:11},{wch:7},{wch:22},{wch:44},{wch:26},{wch:10}];const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Resumen');XLSX.writeFile(wb,'Resumen_servicios_TM_'+rsvTit.replace(/\s+/g,'_')+'.xlsx')}
+// ═══ CUENTAS POR COBRAR (Carlos 01-11): tabla cxc_facturas; plazos = Parámetros del sistema TM ═══
+// EBLOOMS paga el viernes siguiente a la factura; Valle, Ateuro y Spot a 30 días; Los Tres Enanos (arriendo) 5 días. Valle se factura el día que Anita autoriza la liquidación.
+const CXC_PLAZO={'EBLOOMS':'viernes','Alimentos Valle Central':30,'Ateuro / Zuria':30,'Los Tres Enanos':5,'Spot':30};
+const dISO=s=>s?new Date(s+'T12:00:00'):null, fCL=s=>s?s.split('-').reverse().join('-'):'';
+function cxcVence(r){if(r.vence)return r.vence;if(!r.fecha_emision)return null;const d=dISO(r.fecha_emision),p=CXC_PLAZO[r.cliente]??30;
+  if(p==='viernes'){let k=(5-d.getDay()+7)%7;d.setDate(d.getDate()+(k||7))}else d.setDate(d.getDate()+p);return hoyISO(d)}
+function cxcDias(a,b){return Math.round((dISO(b)-dISO(a))/86400000)}
+function cxcEstado(r){const hoy=hoyISO();
+  if(!r.folio){const atr=r.debe_emitir&&r.debe_emitir<=hoy;return {g:'emitir',sem:atr?'🔴':'⚪',txt:atr?'Facturar ya (correspondía el '+fCL(r.debe_emitir)+')':'Facturar el '+fCL(r.debe_emitir)}}
+  const v=cxcVence(r),d=v?cxcDias(hoy,v):null;
+  if(d!==null&&d<0)return {g:'cobrar',sem:'🔴',txt:'Vencida hace '+(-d)+' día(s)'};
+  if(d!==null&&d<=3)return {g:'cobrar',sem:'🟡',txt:d===0?'Vence hoy':'Vence en '+d+' día(s)'};
+  return {g:'cobrar',sem:'🟢',txt:'Al día'+(d!==null?' (vence en '+d+' días)':'')}}
+async function leerCxc(){const r=await conTope(supa.from('cxc_facturas').select('*').eq('empresa',EMPRESA).is('fecha_cobro',null).order('debe_emitir'),10000);if(r.error)throw r.error;return r.data||[]}
+let cxcRows=[];
+async function verCxc(){if(!esAdminTotal())return;ir('s-cxc');$('cxc-box').innerHTML='';$('cxc-sub').textContent='Cargando…';
+  try{cxcRows=await leerCxc()}catch(e){$('cxc-sub').textContent='No se pudo leer (¿falta crear la tabla cxc_facturas?).';return}
+  const pe=cxcRows.filter(r=>!r.folio),pc=cxcRows.filter(r=>r.folio).sort((a,b)=>(cxcVence(a)||'').localeCompare(cxcVence(b)||''));
+  const fila=(r,i)=>{const e=cxcEstado(r);return '<tr><td>'+e.sem+'</td><td>'+r.cliente+'</td><td>'+fCL(r.periodo_desde)+(r.periodo_hasta?' al '+fCL(r.periodo_hasta):'')+'</td><td>'+(r.folio||'—')+'</td><td>'+fCL(r.fecha_emision)+'</td><td>'+fCL(cxcVence(r))+'</td><td class="n">'+fmt$(r.total)+'</td><td>'+e.txt+(r.nota?' · '+r.nota:'')+'</td><td><button class="btn2" style="padding:4px 8px;font-size:12px;margin:0" onclick="'+(r.folio?'cxcCobrada':'cxcFacturada')+'('+i+')">'+(r.folio?'✔ Cobrada':'🧾 Facturada')+'</button></td></tr>'};
+  const sum=a=>a.reduce((t,r)=>t+(+r.total||0),0);
+  const H='<tr><th></th><th>Cliente</th><th>Período</th><th>Folio</th><th>Emisión</th><th>Vence</th><th>Total c/IVA</th><th>Estado</th><th></th></tr>';
+  $('cxc-box').innerHTML='<div class="tblw"><table class="tbl" id="cxc-tbl">'+
+    '<tr><th colspan="9">POR EMITIR</th></tr>'+H+pe.map(r=>fila(r,cxcRows.indexOf(r))).join('')+'<tr class="tot"><td colspan="6">Total por emitir (estimado)</td><td class="n">'+fmt$(sum(pe))+'</td><td colspan="2"></td></tr>'+
+    '<tr><th colspan="9">EMITIDAS POR COBRAR</th></tr>'+H+pc.map(r=>fila(r,cxcRows.indexOf(r))).join('')+'<tr class="tot"><td colspan="6">Total por cobrar</td><td class="n">'+fmt$(sum(pc))+'</td><td colspan="2"></td></tr></table></div>';
+  $('cxc-sub').textContent=pe.length+' por emitir · '+pc.length+' por cobrar ('+fmt$(sum(pc))+')'}
+async function cxcFacturada(i){const r=cxcRows[i];const fo=prompt('N° de factura (folio) de '+r.cliente+':');if(!fo)return;
+  const fe=prompt('Fecha de emisión (dd-mm-aaaa):',hoyISO().split('-').reverse().join('-'));if(!fe)return;const fi=fe.split('-').reverse().join('-');
+  const to=prompt('Total con IVA de la factura:',Math.round(+r.total||0));if(to===null)return;
+  const {error}=await supa.from('cxc_facturas').update({folio:+fo,fecha_emision:fi,total:+String(to).replace(/\D/g,''),actualizado:new Date().toISOString()}).eq('id',r.id);
+  toast(error?'No se pudo guardar':'Factura '+fo+' registrada');verCxc()}
+async function cxcCobrada(i){const r=cxcRows[i];const fe=prompt('Fecha de cobro de la factura '+r.folio+' (dd-mm-aaaa):',hoyISO().split('-').reverse().join('-'));if(!fe)return;
+  const cu=prompt('¿En qué cuenta entró? (Santander u otra)','Santander');if(!cu)return;
+  const {error}=await supa.from('cxc_facturas').update({fecha_cobro:fe.split('-').reverse().join('-'),cuenta_cobro:cu,actualizado:new Date().toISOString()}).eq('id',r.id);
+  toast(error?'No se pudo guardar':'Factura '+r.folio+' cobrada'+(/santander/i.test(cu)?'':' · ⚠ fuera del Santander'));verCxc()}
+async function alertaCxc(){const box=$('alerta-cxc');if(!box||!esAdminTotal()||!supa)return;
+  try{const rs=await leerCxc(),es=rs.map(r=>({r,e:cxcEstado(r)})),rojo=es.filter(x=>x.e.sem==='🔴'),am=es.filter(x=>x.e.sem==='🟡');
+    if(!rojo.length&&!am.length){box.innerHTML='';return}
+    const st='border:2px solid '+(rojo.length?'#ff3b30':'#ff9500')+';border-radius:12px;padding:10px;margin:8px 0 12px;font-weight:800;color:'+(rojo.length?'#ff3b30':'#ff9500');
+    box.innerHTML='<div style="'+st+'">💰 Cuentas por cobrar: '+rojo.length+' urgente(s) · '+am.length+' por vencer'+rojo.concat(am).map(x=>'<div style="color:var(--text);font-weight:600;margin-top:6px">'+x.e.sem+' '+x.r.cliente+(x.r.folio?' · fact. '+x.r.folio:'')+' · '+fmt$(x.r.total)+' · '+x.e.txt+'</div>').join('')+'<button class="btn2" style="margin-top:8px;padding:8px;font-size:13px" onclick="verCxc()">Ver cuentas por cobrar</button></div>'}catch(e){box.innerHTML=''}}
 // Imagen completa de una tabla (proformas y resumen) para compartir por WhatsApp o descargar (Carlos 31-10)
 async function imgTabla(id,tit,compartir){const t=$(id);if(!t||!t.rows.length||!window.html2canvas){toast('No hay datos para la imagen');return}
   const w=document.createElement('div');w.style.cssText='position:fixed;left:-10000px;top:0;background:#fff;color:#111;padding:16px;font-family:Arial,sans-serif;width:max-content';
