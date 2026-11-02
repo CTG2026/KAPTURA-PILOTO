@@ -800,9 +800,9 @@ async function cxcCobrada(i){const r=cxcRows[i];const fe=prompt('Fecha de cobro 
   const cu=prompt('¿En qué cuenta entró? (Santander u otra)','Santander');if(!cu)return;
   const {error}=await supa.from('cxc_facturas').update({etapa:'cobrada',fecha_cobro:fe.split('-').reverse().join('-'),cuenta_cobro:cu,actualizado:new Date().toISOString()}).eq('id',r.id);
   toast(error?'No se pudo guardar':'Factura '+r.folio+' cobrada'+(/santander/i.test(cu)?'':' · ⚠ fuera del Santander'));verCxc()}
-// ═══ REPORTES DEL SISTEMA TM (Carlos 02-11): pilares por mes y caja de la semana. Fuente única: sistema TM (Excel); Claude los sube al actualizarlo. Se leen con PIN de administración ═══
+// ═══ REPORTES DEL SISTEMA TM (Carlos 02-11): pilares por mes y caja de la semana. Fuente única: sistema TM (Excel); Claude los sube al actualizarlo. Tabla abierta por ahora (Carlos 02-11) ═══
 let _repTipo='pilares';
-async function repRpc(tipo,per){const r=await conTope(supa.rpc('tm_reporte',{p_pin:user.pin,p_tipo:tipo,p_periodo:per||null}),10000);if(r.error)throw r.error;return r.data}
+async function repRpc(tipo,per){const q=per?supa.from('tm_reportes').select('datos,actualizado').eq('empresa',EMPRESA).eq('tipo',tipo).eq('periodo',per).maybeSingle():supa.from('tm_reportes').select('periodo,actualizado').eq('empresa',EMPRESA).eq('tipo',tipo).order('periodo',{ascending:false});const r=await conTope(q,10000);if(r.error)throw r.error;return r.data||[]}
 async function verRep(tipo){if(!esAdminTotal())return;_repTipo=tipo;ir('s-rep');navMarcar('s-rep');$('rep-h').textContent=tipo==='pilares'?'Pilares: rentabilidad, liquidez y solvencia':'Caja de la semana';$('rep-tbl').innerHTML='';$('rep-sub').textContent='Cargando…';
   try{const ls_=await repRpc(tipo);if(!ls_.length){$('rep-sub').textContent='Aún no hay datos cargados.';$('rep-per').innerHTML='';return}
     $('rep-per').innerHTML=ls_.map(x=>{const p=x.periodo;let t;if(tipo==='pilares'){const [y,m]=p.split('-').map(Number);t=MESES[m-1]+' '+y;t=t[0].toUpperCase()+t.slice(1)}else{const d=dISO(p),h=new Date(d);h.setDate(h.getDate()+6);t='Semana del '+fCL(p)+' al '+fCL(hoyISO(h))}return '<option value="'+p+'">'+t+'</option>'}).join('');
