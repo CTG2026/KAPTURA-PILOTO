@@ -760,7 +760,7 @@ async function cxcCobrada(i){const r=cxcRows[i];const fe=prompt('Fecha de cobro 
 // ═══ ALERTAS DE ADMINISTRACIÓN (Carlos 01-11): tabla alertas_admin; las ven Carlos, Claudio y administración hasta marcarlas resueltas ═══
 let _alAdm=[];
 async function alertaAdm(){const box=$('alerta-adm');if(!box||!esAdmin()||!supa)return;
-  try{const r=await conTope(supa.from('alertas_admin').select('*').eq('empresa',EMPRESA).eq('activa',true).order('creada'),8000);_alAdm=r.data||[];
+  try{const r=await conTope(supa.from('alertas_admin').select('*').eq('empresa',EMPRESA).eq('activa',true).order('creada'),8000);_alAdm=(r.data||[]).filter(x=>esAdminTotal()||x.para!=='admin');
     box.innerHTML=_alAdm.map((a,i)=>'<div style="border:2px solid #ff3b30;border-radius:12px;padding:10px;margin:8px 0 12px;color:#ff3b30;font-weight:800">⚠ '+a.titulo+'<div style="color:var(--text);font-weight:600;margin-top:6px;white-space:pre-line">'+(a.detalle||'')+'</div><button class="btn2" style="margin-top:8px;padding:8px;font-size:13px" onclick="resolverAdm('+i+')">✔ Marcar resuelta</button></div>').join('')}catch(e){box.innerHTML=''}}
 async function resolverAdm(i){const a=_alAdm[i];if(!a)return;const nota=prompt('¿Cómo se resolvió? (queda registrado)');if(!nota)return;
   const {error}=await supa.from('alertas_admin').update({activa:false,resuelta_por:user.nombre,resolucion:nota,resuelta:new Date().toISOString()}).eq('id',a.id);toast(error?'No se pudo guardar':'Alerta resuelta');alertaAdm()}
