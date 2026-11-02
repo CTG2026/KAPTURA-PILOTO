@@ -309,6 +309,10 @@ input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--bor
 const SUPA_URL='https://aqunzrukuruwzwywnurq.supabase.co';
 const SUPA_KEY='sb_publishable_70t9UxFlcqYDj7AMybsrHg__IMGNA8C';
 const EMPRESA='transportes_madrid';
+// Versión publicada: si hay una nueva, Kaptura se recarga sola cuando el usuario no está registrando nada (Carlos 02-11)
+const APP_VER='20261102143559';
+setInterval(async()=>{try{const t=await fetch(location.pathname+'?nc='+Date.now(),{cache:'no-store'}).then(r=>r.text());const m=t.match(/const APP_VER='(\d+)'/);
+  if(m&&m[1]!==APP_VER){const sc=(document.querySelector('.screen.on')||{}).id;if(!['s-reg','s-ent','s-spot'].includes(sc))location.reload()}}catch(e){}},120000);
 // Empresa activa en Kaptura: el usuario Administración (1313) elige entre TM y Global Solutions (Carlos 02-11)
 let EMP_ACT=EMPRESA;const EMP_NOM={'transportes_madrid':'Transportes Madrid','global_solutions':'Global Solutions'};
 const BUCKET='kaptura-guias';
