@@ -325,7 +325,10 @@ const PEONETAS={'CWVH32-9':['Marcelo González']};
 const ACOPLADOS=['','JN4847','JB6234','GRFD91']; // GRFD91: thermo de reemplazo del dueño del JN (pana o mantención), Carlos 30-10
 const TRACTOS=['DSBZ64','ZV7780']; // solo los tractos llevan acoplado
 const LIC_A5=['0003','0005']; // conductores con licencia A5: ven tractos y afurgonados; el resto solo afurgonados (Carlos 30-10)
-const EXTRAS=[{id:'trasp',txt:'Traspaleteo'},{id:'trasv',txt:'Trasvasije'},{id:'retorno',txt:'Retorno'},{id:'espera',txt:'Espera'},{id:'peaje',txt:'Peaje efectivo'},{id:'reemp',txt:'Acoplado reemplazo'}];
+const EXTRAS=[{id:'trasp',txt:'Traspaleteo'},{id:'trasv',txt:'Trasvasije'},{id:'retorno',txt:'Retorno'},{id:'espera',txt:'Espera'},{id:'peaje',txt:'Peaje efectivo'},{id:'reemp',txt:'Acoplado reemplazo'},{id:'ifco',txt:'Retiro IFCO'}];
+// Retiro de cajas IFCO en bodega o centro de distribución: EBLOOMS paga $85.000 neto (Carlos 02-11)
+const TARIFA_IFCO=85000;
+function precioSvc(r){const n=r._n||parseNotas(r.notas),e=n.extras||{},base=+r.tarifa_neta||0,ret=(e.retorno&&/Supermercados/.test(n.servicio_sistema||''))?Math.round(base*COSTO.retSuper):0;return base+ret+(e.retiro_ifco?TARIFA_IFCO:0)}
 
 // ═══ ESTADO ═══
 let supa=null; try{ supa=window.supabase.createClient(SUPA_URL,SUPA_KEY); }catch(e){}
@@ -480,6 +483,7 @@ $('patente').addEventListener('change',pintarPeoneta);
 function pintarExtras(){
   const c=$('chips');c.innerHTML='';
   EXTRAS.forEach(x=>{ if(x.id==='retorno'&&!(svcSel&&svcSel.retorno)){extrasSel.delete('retorno');return}
+    if(x.id==='ifco'&&!(svcSel&&svcSel.cliente==='EBLOOMS')){extrasSel.delete('ifco');return}
     const b=document.createElement('button');b.className='chip'+(extrasSel.has(x.id)?' sel':'');b.textContent=x.txt;
     b.onclick=()=>{extrasSel.has(x.id)?extrasSel.delete(x.id):extrasSel.add(x.id);pintarExtras()};c.appendChild(b)});
   ['trasp','trasv','espera','peaje','reemp'].forEach(id=>$('x-'+id).classList.toggle('on',extrasSel.has(id)));
@@ -489,6 +493,7 @@ function leerExtras(){
   if(extrasSel.has('trasp'))e.traspaleteo={pallets:n('trasp-pallets'),monto_pagado:n('trasp-monto')};
   if(extrasSel.has('trasv'))e.trasvasije={monto_pagado:n('trasv-monto')};
   if(extrasSel.has('retorno'))e.retorno=true;
+  if(extrasSel.has('ifco'))e.retiro_ifco=true;
   if(extrasSel.has('espera'))e.espera={horas:n('espera-horas')};
   if(extrasSel.has('peaje'))e.peaje_efectivo={monto:n('peaje-monto')};
   if(extrasSel.has('reemp'))e.acoplado_reemplazo=($('reemp-patente').value||'').toUpperCase().trim();
@@ -499,6 +504,7 @@ function textoExtras(e){
   if(e.traspaleteo)t.push('Traspaleteo '+e.traspaleteo.pallets+' pallets ('+fmt$(e.traspaleteo.monto_pagado)+')');
   if(e.trasvasije)t.push('Trasvasije ('+fmt$(e.trasvasije.monto_pagado)+')');
   if(e.retorno)t.push('Retorno');
+  if(e.retiro_ifco)t.push('Retiro IFCO');
   if(e.espera)t.push('Espera '+e.espera.horas+' h');
   if(e.peaje_efectivo)t.push('Peaje efectivo '+fmt$(e.peaje_efectivo.monto));
   if(e.acoplado_reemplazo)t.push('Acoplado reemplazo '+e.acoplado_reemplazo);
@@ -607,7 +613,7 @@ function kmGPS(r){
 }
 function resultadoServicio(r){
   const n=r._n||{},e=n.extras||{},sv=SV_COSTO[n.servicio_sistema||''];if(!sv)return null;
-  const g=kmGPS(r),[kmT,tipo,peaje,dias]=sv,km=g?Math.round(g.km):kmT,kmTxt=g?g.txt:'teórico de la ruta (camión sin GPS)',base=+r.tarifa_neta||0,ret=(e.retorno&&/Supermercados/.test(n.servicio_sistema))?Math.round(base*COSTO.retSuper):0,tarifa=base+ret;
+  const g=kmGPS(r),[kmT,tipo,peaje,dias]=sv,km=g?Math.round(g.km):kmT,kmTxt=g?g.txt:'teórico de la ruta (camión sin GPS)',base=+r.tarifa_neta||0,ret=(e.retorno&&/Supermercados/.test(n.servicio_sistema))?Math.round(base*COSTO.retSuper):0,tarifa=base+ret+(e.retiro_ifco?TARIFA_IFCO:0);
   const alta=r.fecha>=COSTO.alta[0]&&r.fecha<=COSTO.alta[1];
   const tipoC=TIPO_PAT[PAT_GPS(r.patente)]||tipo,pd=(n.diesel&&n.diesel.p)?{p:+n.diesel.p,txt:n.diesel.txt+' · fijado el '+String(n.diesel.fijado||'').split('-').reverse().slice(0,2).join('-')}:precioDiesel(r.fecha);
   const v={combustible:km/COSTO.rend[tipoC]*pd.p,peajes:peaje,comision:tarifa*COSTO.com,asesor:tarifa*COSTO.ase,neumMant:km*(COSTO.neum+COSTO.mant),
@@ -1260,7 +1266,7 @@ async function cargarProforma(){
     else{dst=[locs[0]||'',locs[1]||'',locs[2]||'',locs.slice(3).join('/'),'']}
     const obs=[n.observacion_cliente].filter(Boolean).join(' ');if(obs)dst[4]=obs;
     const [yy,mm,dd]=r.fecha.split('-').map(Number);
-    return {fecha:r.fecha,cells:[profTit,'',semISO(new Date(yy,mm-1,dd)),'Transporte Madrid',r.fecha.split('-').reverse().join('-'),'Coltauco El Trebol',...dst,PAT_PROF(r.patente),RUT_COND[r.conductor]||'',CHOFER_CORTO(r.conductor),+r.tarifa_neta||0]};});
+    return {fecha:r.fecha,cells:[profTit,'',semISO(new Date(yy,mm-1,dd)),'Transporte Madrid',r.fecha.split('-').reverse().join('-'),'Coltauco El Trebol',...dst,PAT_PROF(r.patente),RUT_COND[r.conductor]||'',CHOFER_CORTO(r.conductor),precioSvc(r)]};});
   const head=['Factura','Canal','Semana','Transporte','Fecha Origen','Origen','Destino 1','Destino 2','Destino 3','Retorno','Destino 5','Patente','RUT','Chofer','Precio'];
   const tot=profFilas.reduce((t,f)=>t+f.cells[14],0);
   $('prof-tbl').innerHTML='<tr>'+head.map(h=>'<th>'+h+'</th>').join('')+'</tr>'+profFilas.map(f=>'<tr>'+f.cells.map((c,i)=>'<td'+(i===14?' class="n"':'')+'>'+(i===14?Number(c).toLocaleString('es-CL'):c)+'</td>').join('')+'</tr>').join('')+
