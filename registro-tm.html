@@ -27,6 +27,18 @@ body{padding:16px 16px 40px;max-width:520px;margin:0 auto}
 .brand{font-weight:900;letter-spacing:.12em;font-size:13px;color:var(--gold)}
 .link{background:none;border:none;color:var(--muted);font-size:13px;font-family:inherit;text-decoration:underline;cursor:pointer}
 .screen{display:none}.screen.on{display:block}
+#pcnav{display:none}
+body.pc{max-width:none;padding-left:250px;padding-right:28px}
+body.pc #pcnav{display:flex;flex-direction:column;gap:4px;position:fixed;left:0;top:0;bottom:0;width:226px;background:var(--surface);border-right:1px solid var(--border);padding:18px 12px;overflow-y:auto;z-index:50}
+#pcnav .t{font-weight:900;letter-spacing:.1em;font-size:12px;color:var(--gold);margin:0 6px 14px}
+#pcnav button{background:none;border:none;color:var(--text);text-align:left;font:600 14px 'DM Sans',sans-serif;padding:10px;border-radius:8px;cursor:pointer}
+#pcnav button:hover,#pcnav button.on{background:var(--surface2);color:var(--gold)}
+body.pc #s-home>button{display:none!important}
+body.pc #s-reg,body.pc #s-pin,body.pc #s-ok{max-width:560px}
+body.pc .tbl{font-size:14px}body.pc .tbl td{white-space:normal}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin:10px 0 14px}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px}.kpi .l{font-size:12px;color:var(--muted);font-weight:700}.kpi .v{font-size:22px;font-weight:900;margin-top:4px}.kpi .p{font-size:11px;color:var(--gold);font-weight:800;letter-spacing:.06em}
+.tarea{display:flex;gap:10px;align-items:center;border:1px solid var(--border);border-radius:10px;padding:10px;margin:6px 0;background:var(--surface)}.tarea.roja{border-color:#ff3b30}.tarea.ok{opacity:.55}.tarea .x{flex:1}.tarea .x small{display:block;color:var(--muted);font-weight:600}.tarea button{width:auto;margin:0;padding:6px 10px;font-size:13px}
 h1{font-size:26px;font-weight:900;margin-bottom:6px}
 .sub{color:var(--muted);font-size:14px;margin-bottom:22px}
 .pin-box{display:flex;gap:10px;justify-content:center;margin:26px 0}
@@ -71,6 +83,7 @@ input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--bor
 </head>
 <body>
 <div class="hdr"><div class="brand">KAPTURA · TRANSPORTES MADRID</div><span id="hdr-user" style="margin-left:auto;margin-right:10px;font-weight:800;font-size:14px"></span><button class="link" id="btn-salir" style="display:none" onclick="salir()">Salir</button></div>
+<nav id="pcnav"></nav>
 <div class="pend" id="pend"></div>
 
 <!-- 1. PIN -->
@@ -86,6 +99,8 @@ input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--bor
 <section class="screen" id="s-home">
   <h1 id="saludo">Hola</h1>
   <div class="sub" id="sub-equipo"></div>
+  <div id="pc-dash"></div>
+  <div id="tareas-hoy"></div>
   <div id="alerta-sinreg"></div>
   <div id="alerta-adm"></div>
   <div id="alerta-cxc"></div>
@@ -304,7 +319,7 @@ let pin='', user=null, fotos=[], svcSel=null, extrasSel=new Set(), ultimo=null;
 
 function $(id){return document.getElementById(id)}
 function toast(t){const e=$('toast');e.textContent=t;e.classList.add('on');setTimeout(()=>e.classList.remove('on'),2800)}
-function ir(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));$(id).classList.add('on');window.scrollTo(0,0);if(user)uso('pantalla',id);if(id==='s-home'&&user){alertaSinReg();alertaCxc();alertaAdm()}}
+function ir(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));$(id).classList.add('on');window.scrollTo(0,0);if(user)uso('pantalla',id);if(id==='s-home'&&user){alertaSinReg();alertaCxc();alertaAdm();tareasHoy();pcDash()}navMarcar(id)}
 // Registro de uso de Kaptura (tabla kaptura_uso): entradas y pantallas por usuario. Pruebas internas marcadas con localStorage tm_prueba=1 (Carlos 30-10)
 function uso(accion,detalle){try{if(!supa||!user)return;const k=user.pin+'|'+accion+'|'+(detalle||'');if(uso._u===k)return;uso._u=k;
   supa.from('kaptura_uso').insert({empresa:EMPRESA,pin:user.pin,usuario:user.nombre,rol:user.rol,accion,detalle:detalle||null,dispositivo:/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)?'teléfono':'PC',prueba:ls('tm_prueba')==='1'}).then(()=>{},()=>{})}catch(e){}}
@@ -327,10 +342,10 @@ function entrar(p){
   if(!u){$('pin-err').textContent='PIN no registrado';pin='';setTimeout(pintarPin,600);return}
   user={pin:p,...u}; ls('tm_pin',p); ls('tm_ult',String(Date.now())); uso._u=null; uso('entrada');
   $('saludo').textContent='Hola '+u.nombre.split(' ')[0];
-  $('btn-salir').style.display='block'; $('hdr-user').textContent='👤 '+u.nombre.split(' ')[0]; $('btn-ver').style.display='block';$('btn-ver').textContent=esAdmin()?'📋 Servicios registrados':esCliente()?'📋 Ver mis servicios':'📋 Mis servicios registrados';$('btn-reg').style.display=esCliente()?'none':'block';$('btn-ent').style.display=esCliente()?'none':'block';$('btn-misent').style.display='block';contarSvc();$('btn-res').style.display=verResultado()?'block':'none';$('btn-profA').style.display=esAdmin()?'block':'none';$('btn-rsv').style.display=esAdmin()?'block':'none';$('btn-cxc').style.display=esAdmin()?'block':'none';ordenHome();contarEnt();const vg=(esAdmin()||esCliente())?'block':'none';$('btn-gps').style.display=vg;$('btn-prof').style.display=esCliente()?'none':vg; /* Proforma oculta para el cliente por ahora (Carlos 30-10) */ $('btn-ifco').style.display='block';contarIfco(); ir('s-home'); revisarPendientes();
+  $('btn-salir').style.display='block'; $('hdr-user').textContent='👤 '+u.nombre.split(' ')[0]; $('btn-ver').style.display='block';$('btn-ver').textContent=esAdmin()?'📋 Servicios registrados':esCliente()?'📋 Ver mis servicios':'📋 Mis servicios registrados';$('btn-reg').style.display=esCliente()?'none':'block';$('btn-ent').style.display=esCliente()?'none':'block';$('btn-misent').style.display='block';contarSvc();$('btn-res').style.display=verResultado()?'block':'none';$('btn-profA').style.display=esAdmin()?'block':'none';$('btn-rsv').style.display=esAdmin()?'block':'none';$('btn-cxc').style.display=esAdmin()?'block':'none';ordenHome();contarEnt();const vg=(esAdmin()||esCliente())?'block':'none';$('btn-gps').style.display=vg;$('btn-prof').style.display=esCliente()?'none':vg; /* Proforma oculta para el cliente por ahora (Carlos 30-10) */ $('btn-ifco').style.display='block';contarIfco(); aplicarVista(); ir('s-home'); revisarPendientes();
 }
 function ordenHome(){const h=$('s-home'),ids=esCliente()?['btn-ver','btn-misent','btn-ifco','btn-gps','btn-prof','btn-profA','btn-ent','btn-reg']:['btn-ent','btn-reg','btn-ver','btn-misent','btn-ifco','btn-gps','btn-prof','btn-profA','btn-res','btn-rsv','btn-cxc'];ids.forEach(i=>h.appendChild($(i)))} /* orden de inicio del cliente: servicios, entregas, IFCO, GPS (Carlos 30-10) */
-function salir(){ls('tm_pin',null);user=null;pin='';pintarPin();$('btn-salir').style.display='none';$('hdr-user').textContent='';_dupOk=false;ir('s-pin')}
+function salir(){ls('tm_pin',null);user=null;document.body.classList.remove('pc');$('pcnav').innerHTML='';const bv=$('btn-vista');if(bv)bv.remove();pin='';pintarPin();$('btn-salir').style.display='none';$('hdr-user').textContent='';_dupOk=false;ir('s-pin')}
 
 // ═══ REGISTRO ═══
 // Borrador: las fotos quedan guardadas en el celular hasta registrar el servicio
@@ -774,6 +789,40 @@ async function cxcCobrada(i){const r=cxcRows[i];const fe=prompt('Fecha de cobro 
   const cu=prompt('¿En qué cuenta entró? (Santander u otra)','Santander');if(!cu)return;
   const {error}=await supa.from('cxc_facturas').update({etapa:'cobrada',fecha_cobro:fe.split('-').reverse().join('-'),cuenta_cobro:cu,actualizado:new Date().toISOString()}).eq('id',r.id);
   toast(error?'No se pudo guardar':'Factura '+r.folio+' cobrada'+(/santander/i.test(cu)?'':' · ⚠ fuera del Santander'));verCxc()}
+// ═══ MODO ESCRITORIO (Carlos 02-11): administración en PC, con menú lateral, tablero por pilar y tareas del día ═══
+const NAV_BTNS=['btn-reg','btn-ver','btn-misent','btn-ifco','btn-gps','btn-prof','btn-profA','btn-rsv','btn-cxc','btn-res'];
+const NAV_SCR={'btn-ver':'s-list','btn-misent':'s-misent','btn-ifco':'s-ifco','btn-gps':'s-gps','btn-prof':'s-prof','btn-profA':'s-profA','btn-rsv':'s-rsv','btn-cxc':'s-cxc','btn-res':'s-res','btn-reg':'s-reg'};
+function aplicarVista(){if(!esAdmin())return;const pref=ls('tm_vista'),pc=pref==='pc'||(pref!=='tel'&&window.innerWidth>=1024);document.body.classList.toggle('pc',pc);
+  let bv=$('btn-vista');if(!bv){bv=document.createElement('button');bv.id='btn-vista';bv.className='link';bv.style.marginRight='10px';bv.onclick=()=>{ls('tm_vista',document.body.classList.contains('pc')?'tel':'pc');aplicarVista();ir('s-home')};$('btn-salir').before(bv)}
+  bv.textContent=pc?'📱 Vista teléfono':'🖥 Vista PC';
+  $('pcnav').innerHTML='<div class="t">KAPTURA · TM</div><button data-s="s-home" onclick="ir(\'s-home\')">🏠 Inicio y tareas del día</button>'+NAV_BTNS.filter(i=>$(i)&&$(i).style.display!=='none').map(i=>'<button data-s="'+NAV_SCR[i]+'" onclick="$(\''+i+'\').click()">'+$(i).textContent.replace(/\s*\(\d+\)$/,'')+'</button>').join('')}
+function navMarcar(id){document.querySelectorAll('#pcnav button').forEach(b=>b.classList.toggle('on',b.dataset.s===id))}
+// Tablero por pilar (solo con datos que Kaptura tiene; el resto vive en el sistema TM)
+async function pcDash(){const box=$('pc-dash');if(!box)return;if(!document.body.classList.contains('pc')||!esAdmin()||!supa){box.innerHTML='';return}
+  try{const ini=mesesAtras(1)[0].v+'-01',hoy=hoyISO();
+    const sv=(await conTope(supa.from('servicios_piloto').select('tarifa_neta,cliente').eq('empresa',EMPRESA).eq('modo','registro_tm').neq('estado','anulado').gte('fecha',ini).lte('fecha',hoy),8000)).data||[];
+    const cx=await leerCxc(),sum=a=>a.reduce((t,r)=>t+(+r.total||0),0);
+    const pa=cx.filter(r=>['por_aprobar','por_facturar'].includes(cxcEtapa(r))),pc=cx.filter(r=>cxcEtapa(r)==='por_cobrar'),ve=pc.filter(r=>{const v=cxcVence(r);return v&&v<hoy});
+    const k=(p,l,v,s)=>'<div class="kpi"><div class="p">'+p+'</div><div class="l">'+l+'</div><div class="v">'+v+'</div>'+(s?'<div class="l" style="margin-top:4px">'+s+'</div>':'')+'</div>';
+    box.innerHTML='<div class="kpis">'+k('RENTABILIDAD','Ventas del mes (neto, Kaptura)',fmt$(sv.reduce((t,x)=>t+(+x.tarifa_neta||0),0)),sv.length+' servicio(s) registrados')+
+      k('LIQUIDEZ','Por aprobar y facturar (c/IVA)',fmt$(sum(pa)),pa.length+' período(s)')+k('LIQUIDEZ','Por cobrar (c/IVA)',fmt$(sum(pc)),pc.length+' factura(s)')+
+      k('LIQUIDEZ','Vencido sin cobrar',fmt$(sum(ve)),ve.length?'<span style="color:#ff3b30">cobrar hoy</span>':'al día')+'</div>'}catch(e){box.innerHTML=''}}
+// Tareas del día del administrador (solo administración). Hora límite: 20:00. Las hechas quedan registradas (tareas_admin)
+const TAREAS=[{id:'cartola',t:'Cartola Santander del día → enviar a Claude',d:[1,2,3,4,5],lim:'20:00',p:'Liquidez'},
+  {id:'rcv',t:'RCV compras y ventas del SII → enviar a Claude',d:[1,4],lim:'20:00',p:'Rentabilidad'},
+  {id:'aramco',t:'Transacciones Aramco de la semana → enviar a Claude',d:[1],lim:'20:00',p:'Rentabilidad'},
+  {id:'fuera',t:'Informar pagos o cobros fuera del Santander (si hubo)',d:[1,2,3,4,5,6],lim:'20:00',p:'Liquidez'}];
+let _tHechas=[];
+async function tareasHoy(){const box=$('tareas-hoy');if(!box)return;if(!esAdminTotal()||!supa){box.innerHTML='';return}
+  try{const hoy=hoyISO(),dw=new Date().getDay(),hm=new Date().toTimeString().slice(0,5);
+    _tHechas=(await conTope(supa.from('tareas_admin').select('tarea,hecha_por,hora').eq('empresa',EMPRESA).eq('fecha',hoy),8000)).data||[];
+    const cx=await leerCxc(),it=[];
+    TAREAS.filter(t=>t.d.includes(dw)).forEach(t=>{const h=_tHechas.find(x=>x.tarea===t.id);it.push({t:t.t,p:t.p,lim:t.lim,ok:!!h,roja:!h&&hm>=t.lim,sub:h?'Hecha por '+h.hecha_por.split(' ')[0]+' a las '+new Date(h.hora).toTimeString().slice(0,5):'Hasta las '+t.lim,btn:h?'':'<button class="btn2" onclick="tareaHecha(\''+t.id+'\')">✔ Hecha</button>'})});
+    cx.forEach(r=>{const e=cxcEstado(r),et=cxcEtapa(r);if(e.sem==='🟢')return;it.push({t:e.txt.split(' (')[0]+' · '+r.cliente+(r.folio?' fact. '+r.folio:''),p:'Liquidez',roja:e.sem==='🔴',sub:fmt$(r.total)+(et==='por_cobrar'?' · vence '+fCL(cxcVence(r)):''),btn:'<button class="btn2" onclick="verCxc()">Ir</button>'})});
+    const pend=it.filter(x=>!x.ok).length;
+    box.innerHTML='<div style="margin:6px 0 12px"><div style="font-weight:900;font-size:17px">📋 Tareas de hoy · '+pend+' pendiente(s)</div>'+it.map(x=>'<div class="tarea'+(x.ok?' ok':x.roja?' roja':'')+'"><div class="x"><b>'+(x.ok?'✅ ':x.roja?'🔴 ':'⬜ ')+x.t+'</b><small>'+x.p+' · '+x.sub+'</small></div>'+(x.btn||'')+'</div>').join('')+'</div>'}catch(e){box.innerHTML=''}}
+async function tareaHecha(id){const {error}=await supa.from('tareas_admin').insert({fecha:hoyISO(),tarea:id,hecha_por:user.nombre});toast(error?'No se pudo guardar':'Tarea hecha');tareasHoy()}
+window.addEventListener('resize',()=>{if(user&&esAdmin()&&!ls('tm_vista'))aplicarVista()});
 // ═══ ALERTAS DE ADMINISTRACIÓN (Carlos 01-11): tabla alertas_admin; las ven Carlos, Claudio y administración hasta marcarlas resueltas ═══
 let _alAdm=[];
 async function alertaAdm(){const box=$('alerta-adm');if(!box||!esAdmin()||!supa)return;
