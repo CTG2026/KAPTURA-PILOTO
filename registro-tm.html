@@ -206,6 +206,7 @@ input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--bor
   <h1>Entrega</h1>
   <div class="card"><img id="ent-img" alt="" style="width:100%;border-radius:12px;max-height:42vh;object-fit:contain">
     <div id="ent-local" style="font-size:20px;font-weight:800;margin-top:12px">📍 Buscando ubicación…</div>
+    <select id="ent-sel" onchange="entSelLocal=this.value" style="display:none;width:100%;font-size:18px;padding:10px;border-radius:10px;border:2px solid #ff9500;background:var(--surface);color:var(--text);margin-top:8px"></select>
     <div class="lbl" style="margin-top:10px">N° guía / documento (opcional)</div>
     <input id="ent-nro" inputmode="numeric" placeholder="Leyendo número…" style="width:100%;font-size:20px;padding:10px;border-radius:10px;border:2px solid var(--border);background:var(--surface);color:var(--text)"></div>
   <button class="btn2" id="ent-pend" onclick="togglePend()">📄 IFCO pendiente</button>
@@ -1028,27 +1029,36 @@ function entregue(){
   else entPos={err:1};
   $('cam-ent').value='';$('cam-ent').click();
 }
-function onFotoEnt(inp){const f=inp.files&&inp.files[0];if(!f)return;entFoto=f;$('ent-nro').value='';$('ent-nro').placeholder='Leyendo número…';leerNumero(f).then(n=>{if(entFoto===f&&!$('ent-nro').value&&n)$('ent-nro').value=n;$('ent-nro').placeholder='Escriba el N° si lo ve'});$('ent-img').src=URL.createObjectURL(f);entPend=false;pintarPend();ir('s-ent');pintarEnt()}
+function onFotoEnt(inp){const f=inp.files&&inp.files[0];if(!f)return;entFoto=f;entLocalOCR=null;entSelLocal='';$('ent-nro').value='';$('ent-nro').placeholder='Leyendo número…';leerNumero(f).then(n=>{if(entFoto===f&&!$('ent-nro').value&&n)$('ent-nro').value=n;$('ent-nro').placeholder='Escriba el N° si lo ve'}).then(()=>leerLocal(f)).then(g=>{if(entFoto===f&&g){entLocalOCR=g;pintarEnt()}});$('ent-img').src=URL.createObjectURL(f);entPend=false;pintarPend();ir('s-ent');pintarEnt()}
 function togglePend(){entPend=!entPend;pintarPend()}
 function pintarPend(){const b=$('ent-pend');b.textContent=entPend?'📄 IFCO PENDIENTE (tocar para quitar)':'📄 IFCO pendiente';b.style.background=entPend?'#c77d00':'';b.style.color=entPend?'#fff':''}
+// Local desde el documento (código J### / N### impreso, ej. "J512 JUMBO LA REINA") cuando el GPS no reconoce el local (Carlos 02-11)
+let entLocalOCR=null,entSelLocal='';
+async function leerLocal(file){try{if(!window.Tesseract)return null;const w=await ocrWorker(),c=await prepararOCR(file);const {data}=await w.recognize(c);
+  const t=(data.text||'').toUpperCase();const m=[...t.matchAll(/\b([JN])\s?(\d{3})\b/g)].map(x=>x[1]+x[2]);
+  for(const k of m){const g=GEOCERCAS.find(x=>x.tipo==='local'&&x.nombre.toUpperCase().startsWith(k));if(g)return g}}catch(e){console.log('ocr local',e)}return null}
+function entLocalesOpc(){return GEOCERCAS.filter(x=>x.tipo==='local')}
 async function pintarEnt(){
-  if(!$('s-ent').classList.contains('on'))return;const el=$('ent-local');
+  if(!$('s-ent').classList.contains('on'))return;const el=$('ent-local'),sel=$('ent-sel');sel.style.display='none';
   if(!entPos){el.textContent='📍 Buscando ubicación…';$('ent-ok').disabled=false;return}
   if(entPos.err){el.textContent='📍 Sin ubicación (se guarda igual)';$('ent-ok').disabled=false;return}
   const c=entPos.coords,g=geoCerca(c.latitude,c.longitude,c.accuracy);
+  if(!g&&entLocalOCR){el.textContent='📍 '+entLocalOCR.nombre+' (leído del documento)';$('ent-ok').disabled=false;return}
   el.textContent='📍 '+(g?g.nombre:await lugar(c.latitude,c.longitude));
+  if(!g){if(!sel.options.length)sel.innerHTML='<option value="">⚠ Elija el local de entrega…</option>'+entLocalesOpc().map(x=>'<option>'+x.nombre+'</option>').join('')+'<option value="otro">Otro local (no está en la lista)</option>';sel.value=entSelLocal;sel.style.display='block'}
   if(g&&g.tipo==='planta'){el.textContent+=' · ⚠ No es un punto de entrega';$('ent-ok').disabled=true}else $('ent-ok').disabled=false;
 }
 async function guardarEnt(btn){
   if(!supa||!entFoto)return;
   {const c=entPos&&entPos.coords,g=c?geoCerca(c.latitude,c.longitude,c.accuracy):null;
-   if(g&&g.tipo==='planta'){toast('Está en '+g.nombre+': aquí no se entrega. La guía de salida va en REGISTRAR SERVICIO.');return}}btn.disabled=true;btn.textContent='Guardando…';
+   if(g&&g.tipo==='planta'){toast('Está en '+g.nombre+': aquí no se entrega. La guía de salida va en REGISTRAR SERVICIO.');return}
+   if(!g&&!entLocalOCR&&c&&!entSelLocal){toast('Elija el local de entrega en la lista');$('ent-sel').style.display='block';return}}btn.disabled=true;btn.textContent='Guardando…';
   try{
     const ahora=new Date(),fecha=hoyISO(ahora),hora=String(ahora.getHours()).padStart(2,'0')+':'+String(ahora.getMinutes()).padStart(2,'0');
     let foto=null;try{const b=await comprimir(entFoto);const path='tm/'+fecha.slice(0,7)+'/ent_'+Date.now()+'_'+user.pin+'.jpg';
       const up=await supa.storage.from(BUCKET).upload(path,b,{contentType:'image/jpeg',upsert:false});if(!up.error)foto=supa.storage.from(BUCKET).getPublicUrl(path).data.publicUrl}catch(e){}
-    const c=entPos&&entPos.coords,g=c?geoCerca(c.latitude,c.longitude,c.accuracy):null;
-    const local=g?g.nombre:(c?await lugar(c.latitude,c.longitude):'Sin ubicación');
+    const c=entPos&&entPos.coords,g0=c?geoCerca(c.latitude,c.longitude,c.accuracy):null,gs=entSelLocal&&entSelLocal!=='otro'?GEOCERCAS.find(x=>x.nombre===entSelLocal):null,g=g0||entLocalOCR||gs;
+    const calle=c?await lugar(c.latitude,c.longitude):'Sin ubicación',local=g?g.nombre:(entSelLocal==='otro'?'Otro local · '+calle:calle);
     let sid=null,cli=g?g.cliente:null;try{const r=await conTope(supa.from('servicios_piloto').select('servicio_id,cliente').eq('empresa',EMPRESA).eq('modo','registro_tm').neq('estado','anulado').eq('fecha',fecha).eq('conductor',user.nombre).order('servicio_id',{ascending:false}).limit(1),6000);const s0=(r.data||[])[0]||{};sid=s0.servicio_id||null;cli=cli||s0.cliente||null}catch(e){}
     // Sin geocerca ni servicio del día: cliente del último servicio del conductor, para que el cliente vea su entrega (Carlos 02-11)
     if(!cli){try{const r=await conTope(supa.from('servicios_piloto').select('cliente').eq('empresa',EMPRESA).eq('modo','registro_tm').neq('estado','anulado').eq('conductor',user.nombre).not('cliente','is',null).order('fecha',{ascending:false}).limit(1),6000);cli=((r.data||[])[0]||{}).cliente||null}catch(e){}}
