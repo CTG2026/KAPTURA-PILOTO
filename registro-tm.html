@@ -794,6 +794,19 @@ function descargarResumenSvc(){if(!rsvFilas.length||!window.XLSX)return;const he
   const ws=XLSX.utils.aoa_to_sheet([head,...rsvFilas.map(r=>r.c)]);estiloXLS(ws,rsvFilas.length,6,0);
   rsvFilas.forEach((r,i)=>{if(r.rojo)for(const c of 'ABCDEF'){const x=ws[c+(i+2)];if(x)x.s={...(x.s||{}),font:{bold:true,color:{rgb:'FF3B30'}}}}});
   ws['!cols']=[{wch:11},{wch:7},{wch:22},{wch:44},{wch:26},{wch:10}];const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Resumen');XLSX.writeFile(wb,'Resumen_servicios_TM_'+rsvTit.replace(/\s+/g,'_')+'.xlsx')}
+
+// ═══ FORMULARIO EN VENTANA (Carlos 02-11): fechas siempre con calendario desplegable, nunca escritas a mano ═══
+function formulario(tit,campos){return new Promise(res=>{const w=document.createElement('div');w.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;display:flex;align-items:center;justify-content:center;padding:16px';
+  const st='width:100%;font-size:16px;padding:9px;border-radius:10px;border:2px solid var(--border);background:var(--surface2);color:var(--text);margin:4px 0 10px;font-family:inherit';
+  const DS=['lun','mar','mié','jue','vie','sáb','dom'];
+  const f=c=>'<div style="font-size:13px;font-weight:700;color:var(--muted)">'+c.l+'</div>'+(c.t==='select'?'<select data-k="'+c.k+'" style="'+st+'">'+c.ops.map(o=>'<option'+(o===c.v?' selected':'')+'>'+o+'</option>').join('')+'</select>'
+    :c.t==='dias'?'<div data-k="'+c.k+'" data-dias="1" style="display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 10px">'+DS.map((d,i)=>'<label style="display:flex;gap:4px;align-items:center;background:var(--surface2);padding:6px 8px;border-radius:8px"><input type="checkbox" value="'+(i+1)+'"'+((c.v||[]).includes(i+1)?' checked':'')+'>'+d+'</label>').join('')+'</div>'
+    :'<input data-k="'+c.k+'" type="'+(c.t||'text')+'" value="'+(c.v??'')+'" style="'+st+'"'+(c.t==='number'?' inputmode="numeric"':'')+'>');
+  w.innerHTML='<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;width:100%;max-width:440px;max-height:90vh;overflow:auto"><div style="font-weight:900;font-size:18px;margin-bottom:12px">'+tit+'</div>'+campos.filter(c=>!c.si).map(f).join('')+
+    '<div style="display:flex;gap:8px;margin-top:6px"><button class="btn2" style="flex:1;margin:0" data-x="0">Cancelar</button><button class="big" style="flex:1;margin:0" data-x="1">Guardar</button></div></div>';
+  document.body.appendChild(w);const cerrar=v=>{w.remove();res(v)};
+  w.querySelector('[data-x="0"]').onclick=()=>cerrar(null);
+  w.querySelector('[data-x="1"]').onclick=()=>{const o={};w.querySelectorAll('[data-k]').forEach(e=>{o[e.dataset.k]=e.dataset.dias?[...e.querySelectorAll('input:checked')].map(x=>+x.value):e.value.trim()});cerrar(o)}})}
 // ═══ FACTURACIÓN Y COBRANZA (Carlos 02-11): por aprobar → por facturar → por cobrar → cobrada. Tabla cxc_facturas (columna etapa) ═══
 // Cierre del período: EBLOOMS y Ateuro por quincena (alerta de proforma para aprobación); Valle el último día del mes (alerta de liquidación para aprobación con Anita).
 // Pago: EBLOOMS el viernes siguiente a la factura; Valle, Ateuro y Spot a 30 días; Los Tres Enanos 5 días. Aviso de cobranza 3 días antes del vencimiento.
@@ -836,18 +849,16 @@ async function verCxc(){if(!esAdmin())return;ir('s-cxc');$('cxc-box').innerHTML=
   let h='';for(const [k,t] of ETAPAS){const a=cxcRows.filter(r=>cxcEtapa(r)===k);h+='<tr><th colspan="9">'+t+'</th></tr>'+H+a.map(fila).join('')+'<tr class="tot"><td colspan="6">Total '+t.split(' (')[0].toLowerCase()+'</td><td class="n">'+fmt$(sum(a))+'</td><td colspan="2"></td></tr>'}
   $('cxc-box').innerHTML='<div class="tblw"><table class="tbl" id="cxc-tbl">'+h+'</table></div>';
   const n=k=>cxcRows.filter(r=>cxcEtapa(r)===k).length;$('cxc-sub').textContent=n('por_aprobar')+' por aprobar · '+n('por_facturar')+' por facturar · '+n('por_cobrar')+' por cobrar ('+fmt$(sum(cxcRows.filter(r=>cxcEtapa(r)==='por_cobrar')))+')'}
-async function facAprobar(i){const r=cxcRows[i];const to=prompt('Total con IVA aprobado de '+r.cliente+' (proforma / liquidación):',Math.round(+r.total||0));if(to===null)return;
-  const t=+String(to).replace(/\D/g,'');const {error}=await supa.from('cxc_facturas').update({etapa:'por_facturar',aprobada:hoyISO(),total:t,neto:Math.round(t/1.19),actualizado:new Date().toISOString()}).eq('id',r.id);
+async function facAprobar(i){const r=cxcRows[i];const nn=x=>+String(x||'').replace(/\D/g,'')||0;const v=await formulario('Aprobar '+((FAC_CLI.find(x=>x.c===r.cliente)||{}).doc||'liquidación')+' · '+r.cliente,[{k:'t',l:'Total con IVA aprobado ($)',t:'number',v:Math.round(+r.total||0)}]);if(!v)return;
+  const t=nn(v.t);const {error}=await supa.from('cxc_facturas').update({etapa:'por_facturar',aprobada:hoyISO(),total:t,neto:Math.round(t/1.19),actualizado:new Date().toISOString()}).eq('id',r.id);
   toast(error?'No se pudo guardar':'Aprobada: ahora facturar');verCxc()}
-async function cxcFacturada(i){const r=cxcRows[i];const fo=prompt('N° de factura (folio) de '+r.cliente+':');if(!fo)return;
-  const fe=prompt('Fecha de emisión (dd-mm-aaaa):',hoyISO().split('-').reverse().join('-'));if(!fe)return;const fi=fe.split('-').reverse().join('-');
-  const to=prompt('Total con IVA de la factura:',Math.round(+r.total||0));if(to===null)return;
-  const {error}=await supa.from('cxc_facturas').update({etapa:'por_cobrar',folio:+fo,fecha_emision:fi,total:+String(to).replace(/\D/g,''),actualizado:new Date().toISOString()}).eq('id',r.id);
-  toast(error?'No se pudo guardar':'Factura '+fo+' en cuentas por cobrar');verCxc()}
-async function cxcCobrada(i){const r=cxcRows[i];const fe=prompt('Fecha de cobro de la factura '+r.folio+' (dd-mm-aaaa):',hoyISO().split('-').reverse().join('-'));if(!fe)return;
-  const cu=prompt('¿En qué cuenta entró? (Santander u otra)','Santander');if(!cu)return;
-  const {error}=await supa.from('cxc_facturas').update({etapa:'cobrada',fecha_cobro:fe.split('-').reverse().join('-'),cuenta_cobro:cu,actualizado:new Date().toISOString()}).eq('id',r.id);
-  toast(error?'No se pudo guardar':'Factura '+r.folio+' cobrada'+(/santander/i.test(cu)?'':' · ⚠ fuera del Santander'));verCxc()}
+async function cxcFacturada(i){const r=cxcRows[i];const nn=x=>+String(x||'').replace(/\D/g,'')||0;const v=await formulario('Factura emitida · '+r.cliente,[{k:'fo',l:'N° de factura (folio)',t:'number'},{k:'fe',l:'Fecha de emisión',t:'date',v:hoyISO()},{k:'to',l:'Total con IVA ($)',t:'number',v:Math.round(+r.total||0)}]);
+  if(!v||!v.fo||!v.fe){if(v)toast('Falta el folio o la fecha');return}
+  const {error}=await supa.from('cxc_facturas').update({etapa:'por_cobrar',folio:nn(v.fo),fecha_emision:v.fe,total:nn(v.to),actualizado:new Date().toISOString()}).eq('id',r.id);
+  toast(error?'No se pudo guardar':'Factura '+v.fo+' en cuentas por cobrar');verCxc()}
+async function cxcCobrada(i){const r=cxcRows[i];const v=await formulario('Cobro de la factura '+r.folio+' · '+r.cliente,[{k:'fe',l:'Fecha de cobro',t:'date',v:hoyISO()},{k:'cu',l:'Cuenta donde entró',t:'select',ops:['Santander','Banco de Chile','Otra'],v:'Santander'}]);
+  if(!v||!v.fe)return;const {error}=await supa.from('cxc_facturas').update({etapa:'cobrada',fecha_cobro:v.fe,cuenta_cobro:v.cu,actualizado:new Date().toISOString()}).eq('id',r.id);
+  toast(error?'No se pudo guardar':'Factura '+r.folio+' cobrada'+(v.cu==='Santander'?'':' · ⚠ fuera del Santander'));verCxc()}
 // ═══ REPORTES DEL SISTEMA TM (Carlos 02-11): pilares por mes y caja de la semana. Fuente única: sistema TM (Excel); Claude los sube al actualizarlo. Tabla abierta por ahora (Carlos 02-11) ═══
 let _repTipo='pilares';
 async function repRpc(tipo,per){const q=per?supa.from('tm_reportes').select('datos,actualizado').eq('empresa',EMPRESA).eq('tipo',tipo).eq('periodo',per).maybeSingle():supa.from('tm_reportes').select('periodo,actualizado').eq('empresa',EMPRESA).eq('tipo',tipo).order('periodo',{ascending:false});const r=await conTope(q,10000);if(r.error)throw r.error;return r.data||[]}
@@ -913,11 +924,12 @@ async function tareasHoy(){const box=$('tareas-hoy');if(!box)return;box.innerHTM
     box.innerHTML='<div style="margin:6px 0 12px"><div style="display:flex;align-items:center;gap:10px"><div style="font-weight:900;font-size:16px;flex:1">Tareas de hoy · '+EMP_NOM[EMP_ACT]+' ('+pend.length+')</div><button class="btn2" style="width:auto;margin:0;padding:6px 10px;font-size:13px" onclick="nuevaTarea()">+ Nueva tarea</button>'+(user.rol==='administracion'?'<button class="btn2" style="width:auto;margin:0;padding:6px 10px;font-size:13px" onclick="ir(\'s-emp\')">🔄 Empresa</button>':'')+'</div>'+pend.map(x=>'<div class="tarea"><div class="x"><span style="font-weight:700">'+x.t+'</span><small>'+x.p+' · '+x.sub+'</small></div><span style="color:'+(x.est?'var(--muted)':'#ff3b30')+';font-weight:800;font-size:12px;white-space:nowrap">'+(x.est||(x.roja?'ATRASADA':'PENDIENTE'))+'</span>'+(x.btn||'')+'</div>').join('')+'</div>';}catch(e){box.innerHTML=''}}
 async function tareaHecha(id,unica){const {error}=await supa.from('tareas_admin').insert({fecha:hoyISO(),tarea:id,hecha_por:user.nombre,empresa:EMP_ACT});if(!error&&unica)await supa.from('tareas').update({activa:false}).eq('id',unica);toast(error?'No se pudo guardar':'Tarea hecha');tareasHoy()}
 window.addEventListener('resize',()=>{if(user&&esAdmin()&&!ls('tm_vista'))aplicarVista()});
-async function nuevaTarea(){const t=prompt('Tarea ('+EMP_NOM[EMP_ACT]+'):');if(!t||!t.trim())return;
-  const r=prompt('¿Se repite?\n1 = No (queda hasta marcarla Hecha)\n2 = Cada semana\n3 = Cada mes','1');if(!r)return;const o={empresa:EMP_ACT,titulo:t.trim(),creada_por:user.nombre};
-  if(r==='2'){const d=prompt('Días (1=lun 2=mar 3=mié 4=jue 5=vie 6=sáb 7=dom), separados por coma:','1');if(!d)return;o.recurrencia='semanal';o.dias=d.split(/[^1-7]+/).filter(Boolean).map(Number)}
-  else if(r==='3'){const d=prompt('Día del mes:','10');if(!d)return;o.recurrencia='mensual';o.dia_mes=+d}
-  else{o.recurrencia='unica';const f=prompt('Plazo (dd-mm-aaaa), vacío si no tiene:','');if(f)o.fecha_limite=f.split('-').reverse().join('-')}
+async function nuevaTarea(){const v=await formulario('Nueva tarea · '+EMP_NOM[EMP_ACT],[{k:'t',l:'Tarea'},{k:'r',l:'¿Se repite?',t:'select',ops:['No (queda hasta marcarla Hecha)','Cada semana','Cada mes'],v:'No (queda hasta marcarla Hecha)'},
+  {k:'f',l:'Plazo (si no se repite; vacío = sin plazo)',t:'date'},{k:'d',l:'Días (si es cada semana)',t:'dias',v:[1]},{k:'m',l:'Día del mes (si es cada mes)',t:'number',v:10}]);
+  if(!v||!v.t)return;const o={empresa:EMP_ACT,titulo:v.t,creada_por:user.nombre};
+  if(v.r==='Cada semana'){if(!v.d.length){toast('Elija al menos un día');return}o.recurrencia='semanal';o.dias=v.d}
+  else if(v.r==='Cada mes'){o.recurrencia='mensual';o.dia_mes=Math.min(28,Math.max(1,+v.m||1))}
+  else{o.recurrencia='unica';if(v.f)o.fecha_limite=v.f}
   const {error}=await supa.from('tareas').insert(o);toast(error?'No se pudo guardar':'Tarea creada');tareasHoy()}
 function elegirEmp(e){EMP_ACT=e;document.body.classList.toggle('global',e!==EMPRESA);$('saludo').textContent=e===EMPRESA?'Hola '+user.nombre.split(' ')[0]:EMP_NOM[e];$('hdr-user').textContent='👤 '+user.nombre.split(' ')[0]+' · '+EMP_NOM[e];aplicarVista();ir('s-home')}
 // ═══ ALERTAS DE ADMINISTRACIÓN (Carlos 01-11): tabla alertas_admin; las ven Carlos, Claudio y administración hasta marcarlas resueltas ═══
@@ -1387,13 +1399,11 @@ function chkInact(){if(user&&Date.now()-Number(ls('tm_ult')||0)>INACT_MS){const 
 setInterval(chkInact,30000);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')chkInact()});
 // ═══ SPOT CON TERCERO (Carlos 02-11): Administración crea el link, se lo manda a Claudio y él lo reenvía al chofer del tercero ═══
 let _spot=null,_spotFoto=null,_spotPos=null;
-async function crearSpot(){const q=(t,d)=>{const v=prompt(t,d||'');return v===null?null:v.trim()};
-  const cli=q('Cliente (EBLOOMS, Alimentos Valle Central, Ateuro / Zuria u otro):','Ateuro / Zuria');if(!cli)return;
-  const sv=q('Servicio (origen → destino):');if(!sv)return;const ta=q('Tarifa neta al cliente ($):');if(ta===null)return;
-  const te=q('Tercero (nombre o empresa):');if(!te)return;const pa=q('Patente del camión del tercero:')||'';const pt=q('Pago al tercero neto ($):');if(pt===null)return;
-  const fe=q('Fecha del servicio (dd-mm-aaaa):',hoyISO().split('-').reverse().join('-'));if(!fe)return;
+async function crearSpot(){const nn=x=>+String(x||'').replace(/\D/g,'')||0;const v=await formulario('Servicio spot con tercero',[{k:'cli',l:'Cliente',t:'select',ops:['Ateuro / Zuria','EBLOOMS','Alimentos Valle Central','Otro'],v:'Ateuro / Zuria'},{k:'sv',l:'Servicio (origen → destino)'},{k:'ta',l:'Tarifa neta al cliente ($)',t:'number'},
+  {k:'te',l:'Tercero (nombre o empresa)'},{k:'pa',l:'Patente del camión del tercero'},{k:'pt',l:'Pago al tercero neto ($)',t:'number'},{k:'fe',l:'Fecha del servicio',t:'date',v:hoyISO()}]);
+  if(!v)return;if(!v.sv||!v.te||!v.fe){toast('Faltan servicio, tercero o fecha');return}const cli=v.cli,sv=v.sv,ta=v.ta,te=v.te,pa=v.pa||'',pt=v.pt,fe=fCL(v.fe);
   const token=Math.random().toString(36).slice(2,10)+Date.now().toString(36);const n=x=>+String(x).replace(/\D/g,'')||null;
-  const {error}=await supa.from('spot_links').insert({token,empresa:EMPRESA,fecha:fe.split('-').reverse().join('-'),cliente:cli,servicio:sv,tarifa_neta:n(ta),tercero:te,patente:pa.toUpperCase(),pago_tercero:n(pt),creado_por:user.nombre});
+  const {error}=await supa.from('spot_links').insert({token,empresa:EMPRESA,fecha:v.fe,cliente:cli,servicio:sv,tarifa_neta:n(ta),tercero:te,patente:pa.toUpperCase(),pago_tercero:n(pt),creado_por:user.nombre});
   if(error){toast('No se pudo crear el link');return}
   const link=location.origin+location.pathname+'?spot='+token,txt='Claudio, reenvía este link al chofer de '+te+' para registrar el servicio spot ('+sv+', '+fe+'). Solo debe abrirlo, sacar la foto de la guía y tocar Enviar:\n'+link;
   window.open('https://wa.me/?text='+encodeURIComponent(txt),'_blank')}
