@@ -359,7 +359,7 @@ function entrar(p){
   $('btn-salir').style.display='block'; $('hdr-user').textContent='👤 '+u.nombre.split(' ')[0]; $('btn-ver').style.display='block';$('btn-ver').textContent=esAdmin()?'📋 Servicios registrados':esCliente()?'📋 Ver mis servicios':'📋 Mis servicios registrados';$('btn-reg').style.display=esCliente()?'none':'block';$('btn-ent').style.display=esCliente()?'none':'block';$('btn-misent').style.display='block';contarSvc();$('btn-res').style.display=verResultado()?'block':'none';$('btn-profA').style.display=esAdmin()?'block':'none';$('btn-rsv').style.display=esAdmin()?'block':'none';$('btn-cxc').style.display=esAdmin()?'block':'none';$('btn-pil').style.display=esAdminTotal()?'block':'none';$('btn-caja').style.display=esAdminTotal()?'block':'none';ordenHome();contarEnt();const vg=(esAdmin()||esCliente())?'block':'none';$('btn-gps').style.display=vg;$('btn-prof').style.display=esCliente()?'none':vg; /* Proforma oculta para el cliente por ahora (Carlos 30-10) */ $('btn-ifco').style.display='block';contarIfco(); aplicarVista(); ir('s-home'); revisarPendientes();
 }
 function ordenHome(){const h=$('s-home'),ids=esCliente()?['btn-ver','btn-misent','btn-ifco','btn-gps','btn-prof','btn-profA','btn-ent','btn-reg']:['btn-ent','btn-reg','btn-ver','btn-misent','btn-ifco','btn-gps','btn-prof','btn-profA','btn-res','btn-rsv','btn-pil','btn-caja','btn-cxc'];ids.forEach(i=>h.appendChild($(i)))} /* orden de inicio del cliente: servicios, entregas, IFCO, GPS (Carlos 30-10) */
-function salir(){ls('tm_pin',null);user=null;document.body.classList.remove('pc');$('pcnav').innerHTML='';const bv=$('btn-vista');if(bv)bv.remove();pin='';pintarPin();$('btn-salir').style.display='none';$('hdr-user').textContent='';_dupOk=false;ir('s-pin')}
+function salir(){ls('tm_pin',null);user=null;['alerta-adm','alerta-cxc','tareas-hoy','pc-dash','alerta-sinreg','cxc-box','rep-tbl'].forEach(i=>{const e=$(i);if(e)e.innerHTML=''});document.body.classList.remove('pc');$('pcnav').innerHTML='';const bv=$('btn-vista');if(bv)bv.remove();pin='';pintarPin();$('btn-salir').style.display='none';$('hdr-user').textContent='';_dupOk=false;ir('s-pin')}
 
 // ═══ REGISTRO ═══
 // Borrador: las fotos quedan guardadas en el celular hasta registrar el servicio
@@ -718,7 +718,7 @@ function esAdminTotal(){return user&&(user.rol==='administrador'||user.rol==='ad
 function verResultado(){return user&&user.rol==='administracion'}
 function esCliente(){return user&&user.rol==='cliente'}
 // ═══ SERVICIOS SIN REGISTRAR: entregas sin servicio de días anteriores, o de hoy después de las 21:00 (Carlos 31-10) ═══
-async function alertaSinReg(){const box=$('alerta-sinreg');if(!box||!user||!supa)return;
+async function alertaSinReg(){const box=$('alerta-sinreg');if(!box)return;box.innerHTML='';if(!user||!supa)return;const u0=user;
   try{const d0=new Date();d0.setDate(d0.getDate()-14);const hoy=hoyISO(),tarde=new Date().getHours()>=21;
     let q=supa.from('entregas').select('fecha,conductor,cliente').eq('empresa',EMPRESA).is('servicio_id',null).neq('estado','prueba').gte('fecha',hoyISO(d0));
     if(esCliente())q=q.eq('cliente',user.cliente);else if(!esAdmin())q=q.eq('conductor',user.nombre);
@@ -726,7 +726,7 @@ async function alertaSinReg(){const box=$('alerta-sinreg');if(!box||!user||!supa
     if(!es.length){box.innerHTML='';return}
     const fs=[...new Set(es.map(e=>e.fecha))];const sv=((await conTope(supa.from('servicios_piloto').select('fecha,conductor').eq('empresa',EMPRESA).eq('modo','registro_tm').neq('estado','anulado').in('fecha',fs),8000)).data||[]);
     const g={};es.filter(e=>!sv.some(x=>x.fecha===e.fecha&&x.conductor===e.conductor)).forEach(e=>{const k=e.fecha+'|'+e.conductor;g[k]=(g[k]||0)+1});
-    const ks=Object.keys(g).sort();if(!ks.length){box.innerHTML='';return}
+    const ks=Object.keys(g).sort();if(user!==u0)return;if(!ks.length){box.innerHTML='';return}
     const st='border:2px solid #ff3b30;border-radius:12px;padding:10px;margin:8px 0 12px;color:#ff3b30;font-weight:800';
     if(!esAdmin()&&!esCliente()){box.innerHTML=ks.map(k=>{const [f]=k.split('|');return '<div style="'+st+'">⚠ Tienes '+g[k]+' entrega(s) del '+f.split('-').reverse().join('-')+' sin servicio registrado<button class="big" style="margin-top:8px;background:#ff3b30;color:#fff" onclick="nuevoRegistro(\''+f+'\')">📷 Registrar ese servicio</button></div>'}).join('');return}
     box.innerHTML='<div style="'+st+'">⚠ Servicios sin registrar ('+ks.length+')'+ks.map(k=>{const [f,c]=k.split('|');const t='Hola '+c.split(' ')[0]+', tienes '+g[k]+' entrega(s) del '+f.split('-').reverse().join('-')+' sin servicio registrado en Kaptura. Entra a Kaptura y toca "Registrar ese servicio". Gracias.';
@@ -830,17 +830,17 @@ function aplicarVista(){if(!esAdmin())return;const pref=ls('tm_vista'),pc=pref==
   $('pcnav').innerHTML='<div class="t">KAPTURA · TM</div><button data-s="s-home" onclick="ir(\'s-home\')">🏠 Inicio y tareas del día</button>'+NAV_BTNS.filter(i=>$(i)&&$(i).style.display!=='none').map(i=>'<button data-s="'+NAV_SCR[i]+'" onclick="$(\''+i+'\').click()">'+$(i).textContent.replace(/\s*\(\d+\)$/,'')+'</button>').join('')}
 function navMarcar(id){document.querySelectorAll('#pcnav button').forEach(b=>b.classList.toggle('on',b.dataset.s===id))}
 // Tablero por pilar (solo con datos que Kaptura tiene; el resto vive en el sistema TM)
-async function pcDash(){const box=$('pc-dash');if(!box)return;if(!document.body.classList.contains('pc')||!esAdmin()||!supa){box.innerHTML='';return}
+async function pcDash(){const box=$('pc-dash');if(!box)return;box.innerHTML='';if(!document.body.classList.contains('pc')||!esAdmin()||!supa)return;const u0=user;
   try{const ini=mesesAtras(1)[0].v+'-01',hoy=hoyISO();
     const sv=(await conTope(supa.from('servicios_piloto').select('tarifa_neta,cliente').eq('empresa',EMPRESA).eq('modo','registro_tm').neq('estado','anulado').gte('fecha',ini).lte('fecha',hoy),8000)).data||[];
     const cx=await leerCxc(),sum=a=>a.reduce((t,r)=>t+(+r.total||0),0);
     const pa=cx.filter(r=>['por_aprobar','por_facturar'].includes(cxcEtapa(r))),pc=cx.filter(r=>cxcEtapa(r)==='por_cobrar'),ve=pc.filter(r=>{const v=cxcVence(r);return v&&v<hoy});
     const k=(p,l,v,s)=>'<div class="kpi"><div class="p">'+p+'</div><div class="l">'+l+'</div><div class="v">'+v+'</div>'+(s?'<div class="l" style="margin-top:4px">'+s+'</div>':'')+'</div>';
-    box.innerHTML='<div class="kpis">'+k('RENTABILIDAD','Ventas del mes (neto, Kaptura)',fmt$(sv.reduce((t,x)=>t+(+x.tarifa_neta||0),0)),sv.length+' servicio(s) registrados')+
+    if(user!==u0||!esAdmin())return;box.innerHTML='<div class="kpis">'+k('RENTABILIDAD','Ventas del mes (neto, Kaptura)',fmt$(sv.reduce((t,x)=>t+(+x.tarifa_neta||0),0)),sv.length+' servicio(s) registrados')+
       k('LIQUIDEZ','Por aprobar y facturar (c/IVA)',fmt$(sum(pa)),pa.length+' período(s)')+k('LIQUIDEZ','Por cobrar (c/IVA)',fmt$(sum(pc)),pc.length+' factura(s)')+
       k('LIQUIDEZ','Vencido sin cobrar',fmt$(sum(ve)),ve.length?'<span style="color:#ff3b30">cobrar hoy</span>':'al día')+'</div>';
     if(esAdminTotal()){try{const ps=await repRpc('pilares');if(ps.length){const d=(await repRpc('pilares',ps[0].periodo)).datos.filas,g=t=>d.find(f=>t.test(f.c))||{};const cob=g(/cobertura/i),mes=g(/^Meses que aguanta/i),caj=g(/^Plata en el banco/i),res=g(/^Resultado del mes/i),deu=g(/^Deuda total/i);
-      box.innerHTML+='<div class="kpis">'+k('RENTABILIDAD','Resultado del mes (proyectado, sistema TM)',fRep(res.pr,''),res.s||'')+k('LIQUIDEZ','Plata en el banco (sistema TM)',fRep(caj.r,''),caj.s||'')+k('SOLVENCIA','Cobertura de deuda (meta 1,2)',fRep(cob.pr,'cobertura'),cob.s||'')+k('SOLVENCIA','Meses que aguanta la caja',fRep(mes.pr,'Meses'),mes.s||'')+k('SOLVENCIA','Deuda total conocida',fRep(deu.pr,''),deu.s||'')+'</div><div class="sub" style="margin-top:-6px">Indicadores del sistema TM · '+ps[0].periodo+' · <a href="#" onclick="verRep(\'pilares\');return false" style="color:var(--gold)">ver pilares por mes</a> · <a href="#" onclick="verRep(\'caja_semana\');return false" style="color:var(--gold)">caja de la semana</a></div>'}}catch(e){}}
+      if(user!==u0)return;box.innerHTML+='<div class="kpis">'+k('RENTABILIDAD','Resultado del mes (proyectado, sistema TM)',fRep(res.pr,''),res.s||'')+k('LIQUIDEZ','Plata en el banco (sistema TM)',fRep(caj.r,''),caj.s||'')+k('SOLVENCIA','Cobertura de deuda (meta 1,2)',fRep(cob.pr,'cobertura'),cob.s||'')+k('SOLVENCIA','Meses que aguanta la caja',fRep(mes.pr,'Meses'),mes.s||'')+k('SOLVENCIA','Deuda total conocida',fRep(deu.pr,''),deu.s||'')+'</div><div class="sub" style="margin-top:-6px">Indicadores del sistema TM · '+ps[0].periodo+' · <a href="#" onclick="verRep(\'pilares\');return false" style="color:var(--gold)">ver pilares por mes</a> · <a href="#" onclick="verRep(\'caja_semana\');return false" style="color:var(--gold)">caja de la semana</a></div>'}}catch(e){}}
   }catch(e){box.innerHTML=''}}
 // Tareas del día del administrador (solo administración). Hora límite: 20:00. Las hechas quedan registradas (tareas_admin)
 const TAREAS=[{id:'cartola',t:'Cartola Santander del día → enviar a Claude',d:[1,2,3,4,5],lim:'20:00',p:'Liquidez'},
@@ -848,25 +848,25 @@ const TAREAS=[{id:'cartola',t:'Cartola Santander del día → enviar a Claude',d
   {id:'aramco',t:'Transacciones Aramco de la semana → enviar a Claude',d:[1],lim:'20:00',p:'Rentabilidad'},
   {id:'fuera',t:'Informar pagos o cobros fuera del Santander (si hubo)',d:[1,2,3,4,5,6],lim:'20:00',p:'Liquidez'}];
 let _tHechas=[];
-async function tareasHoy(){const box=$('tareas-hoy');if(!box)return;if(!esAdminTotal()||!supa){box.innerHTML='';return}
+async function tareasHoy(){const box=$('tareas-hoy');if(!box)return;box.innerHTML='';if(!esAdminTotal()||!supa)return;const u0=user;
   try{const hoy=hoyISO(),dw=new Date().getDay(),hm=new Date().toTimeString().slice(0,5);
     _tHechas=(await conTope(supa.from('tareas_admin').select('tarea,hecha_por,hora').eq('empresa',EMPRESA).eq('fecha',hoy),8000)).data||[];
     const cx=await leerCxc(),it=[];
     TAREAS.filter(t=>t.d.includes(dw)).forEach(t=>{const h=_tHechas.find(x=>x.tarea===t.id);it.push({t:t.t,p:t.p,lim:t.lim,ok:!!h,roja:!h&&hm>=t.lim,sub:h?'Hecha por '+h.hecha_por.split(' ')[0]+' a las '+new Date(h.hora).toTimeString().slice(0,5):'Hasta las '+t.lim,btn:h?'':'<button class="btn2" onclick="tareaHecha(\''+t.id+'\')">✔ Hecha</button>'})});
     cx.forEach(r=>{const e=cxcEstado(r),et=cxcEtapa(r);if(e.sem==='🟢')return;it.push({t:e.txt.split(' (')[0]+' · '+r.cliente+(r.folio?' fact. '+r.folio:''),p:'Liquidez',roja:e.sem==='🔴',sub:fmt$(r.total)+(et==='por_cobrar'?' · vence '+fCL(cxcVence(r)):''),btn:'<button class="btn2" onclick="verCxc()">Ir</button>'})});
-    const pend=it.filter(x=>!x.ok).length;
+    if(user!==u0||!esAdminTotal())return;const pend=it.filter(x=>!x.ok).length;
     box.innerHTML='<div style="margin:6px 0 12px"><div style="font-weight:900;font-size:17px">📋 Tareas de hoy · '+pend+' pendiente(s)</div>'+it.map(x=>'<div class="tarea'+(x.ok?' ok':x.roja?' roja':'')+'"><div class="x"><b>'+(x.ok?'✅ ':x.roja?'🔴 ':'⬜ ')+x.t+'</b><small>'+x.p+' · '+x.sub+'</small></div>'+(x.btn||'')+'</div>').join('')+'</div>'}catch(e){box.innerHTML=''}}
 async function tareaHecha(id){const {error}=await supa.from('tareas_admin').insert({fecha:hoyISO(),tarea:id,hecha_por:user.nombre});toast(error?'No se pudo guardar':'Tarea hecha');tareasHoy()}
 window.addEventListener('resize',()=>{if(user&&esAdmin()&&!ls('tm_vista'))aplicarVista()});
 // ═══ ALERTAS DE ADMINISTRACIÓN (Carlos 01-11): tabla alertas_admin; las ven Carlos, Claudio y administración hasta marcarlas resueltas ═══
 let _alAdm=[];
-async function alertaAdm(){const box=$('alerta-adm');if(!box||!esAdmin()||!supa)return;
-  try{const r=await conTope(supa.from('alertas_admin').select('*').eq('empresa',EMPRESA).eq('activa',true).order('creada'),8000);_alAdm=(r.data||[]).filter(x=>esAdminTotal()||x.para!=='admin');
+async function alertaAdm(){const box=$('alerta-adm');if(!box)return;box.innerHTML='';if(!esAdmin()||!supa)return;const u0=user;
+  try{const r=await conTope(supa.from('alertas_admin').select('*').eq('empresa',EMPRESA).eq('activa',true).order('creada'),8000);if(user!==u0||!esAdmin())return;_alAdm=(r.data||[]).filter(x=>esAdminTotal()||x.para!=='admin');
     box.innerHTML=_alAdm.map((a,i)=>'<div style="border:2px solid #ff3b30;border-radius:12px;padding:10px;margin:8px 0 12px;color:#ff3b30;font-weight:800">⚠ '+a.titulo+'<div style="color:var(--text);font-weight:600;margin-top:6px;white-space:pre-line">'+(a.detalle||'')+'</div><button class="btn2" style="margin-top:8px;padding:8px;font-size:13px" onclick="resolverAdm('+i+')">✔ Marcar resuelta</button></div>').join('')}catch(e){box.innerHTML=''}}
 async function resolverAdm(i){const a=_alAdm[i];if(!a)return;const nota=prompt('¿Cómo se resolvió? (queda registrado)');if(!nota)return;
   const {error}=await supa.from('alertas_admin').update({activa:false,resuelta_por:user.nombre,resolucion:nota,resuelta:new Date().toISOString()}).eq('id',a.id);toast(error?'No se pudo guardar':'Alerta resuelta');alertaAdm()}
-async function alertaCxc(){const box=$('alerta-cxc');if(!box||!esAdmin()||!supa)return;
-  try{await facAbrirPeriodos();const rs=await leerCxc(),es=rs.map(r=>({r,e:cxcEstado(r),k:cxcEtapa(r)})).filter(x=>x.e.sem!=='🟢');
+async function alertaCxc(){const box=$('alerta-cxc');if(!box)return;box.innerHTML='';if(!esAdmin()||!supa)return;const u0=user;
+  try{await facAbrirPeriodos();const rs=await leerCxc();if(user!==u0||!esAdmin())return;const es=rs.map(r=>({r,e:cxcEstado(r),k:cxcEtapa(r)})).filter(x=>x.e.sem!=='🟢');
     if(!es.length){box.innerHTML='';return}
     const grp=[['por_aprobar','📝 Por aprobar'],['por_facturar','🧾 Por facturar'],['por_cobrar','💰 Cobranza']];const rojo=es.some(x=>x.e.sem==='🔴');
     const st='border:2px solid '+(rojo?'#ff3b30':'#ff9500')+';border-radius:12px;padding:10px;margin:8px 0 12px;font-weight:800;color:'+(rojo?'#ff3b30':'#ff9500');
