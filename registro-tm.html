@@ -35,7 +35,7 @@ body.pc #pcnav{display:flex;flex-direction:column;gap:4px;position:fixed;left:0;
 #pcnav button:hover,#pcnav button.on{background:var(--surface2);color:var(--gold)}
 body.pc #s-home>button{display:none!important}
 body.pc #s-reg,body.pc #s-pin,body.pc #s-ok{max-width:560px}
-body.pc .tbl{font-size:14px}body.pc .tbl td{white-space:normal}
+body.pc .tbl{font-size:14px}#rep-tbl tr.sec td{background:#1f3a5f;color:#fff;font-weight:900}#rep-tbl tr.n0 td{font-weight:900;background:#eef2f7}#rep-tbl tr.n1 td:first-child{padding-left:16px;font-weight:700}#rep-tbl tr.n2 td:first-child{padding-left:30px}#rep-tbl tr.n3 td:first-child{padding-left:44px}#rep-tbl tr.n4 td:first-child,#rep-tbl tr.n5 td:first-child{padding-left:58px;color:#555}#rep-tbl tr.x{cursor:pointer}#rep-tbl tr.oc{display:none}body.pc .tbl td{white-space:normal}
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin:10px 0 14px}
 .kpi{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px}.kpi .l{font-size:12px;color:var(--muted);font-weight:700}.kpi .v{font-size:22px;font-weight:900;margin-top:4px}.kpi .p{font-size:11px;color:var(--gold);font-weight:800;letter-spacing:.06em}
 .tarea{display:flex;gap:10px;align-items:center;border:1px solid var(--border);border-radius:10px;padding:10px;margin:6px 0;background:var(--surface)}.tarea.roja{border-color:#ff3b30}.tarea.ok{opacity:.55}.tarea .x{flex:1}.tarea .x small{display:block;color:var(--muted);font-weight:600}.tarea button{width:auto;margin:0;padding:6px 10px;font-size:13px}
@@ -114,6 +114,8 @@ input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--bor
   <button class="btn2" id="btn-prof" style="display:none" onclick="verProforma()">🧾 Proforma EBLOOMS</button>
   <button class="btn2" id="btn-profA" style="display:none" onclick="verProformaA()">🧾 Proforma Ateuro / Zuria</button>
   <button class="btn2" id="btn-rsv" style="display:none" onclick="verResumenSvc()">📑 Resumen de servicios</button>
+  <button class="btn2" id="btn-pil" style="display:none" onclick="verRep('pilares')">📈 Pilares: rentabilidad, liquidez y solvencia</button>
+  <button class="btn2" id="btn-caja" style="display:none" onclick="verRep('caja_semana')">💵 Caja de la semana (real y presupuesto)</button>
   <button class="btn2" id="btn-cxc" style="display:none" onclick="verCxc()">💰 Facturación y cobranza</button>
   <button class="btn2" id="btn-res" style="display:none" onclick="verResMes()">📊 Ver resultados del mes</button>
 </section>
@@ -238,6 +240,15 @@ input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--bor
   <button class="btn2" onclick="ir('s-home')">← Volver</button>
 </section>
 
+<section class="screen" id="s-rep">
+  <h1 id="rep-h">Pilares</h1>
+  <select id="rep-per" style="width:100%;font-size:16px;padding:8px;border-radius:10px;border:2px solid var(--border);background:var(--surface);color:var(--text);margin:8px 0"></select>
+  <div class="sub" id="rep-sub">Cargando…</div>
+  <div class="tblw"><table class="tbl" id="rep-tbl"></table></div>
+  <div style="display:flex;gap:8px;margin-top:10px"><button class="btn2" style="flex:1" onclick="imgTabla('rep-tbl',$('rep-h').textContent+' · '+$('rep-per').selectedOptions[0].text,true)">📤 Compartir imagen</button><button class="btn2" style="flex:1" onclick="imgTabla('rep-tbl',$('rep-h').textContent+' · '+$('rep-per').selectedOptions[0].text,false)">🖼 Descargar imagen</button></div>
+  <button class="btn2" onclick="ir('s-home')">← Volver</button>
+</section>
+
 <section class="screen" id="s-cxc">
   <h1>Facturación y cobranza</h1>
   <div class="sub" id="cxc-sub">Cargando…</div>
@@ -342,9 +353,9 @@ function entrar(p){
   if(!u){$('pin-err').textContent='PIN no registrado';pin='';setTimeout(pintarPin,600);return}
   user={pin:p,...u}; ls('tm_pin',p); ls('tm_ult',String(Date.now())); uso._u=null; uso('entrada');
   $('saludo').textContent='Hola '+u.nombre.split(' ')[0];
-  $('btn-salir').style.display='block'; $('hdr-user').textContent='👤 '+u.nombre.split(' ')[0]; $('btn-ver').style.display='block';$('btn-ver').textContent=esAdmin()?'📋 Servicios registrados':esCliente()?'📋 Ver mis servicios':'📋 Mis servicios registrados';$('btn-reg').style.display=esCliente()?'none':'block';$('btn-ent').style.display=esCliente()?'none':'block';$('btn-misent').style.display='block';contarSvc();$('btn-res').style.display=verResultado()?'block':'none';$('btn-profA').style.display=esAdmin()?'block':'none';$('btn-rsv').style.display=esAdmin()?'block':'none';$('btn-cxc').style.display=esAdmin()?'block':'none';ordenHome();contarEnt();const vg=(esAdmin()||esCliente())?'block':'none';$('btn-gps').style.display=vg;$('btn-prof').style.display=esCliente()?'none':vg; /* Proforma oculta para el cliente por ahora (Carlos 30-10) */ $('btn-ifco').style.display='block';contarIfco(); aplicarVista(); ir('s-home'); revisarPendientes();
+  $('btn-salir').style.display='block'; $('hdr-user').textContent='👤 '+u.nombre.split(' ')[0]; $('btn-ver').style.display='block';$('btn-ver').textContent=esAdmin()?'📋 Servicios registrados':esCliente()?'📋 Ver mis servicios':'📋 Mis servicios registrados';$('btn-reg').style.display=esCliente()?'none':'block';$('btn-ent').style.display=esCliente()?'none':'block';$('btn-misent').style.display='block';contarSvc();$('btn-res').style.display=verResultado()?'block':'none';$('btn-profA').style.display=esAdmin()?'block':'none';$('btn-rsv').style.display=esAdmin()?'block':'none';$('btn-cxc').style.display=esAdmin()?'block':'none';$('btn-pil').style.display=esAdminTotal()?'block':'none';$('btn-caja').style.display=esAdminTotal()?'block':'none';ordenHome();contarEnt();const vg=(esAdmin()||esCliente())?'block':'none';$('btn-gps').style.display=vg;$('btn-prof').style.display=esCliente()?'none':vg; /* Proforma oculta para el cliente por ahora (Carlos 30-10) */ $('btn-ifco').style.display='block';contarIfco(); aplicarVista(); ir('s-home'); revisarPendientes();
 }
-function ordenHome(){const h=$('s-home'),ids=esCliente()?['btn-ver','btn-misent','btn-ifco','btn-gps','btn-prof','btn-profA','btn-ent','btn-reg']:['btn-ent','btn-reg','btn-ver','btn-misent','btn-ifco','btn-gps','btn-prof','btn-profA','btn-res','btn-rsv','btn-cxc'];ids.forEach(i=>h.appendChild($(i)))} /* orden de inicio del cliente: servicios, entregas, IFCO, GPS (Carlos 30-10) */
+function ordenHome(){const h=$('s-home'),ids=esCliente()?['btn-ver','btn-misent','btn-ifco','btn-gps','btn-prof','btn-profA','btn-ent','btn-reg']:['btn-ent','btn-reg','btn-ver','btn-misent','btn-ifco','btn-gps','btn-prof','btn-profA','btn-res','btn-rsv','btn-pil','btn-caja','btn-cxc'];ids.forEach(i=>h.appendChild($(i)))} /* orden de inicio del cliente: servicios, entregas, IFCO, GPS (Carlos 30-10) */
 function salir(){ls('tm_pin',null);user=null;document.body.classList.remove('pc');$('pcnav').innerHTML='';const bv=$('btn-vista');if(bv)bv.remove();pin='';pintarPin();$('btn-salir').style.display='none';$('hdr-user').textContent='';_dupOk=false;ir('s-pin')}
 
 // ═══ REGISTRO ═══
@@ -789,9 +800,27 @@ async function cxcCobrada(i){const r=cxcRows[i];const fe=prompt('Fecha de cobro 
   const cu=prompt('¿En qué cuenta entró? (Santander u otra)','Santander');if(!cu)return;
   const {error}=await supa.from('cxc_facturas').update({etapa:'cobrada',fecha_cobro:fe.split('-').reverse().join('-'),cuenta_cobro:cu,actualizado:new Date().toISOString()}).eq('id',r.id);
   toast(error?'No se pudo guardar':'Factura '+r.folio+' cobrada'+(/santander/i.test(cu)?'':' · ⚠ fuera del Santander'));verCxc()}
+// ═══ REPORTES DEL SISTEMA TM (Carlos 02-11): pilares por mes y caja de la semana. Fuente única: sistema TM (Excel); Claude los sube al actualizarlo. Se leen con PIN de administración ═══
+let _repTipo='pilares';
+async function repRpc(tipo,per){const r=await conTope(supa.rpc('tm_reporte',{p_pin:user.pin,p_tipo:tipo,p_periodo:per||null}),10000);if(r.error)throw r.error;return r.data}
+async function verRep(tipo){if(!esAdminTotal())return;_repTipo=tipo;ir('s-rep');navMarcar('s-rep');$('rep-h').textContent=tipo==='pilares'?'Pilares: rentabilidad, liquidez y solvencia':'Caja de la semana';$('rep-tbl').innerHTML='';$('rep-sub').textContent='Cargando…';
+  try{const ls_=await repRpc(tipo);if(!ls_.length){$('rep-sub').textContent='Aún no hay datos cargados.';$('rep-per').innerHTML='';return}
+    $('rep-per').innerHTML=ls_.map(x=>{const p=x.periodo;let t;if(tipo==='pilares'){const [y,m]=p.split('-').map(Number);t=MESES[m-1]+' '+y;t=t[0].toUpperCase()+t.slice(1)}else{const d=dISO(p),h=new Date(d);h.setDate(h.getDate()+6);t='Semana del '+fCL(p)+' al '+fCL(hoyISO(h))}return '<option value="'+p+'">'+t+'</option>'}).join('');
+    const hoy=hoyISO(),cur=tipo==='pilares'?hoy.slice(0,7):ls_.map(x=>x.periodo).filter(p=>p<=hoy).sort().pop();if(cur&&ls_.some(x=>x.periodo===cur))$('rep-per').value=cur;
+    $('rep-per').onchange=()=>cargarRep();cargarRep()}catch(e){$('rep-sub').textContent=/PIN/.test(e.message||'')?'Este usuario no tiene acceso a los reportes.':'No se pudo leer ('+(e.message||e)+').'}}
+function fRep(v,c){if(v===undefined||v===null||v==='')return '';if(typeof v!=='number')return v;if(/^en %/.test(c))return (v*100).toFixed(1)+'%';if(/cobertura/i.test(c))return v.toFixed(2).replace('.',',');if(/^Meses/i.test(c))return v.toFixed(1).replace('.',',')+' meses';if(/^D[ií]as/i.test(c))return v+' días';return (v<0?'<span style="color:#c0392b">':'')+fmt$(v)+(v<0?'</span>':'')}
+async function cargarRep(){const per=$('rep-per').value;$('rep-tbl').innerHTML='';$('rep-sub').textContent='Cargando…';
+  try{const r=await repRpc(_repTipo,per),d=r.datos,act='Actualizado '+new Date(r.actualizado).toLocaleString('es-CL',{dateStyle:'short',timeStyle:'short'})+' desde el sistema TM';
+    if(_repTipo==='pilares'){$('rep-sub').innerHTML=(d.sub||'')+' · '+act;
+      $('rep-tbl').innerHTML='<tr><th>Indicador</th><th>Presupuestado</th><th>Esperado según lo ejecutado</th><th>Pagado real (cartola)</th><th>Proyectado al cierre</th><th>Meta</th><th>Estado</th></tr>'+d.filas.map(f=>f.sec?'<tr class="sec"><td colspan="7">'+f.c+'</td></tr>':'<tr><td title="'+(f.q||'').replace(/"/g,'&quot;')+'"><b>'+f.c+'</b>'+(f.q?'<div style="font-size:11px;color:#666;white-space:normal">'+f.q+'</div>':'')+'</td>'+['p','e','r','pr','m'].map(k=>'<td class="n">'+fRep(f[k],f.c)+'</td>').join('')+'<td>'+(f.s||'')+'</td></tr>').join('')}
+    else{$('rep-sub').textContent='Real = cartola Santander hasta el '+fCL(d.hasta)+' · Presupuestado = plan congelado de la semana · '+act+' · Toque una línea para ver su detalle';
+      const F=d.filas;$('rep-tbl').innerHTML='<tr><th>Concepto</th><th>Presupuestado</th><th>Real</th><th>Diferencia</th><th>Semáforo</th></tr>'+F.map((f,i)=>{const hijos=F[i+1]&&F[i+1].n>f.n;const dif=(typeof f.p==='number'&&typeof f.r==='number')?f.r-f.p:'';return '<tr data-i="'+i+'" data-n="'+f.n+'" class="n'+f.n+(f.n>=2?' oc':'')+(hijos?' x':'')+'"'+(hijos?' onclick="repToggle('+i+')"':'')+'><td>'+(hijos?'▸ ':'')+f.c+'</td><td class="n">'+fRep(f.p,'')+'</td><td class="n">'+fRep(f.r,'')+'</td><td class="n">'+fRep(dif,'')+'</td><td>'+(f.s||'')+'</td></tr>'}).join('')}}
+  catch(e){$('rep-sub').textContent='No se pudo leer ('+(e.message||e)+').'}}
+function repToggle(i){const rows=[...$('rep-tbl').querySelectorAll('tr[data-i]')],k=rows.findIndex(r=>r.dataset.i==String(i)),n=+rows[k].dataset.n;let abrir=null;
+  for(let j=k+1;j<rows.length;j++){const m=+rows[j].dataset.n;if(m<=n)break;if(abrir===null)abrir=rows[j].classList.contains('oc');if(abrir){if(m===n+1)rows[j].classList.remove('oc')}else rows[j].classList.add('oc')}}
 // ═══ MODO ESCRITORIO (Carlos 02-11): administración en PC, con menú lateral, tablero por pilar y tareas del día ═══
-const NAV_BTNS=['btn-reg','btn-ver','btn-misent','btn-ifco','btn-gps','btn-prof','btn-profA','btn-rsv','btn-cxc','btn-res'];
-const NAV_SCR={'btn-ver':'s-list','btn-misent':'s-misent','btn-ifco':'s-ifco','btn-gps':'s-gps','btn-prof':'s-prof','btn-profA':'s-profA','btn-rsv':'s-rsv','btn-cxc':'s-cxc','btn-res':'s-res','btn-reg':'s-reg'};
+const NAV_BTNS=['btn-pil','btn-caja','btn-reg','btn-ver','btn-misent','btn-ifco','btn-gps','btn-prof','btn-profA','btn-rsv','btn-cxc','btn-res'];
+const NAV_SCR={'btn-pil':'s-rep','btn-caja':'s-rep','btn-ver':'s-list','btn-misent':'s-misent','btn-ifco':'s-ifco','btn-gps':'s-gps','btn-prof':'s-prof','btn-profA':'s-profA','btn-rsv':'s-rsv','btn-cxc':'s-cxc','btn-res':'s-res','btn-reg':'s-reg'};
 function aplicarVista(){if(!esAdmin())return;const pref=ls('tm_vista'),pc=pref==='pc'||(pref!=='tel'&&window.innerWidth>=1024);document.body.classList.toggle('pc',pc);
   let bv=$('btn-vista');if(!bv){bv=document.createElement('button');bv.id='btn-vista';bv.className='link';bv.style.marginRight='10px';bv.onclick=()=>{ls('tm_vista',document.body.classList.contains('pc')?'tel':'pc');aplicarVista();ir('s-home')};$('btn-salir').before(bv)}
   bv.textContent=pc?'📱 Vista teléfono':'🖥 Vista PC';
@@ -806,7 +835,10 @@ async function pcDash(){const box=$('pc-dash');if(!box)return;if(!document.body.
     const k=(p,l,v,s)=>'<div class="kpi"><div class="p">'+p+'</div><div class="l">'+l+'</div><div class="v">'+v+'</div>'+(s?'<div class="l" style="margin-top:4px">'+s+'</div>':'')+'</div>';
     box.innerHTML='<div class="kpis">'+k('RENTABILIDAD','Ventas del mes (neto, Kaptura)',fmt$(sv.reduce((t,x)=>t+(+x.tarifa_neta||0),0)),sv.length+' servicio(s) registrados')+
       k('LIQUIDEZ','Por aprobar y facturar (c/IVA)',fmt$(sum(pa)),pa.length+' período(s)')+k('LIQUIDEZ','Por cobrar (c/IVA)',fmt$(sum(pc)),pc.length+' factura(s)')+
-      k('LIQUIDEZ','Vencido sin cobrar',fmt$(sum(ve)),ve.length?'<span style="color:#ff3b30">cobrar hoy</span>':'al día')+'</div>'}catch(e){box.innerHTML=''}}
+      k('LIQUIDEZ','Vencido sin cobrar',fmt$(sum(ve)),ve.length?'<span style="color:#ff3b30">cobrar hoy</span>':'al día')+'</div>';
+    if(esAdminTotal()){try{const ps=await repRpc('pilares');if(ps.length){const d=(await repRpc('pilares',ps[0].periodo)).datos.filas,g=t=>d.find(f=>t.test(f.c))||{};const cob=g(/cobertura/i),mes=g(/^Meses que aguanta/i),caj=g(/^Plata en el banco/i),res=g(/^Resultado del mes/i),deu=g(/^Deuda total/i);
+      box.innerHTML+='<div class="kpis">'+k('RENTABILIDAD','Resultado del mes (proyectado, sistema TM)',fRep(res.pr,''),res.s||'')+k('LIQUIDEZ','Plata en el banco (sistema TM)',fRep(caj.r,''),caj.s||'')+k('SOLVENCIA','Cobertura de deuda (meta 1,2)',fRep(cob.pr,'cobertura'),cob.s||'')+k('SOLVENCIA','Meses que aguanta la caja',fRep(mes.pr,'Meses'),mes.s||'')+k('SOLVENCIA','Deuda total conocida',fRep(deu.pr,''),deu.s||'')+'</div><div class="sub" style="margin-top:-6px">Indicadores del sistema TM · '+ps[0].periodo+' · <a href="#" onclick="verRep(\'pilares\');return false" style="color:var(--gold)">ver pilares por mes</a> · <a href="#" onclick="verRep(\'caja_semana\');return false" style="color:var(--gold)">caja de la semana</a></div>'}}catch(e){}}
+  }catch(e){box.innerHTML=''}}
 // Tareas del día del administrador (solo administración). Hora límite: 20:00. Las hechas quedan registradas (tareas_admin)
 const TAREAS=[{id:'cartola',t:'Cartola Santander del día → enviar a Claude',d:[1,2,3,4,5],lim:'20:00',p:'Liquidez'},
   {id:'rcv',t:'RCV compras y ventas del SII → enviar a Claude',d:[1,4],lim:'20:00',p:'Rentabilidad'},
