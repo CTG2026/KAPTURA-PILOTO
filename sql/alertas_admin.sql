@@ -18,3 +18,5 @@ create policy alertas_leer on public.alertas_admin for select using (true);
 create policy alertas_insertar on public.alertas_admin for insert with check (true);
 create policy alertas_actualizar on public.alertas_admin for update using (true) with check (true);
 grant select, insert, update on public.alertas_admin to anon, authenticated;
+-- 02-11-2026: destinatarios ('todos' = administración + coordinador; 'admin' = solo administración)
+alter table public.alertas_admin add column if not exists para text not null default 'todos';

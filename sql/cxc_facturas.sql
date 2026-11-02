@@ -26,3 +26,5 @@ create policy cxc_leer on public.cxc_facturas for select using (true);
 create policy cxc_insertar on public.cxc_facturas for insert with check (true);
 create policy cxc_actualizar on public.cxc_facturas for update using (true) with check (true);
 grant select, insert, update on public.cxc_facturas to anon, authenticated;
+-- 02-11-2026: flujo por aprobar → por facturar → por cobrar → cobrada
+alter table public.cxc_facturas add column if not exists etapa text, add column if not exists aprobada date;

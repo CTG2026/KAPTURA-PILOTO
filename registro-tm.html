@@ -99,7 +99,7 @@ input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--bor
   <button class="btn2" id="btn-prof" style="display:none" onclick="verProforma()">🧾 Proforma EBLOOMS</button>
   <button class="btn2" id="btn-profA" style="display:none" onclick="verProformaA()">🧾 Proforma Ateuro / Zuria</button>
   <button class="btn2" id="btn-rsv" style="display:none" onclick="verResumenSvc()">📑 Resumen de servicios</button>
-  <button class="btn2" id="btn-cxc" style="display:none" onclick="verCxc()">💰 Cuentas por cobrar</button>
+  <button class="btn2" id="btn-cxc" style="display:none" onclick="verCxc()">💰 Facturación y cobranza</button>
   <button class="btn2" id="btn-res" style="display:none" onclick="verResMes()">📊 Ver resultados del mes</button>
 </section>
 
@@ -224,10 +224,10 @@ input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--bor
 </section>
 
 <section class="screen" id="s-cxc">
-  <h1>Cuentas por cobrar</h1>
+  <h1>Facturación y cobranza</h1>
   <div class="sub" id="cxc-sub">Cargando…</div>
   <div id="cxc-box"></div>
-  <div style="display:flex;gap:8px"><button class="btn2" style="flex:1" onclick="imgTabla('cxc-tbl','Cuentas por cobrar · '+hoyISO().split('-').reverse().join('-'),true)">📤 Compartir imagen</button><button class="btn2" style="flex:1" onclick="imgTabla('cxc-tbl','Cuentas por cobrar · '+hoyISO().split('-').reverse().join('-'),false)">🖼 Descargar imagen</button></div>
+  <div style="display:flex;gap:8px"><button class="btn2" style="flex:1" onclick="imgTabla('cxc-tbl','Facturación y cobranza · '+hoyISO().split('-').reverse().join('-'),true)">📤 Compartir imagen</button><button class="btn2" style="flex:1" onclick="imgTabla('cxc-tbl','Facturación y cobranza · '+hoyISO().split('-').reverse().join('-'),false)">🖼 Descargar imagen</button></div>
   <button class="btn2" onclick="ir('s-home')">← Volver</button>
 </section>
 
@@ -723,39 +723,56 @@ function descargarResumenSvc(){if(!rsvFilas.length||!window.XLSX)return;const he
   const ws=XLSX.utils.aoa_to_sheet([head,...rsvFilas.map(r=>r.c)]);estiloXLS(ws,rsvFilas.length,6,0);
   rsvFilas.forEach((r,i)=>{if(r.rojo)for(const c of 'ABCDEF'){const x=ws[c+(i+2)];if(x)x.s={...(x.s||{}),font:{bold:true,color:{rgb:'FF3B30'}}}}});
   ws['!cols']=[{wch:11},{wch:7},{wch:22},{wch:44},{wch:26},{wch:10}];const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Resumen');XLSX.writeFile(wb,'Resumen_servicios_TM_'+rsvTit.replace(/\s+/g,'_')+'.xlsx')}
-// ═══ CUENTAS POR COBRAR (Carlos 01-11): tabla cxc_facturas; plazos = Parámetros del sistema TM ═══
-// EBLOOMS paga el viernes siguiente a la factura; Valle, Ateuro y Spot a 30 días; Los Tres Enanos (arriendo) 5 días. Valle se factura el día que Anita autoriza la liquidación.
+// ═══ FACTURACIÓN Y COBRANZA (Carlos 02-11): por aprobar → por facturar → por cobrar → cobrada. Tabla cxc_facturas (columna etapa) ═══
+// Cierre del período: EBLOOMS y Ateuro por quincena (alerta de proforma para aprobación); Valle el último día del mes (alerta de liquidación para aprobación con Anita).
+// Pago: EBLOOMS el viernes siguiente a la factura; Valle, Ateuro y Spot a 30 días; Los Tres Enanos 5 días. Aviso de cobranza 3 días antes del vencimiento.
 const CXC_PLAZO={'EBLOOMS':'viernes','Alimentos Valle Central':30,'Ateuro / Zuria':30,'Los Tres Enanos':5,'Spot':30};
+const FAC_CLI=[{c:'EBLOOMS',q:true,doc:'proforma'},{c:'Ateuro / Zuria',q:true,doc:'proforma'},{c:'Alimentos Valle Central',q:false,doc:'liquidación (Anita)'}];
+const FAC_DESDE='2026-11-01'; // períodos que Kaptura abre solo; los anteriores se cargaron a mano
 const dISO=s=>s?new Date(s+'T12:00:00'):null, fCL=s=>s?s.split('-').reverse().join('-'):'';
+const ETAPAS=[['por_aprobar','POR APROBAR (proforma / liquidación)'],['por_facturar','POR FACTURAR'],['por_cobrar','POR COBRAR (facturas emitidas)']];
+function cxcEtapa(r){return r.fecha_cobro?'cobrada':(r.etapa||(r.folio?'por_cobrar':'por_aprobar'))}
 function cxcVence(r){if(r.vence)return r.vence;if(!r.fecha_emision)return null;const d=dISO(r.fecha_emision),p=CXC_PLAZO[r.cliente]??30;
   if(p==='viernes'){let k=(5-d.getDay()+7)%7;d.setDate(d.getDate()+(k||7))}else d.setDate(d.getDate()+p);return hoyISO(d)}
 function cxcDias(a,b){return Math.round((dISO(b)-dISO(a))/86400000)}
-function cxcEstado(r){const hoy=hoyISO();
-  if(!r.folio){const atr=r.debe_emitir&&r.debe_emitir<=hoy;return {g:'emitir',sem:atr?'🔴':'⚪',txt:atr?'Facturar ya (correspondía el '+fCL(r.debe_emitir)+')':'Facturar el '+fCL(r.debe_emitir)}}
+function cxcEstado(r){const hoy=hoyISO(),et=cxcEtapa(r),doc=(FAC_CLI.find(x=>x.c===r.cliente)||{}).doc||'liquidación';
+  if(et==='por_aprobar')return {sem:'🔴',txt:'Aprobar '+doc+' (período cerrado el '+fCL(r.periodo_hasta)+')'};
+  if(et==='por_facturar')return {sem:'🔴',txt:'Facturar ya ('+doc+' aprobada'+(r.aprobada?' el '+fCL(r.aprobada):'')+')'};
   const v=cxcVence(r),d=v?cxcDias(hoy,v):null;
-  if(d!==null&&d<0)return {g:'cobrar',sem:'🔴',txt:'Vencida hace '+(-d)+' día(s)'};
-  if(d!==null&&d<=3)return {g:'cobrar',sem:'🟡',txt:d===0?'Vence hoy':'Vence en '+d+' día(s)'};
-  return {g:'cobrar',sem:'🟢',txt:'Al día'+(d!==null?' (vence en '+d+' días)':'')}}
-async function leerCxc(){const r=await conTope(supa.from('cxc_facturas').select('*').eq('empresa',EMPRESA).is('fecha_cobro',null).order('debe_emitir'),10000);if(r.error)throw r.error;return r.data||[]}
+  if(d!==null&&d<0)return {sem:'🔴',txt:'Cobrar: vencida hace '+(-d)+' día(s)'};
+  if(d!==null&&d<=3)return {sem:'🟡',txt:'Cobrar: '+(d===0?'vence hoy':'vence en '+d+' día(s)')};
+  return {sem:'🟢',txt:'Al día'+(d!==null?' (vence en '+d+' días)':'')}}
+// Abre solo los períodos cerrados desde FAC_DESDE (si el cliente tuvo servicios en Kaptura), con el monto según Kaptura
+async function facAbrirPeriodos(){const hoy=hoyISO(),ps=[],d0=new Date();
+  for(const k of FAC_CLI)for(let i=2;i>=0;i--){const dm=new Date(d0.getFullYear(),d0.getMonth()-i,1),Y=dm.getFullYear(),M=dm.getMonth(),fin=new Date(Y,M+1,0).getDate();
+    for(const [a,b] of (k.q?[[1,15],[16,fin]]:[[1,fin]])){const des=hoyISO(new Date(Y,M,a)),has=hoyISO(new Date(Y,M,b));
+      if(has<FAC_DESDE)continue;if(k.q?has>=hoy:has>hoy)continue;ps.push({k,des,has})}} // quincena: al día siguiente; Valle: el último día del mes
+  const vist=new Set();for(const p of ps){const id=p.k.c.split(' ')[0].toUpperCase()+'-'+p.des;if(vist.has(id))continue;vist.add(id);
+    try{const ex=await supa.from('cxc_facturas').select('id').eq('id',id).maybeSingle();if(ex.data)continue;
+      const sv=(await supa.from('servicios_piloto').select('tarifa_neta').eq('empresa',EMPRESA).eq('modo','registro_tm').neq('estado','anulado').eq('cliente',p.k.c).gte('fecha',p.des).lte('fecha',p.has)).data||[];if(!sv.length)continue;
+      const neto=sv.reduce((t,x)=>t+(+x.tarifa_neta||0),0);
+      await supa.from('cxc_facturas').insert({id,cliente:p.k.c,periodo_desde:p.des,periodo_hasta:p.has,etapa:'por_aprobar',neto,total:Math.round(neto*1.19),nota:sv.length+' servicio(s) según Kaptura'})}catch(e){}}}
+async function leerCxc(){const r=await conTope(supa.from('cxc_facturas').select('*').eq('empresa',EMPRESA).is('fecha_cobro',null).order('periodo_hasta'),10000);if(r.error)throw r.error;return r.data||[]}
 let cxcRows=[];
 async function verCxc(){if(!esAdmin())return;ir('s-cxc');$('cxc-box').innerHTML='';$('cxc-sub').textContent='Cargando…';
-  try{cxcRows=await leerCxc()}catch(e){$('cxc-sub').textContent='No se pudo leer (¿falta crear la tabla cxc_facturas?).';return}
-  const pe=cxcRows.filter(r=>!r.folio),pc=cxcRows.filter(r=>r.folio).sort((a,b)=>(cxcVence(a)||'').localeCompare(cxcVence(b)||''));
-  const fila=(r,i)=>{const e=cxcEstado(r);return '<tr><td>'+e.sem+'</td><td>'+r.cliente+'</td><td>'+fCL(r.periodo_desde)+(r.periodo_hasta?' al '+fCL(r.periodo_hasta):'')+'</td><td>'+(r.folio||'—')+'</td><td>'+fCL(r.fecha_emision)+'</td><td>'+fCL(cxcVence(r))+'</td><td class="n">'+fmt$(r.total)+'</td><td>'+e.txt+(r.nota?' · '+r.nota:'')+'</td><td><button class="btn2" style="padding:4px 8px;font-size:12px;margin:0" onclick="'+(r.folio?'cxcCobrada':'cxcFacturada')+'('+i+')">'+(r.folio?'✔ Cobrada':'🧾 Facturada')+'</button></td></tr>'};
-  const sum=a=>a.reduce((t,r)=>t+(+r.total||0),0);
-  const H='<tr><th></th><th>Cliente</th><th>Período</th><th>Folio</th><th>Emisión</th><th>Vence</th><th>Total c/IVA</th><th>Estado</th><th></th></tr>';
-  $('cxc-box').innerHTML='<div class="tblw"><table class="tbl" id="cxc-tbl">'+
-    '<tr><th colspan="9">POR EMITIR</th></tr>'+H+pe.map(r=>fila(r,cxcRows.indexOf(r))).join('')+'<tr class="tot"><td colspan="6">Total por emitir (estimado)</td><td class="n">'+fmt$(sum(pe))+'</td><td colspan="2"></td></tr>'+
-    '<tr><th colspan="9">EMITIDAS POR COBRAR</th></tr>'+H+pc.map(r=>fila(r,cxcRows.indexOf(r))).join('')+'<tr class="tot"><td colspan="6">Total por cobrar</td><td class="n">'+fmt$(sum(pc))+'</td><td colspan="2"></td></tr></table></div>';
-  $('cxc-sub').textContent=pe.length+' por emitir · '+pc.length+' por cobrar ('+fmt$(sum(pc))+')'}
+  try{cxcRows=await leerCxc()}catch(e){$('cxc-sub').textContent='No se pudo leer.';return}
+  const sum=a=>a.reduce((t,r)=>t+(+r.total||0),0),H='<tr><th></th><th>Cliente</th><th>Período</th><th>Folio</th><th>Emisión</th><th>Vence</th><th>Total c/IVA</th><th>Estado</th><th></th></tr>';
+  const bt={por_aprobar:['facAprobar','✔ Aprobada'],por_facturar:['cxcFacturada','🧾 Facturada'],por_cobrar:['cxcCobrada','✔ Cobrada']};
+  const fila=r=>{const e=cxcEstado(r),i=cxcRows.indexOf(r),b=bt[cxcEtapa(r)];return '<tr><td>'+e.sem+'</td><td>'+r.cliente+'</td><td>'+fCL(r.periodo_desde)+(r.periodo_hasta?' al '+fCL(r.periodo_hasta):'')+'</td><td>'+(r.folio||'—')+'</td><td>'+fCL(r.fecha_emision)+'</td><td>'+fCL(cxcVence(r))+'</td><td class="n">'+fmt$(r.total)+'</td><td>'+e.txt+(r.nota?' · '+r.nota:'')+'</td><td><button class="btn2" style="padding:4px 8px;font-size:12px;margin:0" onclick="'+b[0]+'('+i+')">'+b[1]+'</button></td></tr>'};
+  let h='';for(const [k,t] of ETAPAS){const a=cxcRows.filter(r=>cxcEtapa(r)===k);h+='<tr><th colspan="9">'+t+'</th></tr>'+H+a.map(fila).join('')+'<tr class="tot"><td colspan="6">Total '+t.split(' (')[0].toLowerCase()+'</td><td class="n">'+fmt$(sum(a))+'</td><td colspan="2"></td></tr>'}
+  $('cxc-box').innerHTML='<div class="tblw"><table class="tbl" id="cxc-tbl">'+h+'</table></div>';
+  const n=k=>cxcRows.filter(r=>cxcEtapa(r)===k).length;$('cxc-sub').textContent=n('por_aprobar')+' por aprobar · '+n('por_facturar')+' por facturar · '+n('por_cobrar')+' por cobrar ('+fmt$(sum(cxcRows.filter(r=>cxcEtapa(r)==='por_cobrar')))+')'}
+async function facAprobar(i){const r=cxcRows[i];const to=prompt('Total con IVA aprobado de '+r.cliente+' (proforma / liquidación):',Math.round(+r.total||0));if(to===null)return;
+  const t=+String(to).replace(/\D/g,'');const {error}=await supa.from('cxc_facturas').update({etapa:'por_facturar',aprobada:hoyISO(),total:t,neto:Math.round(t/1.19),actualizado:new Date().toISOString()}).eq('id',r.id);
+  toast(error?'No se pudo guardar':'Aprobada: ahora facturar');verCxc()}
 async function cxcFacturada(i){const r=cxcRows[i];const fo=prompt('N° de factura (folio) de '+r.cliente+':');if(!fo)return;
   const fe=prompt('Fecha de emisión (dd-mm-aaaa):',hoyISO().split('-').reverse().join('-'));if(!fe)return;const fi=fe.split('-').reverse().join('-');
   const to=prompt('Total con IVA de la factura:',Math.round(+r.total||0));if(to===null)return;
-  const {error}=await supa.from('cxc_facturas').update({folio:+fo,fecha_emision:fi,total:+String(to).replace(/\D/g,''),actualizado:new Date().toISOString()}).eq('id',r.id);
-  toast(error?'No se pudo guardar':'Factura '+fo+' registrada');verCxc()}
+  const {error}=await supa.from('cxc_facturas').update({etapa:'por_cobrar',folio:+fo,fecha_emision:fi,total:+String(to).replace(/\D/g,''),actualizado:new Date().toISOString()}).eq('id',r.id);
+  toast(error?'No se pudo guardar':'Factura '+fo+' en cuentas por cobrar');verCxc()}
 async function cxcCobrada(i){const r=cxcRows[i];const fe=prompt('Fecha de cobro de la factura '+r.folio+' (dd-mm-aaaa):',hoyISO().split('-').reverse().join('-'));if(!fe)return;
   const cu=prompt('¿En qué cuenta entró? (Santander u otra)','Santander');if(!cu)return;
-  const {error}=await supa.from('cxc_facturas').update({fecha_cobro:fe.split('-').reverse().join('-'),cuenta_cobro:cu,actualizado:new Date().toISOString()}).eq('id',r.id);
+  const {error}=await supa.from('cxc_facturas').update({etapa:'cobrada',fecha_cobro:fe.split('-').reverse().join('-'),cuenta_cobro:cu,actualizado:new Date().toISOString()}).eq('id',r.id);
   toast(error?'No se pudo guardar':'Factura '+r.folio+' cobrada'+(/santander/i.test(cu)?'':' · ⚠ fuera del Santander'));verCxc()}
 // ═══ ALERTAS DE ADMINISTRACIÓN (Carlos 01-11): tabla alertas_admin; las ven Carlos, Claudio y administración hasta marcarlas resueltas ═══
 let _alAdm=[];
@@ -765,10 +782,11 @@ async function alertaAdm(){const box=$('alerta-adm');if(!box||!esAdmin()||!supa)
 async function resolverAdm(i){const a=_alAdm[i];if(!a)return;const nota=prompt('¿Cómo se resolvió? (queda registrado)');if(!nota)return;
   const {error}=await supa.from('alertas_admin').update({activa:false,resuelta_por:user.nombre,resolucion:nota,resuelta:new Date().toISOString()}).eq('id',a.id);toast(error?'No se pudo guardar':'Alerta resuelta');alertaAdm()}
 async function alertaCxc(){const box=$('alerta-cxc');if(!box||!esAdmin()||!supa)return;
-  try{const rs=await leerCxc(),es=rs.map(r=>({r,e:cxcEstado(r)})),rojo=es.filter(x=>x.e.sem==='🔴'),am=es.filter(x=>x.e.sem==='🟡');
-    if(!rojo.length&&!am.length){box.innerHTML='';return}
-    const st='border:2px solid '+(rojo.length?'#ff3b30':'#ff9500')+';border-radius:12px;padding:10px;margin:8px 0 12px;font-weight:800;color:'+(rojo.length?'#ff3b30':'#ff9500');
-    box.innerHTML='<div style="'+st+'">💰 Cuentas por cobrar: '+rojo.length+' urgente(s) · '+am.length+' por vencer'+rojo.concat(am).map(x=>'<div style="color:var(--text);font-weight:600;margin-top:6px">'+x.e.sem+' '+x.r.cliente+(x.r.folio?' · fact. '+x.r.folio:'')+' · '+fmt$(x.r.total)+' · '+x.e.txt+'</div>').join('')+'<button class="btn2" style="margin-top:8px;padding:8px;font-size:13px" onclick="verCxc()">Ver cuentas por cobrar</button></div>'}catch(e){box.innerHTML=''}}
+  try{await facAbrirPeriodos();const rs=await leerCxc(),es=rs.map(r=>({r,e:cxcEstado(r),k:cxcEtapa(r)})).filter(x=>x.e.sem!=='🟢');
+    if(!es.length){box.innerHTML='';return}
+    const grp=[['por_aprobar','📝 Por aprobar'],['por_facturar','🧾 Por facturar'],['por_cobrar','💰 Cobranza']];const rojo=es.some(x=>x.e.sem==='🔴');
+    const st='border:2px solid '+(rojo?'#ff3b30':'#ff9500')+';border-radius:12px;padding:10px;margin:8px 0 12px;font-weight:800;color:'+(rojo?'#ff3b30':'#ff9500');
+    box.innerHTML='<div style="'+st+'">Facturación y cobranza'+grp.map(([k,t])=>{const a=es.filter(x=>x.k===k);return a.length?'<div style="margin-top:8px">'+t+' ('+a.length+')</div>'+a.map(x=>'<div style="color:var(--text);font-weight:600;margin-top:4px">'+x.e.sem+' '+x.r.cliente+(x.r.folio?' · fact. '+x.r.folio:'')+' · '+fmt$(x.r.total)+' · '+x.e.txt+'</div>').join(''):''}).join('')+'<button class="btn2" style="margin-top:8px;padding:8px;font-size:13px" onclick="verCxc()">Ver facturación y cobranza</button></div>'}catch(e){box.innerHTML=''}}
 // Imagen completa de una tabla (proformas y resumen) para compartir por WhatsApp o descargar (Carlos 31-10)
 async function imgTabla(id,tit,compartir){const t=$(id);if(!t||!t.rows.length||!window.html2canvas){toast('No hay datos para la imagen');return}
   const w=document.createElement('div');w.style.cssText='position:fixed;left:-10000px;top:0;background:#fff;color:#111;padding:16px;font-family:Arial,sans-serif;width:max-content';
