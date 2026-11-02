@@ -676,7 +676,7 @@ async function agregarAServicio(sid){
   }catch(x){err.textContent='No se pudo agregar (revise la señal). Intente de nuevo.'}
 }
 // Entregas del día aún sin servicio quedan vinculadas a este servicio
-async function vincularEnt(reg){try{await conTope(supa.from('entregas').update({servicio_id:reg.servicio_id}).eq('empresa',EMPRESA).eq('fecha',reg.fecha).eq('conductor',reg.conductor).is('servicio_id',null).neq('estado','prueba'),8000)}catch(e){}}
+async function vincularEnt(reg){try{await conTope(supa.from('entregas').update({servicio_id:reg.servicio_id,...(reg.cliente?{cliente:reg.cliente}:{})}).eq('empresa',EMPRESA).eq('fecha',reg.fecha).eq('conductor',reg.conductor).is('servicio_id',null).neq('estado','prueba'),8000)}catch(e){}}
 
 // ═══ COLA SIN SEÑAL (IndexedDB) ═══
 function db(){return new Promise((res,rej)=>{const r=indexedDB.open('tm_registro',1);r.onupgradeneeded=()=>r.result.createObjectStore('cola',{keyPath:'servicio_id'});r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}
@@ -1049,8 +1049,10 @@ async function guardarEnt(btn){
       const up=await supa.storage.from(BUCKET).upload(path,b,{contentType:'image/jpeg',upsert:false});if(!up.error)foto=supa.storage.from(BUCKET).getPublicUrl(path).data.publicUrl}catch(e){}
     const c=entPos&&entPos.coords,g=c?geoCerca(c.latitude,c.longitude,c.accuracy):null;
     const local=g?g.nombre:(c?await lugar(c.latitude,c.longitude):'Sin ubicación');
-    let sid=null;try{const r=await conTope(supa.from('servicios_piloto').select('servicio_id').eq('empresa',EMPRESA).eq('modo','registro_tm').neq('estado','anulado').eq('fecha',fecha).eq('conductor',user.nombre).order('servicio_id',{ascending:false}).limit(1),6000);sid=((r.data||[])[0]||{}).servicio_id||null}catch(e){}
-    const {error}=await supa.from('entregas').insert({empresa:EMPRESA,fecha,hora,conductor:user.nombre,local,cliente:g?g.cliente:null,lat:c?c.latitude:null,lon:c?c.longitude:null,precision_m:c?Math.round(c.accuracy):null,foto,estado:'entregado',ifco_pendiente:entPend,servicio_id:sid,obs:($('ent-nro').value||'').replace(/\D/g,'')||null});
+    let sid=null,cli=g?g.cliente:null;try{const r=await conTope(supa.from('servicios_piloto').select('servicio_id,cliente').eq('empresa',EMPRESA).eq('modo','registro_tm').neq('estado','anulado').eq('fecha',fecha).eq('conductor',user.nombre).order('servicio_id',{ascending:false}).limit(1),6000);const s0=(r.data||[])[0]||{};sid=s0.servicio_id||null;cli=cli||s0.cliente||null}catch(e){}
+    // Sin geocerca ni servicio del día: cliente del último servicio del conductor, para que el cliente vea su entrega (Carlos 02-11)
+    if(!cli){try{const r=await conTope(supa.from('servicios_piloto').select('cliente').eq('empresa',EMPRESA).eq('modo','registro_tm').neq('estado','anulado').eq('conductor',user.nombre).not('cliente','is',null).order('fecha',{ascending:false}).limit(1),6000);cli=((r.data||[])[0]||{}).cliente||null}catch(e){}}
+    const {error}=await supa.from('entregas').insert({empresa:EMPRESA,fecha,hora,conductor:user.nombre,local,cliente:cli,lat:c?c.latitude:null,lon:c?c.longitude:null,precision_m:c?Math.round(c.accuracy):null,foto,estado:'entregado',ifco_pendiente:entPend,servicio_id:sid,obs:($('ent-nro').value||'').replace(/\D/g,'')||null});
     if(error)throw error;
     toast((entPend?'📄 Entregado · IFCO pendiente: ':'✅ Entrega guardada: ')+local+' '+hora);ir('s-home');contarEnt();
   }catch(e){toast('No se pudo guardar. Revise la señal e intente de nuevo.')}
