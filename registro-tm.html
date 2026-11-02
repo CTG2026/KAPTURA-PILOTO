@@ -325,9 +325,9 @@ function pintarPin(){document.querySelectorAll('.pin-box span').forEach((s,i)=>{
 function entrar(p){
   p=p||pin; const u=USUARIOS[p];
   if(!u){$('pin-err').textContent='PIN no registrado';pin='';setTimeout(pintarPin,600);return}
-  user={pin:p,...u}; ls('tm_pin',p); uso._u=null; uso('entrada');
+  user={pin:p,...u}; ls('tm_pin',p); ls('tm_ult',String(Date.now())); uso._u=null; uso('entrada');
   $('saludo').textContent='Hola '+u.nombre.split(' ')[0];
-  $('btn-salir').style.display='block'; $('hdr-user').textContent='👤 '+u.nombre.split(' ')[0]; $('btn-ver').style.display='block';$('btn-ver').textContent=esAdmin()?'📋 Servicios registrados':esCliente()?'📋 Ver mis servicios':'📋 Mis servicios registrados';$('btn-reg').style.display=esCliente()?'none':'block';$('btn-ent').style.display=esCliente()?'none':'block';$('btn-misent').style.display='block';contarSvc();$('btn-res').style.display=verResultado()?'block':'none';$('btn-profA').style.display=esAdmin()?'block':'none';$('btn-rsv').style.display=esAdmin()?'block':'none';$('btn-cxc').style.display=esAdminTotal()?'block':'none';ordenHome();contarEnt();const vg=(esAdmin()||esCliente())?'block':'none';$('btn-gps').style.display=vg;$('btn-prof').style.display=esCliente()?'none':vg; /* Proforma oculta para el cliente por ahora (Carlos 30-10) */ $('btn-ifco').style.display='block';contarIfco(); ir('s-home'); revisarPendientes();
+  $('btn-salir').style.display='block'; $('hdr-user').textContent='👤 '+u.nombre.split(' ')[0]; $('btn-ver').style.display='block';$('btn-ver').textContent=esAdmin()?'📋 Servicios registrados':esCliente()?'📋 Ver mis servicios':'📋 Mis servicios registrados';$('btn-reg').style.display=esCliente()?'none':'block';$('btn-ent').style.display=esCliente()?'none':'block';$('btn-misent').style.display='block';contarSvc();$('btn-res').style.display=verResultado()?'block':'none';$('btn-profA').style.display=esAdmin()?'block':'none';$('btn-rsv').style.display=esAdmin()?'block':'none';$('btn-cxc').style.display=esAdmin()?'block':'none';ordenHome();contarEnt();const vg=(esAdmin()||esCliente())?'block':'none';$('btn-gps').style.display=vg;$('btn-prof').style.display=esCliente()?'none':vg; /* Proforma oculta para el cliente por ahora (Carlos 30-10) */ $('btn-ifco').style.display='block';contarIfco(); ir('s-home'); revisarPendientes();
 }
 function ordenHome(){const h=$('s-home'),ids=esCliente()?['btn-ver','btn-misent','btn-ifco','btn-gps','btn-prof','btn-profA','btn-ent','btn-reg']:['btn-ent','btn-reg','btn-ver','btn-misent','btn-ifco','btn-gps','btn-prof','btn-profA','btn-res','btn-rsv','btn-cxc'];ids.forEach(i=>h.appendChild($(i)))} /* orden de inicio del cliente: servicios, entregas, IFCO, GPS (Carlos 30-10) */
 function salir(){ls('tm_pin',null);user=null;pin='';pintarPin();$('btn-salir').style.display='none';$('hdr-user').textContent='';_dupOk=false;ir('s-pin')}
@@ -738,7 +738,7 @@ function cxcEstado(r){const hoy=hoyISO();
   return {g:'cobrar',sem:'🟢',txt:'Al día'+(d!==null?' (vence en '+d+' días)':'')}}
 async function leerCxc(){const r=await conTope(supa.from('cxc_facturas').select('*').eq('empresa',EMPRESA).is('fecha_cobro',null).order('debe_emitir'),10000);if(r.error)throw r.error;return r.data||[]}
 let cxcRows=[];
-async function verCxc(){if(!esAdminTotal())return;ir('s-cxc');$('cxc-box').innerHTML='';$('cxc-sub').textContent='Cargando…';
+async function verCxc(){if(!esAdmin())return;ir('s-cxc');$('cxc-box').innerHTML='';$('cxc-sub').textContent='Cargando…';
   try{cxcRows=await leerCxc()}catch(e){$('cxc-sub').textContent='No se pudo leer (¿falta crear la tabla cxc_facturas?).';return}
   const pe=cxcRows.filter(r=>!r.folio),pc=cxcRows.filter(r=>r.folio).sort((a,b)=>(cxcVence(a)||'').localeCompare(cxcVence(b)||''));
   const fila=(r,i)=>{const e=cxcEstado(r);return '<tr><td>'+e.sem+'</td><td>'+r.cliente+'</td><td>'+fCL(r.periodo_desde)+(r.periodo_hasta?' al '+fCL(r.periodo_hasta):'')+'</td><td>'+(r.folio||'—')+'</td><td>'+fCL(r.fecha_emision)+'</td><td>'+fCL(cxcVence(r))+'</td><td class="n">'+fmt$(r.total)+'</td><td>'+e.txt+(r.nota?' · '+r.nota:'')+'</td><td><button class="btn2" style="padding:4px 8px;font-size:12px;margin:0" onclick="'+(r.folio?'cxcCobrada':'cxcFacturada')+'('+i+')">'+(r.folio?'✔ Cobrada':'🧾 Facturada')+'</button></td></tr>'};
@@ -759,12 +759,12 @@ async function cxcCobrada(i){const r=cxcRows[i];const fe=prompt('Fecha de cobro 
   toast(error?'No se pudo guardar':'Factura '+r.folio+' cobrada'+(/santander/i.test(cu)?'':' · ⚠ fuera del Santander'));verCxc()}
 // ═══ ALERTAS DE ADMINISTRACIÓN (Carlos 01-11): tabla alertas_admin; las ven Carlos, Claudio y administración hasta marcarlas resueltas ═══
 let _alAdm=[];
-async function alertaAdm(){const box=$('alerta-adm');if(!box||!esAdminTotal()||!supa)return;
+async function alertaAdm(){const box=$('alerta-adm');if(!box||!esAdmin()||!supa)return;
   try{const r=await conTope(supa.from('alertas_admin').select('*').eq('empresa',EMPRESA).eq('activa',true).order('creada'),8000);_alAdm=r.data||[];
     box.innerHTML=_alAdm.map((a,i)=>'<div style="border:2px solid #ff3b30;border-radius:12px;padding:10px;margin:8px 0 12px;color:#ff3b30;font-weight:800">⚠ '+a.titulo+'<div style="color:var(--text);font-weight:600;margin-top:6px;white-space:pre-line">'+(a.detalle||'')+'</div><button class="btn2" style="margin-top:8px;padding:8px;font-size:13px" onclick="resolverAdm('+i+')">✔ Marcar resuelta</button></div>').join('')}catch(e){box.innerHTML=''}}
 async function resolverAdm(i){const a=_alAdm[i];if(!a)return;const nota=prompt('¿Cómo se resolvió? (queda registrado)');if(!nota)return;
   const {error}=await supa.from('alertas_admin').update({activa:false,resuelta_por:user.nombre,resolucion:nota,resuelta:new Date().toISOString()}).eq('id',a.id);toast(error?'No se pudo guardar':'Alerta resuelta');alertaAdm()}
-async function alertaCxc(){const box=$('alerta-cxc');if(!box||!esAdminTotal()||!supa)return;
+async function alertaCxc(){const box=$('alerta-cxc');if(!box||!esAdmin()||!supa)return;
   try{const rs=await leerCxc(),es=rs.map(r=>({r,e:cxcEstado(r)})),rojo=es.filter(x=>x.e.sem==='🔴'),am=es.filter(x=>x.e.sem==='🟡');
     if(!rojo.length&&!am.length){box.innerHTML='';return}
     const st='border:2px solid '+(rojo.length?'#ff3b30':'#ff9500')+';border-radius:12px;padding:10px;margin:8px 0 12px;font-weight:800;color:'+(rojo.length?'#ff3b30':'#ff9500');
@@ -1202,7 +1202,12 @@ function descargarProforma(){
 }
 
 // ═══ INICIO ═══
-const guardado=ls('tm_pin'); if(guardado&&USUARIOS[guardado])entrar(guardado);
+// Cierre de sesión tras 15 min sin actividad, para todos los usuarios (Carlos 02-11)
+const INACT_MS=15*60*1000;
+function marcarAct(){if(user)ls('tm_ult',String(Date.now()))}
+['click','keydown','touchstart','scroll','input'].forEach(ev=>window.addEventListener(ev,marcarAct,{passive:true}));
+setInterval(()=>{if(user&&Date.now()-Number(ls('tm_ult')||0)>INACT_MS){salir();toast('Sesión cerrada por 15 minutos sin actividad')}},30000);
+const guardado=ls('tm_pin'); if(guardado&&USUARIOS[guardado]&&Date.now()-Number(ls('tm_ult')||0)<=INACT_MS)entrar(guardado); else if(guardado)ls('tm_pin',null);
 </script>
 </body>
 </html>
