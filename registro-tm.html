@@ -145,6 +145,8 @@ input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--bor
 <!-- 3. REGISTRO -->
 <section class="screen" id="s-reg">
   <div id="reg-fecha" style="display:none;border:2px solid #ff3b30;border-radius:10px;padding:10px;margin-bottom:10px;font-weight:800;color:#ff3b30"></div>
+  <div style="text-align:right;margin:-4px 0 8px"><a href="#" class="link" onclick="$('reg-dia').style.display='block';this.style.display='none';return false">📅 ¿El servicio fue otro día?</a>
+    <input type="date" id="reg-dia" style="display:none;width:100%;font-size:18px;padding:8px;border-radius:10px;border:2px solid var(--border);background:var(--surface);color:var(--text);margin-top:6px" onchange="otroDia(this.value)"></div>
   <div class="card">
     <div class="lbl">1 · Fotos de las guías</div>
     <div class="thumbs" id="thumbs"></div>
@@ -398,8 +400,11 @@ const bDel=(k)=>k!=null&&bOp('readwrite',st=>st.delete(k));
 const bTodas=()=>bOp('readonly',st=>st.getAll());
 async function bLimpiar(){const t=await bTodas()||[];for(const x of t)if(x.pin===user.pin)await bDel(x.k)}
 let fechaReg=null; // fecha del servicio cuando se registra uno de un día anterior (aviso de servicio sin registrar)
+function otroDia(v){if(!v)return;const h=hoyISO(),d0=new Date();d0.setDate(d0.getDate()-7);if(v>h||v<hoyISO(d0)){toast('Solo hasta 7 días atrás');$('reg-dia').value='';return}
+  fechaReg=v===h?null:v;$('reg-fecha').style.display=fechaReg?'block':'none';$('reg-fecha').textContent=fechaReg?'⚠ Registrando el servicio del '+fCL(fechaReg):''}
 async function nuevoRegistro(fecha){
   if(esCliente())return;fechaReg=(typeof fecha==='string'&&fecha)?fecha:null;
+  $('reg-dia').value='';$('reg-dia').style.display='none';{const ld=$('reg-dia').previousElementSibling;if(ld)ld.style.display=fechaReg?'none':''}
   $('reg-fecha').style.display=fechaReg?'block':'none';$('reg-fecha').textContent=fechaReg?'⚠ Registrando el servicio del '+fechaReg.split('-').reverse().join('-')+' (sus entregas quedan asociadas)':'';
   fotos=[];const guard=(await bTodas()||[]).filter(x=>x.pin===user.pin).sort((a,b)=>a.ts-b.ts);
   guard.forEach(x=>fotos.push({k:x.k,blob:x.blob,url:URL.createObjectURL(x.blob),num:x.num||'',estado:x.num?'ok':'no',ts:x.ft||x.ts}));
@@ -559,7 +564,10 @@ async function guardar2(){
   err.textContent='';
   // Bloqueo de duplicados: si este conductor ya registró hoy este mismo servicio, se ofrece agregar las fotos a ese servicio
   if(!_dupOk&&svcSel.tarifa!==0){let dup=null;try{const r=await conTope(supa.from('servicios_piloto').select('servicio_id,notas').eq('empresa',EMPRESA).eq('modo','registro_tm').neq('estado','anulado').eq('fecha',FR).eq('conductor',user.nombre),8000);dup=(r.data||[]).find(x=>parseNotas(x.notas).servicio_sistema===svcSel.servicio)||null}catch(e){}
-    if(dup){const cod=parseNotas(dup.notas).codigo||'';err.innerHTML='⚠ Ya registraste hoy <b>'+svcSel.txt+'</b>'+(cod?' ('+cod+')':'')+'.<br>'+(fotos.length?'<button class="btn2" style="background:#1f7a3a;color:#fff" onclick="agregarAServicio(\''+dup.servicio_id+'\')">➕ Agregar '+fotos.length+' foto(s) a ese servicio</button>':'')+'<button class="btn2" onclick="_dupOk=true;guardar()">Es otro viaje distinto: registrar nuevo</button>';return}}
+    // Guía ya registrada en otro servicio de los últimos 10 días (ej. se registra al lunes un viaje del viernes) (Carlos 02-11)
+    let gDup='';const nums=fotos.map(f=>f.num).filter(Boolean);if(!dup&&nums.length){try{const d0=new Date(FR+'T12:00:00');d0.setDate(d0.getDate()-10);const r=await conTope(supa.from('servicios_piloto').select('servicio_id,fecha,notas').eq('empresa',EMPRESA).eq('modo','registro_tm').neq('estado','anulado').gte('fecha',hoyISO(d0)),8000);
+      dup=(r.data||[]).find(x=>{const g=parseNotas(x.notas).guias||[];const k=nums.find(n=>g.includes(n));if(k)gDup=k;return !!k})||null}catch(e){}}
+    if(dup){const cod=parseNotas(dup.notas).codigo||'';err.innerHTML=(gDup?'⚠ La guía <b>'+gDup+'</b> ya está en el servicio '+(cod||'')+' del '+fCL(dup.fecha):'⚠ Ya registraste hoy <b>'+svcSel.txt+'</b>'+(cod?' ('+cod+')':''))+'.<br>'+(fotos.length?'<button class="btn2" style="background:#1f7a3a;color:#fff" onclick="agregarAServicio(\''+dup.servicio_id+'\')">➕ Agregar '+fotos.length+' foto(s) a ese servicio</button>':'')+'<button class="btn2" onclick="_dupOk=true;guardar()">Es otro viaje distinto: registrar nuevo</button>';return}}
   _dupOk=false;
   const ahora=new Date(), id='TM-'+hoyISO(ahora).replace(/-/g,'')+'-'+String(ahora.getHours()).padStart(2,'0')+String(ahora.getMinutes()).padStart(2,'0')+String(ahora.getSeconds()).padStart(2,'0')+'-'+user.pin;
   const reg={
