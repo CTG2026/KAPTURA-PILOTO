@@ -1035,8 +1035,9 @@ function pintarPend(){const b=$('ent-pend');b.textContent=entPend?'📄 IFCO PEN
 // Local desde el documento (código J### / N### impreso, ej. "J512 JUMBO LA REINA") cuando el GPS no reconoce el local (Carlos 02-11)
 let entLocalOCR=null,entSelLocal='';
 async function leerLocal(file){try{if(!window.Tesseract)return null;const w=await ocrWorker(),c=await prepararOCR(file);const {data}=await w.recognize(c);
-  const t=(data.text||'').toUpperCase();const m=[...t.matchAll(/\b([JN])\s?(\d{3})\b/g)].map(x=>x[1]+x[2]);
-  for(const k of m){const g=GEOCERCAS.find(x=>x.tipo==='local'&&x.nombre.toUpperCase().startsWith(k));if(g)return g}}catch(e){console.log('ocr local',e)}return null}
+  const t=(data.text||'').toUpperCase();const fx=d=>d.replace(/S/g,'5').replace(/O/g,'0').replace(/[IL|]/g,'1').replace(/B/g,'8').replace(/Z/g,'2');const m=[...t.matchAll(/\b([JN])\s?([0-9SOILBZ|]{3})\b/g)].map(x=>x[1]+fx(x[2])).filter(k=>/^[JN]\d{3}$/.test(k));
+  for(const k of m){const g=GEOCERCAS.find(x=>x.tipo==='local'&&x.nombre.toUpperCase().startsWith(k));if(g)return g}
+  for(const g of GEOCERCAS.filter(x=>x.tipo==='local')){const n=g.nombre.toUpperCase().replace(/^[JN]\d{3}\s+/,'');if(n.length>6&&t.includes(n))return g}}catch(e){console.log('ocr local',e)}return null}
 function entLocalesOpc(){return GEOCERCAS.filter(x=>x.tipo==='local')}
 async function pintarEnt(){
   if(!$('s-ent').classList.contains('on'))return;const el=$('ent-local'),sel=$('ent-sel');sel.style.display='none';
