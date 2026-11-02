@@ -1382,7 +1382,9 @@ function descargarProforma(){
 const INACT_MS=15*60*1000;
 function marcarAct(){if(user)ls('tm_ult',String(Date.now()))}
 ['click','keydown','touchstart','scroll','input'].forEach(ev=>window.addEventListener(ev,marcarAct,{passive:true}));
-setInterval(()=>{if(user&&Date.now()-Number(ls('tm_ult')||0)>INACT_MS){salir();toast('Sesión cerrada por 15 minutos sin actividad')}},30000);
+// Al cerrar por inactividad se recarga la página: así el usuario entra siempre con la última versión publicada (Carlos 02-11)
+function chkInact(){if(user&&Date.now()-Number(ls('tm_ult')||0)>INACT_MS){const sc=(document.querySelector('.screen.on')||{}).id;salir();if(!['s-reg','s-ent'].includes(sc))location.reload();else toast('Sesión cerrada por 15 minutos sin actividad')}}
+setInterval(chkInact,30000);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')chkInact()});
 // ═══ SPOT CON TERCERO (Carlos 02-11): Administración crea el link, se lo manda a Claudio y él lo reenvía al chofer del tercero ═══
 let _spot=null,_spotFoto=null,_spotPos=null;
 async function crearSpot(){const q=(t,d)=>{const v=prompt(t,d||'');return v===null?null:v.trim()};
