@@ -87,6 +87,7 @@ input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--bor
   <h1 id="saludo">Hola</h1>
   <div class="sub" id="sub-equipo"></div>
   <div id="alerta-sinreg"></div>
+  <div id="alerta-adm"></div>
   <div id="alerta-cxc"></div>
   <button class="big" id="btn-ent" style="display:none;background:#1f7a3a;color:#fff;margin-bottom:12px" onclick="entregue()">📦 ENTREGUÉ AQUÍ</button>
   <input type="file" id="cam-ent" accept="image/*" capture="environment" style="display:none" onchange="onFotoEnt(this)">
@@ -303,7 +304,7 @@ let pin='', user=null, fotos=[], svcSel=null, extrasSel=new Set(), ultimo=null;
 
 function $(id){return document.getElementById(id)}
 function toast(t){const e=$('toast');e.textContent=t;e.classList.add('on');setTimeout(()=>e.classList.remove('on'),2800)}
-function ir(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));$(id).classList.add('on');window.scrollTo(0,0);if(user)uso('pantalla',id);if(id==='s-home'&&user){alertaSinReg();alertaCxc()}}
+function ir(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));$(id).classList.add('on');window.scrollTo(0,0);if(user)uso('pantalla',id);if(id==='s-home'&&user){alertaSinReg();alertaCxc();alertaAdm()}}
 // Registro de uso de Kaptura (tabla kaptura_uso): entradas y pantallas por usuario. Pruebas internas marcadas con localStorage tm_prueba=1 (Carlos 30-10)
 function uso(accion,detalle){try{if(!supa||!user)return;const k=user.pin+'|'+accion+'|'+(detalle||'');if(uso._u===k)return;uso._u=k;
   supa.from('kaptura_uso').insert({empresa:EMPRESA,pin:user.pin,usuario:user.nombre,rol:user.rol,accion,detalle:detalle||null,dispositivo:/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)?'teléfono':'PC',prueba:ls('tm_prueba')==='1'}).then(()=>{},()=>{})}catch(e){}}
@@ -756,6 +757,13 @@ async function cxcCobrada(i){const r=cxcRows[i];const fe=prompt('Fecha de cobro 
   const cu=prompt('¿En qué cuenta entró? (Santander u otra)','Santander');if(!cu)return;
   const {error}=await supa.from('cxc_facturas').update({fecha_cobro:fe.split('-').reverse().join('-'),cuenta_cobro:cu,actualizado:new Date().toISOString()}).eq('id',r.id);
   toast(error?'No se pudo guardar':'Factura '+r.folio+' cobrada'+(/santander/i.test(cu)?'':' · ⚠ fuera del Santander'));verCxc()}
+// ═══ ALERTAS DE ADMINISTRACIÓN (Carlos 01-11): tabla alertas_admin; las ven Carlos, Claudio y administración hasta marcarlas resueltas ═══
+let _alAdm=[];
+async function alertaAdm(){const box=$('alerta-adm');if(!box||!esAdminTotal()||!supa)return;
+  try{const r=await conTope(supa.from('alertas_admin').select('*').eq('empresa',EMPRESA).eq('activa',true).order('creada'),8000);_alAdm=r.data||[];
+    box.innerHTML=_alAdm.map((a,i)=>'<div style="border:2px solid #ff3b30;border-radius:12px;padding:10px;margin:8px 0 12px;color:#ff3b30;font-weight:800">⚠ '+a.titulo+'<div style="color:var(--text);font-weight:600;margin-top:6px;white-space:pre-line">'+(a.detalle||'')+'</div><button class="btn2" style="margin-top:8px;padding:8px;font-size:13px" onclick="resolverAdm('+i+')">✔ Marcar resuelta</button></div>').join('')}catch(e){box.innerHTML=''}}
+async function resolverAdm(i){const a=_alAdm[i];if(!a)return;const nota=prompt('¿Cómo se resolvió? (queda registrado)');if(!nota)return;
+  const {error}=await supa.from('alertas_admin').update({activa:false,resuelta_por:user.nombre,resolucion:nota,resuelta:new Date().toISOString()}).eq('id',a.id);toast(error?'No se pudo guardar':'Alerta resuelta');alertaAdm()}
 async function alertaCxc(){const box=$('alerta-cxc');if(!box||!esAdminTotal()||!supa)return;
   try{const rs=await leerCxc(),es=rs.map(r=>({r,e:cxcEstado(r)})),rojo=es.filter(x=>x.e.sem==='🔴'),am=es.filter(x=>x.e.sem==='🟡');
     if(!rojo.length&&!am.length){box.innerHTML='';return}
