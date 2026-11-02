@@ -104,6 +104,18 @@ input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--bor
   <button class="big" style="margin-top:12px;background:#1f3a5f;color:#fff" onclick="elegirEmp('global_solutions')">🌐 GLOBAL SOLUTIONS</button>
 </section>
 
+<section class="screen" id="s-spot">
+  <h1>Registro de servicio</h1>
+  <div class="sub" id="spot-info">Cargando…</div>
+  <div class="card" id="spot-form" style="display:none">
+    <button class="big" onclick="$('spot-cam').click()">📷 FOTO DE LA GUÍA</button>
+    <input type="file" id="spot-cam" accept="image/*" capture="environment" style="display:none" onchange="spotFoto(this)">
+    <img id="spot-img" alt="" style="width:100%;border-radius:12px;margin-top:10px;display:none">
+    <input id="spot-nro" inputmode="numeric" placeholder="N° de guía (opcional)" style="width:100%;font-size:20px;padding:10px;border-radius:10px;border:2px solid var(--border);background:var(--surface);color:var(--text);margin-top:10px">
+    <button class="big" id="spot-ok" style="margin-top:14px;background:#1f7a3a;color:#fff" onclick="spotEnviar(this)" disabled>✅ ENVIAR REGISTRO</button>
+  </div>
+</section>
+
 <!-- 2. INICIO -->
 <section class="screen" id="s-home">
   <h1 id="saludo">Hola</h1>
@@ -123,6 +135,7 @@ input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--bor
   <button class="btn2" id="btn-prof" style="display:none" onclick="verProforma()">🧾 Proforma EBLOOMS</button>
   <button class="btn2" id="btn-profA" style="display:none" onclick="verProformaA()">🧾 Proforma Ateuro / Zuria</button>
   <button class="btn2" id="btn-rsv" style="display:none" onclick="verResumenSvc()">📑 Resumen de servicios</button>
+  <button class="btn2" id="btn-spot" style="display:none" onclick="crearSpot()">🔗 Servicio spot con tercero (link)</button>
   <button class="btn2" id="btn-pil" style="display:none" onclick="verRep('pilares')">📈 Pilares: rentabilidad, liquidez y solvencia</button>
   <button class="btn2" id="btn-caja" style="display:none" onclick="verRep('caja_semana')">💵 Caja de la semana (real y presupuesto)</button>
   <button class="btn2" id="btn-cxc" style="display:none" onclick="verCxc()">💰 Facturación y cobranza</button>
@@ -370,9 +383,9 @@ function entrar(p){
   if(!u){$('pin-err').textContent='PIN no registrado';pin='';setTimeout(pintarPin,600);return}
   user={pin:p,...u}; ls('tm_pin',p); ls('tm_ult',String(Date.now())); uso._u=null; uso('entrada');
   $('saludo').textContent='Hola '+u.nombre.split(' ')[0];
-  $('btn-salir').style.display='block'; $('hdr-user').textContent='👤 '+u.nombre.split(' ')[0]; $('btn-ver').style.display='block';$('btn-ver').textContent=esAdmin()?'📋 Servicios registrados':esCliente()?'📋 Ver mis servicios':'📋 Mis servicios registrados';$('btn-reg').style.display=esCliente()?'none':'block';$('btn-ent').style.display=esCliente()?'none':'block';$('btn-misent').style.display='block';contarSvc();$('btn-res').style.display=verResultado()?'block':'none';$('btn-profA').style.display=esAdmin()?'block':'none';$('btn-rsv').style.display=esAdmin()?'block':'none';$('btn-cxc').style.display=esAdmin()?'block':'none';$('btn-pil').style.display=esAdminTotal()?'block':'none';$('btn-caja').style.display=esAdminTotal()?'block':'none';ordenHome();contarEnt();const vg=(esAdmin()||esCliente())?'block':'none';$('btn-gps').style.display=vg;$('btn-prof').style.display=esCliente()?'none':vg; /* Proforma oculta para el cliente por ahora (Carlos 30-10) */ $('btn-ifco').style.display='block';contarIfco(); EMP_ACT=EMPRESA;document.body.classList.remove('global');aplicarVista(); if(user.rol==='administracion')ir('s-emp'); else ir('s-home'); revisarPendientes();
+  $('btn-salir').style.display='block'; $('hdr-user').textContent='👤 '+u.nombre.split(' ')[0]; $('btn-ver').style.display='block';$('btn-ver').textContent=esAdmin()?'📋 Servicios registrados':esCliente()?'📋 Ver mis servicios':'📋 Mis servicios registrados';$('btn-reg').style.display=esCliente()?'none':'block';$('btn-ent').style.display=esCliente()?'none':'block';$('btn-misent').style.display='block';contarSvc();$('btn-res').style.display=verResultado()?'block':'none';$('btn-profA').style.display=esAdmin()?'block':'none';$('btn-rsv').style.display=esAdmin()?'block':'none';$('btn-cxc').style.display=esAdmin()?'block':'none';$('btn-pil').style.display=esAdminTotal()?'block':'none';$('btn-spot').style.display=esAdminTotal()?'block':'none';$('btn-caja').style.display=esAdminTotal()?'block':'none';ordenHome();contarEnt();const vg=(esAdmin()||esCliente())?'block':'none';$('btn-gps').style.display=vg;$('btn-prof').style.display=esCliente()?'none':vg; /* Proforma oculta para el cliente por ahora (Carlos 30-10) */ $('btn-ifco').style.display='block';contarIfco(); EMP_ACT=EMPRESA;document.body.classList.remove('global');aplicarVista(); if(user.rol==='administracion')ir('s-emp'); else ir('s-home'); revisarPendientes();
 }
-function ordenHome(){const h=$('s-home'),ids=esCliente()?['btn-ver','btn-misent','btn-ifco','btn-gps','btn-prof','btn-profA','btn-ent','btn-reg']:['btn-ent','btn-reg','btn-ver','btn-misent','btn-ifco','btn-gps','btn-prof','btn-profA','btn-res','btn-rsv','btn-pil','btn-caja','btn-cxc'];ids.forEach(i=>h.appendChild($(i)))} /* orden de inicio del cliente: servicios, entregas, IFCO, GPS (Carlos 30-10) */
+function ordenHome(){const h=$('s-home'),ids=esCliente()?['btn-ver','btn-misent','btn-ifco','btn-gps','btn-prof','btn-profA','btn-ent','btn-reg']:['btn-ent','btn-reg','btn-ver','btn-misent','btn-ifco','btn-gps','btn-prof','btn-profA','btn-res','btn-rsv','btn-pil','btn-caja','btn-cxc','btn-spot'];ids.forEach(i=>h.appendChild($(i)))} /* orden de inicio del cliente: servicios, entregas, IFCO, GPS (Carlos 30-10) */
 function salir(){ls('tm_pin',null);user=null;EMP_ACT=EMPRESA;document.body.classList.remove('global');['alerta-adm','alerta-cxc','tareas-hoy','pc-dash','alerta-sinreg','cxc-box','rep-tbl'].forEach(i=>{const e=$(i);if(e)e.innerHTML=''});document.body.classList.remove('pc');$('pcnav').innerHTML='';const bv=$('btn-vista');if(bv)bv.remove();pin='';pintarPin();$('btn-salir').style.display='none';$('hdr-user').textContent='';_dupOk=false;ir('s-pin')}
 
 // ═══ REGISTRO ═══
@@ -597,7 +610,7 @@ async function enviar(reg,blobs){
 }
 // ═══ RESULTADO POR SERVICIO (solo usuario Administración 1313) ═══
 // Parámetros copiados del Excel del sistema v11.10 (Parámetros A y D, Resultados Mes) al 30-10-2026. Al cambiar el Excel, actualizar aquí.
-const COSTO={diesel:1185,rend:{A:3.5,T:2.6},com:0.10,ase:0.03,neum:20,mant:35,viatTracto:15000,viatAfur:7500,retSuper:0.397,fijoMes:4933572,diasMes:20,alta:['2026-11-15','2027-03-31']};
+const COSTO={diesel:1185,rend:{A:3.5,T:2.6},com:0.10,ase:0.03,neum:20,mant:35,viatTracto:15000,viatAfur:7500,retSuper:0.397,fijoMes:4933572,fijos:[['Remuneraciones (costo empresa)',3228840],['Provisión vacaciones y finiquitos',126177],['Arriendo thermo JN',1000000],['Contador (Drival)',300000],['Camioneta: combustible',180000],['Seguros',50000],['Telefonía',28555],['GPS / telemetría',20000]],diasMes:20,alta:['2026-11-15','2027-03-31']};
 // Tipo de cada camión (rendimiento): A = afurgonado 3,5 km/l · T = tracto + thermo 2,6 km/l
 const TIPO_PAT={CWVH32:'A',DZZW14:'A',DSBZ64:'T',ZV7780:'T'};
 const patTipo=p=>{const t=TIPO_PAT[PAT_GPS(p||'')];return p+(esAdmin()&&t?' · '+(t==='T'?'Tracto + thermo':'Afurgonado'):'')}; // tipo de equipo junto a la patente, solo administradores (Carlos 30-10)
@@ -643,7 +656,7 @@ function resultadoHTML(r){
   return '<details style="margin-top:8px;border:1px solid var(--border);border-radius:10px;padding:8px"><summary><b>📊 Resultado del servicio: '+fm$(z.res)+' ('+pctTxt+')</b></summary>'+
     ln('TARIFA',z.tarifa,it('Tarifa de la ruta',z.tarifa-z.ret)+it('Retorno supermercado',z.ret))+
     ln('COSTOS VARIABLES',-z.tv,it('Combustible ('+kmF+' km ÷ '+rd+' km/l × $'+Math.round(z.pd.p).toLocaleString('es-CL')+' neto/l)',-z.v.combustible)+it('Peajes',-z.v.peajes)+it('Comisión conductor 10%',-z.v.comision)+it('Comisión asesor 3%',-z.v.asesor)+it('Neumáticos y mantención ('+kmF+' km × $'+(COSTO.neum+COSTO.mant)+')',-z.v.neumMant)+it('Viáticos',-z.v.viaticos)+'<div style="font-size:12px;color:var(--muted);padding-left:14px">Km: '+z.kmTxt+'<br>Diésel: '+z.pd.txt+'</div>')+
-    ln('COSTOS FIJOS',-z.fijo,it('Fijo empresa del día ($'+COSTO.fijoMes.toLocaleString('es-CL')+' ÷ '+COSTO.diasMes+') ÷ '+z.nDia+' servicio(s)',-z.fijo))+
+    ln('COSTOS FIJOS',-z.fijo,COSTO.fijos.map(([t,m])=>it(t+' ($'+m.toLocaleString('es-CL')+'/mes)',-m/COSTO.diasMes/z.nDia)).join('')+'<div style="font-size:11px;color:var(--muted);padding:4px 0 0 14px">Fijo del mes $'+COSTO.fijoMes.toLocaleString('es-CL')+' ÷ '+COSTO.diasMes+' días ÷ '+z.nDia+' servicio(s) del día. Fuente: Parámetros del sistema TM.</div>')+
     '<div style="display:flex;justify-content:space-between;border-top:2px solid var(--border);padding:8px 0 2px"><b>RESULTADO</b><b>'+fm$(z.res)+' ('+pctTxt+')</b></div>'+
     '<div class="m" style="font-size:12px"><i>Esperado según parámetros del Excel (no es lo pagado real).</i></div></details>';
 }
@@ -732,7 +745,7 @@ function avisarWhatsApp(){
 const SVC_VER=t=>String(t||'').replace(/\s*\(Temporada (Baja|Alta)\)/i,'');
 function esAdmin(){return user&&(user.rol==='administrador'||user.rol==='coordinador'||user.rol==='administracion')}
 function esAdminTotal(){return user&&(user.rol==='administrador'||user.rol==='administracion')}
-function verResultado(){return user&&user.rol==='administracion'}
+function verResultado(){return esAdmin()} // Claudio, Carlos y administración (Carlos 02-11)
 function esCliente(){return user&&user.rol==='cliente'}
 // ═══ SERVICIOS SIN REGISTRAR: entregas sin servicio de días anteriores, o de hoy después de las 21:00 (Carlos 31-10) ═══
 async function alertaSinReg(){const box=$('alerta-sinreg');if(!box)return;box.innerHTML='';if(!user||!supa||EMP_ACT!==EMPRESA)return;const u0=user;
@@ -842,7 +855,7 @@ async function cargarRep(){const per=$('rep-per').value;$('rep-tbl').innerHTML='
 function repToggle(i){const rows=[...$('rep-tbl').querySelectorAll('tr[data-i]')],k=rows.findIndex(r=>r.dataset.i==String(i)),n=+rows[k].dataset.n;let abrir=null;
   for(let j=k+1;j<rows.length;j++){const m=+rows[j].dataset.n;if(m<=n)break;if(abrir===null)abrir=rows[j].classList.contains('oc');if(abrir){if(m===n+1)rows[j].classList.remove('oc')}else rows[j].classList.add('oc')}}
 // ═══ MODO ESCRITORIO (Carlos 02-11): administración en PC, con menú lateral, tablero por pilar y tareas del día ═══
-const NAV_BTNS=['btn-pil','btn-caja','btn-reg','btn-ver','btn-misent','btn-ifco','btn-gps','btn-prof','btn-profA','btn-rsv','btn-cxc','btn-res'];
+const NAV_BTNS=['btn-spot','btn-pil','btn-caja','btn-reg','btn-ver','btn-misent','btn-ifco','btn-gps','btn-prof','btn-profA','btn-rsv','btn-cxc','btn-res'];
 const NAV_SCR={'btn-pil':'s-rep','btn-caja':'s-rep','btn-ver':'s-list','btn-misent':'s-misent','btn-ifco':'s-ifco','btn-gps':'s-gps','btn-prof':'s-prof','btn-profA':'s-profA','btn-rsv':'s-rsv','btn-cxc':'s-cxc','btn-res':'s-res','btn-reg':'s-reg'};
 function aplicarVista(){if(!esAdmin())return;const pref=ls('tm_vista'),pc=pref==='pc'||(pref!=='tel'&&window.innerWidth>=1024);document.body.classList.toggle('pc',pc);
   let bv=$('btn-vista');if(!bv){bv=document.createElement('button');bv.id='btn-vista';bv.className='link';bv.style.marginRight='10px';bv.onclick=()=>{ls('tm_vista',document.body.classList.contains('pc')?'tel':'pc');aplicarVista();ir('s-home')};$('btn-salir').before(bv)}
@@ -1358,7 +1371,37 @@ const INACT_MS=15*60*1000;
 function marcarAct(){if(user)ls('tm_ult',String(Date.now()))}
 ['click','keydown','touchstart','scroll','input'].forEach(ev=>window.addEventListener(ev,marcarAct,{passive:true}));
 setInterval(()=>{if(user&&Date.now()-Number(ls('tm_ult')||0)>INACT_MS){salir();toast('Sesión cerrada por 15 minutos sin actividad')}},30000);
-const guardado=ls('tm_pin'); if(guardado&&USUARIOS[guardado]&&Date.now()-Number(ls('tm_ult')||0)<=INACT_MS)entrar(guardado); else if(guardado)ls('tm_pin',null);
+// ═══ SPOT CON TERCERO (Carlos 02-11): Administración crea el link, se lo manda a Claudio y él lo reenvía al chofer del tercero ═══
+let _spot=null,_spotFoto=null,_spotPos=null;
+async function crearSpot(){const q=(t,d)=>{const v=prompt(t,d||'');return v===null?null:v.trim()};
+  const cli=q('Cliente (EBLOOMS, Alimentos Valle Central, Ateuro / Zuria u otro):','Ateuro / Zuria');if(!cli)return;
+  const sv=q('Servicio (origen → destino):');if(!sv)return;const ta=q('Tarifa neta al cliente ($):');if(ta===null)return;
+  const te=q('Tercero (nombre o empresa):');if(!te)return;const pa=q('Patente del camión del tercero:')||'';const pt=q('Pago al tercero neto ($):');if(pt===null)return;
+  const fe=q('Fecha del servicio (dd-mm-aaaa):',hoyISO().split('-').reverse().join('-'));if(!fe)return;
+  const token=Math.random().toString(36).slice(2,10)+Date.now().toString(36);const n=x=>+String(x).replace(/\D/g,'')||null;
+  const {error}=await supa.from('spot_links').insert({token,empresa:EMPRESA,fecha:fe.split('-').reverse().join('-'),cliente:cli,servicio:sv,tarifa_neta:n(ta),tercero:te,patente:pa.toUpperCase(),pago_tercero:n(pt),creado_por:user.nombre});
+  if(error){toast('No se pudo crear el link');return}
+  const link=location.origin+location.pathname+'?spot='+token,txt='Claudio, reenvía este link al chofer de '+te+' para registrar el servicio spot ('+sv+', '+fe+'). Solo debe abrirlo, sacar la foto de la guía y tocar Enviar:\n'+link;
+  window.open('https://wa.me/?text='+encodeURIComponent(txt),'_blank')}
+async function abrirSpot(token){ir('s-spot');$('pin-err').textContent='';
+  try{const r=await conTope(supa.from('spot_links').select('*').eq('token',token).maybeSingle(),10000);_spot=r.data;
+    if(!_spot){$('spot-info').textContent='Link no válido.';return}
+    if(_spot.usado){$('spot-info').textContent='Este servicio ya fue registrado. Gracias.';return}
+    $('spot-info').innerHTML='<b>'+_spot.servicio+'</b><br>'+_spot.cliente+' · '+fCL(_spot.fecha)+'<br>'+_spot.tercero+(_spot.patente?' · '+_spot.patente:'');$('spot-form').style.display='block';
+    if(navigator.geolocation)navigator.geolocation.getCurrentPosition(p=>{_spotPos=p},()=>{},{enableHighAccuracy:true,timeout:20000})}catch(e){$('spot-info').textContent='Sin conexión. Intente de nuevo.'}}
+function spotFoto(inp){const f=inp.files&&inp.files[0];if(!f)return;_spotFoto=f;$('spot-img').src=URL.createObjectURL(f);$('spot-img').style.display='block';$('spot-ok').disabled=false;
+  leerNumero(f).then(n=>{if(n&&!$('spot-nro').value)$('spot-nro').value=n})}
+async function spotEnviar(btn){if(!_spot||!_spotFoto)return;btn.disabled=true;btn.textContent='Enviando…';
+  try{const b=await comprimir(_spotFoto),path='tm/'+(_spot.fecha||hoyISO()).slice(0,7)+'/spot_'+_spot.token+'.jpg';
+    const up=await supa.storage.from(BUCKET).upload(path,b,{contentType:'image/jpeg',upsert:true});if(up.error)throw up.error;const foto=supa.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
+    const c=_spotPos&&_spotPos.coords,sid='SPOT-'+_spot.token,ahora=new Date().toISOString(),nro=($('spot-nro').value||'').replace(/\D/g,'');
+    const notas={servicio_sistema:'SPOT · '+_spot.servicio,spot:true,tercero:_spot.tercero,pago_tercero:_spot.pago_tercero,fotos:[foto],fotos_ts:[ahora],guias:nro?[nro]:[],registro:'link spot (sin PIN)',lat:c?c.latitude:null,lon:c?c.longitude:null};
+    const {error}=await supa.from('servicios_piloto').insert({servicio_id:sid,patente:_spot.patente||'TERCERO',conductor:'Tercero: '+_spot.tercero,cliente:_spot.cliente,fecha:_spot.fecha,estado:'registrado',empresa:_spot.empresa,modo:'registro_tm',tarifa_neta:_spot.tarifa_neta,notas:JSON.stringify(notas)});
+    if(error)throw error;await supa.from('spot_links').update({usado:ahora,servicio_id:sid}).eq('token',_spot.token);
+    $('spot-form').style.display='none';$('spot-info').innerHTML='<b>✅ Servicio registrado. Gracias.</b><br>Ya puede cerrar esta página.'}
+  catch(e){btn.disabled=false;btn.textContent='✅ ENVIAR REGISTRO';toast('No se pudo enviar. Revise la señal e intente de nuevo.')}}
+const _spotTok=new URLSearchParams(location.search).get('spot');
+const guardado=_spotTok?null:ls('tm_pin'); if(_spotTok)abrirSpot(_spotTok);else if(guardado&&USUARIOS[guardado]&&Date.now()-Number(ls('tm_ult')||0)<=INACT_MS)entrar(guardado); else if(guardado)ls('tm_pin',null);
 </script>
 </body>
 </html>
