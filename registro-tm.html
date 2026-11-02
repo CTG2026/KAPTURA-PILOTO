@@ -761,19 +761,22 @@ function descargarResumenSvc(){if(!rsvFilas.length||!window.XLSX)return;const he
 // ═══ FACTURACIÓN Y COBRANZA (Carlos 02-11): por aprobar → por facturar → por cobrar → cobrada. Tabla cxc_facturas (columna etapa) ═══
 // Cierre del período: EBLOOMS y Ateuro por quincena (alerta de proforma para aprobación); Valle el último día del mes (alerta de liquidación para aprobación con Anita).
 // Pago: EBLOOMS el viernes siguiente a la factura; Valle, Ateuro y Spot a 30 días; Los Tres Enanos 5 días. Aviso de cobranza 3 días antes del vencimiento.
-const CXC_PLAZO={'EBLOOMS':'viernes','Alimentos Valle Central':30,'Ateuro / Zuria':30,'Los Tres Enanos':5,'Spot':30};
+// Solo clientes con plazo conocido. Sin plazo (ej. Los Tres Enanos: factura a crédito sin fecha de vencimiento) NO se inventa vencimiento (Carlos 02-11)
+const CXC_PLAZO={'EBLOOMS':'viernes','Alimentos Valle Central':30,'Ateuro / Zuria':30,'Spot':30};
 const FAC_CLI=[{c:'EBLOOMS',q:true,doc:'proforma'},{c:'Ateuro / Zuria',q:true,doc:'proforma'},{c:'Alimentos Valle Central',q:false,doc:'liquidación (Anita)'}];
 const FAC_DESDE='2026-11-01'; // períodos que Kaptura abre solo; los anteriores se cargaron a mano
 const dISO=s=>s?new Date(s+'T12:00:00'):null, fCL=s=>s?s.split('-').reverse().join('-'):'';
-const ETAPAS=[['por_aprobar','POR APROBAR (proforma / liquidación)'],['por_facturar','POR FACTURAR'],['por_cobrar','POR COBRAR (facturas emitidas)']];
+const ETAPAS=[['pendiente','EN ESPERA (no facturar todavía)'],['por_aprobar','POR APROBAR (proforma / liquidación)'],['por_facturar','POR FACTURAR'],['por_cobrar','POR COBRAR (facturas emitidas)']];
 function cxcEtapa(r){return r.fecha_cobro?'cobrada':(r.etapa||(r.folio?'por_cobrar':'por_aprobar'))}
-function cxcVence(r){if(r.vence)return r.vence;if(!r.fecha_emision)return null;const d=dISO(r.fecha_emision),p=CXC_PLAZO[r.cliente]??30;
+function cxcVence(r){if(r.vence)return r.vence;if(!r.fecha_emision)return null;const d=dISO(r.fecha_emision),p=CXC_PLAZO[r.cliente];if(p===undefined)return null;
   if(p==='viernes'){let k=(5-d.getDay()+7)%7;d.setDate(d.getDate()+(k||7))}else d.setDate(d.getDate()+p);return hoyISO(d)}
 function cxcDias(a,b){return Math.round((dISO(b)-dISO(a))/86400000)}
 function cxcEstado(r){const hoy=hoyISO(),et=cxcEtapa(r),doc=(FAC_CLI.find(x=>x.c===r.cliente)||{}).doc||'liquidación';
+  if(et==='pendiente')return {sem:'⏸',txt:'En espera'};
   if(et==='por_aprobar')return {sem:'🔴',txt:'Aprobar '+doc+' (período cerrado el '+fCL(r.periodo_hasta)+')'};
   if(et==='por_facturar')return {sem:'🔴',txt:'Facturar ya ('+doc+' aprobada'+(r.aprobada?' el '+fCL(r.aprobada):'')+')'};
   const v=cxcVence(r),d=v?cxcDias(hoy,v):null;
+  if(!v)return {sem:'⚪',txt:'Por cobrar · factura sin fecha de vencimiento'};
   if(d!==null&&d<0)return {sem:'🔴',txt:'Cobrar: vencida hace '+(-d)+' día(s)'};
   if(d!==null&&d<=3)return {sem:'🟡',txt:'Cobrar: '+(d===0?'vence hoy':'vence en '+d+' día(s)')};
   return {sem:'🟢',txt:'Al día'+(d!==null?' (vence en '+d+' días)':'')}}
@@ -792,7 +795,7 @@ let cxcRows=[];
 async function verCxc(){if(!esAdmin())return;ir('s-cxc');$('cxc-box').innerHTML='';$('cxc-sub').textContent='Cargando…';
   try{cxcRows=await leerCxc()}catch(e){$('cxc-sub').textContent='No se pudo leer.';return}
   const sum=a=>a.reduce((t,r)=>t+(+r.total||0),0),H='<tr><th></th><th>Cliente</th><th>Período</th><th>Folio</th><th>Emisión</th><th>Vence</th><th>Total c/IVA</th><th>Estado</th><th></th></tr>';
-  const bt={por_aprobar:['facAprobar','✔ Aprobada'],por_facturar:['cxcFacturada','🧾 Facturada'],por_cobrar:['cxcCobrada','✔ Cobrada']};
+  const bt={pendiente:['facAprobar','✔ Aprobada'],por_aprobar:['facAprobar','✔ Aprobada'],por_facturar:['cxcFacturada','🧾 Facturada'],por_cobrar:['cxcCobrada','✔ Cobrada']};
   const fila=r=>{const e=cxcEstado(r),i=cxcRows.indexOf(r),b=bt[cxcEtapa(r)];return '<tr><td>'+e.sem+'</td><td>'+r.cliente+'</td><td>'+fCL(r.periodo_desde)+(r.periodo_hasta?' al '+fCL(r.periodo_hasta):'')+'</td><td>'+(r.folio||'—')+'</td><td>'+fCL(r.fecha_emision)+'</td><td>'+fCL(cxcVence(r))+'</td><td class="n">'+fmt$(r.total)+'</td><td>'+e.txt+(r.nota?' · '+r.nota:'')+'</td><td><button class="btn2" style="padding:4px 8px;font-size:12px;margin:0" onclick="'+b[0]+'('+i+')">'+b[1]+'</button></td></tr>'};
   let h='';for(const [k,t] of ETAPAS){const a=cxcRows.filter(r=>cxcEtapa(r)===k);h+='<tr><th colspan="9">'+t+'</th></tr>'+H+a.map(fila).join('')+'<tr class="tot"><td colspan="6">Total '+t.split(' (')[0].toLowerCase()+'</td><td class="n">'+fmt$(sum(a))+'</td><td colspan="2"></td></tr>'}
   $('cxc-box').innerHTML='<div class="tblw"><table class="tbl" id="cxc-tbl">'+h+'</table></div>';
@@ -859,7 +862,7 @@ async function tareasHoy(){const box=$('tareas-hoy');if(!box)return;box.innerHTM
     _tHechas=(await conTope(supa.from('tareas_admin').select('tarea,hecha_por,hora').eq('empresa',EMPRESA).eq('fecha',hoy),8000)).data||[];
     const cx=await leerCxc(),it=[];
     TAREAS.filter(t=>t.d.includes(dw)).forEach(t=>{const h=_tHechas.find(x=>x.tarea===t.id);it.push({t:t.t,p:t.p,lim:t.lim,ok:!!h,roja:!h&&hm>=t.lim,sub:h?'Hecha por '+h.hecha_por.split(' ')[0]+' a las '+new Date(h.hora).toTimeString().slice(0,5):'Hasta las '+t.lim,btn:h?'':'<button class="btn2" onclick="tareaHecha(\''+t.id+'\')">✔ Hecha</button>'})});
-    cx.forEach(r=>{const e=cxcEstado(r),et=cxcEtapa(r);if(e.sem==='🟢')return;it.push({t:e.txt.split(' (')[0]+' · '+r.cliente+(r.folio?' fact. '+r.folio:''),p:'Liquidez',roja:e.sem==='🔴',sub:fmt$(r.total)+(et==='por_cobrar'?' · vence '+fCL(cxcVence(r)):''),btn:'<button class="btn2" onclick="verCxc()">Ir</button>'})});
+    cx.forEach(r=>{const e=cxcEstado(r),et=cxcEtapa(r);if(e.sem==='🟢'||e.sem==='⚪')return;it.push({t:e.txt.split(' (')[0]+' · '+r.cliente+(r.folio?' fact. '+r.folio:''),p:'Liquidez',roja:e.sem==='🔴',sub:fmt$(r.total)+(et==='por_cobrar'?' · vence '+fCL(cxcVence(r)):''),btn:'<button class="btn2" onclick="verCxc()">Ir</button>'})});
     if(user!==u0||!esAdminTotal())return;const pend=it.filter(x=>!x.ok).length;
     box.innerHTML='<div style="margin:6px 0 12px"><div style="font-weight:900;font-size:17px">📋 Tareas de hoy · '+pend+' pendiente(s)</div>'+it.map(x=>'<div class="tarea'+(x.ok?' ok':x.roja?' roja':'')+'"><div class="x"><b>'+(x.ok?'✅ ':x.roja?'🔴 ':'⬜ ')+x.t+'</b><small>'+x.p+' · '+x.sub+'</small></div>'+(x.btn||'')+'</div>').join('')+'</div>'}catch(e){box.innerHTML=''}}
 async function tareaHecha(id){const {error}=await supa.from('tareas_admin').insert({fecha:hoyISO(),tarea:id,hecha_por:user.nombre});toast(error?'No se pudo guardar':'Tarea hecha');tareasHoy()}
@@ -872,9 +875,9 @@ async function alertaAdm(){const box=$('alerta-adm');if(!box)return;box.innerHTM
 async function resolverAdm(i){const a=_alAdm[i];if(!a)return;const nota=prompt('¿Cómo se resolvió? (queda registrado)');if(!nota)return;
   const {error}=await supa.from('alertas_admin').update({activa:false,resuelta_por:user.nombre,resolucion:nota,resuelta:new Date().toISOString()}).eq('id',a.id);toast(error?'No se pudo guardar':'Alerta resuelta');alertaAdm()}
 async function alertaCxc(){const box=$('alerta-cxc');if(!box)return;box.innerHTML='';if(!esAdmin()||!supa)return;const u0=user;
-  try{await facAbrirPeriodos();const rs=await leerCxc();if(user!==u0||!esAdmin())return;const es=rs.map(r=>({r,e:cxcEstado(r),k:cxcEtapa(r)})).filter(x=>x.e.sem!=='🟢');
+  try{await facAbrirPeriodos();const rs=await leerCxc();if(user!==u0||!esAdmin())return;const es=rs.map(r=>({r,e:cxcEstado(r),k:cxcEtapa(r)})).filter(x=>!['🟢','⚪'].includes(x.e.sem));
     if(!es.length){box.innerHTML='';return}
-    const grp=[['por_aprobar','📝 Por aprobar'],['por_facturar','🧾 Por facturar'],['por_cobrar','💰 Cobranza']];const rojo=es.some(x=>x.e.sem==='🔴');
+    const grp=[['pendiente','⏸ En espera'],['por_aprobar','📝 Por aprobar'],['por_facturar','🧾 Por facturar'],['por_cobrar','💰 Cobranza']];const rojo=es.some(x=>x.e.sem==='🔴');
     const st='border:2px solid '+(rojo?'#ff3b30':'#ff9500')+';border-radius:12px;padding:10px;margin:8px 0 12px;font-weight:800;color:'+(rojo?'#ff3b30':'#ff9500');
     box.innerHTML='<div style="'+st+'">Facturación y cobranza'+grp.map(([k,t])=>{const a=es.filter(x=>x.k===k);return a.length?'<div style="margin-top:8px">'+t+' ('+a.length+')</div>'+a.map(x=>'<div style="color:var(--text);font-weight:600;margin-top:4px">'+x.e.sem+' '+x.r.cliente+(x.r.folio?' · fact. '+x.r.folio:'')+' · '+fmt$(x.r.total)+' · '+x.e.txt+'</div>').join(''):''}).join('')+'<button class="btn2" style="margin-top:8px;padding:8px;font-size:13px" onclick="verCxc()">Ver facturación y cobranza</button></div>'}catch(e){box.innerHTML=''}}
 // Imagen completa de una tabla (proformas y resumen) para compartir por WhatsApp o descargar (Carlos 31-10)
