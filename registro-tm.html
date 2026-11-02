@@ -745,7 +745,7 @@ function avisarWhatsApp(){
 const SVC_VER=t=>String(t||'').replace(/\s*\(Temporada (Baja|Alta)\)/i,'');
 function esAdmin(){return user&&(user.rol==='administrador'||user.rol==='coordinador'||user.rol==='administracion')}
 function esAdminTotal(){return user&&(user.rol==='administrador'||user.rol==='administracion')}
-function verResultado(){return esAdmin()} // Claudio, Carlos y administración (Carlos 02-11)
+function verResultado(){return esAdminTotal()} // Carlos y administración; Claudio todavía no (Carlos 02-11)
 function esCliente(){return user&&user.rol==='cliente'}
 // ═══ SERVICIOS SIN REGISTRAR: entregas sin servicio de días anteriores, o de hoy después de las 21:00 (Carlos 31-10) ═══
 async function alertaSinReg(){const box=$('alerta-sinreg');if(!box)return;box.innerHTML='';if(!user||!supa||EMP_ACT!==EMPRESA)return;const u0=user;
