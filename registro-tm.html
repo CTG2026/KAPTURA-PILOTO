@@ -929,7 +929,8 @@ async function cxpPagado(i,modo){const r=cxpRows[i];const v=await formulario('Pa
 // ═══ MODO ESCRITORIO (Carlos 02-11): administración en PC, con menú lateral, tablero por pilar y tareas del día ═══
 const NAV_BTNS=['btn-spot','btn-pil','btn-caja','btn-reg','btn-ver','btn-misent','btn-ifco','btn-gps','btn-prof','btn-profA','btn-rsv','btn-cxc','btn-res'];
 const NAV_SCR={'btn-pil':'s-rep','btn-caja':'s-rep','btn-ver':'s-list','btn-misent':'s-misent','btn-ifco':'s-ifco','btn-gps':'s-gps','btn-prof':'s-prof','btn-profA':'s-profA','btn-rsv':'s-rsv','btn-cxc':'s-cxc','btn-res':'s-res','btn-reg':'s-reg'};
-function aplicarVista(){if(!esAdmin())return;const pref=ls('tm_vista'),pc=pref==='pc'||(pref!=='tel'&&window.innerWidth>=1024);document.body.classList.toggle('pc',pc);
+function aplicarVista(){if(!esAdminTotal()){document.body.classList.remove('pc');const bv=$('btn-vista');if(bv)bv.remove();return} // vista PC solo Carlos y Administración; Claudio no (Carlos 02-11)
+  const pref=ls('tm_vista'),pc=pref==='pc'||(pref!=='tel'&&window.innerWidth>=1024);document.body.classList.toggle('pc',pc);
   let bv=$('btn-vista');if(!bv){bv=document.createElement('button');bv.id='btn-vista';bv.className='link';bv.style.marginRight='10px';bv.onclick=()=>{ls('tm_vista',document.body.classList.contains('pc')?'tel':'pc');aplicarVista();ir('s-home')};$('btn-salir').before(bv)}
   bv.textContent=pc?'📱 Vista teléfono':'🖥 Vista PC';
   const cambiar=user&&user.rol==='administracion'?'<button onclick="ir(\'s-emp\')">🔄 Cambiar empresa</button>':'';
@@ -974,7 +975,7 @@ async function tareasHoy(){const box=$('tareas-hoy');if(!box)return;box.innerHTM
     // Solo las pendientes: estado en palabra (rojo) y botón; las hechas desaparecen hasta el día siguiente (Carlos 02-11)
     box.innerHTML='<div style="margin:6px 0 12px"><div style="display:flex;align-items:center;gap:10px"><div style="font-weight:900;font-size:16px;flex:1">Tareas de hoy · '+EMP_NOM[EMP_ACT]+' ('+pend.length+')</div><button class="btn2" style="width:auto;margin:0;padding:6px 10px;font-size:13px" onclick="nuevaTarea()">+ Nueva tarea</button>'+(user.rol==='administracion'?'<button class="btn2" style="width:auto;margin:0;padding:6px 10px;font-size:13px" onclick="ir(\'s-emp\')">🔄 Empresa</button>':'')+'</div>'+pend.map(x=>'<div class="tarea"><div class="x"><span style="font-weight:700">'+x.t+'</span><small>'+x.p+' · '+x.sub+'</small></div><span style="color:'+(x.est?'var(--muted)':'#ff3b30')+';font-weight:800;font-size:12px;white-space:nowrap">'+(x.est||(x.roja?'ATRASADA':'PENDIENTE'))+'</span>'+(x.btn||'')+'</div>').join('')+'</div>';}catch(e){box.innerHTML=''}}
 async function tareaHecha(id,unica){const {error}=await supa.from('tareas_admin').insert({fecha:hoyISO(),tarea:id,hecha_por:user.nombre,empresa:EMP_ACT});if(!error&&unica)await supa.from('tareas').update({activa:false}).eq('id',unica);toast(error?'No se pudo guardar':'Tarea hecha');tareasHoy()}
-window.addEventListener('resize',()=>{if(user&&esAdmin()&&!ls('tm_vista'))aplicarVista()});
+window.addEventListener('resize',()=>{if(user&&esAdminTotal()&&!ls('tm_vista'))aplicarVista()});
 async function nuevaTarea(){const v=await formulario('Nueva tarea · '+EMP_NOM[EMP_ACT],[{k:'t',l:'Tarea'},{k:'r',l:'¿Se repite?',t:'select',ops:['No (queda hasta marcarla Hecha)','Cada semana','Cada mes'],v:'No (queda hasta marcarla Hecha)'},
   {k:'f',l:'Plazo (si no se repite; vacío = sin plazo)',t:'date'},{k:'d',l:'Días (si es cada semana)',t:'dias',v:[1]},{k:'m',l:'Día del mes (si es cada mes)',t:'number',v:10}]);
   if(!v||!v.t)return;const o={empresa:EMP_ACT,titulo:v.t,creada_por:user.nombre};
