@@ -971,12 +971,12 @@ async function tareasHoy(){const box=$('tareas-hoy');if(!box)return;box.innerHTM
     _tHechas=(await conTope(supa.from('tareas_admin').select('tarea,hecha_por,hora,fecha').eq('empresa',EMP_ACT).gte('fecha',hoy.slice(0,8)+'01'),8000)).data||[];
     const esTM=EMP_ACT===EMPRESA,cx=esTM?await leerCxc():[],it=[];
     // Tareas creadas por administración: única (hasta Hecha), semanal (sus días), mensual (desde su día, hasta Hecha en el mes)
-    const tm=(await conTope(supa.from('tareas').select('*').eq('empresa',EMP_ACT).eq('activa',true).order('id'),8000)).data||[],dia=new Date().getDate(),dw7=dw||7;
+    const tm=(await conTope(supa.from('tareas').select('*').eq('empresa',EMP_ACT).eq('activa',true).order('id'),8000)).data||[],dia=new Date().getDate(),dw7=dw||7;_tareasEd=tm;
     tm.forEach(t=>{const k='t'+t.id;let ver=false,roja=false,sub='';
       if(t.recurrencia==='semanal'){ver=(t.dias||[]).includes(dw7)&&!_tHechas.some(x=>x.tarea===k&&x.fecha===hoy);sub='Cada '+(t.dias||[]).map(d=>['','lun','mar','mié','jue','vie','sáb','dom'][d]).join(', ')}
       else if(t.recurrencia==='mensual'){ver=dia>=(t.dia_mes||1)&&!_tHechas.some(x=>x.tarea===k);roja=dia>(t.dia_mes||1);sub='Cada mes, día '+t.dia_mes}
       else{ver=true;roja=!!(t.fecha_limite&&t.fecha_limite<hoy);sub=t.fecha_limite?'Plazo '+fCL(t.fecha_limite):'Sin plazo'}
-      if(ver)it.push({t:t.titulo,p:EMP_NOM[EMP_ACT],roja,sub,btn:'<button class="btn2" onclick="tareaHecha(\''+k+'\','+(t.recurrencia==='unica'?t.id:0)+')">✔ Hecha</button>'})});
+      if(ver)it.push({t:t.titulo,p:EMP_NOM[EMP_ACT],roja,sub,btn:'<button class="btn2" title="Editar tarea" style="width:auto;padding:6px 9px" onclick="editarTarea('+t.id+')">✏️</button><button class="btn2" onclick="tareaHecha(\''+k+'\','+(t.recurrencia==='unica'?t.id:0)+')">✔ Hecha</button>'})});
     if(esTM&&user.rol==='administracion'){try{(await leerCxp()).forEach(r=>{const e=cxpEstado(r);if(e.k!=='atr'&&e.k!=='pr')return;it.push({t:'Pagar: '+r.acreedor+' · '+r.concepto,p:'Liquidez',roja:e.k==='atr',sub:fmt$(r.monto)+' · '+fCL(r.fecha)+' · '+e.txt,btn:'<button class="btn2" onclick="verCxp(\'semana\')">Ir</button>'})})}catch(e){}}
     (esTM?TAREAS:[]).filter(t=>t.d.includes(dw)).forEach(t=>{const h=_tHechas.find(x=>x.tarea===t.id&&x.fecha===hoy);it.push({t:t.t,p:t.p,lim:t.lim,ok:!!h,roja:!h&&hm>=t.lim,sub:h?'Hecha por '+h.hecha_por.split(' ')[0]+' a las '+new Date(h.hora).toTimeString().slice(0,5):'Hasta las '+t.lim,btn:h?'':'<button class="btn2" onclick="tareaHecha(\''+t.id+'\')">✔ Hecha</button>'})});
     cx.forEach(r=>{const e=cxcEstado(r),et=cxcEtapa(r);if(e.sem==='🟢'||e.sem==='⚪')return;it.push({t:e.txt.split(' (')[0]+' · '+r.cliente+(r.folio?' fact. '+r.folio:''),p:'Liquidez',roja:e.sem==='🔴',est:et==='pendiente'?'EN ESPERA':null,sub:fmt$(r.total)+(et==='por_cobrar'?' · vence '+fCL(cxcVence(r)):''),btn:'<button class="btn2" onclick="verCxc()">Ir</button>'})});
@@ -992,6 +992,18 @@ async function nuevaTarea(){const v=await formulario('Nueva tarea · '+EMP_NOM[E
   else if(v.r==='Cada mes'){o.recurrencia='mensual';o.dia_mes=Math.min(28,Math.max(1,+v.m||1))}
   else{o.recurrencia='unica';if(v.f)o.fecha_limite=v.f}
   const {error}=await supa.from('tareas').insert(o);toast(error?'No se pudo guardar':'Tarea creada');tareasHoy()}
+// Editar y guardar una tarea creada por administración (TM y Global; Carlos 03-11). Las tareas fijas del sistema no se editan aquí.
+let _tareasEd=[];const _esc=x=>String(x??'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+async function editarTarea(id){const t=_tareasEd.find(x=>x.id===id);if(!t)return;const RR={unica:'No (queda hasta marcarla Hecha)',semanal:'Cada semana',mensual:'Cada mes'};
+  const v=await formulario('Editar tarea · '+EMP_NOM[EMP_ACT],[{k:'t',l:'Tarea',v:_esc(t.titulo)},{k:'r',l:'¿Se repite?',t:'select',ops:Object.values(RR),v:RR[t.recurrencia]||RR.unica},
+    {k:'f',l:'Plazo (si no se repite; vacío = sin plazo)',t:'date',v:t.fecha_limite||''},{k:'d',l:'Días (si es cada semana)',t:'dias',v:t.dias||[1]},{k:'m',l:'Día del mes (si es cada mes)',t:'number',v:t.dia_mes||10},
+    {k:'e',l:'Estado',t:'select',ops:['Activa','Eliminar tarea'],v:'Activa'}]);
+  if(!v)return;if(!v.t){toast('Falta el texto de la tarea');return}
+  const o={titulo:v.t,recurrencia:'unica',dias:null,dia_mes:null,fecha_limite:null,activa:v.e!=='Eliminar tarea'};
+  if(v.r==='Cada semana'){if(!v.d.length){toast('Elija al menos un día');return}o.recurrencia='semanal';o.dias=v.d}
+  else if(v.r==='Cada mes'){o.recurrencia='mensual';o.dia_mes=Math.min(28,Math.max(1,+v.m||1))}
+  else if(v.f)o.fecha_limite=v.f;
+  const {error}=await supa.from('tareas').update(o).eq('id',id).eq('empresa',EMP_ACT);toast(error?'No se pudo guardar':o.activa?'Tarea guardada':'Tarea eliminada');tareasHoy()}
 function elegirEmp(e){EMP_ACT=e;document.body.classList.toggle('global',e!==EMPRESA);$('saludo').textContent=e===EMPRESA?'Hola '+user.nombre.split(' ')[0]:EMP_NOM[e];$('hdr-user').textContent='👤 '+user.nombre.split(' ')[0]+' · '+EMP_NOM[e];aplicarVista();ir('s-home')}
 // ═══ ALERTAS DE ADMINISTRACIÓN (Carlos 01-11): tabla alertas_admin; las ven Carlos, Claudio y administración hasta marcarlas resueltas ═══
 let _alAdm=[];
