@@ -837,11 +837,14 @@ function formulario(tit,campos){return new Promise(res=>{const w=document.create
   w.querySelector('[data-x="0"]').onclick=()=>cerrar(null);
   w.querySelector('[data-x="1"]').onclick=()=>{const o={};w.querySelectorAll('[data-k]').forEach(e=>{o[e.dataset.k]=e.dataset.dias?[...e.querySelectorAll('input:checked')].map(x=>+x.value):e.value.trim()});cerrar(o)}})}
 // ═══ FACTURACIÓN Y COBRANZA (Carlos 02-11): por aprobar → por facturar → por cobrar → cobrada. Tabla cxc_facturas (columna etapa) ═══
-// Cierre del período: EBLOOMS y Ateuro por quincena (alerta de proforma para aprobación); Valle el último día del mes (alerta de liquidación para aprobación con Anita).
+// Cierre del período: EBLOOMS por quincena (alerta de proforma para aprobación); Valle y Ateuro el último día del mes (Valle: liquidación con Anita; Ateuro: proforma mensual) (Carlos 03-11).
 // Pago: EBLOOMS el viernes siguiente a la factura; Valle, Ateuro y Spot a 30 días; Los Tres Enanos 5 días. Aviso de cobranza 3 días antes del vencimiento.
 // Solo clientes con plazo conocido. Sin plazo (ej. Los Tres Enanos: factura a crédito sin fecha de vencimiento) NO se inventa vencimiento (Carlos 02-11)
 const CXC_PLAZO={'EBLOOMS':'viernes','Alimentos Valle Central':30,'Ateuro / Zuria':30,'Spot':30};
-const FAC_CLI=[{c:'EBLOOMS',q:true,doc:'proforma'},{c:'Ateuro / Zuria',q:true,doc:'proforma'},{c:'Alimentos Valle Central',q:false,doc:'liquidación (Anita)'}];
+const FAC_CLI=[{c:'EBLOOMS',q:true,doc:'proforma'},{c:'Ateuro / Zuria',q:false,doc:'proforma'},{c:'Alimentos Valle Central',q:false,doc:'liquidación (Anita)'}];
+// Servicios de un mes anterior que se cobran en otro período (Carlos 03-11: el viaje Ateuro del 30-10 va en la proforma de noviembre)
+const FAC_ARRASTRE={'Ateuro / Zuria':{'2026-11':'2026-10-30'}};
+const facDesde=(cli,ym,d)=>((FAC_ARRASTRE[cli]||{})[ym])||d;
 const FAC_DESDE='2026-11-01'; // períodos que Kaptura abre solo; los anteriores se cargaron a mano
 const dISO=s=>s?new Date(s+'T12:00:00'):null, fCL=s=>s?s.split('-').reverse().join('-'):'';
 const ETAPAS=[['pendiente','EN ESPERA (no facturar todavía)'],['por_aprobar','POR APROBAR (proforma / liquidación)'],['por_facturar','POR FACTURAR'],['por_cobrar','POR COBRAR (facturas emitidas)']];
@@ -862,12 +865,12 @@ function cxcEstado(r){const hoy=hoyISO(),et=cxcEtapa(r),doc=(FAC_CLI.find(x=>x.c
 async function facAbrirPeriodos(){const hoy=hoyISO(),ps=[],d0=new Date();
   for(const k of FAC_CLI)for(let i=2;i>=0;i--){const dm=new Date(d0.getFullYear(),d0.getMonth()-i,1),Y=dm.getFullYear(),M=dm.getMonth(),fin=new Date(Y,M+1,0).getDate();
     for(const [a,b] of (k.q?[[1,15],[16,fin]]:[[1,fin]])){const des=hoyISO(new Date(Y,M,a)),has=hoyISO(new Date(Y,M,b));
-      if(has<FAC_DESDE)continue;if(k.q?has>=hoy:has>hoy)continue;ps.push({k,des,has})}} // quincena: al día siguiente; Valle: el último día del mes
+      if(has<FAC_DESDE)continue;if(k.q?has>=hoy:has>hoy)continue;ps.push({k,des,has,d0:k.q?des:facDesde(k.c,des.slice(0,7),des)})}} // quincena: al día siguiente; Valle: el último día del mes
   const vist=new Set();for(const p of ps){const id=p.k.c.split(' ')[0].toUpperCase()+'-'+p.des;if(vist.has(id))continue;vist.add(id);
     try{const ex=await supa.from('cxc_facturas').select('id').eq('id',id).maybeSingle();if(ex.data)continue;
-      const sv=(await supa.from('servicios_piloto').select('tarifa_neta').eq('empresa',EMPRESA).eq('modo','registro_tm').neq('estado','anulado').eq('cliente',p.k.c).gte('fecha',p.des).lte('fecha',p.has)).data||[];if(!sv.length)continue;
+      const sv=(await supa.from('servicios_piloto').select('tarifa_neta').eq('empresa',EMPRESA).eq('modo','registro_tm').neq('estado','anulado').eq('cliente',p.k.c).gte('fecha',p.d0).lte('fecha',p.has)).data||[];if(!sv.length)continue;
       const neto=sv.reduce((t,x)=>t+(+x.tarifa_neta||0),0);
-      await supa.from('cxc_facturas').insert({id,cliente:p.k.c,periodo_desde:p.des,periodo_hasta:p.has,etapa:'por_aprobar',neto,total:Math.round(neto*1.19),nota:sv.length+' servicio(s) según Kaptura'})}catch(e){}}}
+      await supa.from('cxc_facturas').insert({id,cliente:p.k.c,periodo_desde:p.d0,periodo_hasta:p.has,etapa:'por_aprobar',neto,total:Math.round(neto*1.19),nota:sv.length+' servicio(s) según Kaptura'})}catch(e){}}}
 async function leerCxc(){const r=await conTope(supa.from('cxc_facturas').select('*').eq('empresa',EMPRESA).is('fecha_cobro',null).order('periodo_hasta'),10000);if(r.error)throw r.error;return r.data||[]}
 let cxcRows=[];
 async function verCxc(){if(!esAdmin())return;ir('s-cxc');$('cxc-box').innerHTML='';$('cxc-sub').textContent='Cargando…';
@@ -1398,12 +1401,12 @@ async function cargarProforma(){
 let profAFilas=[],profATit='';
 const HEAD_A=['Fecha','N° de Guia','Transporte','Chofer','Origen ','Destino','Tipo Camión','Movimiento','Neto','Iva','Total'];
 function verProformaA(){if(!esAdmin())return;ir('s-profA');const sel=$('profA-q');
-  if(!sel.options.length){sel.innerHTML=quincenas().map(x=>'<option value="'+x.y+'-'+x.m+'-'+x.q+'">'+(x.q===1?'1ra':'2da')+' quincena '+MESES[x.m]+' '+x.y+'</option>').join('');sel.onchange=cargarProformaA}
+  if(!sel.options.length){llenarMeses('profA-q');sel.onchange=cargarProformaA}
   cargarProformaA()}
 async function cargarProformaA(){
-  const [y,m,q]=$('profA-q').value.split('-').map(Number),d1=q===1?1:16,d2=q===1?15:new Date(y,m+1,0).getDate();
-  const desde=y+'-'+String(m+1).padStart(2,'0')+'-'+String(d1).padStart(2,'0'),hasta=y+'-'+String(m+1).padStart(2,'0')+'-'+String(d2).padStart(2,'0');
-  profATit=(q===1?'1ra':'2da')+' Quincena '+MESES[m];$('profA-tbl').innerHTML='';$('btn-profA-xls').disabled=true;$('profA-sub').textContent='Cargando…';
+  // Proforma Ateuro mensual: se factura a fin de mes y se paga a 30 días, igual que Valle (Carlos 03-11)
+  const ym=$('profA-q').value,[y,m1]=ym.split('-').map(Number),m=m1-1,desde=facDesde('Ateuro / Zuria',ym,ym+'-01'),hasta=finMes(ym);
+  profATit=MESES[m].charAt(0).toUpperCase()+MESES[m].slice(1)+(desde<ym+'-01'?' (incluye '+fCL(desde)+')':'');$('profA-tbl').innerHTML='';$('btn-profA-xls').disabled=true;$('profA-sub').textContent='Cargando…';
   const {data,error}=await supa.from('servicios_piloto').select('*').eq('empresa',EMPRESA).eq('modo','registro_tm').neq('estado','anulado').eq('cliente','Ateuro / Zuria').gte('fecha',desde).lte('fecha',hasta).order('fecha');
   if(error){$('profA-sub').textContent='Error: '+error.message;return}
   profAFilas=(data||[]).map(r=>{const n=parseNotas(r.notas),sv=(n.servicio_sistema||'').replace(/^Ateuro:\s*/,'').replace(/\s*·.*$/,''),[o,d]=sv.split('→').map(x=>(x||'').trim());
