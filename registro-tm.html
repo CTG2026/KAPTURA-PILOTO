@@ -296,6 +296,13 @@ input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--bor
   <button class="btn2" onclick="ir('s-home')">← Volver</button>
 </section>
 
+<section class="screen" id="s-cxp">
+  <h1 id="cxp-h">Compromisos de pago</h1>
+  <div class="sub" id="cxp-sub">Cargando…</div>
+  <div id="cxp-box"></div>
+  <button class="btn2" onclick="ir('s-home')">← Volver</button>
+</section>
+
 <section class="screen" id="s-cxc">
   <h1>Facturación y cobranza</h1>
   <div class="sub" id="cxc-sub">Cargando…</div>
@@ -899,6 +906,26 @@ async function cargarRep(){const per=$('rep-per').value;$('rep-tbl').innerHTML='
   catch(e){$('rep-sub').textContent='No se pudo leer ('+(e.message||e)+').'}}
 function repToggle(i){const rows=[...$('rep-tbl').querySelectorAll('tr[data-i]')],k=rows.findIndex(r=>r.dataset.i==String(i)),n=+rows[k].dataset.n;let abrir=null;
   for(let j=k+1;j<rows.length;j++){const m=+rows[j].dataset.n;if(m<=n)break;if(abrir===null)abrir=rows[j].classList.contains('oc');if(abrir){if(m===n+1)rows[j].classList.remove('oc')}else rows[j].classList.add('oc')}}
+// ═══ COMPROMISOS DE PAGO (CxP) – solo usuario Administración (Carlos 02-11). Fuente: maestro de compromisos del sistema TM ═══
+let cxpRows=[];
+function lunesDe(d){const x=new Date(d);const k=(x.getDay()+6)%7;x.setDate(x.getDate()-k);return hoyISO(x)}
+async function leerCxp(){const r=await conTope(supa.from('cxp_compromisos').select('*').eq('empresa',EMPRESA).order('fecha'),10000);if(r.error)throw r.error;return r.data||[]}
+function cxpEstado(r){const hoy=hoyISO();if(r.estado==='pagado')return {sem:'✅',txt:'Pagado'+(r.fecha_pago?' el '+fCL(r.fecha_pago):''),k:'ok'};const d=cxcDias(hoy,r.fecha);
+  if(d<0)return {sem:'🔴',txt:'ATRASADO ('+(-d)+' día'+(d===-1?'':'s')+')',k:'atr'};if(d<=2)return {sem:'🟡',txt:d===0?'VENCE HOY':'Vence en '+d+' día(s)',k:'pr'};return {sem:'⚪',txt:'Pendiente',k:'pe'}}
+async function verCxp(modo){if(!user||user.rol!=='administracion')return;ir('s-cxp');navMarcar(modo==='mes'?'s-cxp-m':'s-cxp-s');$('cxp-box').innerHTML='';$('cxp-sub').textContent='Cargando…';
+  try{cxpRows=await leerCxp()}catch(e){$('cxp-sub').textContent='No se pudo leer.';return}
+  const hoy=hoyISO(),lu=lunesDe(new Date()),d7=new Date(lu+'T12:00:00');d7.setDate(d7.getDate()+6);const fin=modo==='mes'?finMes(hoy.slice(0,7)):hoyISO(d7),ini=modo==='mes'?hoy.slice(0,8)+'01':lu;
+  $('cxp-h').textContent='Compromisos de pago · '+(modo==='mes'?MESES[+hoy.slice(5,7)-1]+' '+hoy.slice(0,4):'semana del '+fCL(lu)+' al '+fCL(fin));
+  const atr=cxpRows.filter(r=>r.estado!=='pagado'&&r.fecha<ini),per=cxpRows.filter(r=>r.fecha>=ini&&r.fecha<=fin);
+  const sum=a=>a.reduce((t,r)=>t+(+r.monto||0),0),H='<tr><th></th><th>Fecha</th><th>A quién</th><th>Concepto</th><th>Categoría</th><th>Monto</th><th>Estado</th><th></th></tr>';
+  const fila=r=>{const e=cxpEstado(r),i=cxpRows.indexOf(r);return '<tr><td>'+e.sem+'</td><td>'+fCL(r.fecha)+'</td><td>'+(r.acreedor||'')+'</td><td>'+(r.concepto||'')+(r.nota?'<div style="font-size:11px;color:var(--muted)">'+r.nota+'</div>':'')+'</td><td>'+(r.categoria||'')+'</td><td class="n">'+fmt$(r.monto)+'</td><td style="font-weight:800;color:'+(e.k==='atr'?'#D64545':e.k==='pr'?'#B7791F':e.k==='ok'?'#2E8B57':'inherit')+'">'+e.txt+'</td><td>'+(r.estado==='pagado'?'':'<button class="btn2" style="padding:4px 8px;font-size:12px;margin:0;width:auto" onclick="cxpPagado('+i+',\''+modo+'\')">✔ Pagado</button>')+'</td></tr>'};
+  const pend=per.filter(r=>r.estado!=='pagado');
+  $('cxp-box').innerHTML='<div class="tblw"><table class="tbl" id="cxp-tbl">'+(atr.length?'<tr><th colspan="8">ATRASADOS (de antes)</th></tr>'+H+atr.map(fila).join('')+'<tr class="tot"><td colspan="5">Total atrasado</td><td class="n">'+fmt$(sum(atr))+'</td><td colspan="2"></td></tr>':'')+
+    '<tr><th colspan="8">'+(modo==='mes'?'DEL MES':'DE ESTA SEMANA')+'</th></tr>'+H+per.map(fila).join('')+'<tr class="tot"><td colspan="5">Total por pagar '+(modo==='mes'?'en el mes':'en la semana')+'</td><td class="n">'+fmt$(sum(pend))+'</td><td colspan="2"></td></tr></table></div>';
+  $('cxp-sub').textContent=(atr.length?atr.length+' atrasado(s) '+fmt$(sum(atr))+' · ':'')+pend.length+' por pagar '+fmt$(sum(pend))+' · Solo compromisos fijos (sin combustible, viáticos ni anticipos). Fuente: sistema TM.'}
+async function cxpPagado(i,modo){const r=cxpRows[i];const v=await formulario('Pagado · '+r.acreedor+' · '+r.concepto,[{k:'fe',l:'Fecha de pago',t:'date',v:hoyISO()},{k:'cu',l:'Cuenta',t:'select',ops:['Santander','Banco de Chile','Tarjeta de crédito','Otra'],v:'Santander'},{k:'mo',l:'Monto pagado ($)',t:'number',v:Math.round(+r.monto||0)}]);
+  if(!v||!v.fe)return;const {error}=await supa.from('cxp_compromisos').update({estado:'pagado',fecha_pago:v.fe,cuenta:v.cu,monto:+String(v.mo).replace(/\D/g,'')||r.monto,actualizado:new Date().toISOString()}).eq('id',r.id);
+  toast(error?'No se pudo guardar':'Pagado (se confirma con la cartola)');verCxp(modo)}
 // ═══ MODO ESCRITORIO (Carlos 02-11): administración en PC, con menú lateral, tablero por pilar y tareas del día ═══
 const NAV_BTNS=['btn-spot','btn-pil','btn-caja','btn-reg','btn-ver','btn-misent','btn-ifco','btn-gps','btn-prof','btn-profA','btn-rsv','btn-cxc','btn-res'];
 const NAV_SCR={'btn-pil':'s-rep','btn-caja':'s-rep','btn-ver':'s-list','btn-misent':'s-misent','btn-ifco':'s-ifco','btn-gps':'s-gps','btn-prof':'s-prof','btn-profA':'s-profA','btn-rsv':'s-rsv','btn-cxc':'s-cxc','btn-res':'s-res','btn-reg':'s-reg'};
@@ -907,7 +934,8 @@ function aplicarVista(){if(!esAdmin())return;const pref=ls('tm_vista'),pc=pref==
   bv.textContent=pc?'📱 Vista teléfono':'🖥 Vista PC';
   const cambiar=user&&user.rol==='administracion'?'<button onclick="ir(\'s-emp\')">🔄 Cambiar empresa</button>':'';
   if(EMP_ACT!==EMPRESA){$('pcnav').innerHTML='<div class="t">KAPTURA · '+EMP_NOM[EMP_ACT].toUpperCase()+'</div><button data-s="s-home" onclick="ir(\'s-home\')">🏠 Inicio: tareas y alertas</button>'+cambiar;return}
-  $('pcnav').innerHTML='<div class="t">KAPTURA · TM</div><button data-s="s-home" onclick="ir(\'s-home\')">🏠 Inicio y tareas del día</button>'+cambiar+NAV_BTNS.filter(i=>$(i)&&$(i).style.display!=='none').map(i=>'<button data-s="'+NAV_SCR[i]+'" onclick="$(\''+i+'\').click()">'+$(i).textContent.replace(/\s*\(\d+\)$/,'')+'</button>').join('')}
+  const comp=user&&user.rol==='administracion'?'<div style="font-size:11px;font-weight:800;color:var(--muted);letter-spacing:.08em;margin:10px 10px 2px">💸 COMPROMISOS</div><button data-s="s-cxp-s" onclick="verCxp(\'semana\')" style="padding-left:24px">Semana</button><button data-s="s-cxp-m" onclick="verCxp(\'mes\')" style="padding-left:24px">Mes actual</button>':'';
+  $('pcnav').innerHTML='<div class="t">KAPTURA · TM</div><button data-s="s-home" onclick="ir(\'s-home\')">🏠 Inicio y tareas del día</button>'+cambiar+comp+NAV_BTNS.filter(i=>$(i)&&$(i).style.display!=='none').map(i=>'<button data-s="'+NAV_SCR[i]+'" onclick="$(\''+i+'\').click()">'+$(i).textContent.replace(/\s*\(\d+\)$/,'')+'</button>').join('')}
 function navMarcar(id){document.querySelectorAll('#pcnav button').forEach(b=>b.classList.toggle('on',b.dataset.s===id))}
 // Tablero por pilar (solo con datos que Kaptura tiene; el resto vive en el sistema TM)
 async function pcDash(){const box=$('pc-dash');if(!box)return;box.innerHTML='';if(!document.body.classList.contains('pc')||!esAdmin()||!supa||EMP_ACT!==EMPRESA)return;const u0=user;
@@ -939,6 +967,7 @@ async function tareasHoy(){const box=$('tareas-hoy');if(!box)return;box.innerHTM
       else if(t.recurrencia==='mensual'){ver=dia>=(t.dia_mes||1)&&!_tHechas.some(x=>x.tarea===k);roja=dia>(t.dia_mes||1);sub='Cada mes, día '+t.dia_mes}
       else{ver=true;roja=!!(t.fecha_limite&&t.fecha_limite<hoy);sub=t.fecha_limite?'Plazo '+fCL(t.fecha_limite):'Sin plazo'}
       if(ver)it.push({t:t.titulo,p:EMP_NOM[EMP_ACT],roja,sub,btn:'<button class="btn2" onclick="tareaHecha(\''+k+'\','+(t.recurrencia==='unica'?t.id:0)+')">✔ Hecha</button>'})});
+    if(esTM&&user.rol==='administracion'){try{(await leerCxp()).forEach(r=>{const e=cxpEstado(r);if(e.k!=='atr'&&e.k!=='pr')return;it.push({t:'Pagar: '+r.acreedor+' · '+r.concepto,p:'Liquidez',roja:e.k==='atr',sub:fmt$(r.monto)+' · '+fCL(r.fecha)+' · '+e.txt,btn:'<button class="btn2" onclick="verCxp(\'semana\')">Ir</button>'})})}catch(e){}}
     (esTM?TAREAS:[]).filter(t=>t.d.includes(dw)).forEach(t=>{const h=_tHechas.find(x=>x.tarea===t.id&&x.fecha===hoy);it.push({t:t.t,p:t.p,lim:t.lim,ok:!!h,roja:!h&&hm>=t.lim,sub:h?'Hecha por '+h.hecha_por.split(' ')[0]+' a las '+new Date(h.hora).toTimeString().slice(0,5):'Hasta las '+t.lim,btn:h?'':'<button class="btn2" onclick="tareaHecha(\''+t.id+'\')">✔ Hecha</button>'})});
     cx.forEach(r=>{const e=cxcEstado(r),et=cxcEtapa(r);if(e.sem==='🟢'||e.sem==='⚪')return;it.push({t:e.txt.split(' (')[0]+' · '+r.cliente+(r.folio?' fact. '+r.folio:''),p:'Liquidez',roja:e.sem==='🔴',est:et==='pendiente'?'EN ESPERA':null,sub:fmt$(r.total)+(et==='por_cobrar'?' · vence '+fCL(cxcVence(r)):''),btn:'<button class="btn2" onclick="verCxc()">Ir</button>'})});
     if(user!==u0||!esAdminTotal())return;const pend=it.filter(x=>!x.ok);
