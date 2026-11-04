@@ -304,10 +304,10 @@ input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--bor
 </section>
 
 <section class="screen" id="s-arch">
-  <h1>COMERCIAL / EBLOOMS / Tarifarios</h1>
+  <h1 id="arch-h">Archivos</h1>
   <div class="sub" id="arch-sub">Cargando…</div>
   <div id="arch-box"></div>
-  <input type="file" id="arch-file" accept=".xlsx,.xls,.xlsm" style="display:none">
+  <input type="file" id="arch-file" multiple style="display:none">
   <button class="btn2" onclick="ir('s-home')">← Volver</button>
 </section>
 <section class="screen" id="s-cxc">
@@ -942,35 +942,156 @@ async function verCxp(modo){if(!user||user.rol!=='administracion')return;ir('s-c
 async function cxpPagado(i,modo){const r=cxpRows[i];const v=await formulario('Pagado · '+r.acreedor+' · '+r.concepto,[{k:'fe',l:'Fecha de pago',t:'date',v:hoyISO()},{k:'cu',l:'Cuenta',t:'select',ops:['Santander','Banco de Chile','Tarjeta de crédito','Otra'],v:'Santander'},{k:'mo',l:'Monto pagado ($)',t:'number',v:Math.round(+r.monto||0)}]);
   if(!v||!v.fe)return;const {error}=await supa.from('cxp_compromisos').update({estado:'pagado',fecha_pago:v.fe,cuenta:v.cu,monto:+String(v.mo).replace(/\D/g,'')||r.monto,actualizado:new Date().toISOString()}).eq('id',r.id);
   toast(error?'No se pudo guardar':'Pagado (se confirma con la cartola)');verCxp(modo)}
-// ═══ CARPETAS DEL MENÚ PC (Carlos 04-11): archivos en tm_archivos; cada subida es una versión nueva, nunca se borra ni se pisa ═══
-const ARCH_CARPETA='COMERCIAL/EBLOOMS/Tarifarios',ARCH_MAX=8*1024*1024;let archRows=[],archNoms=[];
+// ═══ ARCHIVOS DEL MENÚ PC (Carlos 04-11): explorador con carpetas y subcarpetas, cualquier tipo de archivo, renombrar, mover/arrastrar y Papelera. Tablas tm_carpetas y tm_archivos; subir el mismo nombre crea una versión nueva ═══
+const ARCH_MAX=8*1024*1024,BS='width:auto;margin:4px 6px 0 0;padding:7px 10px;font-size:13px';
+let ARCH={cur:null,carps:[],files:[],pap:[]};
 function archEsc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function archKB(b){return b>=1048576?(b/1048576).toFixed(1)+' MB':Math.max(1,Math.round(b/1024))+' KB'}
 function archFecha(t){const d=new Date(t);return isNaN(d)?'':d.toLocaleString('es-CL',{timeZone:'America/Santiago',day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}
-function archNav(){return '<details open style="margin-top:10px"><summary style="font-size:11px;font-weight:800;color:var(--muted);letter-spacing:.08em;cursor:pointer;padding:4px 10px">📁 COMERCIAL</summary><details open style="margin-left:10px"><summary style="font-size:12px;font-weight:800;color:var(--muted);cursor:pointer;padding:4px 10px">📁 EBLOOMS</summary><button data-s="s-arch" onclick="verArch()" style="padding-left:24px">📁 Tarifarios</button></details></details>'}
-async function verArch(){if(!esAdminTotal())return;ir('s-arch');navMarcar('s-arch');$('arch-box').innerHTML='';$('arch-sub').textContent='Cargando…';
-  const {data,error}=await supa.from('tm_archivos').select('id,nombre,version,bytes,subido_por,creado').eq('empresa',EMPRESA).eq('carpeta',ARCH_CARPETA).order('nombre').order('version',{ascending:false});
-  if(error){$('arch-sub').textContent='No se pudo leer la carpeta. Revise la conexión.';return}
-  archRows=data||[];const por={};archRows.forEach(r=>{(por[r.nombre]=por[r.nombre]||[]).push(r)});archNoms=Object.keys(por);
-  $('arch-sub').textContent=archNoms.length?archNoms.length+' archivo(s). Descargue, edite en Excel y suba la versión nueva: queda como vigente y las anteriores se conservan.':'Carpeta vacía.';
-  $('arch-box').innerHTML=archNoms.map((n,i)=>{const v=por[n],a=v[0];
-    return '<div class="card"><div style="font-weight:800;font-size:15px">📄 '+archEsc(n)+'</div><div style="font-size:12px;color:var(--muted);margin:4px 0 10px">Versión vigente: v'+a.version+' · '+archFecha(a.creado)+' · '+archEsc(a.subido_por||'')+' · '+archKB(a.bytes||0)+'</div>'+
-    '<button class="btn2" onclick="archDescargar(\''+a.id+'\')">⬇ Descargar versión vigente</button> <button class="btn2" onclick="archSubir('+i+')">⬆ Subir versión nueva</button>'+
-    (v.length>1?'<details style="margin-top:10px"><summary style="cursor:pointer;font-size:12px;color:var(--muted)">Historial ('+v.length+' versiones)</summary>'+v.map(x=>'<div style="font-size:12px;padding:4px 0">v'+x.version+' · '+archFecha(x.creado)+' · '+archEsc(x.subido_por||'')+' · '+archKB(x.bytes||0)+' <a href="#" onclick="archDescargar(\''+x.id+'\');return false">⬇ descargar</a></div>').join('')+'</details>':'')+'</div>'}).join('')+
-    '<button class="btn2" onclick="archSubir(-1)">➕ Agregar otro archivo a esta carpeta</button>'}
+function archMs(t){return new Date(t).getTime()}
+function archCarp(id){return ARCH.carps.find(x=>x.id===id)}
+function archRuta(id){const r=[];let c=archCarp(id);while(c){r.unshift(c);c=archCarp(c.padre_id)}return r}
+function archRutaTxt(id){return archRuta(id).map(x=>x.nombre).join(' / ')}
+function archDesc(id){const o=[id];ARCH.carps.filter(x=>x.padre_id===id).forEach(h=>o.push(...archDesc(h.id)));return o}
+function archErr(e,def){return e&&e.code==='23505'?'Ya existe uno con ese nombre en esa carpeta (revise también la Papelera)':def}
+function archNombreOk(n){return !!n&&n.length<=120&&!/[\/\\]/.test(n)}
+async function archCargarCarps(){const {data,error}=await supa.from('tm_carpetas').select('id,padre_id,nombre,eliminado,eliminado_en').eq('empresa',EMPRESA).order('nombre');if(!error)ARCH.carps=data||[];return !error}
+function archNav(){return '<div id="arch-nav"></div>'}
+function archMarcar(){document.querySelectorAll('#pcnav button').forEach(b=>b.classList.toggle('on',b.dataset.s==='arch:'+ARCH.cur))}
+function archNavPintar(){const el=$('arch-nav');if(!el)return;const act=ARCH.carps.filter(c=>!c.eliminado);
+  const rec=(p,d)=>act.filter(c=>(c.padre_id||null)===p).sort((a,b)=>a.nombre.localeCompare(b.nombre,'es')).map(c=>'<button data-s="arch:'+c.id+'" data-drop="'+c.id+'" onclick="verArch(\''+c.id+'\')" style="padding-left:'+(14+d*14)+'px">📁 '+archEsc(c.nombre)+'</button>'+rec(c.id,d+1)).join('');
+  el.innerHTML='<div style="font-size:11px;font-weight:800;color:var(--muted);letter-spacing:.08em;margin:10px 10px 2px">📁 ARCHIVOS</div><button data-s="arch:null" data-drop="root" onclick="verArch(null)" style="padding-left:14px">🗂 Inicio</button>'+rec(null,1)+'<button data-s="arch:papelera" onclick="verArch(\'papelera\')" style="padding-left:14px">🗑 Papelera</button>';archMarcar()}
+async function archNavCargar(){if(!$('arch-nav'))return;if(await archCargarCarps())archNavPintar()}
+async function verArch(id){if(!esAdminTotal())return;if(id!==undefined)ARCH.cur=id;
+  ir('s-arch');$('arch-box').innerHTML='';$('arch-sub').textContent='Cargando…';
+  if(!await archCargarCarps()){$('arch-sub').textContent='No se pudo leer las carpetas. Revise la conexión.';return}
+  const c=ARCH.cur;if(c&&c!=='papelera'){const k=archCarp(c);if(!k||k.eliminado)ARCH.cur=null}
+  if(ARCH.cur==='papelera')await archPapelera();else await archListar();
+  archNavPintar()}
+async function archListar(){const cur=ARCH.cur;let files=[];
+  if(cur){const {data,error}=await supa.from('tm_archivos').select('id,nombre,version,bytes,subido_por,creado').eq('carpeta_id',cur).eq('eliminado',false).order('nombre').order('version',{ascending:false});
+    if(error){$('arch-sub').textContent='No se pudo leer la carpeta. Revise la conexión.';return}files=data||[]}
+  ARCH.files=files;const por={};files.forEach(r=>{(por[r.nombre]=por[r.nombre]||[]).push(r)});const noms=Object.keys(por);
+  const subs=ARCH.carps.filter(c=>!c.eliminado&&(c.padre_id||null)===(cur||null)).sort((a,b)=>a.nombre.localeCompare(b.nombre,'es'));
+  const ruta=cur?archRuta(cur):[];$('arch-h').textContent=ruta.length?ruta.map(x=>x.nombre).join(' / '):'Archivos';
+  $('arch-sub').textContent=cur?'Arrastre archivos desde su PC a esta pantalla para subirlos. Arrastre carpetas o archivos sobre otra carpeta (o sobre el menú de la izquierda) para moverlos.':'Elija una carpeta o cree una nueva. Los archivos se guardan dentro de carpetas.';
+  const sp='cursor:pointer;padding:4px 8px;border-radius:8px;background:var(--surface2);font-weight:800';
+  const mig='<div style="display:flex;flex-wrap:wrap;gap:4px;align-items:center;font-size:14px;margin:6px 0 12px"><span data-drop="root" onclick="verArch(null)" style="'+sp+'">🗂 Inicio</span>'+ruta.map(x=>'<span>›</span><span data-drop="'+x.id+'" onclick="verArch(\''+x.id+'\')" style="'+sp+'">'+archEsc(x.nombre)+'</span>').join('')+'</div>';
+  const barra='<div style="margin-bottom:12px"><button class="btn2" style="'+BS+'" onclick="archNueva()">➕ Nueva carpeta</button>'+(cur?'<button class="btn2" style="'+BS+'" onclick="archPick()">⬆ Subir archivos</button>':'')+'<button class="btn2" style="'+BS+'" onclick="verArch(\'papelera\')">🗑 Papelera</button></div>';
+  const hSub=subs.map(c=>'<div class="card" draggable="true" data-drag="arch:d:'+c.id+'" data-drop="'+c.id+'"><div onclick="verArch(\''+c.id+'\')" style="cursor:pointer;font-weight:800;font-size:15px">📁 '+archEsc(c.nombre)+'</div><div><button class="btn2" style="'+BS+'" onclick="archRenCarp(\''+c.id+'\')">✏ Renombrar</button><button class="btn2" style="'+BS+'" onclick="archMovCarp(\''+c.id+'\')">↔ Mover a…</button><button class="btn2" style="'+BS+'" onclick="archElimCarp(\''+c.id+'\')">🗑 Eliminar</button></div></div>').join('');
+  const hFil=noms.map(n=>{const v=por[n],a=v[0];
+    return '<div class="card" draggable="true" data-drag="arch:f:'+a.id+'"><div style="font-weight:800;font-size:15px">📄 '+archEsc(n)+'</div><div style="font-size:12px;color:var(--muted);margin:4px 0 8px">Versión vigente: v'+a.version+' · '+archFecha(a.creado)+' · '+archEsc(a.subido_por||'')+' · '+archKB(a.bytes||0)+'</div>'+
+    '<button class="btn2" style="'+BS+'" onclick="archDescargar(\''+a.id+'\')">⬇ Descargar</button><button class="btn2" style="'+BS+'" onclick="archVersion(\''+a.id+'\')">⬆ Versión nueva</button><button class="btn2" style="'+BS+'" onclick="archRenArch(\''+a.id+'\')">✏ Renombrar</button><button class="btn2" style="'+BS+'" onclick="archMovArch(\''+a.id+'\')">↔ Mover a…</button><button class="btn2" style="'+BS+'" onclick="archElimArch(\''+a.id+'\')">🗑 Eliminar</button>'+
+    (v.length>1?'<details style="margin-top:8px"><summary style="cursor:pointer;font-size:12px;color:var(--muted)">Historial ('+v.length+' versiones)</summary>'+v.map(x=>'<div style="font-size:12px;padding:4px 0">v'+x.version+' · '+archFecha(x.creado)+' · '+archEsc(x.subido_por||'')+' · '+archKB(x.bytes||0)+' <button class="btn2" style="'+BS+'" onclick="archDescargar(\''+x.id+'\')">⬇</button></div>').join('')+'</details>':'')+'</div>'}).join('');
+  $('arch-box').innerHTML=mig+barra+(hSub+hFil||'<div class="card" style="color:var(--muted)">'+(cur?'Carpeta vacía. Arrastre archivos aquí o use "Subir archivos".':'No hay carpetas. Cree la primera con "Nueva carpeta".')+'</div>')}
+async function archNueva(){if(!esAdminTotal())return;const r=await formulario('Nueva carpeta'+(ARCH.cur&&ARCH.cur!=='papelera'?' en '+archEsc(archRutaTxt(ARCH.cur)):''),[{l:'Nombre',k:'n'}]);if(!r)return;
+  if(!archNombreOk(r.n)){toast('Nombre vacío, muy largo o con / no permitido');return}
+  const {error}=await supa.from('tm_carpetas').insert({empresa:EMPRESA,padre_id:ARCH.cur||null,nombre:r.n,creado_por:(user&&user.nombre)||''});
+  if(error){toast(archErr(error,'No se pudo crear la carpeta'));return}toast('Carpeta creada');verArch()}
+async function archRenCarp(id){if(!esAdminTotal())return;const c=archCarp(id);if(!c)return;const r=await formulario('Renombrar carpeta',[{l:'Nuevo nombre',k:'n',v:archEsc(c.nombre)}]);if(!r||r.n===c.nombre)return;
+  if(!archNombreOk(r.n)){toast('Nombre vacío, muy largo o con / no permitido');return}
+  const {error}=await supa.from('tm_carpetas').update({nombre:r.n}).eq('id',id);if(error){toast(archErr(error,'No se pudo renombrar'));return}toast('Carpeta renombrada');verArch()}
+async function archRenArch(id){if(!esAdminTotal())return;const f=ARCH.files.find(x=>x.id===id);if(!f)return;const r=await formulario('Renombrar archivo',[{l:'Nuevo nombre (con extensión)',k:'n',v:archEsc(f.nombre)}]);if(!r||r.n===f.nombre)return;
+  if(!archNombreOk(r.n)){toast('Nombre vacío, muy largo o con / no permitido');return}
+  const {error}=await supa.from('tm_archivos').update({nombre:r.n}).eq('carpeta_id',ARCH.cur).eq('nombre',f.nombre).eq('eliminado',false);if(error){toast(archErr(error,'No se pudo renombrar'));return}toast('Archivo renombrado');verArch()}
+function archDestinos(excl,raiz,actual){const ex=excl?archDesc(excl):[],m={},ops=[];let v;
+  if(raiz){m['🗂 Inicio (raíz)']=null;ops.push('🗂 Inicio (raíz)')}
+  ARCH.carps.filter(c=>!c.eliminado&&!ex.includes(c.id)).map(c=>[archRutaTxt(c.id),c.id]).sort((a,b)=>a[0].localeCompare(b[0],'es')).forEach(([t,i])=>{m[t]=i;ops.push(t)});
+  const act=actual?archRutaTxt(actual):(raiz?'🗂 Inicio (raíz)':'');return {m,ops:ops.map(archEsc),v:archEsc(act)}}
+async function archMovCarp(id){if(!esAdminTotal())return;const c=archCarp(id);if(!c)return;const d=archDestinos(id,true,c.padre_id);
+  const r=await formulario('Mover "'+archEsc(c.nombre)+'" a…',[{l:'Carpeta destino',k:'d',t:'select',ops:d.ops,v:d.v}]);if(!r||!(r.d in d.m))return;archMover('d',id,d.m[r.d])}
+async function archMovArch(id){if(!esAdminTotal())return;const f=ARCH.files.find(x=>x.id===id);if(!f)return;const d=archDestinos(null,false,ARCH.cur);
+  const r=await formulario('Mover "'+archEsc(f.nombre)+'" a…',[{l:'Carpeta destino',k:'d',t:'select',ops:d.ops,v:d.v}]);if(!r||!(r.d in d.m))return;archMover('f',id,d.m[r.d])}
+async function archMover(tipo,id,dest){if(!esAdminTotal())return;
+  if(tipo==='d'){const c=archCarp(id);if(!c)return;if(dest===id||(dest&&archDesc(id).includes(dest))){toast('No se puede mover una carpeta dentro de sí misma');return}
+    if((c.padre_id||null)===(dest||null))return;
+    const {error}=await supa.from('tm_carpetas').update({padre_id:dest||null}).eq('id',id);if(error){toast(archErr(error,'No se pudo mover'));return}toast('Carpeta movida')}
+  else{if(!dest){toast('Los archivos van dentro de una carpeta, no en el inicio');return}
+    const f=ARCH.files.find(x=>x.id===id);if(!f||dest===ARCH.cur)return;
+    const {error}=await supa.from('tm_archivos').update({carpeta_id:dest}).eq('carpeta_id',ARCH.cur).eq('nombre',f.nombre).eq('eliminado',false);
+    if(error){toast(archErr(error,'No se pudo mover'));return}toast('Archivo movido con todas sus versiones')}
+  verArch()}
+async function archElimCarp(id){if(!esAdminTotal())return;const c=archCarp(id);if(!c)return;const ids=archDesc(id).filter(i=>!archCarp(i).eliminado);
+  if(!confirm('¿Eliminar la carpeta "'+c.nombre+'" con todo su contenido?\nSe envía a la Papelera y se puede restaurar.'))return;
+  const t=new Date().toISOString();
+  let r=await supa.from('tm_carpetas').update({eliminado:true,eliminado_en:t}).in('id',ids).eq('eliminado',false);if(r.error){toast('No se pudo eliminar');return}
+  r=await supa.from('tm_archivos').update({eliminado:true,eliminado_en:t}).in('carpeta_id',ids).eq('eliminado',false);if(r.error){toast('Falló parte de los archivos. Reintente')}else toast('Enviada a la Papelera');
+  if(ARCH.cur&&ids.includes(ARCH.cur))ARCH.cur=c.padre_id||null;verArch()}
+async function archElimArch(id){if(!esAdminTotal())return;const f=ARCH.files.find(x=>x.id===id);if(!f)return;
+  if(!confirm('¿Eliminar "'+f.nombre+'" (todas sus versiones)?\nSe envía a la Papelera y se puede restaurar.'))return;
+  const {error}=await supa.from('tm_archivos').update({eliminado:true,eliminado_en:new Date().toISOString()}).eq('carpeta_id',ARCH.cur).eq('nombre',f.nombre).eq('eliminado',false);
+  if(error){toast('No se pudo eliminar');return}toast('Enviado a la Papelera');verArch()}
+async function archPapelera(){
+  const {data,error}=await supa.from('tm_archivos').select('id,carpeta_id,nombre,version,bytes,eliminado_en').eq('empresa',EMPRESA).eq('eliminado',true).order('eliminado_en',{ascending:false});
+  if(error){$('arch-sub').textContent='No se pudo leer la Papelera.';return}
+  const items=[];
+  ARCH.carps.filter(c=>c.eliminado).forEach(c=>{const p=archCarp(c.padre_id);if(p&&p.eliminado&&archMs(p.eliminado_en)===archMs(c.eliminado_en))return;items.push({t:'d',id:c.id,nombre:c.nombre,donde:c.padre_id?archRutaTxt(c.padre_id):'Inicio',en:c.eliminado_en})});
+  const g={};(data||[]).forEach(f=>{const c=archCarp(f.carpeta_id);if(c&&c.eliminado&&archMs(c.eliminado_en)===archMs(f.eliminado_en))return;const k=f.carpeta_id+'|'+f.nombre;(g[k]=g[k]||{t:'f',carpeta_id:f.carpeta_id,nombre:f.nombre,donde:archRutaTxt(f.carpeta_id),en:f.eliminado_en,n:0,bytes:0}).n++});
+  Object.values(g).forEach(x=>items.push(x));items.sort((a,b)=>archMs(b.en)-archMs(a.en));ARCH.pap=items;
+  $('arch-h').textContent='Papelera';$('arch-sub').textContent=items.length?'Lo eliminado se puede restaurar. "Eliminar definitivamente" no se puede deshacer.':'La Papelera está vacía.';
+  $('arch-box').innerHTML='<div style="margin-bottom:12px"><button class="btn2" style="'+BS+'" onclick="verArch(null)">📁 Volver a archivos</button>'+(items.length?'<button class="btn2" style="'+BS+'" onclick="archVaciar()">✖ Vaciar Papelera</button>':'')+'</div>'+
+    items.map((it,i)=>'<div class="card"><div style="font-weight:800;font-size:15px">'+(it.t==='d'?'📁 ':'📄 ')+archEsc(it.nombre)+'</div><div style="font-size:12px;color:var(--muted);margin:4px 0 8px">Estaba en: '+archEsc(it.donde)+' · eliminado '+archFecha(it.en)+'</div><button class="btn2" style="'+BS+'" onclick="archPapRest('+i+')">♻ Restaurar</button><button class="btn2" style="'+BS+'" onclick="archPapBorrar('+i+')">✖ Eliminar definitivamente</button></div>').join('')}
+async function archPapRest(i){if(!esAdminTotal())return;const it=ARCH.pap[i];if(!it)return;let err=null;
+  if(it.t==='d'){const T=archMs(archCarp(it.id).eliminado_en);const ids=archDesc(it.id).filter(x=>{const k=archCarp(x);return k.eliminado&&archMs(k.eliminado_en)===T});
+    const anc=archRuta(it.id).filter(k=>k.id!==it.id&&k.eliminado).map(k=>k.id);
+    const {data:fl}=await supa.from('tm_archivos').select('id,eliminado_en').in('carpeta_id',ids).eq('eliminado',true);const fid=(fl||[]).filter(f=>archMs(f.eliminado_en)===T).map(f=>f.id);
+    let r=await supa.from('tm_carpetas').update({eliminado:false,eliminado_en:null}).in('id',[...anc,...ids]);err=r.error;
+    if(!err&&fid.length){r=await supa.from('tm_archivos').update({eliminado:false,eliminado_en:null}).in('id',fid);err=r.error}}
+  else{const ch=archRuta(it.carpeta_id).filter(k=>k.eliminado).map(k=>k.id);
+    if(ch.length){const r=await supa.from('tm_carpetas').update({eliminado:false,eliminado_en:null}).in('id',ch);err=r.error}
+    if(!err){const r=await supa.from('tm_archivos').update({eliminado:false,eliminado_en:null}).eq('carpeta_id',it.carpeta_id).eq('nombre',it.nombre).eq('eliminado',true);err=r.error}}
+  if(err){toast(archErr(err,'No se pudo restaurar'));return}toast('Restaurado');verArch('papelera')}
+async function archPapBorrar(i){if(!esAdminTotal())return;const it=ARCH.pap[i];if(!it)return;
+  if(!confirm('¿Eliminar DEFINITIVAMENTE "'+it.nombre+'"'+(it.t==='d'?' y todo su contenido':' con todas sus versiones')+'?\nNo se puede deshacer.'))return;
+  if(!confirm('Última confirmación: "'+it.nombre+'" se borrará para siempre. ¿Continuar?'))return;
+  const r=it.t==='d'?await supa.from('tm_carpetas').delete().eq('id',it.id):await supa.from('tm_archivos').delete().eq('carpeta_id',it.carpeta_id).eq('nombre',it.nombre).eq('eliminado',true);
+  if(r.error){toast('No se pudo eliminar');return}toast('Eliminado definitivamente');verArch('papelera')}
+async function archVaciar(){if(!esAdminTotal()||!ARCH.pap.length)return;
+  if(!confirm('¿Vaciar la Papelera? Se borrarán DEFINITIVAMENTE '+ARCH.pap.length+' elemento(s). No se puede deshacer.'))return;
+  if(!confirm('Última confirmación: vaciar la Papelera para siempre. ¿Continuar?'))return;
+  const ids=ARCH.pap.filter(x=>x.t==='d').map(x=>x.id);
+  let r=await supa.from('tm_archivos').delete().eq('empresa',EMPRESA).eq('eliminado',true);if(r.error){toast('No se pudo vaciar');return}
+  if(ids.length){r=await supa.from('tm_carpetas').delete().in('id',ids);if(r.error){toast('No se pudo vaciar');return}}
+  toast('Papelera vaciada');verArch('papelera')}
 async function archDescargar(id){toast('Preparando descarga…');
   const {data,error}=await supa.from('tm_archivos').select('nombre,version,contenido').eq('id',id).single();
   if(error||!data){toast('No se pudo descargar');return}
   const bin=atob(data.contenido),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);
-  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([u],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));a.download=data.nombre.replace(/(\.[^.]+)?$/,'_v'+data.version+'$1');document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500)}
-function archSubir(i){const inp=$('arch-file');inp.value='';inp.onchange=async()=>{const f=inp.files&&inp.files[0];if(!f)return;
-  if(f.size>ARCH_MAX){toast('El archivo supera 8 MB');return}
-  const nombre=i>=0?archNoms[i]:f.name,prev=archRows.filter(r=>r.nombre===nombre).reduce((m,r)=>Math.max(m,r.version),0);
-  if(!confirm(prev?'¿Subir "'+f.name+'" como versión '+(prev+1)+' de "'+nombre+'"?\nLa versión actual (v'+prev+') queda guardada en el historial.':'¿Agregar "'+nombre+'" a la carpeta?'))return;
-  toast('Subiendo…');const buf=new Uint8Array(await f.arrayBuffer());let s='';for(let k=0;k<buf.length;k+=32768)s+=String.fromCharCode.apply(null,buf.subarray(k,k+32768));
-  const {error}=await supa.from('tm_archivos').insert({empresa:EMPRESA,carpeta:ARCH_CARPETA,nombre,version:prev+1,contenido:btoa(s),bytes:buf.length,subido_por:(user&&user.nombre)||''});
-  if(error){toast(error.code==='23505'?'Otra versión se subió antes. Actualice y reintente':'No se pudo subir');return}
-  toast('Versión '+(prev+1)+' guardada');verArch()};inp.click()}
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([u],{type:'application/octet-stream'}));a.download=data.nombre.replace(/(\.[^.]+)?$/,'_v'+data.version+'$1');document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500)}
+function archPick(forzar){const inp=$('arch-file');inp.value='';inp.multiple=!forzar;inp.onchange=()=>{const fs=[...(inp.files||[])];if(fs.length)archSubirArchivos(fs,ARCH.cur,forzar)};inp.click()}
+function archVersion(id){const f=ARCH.files.find(x=>x.id===id);if(f)archPick(f.nombre)}
+async function archSubirArchivos(fs,dest,forzar){if(!esAdminTotal())return;
+  if(!dest||dest==='papelera'){toast('Abra o elija una carpeta para subir archivos');return}
+  const {data:ex,error:e0}=await supa.from('tm_archivos').select('nombre,version,eliminado').eq('carpeta_id',dest);if(e0){toast('No se pudo revisar la carpeta');return}
+  const ex2=ex||[];let ok=0;
+  for(const f of fs){
+    if(f.size>ARCH_MAX){toast('"'+f.name+'" supera 8 MB: no se subió');continue}
+    const nombre=forzar||f.name,rs=ex2.filter(r=>r.nombre===nombre);
+    if(rs.some(r=>r.eliminado)){alert('"'+nombre+'" está en la Papelera de esta carpeta. Restáurelo o elimínelo definitivamente antes de subir otro con ese nombre.');continue}
+    const prev=rs.reduce((m,r)=>Math.max(m,r.version),0);
+    if(prev&&!confirm('Ya existe "'+nombre+'". ¿Subir "'+f.name+'" como versión '+(prev+1)+'?\nLa versión actual (v'+prev+') queda guardada en el historial.'))continue;
+    toast('Subiendo '+f.name+'…');const buf=new Uint8Array(await f.arrayBuffer());let s='';for(let k=0;k<buf.length;k+=32768)s+=String.fromCharCode.apply(null,buf.subarray(k,k+32768));
+    const {error}=await supa.from('tm_archivos').insert({empresa:EMPRESA,carpeta_id:dest,nombre,version:prev+1,contenido:btoa(s),bytes:buf.length,subido_por:(user&&user.nombre)||''});
+    if(error){toast(error.code==='23505'?'Otra versión se subió antes. Actualice y reintente':'No se pudo subir "'+f.name+'"');continue}
+    ex2.push({nombre,version:prev+1,eliminado:false});ok++}
+  if(ok)toast(ok+' archivo(s) guardado(s)');if(dest===ARCH.cur)verArch()}
+(function(){if(window.__archDnD)return;window.__archDnD=1;
+  const css=document.createElement('style');css.textContent='.arch-sobre{outline:3px dashed #2563EB;outline-offset:-3px;background:rgba(37,99,235,.10)!important}';document.head.appendChild(css);
+  const act=()=>!!$('s-arch')&&$('s-arch').classList.contains('on');
+  const cl=(e,s)=>e.target&&e.target.closest?e.target.closest(s):null;
+  const tgt=e=>{const t=cl(e,'[data-drop]');return t&&(act()||t.closest('#pcnav'))?t:null};
+  const ext=e=>!!e.dataTransfer&&[...(e.dataTransfer.types||[])].includes('Files');
+  const clr=()=>document.querySelectorAll('.arch-sobre').forEach(x=>x.classList.remove('arch-sobre'));
+  document.addEventListener('dragstart',e=>{const d=cl(e,'[data-drag]');if(d&&act())e.dataTransfer.setData('text/plain',d.dataset.drag)});
+  document.addEventListener('dragover',e=>{if(!esAdminTotal())return;const t=tgt(e),box=act()&&ext(e)&&cl(e,'#arch-box')?$('arch-box'):null;
+    if(t||box){e.preventDefault();clr();(t||box).classList.add('arch-sobre')}else if(act()&&ext(e))e.preventDefault()});
+  document.addEventListener('dragleave',e=>{if(!e.relatedTarget)clr()});
+  document.addEventListener('drop',e=>{if(!esAdminTotal())return;const t=tgt(e),box=act()&&cl(e,'#arch-box');
+    if(!t&&!box){if(act()&&ext(e))e.preventDefault();return}
+    e.preventDefault();clr();const dest=t?(t.dataset.drop==='root'?null:t.dataset.drop):ARCH.cur;
+    const fs=[...(e.dataTransfer.files||[])];if(fs.length){archSubirArchivos(fs,dest,null);return}
+    const p=(e.dataTransfer.getData('text/plain')||'').split(':');if(p[0]!=='arch')return;archMover(p[1],p.slice(2).join(':'),dest)});
+})();
 // ═══ MODO ESCRITORIO (Carlos 02-11): administración en PC, con menú lateral, tablero por pilar y tareas del día ═══
 const NAV_BTNS=['btn-spot','btn-pil','btn-caja','btn-reg','btn-ver','btn-misent','btn-ifco','btn-gps','btn-prof','btn-profA','btn-rsv','btn-cxc','btn-res'];
 const NAV_SCR={'btn-pil':'s-rep','btn-caja':'s-rep','btn-ver':'s-list','btn-misent':'s-misent','btn-ifco':'s-ifco','btn-gps':'s-gps','btn-prof':'s-prof','btn-profA':'s-profA','btn-rsv':'s-rsv','btn-cxc':'s-cxc','btn-res':'s-res','btn-reg':'s-reg'};
@@ -981,7 +1102,7 @@ function aplicarVista(){if(!esAdminTotal()){document.body.classList.remove('pc')
   const cambiar=user&&user.rol==='administracion'?'<button onclick="ir(\'s-emp\')">🔄 Cambiar empresa</button>':'';
   if(EMP_ACT!==EMPRESA){$('pcnav').innerHTML='<div class="t">KAPTURA · '+EMP_NOM[EMP_ACT].toUpperCase()+'</div><button data-s="s-home" onclick="ir(\'s-home\')">🏠 Inicio: tareas y alertas</button>'+cambiar;return}
   const comp=user&&user.rol==='administracion'?'<div style="font-size:11px;font-weight:800;color:var(--muted);letter-spacing:.08em;margin:10px 10px 2px">💸 COMPROMISOS</div><button data-s="s-cxp-s" onclick="verCxp(\'semana\')" style="padding-left:24px">Semana</button><button data-s="s-cxp-m" onclick="verCxp(\'mes\')" style="padding-left:24px">Mes actual</button><button data-s="s-rem" onclick="verRep(\'remuneraciones\')">💵 Remuneraciones</button>':'';
-  $('pcnav').innerHTML='<div class="t">KAPTURA · TM</div><button data-s="s-home" onclick="ir(\'s-home\')">🏠 Inicio y tareas del día</button>'+cambiar+comp+NAV_BTNS.filter(i=>$(i)&&$(i).style.display!=='none').map(i=>'<button data-s="'+NAV_SCR[i]+'" onclick="$(\''+i+'\').click()">'+$(i).textContent.replace(/\s*\(\d+\)$/,'')+'</button>').join('')+archNav()}
+  $('pcnav').innerHTML='<div class="t">KAPTURA · TM</div><button data-s="s-home" onclick="ir(\'s-home\')">🏠 Inicio y tareas del día</button>'+cambiar+comp+NAV_BTNS.filter(i=>$(i)&&$(i).style.display!=='none').map(i=>'<button data-s="'+NAV_SCR[i]+'" onclick="$(\''+i+'\').click()">'+$(i).textContent.replace(/\s*\(\d+\)$/,'')+'</button>').join('')+archNav();archNavCargar()}
 function navMarcar(id){document.querySelectorAll('#pcnav button').forEach(b=>b.classList.toggle('on',b.dataset.s===id))}
 // Tablero por pilar (solo con datos que Kaptura tiene; el resto vive en el sistema TM)
 async function pcDash(){const box=$('pc-dash');if(!box)return;box.innerHTML='';if(!document.body.classList.contains('pc')||!esAdmin()||!supa||EMP_ACT!==EMPRESA)return;const u0=user;
