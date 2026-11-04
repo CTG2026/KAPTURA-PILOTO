@@ -303,6 +303,13 @@ input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--bor
   <button class="btn2" onclick="ir('s-home')">← Volver</button>
 </section>
 
+<section class="screen" id="s-arch">
+  <h1>COMERCIAL / EBLOOMS / Tarifarios</h1>
+  <div class="sub" id="arch-sub">Cargando…</div>
+  <div id="arch-box"></div>
+  <input type="file" id="arch-file" accept=".xlsx,.xls,.xlsm" style="display:none">
+  <button class="btn2" onclick="ir('s-home')">← Volver</button>
+</section>
 <section class="screen" id="s-cxc">
   <h1>Facturación y cobranza</h1>
   <div class="sub" id="cxc-sub">Cargando…</div>
@@ -935,6 +942,35 @@ async function verCxp(modo){if(!user||user.rol!=='administracion')return;ir('s-c
 async function cxpPagado(i,modo){const r=cxpRows[i];const v=await formulario('Pagado · '+r.acreedor+' · '+r.concepto,[{k:'fe',l:'Fecha de pago',t:'date',v:hoyISO()},{k:'cu',l:'Cuenta',t:'select',ops:['Santander','Banco de Chile','Tarjeta de crédito','Otra'],v:'Santander'},{k:'mo',l:'Monto pagado ($)',t:'number',v:Math.round(+r.monto||0)}]);
   if(!v||!v.fe)return;const {error}=await supa.from('cxp_compromisos').update({estado:'pagado',fecha_pago:v.fe,cuenta:v.cu,monto:+String(v.mo).replace(/\D/g,'')||r.monto,actualizado:new Date().toISOString()}).eq('id',r.id);
   toast(error?'No se pudo guardar':'Pagado (se confirma con la cartola)');verCxp(modo)}
+// ═══ CARPETAS DEL MENÚ PC (Carlos 04-11): archivos en tm_archivos; cada subida es una versión nueva, nunca se borra ni se pisa ═══
+const ARCH_CARPETA='COMERCIAL/EBLOOMS/Tarifarios',ARCH_MAX=8*1024*1024;let archRows=[],archNoms=[];
+function archEsc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function archKB(b){return b>=1048576?(b/1048576).toFixed(1)+' MB':Math.max(1,Math.round(b/1024))+' KB'}
+function archFecha(t){const d=new Date(t);return isNaN(d)?'':d.toLocaleString('es-CL',{timeZone:'America/Santiago',day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}
+function archNav(){return '<details open style="margin-top:10px"><summary style="font-size:11px;font-weight:800;color:var(--muted);letter-spacing:.08em;cursor:pointer;padding:4px 10px">📁 COMERCIAL</summary><details open style="margin-left:10px"><summary style="font-size:12px;font-weight:800;color:var(--muted);cursor:pointer;padding:4px 10px">📁 EBLOOMS</summary><button data-s="s-arch" onclick="verArch()" style="padding-left:24px">📁 Tarifarios</button></details></details>'}
+async function verArch(){if(!esAdminTotal())return;ir('s-arch');navMarcar('s-arch');$('arch-box').innerHTML='';$('arch-sub').textContent='Cargando…';
+  const {data,error}=await supa.from('tm_archivos').select('id,nombre,version,bytes,subido_por,creado').eq('empresa',EMPRESA).eq('carpeta',ARCH_CARPETA).order('nombre').order('version',{ascending:false});
+  if(error){$('arch-sub').textContent='No se pudo leer la carpeta. Revise la conexión.';return}
+  archRows=data||[];const por={};archRows.forEach(r=>{(por[r.nombre]=por[r.nombre]||[]).push(r)});archNoms=Object.keys(por);
+  $('arch-sub').textContent=archNoms.length?archNoms.length+' archivo(s). Descargue, edite en Excel y suba la versión nueva: queda como vigente y las anteriores se conservan.':'Carpeta vacía.';
+  $('arch-box').innerHTML=archNoms.map((n,i)=>{const v=por[n],a=v[0];
+    return '<div class="card"><div style="font-weight:800;font-size:15px">📄 '+archEsc(n)+'</div><div style="font-size:12px;color:var(--muted);margin:4px 0 10px">Versión vigente: v'+a.version+' · '+archFecha(a.creado)+' · '+archEsc(a.subido_por||'')+' · '+archKB(a.bytes||0)+'</div>'+
+    '<button class="btn2" onclick="archDescargar(\''+a.id+'\')">⬇ Descargar versión vigente</button> <button class="btn2" onclick="archSubir('+i+')">⬆ Subir versión nueva</button>'+
+    (v.length>1?'<details style="margin-top:10px"><summary style="cursor:pointer;font-size:12px;color:var(--muted)">Historial ('+v.length+' versiones)</summary>'+v.map(x=>'<div style="font-size:12px;padding:4px 0">v'+x.version+' · '+archFecha(x.creado)+' · '+archEsc(x.subido_por||'')+' · '+archKB(x.bytes||0)+' <a href="#" onclick="archDescargar(\''+x.id+'\');return false">⬇ descargar</a></div>').join('')+'</details>':'')+'</div>'}).join('')+
+    '<button class="btn2" onclick="archSubir(-1)">➕ Agregar otro archivo a esta carpeta</button>'}
+async function archDescargar(id){toast('Preparando descarga…');
+  const {data,error}=await supa.from('tm_archivos').select('nombre,version,contenido').eq('id',id).single();
+  if(error||!data){toast('No se pudo descargar');return}
+  const bin=atob(data.contenido),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([u],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));a.download=data.nombre.replace(/(\.[^.]+)?$/,'_v'+data.version+'$1');document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500)}
+function archSubir(i){const inp=$('arch-file');inp.value='';inp.onchange=async()=>{const f=inp.files&&inp.files[0];if(!f)return;
+  if(f.size>ARCH_MAX){toast('El archivo supera 8 MB');return}
+  const nombre=i>=0?archNoms[i]:f.name,prev=archRows.filter(r=>r.nombre===nombre).reduce((m,r)=>Math.max(m,r.version),0);
+  if(!confirm(prev?'¿Subir "'+f.name+'" como versión '+(prev+1)+' de "'+nombre+'"?\nLa versión actual (v'+prev+') queda guardada en el historial.':'¿Agregar "'+nombre+'" a la carpeta?'))return;
+  toast('Subiendo…');const buf=new Uint8Array(await f.arrayBuffer());let s='';for(let k=0;k<buf.length;k+=32768)s+=String.fromCharCode.apply(null,buf.subarray(k,k+32768));
+  const {error}=await supa.from('tm_archivos').insert({empresa:EMPRESA,carpeta:ARCH_CARPETA,nombre,version:prev+1,contenido:btoa(s),bytes:buf.length,subido_por:(user&&user.nombre)||''});
+  if(error){toast(error.code==='23505'?'Otra versión se subió antes. Actualice y reintente':'No se pudo subir');return}
+  toast('Versión '+(prev+1)+' guardada');verArch()};inp.click()}
 // ═══ MODO ESCRITORIO (Carlos 02-11): administración en PC, con menú lateral, tablero por pilar y tareas del día ═══
 const NAV_BTNS=['btn-spot','btn-pil','btn-caja','btn-reg','btn-ver','btn-misent','btn-ifco','btn-gps','btn-prof','btn-profA','btn-rsv','btn-cxc','btn-res'];
 const NAV_SCR={'btn-pil':'s-rep','btn-caja':'s-rep','btn-ver':'s-list','btn-misent':'s-misent','btn-ifco':'s-ifco','btn-gps':'s-gps','btn-prof':'s-prof','btn-profA':'s-profA','btn-rsv':'s-rsv','btn-cxc':'s-cxc','btn-res':'s-res','btn-reg':'s-reg'};
@@ -945,7 +981,7 @@ function aplicarVista(){if(!esAdminTotal()){document.body.classList.remove('pc')
   const cambiar=user&&user.rol==='administracion'?'<button onclick="ir(\'s-emp\')">🔄 Cambiar empresa</button>':'';
   if(EMP_ACT!==EMPRESA){$('pcnav').innerHTML='<div class="t">KAPTURA · '+EMP_NOM[EMP_ACT].toUpperCase()+'</div><button data-s="s-home" onclick="ir(\'s-home\')">🏠 Inicio: tareas y alertas</button>'+cambiar;return}
   const comp=user&&user.rol==='administracion'?'<div style="font-size:11px;font-weight:800;color:var(--muted);letter-spacing:.08em;margin:10px 10px 2px">💸 COMPROMISOS</div><button data-s="s-cxp-s" onclick="verCxp(\'semana\')" style="padding-left:24px">Semana</button><button data-s="s-cxp-m" onclick="verCxp(\'mes\')" style="padding-left:24px">Mes actual</button><button data-s="s-rem" onclick="verRep(\'remuneraciones\')">💵 Remuneraciones</button>':'';
-  $('pcnav').innerHTML='<div class="t">KAPTURA · TM</div><button data-s="s-home" onclick="ir(\'s-home\')">🏠 Inicio y tareas del día</button>'+cambiar+comp+NAV_BTNS.filter(i=>$(i)&&$(i).style.display!=='none').map(i=>'<button data-s="'+NAV_SCR[i]+'" onclick="$(\''+i+'\').click()">'+$(i).textContent.replace(/\s*\(\d+\)$/,'')+'</button>').join('')}
+  $('pcnav').innerHTML='<div class="t">KAPTURA · TM</div><button data-s="s-home" onclick="ir(\'s-home\')">🏠 Inicio y tareas del día</button>'+cambiar+comp+NAV_BTNS.filter(i=>$(i)&&$(i).style.display!=='none').map(i=>'<button data-s="'+NAV_SCR[i]+'" onclick="$(\''+i+'\').click()">'+$(i).textContent.replace(/\s*\(\d+\)$/,'')+'</button>').join('')+archNav()}
 function navMarcar(id){document.querySelectorAll('#pcnav button').forEach(b=>b.classList.toggle('on',b.dataset.s===id))}
 // Tablero por pilar (solo con datos que Kaptura tiene; el resto vive en el sistema TM)
 async function pcDash(){const box=$('pc-dash');if(!box)return;box.innerHTML='';if(!document.body.classList.contains('pc')||!esAdmin()||!supa||EMP_ACT!==EMPRESA)return;const u0=user;
