@@ -955,7 +955,7 @@ function archRutaTxt(id){return archRuta(id).map(x=>x.nombre).join(' / ')}
 function archDesc(id){const o=[id];ARCH.carps.filter(x=>x.padre_id===id).forEach(h=>o.push(...archDesc(h.id)));return o}
 function archErr(e,def){return e&&e.code==='23505'?'Ya existe uno con ese nombre en esa carpeta (revise también la Papelera)':def}
 function archNombreOk(n){return !!n&&n.length<=120&&!/[\/\\]/.test(n)}
-async function archCargarCarps(){const {data,error}=await supa.from('tm_carpetas').select('id,padre_id,nombre,eliminado,eliminado_en').eq('empresa',EMPRESA).order('nombre');if(!error)ARCH.carps=data||[];return !error}
+async function archCargarCarps(){const {data,error}=await supa.from('tm_carpetas').select('id,padre_id,nombre,eliminado,eliminado_en').eq('empresa',EMP_ACT).order('nombre');if(!error)ARCH.carps=data||[];return !error}
 function archNav(){return '<div id="arch-nav"></div>'}
 function archMarcar(){document.querySelectorAll('#pcnav button').forEach(b=>b.classList.toggle('on',b.dataset.s==='arch:'+ARCH.cur))}
 function archNavPintar(){const el=$('arch-nav');if(!el)return;const act=ARCH.carps.filter(c=>!c.eliminado);
@@ -986,7 +986,7 @@ async function archListar(){const cur=ARCH.cur;let files=[];
   $('arch-box').innerHTML=mig+barra+(hSub+hFil||'<div class="card" style="color:var(--muted)">'+(cur?'Carpeta vacía. Arrastre archivos aquí o use "Subir archivos".':'No hay carpetas. Cree la primera con "Nueva carpeta".')+'</div>')}
 async function archNueva(){if(!esAdminTotal())return;const r=await formulario('Nueva carpeta'+(ARCH.cur&&ARCH.cur!=='papelera'?' en '+archEsc(archRutaTxt(ARCH.cur)):''),[{l:'Nombre',k:'n'}]);if(!r)return;
   if(!archNombreOk(r.n)){toast('Nombre vacío, muy largo o con / no permitido');return}
-  const {error}=await supa.from('tm_carpetas').insert({empresa:EMPRESA,padre_id:ARCH.cur||null,nombre:r.n,creado_por:(user&&user.nombre)||''});
+  const {error}=await supa.from('tm_carpetas').insert({empresa:EMP_ACT,padre_id:ARCH.cur||null,nombre:r.n,creado_por:(user&&user.nombre)||''});
   if(error){toast(archErr(error,'No se pudo crear la carpeta'));return}toast('Carpeta creada');verArch()}
 async function archRenCarp(id){if(!esAdminTotal())return;const c=archCarp(id);if(!c)return;const r=await formulario('Renombrar carpeta',[{l:'Nuevo nombre',k:'n',v:archEsc(c.nombre)}]);if(!r||r.n===c.nombre)return;
   if(!archNombreOk(r.n)){toast('Nombre vacío, muy largo o con / no permitido');return}
@@ -1022,7 +1022,7 @@ async function archElimArch(id){if(!esAdminTotal())return;const f=ARCH.files.fin
   const {error}=await supa.from('tm_archivos').update({eliminado:true,eliminado_en:new Date().toISOString()}).eq('carpeta_id',ARCH.cur).eq('nombre',f.nombre).eq('eliminado',false);
   if(error){toast('No se pudo eliminar');return}toast('Enviado a la Papelera');verArch()}
 async function archPapelera(){
-  const {data,error}=await supa.from('tm_archivos').select('id,carpeta_id,nombre,version,bytes,eliminado_en').eq('empresa',EMPRESA).eq('eliminado',true).order('eliminado_en',{ascending:false});
+  const {data,error}=await supa.from('tm_archivos').select('id,carpeta_id,nombre,version,bytes,eliminado_en').eq('empresa',EMP_ACT).eq('eliminado',true).order('eliminado_en',{ascending:false});
   if(error){$('arch-sub').textContent='No se pudo leer la Papelera.';return}
   const items=[];
   ARCH.carps.filter(c=>c.eliminado).forEach(c=>{const p=archCarp(c.padre_id);if(p&&p.eliminado&&archMs(p.eliminado_en)===archMs(c.eliminado_en))return;items.push({t:'d',id:c.id,nombre:c.nombre,donde:c.padre_id?archRutaTxt(c.padre_id):'Inicio',en:c.eliminado_en})});
@@ -1050,7 +1050,7 @@ async function archVaciar(){if(!esAdminTotal()||!ARCH.pap.length)return;
   if(!confirm('¿Vaciar la Papelera? Se borrarán DEFINITIVAMENTE '+ARCH.pap.length+' elemento(s). No se puede deshacer.'))return;
   if(!confirm('Última confirmación: vaciar la Papelera para siempre. ¿Continuar?'))return;
   const ids=ARCH.pap.filter(x=>x.t==='d').map(x=>x.id);
-  let r=await supa.from('tm_archivos').delete().eq('empresa',EMPRESA).eq('eliminado',true);if(r.error){toast('No se pudo vaciar');return}
+  let r=await supa.from('tm_archivos').delete().eq('empresa',EMP_ACT).eq('eliminado',true);if(r.error){toast('No se pudo vaciar');return}
   if(ids.length){r=await supa.from('tm_carpetas').delete().in('id',ids);if(r.error){toast('No se pudo vaciar');return}}
   toast('Papelera vaciada');verArch('papelera')}
 async function archDescargar(id){toast('Preparando descarga…');
@@ -1071,7 +1071,7 @@ async function archSubirArchivos(fs,dest,forzar){if(!esAdminTotal())return;
     const prev=rs.reduce((m,r)=>Math.max(m,r.version),0);
     if(prev&&!confirm('Ya existe "'+nombre+'". ¿Subir "'+f.name+'" como versión '+(prev+1)+'?\nLa versión actual (v'+prev+') queda guardada en el historial.'))continue;
     toast('Subiendo '+f.name+'…');const buf=new Uint8Array(await f.arrayBuffer());let s='';for(let k=0;k<buf.length;k+=32768)s+=String.fromCharCode.apply(null,buf.subarray(k,k+32768));
-    const {error}=await supa.from('tm_archivos').insert({empresa:EMPRESA,carpeta_id:dest,nombre,version:prev+1,contenido:btoa(s),bytes:buf.length,subido_por:(user&&user.nombre)||''});
+    const {error}=await supa.from('tm_archivos').insert({empresa:EMP_ACT,carpeta_id:dest,nombre,version:prev+1,contenido:btoa(s),bytes:buf.length,subido_por:(user&&user.nombre)||''});
     if(error){toast(error.code==='23505'?'Otra versión se subió antes. Actualice y reintente':'No se pudo subir "'+f.name+'"');continue}
     ex2.push({nombre,version:prev+1,eliminado:false});ok++}
   if(ok)toast(ok+' archivo(s) guardado(s)');if(dest===ARCH.cur)verArch()}
@@ -1100,7 +1100,7 @@ function aplicarVista(){if(!esAdminTotal()){document.body.classList.remove('pc')
   let bv=$('btn-vista');if(!bv){bv=document.createElement('button');bv.id='btn-vista';bv.className='link';bv.style.marginRight='10px';bv.onclick=()=>{ls('tm_vista',document.body.classList.contains('pc')?'tel':'pc');aplicarVista();ir('s-home')};$('btn-salir').before(bv)}
   bv.textContent=pc?'📱 Vista teléfono':'🖥 Vista PC';
   const cambiar=user&&user.rol==='administracion'?'<button onclick="ir(\'s-emp\')">🔄 Cambiar empresa</button>':'';
-  if(EMP_ACT!==EMPRESA){$('pcnav').innerHTML='<div class="t">KAPTURA · '+EMP_NOM[EMP_ACT].toUpperCase()+'</div><button data-s="s-home" onclick="ir(\'s-home\')">🏠 Inicio: tareas y alertas</button>'+cambiar;return}
+  if(EMP_ACT!==EMPRESA){$('pcnav').innerHTML='<div class="t">KAPTURA · '+EMP_NOM[EMP_ACT].toUpperCase()+'</div><button data-s="s-home" onclick="ir(\'s-home\')">🏠 Inicio: tareas y alertas</button>'+cambiar+archNav();archNavCargar();return}
   const comp=user&&user.rol==='administracion'?'<div style="font-size:11px;font-weight:800;color:var(--muted);letter-spacing:.08em;margin:10px 10px 2px">💸 COMPROMISOS</div><button data-s="s-cxp-s" onclick="verCxp(\'semana\')" style="padding-left:24px">Semana</button><button data-s="s-cxp-m" onclick="verCxp(\'mes\')" style="padding-left:24px">Mes actual</button><button data-s="s-rem" onclick="verRep(\'remuneraciones\')">💵 Remuneraciones</button>':'';
   $('pcnav').innerHTML='<div class="t">KAPTURA · TM</div><button data-s="s-home" onclick="ir(\'s-home\')">🏠 Inicio y tareas del día</button>'+cambiar+comp+NAV_BTNS.filter(i=>$(i)&&$(i).style.display!=='none').map(i=>'<button data-s="'+NAV_SCR[i]+'" onclick="$(\''+i+'\').click()">'+$(i).textContent.replace(/\s*\(\d+\)$/,'')+'</button>').join('')+archNav();archNavCargar()}
 function navMarcar(id){document.querySelectorAll('#pcnav button').forEach(b=>b.classList.toggle('on',b.dataset.s===id))}
@@ -1161,7 +1161,7 @@ async function editarTarea(id){const t=_tareasEd.find(x=>x.id===id);if(!t)return
   else if(v.r==='Cada mes'){o.recurrencia='mensual';o.dia_mes=Math.min(28,Math.max(1,+v.m||1))}
   else if(v.f)o.fecha_limite=v.f;
   const {error}=await supa.from('tareas').update(o).eq('id',id).eq('empresa',EMP_ACT);toast(error?'No se pudo guardar':o.activa?'Tarea guardada':'Tarea eliminada');tareasHoy()}
-function elegirEmp(e){EMP_ACT=e;document.body.classList.toggle('global',e!==EMPRESA);$('saludo').textContent=e===EMPRESA?'Hola '+user.nombre.split(' ')[0]:EMP_NOM[e];$('hdr-user').textContent='👤 '+user.nombre.split(' ')[0]+' · '+EMP_NOM[e];aplicarVista();ir('s-home')}
+function elegirEmp(e){EMP_ACT=e;ARCH.cur=null;ARCH.carps=[];document.body.classList.toggle('global',e!==EMPRESA);$('saludo').textContent=e===EMPRESA?'Hola '+user.nombre.split(' ')[0]:EMP_NOM[e];$('hdr-user').textContent='👤 '+user.nombre.split(' ')[0]+' · '+EMP_NOM[e];aplicarVista();ir('s-home')}
 // ═══ ALERTAS DE ADMINISTRACIÓN (Carlos 01-11): tabla alertas_admin; las ven Carlos, Claudio y administración hasta marcarlas resueltas ═══
 let _alAdm=[];
 async function alertaAdm(){const box=$('alerta-adm');if(!box)return;box.innerHTML='';if(!esAdmin()||!supa)return;const u0=user;
