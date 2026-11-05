@@ -1667,7 +1667,7 @@ function chkInact(){if(user&&Date.now()-Number(ls('tm_ult')||0)>INACT_MS){const 
 setInterval(chkInact,30000);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')chkInact()});
 // ═══ SPOT CON TERCERO (Carlos 02-11): Administración crea el link, se lo manda a Claudio y él lo reenvía al chofer del tercero ═══
 let _spot=null,_spotFoto=null,_spotPos=null;
-async function crearSpot(){const nn=x=>+String(x||'').replace(/\D/g,'')||0;const v=await formulario('Servicio spot con tercero',[{k:'cli',l:'Cliente',t:'select',ops:['Ateuro / Zuria','EBLOOMS','Alimentos Valle Central','Otro'],v:'Ateuro / Zuria'},{k:'sv',l:'Servicio (origen → destino)'},{k:'ta',l:'Tarifa neta al cliente ($)',t:'number'},
+async function crearSpot(){const nn=x=>+String(x||'').replace(/\D/g,'')||0;const v=await formulario('Servicio spot con tercero',[{k:'cli',l:'Cliente',t:'select',ops:['Ateuro / Zuria','EBLOOMS','Alimentos Valle Central','Ave Fenix','Otro'],v:'Ateuro / Zuria'},{k:'sv',l:'Servicio (origen → destino)'},{k:'ta',l:'Tarifa neta al cliente ($)',t:'number'},
   {k:'te',l:'Tercero (nombre o empresa)'},{k:'pa',l:'Patente del camión del tercero'},{k:'pt',l:'Pago al tercero neto ($)',t:'number'},{k:'fe',l:'Fecha del servicio',t:'date',v:hoyISO()}]);
   if(!v)return;if(!v.sv||!v.te||!v.fe){toast('Faltan servicio, tercero o fecha');return}const cli=v.cli,sv=v.sv,ta=v.ta,te=v.te,pa=v.pa||'',pt=v.pt,fe=fCL(v.fe);
   const token=Math.random().toString(36).slice(2,10)+Date.now().toString(36);const n=x=>+String(x).replace(/\D/g,'')||null;
