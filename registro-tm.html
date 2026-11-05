@@ -1143,18 +1143,30 @@ function aplicarVista(){if(!esAdminTotal()){document.body.classList.remove('pc')
   $('pcnav').innerHTML='<div class="t">KAPTURA · TM</div><button data-s="s-home" onclick="ir(\'s-home\')">🏠 Inicio y tareas del día</button>'+cambiar+comp+NAV_BTNS.filter(i=>$(i)&&$(i).style.display!=='none').map(i=>'<button data-s="'+NAV_SCR[i]+'" onclick="$(\''+i+'\').click()">'+$(i).textContent.replace(/\s*\(\d+\)$/,'')+'</button>').join('')+archNav();archNavCargar()}
 function navMarcar(id){document.querySelectorAll('#pcnav button').forEach(b=>b.classList.toggle('on',b.dataset.s===id))}
 // Tablero por pilar (solo con datos que Kaptura tiene; el resto vive en el sistema TM)
+let PCMES=null; // mes elegido en el panel del PC (Carlos 05-11): por defecto el mes en curso
 async function pcDash(){const box=$('pc-dash');if(!box)return;box.innerHTML='';if(!document.body.classList.contains('pc')||!esAdmin()||!supa||EMP_ACT!==EMPRESA)return;const u0=user;
-  try{const ini=mesesAtras(1)[0].v+'-01',hoy=hoyISO();
-    const sv=(await conTope(supa.from('servicios_piloto').select('tarifa_neta,cliente').eq('empresa',EMPRESA).eq('modo','registro_tm').neq('estado','anulado').gte('fecha',ini).lte('fecha',hoy),8000)).data||[];
-    const cx=await leerCxc(),sum=a=>a.reduce((t,r)=>t+(+r.total||0),0);
+  const ops=mesesAtras(13),act=ops[0].v;if(!PCMES)PCMES=act;const mes=PCMES,esAct=mes===act,lbl=(ops.find(o=>o.v===mes)||{t:mes}).t;
+  const [yy,mm]=mes.split('-').map(Number),fin=mes+'-'+String(new Date(yy,mm,0).getDate()).padStart(2,'0');
+  const sel='<div style="display:flex;align-items:center;gap:10px;margin:0 0 10px;flex-wrap:wrap"><b>Mes</b><select id="pc-mes" onchange="PCMES=this.value;pcDash()" style="width:auto;padding:8px 10px">'+ops.map(o=>'<option value="'+o.v+'"'+(o.v===mes?' selected':'')+'>'+o.t+(o.v===act?' (en curso)':'')+'</option>').join('')+'</select><span class="mini" style="margin:0">'+(esAct?'Mes en curso: datos a hoy':'Mes cerrado o pasado')+'</span></div>';
+  box.innerHTML=sel;
+  try{const hasta=esAct?hoyISO():fin;
+    const sv=(await conTope(supa.from('servicios_piloto').select('tarifa_neta,cliente').eq('empresa',EMPRESA).eq('modo','registro_tm').neq('estado','anulado').gte('fecha',mes+'-01').lte('fecha',hasta),8000)).data||[];
+    const cx0=await leerCxc(),cx=esAct?cx0:cx0.filter(r=>String(r.periodo_desde||r.periodo_hasta||'').slice(0,7)===mes),sum=a=>a.reduce((t,r)=>t+(+r.total||0),0),hoy=hoyISO();
     const pa=cx.filter(r=>['por_aprobar','por_facturar'].includes(cxcEtapa(r))),pc=cx.filter(r=>cxcEtapa(r)==='por_cobrar'),ve=pc.filter(r=>{const v=cxcVence(r);return v&&v<hoy});
     const k=(p,l,v,s)=>'<div class="kpi"><div class="p">'+p+'</div><div class="l">'+l+'</div><div class="v">'+v+'</div>'+(s?'<div class="l" style="margin-top:4px">'+s+'</div>':'')+'</div>';
-    if(user!==u0||!esAdmin())return;box.innerHTML='<div class="kpis">'+k('RENTABILIDAD','Ventas del mes (neto, Kaptura)',fmt$(sv.reduce((t,x)=>t+(+x.tarifa_neta||0),0)),sv.length+' servicio(s) registrados')+
-      k('LIQUIDEZ','Por aprobar y facturar (c/IVA)',fmt$(sum(pa)),pa.length+' período(s)')+k('LIQUIDEZ','Por cobrar (c/IVA)',fmt$(sum(pc)),pc.length+' factura(s)')+
+    const alc=esAct?'todo lo pendiente a hoy':'servicios de '+lbl;
+    if(user!==u0||!esAdmin()||PCMES!==mes)return;box.innerHTML=sel+'<div class="kpis">'+k('RENTABILIDAD','Ventas de '+lbl+' (neto, Kaptura)',fmt$(sv.reduce((t,x)=>t+(+x.tarifa_neta||0),0)),sv.length+' servicio(s) registrados')+
+      k('LIQUIDEZ','Por aprobar y facturar (c/IVA)',fmt$(sum(pa)),pa.length+' período(s) · '+alc)+k('LIQUIDEZ','Por cobrar (c/IVA)',fmt$(sum(pc)),pc.length+' factura(s) · '+alc)+
       k('LIQUIDEZ','Vencido sin cobrar',fmt$(sum(ve)),ve.length?'<span style="color:#ff3b30">cobrar hoy</span>':'al día')+'</div>';
-    if(esAdminTotal()){try{const ps=await repRpc('pilares');if(ps.length){const d=(await repRpc('pilares',ps[0].periodo)).datos.filas,g=t=>d.find(f=>t.test(f.c))||{};const cob=g(/cobertura/i),mes=g(/^Meses que aguanta/i),caj=g(/^Plata en el banco/i),res=g(/^Resultado del mes/i),deu=g(/^Deuda total/i);
-      if(user!==u0)return;box.innerHTML+='<div class="kpis">'+k('RENTABILIDAD','Resultado del mes (proyectado, sistema TM)',fRep(res.pr,''),res.s||'')+k('LIQUIDEZ','Plata en el banco (sistema TM)',fRep(caj.r,''),caj.s||'')+k('SOLVENCIA','Cobertura de deuda (meta 1,2)',fRep(cob.pr,'cobertura'),cob.s||'')+k('SOLVENCIA','Meses que aguanta la caja',fRep(mes.pr,'Meses'),mes.s||'')+k('SOLVENCIA','Deuda total conocida',fRep(deu.pr,''),deu.s||'')+'</div><div class="sub" style="margin-top:-6px">Indicadores del sistema TM · '+ps[0].periodo+' · <a href="#" onclick="verRep(\'pilares\');return false" style="color:var(--gold)">ver pilares por mes</a> · <a href="#" onclick="verRep(\'caja_semana\');return false" style="color:var(--gold)">caja de la semana</a></div>'}}catch(e){}}
-  }catch(e){box.innerHTML=''}}
+    if(esAdminTotal()){try{const rp=await repRpc('pilares',mes);const d=rp&&rp.datos&&rp.datos.filas;if(user!==u0||PCMES!==mes)return;
+      if(!d){box.innerHTML+='<div class="sub" style="margin-top:-6px">Sin datos del sistema TM para '+lbl+' todavía · <a href="#" onclick="verRep(\'pilares\');return false" style="color:var(--gold)">ver pilares por mes</a></div>';return}
+      const g=t=>d.find(f=>t.test(f.c))||{};const cob=g(/cobertura/i),mes2=g(/^Meses que aguanta/i),caj=g(/^Plata en el banco/i),res=g(/^Resultado del mes/i),deu=g(/^Deuda total/i);
+      const num=v=>typeof v==='number';
+      box.innerHTML+='<div class="kpis">'+k('RENTABILIDAD','Resultado acumulado de '+lbl+' (esperado según lo ejecutado)',fRep(res.e,''),(res.s||'')+(num(res.pr)?' · proyectado al cierre '+fRep(res.pr,''):''))+
+        k('RENTABILIDAD','Resultado de '+lbl+' según presupuesto',fRep(res.p,''),num(res.pr)&&num(res.p)?'Proyectado al cierre vs presupuesto: '+fRep(res.pr-res.p,''):'')+
+        k('LIQUIDEZ','Plata en el banco (sistema TM)',fRep(caj.r,''),caj.s||'')+k('SOLVENCIA','Cobertura de deuda (meta 1,2)',fRep(cob.pr,'cobertura'),cob.s||'')+k('SOLVENCIA','Meses que aguanta la caja',fRep(mes2.pr,'Meses'),mes2.s||'')+k('SOLVENCIA','Deuda total conocida',fRep(deu.pr,''),deu.s||'')+
+        '</div><div class="sub" style="margin-top:-6px">Indicadores del sistema TM · '+lbl+(rp.actualizado?' · actualizado '+fCL(String(rp.actualizado).slice(0,10)):'')+' · <a href="#" onclick="verRep(\'pilares\');return false" style="color:var(--gold)">ver pilares por mes</a> · <a href="#" onclick="verRep(\'caja_semana\');return false" style="color:var(--gold)">caja de la semana</a></div>'}catch(e){}}
+  }catch(e){box.innerHTML=sel}}
 // Tareas del día del administrador (solo administración). Hora límite: 20:00. Las hechas quedan registradas (tareas_admin)
 const TAREAS=[{id:'cartola',t:'Cartola Santander del día → enviar a Claude',d:[1,2,3,4,5],lim:'20:00',p:'Liquidez'},
   {id:'rcv',t:'RCV compras y ventas del SII → enviar a Claude',d:[1,4],lim:'20:00',p:'Rentabilidad'},
