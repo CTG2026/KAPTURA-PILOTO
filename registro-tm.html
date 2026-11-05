@@ -1668,18 +1668,18 @@ setInterval(chkInact,30000);document.addEventListener('visibilitychange',()=>{if
 // ═══ SPOT CON TERCERO (Carlos 02-11): Administración crea el link, se lo manda a Claudio y él lo reenvía al chofer del tercero ═══
 let _spot=null,_spotFoto=null,_spotPos=null;
 async function crearSpot(){const nn=x=>+String(x||'').replace(/\D/g,'')||0;const v=await formulario('Servicio spot con tercero',[{k:'cli',l:'Cliente',t:'select',ops:['Ateuro / Zuria','EBLOOMS','Alimentos Valle Central','Ave Fenix','Otro'],v:'Ateuro / Zuria'},{k:'sv',l:'Servicio (origen → destino)'},{k:'ta',l:'Tarifa neta al cliente ($)',t:'number'},
-  {k:'te',l:'Tercero (nombre o empresa)'},{k:'pa',l:'Patente del camión del tercero'},{k:'pt',l:'Pago al tercero neto ($)',t:'number'},{k:'fe',l:'Fecha del servicio',t:'date',v:hoyISO()}]);
+  {k:'te',l:'Tercero (nombre o empresa)'},{k:'pa',l:'Patente del camión del tercero'},{k:'pt',l:'Pago al tercero neto ($)',t:'number'},{k:'fe',l:'Fecha del servicio',t:'date',v:hoyISO()},{k:'nc',l:'Indicación para el chofer (opcional · la ve el chofer)'},{k:'ni',l:'Nota interna (opcional · no la ve el chofer)'}]);
   if(!v)return;if(!v.sv||!v.te||!v.fe){toast('Faltan servicio, tercero o fecha');return}const cli=v.cli,sv=v.sv,ta=v.ta,te=v.te,pa=v.pa||'',pt=v.pt,fe=fCL(v.fe);
   const token=Math.random().toString(36).slice(2,10)+Date.now().toString(36);const n=x=>+String(x).replace(/\D/g,'')||null;
-  const {error}=await supa.from('spot_links').insert({token,empresa:EMPRESA,fecha:v.fe,cliente:cli,servicio:sv,tarifa_neta:n(ta),tercero:te,patente:pa.toUpperCase(),pago_tercero:n(pt),creado_por:user.nombre});
+  const {error}=await supa.from('spot_links').insert({token,empresa:EMPRESA,fecha:v.fe,cliente:cli,servicio:sv,tarifa_neta:n(ta),tercero:te,patente:pa.toUpperCase(),pago_tercero:n(pt),creado_por:user.nombre,nota_chofer:(v.nc||'').trim()||null,nota_interna:(v.ni||'').trim()||null});
   if(error){toast('No se pudo crear el link');return}
-  const link=location.origin+location.pathname+'?spot='+token,txt='Claudio, reenvía este link al chofer de '+te+' para registrar el servicio spot ('+sv+', '+fe+'). Solo debe abrirlo, sacar la foto de la guía y tocar Enviar:\n'+link;
+  const link=location.origin+location.pathname+'?spot='+token,txt='Claudio, reenvía este link al chofer de '+te+' para registrar el servicio spot ('+sv+', '+fe+'). Solo debe abrirlo, sacar la foto de la guía y tocar Enviar:\n'+link+((v.nc||'').trim()?'\n\nIndicación: '+v.nc.trim():'')+((v.ni||'').trim()?'\n\n(Nota interna, no reenviar: '+v.ni.trim()+')':'');
   window.open('https://wa.me/?text='+encodeURIComponent(txt),'_blank')}
 async function abrirSpot(token){ir('s-spot');$('pin-err').textContent='';
   try{const r=await conTope(supa.from('spot_links').select('*').eq('token',token).maybeSingle(),10000);_spot=r.data;
     if(!_spot){$('spot-info').textContent='Link no válido.';return}
     if(_spot.usado){$('spot-info').textContent='Este servicio ya fue registrado. Gracias.';return}
-    $('spot-info').innerHTML='<b>'+_spot.servicio+'</b><br>'+_spot.cliente+' · '+fCL(_spot.fecha)+'<br>'+_spot.tercero+(_spot.patente?' · '+_spot.patente:'');$('spot-form').style.display='block';
+    $('spot-info').innerHTML='<b>'+_spot.servicio+'</b><br>'+_spot.cliente+' · '+fCL(_spot.fecha)+'<br>'+_spot.tercero+(_spot.patente?' · '+_spot.patente:'')+(_spot.nota_chofer?'<br><br><b>Indicación:</b> '+empEsc(_spot.nota_chofer):'');$('spot-form').style.display='block';
     if(navigator.geolocation)navigator.geolocation.getCurrentPosition(p=>{_spotPos=p},()=>{},{enableHighAccuracy:true,timeout:20000})}catch(e){$('spot-info').textContent='Sin conexión. Intente de nuevo.'}}
 function spotFoto(inp){const f=inp.files&&inp.files[0];if(!f)return;_spotFoto=f;$('spot-img').src=URL.createObjectURL(f);$('spot-img').style.display='block';$('spot-ok').disabled=false;
   leerNumero(f).then(n=>{if(n&&!$('spot-nro').value)$('spot-nro').value=n})}
@@ -1687,7 +1687,7 @@ async function spotEnviar(btn){if(!_spot||!_spotFoto)return;btn.disabled=true;bt
   try{const b=await comprimir(_spotFoto),path='tm/'+(_spot.fecha||hoyISO()).slice(0,7)+'/spot_'+_spot.token+'.jpg';
     const up=await supa.storage.from(BUCKET).upload(path,b,{contentType:'image/jpeg',upsert:true});if(up.error)throw up.error;const foto=supa.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
     const c=_spotPos&&_spotPos.coords,sid='SPOT-'+_spot.token,ahora=new Date().toISOString(),nro=($('spot-nro').value||'').replace(/\D/g,'');
-    const notas={servicio_sistema:'SPOT · '+_spot.servicio,spot:true,tercero:_spot.tercero,pago_tercero:_spot.pago_tercero,fotos:[foto],fotos_ts:[ahora],guias:nro?[nro]:[],registro:'link spot (sin PIN)',fecha_programada:_spot.fecha,lat:c?c.latitude:null,lon:c?c.longitude:null};
+    const notas={servicio_sistema:'SPOT · '+_spot.servicio,spot:true,tercero:_spot.tercero,pago_tercero:_spot.pago_tercero,fotos:[foto],fotos_ts:[ahora],guias:nro?[nro]:[],registro:'link spot (sin PIN)',fecha_programada:_spot.fecha,nota_chofer:_spot.nota_chofer||null,nota_interna:_spot.nota_interna||null,observacion:_spot.nota_interna||null,lat:c?c.latitude:null,lon:c?c.longitude:null};
     const {error}=await supa.from('servicios_piloto').insert({servicio_id:sid,patente:_spot.patente||'TERCERO',conductor:'Tercero: '+_spot.tercero,cliente:_spot.cliente,fecha:hoyISO(),estado:'registrado',empresa:_spot.empresa,modo:'registro_tm',tarifa_neta:_spot.tarifa_neta,notas:JSON.stringify(notas)});
     if(error)throw error;await supa.from('spot_links').update({usado:ahora,servicio_id:sid}).eq('token',_spot.token);
     $('spot-form').style.display='none';$('spot-info').innerHTML='<b>✅ Servicio registrado. Gracias.</b><br>Ya puede cerrar esta página.'}
