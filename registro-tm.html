@@ -738,13 +738,16 @@ async function verResMes(){
   filas=(data||[]).map(r=>({...r,_n:parseNotas(r.notas)}));
   _gpsRes=[];_cargas=[];try{const d0=new Date(ini+'T12:00:00-03:00');d0.setDate(d0.getDate()-21);const rc=await conTope(supa.from('combustible_cargas').select('fecha,litros,total,iva').gte('fecha',hoyISO(d0)).order('fecha'),10000);_cargas=rc.data||[]}catch(e){}
   try{const r=await conTope(supa.from('gps_viajes').select('patente,tipo,inicio,fin,km,lat_ini,lon_ini,lat_fin,lon_fin').gte('inicio',new Date(ini+'T00:00:00-03:00').toISOString()).lte('inicio',new Date(fin+'T23:59:59-03:00').toISOString()).order('inicio'),15000);_gpsRes=r.data||[]}catch(e){}
-  _resMes={ini,fin,filas};resMesTodo();
+  _resMes={ini,fin,filas,excel:null};try{const rx=await repRpc('resultados',ym);_resMes.excel=rx&&rx.datos?rx.datos:null}catch(e){} // mes cerrado con informe del Excel (octubre congelado, Carlos 06-11)
+  resMesTodo();
 }
+function resXls(d){const n=v=>v===undefined||v===null||v===''?'':v,f=(v,c)=>{if(n(v)==='')return '';if(/%/.test(c))return (v<0?'<span style="color:#c0392b">−':'')+(Math.abs(v)*100).toFixed(1).replace('.',',')+'%'+(v<0?'</span>':'');return v<0?'<span style="color:#c0392b">−'+fmt$(Math.abs(v))+'</span>':fmt$(v)};return '<div class="tblw"><table class="tbl"><tr><th>Concepto</th><th>Presupuestado</th><th>Esperado según lo ejecutado</th><th>Pagado real</th><th>Proyectado al cierre</th></tr>'+(d.filas||[]).map(r=>r.sec?'<tr><td colspan="5" style="background:#1f3a5f;color:#fff;font-weight:900">'+r.c+'</td></tr>':'<tr'+(/^\s/.test(r.c)?'':' style="font-weight:800;background:#eef2f7"')+'><td>'+r.c.replace(/^\s+/,m=>'&nbsp;'.repeat(m.length))+'</td><td>'+f(r.p,r.c)+'</td><td>'+f(r.e,r.c)+'</td><td>'+f(r.r,r.c)+'</td><td>'+f(r.pr,r.c)+'</td></tr>').join('')+'</table></div>'+(d.sub?'<div class="mini">'+d.sub+'</div>':'')}
 function resMesTodo(){const {ini,fin,filas:fs}=_resMes;ir('s-res');$('res-h').textContent='Resultados del mes';$('res-volver').onclick=()=>ir('s-home');
   $('res-sub').textContent='Del '+ini.split('-').reverse().join('-')+' al '+(fin<hoyISO()?fin:hoyISO()).split('-').reverse().join('-')+' · '+fs.length+' servicio(s)';
+  if(_resMes.excel){$('res-sub').textContent=(_resMes.excel.titulo||'Informe de resultados')+' · mes cerrado: cifras oficiales del sistema TM (Excel)';$('res-tot').innerHTML=resXls(_resMes.excel)}else
   $('res-tot').innerHTML=bloqueRes(sumaRes(fs),'Resultado del mes');
   const clis=[...new Set(CLIENTES_REG.concat(fs.map(r=>r.cliente||'Sin cliente')))];
-  $('res-lista').innerHTML='<div class="lbl" style="margin-top:8px">Ver resultados por cliente</div>'+clis.map((c,i)=>{const rs=fs.filter(r=>(r.cliente||'Sin cliente')===c);if(!rs.length&&!CLIENTES_REG.includes(c))return '';const t=sumaRes(rs);
+  $('res-lista').innerHTML='<div class="lbl" style="margin-top:8px">'+(_resMes.excel?'Servicios registrados en Kaptura este mes (parcial: '+fs.length+' servicio(s); no reemplaza el informe)':'Ver resultados por cliente')+'</div>'+clis.map((c,i)=>{const rs=fs.filter(r=>(r.cliente||'Sin cliente')===c);if(!rs.length&&!CLIENTES_REG.includes(c))return '';const t=sumaRes(rs);
     return '<button class="btn2" style="margin-top:8px;display:flex;justify-content:space-between;width:100%" onclick="resMesCli('+i+')"><span>'+c+' ('+rs.length+')</span><span>'+fm$(t.res)+'</span></button>'}).join('');
   _resMes.clis=clis}
 function resMesCli(i){const c=_resMes.clis[i],rs=_resMes.filas.filter(r=>(r.cliente||'Sin cliente')===c);
