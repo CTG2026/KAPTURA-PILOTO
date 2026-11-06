@@ -825,7 +825,10 @@ function avisarWhatsApp(){
 // ═══ VER REGISTROS + EXCEL ═══
 const SVC_VER=t=>String(t||'').replace(/\s*\(Temporada (Baja|Alta)\)/i,'');
 function esAdmin(){return user&&(user.rol==='administrador'||user.rol==='coordinador'||user.rol==='administracion')}
-function esAdminTotal(){return user&&(user.rol==='administrador'||user.rol==='administracion')}
+/* Claudio (coordinador) en vista PC ve lo mismo que Administración, solo TM; en vista teléfono queda como antes (Carlos 06-11) */
+function esPcClaudio(){return !!(user&&user.rol==='coordinador'&&document.body.classList.contains('pc'))}
+function esAdmOp(){return !!(user&&(user.rol==='administracion'||esPcClaudio()))}
+function esAdminTotal(){return !!(user&&(user.rol==='administrador'||user.rol==='administracion'||esPcClaudio()))}
 function verResultado(){return esAdminTotal()} // Carlos y administración; Claudio todavía no (Carlos 02-11)
 function esCliente(){return user&&user.rol==='cliente'}
 // ═══ SERVICIOS SIN REGISTRAR: entregas sin servicio de días anteriores, o de hoy después de las 21:00 (Carlos 31-10) ═══
@@ -934,7 +937,7 @@ async function cxcCobrada(i){const r=cxcRows[i];const v=await formulario('Cobro 
 // ═══ REPORTES DEL SISTEMA TM (Carlos 02-11): pilares por mes y caja de la semana. Fuente única: sistema TM (Excel); Claude los sube al actualizarlo. Tabla abierta por ahora (Carlos 02-11) ═══
 let _repTipo='pilares';
 async function repRpc(tipo,per){const q=per?supa.from('tm_reportes').select('datos,actualizado').eq('empresa',EMPRESA).eq('tipo',tipo).eq('periodo',per).maybeSingle():supa.from('tm_reportes').select('periodo,actualizado').eq('empresa',EMPRESA).eq('tipo',tipo).order('periodo',{ascending:false});const r=await conTope(q,10000);if(r.error)throw r.error;return r.data||[]}
-async function verRep(tipo){if(!esAdminTotal())return;if(tipo==='remuneraciones'&&user.rol!=='administracion')return;const mens=tipo!=='caja_semana';_repTipo=tipo;ir('s-rep');navMarcar(tipo==='remuneraciones'?'s-rem':'s-rep');$('rep-h').textContent=tipo==='pilares'?'Pilares: rentabilidad, liquidez y solvencia':tipo==='remuneraciones'?'Remuneraciones del mes (pre-liquidación)':'Caja de la semana';$('rep-tbl').innerHTML='';$('rep-sub').textContent='Cargando…';
+async function verRep(tipo){if(!esAdminTotal())return;if(tipo==='remuneraciones'&&!esAdmOp())return;const mens=tipo!=='caja_semana';_repTipo=tipo;ir('s-rep');navMarcar(tipo==='remuneraciones'?'s-rem':'s-rep');$('rep-h').textContent=tipo==='pilares'?'Pilares: rentabilidad, liquidez y solvencia':tipo==='remuneraciones'?'Remuneraciones del mes (pre-liquidación)':'Caja de la semana';$('rep-tbl').innerHTML='';$('rep-sub').textContent='Cargando…';
   try{const ls_=await repRpc(tipo);if(!ls_.length){$('rep-sub').textContent='Aún no hay datos cargados.';$('rep-per').innerHTML='';return}
     $('rep-per').innerHTML=ls_.map(x=>{const p=x.periodo;let t;if(mens){const [y,m]=p.split('-').map(Number);t=MESES[m-1]+' '+y;t=t[0].toUpperCase()+t.slice(1)}else{const d=dISO(p),h=new Date(d);h.setDate(h.getDate()+6);t='Semana del '+fCL(p)+' al '+fCL(hoyISO(h))}return '<option value="'+p+'">'+t+'</option>'}).join('');
     const hoy=hoyISO(),cur=tipo==='pilares'?hoy.slice(0,7):tipo==='remuneraciones'?ls_[0].periodo:ls_.map(x=>x.periodo).filter(p=>p<=hoy).sort().pop();if(cur&&ls_.some(x=>x.periodo===cur))$('rep-per').value=cur;
@@ -961,7 +964,7 @@ function lunesDe(d){const x=new Date(d);const k=(x.getDay()+6)%7;x.setDate(x.get
 async function leerCxp(){const r=await conTope(supa.from('cxp_compromisos').select('*').eq('empresa',EMPRESA).order('fecha'),10000);if(r.error)throw r.error;return r.data||[]}
 function cxpEstado(r){const hoy=hoyISO();if(r.estado==='pagado')return {sem:'✅',txt:'Pagado'+(r.fecha_pago?' el '+fCL(r.fecha_pago):''),k:'ok'};const d=cxcDias(hoy,r.fecha);
   if(d<0)return {sem:'🔴',txt:'ATRASADO ('+(-d)+' día'+(d===-1?'':'s')+')',k:'atr'};if(d<=2)return {sem:'🟡',txt:d===0?'VENCE HOY':'Vence en '+d+' día(s)',k:'pr'};return {sem:'⚪',txt:'Pendiente',k:'pe'}}
-async function verCxp(modo){if(!user||user.rol!=='administracion')return;ir('s-cxp');navMarcar(modo==='mes'?'s-cxp-m':'s-cxp-s');$('cxp-box').innerHTML='';$('cxp-sub').textContent='Cargando…';
+async function verCxp(modo){if(!esAdmOp())return;ir('s-cxp');navMarcar(modo==='mes'?'s-cxp-m':'s-cxp-s');$('cxp-box').innerHTML='';$('cxp-sub').textContent='Cargando…';
   try{cxpRows=await leerCxp()}catch(e){$('cxp-sub').textContent='No se pudo leer.';return}
   const hoy=hoyISO(),lu=lunesDe(new Date()),d7=new Date(lu+'T12:00:00');d7.setDate(d7.getDate()+6);const fin=modo==='mes'?finMes(hoy.slice(0,7)):hoyISO(d7),ini=modo==='mes'?hoy.slice(0,8)+'01':lu;
   $('cxp-h').textContent='Compromisos de pago · '+(modo==='mes'?MESES[+hoy.slice(5,7)-1]+' '+hoy.slice(0,4):'semana del '+fCL(lu)+' al '+fCL(fin));
@@ -1157,13 +1160,14 @@ async function archSubirArchivos(fs,dest,forzar){if(!esAdminTotal())return;
 // ═══ MODO ESCRITORIO (Carlos 02-11): administración en PC, con menú lateral, tablero por pilar y tareas del día ═══
 const NAV_BTNS=['btn-spot','btn-pil','btn-caja','btn-reg','btn-ver','btn-misent','btn-ifco','btn-gps','btn-prof','btn-profA','btn-rsv','btn-cxc','btn-res','btn-cos','btn-emp'];
 const NAV_SCR={'btn-emp':'s-empresa','btn-pil':'s-rep','btn-caja':'s-rep','btn-ver':'s-list','btn-misent':'s-misent','btn-ifco':'s-ifco','btn-gps':'s-gps','btn-prof':'s-prof','btn-profA':'s-profA','btn-rsv':'s-rsv','btn-cxc':'s-cxc','btn-res':'s-res','btn-cos':'s-cos','btn-reg':'s-reg'};
-function aplicarVista(){if(!esAdminTotal()){document.body.classList.remove('pc');const bv=$('btn-vista');if(bv)bv.remove();return} // vista PC solo Carlos y Administración; Claudio no (Carlos 02-11)
+function aplicarVista(){if(!(user&&['administrador','administracion','coordinador'].includes(user.rol))){document.body.classList.remove('pc');const bv=$('btn-vista');if(bv)bv.remove();return} // vista PC solo Carlos y Administración; Claudio no (Carlos 02-11)
   const pref=ls('tm_vista'),pc=pref==='pc'||(pref!=='tel'&&window.innerWidth>=1024);document.body.classList.toggle('pc',pc);
   let bv=$('btn-vista');if(!bv){bv=document.createElement('button');bv.id='btn-vista';bv.className='link';bv.style.marginRight='10px';bv.onclick=()=>{ls('tm_vista',document.body.classList.contains('pc')?'tel':'pc');aplicarVista();ir('s-home')};$('btn-salir').before(bv)}
   bv.textContent=pc?'📱 Vista teléfono':'🖥 Vista PC';
+  ['btn-res','btn-cos'].forEach(i=>{if($(i))$(i).style.display=verResultado()?'block':'none'});['btn-pil','btn-spot','btn-caja'].forEach(i=>{if($(i))$(i).style.display=esAdminTotal()?'block':'none'});
   const cambiar=user&&user.rol==='administracion'?'<button onclick="ir(\'s-emp\')">🔄 Cambiar empresa</button>':'';
   if(EMP_ACT!==EMPRESA){$('pcnav').innerHTML='<div class="t">KAPTURA · '+EMP_NOM[EMP_ACT].toUpperCase()+'</div><button data-s="s-home" onclick="ir(\'s-home\')">🏠 Inicio: tareas y alertas</button>'+cambiar+archNav();archNavCargar();return}
-  const adm=user&&user.rol==='administracion',sb='padding-left:24px';
+  const adm=esAdmOp(),sb='padding-left:24px';
   const bt=i=>$(i)&&$(i).style.display!=='none'?'<button data-s="'+NAV_SCR[i]+'" onclick="$(\''+i+'\').click()" style="'+sb+'">'+$(i).textContent.replace(/\s*\(\d+\)$/,'')+'</button>':'';
   const grp=(t,h)=>h?'<details class="ng" ontoggle="if(this.open)document.querySelectorAll(\'#pcnav details.ng\').forEach(x=>{if(x!==this)x.open=false})"><summary style="list-style:none;cursor:pointer;font:700 14px \'DM Sans\',sans-serif;padding:10px;border-radius:8px">'+t+'</summary>'+h+'</details>':'';
   /* Menú PC por ámbito (Carlos 06-11): grandes opciones; adentro, las mismas opciones y permisos de antes */
@@ -1215,14 +1219,14 @@ async function tareasHoy(){const box=$('tareas-hoy');if(!box)return;box.innerHTM
       else if(t.recurrencia==='mensual'){ver=dia>=(t.dia_mes||1)&&!_tHechas.some(x=>x.tarea===k);roja=dia>(t.dia_mes||1);sub='Cada mes, día '+t.dia_mes}
       else{ver=true;roja=!!(t.fecha_limite&&t.fecha_limite<hoy);sub=t.fecha_limite?'Plazo '+fCL(t.fecha_limite):'Sin plazo'}
       if(ver)it.push({t:t.titulo,p:EMP_NOM[EMP_ACT],roja,sub,btn:'<button class="btn2" title="Editar tarea" style="width:auto;padding:6px 9px" onclick="editarTarea('+t.id+')">✏️</button><button class="btn2" onclick="tareaHecha(\''+k+'\','+(t.recurrencia==='unica'?t.id:0)+')">✔ Hecha</button>'})});
-    if(esTM&&user.rol==='administracion'){try{(await leerCxp()).forEach(r=>{const e=cxpEstado(r);if(e.k!=='atr'&&e.k!=='pr')return;it.push({t:'Pagar: '+r.acreedor+' · '+r.concepto,p:'Liquidez',roja:e.k==='atr',sub:fmt$(r.monto)+' · '+fCL(r.fecha)+' · '+e.txt,btn:'<button class="btn2" onclick="verCxp(\'semana\')">Ir</button>'})})}catch(e){}}
+    if(esTM&&esAdmOp()){try{(await leerCxp()).forEach(r=>{const e=cxpEstado(r);if(e.k!=='atr'&&e.k!=='pr')return;it.push({t:'Pagar: '+r.acreedor+' · '+r.concepto,p:'Liquidez',roja:e.k==='atr',sub:fmt$(r.monto)+' · '+fCL(r.fecha)+' · '+e.txt,btn:'<button class="btn2" onclick="verCxp(\'semana\')">Ir</button>'})})}catch(e){}}
     (esTM?TAREAS:[]).filter(t=>t.d.includes(dw)).forEach(t=>{const h=_tHechas.find(x=>x.tarea===t.id&&x.fecha===hoy);it.push({t:t.t,p:t.p,lim:t.lim,ok:!!h,roja:!h&&hm>=t.lim,sub:h?'Hecha por '+h.hecha_por.split(' ')[0]+' a las '+new Date(h.hora).toTimeString().slice(0,5):'Hasta las '+t.lim,btn:h?'':'<button class="btn2" onclick="tareaHecha(\''+t.id+'\')">✔ Hecha</button>'})});
     cx.forEach(r=>{const e=cxcEstado(r),et=cxcEtapa(r);if(e.sem==='🟢'||e.sem==='⚪')return;it.push({t:e.txt.split(' (')[0]+' · '+r.cliente+(r.folio?' fact. '+r.folio:''),p:'Liquidez',roja:e.sem==='🔴',est:et==='pendiente'?'EN ESPERA':null,sub:fmt$(r.total)+(et==='por_cobrar'?' · vence '+fCL(cxcVence(r)):''),btn:'<button class="btn2" onclick="verCxc()">Ir</button>'})});
     if(user!==u0||!esAdminTotal())return;const pend=it.filter(x=>!x.ok);
     // Solo las pendientes: estado en palabra (rojo) y botón; las hechas desaparecen hasta el día siguiente (Carlos 02-11)
     box.innerHTML='<div style="margin:6px 0 12px"><div style="display:flex;align-items:center;gap:10px"><div style="font-weight:900;font-size:16px;flex:1">Tareas de hoy · '+EMP_NOM[EMP_ACT]+' ('+pend.length+')</div><button class="btn2" style="width:auto;margin:0;padding:6px 10px;font-size:13px" onclick="nuevaTarea()">+ Nueva tarea</button>'+(user.rol==='administracion'?'<button class="btn2" style="width:auto;margin:0;padding:6px 10px;font-size:13px" onclick="ir(\'s-emp\')">🔄 Empresa</button>':'')+'</div>'+pend.map(x=>'<div class="tarea"><div class="x"><span style="font-weight:700">'+x.t+'</span><small>'+x.p+' · '+x.sub+'</small></div><span style="color:'+(x.est?'var(--muted)':'#ff3b30')+';font-weight:800;font-size:12px;white-space:nowrap">'+(x.est||(x.roja?'ATRASADA':'PENDIENTE'))+'</span>'+(x.btn||'')+'</div>').join('')+'</div>';}catch(e){box.innerHTML=''}}
 async function tareaHecha(id,unica){const {error}=await supa.from('tareas_admin').insert({fecha:hoyISO(),tarea:id,hecha_por:user.nombre,empresa:EMP_ACT});if(!error&&unica)await supa.from('tareas').update({activa:false}).eq('id',unica);toast(error?'No se pudo guardar':'Tarea hecha');tareasHoy()}
-window.addEventListener('resize',()=>{if(user&&esAdminTotal()&&!ls('tm_vista'))aplicarVista()});
+window.addEventListener('resize',()=>{if(user&&['administrador','administracion','coordinador'].includes(user.rol)&&!ls('tm_vista'))aplicarVista()});
 async function nuevaTarea(){const v=await formulario('Nueva tarea · '+EMP_NOM[EMP_ACT],[{k:'t',l:'Tarea'},{k:'r',l:'¿Se repite?',t:'select',ops:['No (queda hasta marcarla Hecha)','Cada semana','Cada mes'],v:'No (queda hasta marcarla Hecha)'},
   {k:'f',l:'Plazo (si no se repite; vacío = sin plazo)',t:'date'},{k:'d',l:'Días (si es cada semana)',t:'dias',v:[1]},{k:'m',l:'Día del mes (si es cada mes)',t:'number',v:10}]);
   if(!v||!v.t)return;const o={empresa:EMP_ACT,titulo:v.t,creada_por:user.nombre};
