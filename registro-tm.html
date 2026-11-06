@@ -738,6 +738,38 @@ function bloqueRes(t,tit){const pct=t.tarifa?Math.round(t.res/t.tarifa*1000)/10:
     ln('COSTOS FIJOS',-t.fijo,it('Fijo empresa asignado a los servicios',-t.fijo))+
     '<div style="display:flex;justify-content:space-between;border-top:2px solid var(--border);padding:8px 0 2px"><b>RESULTADO</b><b>'+fm$(t.res)+' ('+pctTxt+')</b></div>'+
     '<div class="m" style="font-size:12px"><i>Esperado según parámetros del Excel (no es lo pagado real).</i></div></div>'}
+/* Resultados del mes en vivo con desplegables hasta el último nivel: ventas por cliente → proforma/quincena o spot → cada servicio; costos por concepto → patente o conductor → cada servicio con su cálculo. Los spot suman en ventas aunque no tengan tarifa o costo (Carlos 06-11) */
+function zRes(r){const z=resultadoServicio(r);if(z)return z;const n=r._n||{},t=+r.tarifa_neta||0,nDia=filas.filter(x=>x.fecha===r.fecha).length||1,fijo=COSTO.fijoMes/COSTO.diasMes/nDia;
+  return {tarifa:t,ret:0,v:{combustible:0,peajes:0,comision:0,asesor:0,neumMant:0,viaticos:0},tv:0,fijo,nDia,res:t-fijo,km:0,sinCosto:true,motivo:n.spot?(n.tipo_spot==='propio'?'Spot propio: sin km ni ruta para calcular costos':'Spot con tercero: pago al tercero por definir'):'Servicio sin parámetros de costo'}}
+function bloqueRes2(rs,tit){const esc=t=>String(t==null?'':t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]),W='display:inline-block;min-width:98px;text-align:right;padding-left:6px';
+  const Z=rs.map(r=>({r,n:r._n||{},z:zRes(r)})),S=k=>Z.reduce((a,x)=>a+(k(x)||0),0);
+  const T={tarifa:S(x=>x.z.tarifa),tv:S(x=>x.z.tv),fijo:S(x=>x.z.fijo),km:S(x=>x.z.km)};T.res=T.tarifa-T.tv-T.fijo;
+  const pc=(v,t)=>t?' <span style="color:var(--muted)">'+String(Math.round(v/t*1000)/10).replace('.',',')+'%</span>':'',pctTxt=x=>{const p=T.tarifa?Math.round(x/T.tarifa*1000)/10:0;return p<0?'<span style="color:#ff3b30">−'+String(-p).replace('.',',')+'%</span>':String(p).replace('.',',')+'%'};
+  const fe=r=>r.fecha.slice(8,10)+'-'+r.fecha.slice(5,7),id=x=>x.n.codigo?x.n.codigo+' · ':'',sv=x=>SVC_VER(x.n.servicio_sistema||((x.r.origen||'')+' → '+(x.r.destino||''))),cond=x=>String(x.r.conductor||'').replace(/^Tercero:\s*/,'tercero ');
+  const fila=(t,v,lv)=>'<div style="display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--muted);padding:1px 0 1px '+(14+lv*16)+'px;border-top:1px dashed var(--border)"><span>'+t+'</span><span style="'+W+'">'+fm$(v)+'</span></div>';
+  const det=(t,v,lv,h,cnt)=>'<details style="padding:1px 0 1px '+(lv?16:14)+'px"><summary style="display:flex;justify-content:space-between;gap:8px;cursor:pointer;font-size:'+(lv>1?12:13)+'px'+(lv>1?';color:var(--muted)':'')+'"><span>'+t+(cnt!=null?' <span style="color:var(--muted)">('+cnt+')</span>':'')+' ▸</span><span style="'+W+'">'+fm$(v)+'</span></summary>'+h+'</details>';
+  const ln=(t,v,h)=>'<details style="border-top:1px solid var(--border);padding:6px 0"><summary style="display:flex;justify-content:space-between;cursor:pointer"><b>'+t+' ▸</b><b>'+fm$(v)+'</b></summary>'+h+'</details>';
+  const grpBy=(arr,kf)=>{const m=new Map();arr.forEach(x=>{const k=kf(x);if(!m.has(k))m.set(k,[]);m.get(k).push(x)});return [...m.entries()]};
+  // VENTAS
+  const svLine=x=>{const a=x.z.tarifa,ret=x.z.ret,ifc=a-ret-(+x.r.tarifa_neta||0);const sub=(ret||ifc>0)?fila('Tarifa de la ruta',+x.r.tarifa_neta||0,3)+(ret?fila('Retorno supermercado',ret,3):'')+(ifc>0?fila('Retiro IFCO',ifc,3):''):'';
+    const txt=fe(x.r)+' · '+id(x)+esc(sv(x))+' · '+esc(x.r.patente||'')+' · '+esc(cond(x))+(a?'':' · <b>sin tarifa</b>');return sub?det(txt,a,3,sub):fila(txt,a,2)};
+  const grpVenta=x=>{const c=x.r.cliente||'';if(/EBLOOMS/i.test(c))return +x.r.fecha.slice(8,10)<=15?'Proforma 1ª quincena (1–15)':'Proforma 2ª quincena (16–fin de mes)';if(/Valle/i.test(c))return 'Liquidación del mes';return x.n.spot?'Spot':'Servicios'};
+  const ventas=grpBy(Z,x=>x.r.cliente||'Sin cliente').map(([c,xs])=>{const v=xs.reduce((a,x)=>a+x.z.tarifa,0);return det(esc(c)+pc(v,T.tarifa),v,0,grpBy(xs,grpVenta).map(([g,ys])=>det(esc(g),ys.reduce((a,x)=>a+x.z.tarifa,0),1,ys.sort((a,b)=>a.r.fecha<b.r.fecha?-1:1).map(svLine).join(''),ys.length)).join(''),xs.length)}).join('');
+  // COSTOS VARIABLES
+  const kmF=x=>Math.round(x.z.km).toLocaleString('es-CL'),rd=x=>String(COSTO.rend[x.z.tipoC]).replace('.',',');
+  const formula={combustible:x=>kmF(x)+' km ÷ '+rd(x)+' km/l × $'+Math.round(x.z.pd.p).toLocaleString('es-CL')+' neto/l · km '+x.z.kmTxt,peajes:x=>'peaje de la ruta',comision:x=>'10% de '+fm$(x.z.tarifa),asesor:x=>'3% de '+fm$(x.z.tarifa),neumMant:x=>kmF(x)+' km × $'+(COSTO.neum+COSTO.mant),viaticos:x=>x.z.tipoC==='T'?'tracto: $'+COSTO.viatTracto.toLocaleString('es-CL')+' por día':'afurgonado (solo Temporada Alta)'};
+  const conc=[['combustible','Combustible','pat'],['peajes','Peajes','pat'],['comision','Comisión conductor 10%','con'],['asesor','Comisión asesor 3%','cli'],['neumMant','Neumáticos y mantención','pat'],['viaticos','Viáticos','con']];
+  const C=Z.filter(x=>!x.z.sinCosto),sinC=Z.filter(x=>x.z.sinCosto);
+  const varH=conc.map(([k,t,by])=>{const tot=C.reduce((a,x)=>a+x.z.v[k],0);const kf=by==='pat'?(x=>x.r.patente||'Sin patente'):by==='con'?(x=>x.r.conductor||'Sin conductor'):(x=>x.r.cliente||'Sin cliente');
+    return det(t+pc(tot,T.tv),-tot,0,grpBy(C.filter(x=>x.z.v[k]),kf).map(([g,ys])=>det(esc(g),-ys.reduce((a,x)=>a+x.z.v[k],0),1,ys.map(x=>fila(fe(x.r)+' · '+id(x)+esc(sv(x))+' · <i>'+esc(formula[k](x))+'</i>',-x.z.v[k],2)).join(''),ys.length)).join('')||fila('Sin montos este mes',0,1))}).join('')+
+    (sinC.length?det('Servicios sin costo calculado (no restan)',0,0,sinC.map(x=>fila(fe(x.r)+' · '+id(x)+esc(x.r.cliente||'')+' · '+esc(sv(x))+' · '+esc(x.r.patente||'')+' · <i>'+esc(x.z.motivo)+'</i>',0,1)).join(''),sinC.length):'');
+  // COSTOS FIJOS
+  const dias=[...new Set(Z.map(x=>x.r.fecha))].length;
+  const fijH=COSTO.fijos.map(([t,m])=>det(esc(t)+' <span style="color:var(--muted)">($'+m.toLocaleString('es-CL')+'/mes)</span>',-m*dias/COSTO.diasMes,0,grpBy(Z,x=>x.r.fecha).map(([f,ys])=>fila(f.slice(8,10)+'-'+f.slice(5,7)+' · '+ys.length+' servicio(s): '+ys.map(x=>esc(x.n.codigo||sv(x))).join(', '),-m/COSTO.diasMes,1)).join(''))).join('')+fila('Fijo del mes $'+COSTO.fijoMes.toLocaleString('es-CL')+' ÷ '+COSTO.diasMes+' días × '+dias+' día(s) con servicio',-T.fijo,0);
+  return '<div style="border:1px solid var(--border);border-radius:10px;padding:8px;margin-top:8px;max-width:720px"><div><b>📊 '+tit+': '+fm$(T.res)+' ('+pctTxt(T.res)+')</b></div><div class="m" style="font-size:12px">'+Z.length+' servicio(s) · '+Math.round(T.km).toLocaleString('es-CL')+' km'+(sinC.length?' · '+sinC.length+' sin costo calculado (suman en ventas, no restan costos)':'')+'</div>'+
+    ln('VENTAS',T.tarifa,ventas)+ln('COSTOS VARIABLES',-T.tv,varH)+ln('COSTOS FIJOS',-T.fijo,fijH)+
+    '<div style="display:flex;justify-content:space-between;border-top:2px solid var(--border);padding:8px 0 2px"><b>RESULTADO</b><b>'+fm$(T.res)+' ('+pctTxt(T.res)+')</b></div>'+
+    '<div class="m" style="font-size:12px"><i>Esperado según parámetros del Excel (no es lo pagado real).'+(sinC.length?' Los spot sin costo calculado inflan el resultado hasta definir sus costos.':'')+'</i></div></div>'}
 async function verResMes(){
   if(!verResultado())return;ir('s-res');llenarMeses('res-mes');$('res-mes').onchange=verResMes;$('res-h').textContent='Resultados del mes';$('res-tot').innerHTML='';$('res-lista').innerHTML='';$('res-sub').textContent='Cargando…';$('res-volver').onclick=()=>ir('s-home');
   const ym=$('res-mes').value||mesesAtras(1)[0].v,ini=ym+'-01',fin=finMes(ym);
@@ -766,14 +798,14 @@ function bloqueCos(d){const W='display:inline-block;min-width:98px;text-align:ri
 function resMesTodo(){const {ini,fin,filas:fs}=_resMes;ir('s-res');$('res-h').textContent='Resultados del mes';$('res-volver').onclick=()=>ir('s-home');
   $('res-sub').textContent='Del '+ini.split('-').reverse().join('-')+' al '+(fin<hoyISO()?fin:hoyISO()).split('-').reverse().join('-')+' · '+fs.length+' servicio(s)';
   if(_resMes.excel){$('res-sub').textContent=(_resMes.excel.titulo||'Informe de resultados')+' · mes cerrado: cifras oficiales del sistema TM (Excel)';$('res-tot').innerHTML=bloqueXls(_resMes.excel)}else
-  $('res-tot').innerHTML=bloqueRes(sumaRes(fs),'Resultado del mes');
+  $('res-tot').innerHTML=bloqueRes2(fs,'Resultado del mes');
   const clis=[...new Set(CLIENTES_REG.concat(fs.map(r=>r.cliente||'Sin cliente')))];
-  $('res-lista').innerHTML='<div class="lbl" style="margin-top:8px">'+(_resMes.excel?'Servicios registrados en Kaptura este mes (parcial: '+fs.length+' servicio(s); no reemplaza el informe)':'Ver resultados por cliente')+'</div>'+clis.map((c,i)=>{const rs=fs.filter(r=>(r.cliente||'Sin cliente')===c);if(!rs.length&&!CLIENTES_REG.includes(c))return '';const t=sumaRes(rs);
+  $('res-lista').innerHTML='<div class="lbl" style="margin-top:8px">'+(_resMes.excel?'Servicios registrados en Kaptura este mes (parcial: '+fs.length+' servicio(s); no reemplaza el informe)':'Ver resultados por cliente')+'</div>'+clis.map((c,i)=>{const rs=fs.filter(r=>(r.cliente||'Sin cliente')===c);if(!rs.length&&!CLIENTES_REG.includes(c))return '';const t={res:rs.reduce((a,r)=>{const z=zRes(r);return a+z.tarifa-z.tv-z.fijo},0)};
     return '<button class="btn2" style="margin-top:8px;display:flex;justify-content:space-between;width:100%" onclick="resMesCli('+i+')"><span>'+c+' ('+rs.length+')</span><span>'+fm$(t.res)+'</span></button>'}).join('');
   _resMes.clis=clis}
 function resMesCli(i){const c=_resMes.clis[i],rs=_resMes.filas.filter(r=>(r.cliente||'Sin cliente')===c);
   $('res-h').textContent='Resultados del mes · '+c;$('res-sub').textContent=rs.length+' servicio(s) del mes';$('res-volver').onclick=()=>resMesTodo();
-  $('res-tot').innerHTML=bloqueRes(sumaRes(rs),'Resultado '+c);
+  $('res-tot').innerHTML=bloqueRes2(rs,'Resultado '+c);
   $('res-lista').innerHTML='<div class="lbl" style="margin-top:8px">Resultados de sus servicios</div>'+rs.map(r=>{const n=r._n;return '<div class="reg"><div class="t">'+(n.codigo?'<span class="ul">'+n.codigo+'</span> · ':'')+r.fecha.split('-').reverse().join('-')+' · '+SVC_VER(n.servicio_sistema||((r.origen||'')+' → '+(r.destino||'')))+'</div><div>'+r.conductor+' · '+patTipo(r.patente)+(n.acoplado?' / '+n.acoplado:'')+'</div>'+resultadoHTML(r)+'</div>'}).join('');window.scrollTo(0,0)}
 // Agrega las fotos (y guías) de un registro repetido al servicio que ya existe hoy
 async function agregarAServicio(sid){
