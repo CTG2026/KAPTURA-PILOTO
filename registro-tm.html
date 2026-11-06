@@ -1163,9 +1163,16 @@ function aplicarVista(){if(!esAdminTotal()){document.body.classList.remove('pc')
   bv.textContent=pc?'📱 Vista teléfono':'🖥 Vista PC';
   const cambiar=user&&user.rol==='administracion'?'<button onclick="ir(\'s-emp\')">🔄 Cambiar empresa</button>':'';
   if(EMP_ACT!==EMPRESA){$('pcnav').innerHTML='<div class="t">KAPTURA · '+EMP_NOM[EMP_ACT].toUpperCase()+'</div><button data-s="s-home" onclick="ir(\'s-home\')">🏠 Inicio: tareas y alertas</button>'+cambiar+archNav();archNavCargar();return}
-  const comp=user&&user.rol==='administracion'?'<div style="font-size:11px;font-weight:800;color:var(--muted);letter-spacing:.08em;margin:10px 10px 2px">💸 COMPROMISOS</div><button data-s="s-cxp-s" onclick="verCxp(\'semana\')" style="padding-left:24px">Semana</button><button data-s="s-cxp-m" onclick="verCxp(\'mes\')" style="padding-left:24px">Mes actual</button><button data-s="s-rem" onclick="verRep(\'remuneraciones\')">💵 Remuneraciones</button>':'';
-  $('pcnav').innerHTML='<div class="t">KAPTURA · TM</div><button data-s="s-home" onclick="ir(\'s-home\')">🏠 Inicio y tareas del día</button>'+cambiar+comp+NAV_BTNS.filter(i=>$(i)&&$(i).style.display!=='none').map(i=>'<button data-s="'+NAV_SCR[i]+'" onclick="$(\''+i+'\').click()">'+$(i).textContent.replace(/\s*\(\d+\)$/,'')+'</button>').join('')+archNav();archNavCargar()}
-function navMarcar(id){document.querySelectorAll('#pcnav button').forEach(b=>b.classList.toggle('on',b.dataset.s===id))}
+  const adm=user&&user.rol==='administracion',sb='padding-left:24px';
+  const bt=i=>$(i)&&$(i).style.display!=='none'?'<button data-s="'+NAV_SCR[i]+'" onclick="$(\''+i+'\').click()" style="'+sb+'">'+$(i).textContent.replace(/\s*\(\d+\)$/,'')+'</button>':'';
+  const grp=(t,h)=>h?'<details class="ng" ontoggle="if(this.open)document.querySelectorAll(\'#pcnav details.ng\').forEach(x=>{if(x!==this)x.open=false})"><summary style="list-style:none;cursor:pointer;font:700 14px \'DM Sans\',sans-serif;padding:10px;border-radius:8px">'+t+'</summary>'+h+'</details>':'';
+  /* Menú PC por ámbito (Carlos 06-11): grandes opciones; adentro, las mismas opciones y permisos de antes */
+  const com=['btn-spot','btn-prof','btn-profA','btn-rsv'].map(bt).join('');
+  const ope=['btn-reg','btn-ver','btn-misent','btn-ifco','btn-gps'].map(bt).join('');
+  const fin=(adm?'<button data-s="s-cxp-s" onclick="verCxp(\'semana\')" style="'+sb+'">💸 Compromisos: semana</button><button data-s="s-cxp-m" onclick="verCxp(\'mes\')" style="'+sb+'">💸 Compromisos: mes actual</button>':'')+['btn-caja','btn-cxc','btn-res','btn-cos','btn-pil'].map(bt).join('');
+  const org=(adm?'<button data-s="s-rem" onclick="verRep(\'remuneraciones\')" style="'+sb+'">💵 Remuneraciones</button>':'')+bt('btn-emp');
+  $('pcnav').innerHTML='<div class="t">KAPTURA · TM</div><button data-s="s-home" onclick="ir(\'s-home\')">🏠 Inicio y tareas del día</button>'+cambiar+grp('💼 Comercial',com)+grp('🚚 Operacional',ope)+grp('💰 Financiero',fin)+grp('👥 Organizacional',org)+archNav();archNavCargar()}
+function navMarcar(id){document.querySelectorAll('#pcnav button').forEach(b=>b.classList.toggle('on',b.dataset.s===id));const on=document.querySelector('#pcnav button.on');if(on){const g=on.closest('details.ng');if(g)g.open=true}}
 // Tablero por pilar (solo con datos que Kaptura tiene; el resto vive en el sistema TM)
 let PCMES=null; // mes elegido en el panel del PC (Carlos 05-11): por defecto el mes en curso
 async function pcDash(){const box=$('pc-dash');if(!box)return;box.innerHTML='';if(!document.body.classList.contains('pc')||!esAdmin()||!supa||EMP_ACT!==EMPRESA)return;const u0=user;
