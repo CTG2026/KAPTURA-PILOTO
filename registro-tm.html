@@ -1209,7 +1209,7 @@ const TAREAS=[{id:'cartola',t:'Cartola Santander del día → enviar a Claude',d
   {id:'aramco',t:'Transacciones Aramco de la semana → enviar a Claude',d:[1],lim:'20:00',p:'Rentabilidad'},
   {id:'fuera',t:'Informar pagos o cobros fuera del Santander (si hubo)',d:[1,2,3,4,5,6],lim:'20:00',p:'Liquidez'}];
 let _tHechas=[];
-async function tareasHoy(){const box=$('tareas-hoy');if(!box)return;box.innerHTML='';if(!esAdminTotal()||!supa)return;const u0=user;
+async function tareasHoy(){const box=$('tareas-hoy');if(!box)return;box.innerHTML='';if(!esAdminTotal()||esPcClaudio()||!supa)return;const u0=user; /* Claudio en vista PC no ve las tareas (Carlos 06-11) */
   try{const hoy=hoyISO(),dw=new Date().getDay(),hm=new Date().toTimeString().slice(0,5);
     _tHechas=(await conTope(supa.from('tareas_admin').select('tarea,hecha_por,hora,fecha').eq('empresa',EMP_ACT).gte('fecha',hoy.slice(0,8)+'01'),8000)).data||[];
     const esTM=EMP_ACT===EMPRESA,cx=esTM?await leerCxc():[],it=[];
