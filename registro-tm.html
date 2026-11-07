@@ -116,10 +116,17 @@ body.movnav #pcnav{display:flex;flex-direction:column;gap:4px;position:fixed;lef
 body.movnav.navabierto #pcnav{transform:none}
 #navfondo{display:none}
 body.movnav.navabierto #navfondo{display:block;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:1000}
+/* Vista PC: ☰ oculta/muestra el menú lateral para ganar espacio; se recuerda (Carlos 06-11) */
+body.pc #btn-menu{display:inline-block;color:#fff}
+body.pc #pcnav{transition:transform .2s ease}
+body.pc.navoculto #pcnav{transform:translateX(-105%)}
+body.pc.navoculto{padding-left:28px}
+body.pc.navoculto .hdr{left:0}
+body.pc.navoculto .toast{left:50%}
 </style>
 </head>
 <body>
-<div class="hdr"><button id="btn-menu" aria-label="Menú" onclick="document.body.classList.toggle('navabierto')">☰</button><div class="brand">KAPTURA · TRANSPORTES MADRID</div><span id="hdr-user" style="margin-left:auto;margin-right:10px;font-weight:800;font-size:14px"></span><button class="link" id="btn-salir" style="display:none" onclick="salir()">Salir</button></div>
+<div class="hdr"><button id="btn-menu" aria-label="Menú" onclick="menuToggle()">☰</button><div class="brand">KAPTURA · TRANSPORTES MADRID</div><span id="hdr-user" style="margin-left:auto;margin-right:10px;font-weight:800;font-size:14px"></span><button class="link" id="btn-salir" style="display:none" onclick="salir()">Salir</button></div>
 <nav id="pcnav"></nav><div id="navfondo" onclick="document.body.classList.remove('navabierto')"></div>
 <div class="pend" id="pend"></div>
 
@@ -474,7 +481,7 @@ function entrar(p){
   $('btn-salir').style.display='block'; $('hdr-user').textContent='👤 '+u.nombre.split(' ')[0]; $('btn-ver').style.display='block';$('btn-ver').textContent=esAdmin()?'📋 Servicios registrados':esCliente()?'📋 Ver mis servicios':'📋 Mis servicios registrados';$('btn-reg').style.display=esCliente()?'none':'block';$('btn-ent').style.display=esCliente()?'none':'block';$('btn-misent').style.display='block';contarSvc();$('btn-res').style.display=verResultado()?'block':'none';$('btn-cos').style.display=verResultado()?'block':'none';$('btn-profA').style.display=esAdmin()?'block':'none';$('btn-rsv').style.display=esAdmin()?'block':'none';$('btn-cxc').style.display=esAdmin()?'block':'none';$('btn-emp').style.display=esAdmin()?'block':'none';$('btn-pil').style.display=esAdminTotal()?'block':'none';$('btn-spot').style.display=esAdminTotal()?'block':'none';$('btn-caja').style.display=esAdminTotal()?'block':'none';ordenHome();contarEnt();const vg=(esAdmin()||esCliente())?'block':'none';$('btn-gps').style.display=vg;$('btn-prof').style.display=esCliente()?'none':vg; /* Proforma oculta para el cliente por ahora (Carlos 30-10) */ $('btn-ifco').style.display='block';contarIfco(); EMP_ACT=EMPRESA;document.body.classList.remove('global');aplicarVista(); if(user.rol==='administracion'){EMP_ELEGIDA=false;aplicarVista();ir('s-emp')} else ir('s-home'); revisarPendientes();
 }
 function ordenHome(){const h=$('s-home'),ids=esCliente()?['btn-ver','btn-misent','btn-ifco','btn-gps','btn-prof','btn-profA','btn-ent','btn-reg']:['btn-ent','btn-reg','btn-ver','btn-misent','btn-ifco','btn-gps','btn-prof','btn-profA','btn-flu','btn-res','btn-cos','btn-efe','btn-rsv','btn-pil','btn-caja','btn-cxc','btn-spot','btn-emp'];ids.forEach(i=>h.appendChild($(i)))} /* orden de inicio del cliente: servicios, entregas, IFCO, GPS (Carlos 30-10) */
-function salir(){ls('tm_pin',null);user=null;document.body.classList.remove('movnav','navabierto');EMP_ACT=EMPRESA;document.body.classList.remove('global');['alerta-adm','alerta-cxc','tareas-hoy','pc-dash','alerta-sinreg','cxc-box','rep-tbl'].forEach(i=>{const e=$(i);if(e)e.innerHTML=''});document.body.classList.remove('pc');$('pcnav').innerHTML='';const bv=$('btn-vista');if(bv)bv.remove();pin='';pintarPin();$('btn-salir').style.display='none';$('hdr-user').textContent='';_dupOk=false;ir('s-pin')}
+function salir(){ls('tm_pin',null);user=null;document.body.classList.remove('movnav','navabierto','navoculto');EMP_ACT=EMPRESA;document.body.classList.remove('global');['alerta-adm','alerta-cxc','tareas-hoy','pc-dash','alerta-sinreg','cxc-box','rep-tbl'].forEach(i=>{const e=$(i);if(e)e.innerHTML=''});document.body.classList.remove('pc');$('pcnav').innerHTML='';const bv=$('btn-vista');if(bv)bv.remove();pin='';pintarPin();$('btn-salir').style.display='none';$('hdr-user').textContent='';_dupOk=false;ir('s-pin')}
 
 // ═══ REGISTRO ═══
 // Borrador: las fotos quedan guardadas en el celular hasta registrar el servicio
@@ -1275,7 +1282,7 @@ async function archSubirArchivos(fs,dest,forzar){if(!esAdminTotal())return;
 const NAV_BTNS=['btn-spot','btn-pil','btn-caja','btn-reg','btn-ver','btn-misent','btn-ifco','btn-gps','btn-prof','btn-profA','btn-rsv','btn-cxc','btn-flu','btn-res','btn-cos','btn-efe','btn-emp'];
 const NAV_SCR={'btn-emp':'s-empresa','btn-pil':'s-rep','btn-caja':'s-rep','btn-ver':'s-list','btn-misent':'s-misent','btn-ifco':'s-ifco','btn-gps':'s-gps','btn-prof':'s-prof','btn-profA':'s-profA','btn-rsv':'s-rsv','btn-cxc':'s-cxc','btn-res':'s-res','btn-cos':'s-cos','btn-efe':'s-efe','btn-flu':'s-flu','btn-reg':'s-reg'};
 function aplicarVista(){if(!(user&&['administrador','administracion','coordinador'].includes(user.rol))){document.body.classList.remove('pc','movnav','navabierto');const bv=$('btn-vista');if(bv)bv.remove();return} // vista PC solo Carlos y Administración; Claudio no (Carlos 02-11)
-  const pref=ls('tm_vista'),pc=pref==='pc'||(pref!=='tel'&&window.innerWidth>=1024);document.body.classList.toggle('pc',pc);document.body.classList.toggle('movnav',!pc);document.body.classList.remove('navabierto');
+  const pref=ls('tm_vista'),pc=pref==='pc'||(pref!=='tel'&&window.innerWidth>=1024);document.body.classList.toggle('pc',pc);document.body.classList.toggle('movnav',!pc);document.body.classList.remove('navabierto');document.body.classList.toggle('navoculto',pc&&ls('tm_navoculto')==='1');
   let bv=$('btn-vista');if(!bv){bv=document.createElement('button');bv.id='btn-vista';bv.className='link';bv.style.marginRight='10px';bv.onclick=()=>{ls('tm_vista',document.body.classList.contains('pc')?'tel':'pc');aplicarVista();ir('s-home')};$('btn-salir').before(bv)}
   bv.textContent=pc?'📱 Vista teléfono':'🖥 Vista PC';
   ['btn-res','btn-cos'].forEach(i=>{if($(i))$(i).style.display=verResultado()?'block':'none'});if($('btn-efe'))$('btn-efe').style.display=esCarlos()?'block':'none';if($('btn-flu'))$('btn-flu').style.display=esCarlos()?'block':'none';['btn-pil','btn-spot','btn-caja'].forEach(i=>{if($(i))$(i).style.display=esAdminTotal()?'block':'none'});
@@ -1292,6 +1299,7 @@ function aplicarVista(){if(!(user&&['administrador','administracion','coordinado
   const org=(adm?'<button data-s="s-rem" onclick="verRep(\'remuneraciones\')" style="'+sb+'">💵 Remuneraciones</button>':'')+bt('btn-emp');
   $('pcnav').innerHTML='<div class="t">KAPTURA · TM</div><button data-s="s-home" onclick="ir(\'s-home\')">🏠 Inicio y tareas del día</button>'+cambiar+grp('💼 Comercial',com)+grp('🚚 Operacional',ope)+grp('💰 Financiero',fin)+grp('👥 Organizacional',org)+archNav();archNavCargar()}
 document.addEventListener('click',e=>{if(document.body.classList.contains('navabierto')&&e.target.closest&&e.target.closest('#pcnav button'))document.body.classList.remove('navabierto')});
+function menuToggle(){const b=document.body;if(b.classList.contains('pc')){const o=b.classList.toggle('navoculto');ls('tm_navoculto',o?'1':null)}else b.classList.toggle('navabierto')}
 function navMarcar(id){document.querySelectorAll('#pcnav button').forEach(b=>b.classList.toggle('on',b.dataset.s===id));const on=document.querySelector('#pcnav button.on');if(on){const g=on.closest('details.ng');if(g)g.open=true}}
 // Tablero por pilar (solo con datos que Kaptura tiene; el resto vive en el sistema TM)
 let PCMES=null; // mes elegido en el panel del PC (Carlos 05-11): por defecto el mes en curso
