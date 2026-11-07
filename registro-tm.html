@@ -302,6 +302,7 @@ body.pc.navoculto .toast{left:50%}
 </section>
 <section class="screen" id="s-flu">
   <h1>Flujo de caja</h1>
+  <select id="flu-mes" style="width:100%;font-size:16px;padding:8px;border-radius:10px;border:2px solid var(--border);background:var(--surface);color:var(--text);margin:8px 0 4px"></select>
   <div class="sub" id="flu-sub">Cargando…</div>
   <div style="display:flex;gap:8px;margin:6px 0"><button class="btn2" style="width:auto;margin:0" onclick="_fluN=4;pintarFlujo()">4 meses</button><button class="btn2" style="width:auto;margin:0" onclick="_fluN=12;pintarFlujo()">12 meses</button></div>
   <div id="flu-box"></div>
@@ -832,7 +833,10 @@ function bloqueXls(d){const F={};(d.filas||[]).forEach(r=>F[r.f]=r);const v=f=>+
 /* Flujo de caja 12 meses (Excel: hoja Flujo Anual), estructura simple de Carlos: ingresos por cliente; egresos en costos variables, fijos, deudas, impuestos, imprevistos, inversión y retiros; saldo con alerta bajo el piso de caja. Solo Carlos por ahora (06-11). */
 let _flu=null,_fluN=4;
 async function verFlujo(){if(!esCarlos())return;ir('s-flu');navMarcar('s-flu');$('flu-box').innerHTML='';$('flu-sub').textContent='Cargando…';
-  try{const l=await repRpc('flujo');if(!l.length){$('flu-sub').textContent='Todavía no hay flujo cargado.';return}const r=await repRpc('flujo',l[0].periodo);_flu=r.datos;_flu._act=r.actualizado;pintarFlujo()}catch(e){$('flu-sub').textContent='No se pudo cargar: '+(e.message||e)}}
+  try{const l=await repRpc('flujo');if(!l.length){$('flu-sub').textContent='Todavía no hay flujo cargado.';return}const nm=ym=>['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'][+ym.slice(5,7)-1]+' '+ym.slice(0,4),sel=$('flu-mes'),prev=sel.value;
+    /* Un flujo por mes: el de meses cerrados queda como foto fija; el del mes en curso se actualiza (Carlos 07-11) */
+    sel.innerHTML=l.map((x,i)=>'<option value="'+x.periodo+'">'+(i===0?'Flujo vigente · '+nm(x.periodo)+' (se actualiza)':'Foto fija · '+nm(x.periodo))+'</option>').join('');sel.value=l.some(x=>x.periodo===prev)?prev:l[0].periodo;sel.onchange=verFlujo;
+    const r=await repRpc('flujo',sel.value);_flu=r.datos;_flu._act=r.actualizado;pintarFlujo()}catch(e){$('flu-sub').textContent='No se pudo cargar: '+(e.message||e)}}
 function fluToggle(id){const rs=document.querySelectorAll('#flu-box tr[data-p="'+id+'"]'),abrir=rs.length&&rs[0].style.display==='none';rs.forEach(r=>{r.style.display=abrir?'':'none';if(!abrir){const k=r.dataset.id;if(k)document.querySelectorAll('#flu-box tr[data-p="'+k+'"]').forEach(x=>x.style.display='none')}});const a=document.querySelector('#flu-box [data-a="'+id+'"]');if(a)a.textContent=abrir?'▾':'▸'}
 function pintarFlujo(){const d=_flu;if(!d)return;const n=Math.min(_fluN,d.meses.length),M=d.meses.slice(0,n),esc=t=>String(t==null?'':t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);
   const mn=ym=>['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'][+ym.slice(5,7)-1]+'-'+ym.slice(2,4),est=i=>i===0?'real':i===1?'real + proy.':'proyectado';
