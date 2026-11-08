@@ -768,7 +768,7 @@ function resultadoServicio(r){
   const tipoC=TIPO_PAT[PAT_GPS(r.patente)]||tipo,pd=(n.diesel&&n.diesel.p)?{p:+n.diesel.p,txt:n.diesel.txt+' · fijado el '+String(n.diesel.fijado||'').split('-').reverse().slice(0,2).join('-')}:precioDiesel(r.fecha);
   const v={combustible:km/COSTO.rend[tipoC]*pd.p,peajes:peaje,comision:tarifa*COSTO.com,asesor:tarifa*COSTO.ase,neumMant:km*(COSTO.neum+COSTO.mant),
     viaticos:tipo==='T'?COSTO.viatTracto*dias:(alta?COSTO.viatAfur*(n.peoneta?2:1):0)};
-  const nDia=filas.filter(x=>x.fecha===r.fecha).length||1, fijo=COSTO.fijoMes/COSTO.diasMes/nDia;
+  const nDia=filas.filter(x=>x.fecha===r.fecha&&!esTerR(x)).length||1, fijo=COSTO.fijoMes/COSTO.diasMes/nDia;
   const tv=Object.values(v).reduce((a,b)=>a+b,0);
   return {tarifa,ret,v,tv,fijo,nDia,res:tarifa-tv-fijo,km,kmTxt,tipoC,pd};
 }
@@ -802,9 +802,11 @@ function bloqueRes(t,tit){const pct=t.tarifa?Math.round(t.res/t.tarifa*1000)/10:
 /* Resultados del mes en vivo con desplegables hasta el último nivel: ventas por cliente → proforma/quincena o spot → cada servicio; costos por concepto → patente o conductor → cada servicio con su cálculo. Los spot suman en ventas aunque no tengan tarifa o costo (Carlos 06-11) */
 /* Patentes propias de TM (Carlos 08-11): cualquier otra patente es de tercero */
 const PAT_PROPIAS=['DSBZ64','ZV7780','CWVH32','DZZW14','XJ3908','KFXB58'];
-function zRes(r){const n=r._n||{},t=+r.tarifa_neta||0,nDia=filas.filter(x=>x.fecha===r.fecha).length||1,fijo=COSTO.fijoMes/COSTO.diasMes/nDia;
+/* Tercero = no usa recursos de TM: no absorbe costos fijos ni cuenta en el reparto del día (Carlos 08-11) */
+function esTerR(r){const n=r._n||{},p=String(r.patente||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6);return n.tipo_spot==='tercero'||(n.tipo_spot!=='compartido'&&n.tipo_spot!=='propio'&&(!!n.tercero||/^Tercero/i.test(r.conductor||'')||(p.length===6&&!PAT_PROPIAS.includes(p))))}
+function zRes(r){const n=r._n||{},t=+r.tarifa_neta||0,nDia=filas.filter(x=>x.fecha===r.fecha&&!esTerR(x)).length||1,fijo=esTerR(r)?0:COSTO.fijoMes/COSTO.diasMes/nDia;
   /* Servicio de tercero (no compartido): su costo es el pago acordado al tercero, editable (Carlos 08-11) */
-  const patN=String(r.patente||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6),esTer=n.tipo_spot==='tercero'||(n.tipo_spot!=='compartido'&&n.tipo_spot!=='propio'&&(!!n.tercero||/^Tercero/i.test(r.conductor||'')||(patN.length===6&&!PAT_PROPIAS.includes(patN))));
+  const esTer=esTerR(r);
   if(esTer){const aT=t*COSTO.ase;if(n.pago_tercero==null)return {tarifa:t,ret:0,v:{combustible:0,peajes:0,comision:0,asesor:aT,neumMant:0,viaticos:0},tv:aT,fijo,nDia,res:t-aT-fijo,km:0,sinCosto:true,editable:true,motivo:'Servicio de tercero: falta el pago al tercero (✏️ editar)'};const pT=+n.pago_tercero||0;return {tarifa:t,ret:0,v:{combustible:0,peajes:0,comision:0,asesor:aT,neumMant:0,viaticos:0,pagoTercero:pT},tv:pT+aT,fijo,nDia,res:t-pT-aT-fijo,km:0,tercero:true,editable:true,n}}
   /* Costo editado a mano (spot propio sin parámetros) */
   if(n.costo_manual!=null){const aM=t*COSTO.ase,cM=+n.costo_manual||0;return {tarifa:t,ret:0,v:{combustible:0,peajes:0,comision:0,asesor:aM,neumMant:0,viaticos:0,costoManual:cM},tv:cM+aM,fijo,nDia,res:t-cM-aM-fijo,km:0,editable:true,n}}
