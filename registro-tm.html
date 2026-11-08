@@ -800,9 +800,11 @@ function bloqueRes(t,tit){const pct=t.tarifa?Math.round(t.res/t.tarifa*1000)/10:
     '<div style="display:flex;justify-content:space-between;border-top:2px solid var(--border);padding:8px 0 2px"><b>RESULTADO</b><b>'+fm$(t.res)+' ('+pctTxt+')</b></div>'+
     '<div class="m" style="font-size:12px"><i>Esperado según parámetros del Excel (no es lo pagado real).</i></div></div>'}
 /* Resultados del mes en vivo con desplegables hasta el último nivel: ventas por cliente → proforma/quincena o spot → cada servicio; costos por concepto → patente o conductor → cada servicio con su cálculo. Los spot suman en ventas aunque no tengan tarifa o costo (Carlos 06-11) */
+/* Patentes propias de TM (Carlos 08-11): cualquier otra patente es de tercero */
+const PAT_PROPIAS=['DSBZ64','ZV7780','CWVH32','DZZW14','XJ3908','KFXB58'];
 function zRes(r){const n=r._n||{},t=+r.tarifa_neta||0,nDia=filas.filter(x=>x.fecha===r.fecha).length||1,fijo=COSTO.fijoMes/COSTO.diasMes/nDia;
   /* Servicio de tercero (no compartido): su costo es el pago acordado al tercero, editable (Carlos 08-11) */
-  const esTer=n.tipo_spot==='tercero'||(n.tipo_spot!=='compartido'&&n.tipo_spot!=='propio'&&(!!n.tercero||/^Tercero/i.test(r.conductor||'')));
+  const patN=String(r.patente||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6),esTer=n.tipo_spot==='tercero'||(n.tipo_spot!=='compartido'&&n.tipo_spot!=='propio'&&(!!n.tercero||/^Tercero/i.test(r.conductor||'')||(patN.length===6&&!PAT_PROPIAS.includes(patN))));
   if(esTer){const aT=t*COSTO.ase;if(n.pago_tercero==null)return {tarifa:t,ret:0,v:{combustible:0,peajes:0,comision:0,asesor:aT,neumMant:0,viaticos:0},tv:aT,fijo,nDia,res:t-aT-fijo,km:0,sinCosto:true,editable:true,motivo:'Servicio de tercero: falta el pago al tercero (✏️ editar)'};const pT=+n.pago_tercero||0;return {tarifa:t,ret:0,v:{combustible:0,peajes:0,comision:0,asesor:aT,neumMant:0,viaticos:0,pagoTercero:pT},tv:pT+aT,fijo,nDia,res:t-pT-aT-fijo,km:0,tercero:true,editable:true,n}}
   /* Costo editado a mano (spot propio sin parámetros) */
   if(n.costo_manual!=null){const aM=t*COSTO.ase,cM=+n.costo_manual||0;return {tarifa:t,ret:0,v:{combustible:0,peajes:0,comision:0,asesor:aM,neumMant:0,viaticos:0,costoManual:cM},tv:cM+aM,fijo,nDia,res:t-cM-aM-fijo,km:0,editable:true,n}}
