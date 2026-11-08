@@ -308,6 +308,13 @@ body.pc.navoculto .toast{left:50%}
   <div id="flu-box"></div>
   <button class="btn2" onclick="ir('s-home')">← Volver</button>
 </section>
+<section class="screen" id="s-cla">
+  <h1>Clasificar movimientos</h1>
+  <select id="cla-mes" style="width:100%;font-size:16px;padding:8px;border-radius:10px;border:2px solid var(--border);background:var(--surface);color:var(--text);margin:8px 0 4px"></select>
+  <div class="sub" id="cla-sub"></div>
+  <div id="cla-box"></div>
+  <button class="btn2" onclick="ir('s-home')">← Volver</button>
+</section>
 <section class="screen" id="s-car">
   <h1 id="car-h">Subir cartolas</h1>
   <div class="sub" id="car-sub"></div>
@@ -878,7 +885,7 @@ const carFecha=v=>{if(v==null||v==='')return null;if(v instanceof Date&&!isNaN(v
   const m=String(v).trim().match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})/);if(m){const y=m[3].length===2?'20'+m[3]:m[3];return y+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0')}const m2=String(v).trim().match(/^(\d{4})-(\d{2})-(\d{2})/);return m2?m2[0]:null};
 const carRut=d=>{d=String(d||'');let m=d.match(/(\d{1,2}\.\d{3}\.\d{3}-[\dkK])/);if(m)return m[1].toLowerCase();m=d.match(/\b0*(\d{7,8})([\dkK])\b/);if(m){const n=m[1];return n.slice(0,-6).replace(/^0+/,'')+'.'+n.slice(-6,-3)+'.'+n.slice(-3)+'-'+m[2].toLowerCase()}return null};
 const carCli=r=>{const k=carN(r).split(' ')[0];return Object.keys(CXC_PLAZO).find(c=>carN(c).split(' ')[0]===k)||r};
-function verCar(a){if(!esCarlos())return;a=a||'santander';ir('s-car');navMarcar('s-car-'+a);$('car-h').textContent=CAR_T[a].replace(/^\S+\s/,'');document.querySelectorAll('#s-car [data-car]').forEach(b=>b.style.display=b.dataset.car===a?'':'none');$('car-box').innerHTML='';$('car-sub').textContent='Elige qué vas a subir. Antes de guardar verás un resumen para confirmar.';carLotes()}
+function verCar(a){if(!esCarlos())return;a=a||'santander';if(a==='cla')return verCla();ir('s-car');navMarcar('s-car-'+a);$('car-h').textContent=CAR_T[a].replace(/^\S+\s/,'');document.querySelectorAll('#s-car [data-car]').forEach(b=>b.style.display=b.dataset.car===a?'':'none');$('car-box').innerHTML='';$('car-sub').textContent='Elige qué vas a subir. Antes de guardar verás un resumen para confirmar.';carLotes()}
 function carElegir(t){_car={tipo:t};const f=$('car-file');f.value='';f.accept=t==='sii'?'.csv,.xlsx':'.xlsx,.xls,.csv';f.onchange=()=>{if(f.files[0])carLeer(f.files[0])};f.click()}
 async function carLeer(file){$('car-box').innerHTML='<div class="sub">Leyendo '+file.name+'…</div>';_car.archivo=file.name;
   try{const buf=await file.arrayBuffer();let wb;if(/\.csv$/i.test(file.name)){let t=new TextDecoder('utf-8').decode(buf);if(t.includes('�'))t=new TextDecoder('windows-1252').decode(buf);wb=XLSX.read(t,{type:'string',FS:t.split('\n')[0].includes(';')?';':',',raw:true})}else wb=XLSX.read(buf,{type:'array',cellDates:true});
@@ -899,7 +906,7 @@ async function carSantander(hojas){const rows=hojas[0].r,H=carHdr(rows,['monto',
   const ya=new Set(((await supa.from('cartola_movimientos').select('huella').eq('empresa',EMPRESA).eq('banco','santander').gte('fecha',f0).lte('fecha',f1)).data||[]).map(x=>x.huella));
   const nuevos=movs.filter(m=>!ya.has(m.huella));
   // categorías aprendidas: mismo RUT ya clasificado antes
-  const ap={};((await supa.from('cartola_movimientos').select('rut,categoria').eq('empresa',EMPRESA).not('categoria','is',null).not('rut','is',null).limit(5000)).data||[]).forEach(x=>ap[x.rut]=x.categoria);nuevos.forEach(m=>{if(m.rut&&ap[m.rut])m.categoria=ap[m.rut]});
+  const RG=((await supa.from('cartola_reglas').select('*').eq('empresa',EMPRESA)).data||[]);nuevos.forEach(m=>{const g=RG.find(x=>(x.tipo==='rut'&&m.rut&&x.valor===m.rut)||(x.tipo==='glosa'&&carN(m.descripcion).includes(x.valor)));if(g){m.categoria=g.categoria;m.clasificado_por='Regla automática'}});
   // conciliación exacta: compromisos (egreso = monto, ±15 días) y facturas (abono = total, desde la emisión)
   const cxp=((await supa.from('cxp_compromisos').select('*').eq('empresa',EMPRESA).neq('estado','pagado')).data||[]),cxc=((await supa.from('cxc_facturas').select('*').eq('empresa',EMPRESA).is('fecha_cobro',null)).data||[]);
   const dd=(a,b)=>Math.abs((new Date(a)-new Date(b))/864e5),usados=new Set(),pagos=[],cobros=[];
@@ -965,6 +972,38 @@ async function carAnular(id){if(!confirm('¿Anular esta carga completa? Se borra
     if(l.tipo==='sii'){await supa.from('rcv_documentos').delete().eq('lote_id',id);for(const c of R.cxcN||[])await supa.from('cxc_facturas').delete().eq('id',c);for(const x of R.cxcA||[])await supa.from('cxc_facturas').update({folio:null,fecha_emision:null,etapa:x.etapa}).eq('id',x.id)}
     if(l.tipo==='ppto'){await supa.from('presupuesto_ventas').delete().eq('lote_id',id);if((R.prev||[]).length)await supa.from('presupuesto_ventas').update({activo:true}).in('lote_id',R.prev)}
     await supa.from('cargas_lote').update({anulado:true}).eq('id',id);toast('Carga anulada')}catch(e){toast('No se pudo anular: '+(e.message||e))}carLotes()}
+/* ═══ CLASIFICAR MOVIMIENTOS DE LA CARTOLA (Carlos 08-11): lo no clasificado igual existe y cuenta como "Sin clasificar". Reglas por RUT o glosa en cartola_reglas: solo se recuerdan si Carlos lo marca (las personas pueden tener varias categorías). ═══ */
+const CLA_CAT={ 'Costos variables':['Combustible','Peajes','Viáticos','Pago a terceros','Traspaleteo','Mantención y neumáticos','Comisión asesor (Carlos Torres)'],
+  'Costos fijos':['Sueldos','Previred','Contador','Seguros y permisos','Arriendo equipos','GPS y telefonía','Gastos bancarios','Otros gastos fijos'],
+  'Gasto financiero':['Costo factoring','Intereses'],
+  'No es costo':['Recarga prepago Aramco','Deuda combustible (Peumo)','Arriendo Castro','Deuda TAG Castro Madrid','Tesorería (TGR)','IVA postergado (cuota)','Impuestos (F29)','Inversión en equipos','Retiro de socios','Imprevistos','Préstamo a trabajador','Traspaso entre cuentas'],
+  'Ingresos':['Cobro de facturas','Ingreso spot','Devolución / reintegro','Aporte de socios','Otros ingresos']};
+const claGrupo=c=>Object.keys(CLA_CAT).find(g=>CLA_CAT[g].includes(c))||'Otros';
+let _cla=[];
+async function verCla(){if(!esCarlos())return;ir('s-cla');navMarcar('s-car-cla');llenarMeses('cla-mes');$('cla-mes').onchange=verCla;const ym=$('cla-mes').value||hoyISO().slice(0,7),ini=ym+'-01',fin=finMes(ym);$('cla-sub').textContent='Cargando…';
+  const r=await conTope(supa.from('cartola_movimientos').select('*').eq('empresa',EMPRESA).gte('fecha',ini).lte('fecha',fin).order('fecha').order('monto'),10000);_cla=r.data||[];
+  const sin=_cla.filter(m=>!m.categoria),con=_cla.filter(m=>m.categoria),tot=a=>a.reduce((t,m)=>t+(+m.monto||0),0),ing=_cla.filter(m=>m.monto>0),eg=_cla.filter(m=>m.monto<0);
+  $('cla-sub').textContent=_cla.length+' movimientos del mes · ingresos '+fmt$(tot(ing))+' · egresos −'+fmt$(-tot(eg))+' · '+sin.length+' sin clasificar';
+  const ops='<option value="">— elegir —</option>'+Object.entries(CLA_CAT).map(([g,l])=>'<optgroup label="'+g+'">'+l.map(c=>'<option>'+c+'</option>').join('')+'</optgroup>').join('');
+  const fila=m=>{const i=_cla.indexOf(m);return '<div style="border-top:1px solid var(--border);padding:8px 0;font-size:13px"><div style="display:flex;justify-content:space-between;gap:8px"><span>'+fCL(m.fecha)+' · '+(m.descripcion||'')+(m.documento&&!/^0+$/.test(m.documento)?' · <i>'+m.documento+'</i>':'')+(m.conciliado?' · <span style="color:#2E8B57">'+m.conciliado+'</span>':'')+'</span><b style="white-space:nowrap;color:'+(m.monto<0?'#D64545':'#2E8B57')+'">'+(m.monto<0?'−':'')+fmt$(Math.abs(m.monto))+'</b></div>'+
+    '<div style="display:flex;gap:6px;margin-top:4px;flex-wrap:wrap;align-items:center"><select id="cla-c'+i+'" style="flex:1;min-width:180px;padding:6px;border-radius:8px">'+ops.replace('<option>'+m.categoria+'</option>','<option selected>'+m.categoria+'</option>')+'</select><input id="cla-n'+i+'" placeholder="Nota (opcional)" value="'+String(m.nota||'').replace(/"/g,'&quot;')+'" style="flex:1;min-width:140px;padding:6px;border-radius:8px;border:1px solid var(--border)">'+
+    (m.rut||/esmax|notaria|tuu/i.test(m.descripcion||'')?'<label style="font-size:12px;white-space:nowrap"><input type="checkbox" id="cla-r'+i+'"> recordar '+(m.rut?'este RUT':'esta glosa')+'</label>':'')+'<button class="btn2" style="width:auto;margin:0;padding:5px 10px;font-size:12px" onclick="claGuardar('+i+')">Guardar</button></div></div>'};
+  const res={};_cla.forEach(m=>{const c=m.categoria||'Sin clasificar',g=m.categoria?claGrupo(c):'Sin clasificar';res[g]=res[g]||{};res[g][c]=(res[g][c]||0)+(+m.monto||0)});
+  const ac=(t,body,open,tot2)=>'<details'+(open?' open':'')+' style="border:1px solid var(--border);border-radius:10px;margin:8px 0;padding:0 10px"><summary style="cursor:pointer;padding:10px 0;font-weight:800;display:flex;justify-content:space-between;list-style:none"><span>▸ '+t+'</span>'+(tot2!=null?'<span>'+(tot2<0?'−':'')+fmt$(Math.abs(tot2))+'</span>':'')+'</summary>'+body+'</details>';
+  const resH=['Ingresos','Costos variables','Costos fijos','Gasto financiero','Sin clasificar','No es costo','Otros'].filter(g=>res[g]).map(g=>{const t=Object.values(res[g]).reduce((a,b)=>a+b,0);return ac(g,Object.entries(res[g]).map(([c,v])=>li(c,(v<0?'−':'')+fmt$(Math.abs(v)),v<0?'#D64545':'')).join(''),false,t)}).join('');
+  $('cla-box').innerHTML=ac('Sin clasificar ('+sin.length+')',sin.length?sin.map(fila).join(''):'<div class="sub">Todo clasificado ✔</div>',true,tot(sin))+ac('Resumen del mes por categoría (según banco)',resH+li('<b>Movimiento neto del mes</b>','<b>'+(tot(_cla)<0?'−':'')+fmt$(Math.abs(tot(_cla)))+'</b>'),false,null)+ac('Ya clasificados ('+con.length+')',con.map(fila).join(''),false,tot(con))}
+async function claGuardar(i){const m=_cla[i],c=$('cla-c'+i).value,n=$('cla-n'+i).value.trim();if(!c){toast('Elige una categoría');return}
+  const {error}=await supa.from('cartola_movimientos').update({categoria:c,nota:n||null,clasificado_por:user.nombre}).eq('id',m.id);if(error){toast('No se pudo guardar');return}
+  const rc=$('cla-r'+i);if(rc&&rc.checked){const tipo=m.rut?'rut':'glosa',valor=m.rut||carN(m.descripcion);await supa.from('cartola_reglas').upsert({empresa:EMPRESA,tipo,valor,categoria:c,creado_por:user.nombre},{onConflict:'empresa,tipo,valor'});
+    await supa.from('cartola_movimientos').update({categoria:c,clasificado_por:'Regla de '+user.nombre}).eq('empresa',EMPRESA).is('categoria',null).eq(tipo==='rut'?'rut':'descripcion',tipo==='rut'?valor:m.descripcion)}
+  const p=await supa.from('tareas').select('id,titulo').eq('empresa',EMPRESA).eq('activa',true).like('titulo','Clasificar % cartola%');const q=await supa.from('cartola_movimientos').select('id',{count:'exact',head:true}).eq('empresa',EMPRESA).is('categoria',null);
+  if(p.data&&p.data.length&&q.count===0)await supa.from('tareas').update({activa:false}).in('id',p.data.map(x=>x.id));toast('Clasificado');verCla()}
+/* Informe de costos desde la cartola: para meses sin informe del Excel (Carlos 08-11). Monto = lo pagado al banco (con IVA si corresponde). */
+async function costosDesdeCartola(per){const ini=per+'-01',fin=finMes(per),r=await conTope(supa.from('cartola_movimientos').select('*').eq('empresa',EMPRESA).gte('fecha',ini).lte('fecha',fin).lt('monto',0).order('fecha'),10000),M=r.data||[];if(!M.length)return null;
+  const G={'COSTOS VARIABLES':'Costos variables','COSTOS FIJOS':'Costos fijos','GASTO FINANCIERO':'Gasto financiero','SIN CLASIFICAR (igual son egresos reales)':'Sin clasificar','OTROS PAGOS QUE NO SON COSTO':'No es costo'},by={};
+  M.forEach(m=>{const c=m.categoria||'Sin clasificar',g=m.categoria?claGrupo(c):'Sin clasificar';(by[g]=by[g]||{})[c]=(by[g][c]||[]);by[g][c].push({f:fCL(m.fecha).slice(0,5),d:(m.descripcion||'')+(m.nota?' · '+m.nota:''),nt:-m.monto,pg:-m.monto,doc:''})});
+  return {titulo:'Informe de costos '+per+' · desde la cartola Santander (pagado real)',nota:'Montos pagados según banco (con IVA cuando corresponde). Lo no clasificado va en "Sin clasificar" y cuenta igual. Combustible pagado con prepago Aramco: la recarga no es costo; el consumo se verá con la cartola Aramco.',
+    grupos:Object.entries(G).map(([k,v])=>{const src=Object.assign({},by[v]||{},v==='No es costo'?by['Otros']||{}:{});return {g:k,o:v==='No es costo',l:Object.entries(src).map(([n,m])=>({n,p:0,r:m.reduce((a,x)=>a+x.nt,0),m}))}}).filter(g=>g.l.length)}}
 /* Ingresos en efectivo: solo registro de ingresos, solo Carlos (administrador / Administración) (Carlos 06-11). El resultado interno los usa como venta; el contable no. */
 function esCarlos(){return !!(user&&(user.rol==='administrador'||user.rol==='administracion'))}
 let _efe=[];
@@ -987,7 +1026,7 @@ async function efeAnular(id){if(!esCarlos())return;const x=_efe.find(y=>y.id===i
 /* Informe de costos: presupuesto (Informe de Resultados, neto) vs pagado según cartola Santander (neto), con detalle de cada pago (Carlos 06-11) */
 async function verCostos(per){if(!verResultado())return;ir('s-cos');llenarMeses('cos-mes');$('cos-mes').onchange=()=>verCostos($('cos-mes').value);$('cos-tot').innerHTML='';$('cos-sub').textContent='Cargando…';
   try{if(!per){const l=await repRpc('costos');per=l.length?l[0].periodo:$('cos-mes').value}$('cos-mes').value=per;const r=await repRpc('costos',per);
-    if(!r||!r.datos){$('cos-sub').textContent='Este mes todavía no tiene informe de costos.';return}
+    if(!r||!r.datos){const dc=await costosDesdeCartola(per);if(!dc){$('cos-sub').textContent='Este mes todavía no tiene informe de costos ni cartola cargada.';return}$('cos-sub').textContent=dc.titulo;$('cos-tot').innerHTML=bloqueCos(dc);return}
     $('cos-sub').textContent=(r.datos.titulo||'Informe de costos')+' · actualizado '+new Date(r.actualizado).toLocaleDateString('es-CL');$('cos-tot').innerHTML=bloqueCos(r.datos)}
   catch(e){$('cos-sub').textContent='No se pudo cargar el informe: '+(e.message||e)}}
 function bloqueCos(d){const W='display:inline-block;min-width:98px;text-align:right;padding-left:6px',esc=t=>String(t==null?'':t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]),two=(r,p,o)=>'<span style="white-space:nowrap"><span style="'+W+';color:var(--muted)">'+(o?'—':fm$(-p))+'</span><span style="'+W+'">'+fm$(-r)+'</span></span>';
@@ -1415,7 +1454,7 @@ function aplicarVista(){if(!(user&&['administrador','administracion','coordinado
   const subAc=(t,L)=>'<details class="sac"><summary style="list-style:none;cursor:pointer;padding:8px 10px 8px 24px;font-size:14px">▸ '+t+'</summary>'+L.map(([k,x])=>'<button data-s="s-car-'+k+'" onclick="verCar(\''+k+'\')" style="padding-left:44px">'+x+'</button>').join('')+'</details>';
   const com=['btn-spot','btn-prof','btn-profA','btn-rsv'].map(bt).join('')+(esCarlos()?subAc('📥 Subir archivos',[['ppto','Presupuesto de ventas']]):'');
   const ope=['btn-reg','btn-ver','btn-misent','btn-ifco','btn-gps'].map(bt).join('');
-  const fin=(adm?'<button data-s="s-cxp-s" onclick="verCxp(\'semana\')" style="'+sb+'">💸 Compromisos: semana</button><button data-s="s-cxp-m" onclick="verCxp(\'mes\')" style="'+sb+'">💸 Compromisos: mes actual</button>':'')+['btn-flu','btn-caja','btn-cxc','btn-res','btn-cos','btn-efe','btn-pil'].map(bt).join('')+(esCarlos()?subAc('📥 Cartolas',[['santander','Santander'],['aramco','Aramco'],['sii','SII (ventas y compras)']]):'');
+  const fin=(adm?'<button data-s="s-cxp-s" onclick="verCxp(\'semana\')" style="'+sb+'">💸 Compromisos: semana</button><button data-s="s-cxp-m" onclick="verCxp(\'mes\')" style="'+sb+'">💸 Compromisos: mes actual</button>':'')+['btn-flu','btn-caja','btn-cxc','btn-res','btn-cos','btn-efe','btn-pil'].map(bt).join('')+(esCarlos()?subAc('📥 Cartolas',[['santander','Santander'],['aramco','Aramco'],['sii','SII (ventas y compras)'],['cla','Clasificar movimientos']]):'');
   const org=(adm?'<button data-s="s-rem" onclick="verRep(\'remuneraciones\')" style="'+sb+'">💵 Remuneraciones</button>':'')+bt('btn-emp');
   $('pcnav').innerHTML='<div class="t">KAPTURA · TM</div><button data-s="s-home" onclick="ir(\'s-home\')">🏠 Inicio y tareas del día</button>'+cambiar+grp('💼 Comercial',com)+grp('🚚 Operacional',ope)+grp('💰 Financiero',fin)+grp('👥 Organizacional',org)+archNav();archNavCargar()}
 document.addEventListener('click',e=>{if(document.body.classList.contains('navabierto')&&e.target.closest&&e.target.closest('#pcnav button'))document.body.classList.remove('navabierto')});
