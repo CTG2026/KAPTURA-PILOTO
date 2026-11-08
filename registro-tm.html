@@ -311,10 +311,10 @@ body.pc.navoculto .toast{left:50%}
 <section class="screen" id="s-car">
   <h1 id="car-h">Subir cartolas</h1>
   <div class="sub" id="car-sub"></div>
-  <button class="btn" data-car="santander" onclick="carElegir('santander')">🏦 Cartola Santander</button>
-  <button class="btn" data-car="aramco" onclick="carElegir('aramco')">⛽ Cartola Aramco</button>
-  <button class="btn" data-car="sii" onclick="carElegir('sii')">🧾 SII · RCV ventas o compras</button>
-  <button class="btn" data-car="ppto" onclick="carElegir('ppto')">📊 Presupuesto de ventas</button>
+  <button class="btn" data-car="santander" onclick="carElegir('santander')">📂 Elegir archivo</button>
+  <button class="btn" data-car="aramco" onclick="carElegir('aramco')">📂 Elegir archivo</button>
+  <button class="btn" data-car="sii" onclick="carElegir('sii')">📂 Elegir archivo</button>
+  <button class="btn" data-car="ppto" onclick="carElegir('ppto')">📂 Elegir archivo</button>
   <input type="file" id="car-file" style="display:none">
   <div id="car-box"></div>
   <h3 style="margin-top:18px">Últimas cargas</h3>
@@ -878,8 +878,7 @@ const carFecha=v=>{if(v==null||v==='')return null;if(v instanceof Date&&!isNaN(v
   const m=String(v).trim().match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})/);if(m){const y=m[3].length===2?'20'+m[3]:m[3];return y+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0')}const m2=String(v).trim().match(/^(\d{4})-(\d{2})-(\d{2})/);return m2?m2[0]:null};
 const carRut=d=>{d=String(d||'');let m=d.match(/(\d{1,2}\.\d{3}\.\d{3}-[\dkK])/);if(m)return m[1].toLowerCase();m=d.match(/\b0*(\d{7,8})([\dkK])\b/);if(m){const n=m[1];return n.slice(0,-6).replace(/^0+/,'')+'.'+n.slice(-6,-3)+'.'+n.slice(-3)+'-'+m[2].toLowerCase()}return null};
 const carCli=r=>{const k=carN(r).split(' ')[0];return Object.keys(CXC_PLAZO).find(c=>carN(c).split(' ')[0]===k)||r};
-const CAR_AMB={fin:['santander','aramco','sii'],com:['ppto']};
-function verCar(a){if(!esCarlos())return;a=a||'fin';ir('s-car');navMarcar('s-car-'+a);$('car-h').textContent=a==='com'?'Comercial · Subir archivos':'Financiero · Subir cartolas';document.querySelectorAll('#s-car [data-car]').forEach(b=>b.style.display=CAR_AMB[a].includes(b.dataset.car)?'':'none');$('car-box').innerHTML='';$('car-sub').textContent='Elige qué vas a subir. Antes de guardar verás un resumen para confirmar.';carLotes()}
+function verCar(a){if(!esCarlos())return;a=a||'santander';ir('s-car');navMarcar('s-car-'+a);$('car-h').textContent=CAR_T[a].replace(/^\S+\s/,'');document.querySelectorAll('#s-car [data-car]').forEach(b=>b.style.display=b.dataset.car===a?'':'none');$('car-box').innerHTML='';$('car-sub').textContent='Elige qué vas a subir. Antes de guardar verás un resumen para confirmar.';carLotes()}
 function carElegir(t){_car={tipo:t};const f=$('car-file');f.value='';f.accept=t==='sii'?'.csv,.xlsx':'.xlsx,.xls,.csv';f.onchange=()=>{if(f.files[0])carLeer(f.files[0])};f.click()}
 async function carLeer(file){$('car-box').innerHTML='<div class="sub">Leyendo '+file.name+'…</div>';_car.archivo=file.name;
   try{const buf=await file.arrayBuffer();let wb;if(/\.csv$/i.test(file.name)){let t=new TextDecoder('utf-8').decode(buf);if(t.includes('�'))t=new TextDecoder('windows-1252').decode(buf);wb=XLSX.read(t,{type:'string',FS:t.split('\n')[0].includes(';')?';':',',raw:true})}else wb=XLSX.read(buf,{type:'array',cellDates:true});
@@ -1412,9 +1411,9 @@ function aplicarVista(){if(!(user&&['administrador','administracion','coordinado
   const bt=i=>$(i)&&$(i).style.display!=='none'?'<button data-s="'+NAV_SCR[i]+'" onclick="$(\''+i+'\').click()" style="'+sb+'">'+$(i).textContent.replace(/\s*\(\d+\)$/,'')+'</button>':'';
   const grp=(t,h)=>h?'<details class="ng" ontoggle="if(this.open)document.querySelectorAll(\'#pcnav details.ng\').forEach(x=>{if(x!==this)x.open=false})"><summary style="list-style:none;cursor:pointer;font:700 14px \'DM Sans\',sans-serif;padding:10px;border-radius:8px">'+t+'</summary>'+h+'</details>':'';
   /* Menú PC por ámbito (Carlos 06-11): grandes opciones; adentro, las mismas opciones y permisos de antes */
-  const com=['btn-spot','btn-prof','btn-profA','btn-rsv'].map(bt).join('')+(esCarlos()?'<button data-s="s-car-com" onclick="verCar(\'com\')" style="'+sb+'">📥 Subir: presupuesto de ventas</button>':'');
+  const com=['btn-spot','btn-prof','btn-profA','btn-rsv'].map(bt).join('')+(esCarlos()?'<button data-s="s-car-ppto" onclick="verCar(\'ppto\')" style="'+sb+'">📊 Presupuesto de ventas</button>':'');
   const ope=['btn-reg','btn-ver','btn-misent','btn-ifco','btn-gps'].map(bt).join('');
-  const fin=(adm?'<button data-s="s-cxp-s" onclick="verCxp(\'semana\')" style="'+sb+'">💸 Compromisos: semana</button><button data-s="s-cxp-m" onclick="verCxp(\'mes\')" style="'+sb+'">💸 Compromisos: mes actual</button>':'')+['btn-flu','btn-caja','btn-cxc','btn-res','btn-cos','btn-efe','btn-pil'].map(bt).join('')+(esCarlos()?'<button data-s="s-car-fin" onclick="verCar(\'fin\')" style="'+sb+'">📥 Subir: cartolas Santander, Aramco y SII</button>':'');
+  const fin=(adm?'<button data-s="s-cxp-s" onclick="verCxp(\'semana\')" style="'+sb+'">💸 Compromisos: semana</button><button data-s="s-cxp-m" onclick="verCxp(\'mes\')" style="'+sb+'">💸 Compromisos: mes actual</button>':'')+['btn-flu','btn-caja','btn-cxc','btn-res','btn-cos','btn-efe','btn-pil'].map(bt).join('')+(esCarlos()?[['santander','🏦 Cartola Santander'],['aramco','⛽ Cartola Aramco'],['sii','🧾 Cartola SII (ventas y compras)']].map(([k,t])=>'<button data-s="s-car-'+k+'" onclick="verCar(\''+k+'\')" style="'+sb+'">'+t+'</button>').join(''):'');
   const org=(adm?'<button data-s="s-rem" onclick="verRep(\'remuneraciones\')" style="'+sb+'">💵 Remuneraciones</button>':'')+bt('btn-emp');
   $('pcnav').innerHTML='<div class="t">KAPTURA · TM</div><button data-s="s-home" onclick="ir(\'s-home\')">🏠 Inicio y tareas del día</button>'+cambiar+grp('💼 Comercial',com)+grp('🚚 Operacional',ope)+grp('💰 Financiero',fin)+grp('👥 Organizacional',org)+archNav();archNavCargar()}
 document.addEventListener('click',e=>{if(document.body.classList.contains('navabierto')&&e.target.closest&&e.target.closest('#pcnav button'))document.body.classList.remove('navabierto')});
