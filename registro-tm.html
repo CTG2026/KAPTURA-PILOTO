@@ -1187,7 +1187,7 @@ function formulario(tit,campos){return new Promise(res=>{const w=document.create
 // Pago: EBLOOMS el viernes siguiente a la factura; Valle, Ateuro y Spot a 30 días; Los Tres Enanos 5 días. Aviso de cobranza 3 días antes del vencimiento.
 // Solo clientes con plazo conocido. Sin plazo (ej. Los Tres Enanos: factura a crédito sin fecha de vencimiento) NO se inventa vencimiento (Carlos 02-11)
 const CXC_PLAZO={'EBLOOMS':'viernes','Alimentos Valle Central':30,'Ateuro / Zuria':30,'Spot':30};
-const FAC_CLI=[{c:'EBLOOMS',q:true,doc:'proforma'},{c:'Ateuro / Zuria',q:false,doc:'proforma'},{c:'Alimentos Valle Central',q:false,doc:'liquidación (Anita)'}];
+const FAC_CLI=[{c:'EBLOOMS',q:true,doc:'proforma'},{c:'Ateuro / Zuria',q:true,doc:'proforma'},{c:'Alimentos Valle Central',q:false,doc:'liquidación (Anita)'}];
 // Servicios de un mes anterior que se cobran en otro período (Carlos 03-11: el viaje Ateuro del 30-10 va en la proforma de noviembre)
 const FAC_ARRASTRE={'Ateuro / Zuria':{'2026-11':'2026-10-30'}};
 const facDesde=(cli,ym,d)=>((FAC_ARRASTRE[cli]||{})[ym])||d;
