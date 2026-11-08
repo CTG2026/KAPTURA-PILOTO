@@ -123,6 +123,7 @@ body.pc.navoculto #pcnav{transform:translateX(-105%)}
 body.pc.navoculto{padding-left:28px}
 body.pc.navoculto .hdr{left:0}
 body.pc.navoculto .toast{left:50%}
+body.pc .tv{display:none}body:not(.pc) .tp{display:none}
 </style>
 </head>
 <body>
@@ -230,7 +231,7 @@ body.pc.navoculto .toast{left:50%}
   </div>
   <div class="err" id="reg-err"></div>
   <button class="big" id="btn-guardar" onclick="guardar()">GUARDAR</button>
-  <button class="btn2" onclick="ir('s-home')">← Volver</button>
+  <button class="btn2" onclick="atras()"><span class="tv">← Volver</span><span class="tp">← Atrás</span></button>
 </section>
 
 <!-- 4. LISTO -->
@@ -251,7 +252,7 @@ body.pc.navoculto .toast{left:50%}
   <button class="big" id="btn-xls" onclick="descargarExcel()" disabled>⬇ Descargar Excel</button>
   <div style="height:14px"></div>
   <div id="lista"></div>
-  <button class="btn2" onclick="ir('s-home')">← Volver</button>
+  <button class="btn2" onclick="atras()"><span class="tv">← Volver</span><span class="tp">← Atrás</span></button>
 </section>
 
 <!-- 6. REPORTE GPS -->
@@ -298,7 +299,7 @@ body.pc.navoculto .toast{left:50%}
   <div class="sub" id="res-sub">Cargando…</div>
   <div id="res-tot"></div>
   <div id="res-lista" style="margin-top:12px"></div>
-  <button class="btn2" id="res-volver" onclick="ir('s-home')">← Volver</button>
+  <button class="btn2" id="res-volver" onclick="atras()"><span class="tv">← Volver</span><span class="tp">← Atrás</span></button>
 </section>
 <section class="screen" id="s-flu">
   <h1>Flujo de caja</h1>
@@ -306,14 +307,14 @@ body.pc.navoculto .toast{left:50%}
   <div class="sub" id="flu-sub">Cargando…</div>
   <div style="display:flex;gap:8px;margin:6px 0"><button class="btn2" style="width:auto;margin:0" onclick="_fluN=4;pintarFlujo()">4 meses</button><button class="btn2" style="width:auto;margin:0" onclick="_fluN=12;pintarFlujo()">12 meses</button></div>
   <div id="flu-box"></div>
-  <button class="btn2" onclick="ir('s-home')">← Volver</button>
+  <button class="btn2" onclick="atras()"><span class="tv">← Volver</span><span class="tp">← Atrás</span></button>
 </section>
 <section class="screen" id="s-cla">
   <h1>Clasificar movimientos</h1>
   <select id="cla-mes" style="width:100%;font-size:16px;padding:8px;border-radius:10px;border:2px solid var(--border);background:var(--surface);color:var(--text);margin:8px 0 4px"></select>
   <div class="sub" id="cla-sub"></div>
   <div id="cla-box"></div>
-  <button class="btn2" onclick="ir('s-home')">← Volver</button>
+  <button class="btn2" onclick="atras()"><span class="tv">← Volver</span><span class="tp">← Atrás</span></button>
 </section>
 <section class="screen" id="s-car">
   <h1 id="car-h">Subir cartolas</h1>
@@ -326,7 +327,7 @@ body.pc.navoculto .toast{left:50%}
   <div id="car-box"></div>
   <h3 style="margin-top:18px">Últimas cargas</h3>
   <div id="car-lotes"></div>
-  <button class="btn2" onclick="ir('s-home')">← Volver</button>
+  <button class="btn2" onclick="atras()"><span class="tv">← Volver</span><span class="tp">← Atrás</span></button>
 </section>
 <section class="screen" id="s-efe">
   <h1>Ingresos en efectivo</h1>
@@ -334,14 +335,14 @@ body.pc.navoculto .toast{left:50%}
   <div class="sub" id="efe-sub">Cargando…</div>
   <button class="btn" onclick="efeNuevo()">+ Registrar ingreso en efectivo</button>
   <div id="efe-box"></div>
-  <button class="btn2" onclick="ir('s-home')">← Volver</button>
+  <button class="btn2" onclick="atras()"><span class="tv">← Volver</span><span class="tp">← Atrás</span></button>
 </section>
 <section class="screen" id="s-cos">
   <h1>Informe de costos</h1>
   <select id="cos-mes" style="width:100%;font-size:16px;padding:8px;border-radius:10px;border:2px solid var(--border);background:var(--surface);color:var(--text);margin:8px 0 4px"></select>
   <div class="sub" id="cos-sub">Cargando…</div>
   <div id="cos-tot"></div>
-  <button class="btn2" onclick="ir('s-home')">← Volver</button>
+  <button class="btn2" onclick="atras()"><span class="tv">← Volver</span><span class="tp">← Atrás</span></button>
 </section>
 
 <section class="screen" id="s-rsv">
@@ -351,7 +352,7 @@ body.pc.navoculto .toast{left:50%}
   <div class="tblw"><table class="tbl" id="rsv-tbl"></table></div>
   <button class="big" id="btn-rsv-xls" onclick="descargarResumenSvc()" disabled>⬇ Descargar Excel</button>
   <div style="display:flex;gap:8px"><button class="btn2" style="flex:1" onclick="imgTabla('rsv-tbl','Resumen de servicios · '+rsvTit,true)">📤 Compartir imagen</button><button class="btn2" style="flex:1" onclick="imgTabla('rsv-tbl','Resumen de servicios · '+rsvTit,false)">🖼 Descargar imagen</button></div>
-  <button class="btn2" onclick="ir('s-home')">← Volver</button>
+  <button class="btn2" onclick="atras()"><span class="tv">← Volver</span><span class="tp">← Atrás</span></button>
 </section>
 
 <section class="screen" id="s-rep">
@@ -360,14 +361,14 @@ body.pc.navoculto .toast{left:50%}
   <div class="sub" id="rep-sub">Cargando…</div>
   <div class="tblw"><table class="tbl" id="rep-tbl"></table></div>
   <div style="display:flex;gap:8px;margin-top:10px"><button class="btn2" style="flex:1" onclick="imgTabla('rep-tbl',$('rep-h').textContent+' · '+$('rep-per').selectedOptions[0].text,true)">📤 Compartir imagen</button><button class="btn2" style="flex:1" onclick="imgTabla('rep-tbl',$('rep-h').textContent+' · '+$('rep-per').selectedOptions[0].text,false)">🖼 Descargar imagen</button></div>
-  <button class="btn2" onclick="ir('s-home')">← Volver</button>
+  <button class="btn2" onclick="atras()"><span class="tv">← Volver</span><span class="tp">← Atrás</span></button>
 </section>
 
 <section class="screen" id="s-cxp">
   <h1 id="cxp-h">Compromisos de pago</h1>
   <div class="sub" id="cxp-sub">Cargando…</div>
   <div id="cxp-box"></div>
-  <button class="btn2" onclick="ir('s-home')">← Volver</button>
+  <button class="btn2" onclick="atras()"><span class="tv">← Volver</span><span class="tp">← Atrás</span></button>
 </section>
 
 <section class="screen" id="s-arch">
@@ -375,21 +376,21 @@ body.pc.navoculto .toast{left:50%}
   <div class="sub" id="arch-sub">Cargando…</div>
   <div id="arch-box"></div>
   <input type="file" id="arch-file" multiple style="display:none">
-  <button class="btn2" onclick="ir('s-home')">← Volver</button>
+  <button class="btn2" onclick="atras()"><span class="tv">← Volver</span><span class="tp">← Atrás</span></button>
 </section>
 
 <section class="screen" id="s-empresa">
   <h1>Empresa</h1>
   <div class="sub">Transportes Madrid Gaete SpA · datos para copiar y enviar</div>
   <div id="emp-box"></div>
-  <button class="btn2" onclick="ir('s-home')">← Volver</button>
+  <button class="btn2" onclick="atras()"><span class="tv">← Volver</span><span class="tp">← Atrás</span></button>
 </section>
 <section class="screen" id="s-cxc">
   <h1>Facturación y cobranza</h1>
   <div class="sub" id="cxc-sub">Cargando…</div>
   <div id="cxc-box"></div>
   <div style="display:flex;gap:8px"><button class="btn2" style="flex:1" onclick="imgTabla('cxc-tbl','Facturación y cobranza · '+hoyISO().split('-').reverse().join('-'),true)">📤 Compartir imagen</button><button class="btn2" style="flex:1" onclick="imgTabla('cxc-tbl','Facturación y cobranza · '+hoyISO().split('-').reverse().join('-'),false)">🖼 Descargar imagen</button></div>
-  <button class="btn2" onclick="ir('s-home')">← Volver</button>
+  <button class="btn2" onclick="atras()"><span class="tv">← Volver</span><span class="tp">← Atrás</span></button>
 </section>
 
 <section class="screen" id="s-profA">
@@ -399,7 +400,7 @@ body.pc.navoculto .toast{left:50%}
   <div class="tblw"><table class="tbl" id="profA-tbl"></table></div>
   <button class="big" id="btn-profA-xls" onclick="descargarProformaA()" disabled>⬇ Descargar Excel</button>
   <div style="display:flex;gap:8px"><button class="btn2" style="flex:1" onclick="imgTabla('profA-tbl','Proforma Ateuro / Zuria · '+profATit,true)">📤 Compartir imagen</button><button class="btn2" style="flex:1" onclick="imgTabla('profA-tbl','Proforma Ateuro / Zuria · '+profATit,false)">🖼 Descargar imagen</button></div>
-  <button class="btn2" onclick="ir('s-home')">← Volver</button>
+  <button class="btn2" onclick="atras()"><span class="tv">← Volver</span><span class="tp">← Atrás</span></button>
 </section>
 
 <section class="screen" id="s-prof">
@@ -409,7 +410,7 @@ body.pc.navoculto .toast{left:50%}
   <div class="tblw"><table class="tbl" id="prof-tbl"></table></div>
   <button class="big" id="btn-prof-xls" onclick="descargarProforma()" disabled>⬇ Descargar Excel</button>
   <div style="display:flex;gap:8px"><button class="btn2" style="flex:1" onclick="imgTabla('prof-tbl','Proforma EBLOOMS · '+profTit,true)">📤 Compartir imagen</button><button class="btn2" style="flex:1" onclick="imgTabla('prof-tbl','Proforma EBLOOMS · '+profTit,false)">🖼 Descargar imagen</button></div>
-  <button class="btn2" onclick="ir('s-home')">← Volver</button>
+  <button class="btn2" onclick="atras()"><span class="tv">← Volver</span><span class="tp">← Atrás</span></button>
 </section>
 
 <div class="toast" id="toast"></div>
@@ -476,7 +477,8 @@ let pin='', user=null, fotos=[], svcSel=null, extrasSel=new Set(), ultimo=null;
 
 function $(id){return document.getElementById(id)}
 function toast(t){const e=$('toast');e.textContent=t;e.classList.add('on');setTimeout(()=>e.classList.remove('on'),2800)}
-function ir(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));$(id).classList.add('on');window.scrollTo(0,0);if(user)uso('pantalla',id);if(id==='s-home'&&user){alertaSinReg();alertaCxc();alertaAdm();tareasHoy();pcDash()}navMarcar(id)}
+let _hist=[];function atras(){let p=_hist.pop();while(p&&!$(p))p=_hist.pop();ir(p||'s-home',true)} /* Atrás vuelve a la vista anterior (Carlos 08-11) */
+function ir(id,vuelta){const cur=(document.querySelector('.screen.on')||{}).id;if(!vuelta&&cur&&cur!==id){_hist.push(cur);if(_hist.length>30)_hist.shift()}if(id==='s-home')_hist=[];document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));$(id).classList.add('on');window.scrollTo(0,0);if(user)uso('pantalla',id);if(id==='s-home'&&user){alertaSinReg();alertaCxc();alertaAdm();tareasHoy();pcDash()}navMarcar(id)}
 // Registro de uso de Kaptura (tabla kaptura_uso): entradas y pantallas por usuario. Pruebas internas marcadas con localStorage tm_prueba=1 (Carlos 30-10)
 function uso(accion,detalle){try{if(!supa||!user)return;const k=user.pin+'|'+accion+'|'+(detalle||'');if(uso._u===k)return;uso._u=k;
   supa.from('kaptura_uso').insert({empresa:EMPRESA,pin:user.pin,usuario:user.nombre,rol:user.rol,accion,detalle:detalle||null,dispositivo:/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)?'teléfono':'PC',prueba:ls('tm_prueba')==='1'}).then(()=>{},()=>{})}catch(e){}}
@@ -838,7 +840,7 @@ function bloqueRes2(rs,tit){const esc=t=>String(t==null?'':t).replace(/[&<>"]/g,
     '<div style="display:flex;justify-content:space-between;border-top:2px solid var(--border);padding:8px 0 2px"><b>RESULTADO</b><b>'+fm$(T.res)+' ('+pctTxt(T.res)+')</b></div>'+
     '<div class="m" style="font-size:12px"><i>Esperado según parámetros del Excel (no es lo pagado real).'+(sinC.length?' Los spot sin costo calculado inflan el resultado hasta definir sus costos.':'')+'</i></div></div>'}
 async function verResMes(){
-  if(!verResultado())return;ir('s-res');llenarMeses('res-mes');$('res-mes').onchange=verResMes;$('res-h').textContent='Resultados del mes';$('res-tot').innerHTML='';$('res-lista').innerHTML='';$('res-sub').textContent='Cargando…';$('res-volver').onclick=()=>ir('s-home');
+  if(!verResultado())return;ir('s-res');llenarMeses('res-mes');$('res-mes').onchange=verResMes;$('res-h').textContent='Resultados del mes';$('res-tot').innerHTML='';$('res-lista').innerHTML='';$('res-sub').textContent='Cargando…';$('res-volver').onclick=()=>atras();
   const ym=$('res-mes').value||mesesAtras(1)[0].v,ini=ym+'-01',fin=finMes(ym);
   const {data,error}=await supa.from('servicios_piloto').select('*').eq('empresa',EMPRESA).eq('modo','registro_tm').neq('estado','anulado').gte('fecha',ini).lte('fecha',fin).order('fecha',{ascending:false}).order('servicio_id',{ascending:false});
   if(error){$('res-sub').textContent='Error al leer: '+error.message;return}
@@ -856,7 +858,7 @@ async function verFlujo(){if(!esCarlos())return;ir('s-flu');navMarcar('s-flu');$
   try{const l=await repRpc('flujo');if(!l.length){$('flu-sub').textContent='Todavía no hay flujo cargado.';return}const nm=ym=>['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'][+ym.slice(5,7)-1]+' '+ym.slice(0,4),sel=$('flu-mes'),prev=sel.value;
     /* Un flujo por mes: el de meses cerrados queda como foto fija; el del mes en curso se actualiza (Carlos 07-11) */
     sel.innerHTML=l.map((x,i)=>'<option value="'+x.periodo+'">'+(i===0?'Flujo vigente · '+nm(x.periodo)+' (se actualiza)':'Foto fija · '+nm(x.periodo))+'</option>').join('');sel.value=l.some(x=>x.periodo===prev)?prev:l[0].periodo;sel.onchange=verFlujo;
-    const r=await repRpc('flujo',sel.value);_flu=r.datos;_flu._act=r.actualizado;pintarFlujo()}catch(e){$('flu-sub').textContent='No se pudo cargar: '+(e.message||e)}}
+    const r=await repRpc('flujo',sel.value);_flu=r.datos;_flu._act=r.actualizado;pintarFlujo();const pr=sel.value;if(!$('flu-cart'))$('flu-box').insertAdjacentHTML('afterend','<div id="flu-cart"></div>');$('flu-cart').innerHTML='';cartolaBloque(pr+'-01',finMes(pr)).then(h=>{if(sel.value===pr)$('flu-cart').innerHTML=h})}catch(e){$('flu-sub').textContent='No se pudo cargar: '+(e.message||e)}}
 function fluToggle(id){const rs=document.querySelectorAll('#flu-box tr[data-p="'+id+'"]'),abrir=rs.length&&rs[0].style.display==='none';rs.forEach(r=>{r.style.display=abrir?'':'none';if(!abrir){const k=r.dataset.id;if(k)document.querySelectorAll('#flu-box tr[data-p="'+k+'"]').forEach(x=>x.style.display='none')}});const a=document.querySelector('#flu-box [data-a="'+id+'"]');if(a)a.textContent=abrir?'▾':'▸'}
 function pintarFlujo(){const d=_flu;if(!d)return;const n=Math.min(_fluN,d.meses.length),M=d.meses.slice(0,n),esc=t=>String(t==null?'':t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);
   const mn=ym=>['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'][+ym.slice(5,7)-1]+'-'+ym.slice(2,4),est=i=>i===0?'real':i===1?'real + proy.':'proyectado';
@@ -1004,6 +1006,18 @@ async function costosDesdeCartola(per){const ini=per+'-01',fin=finMes(per),r=awa
   M.forEach(m=>{const c=m.categoria||'Sin clasificar',g=m.categoria?claGrupo(c):'Sin clasificar';(by[g]=by[g]||{})[c]=(by[g][c]||[]);by[g][c].push({f:fCL(m.fecha).slice(0,5),d:(m.descripcion||'')+(m.nota?' · '+m.nota:''),nt:-m.monto,pg:-m.monto,doc:''})});
   return {titulo:'Informe de costos '+per+' · desde la cartola Santander (pagado real)',nota:'Montos pagados según banco (con IVA cuando corresponde). Lo no clasificado va en "Sin clasificar" y cuenta igual. Combustible pagado con prepago Aramco: la recarga no es costo; el consumo se verá con la cartola Aramco.',
     grupos:Object.entries(G).map(([k,v])=>{const src=Object.assign({},by[v]||{},v==='No es costo'?by['Otros']||{}:{});return {g:k,o:v==='No es costo',l:Object.entries(src).map(([n,m])=>({n,p:0,r:m.reduce((a,x)=>a+x.nt,0),m}))}}).filter(g=>g.l.length)}}
+/* Real según banco (cartola) en Resultados y Flujo de caja: todo movimiento cuenta, lo no clasificado como "Sin clasificar" (Carlos 08-11). */
+async function cartolaBloque(ini,fin){const r=await conTope(supa.from('cartola_movimientos').select('fecha,monto,categoria,descripcion,nota').eq('empresa',EMPRESA).gte('fecha',ini).lte('fecha',fin).order('fecha'),10000),M=r.data||[];if(!M.length)return '';
+  const lo=((await conTope(supa.from('cargas_lote').select('resumen,creado').eq('empresa',EMPRESA).eq('tipo','santander').eq('anulado',false).order('creado',{ascending:false}).limit(1),8000)).data||[])[0],sal=lo&&lo.resumen&&lo.resumen.sal?lo.resumen:null;
+  const G={},orden=['Ingresos','Costos variables','Costos fijos','Gasto financiero','Sin clasificar','No es costo'];M.forEach(m=>{const c=m.categoria||'Sin clasificar',g=m.categoria?(m.monto>0&&claGrupo(c)!=='Ingresos'&&claGrupo(c)!=='No es costo'?'Ingresos':claGrupo(c)):'Sin clasificar',gg=g==='Otros'?'No es costo':g;((G[gg]=G[gg]||{})[c]=G[gg][c]||[]).push(m)});
+  const s=a=>a.reduce((t,m)=>t+(+m.monto||0),0),sg=g=>Object.values(G[g]||{}).reduce((t,a)=>t+s(a),0),$$=v=>(v<0?'<span style="color:#D64545">−':'<span>')+fmt$(Math.abs(v))+'</span>';
+  const res=['Ingresos','Costos variables','Costos fijos','Gasto financiero','Sin clasificar'].reduce((t,g)=>t+sg(g),0),caja=s(M);
+  const det=(t,v,body)=>'<details style="padding:2px 0 2px 12px;border-top:1px solid var(--border)"><summary style="display:flex;justify-content:space-between;gap:8px;cursor:pointer;list-style:none;padding:5px 0"><span>▸ '+t+'</span><b>'+$$(v)+'</b></summary>'+body+'</details>';
+  const mov=m=>'<div style="display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--muted);padding:2px 0 2px 26px"><span>'+fCL(m.fecha).slice(0,5)+' · '+(m.descripcion||'')+(m.nota?' · '+m.nota:'')+'</span><span>'+$$(+m.monto)+'</span></div>';
+  const body=orden.filter(g=>G[g]).map(g=>det(g+(g==='Sin clasificar'?' (cuenta igual)':g==='No es costo'?' (solo caja, no resultado)':''),sg(g),Object.entries(G[g]).map(([c,a])=>det(c+' ('+a.length+')',s(a),a.map(mov).join(''))).join(''))).join('')+
+    '<div style="display:flex;justify-content:space-between;padding:8px 0 2px;border-top:2px solid var(--border)"><b>Resultado según banco</b><b>'+$$(res)+'</b></div><div style="display:flex;justify-content:space-between;padding:2px 0"><b>Movimiento de caja del mes</b><b>'+$$(caja)+'</b></div>'+
+    (sal?'<div style="display:flex;justify-content:space-between;padding:2px 0"><span>Saldo banco según última cartola'+(sal.hasta?' (al '+fCL(sal.hasta)+')':'')+'</span><b>'+$$(sal.sal.fin)+'</b></div>':'')+'<div class="m" style="font-size:11px;margin-top:4px">Montos pagados al banco (con IVA si corresponde). Se actualiza al subir la cartola y al clasificar.</div>';
+  return '<details style="border:1px solid var(--border);border-radius:10px;padding:0 10px;margin:10px 0;max-width:720px"><summary style="display:flex;justify-content:space-between;gap:8px;cursor:pointer;list-style:none;padding:10px 0;font-weight:800"><span>▸ 💳 Real según banco (cartola)</span><span>'+$$(res)+'</span></summary>'+body+'</details>'}
 /* Ingresos en efectivo: solo registro de ingresos, solo Carlos (administrador / Administración) (Carlos 06-11). El resultado interno los usa como venta; el contable no. */
 function esCarlos(){return !!(user&&(user.rol==='administrador'||user.rol==='administracion'))}
 let _efe=[];
@@ -1035,7 +1049,8 @@ function bloqueCos(d){const W='display:inline-block;min-width:98px;text-align:ri
   const gr=g=>{const o=!!g.o,R=g.l.reduce((a,l)=>a+l.r,0),P=g.l.reduce((a,l)=>a+l.p,0);return '<details style="border-top:1px solid var(--border);padding:6px 0"'+(o?'':' open')+'><summary style="display:flex;justify-content:space-between;gap:8px;cursor:pointer"><b>'+esc(g.g)+'</b><b>'+two(R,P,o)+'</b></summary>'+g.l.map(l=>li(l,o)).join('')+'</details>'};
   const cs=(d.grupos||[]).filter(g=>!g.o),TR=cs.reduce((a,g)=>a+g.l.reduce((x,l)=>x+l.r,0),0),TP=cs.reduce((a,g)=>a+g.l.reduce((x,l)=>x+l.p,0),0);
   return '<div style="border:1px solid var(--border);border-radius:10px;padding:8px;margin-top:8px;overflow-x:auto;max-width:720px"><div style="display:flex;justify-content:flex-end;font-size:11px;font-weight:800;letter-spacing:.06em;color:var(--muted);padding:6px 0 2px"><span style="'+W+'">PRESUPUESTO</span><span style="'+W+'">REAL</span></div>'+(d.grupos||[]).filter(g=>!g.o).map(gr).join('')+'<div style="display:flex;justify-content:space-between;gap:8px;border-top:2px solid var(--border);padding:8px 0 2px"><b>TOTAL COSTOS</b><b>'+two(TR,TP)+'</b></div>'+(d.grupos||[]).filter(g=>g.o).map(gr).join('')+'<div class="m" style="font-size:12px;margin-top:6px"><i>'+esc(d.nota||'')+'</i></div></div>'}
-function resMesTodo(){const {ini,fin,filas:fs}=_resMes;ir('s-res');$('res-h').textContent='Resultados del mes';$('res-volver').onclick=()=>ir('s-home');
+function resMesTodo(){resMesTodo0();if(!_resMes.excel){const k=_resMes.ini;cartolaBloque(_resMes.ini,_resMes.fin).then(h=>{if(h&&_resMes.ini===k&&$('s-res').classList.contains('on')){const d=$('res-cart')||($('res-tot').insertAdjacentHTML('afterend','<div id="res-cart"></div>'),$('res-cart'));d.innerHTML=h}})}else if($('res-cart'))$('res-cart').innerHTML=''}
+function resMesTodo0(){const {ini,fin,filas:fs}=_resMes;if($('res-cart'))$('res-cart').innerHTML='';ir('s-res');$('res-h').textContent='Resultados del mes';$('res-volver').onclick=()=>atras();
   $('res-sub').textContent='Del '+ini.split('-').reverse().join('-')+' al '+(fin<hoyISO()?fin:hoyISO()).split('-').reverse().join('-')+' · '+fs.length+' servicio(s)';
   if(_resMes.excel){$('res-sub').textContent=(_resMes.excel.titulo||'Informe de resultados')+' · mes cerrado: cifras oficiales del sistema TM (Excel)';$('res-tot').innerHTML=bloqueXls(_resMes.excel)}else
   $('res-tot').innerHTML=bloqueRes2(fs,'Resultado del mes');
@@ -1043,7 +1058,7 @@ function resMesTodo(){const {ini,fin,filas:fs}=_resMes;ir('s-res');$('res-h').te
   $('res-lista').innerHTML='<div class="lbl" style="margin-top:8px">'+(_resMes.excel?'Servicios registrados en Kaptura este mes (parcial: '+fs.length+' servicio(s); no reemplaza el informe)':'Ver resultados por cliente')+'</div>'+clis.map((c,i)=>{const rs=fs.filter(r=>(r.cliente||'Sin cliente')===c);if(!rs.length&&!CLIENTES_REG.includes(c))return '';const t={res:rs.reduce((a,r)=>{const z=zRes(r);return a+z.tarifa-z.tv-z.fijo},0)};
     return '<button class="btn2" style="margin-top:8px;display:flex;justify-content:space-between;width:100%" onclick="resMesCli('+i+')"><span>'+c+' ('+rs.length+')</span><span>'+fm$(t.res)+'</span></button>'}).join('');
   _resMes.clis=clis}
-function resMesCli(i){const c=_resMes.clis[i],rs=_resMes.filas.filter(r=>(r.cliente||'Sin cliente')===c);
+function resMesCli(i){const c=_resMes.clis[i],rs=_resMes.filas.filter(r=>(r.cliente||'Sin cliente')===c);if($('res-cart'))$('res-cart').innerHTML='';
   $('res-h').textContent='Resultados del mes · '+c;$('res-sub').textContent=rs.length+' servicio(s) del mes';$('res-volver').onclick=()=>resMesTodo();
   $('res-tot').innerHTML=bloqueRes2(rs,'Resultado '+c);
   $('res-lista').innerHTML='<div class="lbl" style="margin-top:8px">Resultados de sus servicios</div>'+rs.map(r=>{const n=r._n;return '<div class="reg"><div class="t">'+(n.codigo?'<span class="ul">'+n.codigo+'</span> · ':'')+r.fecha.split('-').reverse().join('-')+' · '+SVC_VER(n.servicio_sistema||((r.origen||'')+' → '+(r.destino||'')))+'</div><div>'+r.conductor+' · '+patTipo(r.patente)+(n.acoplado?' / '+n.acoplado:'')+'</div>'+resultadoHTML(r)+'</div>'}).join('');window.scrollTo(0,0)}
