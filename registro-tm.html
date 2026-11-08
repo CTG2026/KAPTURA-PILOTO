@@ -1514,7 +1514,7 @@ async function pcDash(){const box=$('pc-dash');if(!box)return;box.innerHTML='';i
     const dVe='<div style="color:var(--muted);margin-bottom:4px">Facturas por cobrar con fecha de vencimiento ya pasada.</div>'+(ve.length?ve.map(r=>ln2(fx(r)+' · venció '+fCL(cxcVence(r)),fmt$(+r.total||0),'#ff3b30')).join(''):'Ninguna vencida.');
     const alc=esAct?'todo lo pendiente a hoy':'servicios de '+lbl;
     if(user!==u0||!esAdmin()||PCMES!==mes)return;box.innerHTML=sel+'<div class="kpis">'+k('RENTABILIDAD','Ventas de '+lbl+' (neto, Kaptura)',fmt$(sv.reduce((t,x)=>t+(+x.tarifa_neta||0),0)),sv.length+' servicio(s) registrados',dVen)+
-      k('LIQUIDEZ','Por aprobar y facturar (c/IVA)',fmt$(sum(pa)),pa.length+' período(s) · '+alc,dPa)+k('LIQUIDEZ','Por cobrar (c/IVA)',fmt$(sum(pc)),pc.length+' factura(s) · '+alc+(ve.length?' · <span style="color:#ff3b30;font-weight:800">vencido '+fmt$(sum(ve))+' ('+ve.length+')</span>':''),dPc)+
+      k('LIQUIDEZ','Facturación y cobranza pendiente (c/IVA)',fmt$(sum(pa)+sum(pc)),(ve.length?'<div style="color:#ff3b30;font-weight:800">Vencido: '+fmt$(sum(ve))+' ('+ve.length+')</div>':'')+'<div>Por cobrar: '+fmt$(sum(pc))+' ('+pc.length+')</div><div>Por aprobar y facturar: '+fmt$(sum(pa))+' ('+pa.length+')</div>',grp('Por cobrar ('+pc.length+')',fmt$(sum(pc)),[dPc])+grp('Por aprobar y facturar ('+pa.length+')',fmt$(sum(pa)),[dPa]))+
       '</div>';
     if(esAdminTotal()){try{const rp=await repRpc('pilares',mes);const d=rp&&rp.datos&&rp.datos.filas;if(user!==u0||PCMES!==mes)return;
       if(!d){box.innerHTML+='<div class="sub" style="margin-top:-6px">Sin datos del sistema TM para '+lbl+' todavía · <a href="#" onclick="verRep(\'pilares\');return false" style="color:var(--gold)">ver pilares por mes</a></div>';return}
