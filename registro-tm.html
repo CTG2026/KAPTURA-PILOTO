@@ -1022,7 +1022,7 @@ async function cartolaBloque(ini,fin){const r=await conTope(supa.from('cartola_m
 /* Columna EXPLICACIÓN (Carlos 08-11): en filas con diferencia entre presupuesto y real, o con nota, un botón que despliega la explicación; Carlos la puede editar. Notas en notas_informe. */
 let _expN={},_expP={},_expD={};
 async function expCargar(inf,per){_expP[inf]=per;try{const r=await conTope(supa.from('notas_informe').select('fila,texto,autor,actualizado').eq('empresa',EMPRESA).eq('informe',inf).eq('periodo',per),8000);(r.data||[]).forEach(x=>_expN[inf+'|'+x.fila]=x)}catch(e){}}
-const expH=()=>'<span style="display:inline-block;width:88px;text-align:center;padding-left:6px" title="Explicación">EXPLICACIÓN</span>',expV=()=>'<span style="display:inline-block;width:34px"></span>';
+const expH=()=>'<span style="display:inline-block;width:88px;text-align:center;padding-left:6px" title="Explicación">EXPLICACIÓN</span>',expV=()=>'<span style="display:inline-block;width:88px"></span>';
 function expC(inf,key,x,q,def){const k=inf+'|'+key,n=_expN[k],t=n?n.texto:(def||''),dif=Math.round(+x||0)!==Math.round(+q||0);_expD[k]=def||'';if(!t&&!dif)return expV();
   return '<span style="display:inline-block;width:88px;text-align:center;cursor:pointer" title="'+(t?'Ver explicación':'Explicar la diferencia')+'" onclick="event.preventDefault();event.stopPropagation();expTog(this,\''+inf+'\',\''+key.replace(/'/g,"\\'")+'\')">'+(t?'💬':(esCarlos()?'➕':''))+'</span>'}
 function expTog(el,inf,key){const s=el.closest('summary'),h=s?s.parentElement:el.closest('div'),nx=h.nextElementSibling;if(nx&&nx.classList.contains('expl')){nx.remove();return}
