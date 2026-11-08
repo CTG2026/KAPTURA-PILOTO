@@ -263,7 +263,7 @@ body.pc .tv{display:none}body:not(.pc) .tp{display:none}
   <select id="seg-ent-mes" style="width:100%;font-size:16px;padding:8px;border-radius:10px;border:2px solid var(--border);background:var(--surface);color:var(--text);margin:8px 0 4px"></select>
   <div class="sub" id="misent-sub">Cargando…</div>
   <div id="misent-lista"></div>
-  <button class="btn2" onclick="ir('s-home');contarEnt()">← Volver</button>
+  <button class="btn2" onclick="atras();contarEnt()"><span class="tv">← Volver</span><span class="tp">← Atrás</span></button>
 </section>
 <section class="screen" id="s-ifco">
   <h1>IFCO pendientes</h1>
@@ -272,7 +272,7 @@ body.pc .tv{display:none}body:not(.pc) .tp{display:none}
   <button class="big" id="btn-ifco-wa" style="margin-top:12px;background:#1f7a3a;color:#fff" onclick="ifcoWhatsApp()" disabled>📤 Enviar resumen por WhatsApp</button>
   <button class="btn2" id="btn-ifco-xls" onclick="ifcoExcel()" disabled>⬇ Descargar Excel</button>
   <input type="file" id="ifco-cam" accept="image/*" capture="environment" style="display:none" onchange="ifcoSubir(this)">
-  <button class="btn2" onclick="ir('s-home');contarIfco()">← Volver</button>
+  <button class="btn2" onclick="atras();contarIfco()"><span class="tv">← Volver</span><span class="tp">← Atrás</span></button>
 </section>
 <section class="screen" id="s-ent">
   <h1>Entrega</h1>
