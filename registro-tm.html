@@ -308,6 +308,19 @@ body.pc.navoculto .toast{left:50%}
   <div id="flu-box"></div>
   <button class="btn2" onclick="ir('s-home')">← Volver</button>
 </section>
+<section class="screen" id="s-car">
+  <h1>Subir cartolas</h1>
+  <div class="sub" id="car-sub"></div>
+  <button class="btn" onclick="carElegir('santander')">🏦 Cartola Santander</button>
+  <button class="btn" onclick="carElegir('aramco')">⛽ Cartola Aramco</button>
+  <button class="btn" onclick="carElegir('sii')">🧾 SII · RCV ventas o compras</button>
+  <button class="btn" onclick="carElegir('ppto')">📊 Presupuesto de ventas</button>
+  <input type="file" id="car-file" style="display:none">
+  <div id="car-box"></div>
+  <h3 style="margin-top:18px">Últimas cargas</h3>
+  <div id="car-lotes"></div>
+  <button class="btn2" onclick="ir('s-home')">← Volver</button>
+</section>
 <section class="screen" id="s-efe">
   <h1>Ingresos en efectivo</h1>
   <select id="efe-mes" style="width:100%;font-size:16px;padding:8px;border-radius:10px;border:2px solid var(--border);background:var(--surface);color:var(--text);margin:8px 0 4px"></select>
@@ -856,6 +869,102 @@ function pintarFlujo(){const d=_flu;if(!d)return;const n=Math.min(_fluN,d.meses.
   const bajo=M.map((m,k)=>({m,v:d.saldo_fin[k]})).filter(x=>x.v<d.piso);
   h+='</table></div><div class="m" style="font-size:12px;margin-top:6px">Piso de caja: $'+d.piso.toLocaleString('es-CL')+' (1 mes de compromisos fijos). '+(bajo.length?'<b style="color:#ff3b30">⚠ Bajo el piso en: '+bajo.map(x=>mn(x.m)).join(', ')+'.</b>':'Ningún mes de esta vista baja del piso.')+'<br><i>'+esc(d.nota||'')+'</i></div>';
   $('flu-box').innerHTML=h}
+/* ═══ SUBIR CARTOLAS (Carlos 08-11): Santander, Aramco, SII (RCV) y presupuesto de ventas. Cada carga es un lote: resumen antes de guardar, sin duplicados y se puede anular completa. Solo Carlos / Administración. ═══ */
+let _car=null;
+const CAR_T={santander:'🏦 Cartola Santander',aramco:'⛽ Cartola Aramco',sii:'🧾 SII · RCV ventas o compras',ppto:'📊 Presupuesto de ventas'};
+const carN=s=>String(s==null?'':s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/\s+/g,' ').trim();
+const carNum=v=>{if(v==null||v==='')return null;if(typeof v==='number')return v;let s=String(v).replace(/[$\s]/g,'');if(/,\d{1,4}$/.test(s))s=s.replace(/\./g,'').replace(',','.');else s=s.replace(/[.,](?=\d{3}(\D|$))/g,'');const n=+s;return isNaN(n)?null:n};
+const carFecha=v=>{if(v==null||v==='')return null;if(v instanceof Date&&!isNaN(v))return v.getFullYear()+'-'+String(v.getMonth()+1).padStart(2,'0')+'-'+String(v.getDate()).padStart(2,'0');if(typeof v==='number'&&v>20000&&v<80000){const d=XLSX.SSF.parse_date_code(v);return d.y+'-'+String(d.m).padStart(2,'0')+'-'+String(d.d).padStart(2,'0')}
+  const m=String(v).trim().match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})/);if(m){const y=m[3].length===2?'20'+m[3]:m[3];return y+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0')}const m2=String(v).trim().match(/^(\d{4})-(\d{2})-(\d{2})/);return m2?m2[0]:null};
+const carRut=d=>{d=String(d||'');let m=d.match(/(\d{1,2}\.\d{3}\.\d{3}-[\dkK])/);if(m)return m[1].toLowerCase();m=d.match(/\b0*(\d{7,8})([\dkK])\b/);if(m){const n=m[1];return n.slice(0,-6).replace(/^0+/,'')+'.'+n.slice(-6,-3)+'.'+n.slice(-3)+'-'+m[2].toLowerCase()}return null};
+const carCli=r=>{const k=carN(r).split(' ')[0];return Object.keys(CXC_PLAZO).find(c=>carN(c).split(' ')[0]===k)||r};
+function verCar(){if(!esCarlos())return;ir('s-car');navMarcar('s-car');$('car-box').innerHTML='';$('car-sub').textContent='Elige qué vas a subir. Antes de guardar verás un resumen para confirmar.';carLotes()}
+function carElegir(t){_car={tipo:t};const f=$('car-file');f.value='';f.accept=t==='sii'?'.csv,.xlsx':'.xlsx,.xls,.csv';f.onchange=()=>{if(f.files[0])carLeer(f.files[0])};f.click()}
+async function carLeer(file){$('car-box').innerHTML='<div class="sub">Leyendo '+file.name+'…</div>';_car.archivo=file.name;
+  try{const buf=await file.arrayBuffer();let wb;if(/\.csv$/i.test(file.name)){let t=new TextDecoder('utf-8').decode(buf);if(t.includes('�'))t=new TextDecoder('windows-1252').decode(buf);wb=XLSX.read(t,{type:'string',FS:t.split('\n')[0].includes(';')?';':',',raw:true})}else wb=XLSX.read(buf,{type:'array',cellDates:true});
+    _car.wb=wb;const hojas=wb.SheetNames.map(n=>({n,r:XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,raw:true,defval:null,blankrows:false})}));
+    const P={santander:carSantander,aramco:carAramco,sii:carSii,ppto:carPpto}[_car.tipo];await P(hojas)}catch(e){$('car-box').innerHTML='<div class="sub" style="color:#D64545">No se pudo leer el archivo: '+(e.message||e)+'. Pásaselo a Claude.</div>'}}
+const carHdr=(rows,need)=>{for(let i=0;i<Math.min(rows.length,40);i++){const h=(rows[i]||[]).map(carN);if(need.every(k=>h.some(x=>x.length<45&&x.includes(k))))return {i,h,col:k=>h.findIndex(x=>x.includes(k))}}return null};
+function carPrev(html,ok){$('car-box').innerHTML='<div class="card" style="padding:12px 14px;border:1px solid var(--border);border-radius:12px;margin:10px 0"><div style="font-weight:900;margin-bottom:6px">'+CAR_T[_car.tipo]+' · '+_car.archivo+'</div>'+html+'</div>'+(ok?'<button class="btn" onclick="carGuardar()">✔ Confirmar y guardar</button>':'')+'<button class="btn2" onclick="$(\'car-box\').innerHTML=\'\'">Cancelar</button>'}
+const li=(a,b,c)=>'<div style="display:flex;justify-content:space-between;gap:8px;padding:3px 0;border-top:1px solid var(--border)"><span>'+a+'</span><b style="white-space:nowrap'+(c?';color:'+c:'')+'">'+b+'</b></div>';
+const acd=(t,items)=>items.length?'<details style="margin-top:6px"><summary style="cursor:pointer;font-weight:700">▸ '+t+' ('+items.length+')</summary><div style="font-size:12px">'+items.join('')+'</div></details>':'';
+/* ── Santander ── */
+async function carSantander(hojas){const rows=hojas[0].r,H=carHdr(rows,['monto','descripcion','fecha']);if(!H){carPrev('Formato no reconocido (no encuentro MONTO / DESCRIPCIÓN / FECHA). Pásaselo a Claude.');return}
+  const cM=H.col('monto'),cD=H.col('descripcion'),cF=H.col('fecha'),cN=H.col('documento'),cS=H.col('sucursal');let sal=null,desde=null,hasta=null;
+  rows.forEach((r,i)=>{(r||[]).forEach(v=>{const s=String(v||'');let m=s.match(/Fecha desde:\s*(\S+)/i);if(m)desde=carFecha(m[1]);m=s.match(/Fecha hasta:\s*(\S+)/i);if(m)hasta=carFecha(m[1])});if(carN((r||[])[0])==='saldo inicial'&&rows[i+1])sal={ini:carNum(rows[i+1][0]),fin:carNum(rows[i+1][3])}});
+  const cnt={},movs=[];for(let i=H.i+1;i<rows.length;i++){const r=rows[i]||[],mo=carNum(r[cM]),fe=carFecha(r[cF]);if(mo==null||!fe)continue;const de=String(r[cD]||'').trim(),doc=String(r[cN]==null?'':r[cN]).trim(),b=fe+'|'+mo+'|'+de+'|'+doc;cnt[b]=(cnt[b]||0)+1;
+    movs.push({empresa:EMPRESA,banco:'santander',fecha:fe,monto:mo,descripcion:de,documento:doc,sucursal:cS>=0?String(r[cS]||''):null,rut:carRut(de),huella:b+'|'+cnt[b]})}
+  if(!movs.length){carPrev('No encontré movimientos en el archivo.');return}
+  const f0=movs.reduce((a,m)=>m.fecha<a?m.fecha:a,'9999'),f1=movs.reduce((a,m)=>m.fecha>a?m.fecha:a,'0000');
+  const ya=new Set(((await supa.from('cartola_movimientos').select('huella').eq('empresa',EMPRESA).eq('banco','santander').gte('fecha',f0).lte('fecha',f1)).data||[]).map(x=>x.huella));
+  const nuevos=movs.filter(m=>!ya.has(m.huella));
+  // categorías aprendidas: mismo RUT ya clasificado antes
+  const ap={};((await supa.from('cartola_movimientos').select('rut,categoria').eq('empresa',EMPRESA).not('categoria','is',null).not('rut','is',null).limit(5000)).data||[]).forEach(x=>ap[x.rut]=x.categoria);nuevos.forEach(m=>{if(m.rut&&ap[m.rut])m.categoria=ap[m.rut]});
+  // conciliación exacta: compromisos (egreso = monto, ±15 días) y facturas (abono = total, desde la emisión)
+  const cxp=((await supa.from('cxp_compromisos').select('*').eq('empresa',EMPRESA).neq('estado','pagado')).data||[]),cxc=((await supa.from('cxc_facturas').select('*').eq('empresa',EMPRESA).is('fecha_cobro',null)).data||[]);
+  const dd=(a,b)=>Math.abs((new Date(a)-new Date(b))/864e5),usados=new Set(),pagos=[],cobros=[];
+  cxp.forEach(c=>{const cand=nuevos.filter(m=>m.monto<0&&Math.round(-m.monto)===Math.round(+c.monto)&&dd(m.fecha,c.fecha)<=15&&!usados.has(m.huella));if(cand.length!==1)return;const otros=cxp.filter(o=>o!==c&&Math.round(+o.monto)===Math.round(+c.monto)&&dd(cand[0].fecha,o.fecha)<=15);if(otros.length)return;usados.add(cand[0].huella);cand[0].conciliado='cxp:'+c.id;pagos.push({c,m:cand[0]})});
+  cxc.forEach(c=>{if(!c.total)return;const cand=nuevos.filter(m=>m.monto>0&&Math.round(m.monto)===Math.round(+c.total)&&(!c.fecha_emision||m.fecha>=c.fecha_emision)&&!usados.has(m.huella));if(cand.length!==1)return;usados.add(cand[0].huella);cand[0].conciliado='cxc:'+c.id;cobros.push({c,m:cand[0]})});
+  const eg=nuevos.filter(m=>m.monto<0).reduce((a,m)=>a+m.monto,0),ing=nuevos.filter(m=>m.monto>0).reduce((a,m)=>a+m.monto,0),sinCat=nuevos.filter(m=>!m.categoria&&!m.conciliado);
+  let cuadra=null;if(sal&&sal.ini!=null&&sal.fin!=null){cuadra=Math.round(sal.ini+movs.reduce((a,m)=>a+m.monto,0))===Math.round(sal.fin)}
+  _car.datos={movs:nuevos,pagos,cobros,sal,desde,hasta};
+  carPrev(li('Período',(desde?fCL(desde):fCL(f0))+' al '+(hasta?fCL(hasta):fCL(f1)))+li('Movimientos en el archivo',movs.length)+li('Nuevos (se guardan)',nuevos.length)+li('Ya cargados antes (se omiten)',movs.length-nuevos.length)+li('Ingresos nuevos',fmt$(ing))+li('Egresos nuevos','−'+fmt$(-eg),'#D64545')+
+    (sal?li('Saldo final de la cartola',fmt$(sal.fin))+li('Control de saldo',cuadra?'✔ cuadra':'✖ no cuadra',cuadra?'#2E8B57':'#D64545'):'')+
+    acd('Compromisos que quedan pagados',pagos.map(p=>li(fCL(p.m.fecha)+' · '+p.c.acreedor+' · '+p.c.concepto,fmt$(p.c.monto))))+acd('Facturas que quedan cobradas',cobros.map(p=>li(fCL(p.m.fecha)+' · '+p.c.cliente+(p.c.folio?' fact. '+p.c.folio:''),fmt$(p.c.total))))+
+    acd('Sin clasificar (igual cuentan en caja y resultado)',sinCat.map(m=>li(fCL(m.fecha)+' · '+m.descripcion,(m.monto<0?'−':'')+fmt$(Math.abs(m.monto)),m.monto<0?'#D64545':''))),nuevos.length>0&&cuadra!==false)
+  if(cuadra===false)$('car-box').insertAdjacentHTML('afterbegin','<div class="sub" style="color:#D64545;font-weight:800">El saldo no cuadra con los movimientos: no se guarda. Revisa que el archivo esté completo o pásaselo a Claude.</div>')}
+/* ── Aramco ── */
+async function carAramco(hojas){let H=null,rows=null;for(const h of hojas){H=carHdr(h.r,['fecha','patente','litro']);if(H){rows=h.r;break}}if(!H){carPrev('Formato no reconocido (no encuentro FECHA / PATENTE / LITROS). Pásaselo a Claude.');return}
+  const c=k=>H.col(k),cF=c('fecha'),cP=c('patente'),cL=c('litro'),cT=[c('total pago'),c('monto pagado'),c('total pagado'),c('monto'),c('total')].find(x=>x>=0),cDoc=[c('transac'),c('guia'),c('folio'),c('documento'),c('n°')].find(x=>x>=0),cH=H.h.findIndex(x=>x==='hora');
+  if(cT==null||cT<0){carPrev('No encuentro la columna del monto pagado. Pásaselo a Claude.');return}
+  const cs=[];for(let i=H.i+1;i<rows.length;i++){const r=rows[i]||[],fe=carFecha(r[cF]),l=carNum(r[cL]),t=carNum(r[cT]);if(!fe||!l||!t)continue;const pa=String(r[cP]||'').replace(/[\s\-·.]/g,'').toUpperCase()||null;
+    const doc=cDoc!=null&&cDoc>=0&&r[cDoc]!=null&&String(r[cDoc]).trim()?String(r[cDoc]).trim():fe+'-'+(cH>=0?String(r[cH]||''):'')+'-'+pa+'-'+l;const iva=Math.round(t*19/119*100)/100;
+    cs.push({fuente:'aramco',documento:doc,fecha:fe,patente:pa,litros:l,total:t,iva,neto_litro:Math.round((t-iva)/l*100)/100,nota:'Cargado desde Kaptura ('+_car.archivo+'); IVA estimado'})}
+  if(!cs.length){carPrev('No encontré cargas en el archivo.');return}
+  const f0=cs.reduce((a,m)=>m.fecha<a?m.fecha:a,'9999'),f1=cs.reduce((a,m)=>m.fecha>a?m.fecha:a,'0000'),ex=((await supa.from('combustible_cargas').select('documento,fecha,patente,litros').eq('fuente','aramco').gte('fecha',f0).lte('fecha',f1)).data||[]);
+  const k=x=>x.fecha+'|'+x.patente+'|'+(+x.litros).toFixed(2),ya=new Set(ex.map(x=>x.documento)),yk=new Set(ex.map(k)),nu=cs.filter(x=>!ya.has(x.documento)&&!yk.has(k(x)));
+  const pp={};nu.forEach(x=>{pp[x.patente||'Sin patente']=(pp[x.patente||'Sin patente']||0)+x.total});_car.datos={cargas:nu};
+  carPrev(li('Período',fCL(f0)+' al '+fCL(f1))+li('Cargas en el archivo',cs.length)+li('Nuevas (se guardan)',nu.length)+li('Ya cargadas antes (se omiten)',cs.length-nu.length)+li('Litros nuevos',nu.reduce((a,x)=>a+x.litros,0).toFixed(1)+' L')+li('Total pagado nuevo',fmt$(nu.reduce((a,x)=>a+x.total,0)))+acd('Por patente',Object.entries(pp).map(([p,v])=>li(p,fmt$(v)))),nu.length>0)}
+/* ── SII (RCV) ── */
+async function carSii(hojas){const rows=hojas[0].r,H=carHdr(rows,['folio','razon social','tipo doc']);if(!H){carPrev('Formato no reconocido (no es un RCV del SII). Pásaselo a Claude.');return}
+  const venta=H.h.some(x=>x.includes('rut cliente')),c=k=>H.col(k),cR=venta?c('rut cliente'):c('rut proveedor'),cIva=venta?c('monto iva'):c('monto iva recuperable');
+  const docs=[];for(let i=H.i+1;i<rows.length;i++){const r=rows[i]||[],fo=carNum(r[c('folio')]);if(!fo)continue;docs.push({empresa:EMPRESA,libro:venta?'venta':'compra',tipo_doc:carNum(r[c('tipo doc')]),rut:String(r[cR]||'').toLowerCase(),razon:r[c('razon social')],folio:fo,fecha:carFecha(r[c('fecha docto')]),exento:carNum(r[c('monto exento')])||0,neto:carNum(r[c('monto neto')])||0,iva:carNum(r[cIva])||0,total:carNum(r[c('monto total')])||0})}
+  if(!docs.length){carPrev('El archivo no trae documentos.');return}
+  const ex=((await supa.from('rcv_documentos').select('tipo_doc,rut,folio').eq('empresa',EMPRESA).eq('libro',docs[0].libro).in('folio',docs.map(d=>d.folio))).data||[]),ks=new Set(ex.map(x=>x.tipo_doc+'|'+x.rut+'|'+x.folio)),nu=docs.filter(d=>!ks.has(d.tipo_doc+'|'+d.rut+'|'+d.folio));
+  let cxcN=[],cxcA=[];if(venta){const cx=((await supa.from('cxc_facturas').select('*').eq('empresa',EMPRESA)).data||[]);nu.filter(d=>d.tipo_doc===33||d.tipo_doc===34).forEach(d=>{if(cx.some(x=>+x.folio===+d.folio))return;const cli=carCli(d.razon),sin=cx.find(x=>!x.folio&&x.cliente===cli&&Math.round(+x.total)===Math.round(d.total));if(sin)cxcA.push({x:sin,d});else cxcN.push({d,cli})})}
+  const sg=d=>d.tipo_doc===61?-1:1,neto=nu.reduce((a,d)=>a+sg(d)*d.neto,0),iva=nu.reduce((a,d)=>a+sg(d)*d.iva,0);_car.datos={docs:nu,cxcN,cxcA,libro:docs[0].libro};
+  carPrev(li('Libro',venta?'Ventas':'Compras')+li('Documentos en el archivo',docs.length)+li('Nuevos (se guardan)',nu.length)+li('Ya cargados antes (se omiten)',docs.length-nu.length)+li('Neto nuevo',fmt$(neto))+li((venta?'IVA débito':'IVA crédito')+' nuevo',fmt$(iva))+
+    acd('Documentos nuevos',nu.map(d=>li(fCL(d.fecha)+' · '+(d.tipo_doc===61?'NC ':'')+d.folio+' · '+d.razon,fmt$(d.total))))+acd('Facturas nuevas en Cobranza',cxcN.map(x=>li('Fact. '+x.d.folio+' · '+x.cli,fmt$(x.d.total))))+acd('Cobranza: se asigna el folio',cxcA.map(x=>li(x.x.cliente+' → fact. '+x.d.folio,fmt$(x.d.total)))),nu.length>0)}
+/* ── Presupuesto de ventas (plantilla de Claude) ── */
+async function carPpto(hojas){let H=null,rows=null;for(const h of hojas){H=carHdr(h.r,['cliente','servicio','viajes']);if(H){rows=h.r;break}}if(!H){carPrev('Formato no reconocido: usa la plantilla de presupuesto de ventas.');return}
+  const sv={};hojas.forEach(h=>{const S=carHdr(h.r,['servicio','tarifa']);if(S&&!S.h.some(x=>x.includes('viajes')))h.r.slice(S.i+1).forEach(r=>{if(r&&r[0])sv[carN(r[0])]=carNum(r[S.col('tarifa')])})});
+  const c=k=>H.col(k),L=[];for(let i=H.i+1;i<rows.length;i++){const r=rows[i]||[],vi=carNum(r[c('viajes')]);if(!vi)continue;const se=String(r[c('servicio')]||'').trim();let ta=carNum(r[c('tarifa')]);if(ta==null)ta=sv[carN(se)]||null;
+    L.push({empresa:EMPRESA,mes:String(r[c('mes')]||'').slice(0,7),semana:carNum(r[c('semana')]),desde:carFecha(r[c('desde')]),hasta:carFecha(r[c('hasta')]),cliente:String(r[c('cliente')]||'').trim(),servicio:se,viajes:vi,tarifa:ta,total:ta?vi*ta:null,patente:c('patente')>=0?r[c('patente')]:null,nota:c('nota')>=0?r[c('nota')]:null})}
+  if(!L.length){carPrev('No hay líneas con N° de viajes.');return}const sinT=L.filter(x=>!x.tarifa),meses=[...new Set(L.map(x=>x.mes))],cl={};L.forEach(x=>cl[x.cliente]=(cl[x.cliente]||0)+(x.total||0));_car.datos={L,meses};
+  carPrev(li('Mes',meses.join(', '))+li('Líneas',L.length)+li('Viajes',L.reduce((a,x)=>a+x.viajes,0))+li('Total presupuestado (neto)',fmt$(L.reduce((a,x)=>a+(x.total||0),0)))+acd('Por cliente',Object.entries(cl).map(([k,v])=>li(k,fmt$(v))))+(sinT.length?acd('Sin tarifa (escríbela en la plantilla)',sinT.map(x=>li(x.cliente+' · '+x.servicio,'—','#D64545'))):'')+'<div class="sub">Reemplaza el presupuesto anterior de '+meses.join(', ')+'.</div>',sinT.length===0)}
+/* ── Guardar y anular ── */
+async function carGuardar(){const t=_car.tipo,d=_car.datos;if(!d)return;$('car-box').innerHTML='<div class="sub">Guardando…</div>';
+  try{const lo=await supa.from('cargas_lote').insert({empresa:EMPRESA,tipo:t,archivo:_car.archivo,creado_por:user.nombre,resumen:{}}).select('id').single();if(lo.error)throw lo.error;const id=lo.data.id,R={};let n=0;const ok=r=>{if(r.error)throw r.error;return r};
+    if(t==='santander'){ok(await supa.from('cartola_movimientos').insert(d.movs.map(m=>({...m,lote_id:id}))));n=d.movs.length;const hoyN='(cartola, carga '+fCL(hoyISO())+')';
+      R.cxp=[];for(const p of d.pagos){ok(await supa.from('cxp_compromisos').update({estado:'pagado',fecha_pago:p.m.fecha,cuenta:'Santander',nota:((p.c.nota?p.c.nota+' · ':'')+'Conciliado con cartola '+hoyN),actualizado:new Date().toISOString()}).eq('id',p.c.id));R.cxp.push({id:p.c.id,nota:p.c.nota||null})}
+      R.cxc=[];for(const p of d.cobros){ok(await supa.from('cxc_facturas').update({etapa:'cobrada',fecha_cobro:p.m.fecha,cuenta_cobro:'Santander',actualizado:new Date().toISOString()}).eq('id',p.c.id));R.cxc.push({id:p.c.id,etapa:p.c.etapa||null})}
+      R.sal=d.sal;R.desde=d.desde;R.hasta=d.hasta;const sc=d.movs.filter(m=>!m.categoria&&!m.conciliado).length;if(sc)await supa.from('tareas').insert({empresa:EMPRESA,titulo:'Clasificar '+sc+' movimientos de la cartola Santander (carga '+fCL(hoyISO())+')',recurrencia:'unica',activa:true,creada_por:user.nombre})}
+    if(t==='aramco'){ok(await supa.from('combustible_cargas').insert(d.cargas.map(x=>({...x,lote_id:id}))));n=d.cargas.length}
+    if(t==='sii'){ok(await supa.from('rcv_documentos').insert(d.docs.map(x=>({...x,lote_id:id}))));n=d.docs.length;R.cxcN=[];R.cxcA=[];
+      for(const x of d.cxcN){const cid='SII-'+x.d.folio;ok(await supa.from('cxc_facturas').insert({id:cid,empresa:EMPRESA,cliente:x.cli,folio:x.d.folio,fecha_emision:x.d.fecha,neto:x.d.neto,total:x.d.total,etapa:'por_cobrar',nota:'Creada desde RCV ventas (Kaptura)',actualizado:new Date().toISOString()}));R.cxcN.push(cid)}
+      for(const x of d.cxcA){ok(await supa.from('cxc_facturas').update({folio:x.d.folio,fecha_emision:x.d.fecha,etapa:'por_cobrar',actualizado:new Date().toISOString()}).eq('id',x.x.id));R.cxcA.push({id:x.x.id,etapa:x.x.etapa||null})}}
+    if(t==='ppto'){const prev=((await supa.from('presupuesto_ventas').select('lote_id').eq('empresa',EMPRESA).eq('activo',true).in('mes',d.meses)).data||[]);R.prev=[...new Set(prev.map(x=>x.lote_id).filter(Boolean))];
+      ok(await supa.from('presupuesto_ventas').update({activo:false}).eq('empresa',EMPRESA).in('mes',d.meses));ok(await supa.from('presupuesto_ventas').insert(d.L.map(x=>({...x,lote_id:id}))));n=d.L.length}
+    await supa.from('cargas_lote').update({filas:n,resumen:R}).eq('id',id);toast('Guardado: '+n+' registros');_car=null;$('car-box').innerHTML='';carLotes()}catch(e){$('car-box').innerHTML='<div class="sub" style="color:#D64545">No se pudo guardar: '+(e.message||e)+'. Si quedó a medias, anula la carga y vuelve a subirla.</div>';carLotes()}}
+async function carLotes(){const r=await conTope(supa.from('cargas_lote').select('*').eq('empresa',EMPRESA).eq('anulado',false).order('creado',{ascending:false}).limit(15),8000);const l=r.data||[];
+  $('car-lotes').innerHTML=l.length?l.map(x=>'<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 0;border-top:1px solid var(--border);font-size:13px"><span>'+CAR_T[x.tipo]+'<br><small style="color:var(--muted)">'+new Date(x.creado).toLocaleString('es-CL')+' · '+(x.archivo||'')+' · '+x.filas+' registros · '+(x.creado_por||'')+'</small></span><button class="btn2" style="width:auto;margin:0;padding:4px 8px;font-size:12px" onclick="carAnular(\''+x.id+'\')">Anular</button></div>').join(''):'<div class="sub">Todavía no hay cargas.</div>'}
+async function carAnular(id){if(!confirm('¿Anular esta carga completa? Se borran sus registros y se deshacen los pagos y cobros que marcó.'))return;
+  try{const l=(await supa.from('cargas_lote').select('*').eq('id',id).single()).data,R=l.resumen||{};
+    if(l.tipo==='santander'){await supa.from('cartola_movimientos').delete().eq('lote_id',id);for(const x of R.cxp||[])await supa.from('cxp_compromisos').update({estado:'pendiente',fecha_pago:null,cuenta:null,nota:x.nota}).eq('id',x.id);for(const x of R.cxc||[])await supa.from('cxc_facturas').update({etapa:x.etapa,fecha_cobro:null,cuenta_cobro:null}).eq('id',x.id)}
+    if(l.tipo==='aramco')await supa.from('combustible_cargas').delete().eq('lote_id',id);
+    if(l.tipo==='sii'){await supa.from('rcv_documentos').delete().eq('lote_id',id);for(const c of R.cxcN||[])await supa.from('cxc_facturas').delete().eq('id',c);for(const x of R.cxcA||[])await supa.from('cxc_facturas').update({folio:null,fecha_emision:null,etapa:x.etapa}).eq('id',x.id)}
+    if(l.tipo==='ppto'){await supa.from('presupuesto_ventas').delete().eq('lote_id',id);if((R.prev||[]).length)await supa.from('presupuesto_ventas').update({activo:true}).in('lote_id',R.prev)}
+    await supa.from('cargas_lote').update({anulado:true}).eq('id',id);toast('Carga anulada')}catch(e){toast('No se pudo anular: '+(e.message||e))}carLotes()}
 /* Ingresos en efectivo: solo registro de ingresos, solo Carlos (administrador / Administración) (Carlos 06-11). El resultado interno los usa como venta; el contable no. */
 function esCarlos(){return !!(user&&(user.rol==='administrador'||user.rol==='administracion'))}
 let _efe=[];
@@ -1306,7 +1415,7 @@ function aplicarVista(){if(!(user&&['administrador','administracion','coordinado
   const ope=['btn-reg','btn-ver','btn-misent','btn-ifco','btn-gps'].map(bt).join('');
   const fin=(adm?'<button data-s="s-cxp-s" onclick="verCxp(\'semana\')" style="'+sb+'">💸 Compromisos: semana</button><button data-s="s-cxp-m" onclick="verCxp(\'mes\')" style="'+sb+'">💸 Compromisos: mes actual</button>':'')+['btn-flu','btn-caja','btn-cxc','btn-res','btn-cos','btn-efe','btn-pil'].map(bt).join('');
   const org=(adm?'<button data-s="s-rem" onclick="verRep(\'remuneraciones\')" style="'+sb+'">💵 Remuneraciones</button>':'')+bt('btn-emp');
-  $('pcnav').innerHTML='<div class="t">KAPTURA · TM</div><button data-s="s-home" onclick="ir(\'s-home\')">🏠 Inicio y tareas del día</button>'+cambiar+grp('💼 Comercial',com)+grp('🚚 Operacional',ope)+grp('💰 Financiero',fin)+grp('👥 Organizacional',org)+archNav();archNavCargar()}
+  $('pcnav').innerHTML='<div class="t">KAPTURA · TM</div><button data-s="s-home" onclick="ir(\'s-home\')">🏠 Inicio y tareas del día</button>'+cambiar+grp('💼 Comercial',com)+grp('🚚 Operacional',ope)+grp('💰 Financiero',fin)+grp('👥 Organizacional',org)+(esCarlos()?grp('📥 Subir cartolas','<button data-s="s-car" onclick="verCar()" style="'+sb+'">🏦 Santander · ⛽ Aramco · 🧾 SII · 📊 Presupuesto</button>'):'')+archNav();archNavCargar()}
 document.addEventListener('click',e=>{if(document.body.classList.contains('navabierto')&&e.target.closest&&e.target.closest('#pcnav button'))document.body.classList.remove('navabierto')});
 function menuToggle(){const b=document.body;if(b.classList.contains('pc')){const o=b.classList.toggle('navoculto');ls('tm_navoculto',o?'1':null)}else b.classList.toggle('navabierto')}
 function navMarcar(id){document.querySelectorAll('#pcnav button').forEach(b=>b.classList.toggle('on',b.dataset.s===id));const on=document.querySelector('#pcnav button.on');if(on){const g=on.closest('details.ng');if(g)g.open=true}}
