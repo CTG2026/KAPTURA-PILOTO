@@ -308,10 +308,8 @@ body.pc .tv{display:none}body:not(.pc) .tp{display:none}
   <h1>Flujo de caja</h1>
   <select id="flu-mes" style="width:100%;font-size:16px;padding:8px;border-radius:10px;border:2px solid var(--border);background:var(--surface);color:var(--text);margin:8px 0 4px"></select>
   <div class="sub" id="flu-sub">Cargando…</div>
-  <div style="display:flex;gap:8px;margin:6px 0"><button class="btn2" style="width:auto;margin:0" onclick="_fluN=4;pintarFlujo()">4 meses</button><button class="btn2" style="width:auto;margin:0" onclick="_fluN=12;pintarFlujo()">12 meses</button></div>
-  <div id="flu-semcur"></div>
+  <div style="display:flex;gap:8px;margin:6px 0"><button class="btn2" style="width:auto;margin:0" onclick="_fluMes=null;_fluN=4;pintarFlujo()">4 meses</button><button class="btn2" style="width:auto;margin:0" onclick="_fluMes=null;_fluN=12;pintarFlujo()">12 meses</button><button class="btn2" style="width:auto;margin:0" onclick="fluSemMes(hoyISO().slice(0,7))">Semana en curso</button></div>
   <div id="flu-box"></div>
-  <div id="flu-sem"></div>
   <div id="flu-cart"></div>
   <button class="btn2" onclick="atras()"><span class="tv">← Volver</span><span class="tp">← Atrás</span></button>
 </section>
@@ -881,57 +879,50 @@ async function verFlujo(){if(!esCarlos())return;ir('s-flu');navMarcar('s-flu');$
   try{const l=await repRpc('flujo');if(!l.length){$('flu-sub').textContent='Todavía no hay flujo cargado.';return}const nm=ym=>['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'][+ym.slice(5,7)-1]+' '+ym.slice(0,4),sel=$('flu-mes'),prev=sel.value;
     /* Un flujo por mes: el de meses cerrados queda como foto fija; el del mes en curso se actualiza (Carlos 07-11) */
     sel.innerHTML=l.map((x,i)=>'<option value="'+x.periodo+'">'+(i===0?'Flujo vigente · '+nm(x.periodo)+' (se actualiza)':'Foto fija · '+nm(x.periodo))+'</option>').join('');sel.value=l.some(x=>x.periodo===prev)?prev:l[0].periodo;sel.onchange=verFlujo;
-    const r=await repRpc('flujo',sel.value);_flu=r.datos;_flu._act=r.actualizado;_fluSem=null;$('flu-semcur').innerHTML='';$('flu-sem').innerHTML='';pintarFlujo();if(sel.value===l[0].periodo)fluSemCargar();const pr=sel.value;if(!$('flu-cart'))$('flu-box').insertAdjacentHTML('afterend','<div id="flu-cart"></div>');$('flu-cart').innerHTML='';cartolaBloque(pr+'-01',finMes(pr)).then(h=>{if(sel.value===pr)$('flu-cart').innerHTML=h})}catch(e){$('flu-sub').textContent='No se pudo cargar: '+(e.message||e)}}
+    const r=await repRpc('flujo',sel.value);_flu=r.datos;_flu._act=r.actualizado;_fluSem=null;_fluMes=null;_fluVig=sel.value===l[0].periodo;pintarFlujo();const pr=sel.value;if(!$('flu-cart'))$('flu-box').insertAdjacentHTML('afterend','<div id="flu-cart"></div>');$('flu-cart').innerHTML='';cartolaBloque(pr+'-01',finMes(pr)).then(h=>{if(sel.value===pr)$('flu-cart').innerHTML=h})}catch(e){$('flu-sub').textContent='No se pudo cargar: '+(e.message||e)}}
 function fluToggle(id){const rs=document.querySelectorAll('#flu-box tr[data-p="'+id+'"]'),abrir=rs.length&&rs[0].style.display==='none';rs.forEach(r=>{r.style.display=abrir?'':'none';if(!abrir){const k=r.dataset.id;if(k)document.querySelectorAll('#flu-box tr[data-p="'+k+'"]').forEach(x=>x.style.display='none')}});const a=document.querySelector('#flu-box [data-a="'+id+'"]');if(a)a.textContent=abrir?'▾':'▸'}
-function pintarFlujo(){const d=_flu;if(!d)return;const n=Math.min(_fluN,d.meses.length),M=d.meses.slice(0,n),esc=t=>String(t==null?'':t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);
+function pintarFlujo(){if(!_flu)return;const V=_fluMes&&_fluSem?fluSemData(_fluMes):null,d=V?V.d:_flu;const n=V?d.meses.length:Math.min(_fluN,d.meses.length),M=d.meses.slice(0,n),esc=t=>String(t==null?'':t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);
   const mn=ym=>['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'][+ym.slice(5,7)-1]+'-'+ym.slice(2,4),est=i=>i===0?'real':i===1?'real + proy.':'proyectado';
   $('flu-sub').textContent=(d.titulo||'Flujo de caja')+' · '+(d.corte||'')+' · actualizado '+new Date(d._act).toLocaleDateString('es-CL');
   const td=(v,b,red,bs)=>{v=Math.round(v)||0;const pc=bs&&v?'<span style="font-size:10px;font-weight:400;color:var(--muted);margin-left:5px">'+String(Math.round(Math.abs(v)/Math.abs(bs)*1000)/10).replace('.',',')+'%</span>':'';return '<td style="text-align:right;white-space:nowrap;padding:4px 8px'+(b?';font-weight:800':'')+'">'+(red?'<span style="color:#ff3b30">⚠ ':'')+(v<0?'<span style="color:#ff3b30">−$'+Math.round(-v).toLocaleString('es-CL')+'</span>':'$'+Math.round(v).toLocaleString('es-CL'))+(red?'</span>':'')+pc+'</td>'};
   const fila=(lab,vs,o)=>{o=o||{};const pad=8+(o.lv||0)*18,tog=o.id?'<span data-a="'+o.id+'" style="display:inline-block;width:14px">▸</span>':'<span style="display:inline-block;width:14px"></span>';
     return '<tr'+(o.p?' data-p="'+o.p+'" style="display:none"':'')+(o.id?' data-id="'+o.id+'"':'')+(o.bg?' style="background:'+o.bg+'"':'')+'><td style="padding:4px 8px 4px '+pad+'px;white-space:nowrap;'+(o.id?'cursor:pointer;':'')+(o.b?'font-weight:800;':'')+(o.lv>1?'color:var(--muted);font-size:12px':'')+'"'+(o.id?' onclick="fluToggle(\''+o.id+'\')"':'')+'>'+tog+esc(lab)+'</td>'+vs.slice(0,n).map((v,i)=>td(v,o.b,o.alerta&&v<d.piso,o.base?o.base[i]:0)).join('')+'</tr>'};
   const sum=(arr)=>M.map((_,k)=>arr.reduce((a,g)=>a+(g.v[k]||0),0)),TI=sum(d.ingresos),TE=sum(d.egresos); /* % pequeño: ingresos sobre total ingresos; egresos sobre total egresos del mes (Carlos 06-11) */
-  let h='<div class="tblw"><table class="tbl" style="min-width:'+(260+n*120)+'px"><tr><th style="text-align:left">Mes</th>'+M.map((m,i)=>'<th style="text-align:right;cursor:pointer" title="Ver por semana" onclick="fluSemMes(\''+m+'\')">'+mn(m)+' ▾<br><span style="font-weight:400;font-size:11px">'+est(i)+'</span></th>').join('')+'</tr>';
+  let h=(V?'<button class="btn2" style="width:auto;margin:0 0 8px" onclick="_fluMes=null;pintarFlujo()">← Volver a meses</button>':'')+'<div class="tblw"><table class="tbl" style="min-width:'+(260+n*120)+'px"><tr><th style="text-align:left">'+(V?V.tit:'Mes')+'</th>'+(V?V.heads.map(x=>'<th style="text-align:right'+(x.cur?';background:var(--gold);color:#000':'')+'">'+x.t+'<br><span style="font-weight:400;font-size:11px">'+x.s+'</span></th>').join(''):M.map((m,i)=>'<th style="text-align:right'+(_fluVig?';cursor:pointer" title="Ver por semana" onclick="fluSemMes(\''+m+'\')':'')+'">'+mn(m)+(_fluVig?' ▾':'')+'<br><span style="font-weight:400;font-size:11px">'+est(i)+'</span></th>').join(''))+'</tr>';
   h+=fila('SALDO INICIAL',d.saldo_ini,{b:true,bg:'rgba(128,128,128,.08)'});
   h+=fila('INGRESOS',sum(d.ingresos),{b:true,id:'ing'});
   d.ingresos.forEach((g,gi)=>{h+=fila(g.n,g.v,{lv:1,p:'ing',id:g.i&&g.i.length?'i'+gi:'',base:TI});(g.i||[]).forEach(x=>{if(x.v.slice(0,n).some(v=>v))h+=fila(x.d,x.v,{lv:2,p:'i'+gi,base:TI})})});
   h+=fila('EGRESOS',sum(d.egresos).map(v=>-v),{b:true,id:'egr'});
   d.egresos.forEach((g,gi)=>{h+=fila(g.n,g.v.map(v=>-v),{lv:1,p:'egr',id:g.i&&g.i.length?'e'+gi:'',base:TE});(g.i||[]).forEach(x=>{if(x.v.slice(0,n).some(v=>v))h+=fila(x.d,x.v.map(v=>-v),{lv:2,p:'e'+gi,base:TE})})});
-  h+=fila('FLUJO NETO DEL MES',d.neto,{b:true});
+  h+=fila(V?'FLUJO NETO DE LA SEMANA':'FLUJO NETO DEL MES',d.neto,{b:true});
   h+=fila('SALDO FINAL',d.saldo_fin,{b:true,alerta:true,bg:'rgba(128,128,128,.08)'});
   const bajo=M.map((m,k)=>({m,v:d.saldo_fin[k]})).filter(x=>x.v<d.piso);
-  h+='</table></div><div class="m" style="font-size:12px;margin-top:6px">Piso de caja: $'+d.piso.toLocaleString('es-CL')+' (1 mes de compromisos fijos). '+(bajo.length?'<b style="color:#ff3b30">⚠ Bajo el piso en: '+bajo.map(x=>mn(x.m)).join(', ')+'.</b>':'Ningún mes de esta vista baja del piso.')+'<br><i>'+esc(d.nota||'')+'</i></div>';
-  $('flu-box').innerHTML=h;fluSemPintar()}
+  h+='</table></div>'+(V?'<div class="m" style="font-size:12px;margin-top:6px">Piso de caja: $'+d.piso.toLocaleString('es-CL')+'. Real: cartola Santander hasta el '+fCL(_fluSem.sc.hasta)+'. Proyectado: facturas por cobrar según vencimiento y compromisos de pago pendientes (solo fijos: sin combustible, viáticos ni anticipos). Lo atrasado va en la primera semana proyectada.'+(V.sinF?' Por cobrar sin fecha (no suma): '+fmt$(V.sinF)+'.':'')+'</div>':'<div class="m" style="font-size:12px;margin-top:6px">Piso de caja: $'+d.piso.toLocaleString('es-CL')+' (1 mes de compromisos fijos). '+(bajo.length?'<b style="color:#ff3b30">⚠ Bajo el piso en: '+bajo.map(x=>mn(x.m)).join(', ')+'.</b>':'Ningún mes de esta vista baja del piso.')+'<br><i>'+esc(d.nota||'')+'</i></div>');
+  $('flu-box').innerHTML=h}
 /* Flujo por semana (Carlos 08-11): semana en curso arriba; al pinchar un mes se despliegan sus semanas (lunes a domingo; la semana pertenece al mes de su lunes).
    Real = movimientos de la cartola Santander hasta su última fecha. Proyectado = facturas por cobrar según vencimiento y compromisos pendientes según fecha; lo atrasado cae en la primera semana proyectada. El saldo parte del último saldo de la cartola. Los totales mensuales siguen siendo los del Excel. */
-let _fluSem=null;
-async function fluSemCargar(){try{const sc=await cartolaSaldo();if(!sc||!_flu)return;const M=_flu.meses,d0=lunesDe(new Date(M[0]+'-01T12:00:00')),
+let _fluSem=null,_fluMes=null,_fluVig=false;
+async function fluSemCargar(){const sc=await cartolaSaldo();if(!sc||!_flu)return;const d0=lunesDe(new Date(_flu.meses[0]+'-01T12:00:00')),
     mv=((await conTope(supa.from('cartola_movimientos').select('fecha,monto,descripcion,categoria').eq('empresa',EMPRESA).gte('fecha',d0).order('fecha'),10000)).data||[]),
-    cx=await leerCxc(),cp=(await leerCxp()).filter(r=>r.estado!=='pagado');_fluSem={sc,mv,cx,cp};fluSemPintar()}catch(e){console.error(e)}}
-function fluSemPintar(){const S=_fluSem,d=_flu;if(!S||!d||!$('flu-sem'))return;const esc=t=>String(t==null?'':t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);
-  const n=Math.min(_fluN,d.meses.length),M=d.meses.slice(0,n),H=S.sc.hasta,P=d.piso||0,dd=x=>{const t=new Date(x+'T12:00:00');return t},add=(x,k)=>{const t=dd(x);t.setDate(t.getDate()+k);return hoyISO(t)},dm=x=>x.slice(8,10)+'-'+x.slice(5,7);
-  /* semanas: lunes desde la primera semana cuyo lunes cae en el primer mes visible, hasta el último mes visible */
-  let lu=lunesDe(dd(M[0]+'-01'));if(lu<M[0]+'-01')lu=add(lu,7);const W=[];const finU=finMes(M[n-1]);while(lu<=finU){W.push({ini:lu,fin:add(lu,6),mes:lu.slice(0,7)});lu=add(lu,7)}
-  const h1=add(H,1),wProy=W.find(w=>w.ini<=h1&&h1<=w.fin)||W.find(w=>w.ini>h1);
-  const it=[];S.mv.forEach(m=>it.push({f:m.fecha>H?H:m.fecha,v:+m.monto||0,t:(m.descripcion||'')+(m.categoria?' · '+m.categoria:'')+(m.fecha>H?' · fecha '+fCL(m.fecha)+' en la cartola':''),real:true}));
-  const sinF=[];S.cx.forEach(r=>{const v=cxcVence(r),m=cxcCaja(r);if(!m)return;const t=r.cliente+(r.folio?' · fact. '+r.folio:'');if(!v){sinF.push({v:m,t:t+' · '+(cxcEtapa(r)==='por_aprobar'?'por aprobar':cxcEtapa(r)==='por_facturar'?'por facturar':'sin vencimiento')});return}it.push({f:v>H?v:null,v:m,t:t+(v<=H?' · venció '+fCL(v):' · vence '+fCL(v))})});
-  S.cp.forEach(r=>{const f=r.fecha;it.push({f:f>H?f:null,v:-(+r.monto||0),t:(r.acreedor||'')+' · '+(r.concepto||'')+(f<=H?' · atrasado ('+fCL(f)+')':'')})});
-  W.forEach(w=>{w.it=it.filter(x=>x.f?(x.f>=w.ini&&x.f<=w.fin):w===wProy)});
-  /* saldo al inicio de la primera semana = saldo cartola − movimientos reales desde ese lunes */
+    cx=await leerCxc(),cp=(await leerCxp()).filter(r=>r.estado!=='pagado');_fluSem={sc,mv,cx,cp}}
+async function fluSemMes(ym){if(!_fluVig||!_flu||!_flu.meses.includes(ym))return;_fluMes=ym;if(!_fluSem){$('flu-box').innerHTML='Cargando semanas…';try{await fluSemCargar()}catch(e){}}if(!_fluSem){_fluMes=null;toast('Falta cargar la cartola Santander')}pintarFlujo()}
+/* Semanas de un mes en el MISMO formato del flujo mensual (Carlos 08-11): columnas = semanas (lunes a domingo, la semana es del mes de su lunes); filas = saldo inicial, ingresos y egresos en acordeón, flujo neto y saldo final.
+   Real = cartola Santander hasta su última fecha; proyectado = facturas por cobrar (vencimiento) y compromisos pendientes (fecha); lo atrasado cae en la primera semana proyectada. */
+function fluSemData(ym){const S=_fluSem,H=S.sc.hasta,dd=x=>new Date(x+'T12:00:00'),add=(x,k)=>{const t=dd(x);t.setDate(t.getDate()+k);return hoyISO(t)},dm=x=>x.slice(8,10)+'-'+x.slice(5,7);
+  let lu=lunesDe(dd(_flu.meses[0]+'-01'));if(lu<_flu.meses[0]+'-01')lu=add(lu,7);const W=[];const fU=finMes(ym);while(lu<=fU){W.push({ini:lu,fin:add(lu,6)});lu=add(lu,7)}
+  const h1=add(H,1),wP=W.find(w=>w.ini<=h1&&h1<=w.fin)||W.find(w=>w.ini>h1);
+  const it=[];S.mv.forEach(m=>{const v=+m.monto||0;it.push({f:m.fecha>H?H:m.fecha,v,g:v>0?'Cobros y otros ingresos (cartola)':(m.categoria||'Sin clasificar'),t:dm(m.fecha)+' · '+(m.descripcion||'')})});
+  let sinF=0;S.cx.forEach(r=>{const v=cxcVence(r),m=cxcCaja(r);if(!m)return;if(!v){sinF+=m;return}it.push({f:v>H?v:null,v:m,g:r.cliente||'Sin cliente',t:(r.folio?'Fact. '+r.folio+' · ':'')+(v<=H?'venció ':'vence ')+fCL(v)})});
+  S.cp.forEach(r=>{const f=r.fecha;it.push({f:f>H?f:null,v:-(+r.monto||0),g:r.categoria||'Otros compromisos',t:(r.acreedor||'')+' · '+(r.concepto||'')+(f<=H?' · atrasado '+fCL(f):' · '+fCL(f))})});
+  const Wm=W.filter(w=>w.ini.slice(0,7)===ym),inW=(x,w)=>x.f?(x.f>=w.ini&&x.f<=w.fin):w===wP;
   let sal=S.sc.fin-S.mv.filter(m=>m.fecha>=W[0].ini).reduce((t,m)=>t+(+m.monto||0),0);
-  W.forEach(w=>{w.si=sal;w.en=w.it.filter(x=>x.v>0).reduce((t,x)=>t+x.v,0);w.sa=w.it.filter(x=>x.v<0).reduce((t,x)=>t-x.v,0);w.sf=w.si+w.en-w.sa;sal=w.sf;w.est=w.fin<=H?'real':w.ini>H?'proyectado':'real + proy.'});
-  const m$=v=>Math.round(v)<0?'<span style="color:#ff3b30">−'+fmt$(-v)+'</span>':fmt$(v),ln=(a,b,st)=>'<div style="display:flex;justify-content:space-between;gap:8px;padding:3px 0;border-top:1px dashed var(--border)'+(st||'')+'"><span>'+a+'</span><b style="white-space:nowrap">'+b+'</b></div>';
-  const det=(t,v,b,op)=>'<details'+(op?' open':'')+' style="padding:3px 0;border-top:1px solid var(--border)"><summary style="display:flex;justify-content:space-between;gap:8px;cursor:pointer;list-style:none"><span>▸ '+t+'</span><b style="white-space:nowrap">'+v+'</b></summary><div style="padding-left:14px;font-size:12px;color:var(--muted)">'+b+'</div></details>';
-  const lis=a=>a.length?a.sort((x,y)=>String(x.f||'').localeCompare(String(y.f||''))).map(x=>ln((x.f?dm(x.f)+' · ':'')+esc(x.t)+(x.real?'':' <i>(proy.)</i>'),m$(Math.abs(x.v)))).join(''):'<div style="padding:3px 0">Nada.</div>';
-  const semH=w=>ln('Saldo inicial',m$(w.si))+det('Entradas',fmt$(w.en),lis(w.it.filter(x=>x.v>0)))+det('Salidas',m$(-w.sa),lis(w.it.filter(x=>x.v<0)))+ln('<b>Saldo final</b>',m$(w.sf)+(w.sf<P?' <span style="color:#ff3b30">⚠ bajo el piso</span>':''));
-  const tit=w=>dm(w.ini)+' al '+dm(w.fin)+' · '+w.est;
-  const hoy=hoyISO(),wc=W.find(w=>w.ini<=hoy&&hoy<=w.fin);
-  $('flu-semcur').innerHTML=wc?'<div style="border:1px solid var(--border);border-radius:10px;padding:8px 12px;margin:6px 0 10px;max-width:720px"><div style="display:flex;justify-content:space-between;gap:8px"><b>Semana en curso · '+tit(wc)+'</b><b>'+m$(wc.sf)+'</b></div><div style="font-size:13px">'+semH(wc)+'</div></div>':'';
-  const MESL=ym=>MESES[+ym.slice(5,7)-1]+' '+ym.slice(0,4);
-  $('flu-sem').innerHTML='<div class="lbl" style="margin-top:10px">Por semana (pincha el mes)</div>'+M.map(ym=>{const ws=W.filter(w=>w.mes===ym);if(!ws.length)return '';const sf=ws[ws.length-1].sf;
-    return '<details id="fsm-'+ym+'" style="border:1px solid var(--border);border-radius:10px;margin:6px 0;padding:6px 12px;max-width:720px"><summary style="display:flex;justify-content:space-between;gap:8px;cursor:pointer;list-style:none;font-weight:800"><span>▸ '+MESL(ym)+'</span><span>saldo fin '+m$(sf)+'</span></summary><div style="font-size:13px">'+ws.map((w,i)=>det('Semana '+(i+1)+' · '+tit(w),m$(w.sf)+(w.sf<P?' ⚠':''),semH(w))).join('')+
-      (ym===M[0]&&sinF.length?det('Por cobrar sin fecha (no suma al saldo)',fmt$(sinF.reduce((t,x)=>t+x.v,0)),lis(sinF)):'')+'</div></details>'}).join('')+
-    '<div class="m" style="font-size:12px;margin-top:4px"><i>Real: cartola Santander hasta el '+fCL(H)+'. Proyectado: facturas por cobrar según vencimiento y compromisos de pago pendientes (solo fijos: no incluye combustible, viáticos ni anticipos). Lo atrasado cae en la primera semana proyectada.</i></div>'}
-function fluSemMes(ym){const e=$('fsm-'+ym);if(!e)return;e.open=true;e.scrollIntoView({behavior:'smooth',block:'start'})}
+  W.forEach(w=>{const a=it.filter(x=>inW(x,w));w.en=a.filter(x=>x.v>0).reduce((t,x)=>t+x.v,0);w.sa=a.filter(x=>x.v<0).reduce((t,x)=>t-x.v,0);w.si=sal;w.sf=sal+w.en-w.sa;sal=w.sf});
+  const grupos=pos=>{const G={};it.filter(x=>pos?x.v>0:x.v<0).forEach(x=>{if(!Wm.some(w=>inW(x,w)))return;(G[x.g]=G[x.g]||[]).push(x)});
+    return Object.entries(G).map(([n,xs])=>({n,v:Wm.map(w=>xs.filter(x=>inW(x,w)).reduce((t,x)=>t+Math.abs(x.v),0)),i:xs.map(x=>({d:x.t,v:Wm.map(w=>inW(x,w)?Math.abs(x.v):0)}))})).sort((a,b)=>b.v.reduce((t,x)=>t+x,0)-a.v.reduce((t,x)=>t+x,0))};
+  const hoy=hoyISO();
+  return {tit:MESES[+ym.slice(5,7)-1].replace(/^./,c=>c.toUpperCase())+' '+ym.slice(0,4),sinF:ym===hoy.slice(0,7)?sinF:0,
+    heads:Wm.map((w,k)=>({t:'Semana '+(k+1)+(w.ini<=hoy&&hoy<=w.fin?' · en curso':''),s:dm(w.ini)+' al '+dm(w.fin)+' · '+(w.fin<=H?'real':w.ini>H?'proyectado':'real + proy.'),cur:w.ini<=hoy&&hoy<=w.fin})),
+    d:{meses:Wm.map(w=>w.ini),saldo_ini:Wm.map(w=>w.si),ingresos:grupos(true),egresos:grupos(false),neto:Wm.map(w=>w.en-w.sa),saldo_fin:Wm.map(w=>w.sf),piso:_flu.piso||0}}}
 /* ═══ SUBIR CARTOLAS (Carlos 08-11): Santander, Aramco, SII (RCV) y presupuesto de ventas. Cada carga es un lote: resumen antes de guardar, sin duplicados y se puede anular completa. Solo Carlos / Administración. ═══ */
 let _car=null;
 const CAR_T={santander:'🏦 Cartola Santander',aramco:'⛽ Cartola Aramco',sii:'🧾 SII · RCV ventas o compras',ppto:'📊 Presupuesto de ventas'};
