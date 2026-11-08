@@ -124,6 +124,7 @@ body.pc.navoculto{padding-left:28px}
 body.pc.navoculto .hdr{left:0}
 body.pc.navoculto .toast{left:50%}
 body.pc .tv{display:none}body:not(.pc) .tp{display:none}
+.carpick{display:block;width:100%;margin:10px 0;padding:26px 14px;border:2px dashed #2563eb;border-radius:14px;background:rgba(37,99,235,.06);color:var(--text);font:800 17px 'DM Sans',sans-serif;cursor:pointer}.carpick small{font-weight:400;font-size:13px;color:var(--muted)}
 </style>
 </head>
 <body>
@@ -318,15 +319,15 @@ body.pc .tv{display:none}body:not(.pc) .tp{display:none}
 </section>
 <section class="screen" id="s-car">
   <h1 id="car-h">Subir cartolas</h1>
+  <div style="font-size:14px;line-height:1.5;margin:6px 0 10px"><b>Cómo se hace:</b> 1) toca el recuadro y elige el archivo · 2) revisa el resumen · 3) toca <b>Confirmar y guardar</b>.<br><span style="color:var(--muted)">Puedes subir una cartola que se traslape con otra: lo ya cargado no se duplica.</span></div>
   <div class="sub" id="car-sub"></div>
-  <button class="btn" data-car="santander" onclick="carElegir('santander')">📂 Elegir archivo</button>
-  <button class="btn" data-car="aramco" onclick="carElegir('aramco')">📂 Elegir archivo</button>
-  <button class="btn" data-car="sii" onclick="carElegir('sii')">📂 Elegir archivo</button>
-  <button class="btn" data-car="ppto" onclick="carElegir('ppto')">📂 Elegir archivo</button>
+  <button data-car="santander" onclick="carElegir('santander')" class="carpick">📂 Toca aquí para elegir la cartola del Santander<br><small>Excel descargado del banco</small></button>
+  <button data-car="aramco" onclick="carElegir('aramco')" class="carpick">📂 Toca aquí para elegir la cartola de Aramco<br><small>Excel del portal Aramco</small></button>
+  <button data-car="sii" onclick="carElegir('sii')" class="carpick">📂 Toca aquí para elegir el RCV del SII<br><small>CSV de ventas o de compras</small></button>
+  <button data-car="ppto" onclick="carElegir('ppto')" class="carpick">📂 Toca aquí para elegir el presupuesto de ventas<br><small>Plantilla Excel de presupuesto</small></button>
   <input type="file" id="car-file" style="display:none">
   <div id="car-box"></div>
-  <h3 style="margin-top:18px">Últimas cargas</h3>
-  <div id="car-lotes"></div>
+  <details style="margin-top:18px;border:1px solid var(--border);border-radius:10px;padding:0 10px"><summary style="cursor:pointer;padding:10px 0;font-weight:800;list-style:none">▸ Historial de cargas (solo para deshacer un error)</summary><div id="car-lotes"></div></details>
   <button class="btn2" onclick="atras()"><span class="tv">← Volver</span><span class="tp">← Atrás</span></button>
 </section>
 <section class="screen" id="s-efe">
@@ -887,7 +888,7 @@ const carFecha=v=>{if(v==null||v==='')return null;if(v instanceof Date&&!isNaN(v
   const m=String(v).trim().match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})/);if(m){const y=m[3].length===2?'20'+m[3]:m[3];return y+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0')}const m2=String(v).trim().match(/^(\d{4})-(\d{2})-(\d{2})/);return m2?m2[0]:null};
 const carRut=d=>{d=String(d||'');let m=d.match(/(\d{1,2}\.\d{3}\.\d{3}-[\dkK])/);if(m)return m[1].toLowerCase();m=d.match(/\b0*(\d{7,8})([\dkK])\b/);if(m){const n=m[1];return n.slice(0,-6).replace(/^0+/,'')+'.'+n.slice(-6,-3)+'.'+n.slice(-3)+'-'+m[2].toLowerCase()}return null};
 const carCli=r=>{const k=carN(r).split(' ')[0];return Object.keys(CXC_PLAZO).find(c=>carN(c).split(' ')[0]===k)||r};
-function verCar(a){if(!esCarlos())return;a=a||'santander';if(a==='cla')return verCla();ir('s-car');navMarcar('s-car-'+a);$('car-h').textContent=CAR_T[a].replace(/^\S+\s/,'');document.querySelectorAll('#s-car [data-car]').forEach(b=>b.style.display=b.dataset.car===a?'':'none');$('car-box').innerHTML='';$('car-sub').textContent='Elige qué vas a subir. Antes de guardar verás un resumen para confirmar.';carLotes()}
+function verCar(a){if(!esCarlos())return;a=a||'santander';if(a==='cla')return verCla();ir('s-car');navMarcar('s-car-'+a);$('car-h').textContent=CAR_T[a].replace(/^\S+\s/,'');document.querySelectorAll('#s-car [data-car]').forEach(b=>b.style.display=b.dataset.car===a?'':'none');$('car-box').innerHTML='';$('car-sub').textContent='';carLotes()}
 function carElegir(t){_car={tipo:t};const f=$('car-file');f.value='';f.accept=t==='sii'?'.csv,.xlsx':'.xlsx,.xls,.csv';f.onchange=()=>{if(f.files[0])carLeer(f.files[0])};f.click()}
 async function carLeer(file){$('car-box').innerHTML='<div class="sub">Leyendo '+file.name+'…</div>';_car.archivo=file.name;
   try{const buf=await file.arrayBuffer();let wb;if(/\.csv$/i.test(file.name)){let t=new TextDecoder('utf-8').decode(buf);if(t.includes('�'))t=new TextDecoder('windows-1252').decode(buf);wb=XLSX.read(t,{type:'string',FS:t.split('\n')[0].includes(';')?';':',',raw:true})}else wb=XLSX.read(buf,{type:'array',cellDates:true});
@@ -964,10 +965,10 @@ async function carGuardar(){const t=_car.tipo,d=_car.datos;if(!d)return;$('car-b
       for(const x of d.cxcA){ok(await supa.from('cxc_facturas').update({folio:x.d.folio,fecha_emision:x.d.fecha,etapa:'por_cobrar',actualizado:new Date().toISOString()}).eq('id',x.x.id));R.cxcA.push({id:x.x.id,etapa:x.x.etapa||null})}}
     if(t==='ppto'){const prev=((await supa.from('presupuesto_ventas').select('lote_id').eq('empresa',EMPRESA).eq('activo',true).in('mes',d.meses)).data||[]);R.prev=[...new Set(prev.map(x=>x.lote_id).filter(Boolean))];
       ok(await supa.from('presupuesto_ventas').update({activo:false}).eq('empresa',EMPRESA).in('mes',d.meses));ok(await supa.from('presupuesto_ventas').insert(d.L.map(x=>({...x,lote_id:id}))));n=d.L.length}
-    await supa.from('cargas_lote').update({filas:n,resumen:R}).eq('id',id);toast('Guardado: '+n+' registros');_car=null;$('car-box').innerHTML='';carLotes()}catch(e){$('car-box').innerHTML='<div class="sub" style="color:#D64545">No se pudo guardar: '+(e.message||e)+'. Si quedó a medias, anula la carga y vuelve a subirla.</div>';carLotes()}}
+    await supa.from('cargas_lote').update({filas:n,resumen:R}).eq('id',id);toast('Guardado: '+n+' registros');_car=null;$('car-box').innerHTML='<div style="border:2px solid #2E8B57;border-radius:12px;padding:12px;margin:10px 0;font-weight:800;color:#2E8B57">✔ Listo: se guardaron '+n+' registros'+(t==='santander'?' · '+(R.cxp||[]).length+' compromiso(s) pagados · '+(R.cxc||[]).length+' factura(s) cobradas':'')+'.</div>';carLotes()}catch(e){$('car-box').innerHTML='<div class="sub" style="color:#D64545">No se pudo guardar: '+(e.message||e)+'. Si quedó a medias, anula la carga y vuelve a subirla.</div>';carLotes()}}
 async function carLotes(){const r=await conTope(supa.from('cargas_lote').select('*').eq('empresa',EMPRESA).eq('anulado',false).order('creado',{ascending:false}).limit(15),8000);const l=r.data||[];
-  $('car-lotes').innerHTML=l.length?l.map(x=>'<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 0;border-top:1px solid var(--border);font-size:13px"><span>'+CAR_T[x.tipo]+'<br><small style="color:var(--muted)">'+new Date(x.creado).toLocaleString('es-CL')+' · '+(x.archivo||'')+' · '+x.filas+' registros · '+(x.creado_por||'')+'</small></span><button class="btn2" style="width:auto;margin:0;padding:4px 8px;font-size:12px" onclick="carAnular(\''+x.id+'\')">Anular</button></div>').join(''):'<div class="sub">Todavía no hay cargas.</div>'}
-async function carAnular(id){if(!confirm('¿Anular esta carga completa? Se borran sus registros y se deshacen los pagos y cobros que marcó.'))return;
+  $('car-lotes').innerHTML=l.length?l.map(x=>'<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 0;border-top:1px solid var(--border);font-size:13px"><span>'+CAR_T[x.tipo]+'<br><small style="color:var(--muted)">'+new Date(x.creado).toLocaleString('es-CL')+' · '+(x.archivo||'')+' · '+x.filas+' registros · '+(x.creado_por||'')+'</small></span><button class="btn2" style="width:auto;margin:0;padding:4px 8px;font-size:12px" onclick="carAnular(\''+x.id+'\')" style="color:#D64545">Deshacer esta carga</button></div>').join(''):'<div class="sub">Todavía no hay cargas.</div>'}
+async function carAnular(id){const w=prompt('Esto BORRA esta carga y deshace los pagos y cobros que marcó. No es para subir una cartola nueva.\n\nSi de verdad quieres deshacerla, escribe ANULAR:');if((w||'').trim().toUpperCase()!=='ANULAR'){toast('No se anuló nada');return}
   try{const l=(await supa.from('cargas_lote').select('*').eq('id',id).single()).data,R=l.resumen||{};
     if(l.tipo==='santander'){await supa.from('cartola_movimientos').delete().eq('lote_id',id);for(const x of R.cxp||[])await supa.from('cxp_compromisos').update({estado:'pendiente',fecha_pago:null,cuenta:null,nota:x.nota}).eq('id',x.id);for(const x of R.cxc||[])await supa.from('cxc_facturas').update({etapa:x.etapa,fecha_cobro:null,cuenta_cobro:null}).eq('id',x.id)}
     if(l.tipo==='aramco')await supa.from('combustible_cargas').delete().eq('lote_id',id);
