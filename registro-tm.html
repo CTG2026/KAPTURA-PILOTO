@@ -969,6 +969,7 @@ async function fdAbrir(){let ov=$('fd-ov');if(!ov){ov=document.createElement('di
     h+=av('No pagado (no suma)',d.noPa,'fnp','fe');
     h+=tr('FLUJO NETO DEL DÍA',ds.map((f,k)=>cel(d.neto[k],stc(itK(d.ingresos,k).concat(itK(d.egresos,k)))||(f>H?Y:G),false,true)).join(''),{b:true});
     h+=tr('SALDO FINAL',ds.map((f,k)=>cel(d.saldo_fin[k],d.saldo_fin[k]<P?R:(stc(itK(d.ingresos,k).concat(itK(d.egresos,k)))||(f>H?Y:G)),false,true)).join(''),{b:true});
+    if(d.efe&&d.efe.some(v=>Math.round(v)))h+=tr('<span style="font-weight:600">  de lo cual en efectivo (Claudio)</span>',ds.map((f,k)=>cel(d.efe[k],'',false)).join(''),{lv:1});
     ov.innerHTML=h+'</table></div><div class="m" style="font-size:12px;margin-top:6px">Piso de caja '+fmt$(P)+'. Toca INGRESOS, EGRESOS o cada grupo para ver el detalle.</div>'}
   catch(e){ov.innerHTML='No se pudo cargar el flujo diario. <button class="btn2" onclick="$(\'fd-ov\').style.display=\'none\'">Cerrar</button>'}}
 /* Marca un spot como cobrado o su tercero como pagado en efectivo (Carlos 09-11) */
@@ -986,7 +987,8 @@ function fluSemData(ym,dias){const S=_fluSem,H=S.sc.hasta,dd=x=>new Date(x+'T12:
   /* Lo vencido y no recibido/pagado (Carlos 08-11): no suma donde debió ocurrir (aviso rojo) y pasa como proyectado a la semana siguiente a hoy */
   const hoy=hoyISO(),wP=W.find(w=>w.ini<=hoy&&hoy<=w.fin)||W.find(w=>w.ini>hoy),av=[];
   /* quién es: si el movimiento quedó conciliado con una factura o un compromiso, se muestra el cliente o acreedor entre paréntesis (Carlos 09-11) */const quien=m=>{const c=String(m.conciliado||''),id=c.slice(4);if(c.startsWith('cxc:')){const x=(S.cxAll||[]).find(y=>y.id===id);return x?{n:x.cliente,t:x.cliente+(x.folio?' · fact. '+x.folio:'')}:null}if(c.startsWith('cxp:')){const x=(S.cpAll||[]).find(y=>String(y.id)===id);return x?{n:x.acreedor,t:x.acreedor}:null}return null};
-  const it=[];S.mv.forEach(m=>{const v=+m.monto||0,q=quien(m);it.push({f:m.fecha>H?H:m.fecha,v,r:true,g:v>0?(q?q.n:'Cobros y otros ingresos (cartola)'):(m.categoria||'Sin clasificar'),t:dm(m.fecha)+' · '+(m.descripcion||'')+(q?' ('+q.t+')':'')})});
+  /* Efectivo (Carlos 09-11): lo maneja Claudio; el depósito al banco es traspaso (no entra al flujo) y baja la caja en efectivo */const DEP='Depósito de efectivo (Claudio)',ce=[];
+  const it=[];S.mv.forEach(m=>{if(m.categoria===DEP){ce.push({f:m.fecha>H?H:m.fecha,v:-(+m.monto||0)});return}const v=+m.monto||0,q=quien(m);it.push({f:m.fecha>H?H:m.fecha,v,r:true,g:v>0?(q?q.n:'Cobros y otros ingresos (cartola)'):(m.categoria||'Sin clasificar'),t:dm(m.fecha)+' · '+(m.descripcion||'')+(q?' ('+q.t+')':'')})});
   let sinF=0;const pr=(f,v,g,t,h)=>{if(f>hoy){it.push({f,v,g,h,t:t+' · '+fCL(f)});return}av.push({f,v,h,t:g+' · '+t+' · debió el '+fCL(f)});it.push({f:null,v,g,h,t:t+' · ⚠ atrasado (debió el '+fCL(f)+')'})};
   S.cx.forEach(r=>{let v=cxcVence(r),t=r.folio?'Fact. '+r.folio:'Factura';const m=cxcCaja(r);if(!m)return;
     /* sin factura aún: cobro esperado = cierre del período + plazo del cliente (Carlos 08-11) */if(!v&&r.periodo_hasta){v=cxcVence({cliente:r.cliente,fecha_emision:add(r.periodo_hasta,1)});t=dm(r.periodo_desde||r.periodo_hasta)+' al '+dm(r.periodo_hasta)+' ('+(cxcEtapa(r)==='por_facturar'?'por facturar':'por aprobar')+')'}
@@ -999,20 +1001,20 @@ function fluSemData(ym,dias){const S=_fluSem,H=S.sc.hasta,dd=x=>new Date(x+'T12:
   /* Spot sin factura y pago a terceros de spot (Carlos 09-11): esperados en su fecha; "en efectivo" los marca como ocurridos aunque no pasen por el banco */
   (S.sp||[]).forEach(sv=>{let n={};try{n=JSON.parse(sv.notas||'{}')}catch(e){}if(!n.spot)return;const ad=(f,k)=>{const t=new Date(f+'T12:00:00');t.setDate(t.getDate()+k);return hoyISO(t)},lb=String(n.servicio_sistema||'').replace(/^SPOT · /,'')+(sv.patente?' · '+sv.patente:'');
     if(!FAC_CLI.some(y=>y.c===sv.cliente)&&+sv.tarifa_neta){const v=+sv.tarifa_neta,bt=esCarlos()?' <a href="#" onclick="event.preventDefault();event.stopPropagation();svEfectivo('+sv.id+',\'cobro\')" style="color:var(--gold);font-size:11px">cobrado en efectivo</a>':'';
-      if(n.cobro_efectivo)it.push({f:n.cobro_efectivo,v,r:true,g:sv.cliente,t:dm(sv.fecha)+' · spot '+lb+' (cobrado en efectivo)'});else pr(sv.fecha,v,sv.cliente||'Spot','Spot '+lb+' (sin factura, neto)',bt)}
+      if(n.cobro_efectivo){it.push({f:n.cobro_efectivo,v,r:true,g:sv.cliente,t:dm(sv.fecha)+' · spot '+lb+' (cobrado en efectivo, Claudio)'});ce.push({f:n.cobro_efectivo,v})}else pr(sv.fecha,v,sv.cliente||'Spot','Spot '+lb+' (sin factura, neto)',bt)}
     const pt=+n.pago_tercero||0;if(pt){const bt=esCarlos()?' <a href="#" onclick="event.preventDefault();event.stopPropagation();svEfectivo('+sv.id+',\'tercero\')" style="color:var(--gold);font-size:11px">pagado en efectivo</a>':'';
-      if(n.pago_tercero_efectivo)it.push({f:n.pago_tercero_efectivo,v:-pt,r:true,g:'Pago a terceros (spot)',t:dm(sv.fecha)+' · '+(n.tercero||'Tercero')+' · '+lb+' (pagado en efectivo)'});else if(!n.fecha_pago_tercero)pr(n.fecha_pago_programada||ad(sv.fecha,7),-pt,'Pago a terceros (spot)',(n.tercero||'Tercero')+' · '+lb,bt)}});
+      if(n.pago_tercero_efectivo){it.push({f:n.pago_tercero_efectivo,v:-pt,r:true,g:'Pago a terceros (spot)',t:dm(sv.fecha)+' · '+(n.tercero||'Tercero')+' · '+lb+' (pagado en efectivo, Claudio)'});ce.push({f:n.pago_tercero_efectivo,v:-pt})}else if(!n.fecha_pago_tercero)pr(n.fecha_pago_programada||ad(sv.fecha,7),-pt,'Pago a terceros (spot)',(n.tercero||'Tercero')+' · '+lb,bt)}});
   /* Costos variables del presupuesto (hoja Presupuesto Nov) que salen de caja el mismo día: combustible, viáticos y pago a terceros; solo días que la cartola aún no cubre (Carlos 09-11) */
   (S.pd||[]).forEach(x=>{const f=String(x.fecha).slice(0,10);if(f<=H)return;[['combustible','Combustible (presupuesto)'],['viaticos','Viáticos (presupuesto)'],['terceros','Pago a terceros (presupuesto)']].forEach(([k,g])=>{const v=+x[k]||0;if(v)it.push({f,v:-v,g,t:dm(f)+' · '+g})})});
   const Wm=dias?W:W.filter(w=>w.ini.slice(0,7)===ym),inW=(x,w)=>x.f?(x.f>=w.ini&&x.f<=w.fin):w===wP;
-  let sal=S.sc.fin-S.mv.filter(m=>(m.fecha>H?H:m.fecha)>=W[0].ini).reduce((t,m)=>t+(+m.monto||0),0);
+  let sal=S.sc.fin-S.mv.filter(m=>(m.fecha>H?H:m.fecha)>=W[0].ini).reduce((t,m)=>t+(+m.monto||0),0)+ce.filter(x=>x.f<W[0].ini).reduce((t,x)=>t+x.v,0);
   W.forEach(w=>{const a=it.filter(x=>inW(x,w));w.en=a.filter(x=>x.v>0).reduce((t,x)=>t+x.v,0);w.sa=a.filter(x=>x.v<0).reduce((t,x)=>t-x.v,0);w.si=sal;w.sf=sal+w.en-w.sa;sal=w.sf});
   const wAv=x=>Wm.find(w=>x.f>=w.ini&&x.f<=w.fin)||(x.f<Wm[0].ini?Wm[0]:null),aviso=pos=>{const xs=av.filter(x=>pos?x.v>0:x.v<0);return {v:Wm.map(w=>xs.filter(x=>wAv(x)===w).reduce((t,x)=>t+Math.abs(x.v),0)),i:xs.filter(x=>wAv(x)).map(x=>({d:x.t,h:x.h,v:Wm.map(w=>wAv(x)===w?Math.abs(x.v):0)}))}};
   const grupos=pos=>{const G={};it.filter(x=>pos?x.v>0:x.v<0).forEach(x=>{if(!Wm.some(w=>inW(x,w)))return;(G[x.g]=G[x.g]||[]).push(x)});
     return Object.entries(G).map(([n,xs])=>({n,v:Wm.map(w=>xs.filter(x=>inW(x,w)).reduce((t,x)=>t+Math.abs(x.v),0)),i:xs.map(x=>({d:x.t,h:x.h,r:x.r,v:Wm.map(w=>inW(x,w)?Math.abs(x.v):0)}))})).sort((a,b)=>b.v.reduce((t,x)=>t+x,0)-a.v.reduce((t,x)=>t+x,0))};
   return {tit:MESES[+ym.slice(5,7)-1].replace(/^./,c=>c.toUpperCase())+' '+ym.slice(0,4),sinF:ym===hoy.slice(0,7)?sinF:0,
     heads:Wm.map((w,k)=>({t:'Semana '+(k+1)+(w.ini<=hoy&&hoy<=w.fin?' · en curso':''),s:dm(w.ini)+' al '+dm(w.fin)+' · '+(w.fin<hoy?'real':w.ini>hoy?'proyectado':'real a hoy'),cur:w.ini<=hoy&&hoy<=w.fin})),
-    d:{noEn:aviso(true),noPa:aviso(false),meses:Wm.map(w=>w.ini),saldo_ini:Wm.map(w=>w.si),ingresos:grupos(true),egresos:grupos(false),neto:Wm.map(w=>w.en-w.sa),saldo_fin:Wm.map(w=>w.sf),piso:_flu.piso||0}}}
+    d:{efe:Wm.map(w=>ce.filter(x=>x.f<=w.fin).reduce((t,x)=>t+x.v,0)),noEn:aviso(true),noPa:aviso(false),meses:Wm.map(w=>w.ini),saldo_ini:Wm.map(w=>w.si),ingresos:grupos(true),egresos:grupos(false),neto:Wm.map(w=>w.en-w.sa),saldo_fin:Wm.map(w=>w.sf),piso:_flu.piso||0}}}
 /* ═══ SUBIR CARTOLAS (Carlos 08-11): Santander, Aramco, SII (RCV) y presupuesto de ventas. Cada carga es un lote: resumen antes de guardar, sin duplicados y se puede anular completa. Solo Carlos / Administración. ═══ */
 let _car=null;
 const CAR_T={santander:'🏦 Cartola Santander',aramco:'⛽ Cartola Aramco',sii:'🧾 SII · RCV ventas o compras',ppto:'📊 Presupuesto de ventas'};
@@ -1114,7 +1116,7 @@ async function carAnular(id){const w=prompt('Esto BORRA esta carga y deshace los
 const CLA_CAT={ 'Costos variables':['Combustible','Peajes','Viáticos','Pago a terceros','Traspaleteo','Mantención y neumáticos','Comisión asesor (Carlos Torres)'],
   'Costos fijos':['Sueldos','Previred','Contador','Seguros y permisos','Arriendo equipos','GPS y telefonía','Gastos bancarios','Otros gastos fijos'],
   'Gasto financiero':['Costo factoring','Intereses'],
-  'No es costo':['Arriendo a Tres Enanos (solo contable)','Recarga prepago Aramco','Deuda combustible (Peumo)','Arriendo Castro','Deuda TAG Castro Madrid','Tesorería (TGR)','IVA postergado (cuota)','Impuestos (F29)','Inversión en equipos','Retiro de socios','Imprevistos','Préstamo a trabajador','Traspaso entre cuentas'],
+  'No es costo':['Arriendo a Tres Enanos (solo contable)','Recarga prepago Aramco','Deuda combustible (Peumo)','Arriendo Castro','Deuda TAG Castro Madrid','Tesorería (TGR)','IVA postergado (cuota)','Impuestos (F29)','Inversión en equipos','Retiro de socios','Imprevistos','Préstamo a trabajador','Traspaso entre cuentas','Depósito de efectivo (Claudio)'],
   'Ingresos':['Cobro de facturas','Ingreso spot','Devolución / reintegro','Aporte de socios','Otros ingresos']};
 const claOps=sel=>'<option value="">— elegir categoría —</option>'+Object.entries(CLA_CAT).map(([g,l])=>'<optgroup label="'+g+'">'+l.map(c=>'<option'+(c===sel?' selected':'')+'>'+c+'</option>').join('')+'</optgroup>').join('');
 const claGrupo=c=>Object.keys(CLA_CAT).find(g=>CLA_CAT[g].includes(c))||'Otros';
