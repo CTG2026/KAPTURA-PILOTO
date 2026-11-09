@@ -968,7 +968,10 @@ async function fdAbrir(){let ov=$('fd-ov');if(!ov){ov=document.createElement('di
     h+=tr('EGRESOS',ds.map((f,k)=>cel(sum(d.egresos,k),colK(d.egresos,k,f),true,true)).join(''),{id:'fe',b:true})+blk(d.egresos,true,'fe');
     h+=av('No pagado (no suma)',d.noPa,'fnp','fe');
     h+=tr('FLUJO NETO DEL DÍA',ds.map((f,k)=>cel(d.neto[k],stc(itK(d.ingresos,k).concat(itK(d.egresos,k)))||(f>H?Y:G),false,true)).join(''),{b:true});
-    h+=tr('SALDO FINAL',ds.map((f,k)=>cel(d.saldo_fin[k],d.saldo_fin[k]<P?R:(stc(itK(d.ingresos,k).concat(itK(d.egresos,k)))||(f>H?Y:G)),false,true)).join(''),{b:true});
+    /* Saldo real (solo lo ocurrido: cartola + efectivo marcado) y saldo esperado (real + lo pendiente) en filas separadas (Carlos 09-11) */
+    const rN=k=>itK(d.ingresos,k).filter(x=>x.r).reduce((t,x)=>t+(x.v[k]||0),0)-itK(d.egresos,k).filter(x=>x.r).reduce((t,x)=>t+(x.v[k]||0),0);let ra=d.saldo_ini[0];const rF=ds.map((f,k)=>ra+=rN(k));
+    h+=tr('SALDO REAL',ds.map((f,k)=>cel(rF[k],rF[k]<P?R:G,false,true)).join(''),{b:true,col:G});
+    h+=tr('SALDO ESPERADO',ds.map((f,k)=>cel(d.saldo_fin[k],d.saldo_fin[k]<P?R:Y,false,true)).join(''),{b:true,col:Y});
     if(d.efe&&d.efe.some(v=>Math.round(v)))h+=tr('<span style="font-weight:600">  de lo cual en efectivo (Claudio)</span>',ds.map((f,k)=>cel(d.efe[k],'',false)).join(''),{lv:1});
     ov.innerHTML=h+'</table></div><div class="m" style="font-size:12px;margin-top:6px">Piso de caja '+fmt$(P)+'. Toca INGRESOS, EGRESOS o cada grupo para ver el detalle.</div>'}
   catch(e){ov.innerHTML='No se pudo cargar el flujo diario. <button class="btn2" onclick="$(\'fd-ov\').style.display=\'none\'">Cerrar</button>'}}
