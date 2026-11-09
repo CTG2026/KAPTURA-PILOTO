@@ -170,6 +170,12 @@ body.pc .tv{display:none}body:not(.pc) .tp{display:none}
   <div class="sub">Hora en que se sacó la foto, conductor y patente. La patente se toma del primer servicio del día de ese conductor; si no hay, se asigna aquí. Al lado, las cargas Aramco de esa patente ese día.</div>
   <div id="fc-box">Cargando…</div>
 </section>
+<section class="screen" id="s-deu">
+  <button class="btn2" onclick="atras()"><span class="tv">← Volver</span><span class="tp">← Atrás</span></button>
+  <h2>🏦 Deudas</h2>
+  <div class="sub">Saldo, cuotas y detalle de cada deuda. Las cuotas están en Compromisos y en el flujo de caja; se marcan pagadas al conciliar la cartola Santander. Respaldo: Excel oficial.</div>
+  <div id="deu-box">Cargando…</div>
+</section>
 <section class="screen" id="s-home">
   <h1 id="saludo">Hola</h1>
   <div class="sub" id="sub-equipo"></div>
@@ -948,6 +954,25 @@ async function fluSemCargar(){const sc=await cartolaSaldo();if(!sc||!_flu)return
     conTope(supa.from('cxp_compromisos').select('id,acreedor').eq('empresa',EMPRESA),10000).then(D),conTope(supa.from('servicios_piloto').select('id,fecha,cliente,patente,tarifa_neta,notas').eq('empresa',EMPRESA).eq('modo','registro_tm').neq('estado','anulado').gte('fecha',d0).ilike('notas','%spot%'),8000).then(D),
     conTope(supa.from('presupuesto_dia').select('*').eq('empresa',EMPRESA).in('mes',_flu.meses),8000).then(D)]);
   const cp=(cp0||[]).filter(r=>r.estado!=='pagado');_fluSem={sc,mv,cx,cp,pv,cxAll,cpAll,sp,pd}}
+/* ═══ DEUDAS (Carlos 09-11): saldo = original − cuotas pagadas (Compromisos con deuda_id); detalle de tránsitos a pedido ═══ */
+async function verDeu(){ir('s-deu');navMarcar('s-deu');const box=$('deu-box');box.textContent='Cargando…';
+  try{const [dr,cr]=await Promise.all([conTope(supa.from('deudas').select('*').eq('empresa',EMPRESA).order('creado'),8000),conTope(supa.from('cxp_compromisos').select('*').eq('empresa',EMPRESA).not('deuda_id','is',null).order('fecha'),8000)]);
+    const D=dr.data||[],C=cr.data||[],hoy=hoyISO();if(!D.length){box.innerHTML='<div class="m">Sin deudas registradas.</div>';return}
+    const ln=(a,b,c)=>'<div style="display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid var(--border)"><span>'+a+'</span><b style="white-space:nowrap'+(c?';color:'+c:'')+'">'+b+'</b></div>';
+    const ac=(t,v,b,id)=>'<details'+(id?' ontoggle="if(this.open)deuDet(\''+id+'\')"':'')+'><summary style="display:flex;justify-content:space-between;gap:10px;cursor:pointer;list-style:none;padding:7px 0;border-bottom:1px solid var(--border)"><span>▸ '+t+'</span><b style="white-space:nowrap">'+v+'</b></summary><div style="padding-left:14px">'+b+'</div></details>';
+    box.innerHTML=D.map(d=>{const cs=C.filter(c=>c.deuda_id===d.id),pg=cs.filter(c=>c.estado==='pagado'),pe=cs.filter(c=>c.estado!=='pagado'),sP=pg.reduce((t,c)=>t+(+c.monto||0),0),sal=(+d.monto_original||0)-sP,at=pe.filter(c=>c.fecha<hoy),px=pe.find(c=>c.fecha>=hoy),pct=d.monto_original?Math.round(sP/d.monto_original*100):0;
+      return '<div class="kpi" style="max-width:720px;margin:10px 0"><div class="p">'+d.nombre+'</div><div class="l">'+(d.acreedor||'')+(d.rut?' · '+d.rut:'')+'</div><div style="font-size:12px;color:var(--muted);margin-top:6px">Saldo por pagar</div><div class="v">'+fmt$(sal)+'</div>'+
+        '<div style="height:8px;background:var(--border);border-radius:6px;margin:6px 0"><div style="height:8px;width:'+pct+'%;background:var(--green);border-radius:6px"></div></div><div style="font-size:12px;color:var(--muted)">Pagado '+pct+'% · '+pg.length+' de '+cs.length+' cuotas'+(px?' · próxima '+fCL(px.fecha)+' por '+fmt$(+px.monto):'')+'</div>'+
+        (at.length?'<div style="color:#DC2626;font-weight:700;margin-top:6px">⚠ '+at.length+' cuota(s) atrasada(s) por '+fmt$(at.reduce((t,c)=>t+(+c.monto||0),0))+'</div>':'')+
+        '<div style="margin-top:8px;border-top:1px solid var(--border)">'+ln('Deuda original',fmt$(d.monto_original))+ln('Pagado',fmt$(sP),'var(--green)')+ln('<b>Saldo</b>',fmt$(sal))+
+        ac('Cuotas ('+cs.length+')',fmt$(cs.reduce((t,c)=>t+(+c.monto||0),0)),cs.map(c=>ln(fCL(c.fecha)+' · '+c.concepto+(c.estado==='pagado'?' <span style="color:var(--green)">✓ pagada '+(c.fecha_pago?fCL(c.fecha_pago):'')+'</span>':c.fecha<hoy?' <span style="color:#DC2626">⚠ atrasada</span>':''),fmt$(+c.monto))).join(''))+
+        ac('Detalle de la deuda',fmt$(d.monto_original),'<div id="deud-'+d.id+'">Cargando…</div>',d.id)+(d.nota?'<div style="font-size:12px;color:var(--muted);margin-top:6px">'+d.nota+'</div>':'')+'</div></div>'}).join('')}
+  catch(e){box.innerHTML='<div class="m">No se pudo cargar.</div>'}}
+async function deuDet(id){const el=$('deud-'+id);if(!el||el.dataset.ok)return;el.dataset.ok=1;let R=[];
+  try{for(let i=0;i<20000;i+=1000){const r=await conTope(supa.from('deuda_detalle').select('patente,autopista,anio,fecha,valor').eq('deuda_id',id).order('id').range(i,i+999),15000);const a=(r&&r.data)||[];R=R.concat(a);if(a.length<1000)break}}catch(e){el.textContent='No se pudo cargar.';return}
+  const sm=a=>a.reduce((t,x)=>t+(+x.valor||0),0),gb=(a,k)=>{const o={};a.forEach(x=>{(o[x[k]]=o[x[k]]||[]).push(x)});return Object.entries(o)},ln=(a,b)=>'<div style="display:flex;justify-content:space-between;gap:10px;padding:4px 0;border-bottom:1px solid var(--border);font-size:12px"><span>'+a+'</span><b>'+b+'</b></div>',
+    ac=(t,v,b)=>'<details><summary style="display:flex;justify-content:space-between;gap:10px;cursor:pointer;list-style:none;padding:6px 0;border-bottom:1px solid var(--border)"><span>▸ '+t+'</span><b>'+v+'</b></summary><div style="padding-left:14px">'+b+'</div></details>';
+  el.innerHTML=gb(R,'patente').map(([p,a])=>ac(p+' ('+a.length+' tránsitos)',fmt$(Math.round(sm(a))),gb(a,'anio').map(([y,b])=>ac(y,fmt$(Math.round(sm(b))),gb(b,'autopista').sort((x,z)=>sm(z[1])-sm(x[1])).map(([au,c])=>ac(au+' ('+c.length+')',fmt$(Math.round(sm(c))),c.map(x=>ln(fCL(x.fecha),fmt$(Math.round(+x.valor)))))).join(''))).join(''))).join('')}
 /* ═══ FLUJO DIARIO en ventana aparte (Carlos 09-11): 7 días de la semana en curso; amarillo = esperado, normal = ocurrió (cartola), rojo = debió ocurrir y no ocurrió ═══ */
 async function fdAbrir(){let ov=$('fd-ov');if(!ov){ov=document.createElement('div');ov.id='fd-ov';ov.style.cssText='position:fixed;inset:0;z-index:9998;background:var(--bg);color:var(--text);overflow-y:auto;padding:14px 16px 40px;box-sizing:border-box';document.body.appendChild(ov)}
   ov.style.display='block';ov.innerHTML='Cargando…';
@@ -1637,7 +1662,7 @@ function aplicarVista(){if(!(user&&['administrador','administracion','coordinado
   const subAc=(t,L)=>'<details class="sac"><summary style="list-style:none;cursor:pointer;padding:8px 10px 8px 24px;font-size:14px">▸ '+t+'</summary>'+L.map(([k,x])=>'<button data-s="s-car-'+k+'" onclick="verCar(\''+k+'\')" style="padding-left:44px">'+x+'</button>').join('')+'</details>';
   const com=['btn-spot','btn-prof','btn-profA','btn-rsv'].map(bt).join('')+(esCarlos()?subAc('📥 Subir archivos',[['ppto','Presupuesto de ventas']]):'');
   const ope=['btn-reg','btn-ver','btn-misent','btn-ifco','btn-gps','btn-fcadm'].map(bt).join('');
-  const fin=(adm?'<button data-s="s-cxp-s" onclick="verCxp(\'semana\')" style="'+sb+'">💸 Compromisos: semana</button><button data-s="s-cxp-m" onclick="verCxp(\'mes\')" style="'+sb+'">💸 Compromisos: mes actual</button>':'')+['btn-flu','btn-caja','btn-cxc','btn-res','btn-cos','btn-efe','btn-pil'].map(bt).join('')+(esCarlos()?subAc('📥 Cartolas',[['santander','Santander'],['aramco','Aramco'],['sii','SII (ventas y compras)'],['cla','Clasificar movimientos']]):'');
+  const fin=(adm?'<button data-s="s-cxp-s" onclick="verCxp(\'semana\')" style="'+sb+'">💸 Compromisos: semana</button><button data-s="s-cxp-m" onclick="verCxp(\'mes\')" style="'+sb+'">💸 Compromisos: mes actual</button><button data-s="s-deu" onclick="verDeu()" style="'+sb+'">🏦 Deudas</button>':'')+['btn-flu','btn-caja','btn-cxc','btn-res','btn-cos','btn-efe','btn-pil'].map(bt).join('')+(esCarlos()?subAc('📥 Cartolas',[['santander','Santander'],['aramco','Aramco'],['sii','SII (ventas y compras)'],['cla','Clasificar movimientos']]):'');
   const org=(adm?'<button data-s="s-rem" onclick="verRep(\'remuneraciones\')" style="'+sb+'">💵 Remuneraciones</button>':'')+bt('btn-emp');
   $('pcnav').innerHTML='<div class="t">KAPTURA · TM</div><button data-s="s-home" onclick="ir(\'s-home\')">🏠 Inicio y tareas del día</button>'+cambiar+grp('💼 Comercial',com)+grp('🚚 Operacional',ope)+grp('💰 Financiero',fin)+grp('👥 Organizacional',org)+archNav();archNavCargar()}
 document.addEventListener('click',e=>{if(document.body.classList.contains('navabierto')&&e.target.closest&&e.target.closest('#pcnav button'))document.body.classList.remove('navabierto')});
