@@ -930,10 +930,10 @@ function pintarFlujo(){if(!_flu)return;const V=_fluMes&&_fluSem?fluSemData(_fluM
   h+=fila('SALDO INICIAL',d.saldo_ini,{b:true,bg:'rgba(128,128,128,.08)'});
   h+=fila('INGRESOS',sum(d.ingresos),{b:true,id:'ing'});
   d.ingresos.forEach((g,gi)=>{h+=fila(g.n,g.v,{lv:1,p:'ing',id:g.i&&g.i.length?'i'+gi:'',base:TI});(g.i||[]).forEach(x=>{if(x.v.slice(0,n).some(v=>v))h+=fila(x.d,x.v,{lv:2,p:'i'+gi,base:TI,h:x.h})})});
-  const avF=(t,o,id)=>{if(!o||!o.v.some(v=>v))return;h+=fila(t,o.v,{b:true,id,bg:'rgba(255,59,48,.12)'});o.i.forEach(x=>h+=fila(x.d,x.v,{lv:2,p:id,h:x.h}))};if(V)avF('⚠ No entró (no suma al saldo)',d.noEn,'ne');
+  /* No entró / No pagado van dentro de INGRESOS / EGRESOS, no en la primera vista (Carlos 09-11) */const avF=(t,o,id,par)=>{if(!o||!o.v.some(v=>v))return;h+=fila(t,o.v,{b:true,id,p:par,lv:1});o.i.forEach(x=>h+=fila(x.d,x.v,{lv:2,p:id,h:x.h}))};if(V)avF('⚠ No entró (no suma al saldo)',d.noEn,'ne','ing');
   h+=fila('EGRESOS',sum(d.egresos).map(v=>-v),{b:true,id:'egr'});
   d.egresos.forEach((g,gi)=>{h+=fila(g.n,g.v.map(v=>-v),{lv:1,p:'egr',id:g.i&&g.i.length?'e'+gi:'',base:TE});(g.i||[]).forEach(x=>{if(x.v.slice(0,n).some(v=>v))h+=fila(x.d,x.v.map(v=>-v),{lv:2,p:'e'+gi,base:TE})})});
-  if(V)avF('⚠ No pagado (no suma al saldo)',d.noPa,'np');
+  if(V)avF('⚠ No pagado (no suma al saldo)',d.noPa,'np','egr');
   h+=fila(V?'FLUJO NETO DE LA SEMANA':'FLUJO NETO DEL MES',d.neto,{b:true});
   h+=fila('SALDO FINAL',d.saldo_fin,{b:true,alerta:true,bg:'rgba(128,128,128,.08)'});
   const bajo=M.map((m,k)=>({m,v:d.saldo_fin[k]})).filter(x=>x.v<d.piso);
@@ -957,15 +957,15 @@ async function fdAbrir(){let ov=$('fd-ov');if(!ov){ov=document.createElement('di
     const cel=(v,col,neg,b)=>'<td style="text-align:right;white-space:nowrap;padding:8px 10px;border:0;border-bottom:1px solid var(--border);background:none;'+(col?'color:'+col+';':'')+(b?'font-weight:800;':'')+'">'+(Math.round(v)?(neg||v<0?'−':'')+fmt$(Math.abs(v)):'<span style="opacity:.35">–</span>')+'</td>';
     const tr=(lab,cells,o)=>{o=o||{};return '<tr'+(o.id?' data-id="'+o.id+'"':'')+(o.p?' data-p="'+o.p+'" style="display:none"':'')+'><td style="padding:8px 10px;border:0;border-bottom:1px solid var(--border);background:none;position:sticky;left:0;background:var(--bg);'+(o.lv?'padding-left:'+(8+o.lv*14)+'px;':'')+(o.b?'font-weight:800;':'')+(o.col?'color:'+o.col+';':'')+(o.id?'cursor:pointer;':'')+'"'+(o.id?' onclick="fdTog(\''+o.id+'\')"':'')+'>'+(o.id?'<span class="fdtg">▸</span> ':'')+lab+'</td>'+cells+'</tr>'};
     const blk=(gs,neg,pre)=>gs.map((g,gi)=>{const gid=pre+gi;return tr(esc2(g.n),ds.map((f,k)=>{const xs=g.i.filter(x=>Math.round(x.v[k]||0));return cel(g.v[k],xs.length&&!xs.every(x=>x.r)?Y:'',neg)}).join(''),{id:gid,p:pre,lv:1})+g.i.map(x=>tr(esc2(x.d)+(x.h||''),ds.map((f,k)=>cel(x.v[k],x.r?'':Y,neg)).join(''),{p:gid,lv:2,col:x.r?'':Y})).join('')}).join('');
-    const sum=(gs,k)=>gs.reduce((t,g)=>t+(g.v[k]||0),0),av=(lab,o,id)=>o&&o.v.some(v=>Math.round(v))?tr('⚠ '+lab,ds.map((f,k)=>cel(o.v[k],R)).join(''),{id,col:R,b:true})+o.i.map(x=>tr(esc2(x.d),ds.map((f,k)=>cel(x.v[k],R)).join(''),{p:id,lv:1,col:R})).join(''):'';
+    const sum=(gs,k)=>gs.reduce((t,g)=>t+(g.v[k]||0),0),av=(lab,o,id,par)=>o&&o.v.some(v=>Math.round(v))?tr('⚠ '+lab,ds.map((f,k)=>cel(o.v[k],R)).join(''),{id,p:par,lv:1,col:R,b:true})+o.i.map(x=>tr(esc2(x.d),ds.map((f,k)=>cel(x.v[k],R)).join(''),{p:id,lv:2,col:R})).join(''):'';
     let h='<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px"><b style="font-size:18px">Flujo diario · semana '+fCL(ds[0]).slice(0,5)+' al '+fCL(ds[6]).slice(0,5)+'</b><button class="btn2" style="width:auto;margin:0" onclick="$(\'fd-ov\').style.display=\'none\'">✕ Cerrar</button></div>'+
       '<div style="font-size:12px;color:var(--muted);margin-bottom:8px"><span style="color:'+Y+'">■ Esperado</span> · ■ Ocurrió (cartola al '+fCL(_fluSem.sc.hasta)+') · <span style="color:'+R+'">■ No ocurrió (pasa a hoy)</span></div>'+
       '<div style="overflow-x:auto"><table style="border-collapse:collapse;width:100%;min-width:'+(240+7*115)+'px;font-size:14px"><tr><th style="text-align:left;padding:8px 10px;border-bottom:2px solid var(--text);position:sticky;left:0;background:var(--bg)"></th>'+ds.map((f,k)=>'<th style="text-align:right;padding:8px 10px;border-bottom:2px solid '+(f===hoy?'#F5B800':'var(--text)')+';font-weight:800;white-space:nowrap">'+DN[k]+' '+fCL(f).slice(0,5)+(f===hoy?'<div style="font-size:11px;color:#C99A00">HOY</div>':'<div style="font-size:11px;color:var(--muted)">'+(f<hoy?'real':'esperado')+'</div>')+'</th>').join('')+'</tr>';
     h+=tr('SALDO INICIAL',ds.map((f,k)=>cel(d.saldo_ini[k],'',false,true)).join(''),{b:true});
     h+=tr('INGRESOS',ds.map((f,k)=>cel(sum(d.ingresos,k),f>=hoy?Y:'',false,true)).join(''),{id:'fi',b:true})+blk(d.ingresos,false,'fi');
-    h+=av('No entró (no suma)',d.noEn,'fne');
+    h+=av('No entró (no suma)',d.noEn,'fne','fi');
     h+=tr('EGRESOS',ds.map((f,k)=>cel(sum(d.egresos,k),f>=hoy?Y:'',true,true)).join(''),{id:'fe',b:true})+blk(d.egresos,true,'fe');
-    h+=av('No pagado (no suma)',d.noPa,'fnp');
+    h+=av('No pagado (no suma)',d.noPa,'fnp','fe');
     h+=tr('FLUJO NETO DEL DÍA',ds.map((f,k)=>cel(d.neto[k],'',false,true)).join(''),{b:true});
     h+=tr('SALDO FINAL',ds.map((f,k)=>cel(d.saldo_fin[k],d.saldo_fin[k]<P?R:'',false,true)).join(''),{b:true});
     ov.innerHTML=h+'</table></div><div class="m" style="font-size:12px;margin-top:6px">Piso de caja '+fmt$(P)+'. Toca INGRESOS, EGRESOS o cada grupo para ver el detalle.</div>'}
