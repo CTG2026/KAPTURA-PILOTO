@@ -943,10 +943,10 @@ function pintarFlujo(){if(!_flu)return;const V=_fluMes&&_fluSem?fluSemData(_fluM
    Real = movimientos de la cartola Santander hasta su última fecha. Proyectado = facturas por cobrar según vencimiento y compromisos pendientes según fecha; lo atrasado cae en la primera semana proyectada. El saldo parte del último saldo de la cartola. Los totales mensuales siguen siendo los del Excel. */
 let _fluSem=null,_fluMes=null,_fluVig=false;
 async function fluSemCargar(){const sc=await cartolaSaldo();if(!sc||!_flu)return;const d0=lunesDe(new Date(_flu.meses[0]+'-01T12:00:00')),
-    mv=((await conTope(supa.from('cartola_movimientos').select('fecha,monto,descripcion,categoria').eq('empresa',EMPRESA).gte('fecha',d0).order('fecha'),10000)).data||[]),
+    mv=((await conTope(supa.from('cartola_movimientos').select('fecha,monto,descripcion,categoria,rut,conciliado').eq('empresa',EMPRESA).gte('fecha',d0).order('fecha'),10000)).data||[]),
     cx=await leerCxc(),cp=(await leerCxp()).filter(r=>r.estado!=='pagado'),
     pv=((await conTope(supa.from('presupuesto_ventas').select('cliente,desde,total').eq('empresa',EMPRESA).eq('activo',true).in('mes',_flu.meses),10000)).data||[]),
-    cxAll=((await conTope(supa.from('cxc_facturas').select('cliente,periodo_desde,periodo_hasta').eq('empresa',EMPRESA),10000)).data||[]);_fluSem={sc,mv,cx,cp,pv,cxAll}}
+    cxAll=((await conTope(supa.from('cxc_facturas').select('id,cliente,folio,periodo_desde,periodo_hasta').eq('empresa',EMPRESA),10000)).data||[]),cpAll=((await conTope(supa.from('cxp_compromisos').select('id,acreedor').eq('empresa',EMPRESA),10000)).data||[]);_fluSem={sc,mv,cx,cp,pv,cxAll,cpAll}}
 /* ═══ FLUJO DIARIO en ventana aparte (Carlos 09-11): 7 días de la semana en curso; amarillo = esperado, normal = ocurrió (cartola), rojo = debió ocurrir y no ocurrió ═══ */
 async function fdAbrir(){let ov=$('fd-ov');if(!ov){ov=document.createElement('div');ov.id='fd-ov';ov.style.cssText='position:fixed;inset:0;z-index:9998;background:var(--bg);color:var(--text);overflow-y:auto;padding:14px 16px 40px;box-sizing:border-box';document.body.appendChild(ov)}
   ov.style.display='block';ov.innerHTML='Cargando…';
@@ -981,7 +981,8 @@ function fluSemData(ym,dias){const S=_fluSem,H=S.sc.hasta,dd=x=>new Date(x+'T12:
   let lu=lunesDe(dd(_flu.meses[0]+'-01'));if(lu<_flu.meses[0]+'-01')lu=add(lu,7);const W=[];const fU=finMes(ym);while(lu<=fU){W.push({ini:lu,fin:add(lu,6)});lu=add(lu,7)}W.push({ini:lu,fin:add(lu,6)});if(dias){W.length=0;dias.forEach(d=>W.push({ini:d,fin:d}))}
   /* Lo vencido y no recibido/pagado (Carlos 08-11): no suma donde debió ocurrir (aviso rojo) y pasa como proyectado a la semana siguiente a hoy */
   const hoy=hoyISO(),wP=W.find(w=>w.ini<=hoy&&hoy<=w.fin)||W.find(w=>w.ini>hoy),av=[];
-  const it=[];S.mv.forEach(m=>{const v=+m.monto||0;it.push({f:m.fecha>H?H:m.fecha,v,r:true,g:v>0?'Cobros y otros ingresos (cartola)':(m.categoria||'Sin clasificar'),t:dm(m.fecha)+' · '+(m.descripcion||'')})});
+  /* quién es: si el movimiento quedó conciliado con una factura o un compromiso, se muestra el cliente o acreedor entre paréntesis (Carlos 09-11) */const quien=m=>{const c=String(m.conciliado||''),id=c.slice(4);if(c.startsWith('cxc:')){const x=(S.cxAll||[]).find(y=>y.id===id);return x?{n:x.cliente,t:x.cliente+(x.folio?' · fact. '+x.folio:'')}:null}if(c.startsWith('cxp:')){const x=(S.cpAll||[]).find(y=>String(y.id)===id);return x?{n:x.acreedor,t:x.acreedor}:null}return null};
+  const it=[];S.mv.forEach(m=>{const v=+m.monto||0,q=quien(m);it.push({f:m.fecha>H?H:m.fecha,v,r:true,g:v>0?(q?q.n:'Cobros y otros ingresos (cartola)'):(m.categoria||'Sin clasificar'),t:dm(m.fecha)+' · '+(m.descripcion||'')+(q?' ('+q.t+')':'')})});
   let sinF=0;const pr=(f,v,g,t,h)=>{if(f>hoy){it.push({f,v,g,h,t:t+' · '+fCL(f)});return}av.push({f,v,h,t:g+' · '+t+' · debió el '+fCL(f)});it.push({f:null,v,g,h,t:t+' · ⚠ atrasado (debió el '+fCL(f)+')'})};
   S.cx.forEach(r=>{let v=cxcVence(r),t=r.folio?'Fact. '+r.folio:'Factura';const m=cxcCaja(r);if(!m)return;
     /* sin factura aún: cobro esperado = cierre del período + plazo del cliente (Carlos 08-11) */if(!v&&r.periodo_hasta){v=cxcVence({cliente:r.cliente,fecha_emision:add(r.periodo_hasta,1)});t=dm(r.periodo_desde||r.periodo_hasta)+' al '+dm(r.periodo_hasta)+' ('+(cxcEtapa(r)==='por_facturar'?'por facturar':'por aprobar')+')'}
