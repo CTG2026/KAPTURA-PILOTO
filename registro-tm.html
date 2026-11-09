@@ -125,6 +125,7 @@ body.pc.navoculto .hdr{left:0}
 body.pc.navoculto .toast{left:50%}
 body.pc .tv{display:none}body:not(.pc) .tp{display:none}
 .carpick{display:block;width:100%;margin:10px 0;padding:26px 14px;border:2px dashed #2563eb;border-radius:14px;background:rgba(37,99,235,.06);color:var(--text);font:800 17px 'DM Sans',sans-serif;cursor:pointer}.carpick small{font-weight:400;font-size:13px;color:var(--muted)}
+/* Líneas conectoras (puntos) entre el concepto y el monto en todos los desplegables y tarjetas (Carlos 09-11) */details [style*="justify-content:space-between"]::after,.kpi [style*="justify-content:space-between"]::after{content:"";flex:1 1 6px;min-width:6px;order:1;align-self:flex-end;border-bottom:1px dotted var(--muted);opacity:.6;margin:0 2px 5px}details [style*="justify-content:space-between"]>*:not(:first-child),.kpi [style*="justify-content:space-between"]>*:not(:first-child){order:2}
 /* Columna Presupuesto junto a Real: solo con el teléfono horizontal (o pantalla ancha) (Carlos 08-11) */.pcol,.pcolh{display:none}@media (orientation:landscape){.pcol{display:inline-block;min-width:105px;text-align:right;margin-left:auto;color:var(--muted);font-weight:600}.pcolh{display:flex;justify-content:flex-end;gap:8px;font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase}}
 #pc-dash .kpis{display:grid!important;grid-template-columns:1fr!important;gap:12px}@media (min-width:700px),(orientation:landscape){#pc-dash .kpis{grid-template-columns:1fr 1fr!important}}
 </style>
