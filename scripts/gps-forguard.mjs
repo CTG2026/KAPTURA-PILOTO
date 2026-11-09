@@ -13,8 +13,11 @@ async function rpc(method, params) {
     headers: { 'Content-Type': 'application/json', 'X-AccessToken': TOKEN },
     body: JSON.stringify({ jsonrpc: '2.0', method, params, id: 'k' })
   });
-  const j = await r.json().catch(() => ({}));
-  if (j.error) throw new Error('Forguard ' + method + ': ' + (j.error.message || 'error') + ' ' + JSON.stringify(j.error.data || '').slice(0, 200));
+  const txt = await r.text().catch(() => '');
+  let j = {};
+  try { j = JSON.parse(txt); } catch { j = {}; }
+  if (j.error) throw new Error('Forguard ' + method + ' (HTTP ' + r.status + '): ' + (j.error.message || 'error') + ' ' + JSON.stringify(j.error.data || '').slice(0, 200));
+  if (!r.ok || j.result === undefined) throw new Error('Forguard ' + method + ' respondió sin datos (HTTP ' + r.status + '): ' + txt.slice(0, 300));
   return j.result;
 }
 
