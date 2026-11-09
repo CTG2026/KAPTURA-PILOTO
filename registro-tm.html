@@ -898,14 +898,16 @@ function pintarFlujo(){if(!_flu)return;const V=_fluMes&&_fluSem?fluSemData(_fluM
   h+=fila(V?'FLUJO NETO DE LA SEMANA':'FLUJO NETO DEL MES',d.neto,{b:true});
   h+=fila('SALDO FINAL',d.saldo_fin,{b:true,alerta:true,bg:'rgba(128,128,128,.08)'});
   const bajo=M.map((m,k)=>({m,v:d.saldo_fin[k]})).filter(x=>x.v<d.piso);
-  h+='</table></div>'+(V?'<div class="m" style="font-size:12px;margin-top:6px">Piso de caja: $'+d.piso.toLocaleString('es-CL')+'. Real: cartola Santander hasta el '+fCL(_fluSem.sc.hasta)+'. Proyectado: facturas por cobrar según vencimiento y compromisos de pago pendientes (solo fijos: sin combustible, viáticos ni anticipos). Lo que no entró o no se pagó a tiempo se avisa en rojo y pasa a la semana siguiente.'+(V.sinF?' Por cobrar sin fecha (no suma): '+fmt$(V.sinF)+'.':'')+'</div>':'<div class="m" style="font-size:12px;margin-top:6px">Piso de caja: $'+d.piso.toLocaleString('es-CL')+' (1 mes de compromisos fijos). '+(bajo.length?'<b style="color:#ff3b30">⚠ Bajo el piso en: '+bajo.map(x=>mn(x.m)).join(', ')+'.</b>':'Ningún mes de esta vista baja del piso.')+'<br><i>'+esc(d.nota||'')+'</i></div>');
+  h+='</table></div>'+(V?'<div class="m" style="font-size:12px;margin-top:6px">Piso de caja: $'+d.piso.toLocaleString('es-CL')+'. Real: cartola Santander hasta el '+fCL(_fluSem.sc.hasta)+'. Proyectado: facturas por cobrar según vencimiento, presupuesto de ventas convertido a cobro (cierre del período + plazo del cliente, con IVA) y compromisos de pago pendientes (solo fijos: sin combustible, viáticos ni anticipos). Lo que no entró o no se pagó a tiempo se avisa en rojo y pasa a la semana siguiente.'+(V.sinF?' Por cobrar sin fecha (no suma): '+fmt$(V.sinF)+'.':'')+'</div>':'<div class="m" style="font-size:12px;margin-top:6px">Piso de caja: $'+d.piso.toLocaleString('es-CL')+' (1 mes de compromisos fijos). '+(bajo.length?'<b style="color:#ff3b30">⚠ Bajo el piso en: '+bajo.map(x=>mn(x.m)).join(', ')+'.</b>':'Ningún mes de esta vista baja del piso.')+'<br><i>'+esc(d.nota||'')+'</i></div>');
   $('flu-box').innerHTML=h}
 /* Flujo por semana (Carlos 08-11): semana en curso arriba; al pinchar un mes se despliegan sus semanas (lunes a domingo; la semana pertenece al mes de su lunes).
    Real = movimientos de la cartola Santander hasta su última fecha. Proyectado = facturas por cobrar según vencimiento y compromisos pendientes según fecha; lo atrasado cae en la primera semana proyectada. El saldo parte del último saldo de la cartola. Los totales mensuales siguen siendo los del Excel. */
 let _fluSem=null,_fluMes=null,_fluVig=false;
 async function fluSemCargar(){const sc=await cartolaSaldo();if(!sc||!_flu)return;const d0=lunesDe(new Date(_flu.meses[0]+'-01T12:00:00')),
     mv=((await conTope(supa.from('cartola_movimientos').select('fecha,monto,descripcion,categoria').eq('empresa',EMPRESA).gte('fecha',d0).order('fecha'),10000)).data||[]),
-    cx=await leerCxc(),cp=(await leerCxp()).filter(r=>r.estado!=='pagado');_fluSem={sc,mv,cx,cp}}
+    cx=await leerCxc(),cp=(await leerCxp()).filter(r=>r.estado!=='pagado'),
+    pv=((await conTope(supa.from('presupuesto_ventas').select('cliente,desde,total').eq('empresa',EMPRESA).eq('activo',true).in('mes',_flu.meses),10000)).data||[]),
+    cxAll=((await conTope(supa.from('cxc_facturas').select('cliente,periodo_desde,periodo_hasta').eq('empresa',EMPRESA),10000)).data||[]);_fluSem={sc,mv,cx,cp,pv,cxAll}}
 async function fluSemMes(ym){if(!_fluVig||!_flu||!_flu.meses.includes(ym))return;_fluMes=ym;if(!_fluSem){$('flu-box').innerHTML='Cargando semanas…';try{await fluSemCargar()}catch(e){}}if(!_fluSem){_fluMes=null;toast('Falta cargar la cartola Santander')}pintarFlujo()}
 /* Semanas de un mes en el MISMO formato del flujo mensual (Carlos 08-11): columnas = semanas (lunes a domingo, la semana es del mes de su lunes); filas = saldo inicial, ingresos y egresos en acordeón, flujo neto y saldo final.
    Real = cartola Santander hasta su última fecha; proyectado = facturas por cobrar (vencimiento) y compromisos pendientes (fecha); lo atrasado cae en la primera semana proyectada. */
@@ -915,7 +917,13 @@ function fluSemData(ym){const S=_fluSem,H=S.sc.hasta,dd=x=>new Date(x+'T12:00:00
   const hoy=hoyISO(),wP=W.find(w=>w.ini>hoy),av=[];
   const it=[];S.mv.forEach(m=>{const v=+m.monto||0;it.push({f:m.fecha>H?H:m.fecha,v,g:v>0?'Cobros y otros ingresos (cartola)':(m.categoria||'Sin clasificar'),t:dm(m.fecha)+' · '+(m.descripcion||'')})});
   let sinF=0;const pr=(f,v,g,t)=>{if(f>hoy){it.push({f,v,g,t:t+' · '+fCL(f)});return}av.push({f,v,t:g+' · '+t+' · debió el '+fCL(f)});it.push({f:null,v,g,t:t+' · ⚠ atrasado (debió el '+fCL(f)+')'})};
-  S.cx.forEach(r=>{const v=cxcVence(r),m=cxcCaja(r);if(!m)return;if(!v){sinF+=m;return}pr(v,m,r.cliente||'Sin cliente',r.folio?'Fact. '+r.folio:'Factura')});
+  S.cx.forEach(r=>{let v=cxcVence(r),t=r.folio?'Fact. '+r.folio:'Factura';const m=cxcCaja(r);if(!m)return;
+    /* sin factura aún: cobro esperado = cierre del período + plazo del cliente (Carlos 08-11) */if(!v&&r.periodo_hasta){v=cxcVence({cliente:r.cliente,fecha_emision:add(r.periodo_hasta,1)});t=dm(r.periodo_desde||r.periodo_hasta)+' al '+dm(r.periodo_hasta)+' ('+(cxcEtapa(r)==='por_facturar'?'por facturar':'por aprobar')+')'}
+    if(!v){sinF+=m;return}pr(v,m,r.cliente||'Sin cliente',t)});
+  /* Presupuesto de ventas → cobro esperado (Carlos 08-11): período de facturación (quincenal o mensual) → factura al día siguiente del cierre → cobro según plazo del cliente, con IVA. Si ya hay factura o liquidación de ese período, manda la real. */
+  const cub=(c,a,b)=>(S.cxAll||[]).some(x=>x.cliente===c&&x.periodo_desde&&x.periodo_desde<=b&&(x.periodo_hasta||x.periodo_desde)>=a),PB={};
+  (S.pv||[]).forEach(x=>{const c=x.cliente,f=String(x.desde||'').slice(0,10);if(!f||!+x.total)return;const q=(FAC_CLI.find(y=>y.c===c)||{}).q,ym=f.slice(0,7),d1=+f.slice(8)<=15,a=q&&!d1?ym+'-16':ym+'-01',b=q&&d1?ym+'-15':finMes(ym),k=c+'|'+a;(PB[k]=PB[k]||{c,a,b,t:0}).t+=+x.total});
+  Object.values(PB).forEach(o=>{if(cub(o.c,o.a,o.b))return;const v=cxcVence({cliente:o.c,fecha_emision:add(o.b,1)});if(v)pr(v,Math.round(o.t*1.19),o.c,'Presupuesto '+dm(o.a)+' al '+dm(o.b))});
   S.cp.forEach(r=>pr(r.fecha,-(+r.monto||0),r.categoria||'Otros compromisos',(r.acreedor||'')+' · '+(r.concepto||'')));
   const Wm=W.filter(w=>w.ini.slice(0,7)===ym),inW=(x,w)=>x.f?(x.f>=w.ini&&x.f<=w.fin):w===wP;
   let sal=S.sc.fin-S.mv.filter(m=>m.fecha>=W[0].ini).reduce((t,m)=>t+(+m.monto||0),0);
