@@ -2054,7 +2054,9 @@ const GEOCERCAS=[{nombre:'Planta EBLOOMS',cliente:'EBLOOMS',tipo:'planta',lat:-3
   {nombre:'J502 Jumbo Kennedy',ok:true,cliente:'EBLOOMS',tipo:'local',lat:-33.39250,lon:-70.54560,radio:200},
   {nombre:'J514 Jumbo La Dehesa',ok:true,cliente:'EBLOOMS',tipo:'local',lat:-33.35690,lon:-70.51530,radio:200},
   {nombre:'J810 Jumbo Lo Castillo',ok:true,cliente:'EBLOOMS',tipo:'local',lat:-33.39958,lon:-70.59293,radio:150},
-  {nombre:'J843 Jumbo San Bernardo',ok:true,cliente:'EBLOOMS',tipo:'local',lat:-33.63430,lon:-70.70900,radio:200}];
+  {nombre:'J843 Jumbo San Bernardo',ok:true,cliente:'EBLOOMS',tipo:'local',lat:-33.63430,lon:-70.70900,radio:200},
+  {nombre:'J624 Jumbo El Alba',ok:true,cliente:'EBLOOMS',tipo:'local',lat:-33.40233,lon:-70.51477,radio:150}, // Av. Camino El Alba 11969 (Entrada de Mercancía 04, 06 y 09-11)
+  {nombre:'J411 Dark Store Costanera Center',ok:true,cliente:'EBLOOMS',tipo:'local',lat:-33.41817,lon:-70.60780,radio:150}]; // Av. Andrés Bello 2447 nivel -5 (Entrada de Mercancía 06-11, factura 09-11)
 const enGeo=(lat,lon)=>lat==null?null:GEOCERCAS.find(g=>Math.hypot((lat-g.lat)*111320,(lon-g.lon)*111320*Math.cos(g.lat*Math.PI/180))<=g.radio)||null;
 async function lugarG(lat,lon){const g=enGeo(lat,lon);return g?g.nombre:await lugar(lat,lon)}
 // ═══ ENTREGAS (botón del conductor: foto + ubicación del celular) ═══
