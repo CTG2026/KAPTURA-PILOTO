@@ -413,6 +413,11 @@ body.pc .tv{display:none}body:not(.pc) .tp{display:none}
   <div id="carp-box">Cargando…</div>
   <button class="btn2" onclick="atras()"><span class="tv">← Volver</span><span class="tp">← Atrás</span></button>
 </section>
+<section class="screen" id="s-carpub">
+  <h1>Transportes Madrid Gaete SpA</h1>
+  <div class="sub" id="carpub-sub">Cargando…</div>
+  <div id="carpub-box"></div>
+</section>
 <section class="screen" id="s-ctc">
   <h1 id="ctc-h">Contactos</h1>
   <div class="sub">Toque el teléfono para llamar o WhatsApp para escribir</div>
@@ -1516,7 +1521,9 @@ async function verCarp(){if(!esCarlos())return;ir('s-carp');$('carp-box').innerH
   if(e.error||p.error){$('carp-box').innerHTML='No se pudo cargar.';return}_carp={eq:e.data||[],pol:p.data||[]};
   const tm=_carp.eq.filter(x=>x.grupo==='TM'),te=_carp.eq.filter(x=>x.grupo==='Terceros'),pend=t=>'<details class="card" style="padding:10px 12px;margin-bottom:8px"><summary style="font-weight:700;cursor:pointer">'+t+' <small style="color:#888;font-weight:400">· pendiente</small></summary><div style="color:#888;padding:6px 0">Por cargar.</div></details>',
     sec=(t,n,h,o)=>'<details class="card" style="padding:10px 12px;margin-bottom:8px"'+(o?' open':'')+'><summary style="font-weight:700;cursor:pointer">'+t+(n!=null?' <small style="color:#888;font-weight:400">('+n+')</small>':'')+'</summary><div style="overflow-x:auto;margin-top:8px">'+h+'</div></details>';
-  $('carp-box').innerHTML='<div style="margin-bottom:10px"><button class="btn2" onclick="carpCopiar()">📋 Copiar para correo</button></div>'+
+  const lr=await conTope(supa.from('carpeta_links').select('*').eq('empresa',EMPRESA).order('creado',{ascending:false}),8000),LK=lr.data||[];
+  $('carp-box').innerHTML='<div style="margin-bottom:10px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn2" style="flex:1" onclick="carpCopiar()">📋 Copiar para correo</button><button class="btn2 wa" style="flex:1" onclick="carpLink()">📲 Enviar por WhatsApp</button></div>'+
+    (LK.length?sec('Links enviados',LK.length,'<table style="border-collapse:collapse;width:100%;font-size:13px">'+LK.map(l=>'<tr><td style="border-bottom:1px solid var(--border);padding:6px 8px">'+(l.para||'—')+'<div style="font-size:11px;color:#888">'+new Date(l.creado).toLocaleDateString('es-CL')+(l.incluye_terceros?' · con terceros':' · solo TM')+'</div></td><td style="border-bottom:1px solid var(--border);padding:6px 8px;text-align:right;white-space:nowrap">'+(l.activo?'<a href="#" onclick="carpLinkCopiar(\''+l.token+'\');return false">Copiar link</a> · <a href="#" style="color:#DC2626" onclick="carpLinkOff(\''+l.token+'\');return false">Desactivar</a>':'<span style="color:#888">Desactivado</span>')+'</td></tr>').join('')+'</table>'):'')+
     pend('Presentación de la empresa')+pend('Anexo: Constitución de sociedad')+pend('Anexo: Carpeta tributaria')+pend('Anexo: Balance')+
     sec('Anexo: Equipos TM',tm.length,carpTblEq(tm),true)+sec('Anexo: Equipos de terceros',te.length,carpTblEq(te))+pend('Anexo: Conductores')+
     sec('Anexo: Seguros (pólizas por tipo de equipo y exigencia de clientes)',null,carpTblPol(_carp.pol))+pend('Bases comerciales y anexos de servicio')+
@@ -1524,6 +1531,19 @@ async function verCarp(){if(!esCarlos())return;ir('s-carp');$('carp-box').innerH
 async function carpCopiar(){if(!_carp)return;const tm=_carp.eq.filter(x=>x.grupo==='TM'),te=_carp.eq.filter(x=>x.grupo==='Terceros');
   const h='<div style="font-family:Arial,sans-serif"><p><b>Transportes Madrid Gaete SpA</b> · Estado de documentos al '+fCL(hoyISO())+'</p><p><b>Anexo: Equipos TM</b></p>'+carpTblEq(tm,1)+'<p><b>Anexo: Equipos de terceros</b></p>'+carpTblEq(te,1)+'<p><b>Anexo: Seguros</b></p>'+carpTblPol(_carp.pol,1)+'</div>';
   try{await navigator.clipboard.write([new ClipboardItem({'text/html':new Blob([h],{type:'text/html'}),'text/plain':new Blob([h.replace(/<[^>]+>/g,' ')],{type:'text/plain'})})]);toast('Copiado: péguelo en el correo')}catch(_){toast('No se pudo copiar')}}
+// Link público de la carpeta (Carlos 09-11): sin PIN, solo lectura, sin cuotas ni observaciones internas, desactivable
+const carpUrl=t=>location.origin+location.pathname+'?carpeta='+t;
+async function carpLink(){const v=await formulario('Link de la carpeta para el cliente',[{k:'n',l:'Para (cliente o persona)'},{k:'t',l:'Incluir equipos de terceros',t:'select',ops:['No','Sí'],v:'No'}]);if(!v)return;
+  const token=Math.random().toString(36).slice(2,10)+Math.random().toString(36).slice(2,10);const {error}=await supa.from('carpeta_links').insert({token,empresa:EMPRESA,para:(v.n||'').trim()||null,incluye_terceros:v.t==='Sí',creado_por:user.nombre});if(error){toast('No se pudo crear el link');return}
+  window.open('https://wa.me/?text='+encodeURIComponent('Transportes Madrid Gaete SpA · Documentos de nuestros equipos (permiso de circulación, revisión técnica, SOAP y seguros). Toque cada fecha para abrir el documento:\n'+carpUrl(token)),'_blank');verCarp()}
+async function carpLinkCopiar(t){try{await navigator.clipboard.writeText(carpUrl(t));toast('Link copiado')}catch(_){toast(carpUrl(t))}}
+async function carpLinkOff(t){const v=await formulario('¿Desactivar este link?',[{k:'m',l:'Quien lo tenga ya no podrá abrir la carpeta',t:'select',ops:['No','Sí, desactivar'],v:'No'}]);if(!v||v.m!=='Sí, desactivar')return;const {error}=await supa.from('carpeta_links').update({activo:false}).eq('token',t);toast(error?'No se pudo desactivar':'Link desactivado');verCarp()}
+async function abrirCarpPub(token){ir('s-carpub');try{const l=await conTope(supa.from('carpeta_links').select('*').eq('token',token).eq('activo',true).maybeSingle(),10000);if(!l.data){$('carpub-sub').textContent='Este link ya no está disponible.';return}
+  const emp=l.data.empresa,[e,p]=await Promise.all([conTope(supa.from('carpeta_equipos').select('*').eq('empresa',emp).order('grupo',{ascending:false}).order('orden'),10000),conTope(supa.from('seguros_polizas').select('*').eq('empresa',emp).order('orden'),10000)]);
+  const eq=e.data||[],tm=eq.filter(x=>x.grupo==='TM'),te=eq.filter(x=>x.grupo==='Terceros'),bl=(t,h)=>'<div class="card" style="padding:10px 12px;margin-bottom:10px"><div style="font-weight:700;margin-bottom:6px">'+t+'</div><div style="overflow-x:auto">'+h+'</div></div>';
+  $('carpub-sub').textContent='Estado de documentos de equipos al '+fCL(hoyISO())+(l.data.para?' · Para: '+l.data.para:'')+' · Toque una fecha para abrir el documento';
+  $('carpub-box').innerHTML=bl('Equipos Transportes Madrid',carpTblEq(tm,1))+(l.data.incluye_terceros?bl('Equipos de terceros (subcontratados)',carpTblEq(te,1)):'')+bl('Seguros por tipo de equipo',carpTblPol(p.data||[],1))+
+    '<div style="font-size:11px;color:#888">✓ vigente · ⚠ vence en 30 días o menos · ✗ vencido</div>'}catch(_){$('carpub-sub').textContent='No se pudo cargar. Revise la señal e intente de nuevo.'}}
 // Contactos de clientes (Carlos 09-11): vista teléfono, Claudio y Administración; agrupado por predio/planta en acordeón
 async function verCtc(cli){if(!esAdmin())return;ir('s-ctc');$('ctc-h').textContent='Contactos '+cli;$('ctc-box').innerHTML='Cargando…';
   const r=await conTope(supa.from('contactos_clientes').select('*').eq('empresa',EMPRESA).eq('cliente',cli).order('lugar').order('area').order('nombre'),8000);if(r.error){$('ctc-box').innerHTML='No se pudo cargar.';return}
@@ -2390,8 +2410,8 @@ async function spotEnviar(btn){if(!_spot||!_spotFoto)return;btn.disabled=true;bt
     if(error)throw error;await supa.from('spot_links').update({usado:ahora,servicio_id:sid}).eq('token',_spot.token);
     $('spot-form').style.display='none';$('spot-info').innerHTML='<b>✅ Servicio registrado. Gracias.</b><br>Ya puede cerrar esta página.'}
   catch(e){btn.disabled=false;btn.textContent='✅ ENVIAR REGISTRO';toast('No se pudo enviar. Revise la señal e intente de nuevo.')}}
-const _spotTok=new URLSearchParams(location.search).get('spot');
-const guardado=_spotTok?null:ls('tm_pin'); if(_spotTok)abrirSpot(_spotTok);else if(guardado&&USUARIOS[guardado]&&Date.now()-Number(ls('tm_ult')||0)<=INACT_MS)entrar(guardado); else if(guardado)ls('tm_pin',null);
+const _spotTok=new URLSearchParams(location.search).get('spot'),_carpTok=new URLSearchParams(location.search).get('carpeta');
+const guardado=(_spotTok||_carpTok)?null:ls('tm_pin'); if(_carpTok)abrirCarpPub(_carpTok);else if(_spotTok)abrirSpot(_spotTok);else if(guardado&&USUARIOS[guardado]&&Date.now()-Number(ls('tm_ult')||0)<=INACT_MS)entrar(guardado); else if(guardado)ls('tm_pin',null);
 </script>
 </body>
 </html>
