@@ -207,6 +207,7 @@ body.pc .tv{display:none}body:not(.pc) .tp{display:none}
   <button class="btn2" id="btn-flu" style="display:none" onclick="verFlujo()">💧 Flujo de caja</button>
   <button class="btn2" id="btn-efe" style="display:none" onclick="verEfe()">💵 Ingresos en efectivo</button>
   <button class="btn2" id="btn-emp" style="display:none" onclick="verEmpresa()">🏢 Empresa</button>
+  <button class="btn2" id="btn-ctc" style="display:none" onclick="verCtc('DDC')">📞 Contactos DDC</button>
 </section>
 
 <!-- 3. REGISTRO -->
@@ -406,6 +407,12 @@ body.pc .tv{display:none}body:not(.pc) .tp{display:none}
   <div id="emp-box"></div>
   <button class="btn2" onclick="atras()"><span class="tv">← Volver</span><span class="tp">← Atrás</span></button>
 </section>
+<section class="screen" id="s-ctc">
+  <h1 id="ctc-h">Contactos</h1>
+  <div class="sub">Toque el teléfono para llamar o WhatsApp para escribir</div>
+  <div id="ctc-box"></div>
+  <button class="btn2" onclick="atras()"><span class="tv">← Volver</span><span class="tp">← Atrás</span></button>
+</section>
 <section class="screen" id="s-cxc">
   <h1>Facturación y cobranza</h1>
   <div class="sub" id="cxc-sub">Cargando…</div>
@@ -522,7 +529,7 @@ function entrar(p){
   if(!u){$('pin-err').textContent='PIN no registrado';pin='';setTimeout(pintarPin,600);return}
   user={pin:p,...u}; ls('tm_pin',p); ls('tm_ult',String(Date.now())); uso._u=null; uso('entrada');
   $('saludo').textContent='Hola '+u.nombre.split(' ')[0];
-  $('btn-salir').style.display='block'; $('hdr-user').textContent='👤 '+u.nombre.split(' ')[0]; $('btn-ver').style.display='block';$('btn-ver').textContent=esAdmin()?'📋 Servicios registrados':esCliente()?'📋 Ver mis servicios':'📋 Mis servicios registrados';$('btn-reg').style.display=esCliente()?'none':'block';$('btn-ent').style.display=esCliente()?'none':'block';$('btn-misent').style.display='block';$('btn-fcomb').style.display=esCliente()?'none':'block';$('btn-fcadm').style.display=esAdmin()?'block':'none';contarSvc();$('btn-res').style.display=verResultado()?'block':'none';$('btn-cos').style.display=verResultado()?'block':'none';$('btn-profA').style.display=esAdmin()?'block':'none';$('btn-rsv').style.display=esAdmin()?'block':'none';$('btn-cxc').style.display=esAdmin()?'block':'none';$('btn-emp').style.display=esAdmin()?'block':'none';$('btn-pil').style.display=esAdminTotal()?'block':'none';$('btn-spot').style.display=esAdminTotal()?'block':'none';$('btn-caja').style.display=esAdminTotal()?'block':'none';ordenHome();contarEnt();const vg=(esAdmin()||esCliente())?'block':'none';$('btn-gps').style.display=vg;$('btn-prof').style.display=esCliente()?'none':vg; /* Proforma oculta para el cliente por ahora (Carlos 30-10) */ $('btn-ifco').style.display='block';contarIfco(); EMP_ACT=EMPRESA;document.body.classList.remove('global');aplicarVista(); if(user.rol==='administracion'){EMP_ELEGIDA=false;aplicarVista();ir('s-emp')} else ir('s-home'); revisarPendientes();
+  $('btn-salir').style.display='block'; $('hdr-user').textContent='👤 '+u.nombre.split(' ')[0]; $('btn-ver').style.display='block';$('btn-ver').textContent=esAdmin()?'📋 Servicios registrados':esCliente()?'📋 Ver mis servicios':'📋 Mis servicios registrados';$('btn-reg').style.display=esCliente()?'none':'block';$('btn-ent').style.display=esCliente()?'none':'block';$('btn-misent').style.display='block';$('btn-fcomb').style.display=esCliente()?'none':'block';$('btn-fcadm').style.display=esAdmin()?'block':'none';contarSvc();$('btn-res').style.display=verResultado()?'block':'none';$('btn-cos').style.display=verResultado()?'block':'none';$('btn-profA').style.display=esAdmin()?'block':'none';$('btn-rsv').style.display=esAdmin()?'block':'none';$('btn-cxc').style.display=esAdmin()?'block':'none';$('btn-emp').style.display=esAdmin()?'block':'none';if($('btn-ctc'))$('btn-ctc').style.display=esAdmin()?'block':'none';$('btn-pil').style.display=esAdminTotal()?'block':'none';$('btn-spot').style.display=esAdminTotal()?'block':'none';$('btn-caja').style.display=esAdminTotal()?'block':'none';ordenHome();contarEnt();const vg=(esAdmin()||esCliente())?'block':'none';$('btn-gps').style.display=vg;$('btn-prof').style.display=esCliente()?'none':vg; /* Proforma oculta para el cliente por ahora (Carlos 30-10) */ $('btn-ifco').style.display='block';contarIfco(); EMP_ACT=EMPRESA;document.body.classList.remove('global');aplicarVista(); if(user.rol==='administracion'){EMP_ELEGIDA=false;aplicarVista();ir('s-emp')} else ir('s-home'); revisarPendientes();
 }
 /* ═══ FOTO NIVEL COMBUSTIBLE (Carlos 08-11) ═══ El conductor solo saca la foto y aprieta ✔. Se guarda la hora de la foto, la ubicación y el conductor; la patente se resuelve después (primer servicio del día de ese conductor, o asignación manual), y se cruza con las cargas Aramco por patente y hora. */
 let _fcF=null,_fcPos=null;
@@ -551,7 +558,7 @@ async function verFcomb(){ir('s-fcomb');const box=$('fc-box');box.textContent='C
         '<div style="margin-top:4px"><b>Cargas Aramco de '+(r.p||'la patente')+' ese día:</b> '+(r.p?(cs.length?cs.map(x=>(x.ts?hm(x.ts):'')+' · '+String(x.litros||'').replace('.',',')+' L · '+fmt$(+x.total||0)).join(' | '):'ninguna'):'—')+'</div></div></details>'}).join('')+'</details>').join('')}
   catch(e){box.innerHTML='<div class="m">No se pudo cargar.</div>'}}
 async function fcPat(id,p){if(!p)return;const {error}=await supa.from('fotos_combustible').update({patente:p}).eq('id',id);toast(error?'No se pudo guardar':'Patente asignada');if(!error)verFcomb()}
-function ordenHome(){const h=$('s-home'),ids=esCliente()?['btn-ver','btn-misent','btn-ifco','btn-gps','btn-prof','btn-profA','btn-ent','btn-reg']:['btn-ent','btn-reg','btn-fcomb','btn-ver','btn-misent','btn-fcadm','btn-ifco','btn-gps','btn-prof','btn-profA','btn-flu','btn-res','btn-cos','btn-efe','btn-rsv','btn-pil','btn-caja','btn-cxc','btn-spot','btn-emp'];ids.forEach(i=>h.appendChild($(i)))} /* orden de inicio del cliente: servicios, entregas, IFCO, GPS (Carlos 30-10) */
+function ordenHome(){const h=$('s-home'),ids=esCliente()?['btn-ver','btn-misent','btn-ifco','btn-gps','btn-prof','btn-profA','btn-ent','btn-reg']:['btn-ent','btn-reg','btn-fcomb','btn-ver','btn-misent','btn-fcadm','btn-ifco','btn-gps','btn-prof','btn-profA','btn-flu','btn-res','btn-cos','btn-efe','btn-rsv','btn-pil','btn-caja','btn-cxc','btn-spot','btn-emp','btn-ctc'];ids.forEach(i=>h.appendChild($(i)))} /* orden de inicio del cliente: servicios, entregas, IFCO, GPS (Carlos 30-10) */
 function salir(){ls('tm_pin',null);user=null;document.body.classList.remove('movnav','navabierto','navoculto');EMP_ACT=EMPRESA;document.body.classList.remove('global');['alerta-adm','alerta-cxc','tareas-hoy','pc-dash','alerta-sinreg','cxc-box','rep-tbl'].forEach(i=>{const e=$(i);if(e)e.innerHTML=''});document.body.classList.remove('pc');$('pcnav').innerHTML='';const bv=$('btn-vista');if(bv)bv.remove();pin='';pintarPin();$('btn-salir').style.display='none';$('hdr-user').textContent='';_dupOk=false;ir('s-pin')}
 
 // ═══ REGISTRO ═══
@@ -1487,6 +1494,11 @@ function empFb(t){const x=document.createElement('textarea');x.value=t;x.style.p
 function empCp(btn,i,j){const t=j===undefined?empTexto(i):EMP_BLQ[i].f[j][1],o=btn.textContent,ok=()=>{btn.textContent='✓ Copiado';setTimeout(()=>{btn.textContent=o},1500)};
   try{navigator.clipboard.writeText(t).then(ok,()=>{empFb(t);ok()})}catch(e){empFb(t);ok()}}
 function empWa(i){window.open('https://wa.me/?text='+encodeURIComponent(empTexto(i)),'_blank')}
+// Contactos de clientes (Carlos 09-11): vista teléfono, Claudio y Administración; agrupado por predio/planta en acordeón
+async function verCtc(cli){if(!esAdmin())return;ir('s-ctc');$('ctc-h').textContent='Contactos '+cli;$('ctc-box').innerHTML='Cargando…';
+  const r=await conTope(supa.from('contactos_clientes').select('*').eq('empresa',EMPRESA).eq('cliente',cli).order('lugar').order('area').order('nombre'),8000);if(r.error){$('ctc-box').innerHTML='No se pudo cargar.';return}
+  const g={};(r.data||[]).forEach(x=>(g[x.lugar||'—']=g[x.lugar||'—']||[]).push(x));const e=t=>String(t||'').replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));
+  $('ctc-box').innerHTML=Object.keys(g).map(k=>'<details class="card" style="padding:10px 12px;margin-bottom:8px"><summary style="font-weight:700;cursor:pointer">'+e(k)+' <small style="font-weight:400;color:#888">('+g[k].length+')</small></summary>'+g[k].map(x=>{const t=String(x.telefono||'').replace(/[^\d+]/g,''),w=t.replace(/^\+/,'');return '<div style="border-top:1px solid var(--border);padding:8px 0"><b>'+e(x.nombre)+'</b><div style="font-size:12px;color:#888">'+e(x.area)+'</div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">'+(t?'<a class="btn2" style="flex:1;text-align:center;text-decoration:none;margin:0" href="tel:'+t+'">📞 '+e(x.telefono)+'</a><a class="btn2 wa" style="flex:1;text-align:center;text-decoration:none;margin:0" href="https://wa.me/'+w+'" target="_blank">WhatsApp</a>':'')+'</div>'+(x.mail?'<div style="font-size:12px;margin-top:4px"><a href="mailto:'+e(x.mail)+'">'+e(x.mail)+'</a></div>':'')+'</div>'}).join('')+'</details>').join('')||'Sin contactos.'}
 async function verEmpresa(){if(!esAdmin())return;ir('s-empresa');
   $('emp-box').innerHTML=EMP_BLQ.map((b,i)=>'<div class="card"><div class="lbl">'+b.t+'</div>'+b.f.map((r,j)=>'<div class="emp-r"><div><small>'+empEsc(r[0])+'</small><b'+(r[0]===b.num?' class="num"':'')+'>'+empEsc(r[1])+'</b></div><button class="emp-cp" onclick="empCp(this,'+i+','+j+')">Copiar</button></div>').join('')+
     '<div class="emp-btns"><button class="btn2" onclick="empCp(this,'+i+')">📋 Copiar todo</button><button class="btn2 wa" onclick="empWa('+i+')">Enviar por WhatsApp</button></div></div>').join('')+
