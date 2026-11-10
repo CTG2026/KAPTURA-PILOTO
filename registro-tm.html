@@ -420,6 +420,12 @@ body.pc .tv{display:none}body:not(.pc) .tp{display:none}
   <div id="pipe-box">Cargando…</div>
   <button class="btn2" onclick="atras()"><span class="tv">← Volver</span><span class="tp">← Atrás</span></button>
 </section>
+<section class="screen" id="s-tarc">
+  <h1 id="tarc-h">Tarifario</h1>
+  <div class="sub">Tarifas netas por viaje.</div>
+  <div id="tarc-box">Cargando…</div>
+  <button class="btn2" onclick="atras()"><span class="tv">← Volver</span><span class="tp">← Atrás</span></button>
+</section>
 <section class="screen" id="s-carpub">
   <h1>Transportes Madrid Gaete SpA</h1>
   <div class="sub" id="carpub-sub">Cargando…</div>
@@ -1571,6 +1577,12 @@ async function pipeEtapa(id){const x=_pipe.find(p=>p.id===id);if(!x)return;const
 async function pipePaso(id){const x=_pipe.find(p=>p.id===id);if(!x)return;const v=await formulario('Próximo paso · '+x.nombre,[{k:'p',l:'Próximo paso',v:x.proximo_paso||''},{k:'f',l:'Fecha',t:'date',v:x.proximo_fecha||''}]);if(!v)return;
   const {error}=await supa.from('prospectos').update({proximo_paso:(v.p||'').trim()||null,proximo_fecha:v.f||null,actualizado:new Date().toISOString()}).eq('id',id);if(error){toast('No se pudo guardar');return}
   if(x.tarea_id)await supa.from('tareas').update({activa:false}).eq('id',x.tarea_id);if((v.p||'').trim())await pipeTarea(id,x.nombre,v.p.trim(),v.f);toast('Próximo paso guardado');verPipe()}
+// Tarifario por cliente en Comercial (Carlos 10-11): tabla tarifas_clientes
+async function verTarifa(cli){if(!esCarlos())return;ir('s-tarc');$('tarc-h').textContent='Tarifario '+cli;$('tarc-box').innerHTML='Cargando…';
+  const r=await conTope(supa.from('tarifas_clientes').select('*').eq('empresa',EMPRESA).eq('cliente',cli).eq('activo',true).order('orden'),8000);if(r.error){$('tarc-box').innerHTML='No se pudo cargar.';return}
+  const B='border-bottom:1px solid var(--border);padding:7px 8px;text-align:left;vertical-align:top',N=B+';text-align:right;white-space:nowrap',e=pEsc;
+  $('tarc-box').innerHTML=(r.data||[]).length?'<div class="card" style="padding:6px 10px;overflow-x:auto"><table style="border-collapse:collapse;width:100%;font-size:13px"><tr><th style="'+B+'">Servicio</th><th style="'+B+'">Carga</th><th style="'+B+'">Equipo</th><th style="'+B+'">Temporada</th><th style="'+N+'">Tarifa neta</th><th style="'+N+'">IVA</th><th style="'+N+'">Total</th></tr>'+
+    r.data.map(x=>{const t=+x.tarifa_neta||0;return '<tr><td style="'+B+'"><b>'+e(x.servicio)+'</b>'+(x.nota?'<div style="font-size:11px;color:#888">'+e(x.nota)+'</div>':'')+'</td><td style="'+B+'">'+e(x.carga||'—')+'</td><td style="'+B+'">'+e(x.equipo||'—')+'</td><td style="'+B+'">'+e(x.temporada||'—')+'</td><td style="'+N+'"><b>'+fmt$(t)+'</b></td><td style="'+N+'">'+fmt$(Math.round(t*.19))+'</td><td style="'+N+'">'+fmt$(Math.round(t*1.19))+'</td></tr>'}).join('')+'</table></div>':'<div class="mini">Sin tarifas cargadas.</div>'}
 // Contactos de clientes (Carlos 09-11): vista teléfono, Claudio y Administración; agrupado por predio/planta en acordeón
 async function verCtc(cli){if(!esAdmin())return;ir('s-ctc');$('ctc-h').textContent='Contactos '+cli;$('ctc-box').innerHTML='Cargando…';
   const r=await conTope(supa.from('contactos_clientes').select('*').eq('empresa',EMPRESA).eq('cliente',cli).order('lugar').order('area').order('nombre'),8000);if(r.error){$('ctc-box').innerHTML='No se pudo cargar.';return}
@@ -1760,7 +1772,7 @@ function aplicarVista(){if(!(user&&['administrador','administracion','coordinado
   /* Menú PC por ámbito (Carlos 06-11): grandes opciones; adentro, las mismas opciones y permisos de antes */
   /* Acordeón dentro del ámbito: una opción que se despliega con su lista (Carlos 08-11) */
   const subAc=(t,L)=>'<details class="sac"><summary style="list-style:none;cursor:pointer;padding:8px 10px 8px 24px;font-size:14px">▸ '+t+'</summary>'+L.map(([k,x])=>'<button data-s="s-car-'+k+'" onclick="verCar(\''+k+'\')" style="padding-left:44px">'+x+'</button>').join('')+'</details>';
-  const prf=['btn-prof','btn-profA'].map(bt).filter(Boolean).map(h=>h.replace('style="','style="padding-left:44px;')).join(''),com=['btn-spot','btn-spotm'].map(bt).join('')+(prf?'<details class="sac"><summary style="list-style:none;cursor:pointer;padding:8px 10px 8px 24px;font-size:14px">▸ 🧾 Proformas</summary>'+prf+'</details>':'')+['btn-rsv'].map(bt).join('')+(esCarlos()?'<button data-s="s-carp" onclick="verCarp()" style="'+sb+'">📁 Carpeta de arranque TM</button><button data-s="s-pipe" onclick="verPipe()" style="'+sb+'">🎯 Pipeline comercial</button>':'')+(esCarlos()?subAc('📥 Subir archivos',[['ppto','Presupuesto de ventas']]):'');
+  const prf=['btn-prof','btn-profA'].map(bt).filter(Boolean).map(h=>h.replace('style="','style="padding-left:44px;')).join(''),com=['btn-spot','btn-spotm'].map(bt).join('')+(prf?'<details class="sac"><summary style="list-style:none;cursor:pointer;padding:8px 10px 8px 24px;font-size:14px">▸ 🧾 Proformas</summary>'+prf+'</details>':'')+(esCarlos()?['ATEURO','DDC'].map(c=>'<details class="sac"><summary style="list-style:none;cursor:pointer;padding:8px 10px 8px 24px;font-size:14px">▸ 📁 '+c+'</summary><button data-s="s-tarc" onclick="verTarifa(\''+c+'\')" style="padding-left:44px;'+sb+'">💲 Tarifario</button></details>').join(''):'')+['btn-rsv'].map(bt).join('')+(esCarlos()?'<button data-s="s-carp" onclick="verCarp()" style="'+sb+'">📁 Carpeta de arranque TM</button><button data-s="s-pipe" onclick="verPipe()" style="'+sb+'">🎯 Pipeline comercial</button>':'')+(esCarlos()?subAc('📥 Subir archivos',[['ppto','Presupuesto de ventas']]):'');
   const ope=['btn-reg','btn-ver','btn-misent','btn-ifco','btn-gps','btn-fcadm'].map(bt).join('');
   const fin=(adm?'<button data-s="s-cxp-s" onclick="verCxp(\'semana\')" style="'+sb+'">💸 Compromisos: semana</button><button data-s="s-cxp-m" onclick="verCxp(\'mes\')" style="'+sb+'">💸 Compromisos: mes actual</button><button data-s="s-deu" onclick="verDeu()" style="'+sb+'">🏦 Deudas</button>':'')+['btn-flu','btn-caja','btn-cxc','btn-res','btn-cos','btn-efe','btn-pil'].map(bt).join('')+(esCarlos()?subAc('📥 Cartolas',[['santander','Santander'],['aramco','Aramco'],['sii','SII (ventas y compras)'],['cla','Clasificar movimientos']]):'');
   const org=(adm?'<button data-s="s-rem" onclick="verRep(\'remuneraciones\')" style="'+sb+'">💵 Remuneraciones</button>':'')+bt('btn-emp');
