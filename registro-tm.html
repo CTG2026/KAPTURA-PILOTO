@@ -1774,8 +1774,12 @@ function pcOrden(box){const gs=[...box.querySelectorAll('.kpis')];if(gs.length<2
 // Tablero por pilar (solo con datos que Kaptura tiene; el resto vive en el sistema TM)
 let PCMES=null; // mes elegido en el panel del PC (Carlos 05-11): por defecto el mes en curso
 /* si se llama dos veces seguidas, solo la última dibuja (evita tarjetas duplicadas) */let _pcRun=0;
-async function pcDash(){const box=$('pc-dash');if(!box)return;const run=++_pcRun;box.innerHTML='';if(!document.body.classList.contains('pc')||!esAdmin()||!supa||EMP_ACT!==EMPRESA)return;const u0=user;
+async function pcDash(){const box=$('pc-dash');if(!box)return;const run=++_pcRun;box.innerHTML='';let ov=$('pc-dash-c');if(!ov){ov=document.createElement('div');ov.id='pc-dash-c';box.parentNode.insertBefore(ov,box)}ov.style.display='none';ov.innerHTML='';box.style.display='';if(!document.body.classList.contains('pc')||!esAdmin()||!supa||EMP_ACT!==EMPRESA)return;const u0=user;
   const ops=mesesAtras(13),act=ops[0].v;if(!PCMES)PCMES=act;const mes=PCMES,esAct=mes===act,lbl=(ops.find(o=>o.v===mes)||{t:mes}).t;
+  /* Inicio al instante (Carlos 10-11): muestra lo último visto mientras carga lo nuevo; al terminar se reemplaza y se guarda */
+  const ck='pcc_'+user.pin+'_'+EMPRESA+'_'+mes;let cch=null;try{cch=localStorage.getItem(ck)}catch(e){}
+  if(cch){ov.innerHTML='<div class="mini" style="margin:0 0 8px;color:#CA8A04;font-weight:700">⟳ Actualizando… (mostrando lo último visto)</div>'+cch;ov.style.display='';box.style.display='none'}
+  const pcFin=()=>{if(run!==_pcRun)return;box.style.display='';ov.style.display='none';ov.innerHTML='';try{localStorage.setItem(ck,box.innerHTML)}catch(e){}};
   const [yy,mm]=mes.split('-').map(Number),fin=mes+'-'+String(new Date(yy,mm,0).getDate()).padStart(2,'0');
   const sel='<div style="display:flex;align-items:center;gap:10px;margin:0 0 10px;flex-wrap:wrap"><b>Mes</b><select id="pc-mes" onchange="PCMES=this.value;pcDash()" style="width:auto;padding:8px 10px">'+ops.map(o=>'<option value="'+o.v+'"'+(o.v===mes?' selected':'')+'>'+o.t+(o.v===act?' (en curso)':'')+'</option>').join('')+'</select><span class="mini" style="margin:0">'+(esAct?'Mes en curso: datos a hoy':'Mes cerrado o pasado')+'</span></div>';
   box.innerHTML=sel;
@@ -1890,7 +1894,7 @@ async function pcDash(){const box=$('pc-dash');if(!box)return;const run=++_pcRun
         liqCard+k('SOLVENCIA','Cobertura de deuda (meta 1,2)',fRep(cob.pr,'cobertura'),cob.s||'',dP(cob,'cobertura'))+k('SOLVENCIA','Deuda total conocida',fRep(deu.pr,''),deu.s||'',dP(deu))+
         '</div><div class="sub" style="margin-top:-6px">Indicadores del sistema TM · '+lbl+(rp.actualizado?' · actualizado '+fCL(String(rp.actualizado).slice(0,10)):'')+' · <a href="#" onclick="verRep(\'pilares\');return false" style="color:var(--gold)">ver pilares por mes</a> · <a href="#" onclick="verRep(\'caja_semana\');return false" style="color:var(--gold)">caja de la semana</a></div>';
       /* Utilidad Kaptura vs presupuesto del sistema TM (a la fecha y del mes) */const uP=box.querySelector('#pc-upre'),uD=box.querySelector('#pc-udif'),U=window._pcU;if(window._pcPB==null&&uP&&num(U)&&num(res.p)){uP.innerHTML=ln2('Presupuesto a la fecha ('+frT+')',fRep(pHoy,'')+dif(U,pHoy))+ln2('Presupuesto del mes',fRep(res.p,''));}const pj=box.querySelector('#pc-proj'),gv=g(/^Ventas del mes/),gm=g(/^Margen después de costos de viaje/),go=g(/^Ganancia de la operación/);if(pj&&projF&&num(gv.p)&&num(gm.p)&&num(go.p)&&num(res.p))pj.outerHTML=projF(gv.p,gv.p-gm.p,gm.p-go.p,res.p);pcOrden(box)}catch(e){}}
-  }catch(e){box.innerHTML=sel}}
+  ;pcFin()}catch(e){box.innerHTML=sel;pcFin()}}
 // Tareas del día del administrador (solo administración). Hora límite: 20:00. Las hechas quedan registradas (tareas_admin)
 const TAREAS=[{id:'cartola',t:'Cartola Santander del día → subirla en Kaptura (Financiero › Cartolas)',d:[1,2,3,4,5],lim:'20:00',p:'Liquidez'},
   {id:'rcv',t:'RCV compras y ventas del SII → enviar a Claude',d:[1,4],lim:'20:00',p:'Rentabilidad'},
