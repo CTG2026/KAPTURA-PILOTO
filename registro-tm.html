@@ -407,6 +407,12 @@ body.pc .tv{display:none}body:not(.pc) .tp{display:none}
   <div id="emp-box"></div>
   <button class="btn2" onclick="atras()"><span class="tv">← Volver</span><span class="tp">← Atrás</span></button>
 </section>
+<section class="screen" id="s-carp">
+  <h1>Carpeta de arranque TM</h1>
+  <div class="sub">Lo que se entrega al cliente: empresa, equipos, conductores, seguros y anexos. Solo valen fechas con documento de respaldo.</div>
+  <div id="carp-box">Cargando…</div>
+  <button class="btn2" onclick="atras()"><span class="tv">← Volver</span><span class="tp">← Atrás</span></button>
+</section>
 <section class="screen" id="s-ctc">
   <h1 id="ctc-h">Contactos</h1>
   <div class="sub">Toque el teléfono para llamar o WhatsApp para escribir</div>
@@ -1494,6 +1500,30 @@ function empFb(t){const x=document.createElement('textarea');x.value=t;x.style.p
 function empCp(btn,i,j){const t=j===undefined?empTexto(i):EMP_BLQ[i].f[j][1],o=btn.textContent,ok=()=>{btn.textContent='✓ Copiado';setTimeout(()=>{btn.textContent=o},1500)};
   try{navigator.clipboard.writeText(t).then(ok,()=>{empFb(t);ok()})}catch(e){empFb(t);ok()}}
 function empWa(i){window.open('https://wa.me/?text='+encodeURIComponent(empTexto(i)),'_blank')}
+// ═══ CARPETA DE ARRANQUE TM (Carlos 09-11): ficha para clientes y bancos. Solo valen fechas con documento de respaldo. Tablas carpeta_equipos y seguros_polizas ═══
+let _carp=null;
+function carpSem(d,nota){const G='#15803D',Y='#CA8A04',R='#DC2626';if(!d){const n=nota||'Sin documento';return {t:n,c:/no aplica/i.test(n)?'#888':R}}const dias=Math.round((dISO(d)-dISO(hoyISO()))/864e5);return {t:fCL(d),c:dias<0?R:dias<=30?Y:G,ic:dias<0?'✗ ':dias<=30?'⚠ ':'✓ '}}
+function carpTblEq(L,mail){const B='border-bottom:1px solid '+(mail?'#ddd':'var(--border)')+';padding:6px 8px;text-align:left;vertical-align:top',C=B+';white-space:nowrap';
+  const cel=(d,n)=>{const x=carpSem(d,n);return '<td style="'+C+';color:'+x.c+';font-weight:600">'+(x.ic||'')+x.t+'</td>'};
+  return '<table style="border-collapse:collapse;width:100%;font-size:13px"><tr><th style="'+B+'">Patente</th><th style="'+B+'">Equipo</th><th style="'+C+'">Permiso circulación</th><th style="'+C+'">Revisión técnica</th><th style="'+C+'">SOAP</th><th style="'+C+'">Seguro carga</th></tr>'+
+    L.map(x=>{const sc=x.carga_uf?carpSem(x.carga_vence):carpSem(null,x.carga_nota);return '<tr><td style="'+C+'"><b>'+x.patente+'</b></td><td style="'+B+'">'+(x.tipo||'')+(mail?'':'<div style="font-size:11px;color:#888">'+(x.propietario||'')+(x.obs?' · '+x.obs:'')+'</div>')+'</td>'+cel(x.pc,x.pc_nota)+cel(x.rt,x.rt_nota)+cel(x.soap,x.soap_nota)+'<td style="'+C+';color:'+sc.c+';font-weight:600">'+(x.carga_uf?(sc.ic||'')+fmtN(x.carga_uf)+' UF · '+sc.t:sc.t)+'</td></tr>'}).join('')+'</table>'}
+function fmtN(n){return Number(n).toLocaleString('es-CL')}
+function carpTblPol(P,mail){const B='border-bottom:1px solid '+(mail?'#ddd':'var(--border)')+';padding:6px 8px;text-align:left',N=B+';text-align:right;white-space:nowrap';const ok=(c,r)=>r==null?'<td style="'+N+'">—</td>':'<td style="'+N+';color:'+(c!=null&&c>=r?'#15803D':'#DC2626')+';font-weight:600">'+fmtN(r)+(c!=null&&c>=r?' ✓':' ✗')+'</td>';
+  return '<table style="border-collapse:collapse;width:100%;font-size:13px"><tr><th style="'+B+'">Equipo</th><th style="'+B+'">Seguro</th><th style="'+N+'">Cobertura</th>'+(mail?'':'<th style="'+N+'">Cuota mes</th><th style="'+N+'">Total año</th>')+'<th style="'+N+'">DDC exige</th><th style="'+N+'">Trast fruta</th><th style="'+N+'">Trast carnes</th></tr>'+
+    P.map(x=>'<tr><td style="'+B+'"><b>'+x.tipo_equipo+'</b></td><td style="'+B+'">'+x.seguro+(x.nota&&!mail?'<div style="font-size:11px;color:#888">'+x.nota+'</div>':'')+'</td><td style="'+N+'">'+(x.cobertura_uf?fmtN(x.cobertura_uf)+' UF':(x.cobertura_txt||'—'))+'</td>'+(mail?'':'<td style="'+N+'">'+(x.cuota_mes?fmt$(+x.cuota_mes):'—')+'</td><td style="'+N+'">'+(x.total_anio?fmt$(+x.total_anio):'—')+'</td>')+ok(x.cobertura_uf,x.ddc_uf)+ok(x.cobertura_uf,x.trast_fruta_uf)+ok(x.cobertura_uf,x.trast_carnes_uf)+'</tr>').join('')+'</table>'}
+async function verCarp(){if(!esCarlos())return;ir('s-carp');$('carp-box').innerHTML='Cargando…';
+  const [e,p]=await Promise.all([conTope(supa.from('carpeta_equipos').select('*').eq('empresa',EMPRESA).order('grupo',{ascending:false}).order('orden'),8000),conTope(supa.from('seguros_polizas').select('*').eq('empresa',EMPRESA).order('orden'),8000)]);
+  if(e.error||p.error){$('carp-box').innerHTML='No se pudo cargar.';return}_carp={eq:e.data||[],pol:p.data||[]};
+  const tm=_carp.eq.filter(x=>x.grupo==='TM'),te=_carp.eq.filter(x=>x.grupo==='Terceros'),pend=t=>'<details class="card" style="padding:10px 12px;margin-bottom:8px"><summary style="font-weight:700;cursor:pointer">'+t+' <small style="color:#888;font-weight:400">· pendiente</small></summary><div style="color:#888;padding:6px 0">Por cargar.</div></details>',
+    sec=(t,n,h,o)=>'<details class="card" style="padding:10px 12px;margin-bottom:8px"'+(o?' open':'')+'><summary style="font-weight:700;cursor:pointer">'+t+(n!=null?' <small style="color:#888;font-weight:400">('+n+')</small>':'')+'</summary><div style="overflow-x:auto;margin-top:8px">'+h+'</div></details>';
+  $('carp-box').innerHTML='<div style="margin-bottom:10px"><button class="btn2" onclick="carpCopiar()">📋 Copiar para correo</button></div>'+
+    pend('Presentación de la empresa')+pend('Anexo: Constitución de sociedad')+pend('Anexo: Carpeta tributaria')+pend('Anexo: Balance')+
+    sec('Anexo: Equipos TM',tm.length,carpTblEq(tm),true)+sec('Anexo: Equipos de terceros',te.length,carpTblEq(te))+pend('Anexo: Conductores')+
+    sec('Anexo: Seguros (pólizas por tipo de equipo y exigencia de clientes)',null,carpTblPol(_carp.pol))+pend('Bases comerciales y anexos de servicio')+
+    '<div style="font-size:11px;color:#888;margin-top:6px">✓ vigente · ⚠ vence en 30 días o menos · ✗ vencido · "Sin documento": no hay respaldo, la fecha no vale.</div>'}
+async function carpCopiar(){if(!_carp)return;const tm=_carp.eq.filter(x=>x.grupo==='TM'),te=_carp.eq.filter(x=>x.grupo==='Terceros');
+  const h='<div style="font-family:Arial,sans-serif"><p><b>Transportes Madrid Gaete SpA</b> · Estado de documentos al '+fCL(hoyISO())+'</p><p><b>Anexo: Equipos TM</b></p>'+carpTblEq(tm,1)+'<p><b>Anexo: Equipos de terceros</b></p>'+carpTblEq(te,1)+'<p><b>Anexo: Seguros</b></p>'+carpTblPol(_carp.pol,1)+'</div>';
+  try{await navigator.clipboard.write([new ClipboardItem({'text/html':new Blob([h],{type:'text/html'}),'text/plain':new Blob([h.replace(/<[^>]+>/g,' ')],{type:'text/plain'})})]);toast('Copiado: péguelo en el correo')}catch(_){toast('No se pudo copiar')}}
 // Contactos de clientes (Carlos 09-11): vista teléfono, Claudio y Administración; agrupado por predio/planta en acordeón
 async function verCtc(cli){if(!esAdmin())return;ir('s-ctc');$('ctc-h').textContent='Contactos '+cli;$('ctc-box').innerHTML='Cargando…';
   const r=await conTope(supa.from('contactos_clientes').select('*').eq('empresa',EMPRESA).eq('cliente',cli).order('lugar').order('area').order('nombre'),8000);if(r.error){$('ctc-box').innerHTML='No se pudo cargar.';return}
@@ -1683,7 +1713,7 @@ function aplicarVista(){if(!(user&&['administrador','administracion','coordinado
   /* Menú PC por ámbito (Carlos 06-11): grandes opciones; adentro, las mismas opciones y permisos de antes */
   /* Acordeón dentro del ámbito: una opción que se despliega con su lista (Carlos 08-11) */
   const subAc=(t,L)=>'<details class="sac"><summary style="list-style:none;cursor:pointer;padding:8px 10px 8px 24px;font-size:14px">▸ '+t+'</summary>'+L.map(([k,x])=>'<button data-s="s-car-'+k+'" onclick="verCar(\''+k+'\')" style="padding-left:44px">'+x+'</button>').join('')+'</details>';
-  const com=['btn-spot','btn-prof','btn-profA','btn-rsv'].map(bt).join('')+(esCarlos()?subAc('📥 Subir archivos',[['ppto','Presupuesto de ventas']]):'');
+  const com=['btn-spot','btn-prof','btn-profA','btn-rsv'].map(bt).join('')+(esCarlos()?'<button data-s="s-carp" onclick="verCarp()" style="'+sb+'">📁 Carpeta de arranque TM</button>':'')+(esCarlos()?subAc('📥 Subir archivos',[['ppto','Presupuesto de ventas']]):'');
   const ope=['btn-reg','btn-ver','btn-misent','btn-ifco','btn-gps','btn-fcadm'].map(bt).join('');
   const fin=(adm?'<button data-s="s-cxp-s" onclick="verCxp(\'semana\')" style="'+sb+'">💸 Compromisos: semana</button><button data-s="s-cxp-m" onclick="verCxp(\'mes\')" style="'+sb+'">💸 Compromisos: mes actual</button><button data-s="s-deu" onclick="verDeu()" style="'+sb+'">🏦 Deudas</button>':'')+['btn-flu','btn-caja','btn-cxc','btn-res','btn-cos','btn-efe','btn-pil'].map(bt).join('')+(esCarlos()?subAc('📥 Cartolas',[['santander','Santander'],['aramco','Aramco'],['sii','SII (ventas y compras)'],['cla','Clasificar movimientos']]):'');
   const org=(adm?'<button data-s="s-rem" onclick="verRep(\'remuneraciones\')" style="'+sb+'">💵 Remuneraciones</button>':'')+bt('btn-emp');
