@@ -548,10 +548,10 @@ function hoyISO(d){d=d||new Date();return d.getFullYear()+'-'+String(d.getMonth(
   });
 })();
 function pintarPin(){document.querySelectorAll('.pin-box span').forEach((s,i)=>{s.textContent=pin[i]?'•':'';s.classList.toggle('f',!!pin[i])});$('pin-err').textContent=''}
-function entrar(p){
+function entrar(p,auto){
   p=p||pin; const u=USUARIOS[p];
   if(!u){$('pin-err').textContent='PIN no registrado';pin='';setTimeout(pintarPin,600);return}
-  user={pin:p,...u}; ls('tm_pin',p); ls('tm_ult',String(Date.now())); uso._u=null; uso('entrada');
+  user={pin:p,...u}; ls('tm_pin',p); if(!auto)ls('tm_ult',String(Date.now())); uso._u=null; uso(auto?'recarga':'entrada'); // auto = reentrada por recarga (versión nueva): no cuenta como actividad ni como ingreso (Carlos 11-11)
   $('saludo').textContent='Hola '+u.nombre.split(' ')[0];
   $('btn-salir').style.display='block'; $('hdr-user').textContent='👤 '+u.nombre.split(' ')[0]; $('btn-ver').style.display='block';$('btn-ver').textContent=esAdmin()?'📋 Servicios registrados':esCliente()?'📋 Ver mis servicios':'📋 Mis servicios registrados';$('btn-reg').style.display=esCliente()?'none':'block';$('btn-ent').style.display=esCliente()?'none':'block';$('btn-misent').style.display='block';$('btn-fcomb').style.display=esCliente()?'none':'block';$('btn-fcadm').style.display=esAdmin()?'block':'none';contarSvc();$('btn-res').style.display=verResultado()?'block':'none';$('btn-cos').style.display=verResultado()?'block':'none';$('btn-profA').style.display=esAdmin()?'block':'none';$('btn-rsv').style.display=esAdmin()?'block':'none';$('btn-cxc').style.display=esAdmin()?'block':'none';$('btn-emp').style.display=esAdmin()?'block':'none';if($('btn-ctc'))$('btn-ctc').style.display=esAdmin()?'block':'none';$('btn-pil').style.display=esAdminTotal()?'block':'none';$('btn-spot').style.display=(esAdminTotal()||user.rol==='coordinador')?'block':'none';if($('btn-spotm'))$('btn-spotm').style.display=esAdminTotal()?'block':'none';$('btn-caja').style.display=esAdminTotal()?'block':'none';ordenHome();contarEnt();const vg=(esAdmin()||esCliente())?'block':'none';$('btn-gps').style.display=vg;$('btn-prof').style.display=esCliente()?'none':vg; /* Proforma oculta para el cliente por ahora (Carlos 30-10) */ $('btn-ifco').style.display='block';contarIfco(); EMP_ACT=EMPRESA;document.body.classList.remove('global');aplicarVista(); if(user.rol==='administracion'){EMP_ELEGIDA=false;aplicarVista();ir('s-emp')} else ir('s-home'); revisarPendientes();
 }
@@ -2466,7 +2466,7 @@ async function spotEnviar(btn){if(!_spot||!_spotFoto)return;btn.disabled=true;bt
     $('spot-form').style.display='none';$('spot-info').innerHTML='<b>✅ Servicio registrado. Gracias.</b><br>Ya puede cerrar esta página.'}
   catch(e){btn.disabled=false;btn.textContent='✅ ENVIAR REGISTRO';toast('No se pudo enviar. Revise la señal e intente de nuevo.')}}
 const _spotTok=new URLSearchParams(location.search).get('spot'),_carpTok=new URLSearchParams(location.search).get('carpeta');
-const guardado=(_spotTok||_carpTok)?null:ls('tm_pin'); if(_carpTok)abrirCarpPub(_carpTok);else if(_spotTok)abrirSpot(_spotTok);else if(guardado&&USUARIOS[guardado]&&Date.now()-Number(ls('tm_ult')||0)<=INACT_MS)entrar(guardado); else if(guardado)ls('tm_pin',null);
+const guardado=(_spotTok||_carpTok)?null:ls('tm_pin'); if(_carpTok)abrirCarpPub(_carpTok);else if(_spotTok)abrirSpot(_spotTok);else if(guardado&&USUARIOS[guardado]&&Date.now()-Number(ls('tm_ult')||0)<=INACT_MS)entrar(guardado,true); else if(guardado)ls('tm_pin',null);
 </script>
 </body>
 </html>
