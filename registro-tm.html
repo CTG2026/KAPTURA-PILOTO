@@ -2001,16 +2001,16 @@ function desde(){const d=new Date();if(rango.startsWith('m:'))return rango.slice
 function hasta(){return rango.startsWith('m:')?finMes(rango.slice(2)):hoyISO()}
 // ═══ VISTA PILOTO (Carlos 12-11): una sola fuente (Kaptura), base caja, 3 pantallas. No cambia nada de lo existente. ═══
 let _pilSem=0;
-const PIL_NOCOSTO=/^(Tesorer|Deuda|IVA postergado|Arriendo Castro|Compra thermo|Inversi|Retiro|F29|Imprevistos|Traspaleteo|Cobro|Otros ingresos|Devoluci)/; // no son costo de operar el mes
-const PIL_IVA=/^(Combustible|Recarga prepago Aramco|Mantenci|Pago a terceros|Comisi[oó]n asesor)/; // pagos con factura: se lleva a neto (÷1,19)
+const PIL_NOCOSTO=/^(Tesorer|Deuda (?!combustible)|IVA postergado|Arriendo Castro|Compra thermo|Inversi|Retiro|F29|Imprevistos|Traspaleteo|Cobro|Otros ingresos|Devoluci)/; // no son costo de operar el mes
+const PIL_IVA=/^(Combustible|Deuda combustible|Recarga prepago Aramco|Mantenci|Pago a terceros|Comisi[oó]n asesor)/; // pagos con factura: se lleva a neto (÷1,19)
 function pilGrupo(cat,monto){const c=cat||'';if(monto>0)return /^Cobro/.test(c)?'Cobros de clientes':'Otras entradas';
-  if(/^(Sueldos|Vi[aá]ticos|Previred)/.test(c))return 'Sueldos, viáticos y Previred';if(/^(Combustible|Recarga prepago Aramco)/.test(c))return 'Combustible';
+  if(/^(Sueldos|Vi[aá]ticos|Previred)/.test(c))return 'Sueldos, viáticos y Previred';if(/^(Combustible|Deuda combustible|Recarga prepago Aramco)/.test(c))return 'Combustible';
   if(/^Mantenci/.test(c))return 'Mantención y repuestos';if(/^Peajes/.test(c))return 'Peajes';
   if(/^(Tesorer|Deuda|IVA postergado|Arriendo Castro)/.test(c))return 'Deudas y convenios';if(/^(Compra thermo|Inversi)/.test(c))return 'Inversión';
   if(/^F29|^Impuestos/.test(c))return 'Impuestos (F29)';if(/^Retiro/.test(c))return 'Retiros';if(/^Imprevistos/.test(c))return 'Imprevistos';
   if(!c)return 'Por clasificar';return 'Otros gastos'}
 const PIL_ORD=['Cobros de clientes','Otras entradas','Sueldos, viáticos y Previred','Combustible','Mantención y repuestos','Peajes','Otros gastos','Deudas y convenios','Impuestos (F29)','Inversión','Retiros','Imprevistos','Por clasificar'];
-function pilCxpCat(c){c=c||'';if(/Deuda combustible|Tesorer|TAG|Arriendo Castro/.test(c))return 'Deudas y convenios';if(/Impuestos/.test(c))return 'Impuestos (F29)';if(/Inversi/.test(c))return 'Inversión';
+function pilCxpCat(c){c=c||'';if(/Deuda combustible/.test(c))return 'Combustible';if(/Tesorer|TAG|Arriendo Castro/.test(c))return 'Deudas y convenios';if(/Impuestos/.test(c))return 'Impuestos (F29)';if(/Inversi/.test(c))return 'Inversión';
   if(/Sueldos|Previred/.test(c))return 'Sueldos, viáticos y Previred';return 'Otros gastos'}
 async function verPiloto(dsem){if(!esCarlos())return;if(dsem)_pilSem+=dsem;else _pilSem=0;ir('s-pil');navMarcar('s-pil');const box=$('pil-box');box.innerHTML='<div class="sub">Cargando…</div>';
   try{const hoy=hoyISO(),dH=new Date(hoy+'T12:00:00');
@@ -2056,7 +2056,7 @@ async function verPiloto(dsem){if(!esCarlos())return;if(dsem)_pilSem+=dsem;else 
   const r3=(t,a,b,c,bold)=>'<tr'+(bold?' style="font-weight:900"':'')+'><td>'+t+'</td>'+td(a,bold?'font-weight:900':'')+td(b,bold?'font-weight:900':'')+td(c,bold?'font-weight:900':'')+'</tr>';
   const gs=[...new Set([...Object.keys(cP.det),...Object.keys(cA.det)])].sort((a,b)=>PIL_ORD.indexOf(a)-PIL_ORD.indexOf(b));
   const mesTxt=m=>MESES[+m.slice(5,7)-1];
-  const res='<h2 style="margin:22px 0 4px">2. Resultado (pesos netos)</h2><div class="mini">Ventas = servicios del mes. Costos = lo que salió del banco para operar (sin deudas, inversión, impuestos, retiros ni imprevistos; con factura se lleva a neto). Proyectado = al día + promedio diario de '+mesTxt(ymP)+' × días que faltan.</div>'+
+  const res='<h2 style="margin:22px 0 4px">2. Resultado (pesos netos)</h2><div class="mini">Ventas = servicios del mes. Costos = lo que salió del banco para operar, incluido lo pagado a Peumo por combustible (sin otras deudas, inversión, impuestos, retiros ni imprevistos; con factura se lleva a neto). Proyectado = al día + promedio diario de '+mesTxt(ymP)+' × días que faltan.</div>'+
    '<div class="tblw"><table class="tbl"><tr><th></th><th>'+mesTxt(ymP)+' (cerrado)</th><th>'+mesTxt(ym)+' al '+fCL(hoy).slice(0,5)+'</th><th>'+mesTxt(ym)+' proyectado</th></tr>'+
    r3('Ventas',vP,vA,vPr,true)+r3('Costos',-cP.t,-cA.t,-cPr,true)+gs.map(g=>r3('<span style="padding-left:14px;color:var(--muted)">'+g+'</span>',-(cP.det[g]||0),-(cA.det[g]||0),'')).join('')+
    r3('UTILIDAD NETA',vP-cP.t,vA-cA.t,vPr-cPr,true)+'</table></div><div class="mini">Fuente ventas '+mesTxt(ymP)+': '+srcVP+'. Ventas '+mesTxt(ym)+': servicios registrados en Kaptura. Costos '+mesTxt(ym)+': cartola hasta el '+fCL(ultC)+'.</div>';
