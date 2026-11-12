@@ -184,6 +184,7 @@ body.pc .tv{display:none}body:not(.pc) .tp{display:none}
   <div id="alerta-sinreg"></div>
   <div id="alerta-adm"></div>
   <div id="alerta-cxc"></div>
+  <button class="big" id="btn-piloto" style="display:none;background:#7C3AED;color:#fff;margin-bottom:12px" onclick="verPiloto()">🧪 VISTA PILOTO</button>
   <button class="big" id="btn-ent" style="display:none;background:#1f7a3a;color:#fff;margin-bottom:12px" onclick="entregue()">📦 ENTREGUÉ AQUÍ</button>
   <input type="file" id="cam-ent" accept="image/*" capture="environment" style="display:none" onchange="onFotoEnt(this)">
   <button class="big" id="btn-reg" onclick="nuevoRegistro()">📷 REGISTRAR SERVICIO</button>
@@ -384,6 +385,13 @@ body.pc .tv{display:none}body:not(.pc) .tp{display:none}
   <div class="sub" id="rep-sub">Cargando…</div>
   <div class="tblw"><table class="tbl" id="rep-tbl"></table></div>
   <div style="display:flex;gap:8px;margin-top:10px"><button class="btn2" style="flex:1" onclick="imgTabla('rep-tbl',$('rep-h').textContent+' · '+$('rep-per').selectedOptions[0].text,true)">📤 Compartir imagen</button><button class="btn2" style="flex:1" onclick="imgTabla('rep-tbl',$('rep-h').textContent+' · '+$('rep-per').selectedOptions[0].text,false)">🖼 Descargar imagen</button></div>
+  <button class="btn2" onclick="atras()"><span class="tv">← Volver</span><span class="tp">← Atrás</span></button>
+</section>
+
+<section class="screen" id="s-pil">
+  <h1>🧪 Vista piloto</h1>
+  <div class="sub">Caja de la semana · Resultado · Deudas y por cobrar. Todo desde Kaptura, base caja. Es una prueba: no cambia nada de lo existente.</div>
+  <div id="pil-box"></div>
   <button class="btn2" onclick="atras()"><span class="tv">← Volver</span><span class="tp">← Atrás</span></button>
 </section>
 
@@ -1764,7 +1772,7 @@ function aplicarVista(){if(!(user&&['administrador','administracion','coordinado
   const pref=ls('tm_vista'),pc=pref==='pc'||(pref!=='tel'&&window.innerWidth>=1024);document.body.classList.toggle('pc',pc);document.body.classList.toggle('movnav',!pc);document.body.classList.remove('navabierto');document.body.classList.toggle('navoculto',pc&&ls('tm_navoculto')==='1');
   let bv=$('btn-vista');if(!bv){bv=document.createElement('button');bv.id='btn-vista';bv.className='link';bv.style.marginRight='10px';bv.onclick=()=>{ls('tm_vista',document.body.classList.contains('pc')?'tel':'pc');aplicarVista();ir('s-home')};$('btn-salir').before(bv)}
   bv.textContent=pc?'📱 Vista teléfono':'🖥 Vista PC';
-  ['btn-res','btn-cos'].forEach(i=>{if($(i))$(i).style.display=verResultado()?'block':'none'});if($('btn-efe'))$('btn-efe').style.display=esCarlos()?'block':'none';if($('btn-flu'))$('btn-flu').style.display=esCarlos()?'block':'none';['btn-pil','btn-spot','btn-caja'].forEach(i=>{if($(i))$(i).style.display=(esAdminTotal()||(i==='btn-spot'&&user&&user.rol==='coordinador'))?'block':'none'});
+  ['btn-res','btn-cos'].forEach(i=>{if($(i))$(i).style.display=verResultado()?'block':'none'});if($('btn-efe'))$('btn-efe').style.display=esCarlos()?'block':'none';if($('btn-piloto'))$('btn-piloto').style.display=esCarlos()?'block':'none';if($('btn-flu'))$('btn-flu').style.display=esCarlos()?'block':'none';['btn-pil','btn-spot','btn-caja'].forEach(i=>{if($(i))$(i).style.display=(esAdminTotal()||(i==='btn-spot'&&user&&user.rol==='coordinador'))?'block':'none'});
   const cambiar=user&&user.rol==='administracion'?'<button onclick="EMP_ELEGIDA=false;aplicarVista();ir(\'s-emp\')">🔄 Cambiar empresa</button>':'';
   if(user.rol==='administracion'&&!EMP_ELEGIDA){$('pcnav').innerHTML='<div class="t">KAPTURA</div><div class="m" style="padding:10px">Elige una empresa para ver su menú.</div>';return} /* sin menú hasta elegir empresa (Carlos 06-11) */
   if(EMP_ACT!==EMPRESA){$('pcnav').innerHTML='<div class="t">KAPTURA · '+EMP_NOM[EMP_ACT].toUpperCase()+'</div><button data-s="s-home" onclick="ir(\'s-home\')">🏠 Inicio: tareas y alertas</button>'+cambiar+archNav();archNavCargar();return}
@@ -1778,7 +1786,7 @@ function aplicarVista(){if(!(user&&['administrador','administracion','coordinado
   const ope=['btn-reg','btn-ver','btn-misent','btn-ifco','btn-gps','btn-fcadm'].map(bt).join('');
   const fin=(adm?'<button data-s="s-cxp-s" onclick="verCxp(\'semana\')" style="'+sb+'">💸 Compromisos: semana</button><button data-s="s-cxp-m" onclick="verCxp(\'mes\')" style="'+sb+'">💸 Compromisos: mes actual</button><button data-s="s-deu" onclick="verDeu()" style="'+sb+'">🏦 Deudas</button>':'')+['btn-flu','btn-caja','btn-cxc','btn-res','btn-cos','btn-efe','btn-pil'].map(bt).join('')+(esCarlos()?subAc('📥 Cartolas',[['santander','Santander'],['aramco','Aramco'],['sii','SII (ventas y compras)'],['cla','Clasificar movimientos']]):'');
   const org=(adm?'<button data-s="s-rem" onclick="verRep(\'remuneraciones\')" style="'+sb+'">💵 Remuneraciones</button>':'')+bt('btn-emp');
-  $('pcnav').innerHTML='<div class="t">KAPTURA · TM</div><button data-s="s-home" onclick="ir(\'s-home\')">🏠 Inicio y tareas del día</button>'+cambiar+grp('💼 Comercial',com)+grp('🚚 Operacional',ope)+grp('💰 Financiero',fin)+grp('👥 Organizacional',org)+archNav();archNavCargar()}
+  $('pcnav').innerHTML='<div class="t">KAPTURA · TM</div><button data-s="s-home" onclick="ir(\'s-home\')">🏠 Inicio y tareas del día</button>'+(esCarlos()?'<button data-s="s-pil" onclick="verPiloto()">🧪 VISTA PILOTO</button>':'')+cambiar+grp('💼 Comercial',com)+grp('🚚 Operacional',ope)+grp('💰 Financiero',fin)+grp('👥 Organizacional',org)+archNav();archNavCargar()}
 document.addEventListener('click',e=>{if(document.body.classList.contains('navabierto')&&e.target.closest&&e.target.closest('#pcnav button'))document.body.classList.remove('navabierto')});
 function menuToggle(){const b=document.body;if(b.classList.contains('pc')){const o=b.classList.toggle('navoculto');ls('tm_navoculto',o?'1':null)}else b.classList.toggle('navabierto')}
 function navMarcar(id){document.querySelectorAll('#pcnav button').forEach(b=>b.classList.toggle('on',b.dataset.s===id));const on=document.querySelector('#pcnav button.on');if(on){const g=on.closest('details.ng');if(g)g.open=true;const h=on.closest('details.sac');if(h)h.open=true}}
@@ -1991,6 +1999,76 @@ document.querySelectorAll('#seg button').forEach(b=>b.onclick=()=>{rango=b.datas
 $('seg-mes').onchange=()=>{const v=$('seg-mes').value;if(!v)return;rango='m:'+v;document.querySelectorAll('#seg button').forEach(x=>x.classList.remove('sel'));verRegistros()};
 function desde(){const d=new Date();if(rango.startsWith('m:'))return rango.slice(2)+'-01';if(rango==='hoy')return hoyISO(d);if(rango==='mes')return hoyISO(new Date(d.getFullYear(),d.getMonth(),1));d.setDate(d.getDate()-6);return hoyISO(d)}
 function hasta(){return rango.startsWith('m:')?finMes(rango.slice(2)):hoyISO()}
+// ═══ VISTA PILOTO (Carlos 12-11): una sola fuente (Kaptura), base caja, 3 pantallas. No cambia nada de lo existente. ═══
+let _pilSem=0;
+const PIL_NOCOSTO=/^(Tesorer|Deuda (?!combustible)|IVA postergado|Arriendo Castro|Compra thermo|Inversi|Retiro|F29|Imprevistos|Traspaleteo|Cobro|Otros ingresos|Devoluci)/; // no son costo de operar el mes
+const PIL_IVA=/^(Combustible|Deuda combustible|Recarga prepago Aramco|Mantenci|Pago a terceros|Comisi[oó]n asesor)/; // pagos con factura: se lleva a neto (÷1,19)
+function pilGrupo(cat,monto){const c=cat||'';if(monto>0)return /^Cobro/.test(c)?'Cobros de clientes':'Otras entradas';
+  if(/^(Sueldos|Vi[aá]ticos|Previred)/.test(c))return 'Sueldos, viáticos y Previred';if(/^(Combustible|Deuda combustible|Recarga prepago Aramco)/.test(c))return 'Combustible';
+  if(/^Mantenci/.test(c))return 'Mantención y repuestos';if(/^Peajes/.test(c))return 'Peajes';
+  if(/^(Tesorer|Deuda|IVA postergado|Arriendo Castro)/.test(c))return 'Deudas y convenios';if(/^(Compra thermo|Inversi)/.test(c))return 'Inversión';
+  if(/^F29|^Impuestos/.test(c))return 'Impuestos (F29)';if(/^Retiro/.test(c))return 'Retiros';if(/^Imprevistos/.test(c))return 'Imprevistos';
+  if(!c)return 'Por clasificar';return 'Otros gastos'}
+const PIL_ORD=['Cobros de clientes','Otras entradas','Sueldos, viáticos y Previred','Combustible','Mantención y repuestos','Peajes','Otros gastos','Deudas y convenios','Impuestos (F29)','Inversión','Retiros','Imprevistos','Por clasificar'];
+function pilCxpCat(c){c=c||'';if(/Deuda combustible/.test(c))return 'Combustible';if(/Tesorer|TAG|Arriendo Castro/.test(c))return 'Deudas y convenios';if(/Impuestos/.test(c))return 'Impuestos (F29)';if(/Inversi/.test(c))return 'Inversión';
+  if(/Sueldos|Previred/.test(c))return 'Sueldos, viáticos y Previred';return 'Otros gastos'}
+async function verPiloto(dsem){if(!esCarlos())return;if(dsem)_pilSem+=dsem;else _pilSem=0;ir('s-pil');navMarcar('s-pil');const box=$('pil-box');box.innerHTML='<div class="sub">Cargando…</div>';
+  try{const hoy=hoyISO(),dH=new Date(hoy+'T12:00:00');
+  const q=(p)=>conTope(p,12000);
+  const [rc,rs,rp,rx,rr]=await Promise.all([
+    q(supa.from('cartola_movimientos').select('fecha,monto,categoria,descripcion').eq('empresa',EMPRESA).gte('fecha','2026-10-01').order('fecha')),
+    q(supa.from('servicios_piloto').select('fecha,tarifa_neta,notas,estado').eq('empresa',EMPRESA).eq('modo','registro_tm').neq('estado','anulado').gte('fecha','2026-10-01')),
+    q(supa.from('cxp_compromisos').select('id,fecha,acreedor,concepto,categoria,monto,estado').neq('estado','pagado')),
+    q(supa.from('cxc_facturas').select('cliente,folio,total,vence,etapa,solo_contable,periodo_hasta').neq('etapa','cobrada')),
+    q(supa.from('tm_reportes').select('tipo,periodo,datos').in('tipo',['flujo','resultados']))]);
+  const mov=rc.data||[],svc=rs.data||[],cxp=(rp.data||[]).filter(x=>(x.estado||'')!=='anulado'),cxc=(rx.data||[]).filter(x=>!x.solo_contable),rep=rr.data||[];
+  const fl10=(rep.find(x=>x.tipo==='flujo'&&x.periodo==='2026-10')||{}).datos||{};const base=(fl10.saldo_ini||[])[0];
+  const ultC=mov.length?mov[mov.length-1].fecha:'—';
+  const M=n=>{const v=Math.round(n||0);return (v<0?'−':'')+'$'+Math.abs(v).toLocaleString('es-CL')};
+  const td=(v,st)=>'<td style="text-align:right;white-space:nowrap;'+(st||'')+'">'+(v?M(v):'')+'</td>';
+  // ── 1. CAJA DE LA SEMANA (Gantt) ──
+  const lun=new Date(dH);lun.setDate(lun.getDate()-((lun.getDay()+6)%7)+7*_pilSem);const dias=[...Array(7)].map((_,i)=>{const d=new Date(lun);d.setDate(d.getDate()+i);return hoyISO(d)});
+  const DN=['lun','mar','mié','jue','vie','sáb','dom'];
+  const cel={};const add=(g,d,v)=>{cel[g]=cel[g]||{};cel[g][d]=(cel[g][d]||0)+v};
+  mov.forEach(m=>{if(dias.includes(m.fecha))add(pilGrupo(m.categoria,m.monto),m.fecha,m.monto)});
+  const fut=d=>d>ultC;
+  cxp.forEach(c=>{if(!c.fecha)return;let d=c.fecha;if(d<=ultC)d=hoy>ultC?hoy:null;if(!d||!fut(d)||!dias.includes(d))return;const v=-(+c.monto||0);add(v>0?'Otras entradas':pilCxpCat(c.categoria),d,v)});
+  cxc.forEach(c=>{if(c.etapa!=='por_cobrar'||!c.vence)return;let d=c.vence<=ultC?(hoy>ultC?hoy:null):c.vence;if(!d||!dias.includes(d))return;add('Cobros de clientes',d,+c.total||0)});
+  let s0=base==null?null:base+mov.filter(m=>m.fecha<dias[0]).reduce((a,m)=>a+m.monto,0);
+  /* días proyectados anteriores a la semana: suma compromisos pendientes entre la última cartola y el lunes */
+  if(s0!=null&&dias[0]>ultC){cxp.forEach(c=>{let d=c.fecha;if(!d)return;if(d<=ultC)d=hoy>ultC?hoy:null;if(d&&d>ultC&&d<dias[0])s0-=(+c.monto||0)});cxc.forEach(c=>{if(c.etapa!=='por_cobrar'||!c.vence)return;let d=c.vence<=ultC?(hoy>ultC?hoy:null):c.vence;if(d&&d>ultC&&d<dias[0])s0+=(+c.total||0)})}
+  const grps=PIL_ORD.filter(g=>cel[g]);let sal=s0;const sIni=[],sFin=[];dias.forEach(d=>{sIni.push(sal);const n=grps.reduce((a,g)=>a+((cel[g]||{})[d]||0),0);sal=sal==null?null:sal+n;sFin.push(sal)});
+  const th=dias.map((d,i)=>'<th style="text-align:center;'+(fut(d)?'background:#CA8A04':'')+'">'+DN[i]+' '+d.slice(8,10)+'-'+d.slice(5,7)+'<br><span style="font-weight:400;font-size:11px">'+(fut(d)?'proyectado':'real')+'</span></th>').join('');
+  const fila=g=>'<tr><td>'+g+'</td>'+dias.map(d=>{const v=(cel[g]||{})[d]||0;return td(v,v?(v>0?'background:#D1FAE5;color:#065F46;font-weight:700':'background:#FEE2E2;color:#991B1B;font-weight:700'):'')}).join('')+td(dias.reduce((a,d)=>a+((cel[g]||{})[d]||0),0),'font-weight:700')+'</tr>';
+  const caja='<h2 style="margin:14px 0 4px">1. Caja de la semana</h2><div class="mini">Real = cartola Santander (cargada hasta el '+fCL(ultC)+'). Proyectado = compromisos y cobros registrados en Kaptura (lo vencido sin pagar aparece hoy).</div>'+
+   '<div style="display:flex;gap:8px;margin:8px 0"><button class="btn2" style="margin:0;flex:1" onclick="verPiloto(-1)">◀ Semana anterior</button><button class="btn2" style="margin:0;flex:1" onclick="verPiloto(1)">Semana siguiente ▶</button></div>'+
+   '<div class="tblw"><table class="tbl"><tr><th></th>'+th+'<th>Semana</th></tr><tr><td><b>Saldo inicial</b></td>'+sIni.map(v=>td(v,'font-weight:700')).join('')+'<td></td></tr>'+grps.map(fila).join('')+
+   '<tr><td><b>SALDO FINAL</b></td>'+sFin.map(v=>td(v,'font-weight:900;font-size:15px')).join('')+td(sFin[6],'font-weight:900;font-size:15px')+'</tr></table></div>';
+  // ── 2. RESULTADO ──
+  const ym=hoy.slice(0,7),[Y,Mo]=ym.split('-').map(Number),pm=new Date(Y,Mo-2,1),ymP=pm.getFullYear()+'-'+String(pm.getMonth()+1).padStart(2,'0');
+  const dimP=new Date(pm.getFullYear(),pm.getMonth()+1,0).getDate(),dim=new Date(Y,Mo,0).getDate();
+  const costoMes=(m,hasta)=>{const det={};let t=0;mov.filter(x=>x.fecha.slice(0,7)===m&&(!hasta||x.fecha<=hasta)&&x.monto<0&&!PIL_NOCOSTO.test(x.categoria||'')).forEach(x=>{const v=-x.monto/(PIL_IVA.test(x.categoria||'')?1.19:1);t+=v;const g=pilGrupo(x.categoria,x.monto);det[g]=(det[g]||0)+v});return {t,det}};
+  const ventaK=(m,hasta)=>svc.filter(x=>x.fecha.slice(0,7)===m&&(!hasta||x.fecha<=hasta)).reduce((a,x)=>a+precioSvc(x),0);
+  const resP=(rep.find(x=>x.tipo==='resultados'&&x.periodo===ymP)||{}).datos;const fV=resP&&(resP.filas||[]).find(f=>f.f===5);
+  const vP=fV&&fV.e!=null?+fV.e:ventaK(ymP),srcVP=fV&&fV.e!=null?'servicios del mes cerrado (sistema TM)':'servicios en Kaptura';
+  const cP=costoMes(ymP),vA=ventaK(ym,hoy),cA=costoMes(ym),dC=ultC.slice(0,7)===ym?+ultC.slice(8,10):0,dV=+hoy.slice(8,10);
+  const vPr=vA+vP/dimP*(dim-dV),cPr=cA.t+cP.t/dimP*(dim-dC);
+  const r3=(t,a,b,c,bold)=>'<tr'+(bold?' style="font-weight:900"':'')+'><td>'+t+'</td>'+td(a,bold?'font-weight:900':'')+td(b,bold?'font-weight:900':'')+td(c,bold?'font-weight:900':'')+'</tr>';
+  const gs=[...new Set([...Object.keys(cP.det),...Object.keys(cA.det)])].sort((a,b)=>PIL_ORD.indexOf(a)-PIL_ORD.indexOf(b));
+  const mesTxt=m=>MESES[+m.slice(5,7)-1];
+  const res='<h2 style="margin:22px 0 4px">2. Resultado (pesos netos)</h2><div class="mini">Ventas = servicios del mes. Costos = lo que salió del banco para operar, incluido lo pagado a Peumo por combustible (sin otras deudas, inversión, impuestos, retiros ni imprevistos; con factura se lleva a neto). Proyectado = al día + promedio diario de '+mesTxt(ymP)+' × días que faltan.</div>'+
+   '<div class="tblw"><table class="tbl"><tr><th></th><th>'+mesTxt(ymP)+' (cerrado)</th><th>'+mesTxt(ym)+' al '+fCL(hoy).slice(0,5)+'</th><th>'+mesTxt(ym)+' proyectado</th></tr>'+
+   r3('Ventas',vP,vA,vPr,true)+r3('Costos',-cP.t,-cA.t,-cPr,true)+gs.map(g=>r3('<span style="padding-left:14px;color:var(--muted)">'+g+'</span>',-(cP.det[g]||0),-(cA.det[g]||0),'')).join('')+
+   r3('UTILIDAD NETA',vP-cP.t,vA-cA.t,vPr-cPr,true)+'</table></div><div class="mini">Fuente ventas '+mesTxt(ymP)+': '+srcVP+'. Ventas '+mesTxt(ym)+': servicios registrados en Kaptura. Costos '+mesTxt(ym)+': cartola hasta el '+fCL(ultC)+'.</div>';
+  // ── 3. DEUDAS Y CUENTAS POR COBRAR ──
+  const cob=cxc.filter(x=>x.total).sort((a,b)=>(a.vence||'9').localeCompare(b.vence||'9'));const tCob=cob.reduce((a,x)=>a+(+x.total||0),0);
+  const ac={};cxp.filter(x=>+x.monto>0).forEach(x=>{const k=x.acreedor||'Sin nombre';ac[k]=ac[k]||{t:0,v:0,px:null};ac[k].t+=+x.monto;if(x.fecha&&x.fecha<hoy)ac[k].v+=+x.monto;else if(x.fecha&&(!ac[k].px||x.fecha<ac[k].px.fecha))ac[k].px=x});
+  const acs=Object.entries(ac).sort((a,b)=>b[1].t-a[1].t);const tD=acs.reduce((a,[,x])=>a+x.t,0),tV=acs.reduce((a,[,x])=>a+x.v,0);
+  const deu='<h2 style="margin:22px 0 4px">3. Deudas y cuentas por cobrar</h2>'+
+   '<div class="tblw"><table class="tbl"><tr><th>Por cobrar</th><th>Documento</th><th>Vence</th><th>Total</th></tr>'+cob.map(x=>'<tr><td>'+x.cliente+'</td><td>'+(x.folio?'Factura '+x.folio:(x.etapa==='por_facturar'?'Por facturar':''))+'</td><td>'+(x.vence?fCL(x.vence):'—')+'</td>'+td(+x.total)+'</tr>').join('')+'<tr style="font-weight:900"><td>Total por cobrar</td><td></td><td></td>'+td(tCob,'font-weight:900')+'</tr></table></div>'+
+   '<div class="tblw" style="margin-top:10px"><table class="tbl"><tr><th>Deuda (compromisos)</th><th>Saldo</th><th>Vencido</th><th>Próximo pago</th></tr>'+acs.map(([k,x])=>'<tr><td>'+k+'</td>'+td(x.t)+td(x.v,x.v?'color:#B91C1C;font-weight:800':'')+'<td>'+(x.px?fCL(x.px.fecha)+' · '+M(+x.px.monto):'—')+'</td></tr>').join('')+
+   '<tr style="font-weight:900"><td>Total</td>'+td(tD,'font-weight:900')+td(tV,'font-weight:900;color:#B91C1C')+'<td></td></tr></table></div><div class="mini">Solo lo registrado en Compromisos de Kaptura. Falta cargar: crédito Fogape (tabla del banco) y la parte de Peumo sin calendario.</div>';
+  box.innerHTML=caja+res+deu}catch(e){box.innerHTML='<div class="sub">No se pudo cargar: '+(e.message||e)+'</div>'}}
 function parseNotas(n){try{return JSON.parse(n||'{}')}catch(e){return{observacion:n}}}
 async function verRegistros(){
   ir('s-list'); $('lista').innerHTML=''; $('btn-xls').disabled=true; $('btn-xls').style.display=esAdmin()?'block':'none'; $('list-h').textContent=esAdmin()?'Servicios registrados – Transportes Madrid':esCliente()?'Servicios '+user.cliente:'Mis servicios registrados';
