@@ -26,7 +26,7 @@ body{padding:16px 16px 40px;max-width:520px;margin:0 auto}
 .hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
 .brand{font-weight:900;letter-spacing:.12em;font-size:13px;color:var(--gold)}
 .link{background:none;border:none;color:var(--muted);font-size:13px;font-family:inherit;text-decoration:underline;cursor:pointer}
-.screen{display:none}.screen.on{display:block}
+.screen{display:none}.screen.on{display:block}body.admhome:not(.pc) #s-home.on{display:flex;flex-direction:column}body.admhome:not(.pc) #s-home>#tareas-hoy,body.admhome:not(.pc) #s-home>#alerta-sinreg,body.admhome:not(.pc) #s-home>#alerta-adm,body.admhome:not(.pc) #s-home>#alerta-cxc{order:99;margin-top:12px} /* teléfono, administración: primero el menú y al final tareas y alertas (Carlos 12-11) */
 #pcnav{display:none}
 /* ═══ VISTA PC ADMINISTRACIÓN: tema claro estilo sistema de gestión (Carlos 02-11). Teléfonos sin cambio ═══ */
 html:has(body.pc){background:#F4F6F9}
@@ -598,8 +598,8 @@ async function verFcomb(){ir('s-fcomb');const box=$('fc-box');box.textContent='C
   catch(e){box.innerHTML='<div class="m">No se pudo cargar.</div>'}}
 async function fcNivel(id,v){if(!v)return;const {error}=await supa.from('fotos_combustible').update({nota:'nivel='+v}).eq('id',id);toast(error?'No se pudo guardar':'Nivel guardado');if(!error)verFcomb()}
 async function fcPat(id,p){if(!p)return;const {error}=await supa.from('fotos_combustible').update({patente:p}).eq('id',id);toast(error?'No se pudo guardar':'Patente asignada');if(!error)verFcomb()}
-function ordenHome(){const h=$('s-home'),ids=esCliente()?['btn-ver','btn-misent','btn-ifco','btn-gps','btn-prof','btn-profA','btn-ent','btn-reg']:['btn-ent','btn-reg','btn-fcomb','btn-ver','btn-misent','btn-fcadm','btn-ifco','btn-gps','btn-prof','btn-profA','btn-flu','btn-res','btn-cos','btn-efe','btn-rsv','btn-pil','btn-caja','btn-cxc','btn-spot','btn-spotm','btn-emp','btn-ctc'];ids.forEach(i=>h.appendChild($(i)))} /* orden de inicio del cliente: servicios, entregas, IFCO, GPS (Carlos 30-10) */
-function salir(){ls('tm_pin',null);user=null;document.body.classList.remove('movnav','navabierto','navoculto');EMP_ACT=EMPRESA;document.body.classList.remove('global');['alerta-adm','alerta-cxc','tareas-hoy','pc-dash','alerta-sinreg','cxc-box','rep-tbl'].forEach(i=>{const e=$(i);if(e)e.innerHTML=''});document.body.classList.remove('pc');$('pcnav').innerHTML='';const bv=$('btn-vista');if(bv)bv.remove();pin='';pintarPin();$('btn-salir').style.display='none';$('hdr-user').textContent='';_dupOk=false;ir('s-pin')}
+function ordenHome(){document.body.classList.toggle('admhome',!!esAdmin());const h=$('s-home'),ids=esCliente()?['btn-ver','btn-misent','btn-ifco','btn-gps','btn-prof','btn-profA','btn-ent','btn-reg']:['btn-ent','btn-reg','btn-fcomb','btn-ver','btn-misent','btn-fcadm','btn-ifco','btn-gps','btn-prof','btn-profA','btn-flu','btn-res','btn-cos','btn-efe','btn-rsv','btn-pil','btn-caja','btn-cxc','btn-spot','btn-spotm','btn-emp','btn-ctc'];ids.forEach(i=>h.appendChild($(i)))} /* orden de inicio del cliente: servicios, entregas, IFCO, GPS (Carlos 30-10) */
+function salir(){ls('tm_pin',null);user=null;document.body.classList.remove('movnav','navabierto','navoculto','admhome');EMP_ACT=EMPRESA;document.body.classList.remove('global');['alerta-adm','alerta-cxc','tareas-hoy','pc-dash','alerta-sinreg','cxc-box','rep-tbl'].forEach(i=>{const e=$(i);if(e)e.innerHTML=''});document.body.classList.remove('pc');$('pcnav').innerHTML='';const bv=$('btn-vista');if(bv)bv.remove();pin='';pintarPin();$('btn-salir').style.display='none';$('hdr-user').textContent='';_dupOk=false;ir('s-pin')}
 
 // ═══ REGISTRO ═══
 // Borrador: las fotos quedan guardadas en el celular hasta registrar el servicio
