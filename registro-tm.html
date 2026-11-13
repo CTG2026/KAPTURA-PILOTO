@@ -520,7 +520,7 @@ const SERVICIOS=[
   {txt:'Ateuro: Las Petacas → Clee · 66 bins',servicio:'Ateuro: Las Petacas → Clee · 66 bins',cliente:'Ateuro / Zuria',origen:'LAS PETACAS',destino:'CLEE',tarifa:450000,soloTracto:true},
   {txt:'Otro (escribir en observación)',servicio:'SPOT – viaje puntual (escriba la tarifa en Servicios reales)',cliente:'',origen:'',destino:'',tarifa:0}
 ];
-const PATENTES=['DSBZ64','ZV7780','CWVH32-9','DZZW14','XJ3908'];
+const PATENTES=['DSBZ64','ZV7780','CWVH32-9','DZZW14','XJ3908','GXYD90']; // GXYD90: equipo de TM que trabaja en otra sociedad; tipo por confirmar (Carlos 13-11)
 // peonetas por patente (afurgonados)
 const PEONETAS={'CWVH32-9':['Marcelo González']};
 const ACOPLADOS=['','JN4847','JB6234','GRFD91']; // GRFD91: thermo de reemplazo del dueño del JN (pana o mantención), Carlos 30-10
@@ -707,7 +707,8 @@ function pintarServicios(cli){
 }
 function pintarEquipo(){
   const pats=(user&&user.rol==='conductor'&&!LIC_A5.includes(user.pin))?PATENTES.filter(x=>!TRACTOS.includes(x)&&x!=='XJ3908'):PATENTES;
-  $('patente').innerHTML='<option value="" selected>Elige patente</option>'+pats.map(x=>'<option>'+x+'</option>').join('');
+  /* Por defecto, la patente asignada al conductor; puede cambiarla en la lista (Carlos 13-11) */const def=(user&&pats.includes(user.patente))?user.patente:'';
+  $('patente').innerHTML='<option value=""'+(def?'':' selected')+'>Elige patente</option>'+pats.map(x=>'<option'+(x===def?' selected':'')+'>'+x+'</option>').join('');
   $('acoplado').innerHTML='<option value="?" selected>Elige acoplado</option>'+ACOPLADOS.map(x=>'<option value="'+x+'">'+(x||'Sin acoplado')+'</option>').join('');
   pintarPeoneta();
 }
