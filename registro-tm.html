@@ -19,7 +19,7 @@
 <style>
 :root{--bg:#0E0E0E;--surface:#181818;--surface2:#222;--border:#2E2E2E;--text:#F2F2F2;--muted:#9A9A9A;--gold:#F5B800;--green:#2ECC71;--danger:#FF5A5A}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{background:var(--bg);color:var(--text);font-family:'DM Sans',system-ui,sans-serif;min-height:100%}
+html,body{background:var(--bg);color:var(--text);font-family:'Cifras','DM Sans',system-ui,sans-serif;min-height:100%}
 body{padding:16px 16px 40px;max-width:520px;margin:0 auto}
 @media (pointer:fine){html{overflow-y:scroll}::-webkit-scrollbar{width:12px;height:12px}::-webkit-scrollbar-track{background:#1b1b1b}::-webkit-scrollbar-thumb{background:#8a7a3a;border-radius:6px;border:2px solid #1b1b1b}::-webkit-scrollbar-thumb:hover{background:#c9a227}html{scrollbar-color:#8a7a3a #1b1b1b}}
 @media (min-width:1024px){body:has(#s-fcomb.on),body:has(#s-prof.on),body:has(#s-profA.on),body:has(#s-rsv.on),body:has(#s-cxc.on){max-width:none}body:has(#s-cxc.on) #cxc-tbl{font-size:14px}body:has(#s-cxc.on) #cxc-tbl td:nth-child(8){white-space:normal;min-width:260px}body:has(#s-profA.on) #profA-tbl td,body:has(#s-rsv.on) #rsv-tbl td{white-space:normal}body:has(#s-prof.on) #prof-tbl td{white-space:normal}body:has(#s-prof.on) #prof-tbl td:nth-child(5),body:has(#s-prof.on) #prof-tbl td:nth-child(12),body:has(#s-prof.on) #prof-tbl td:nth-child(13),body:has(#s-prof.on) #prof-tbl td:nth-child(15){white-space:nowrap}}
@@ -54,7 +54,7 @@ body.pc .toast{left:calc(50% + 113px);max-width:520px}
 body.pc{max-width:none;padding-left:250px;padding-right:28px}
 body.pc #pcnav{display:flex;flex-direction:column;gap:4px;position:fixed;left:0;top:0;bottom:0;width:226px;background:var(--surface);border-right:1px solid var(--border);padding:18px 12px;overflow-y:auto;z-index:50}
 #pcnav .t{font-weight:900;letter-spacing:.1em;font-size:12px;color:var(--gold);margin:0 6px 14px}
-#pcnav button{background:none;border:none;color:var(--text);text-align:left;font:600 14px 'DM Sans',sans-serif;padding:10px;border-radius:8px;cursor:pointer}
+#pcnav button{background:none;border:none;color:var(--text);text-align:left;font:600 14px 'Cifras','DM Sans',sans-serif;padding:10px;border-radius:8px;cursor:pointer}
 #pcnav button:hover,#pcnav button.on{background:var(--surface2);color:var(--gold)}
 body.pc #s-home>button{display:none!important}
 body.global #s-home>button,body.global #alerta-sinreg,body.global #alerta-cxc,body.global #pc-dash{display:none!important}
@@ -124,9 +124,9 @@ body.pc.navoculto{padding-left:28px}
 body.pc.navoculto .hdr{left:0}
 body.pc.navoculto .toast{left:50%}
 body.pc .tv{display:none}body:not(.pc) .tp{display:none}
-.carpick{display:block;width:100%;margin:10px 0;padding:26px 14px;border:2px dashed #2563eb;border-radius:14px;background:rgba(37,99,235,.06);color:var(--text);font:800 17px 'DM Sans',sans-serif;cursor:pointer}.carpick small{font-weight:400;font-size:13px;color:var(--muted)}
+.carpick{display:block;width:100%;margin:10px 0;padding:26px 14px;border:2px dashed #2563eb;border-radius:14px;background:rgba(37,99,235,.06);color:var(--text);font:800 17px 'Cifras','DM Sans',sans-serif;cursor:pointer}.carpick small{font-weight:400;font-size:13px;color:var(--muted)}
 /* Filas guiadas por bordes horizontales arriba y abajo, de borde a borde (Carlos 09-11) */details [style*="justify-content:space-between"],.kpi [style*="justify-content:space-between"]{border-top:0!important;border-bottom:1px solid var(--border)}details details,.kpi details{border-top:0!important}.pcolh{border-bottom:1px solid var(--border)}
-/* Cifras alineadas dígito bajo dígito (Carlos 13-11) */summary b,.pcol{font-variant-numeric:tabular-nums}/* Columna Presupuesto junto a Real: solo con el teléfono horizontal (o pantalla ancha) (Carlos 08-11) */.pcol,.pcolh{display:none}@media (orientation:landscape){.pcol{display:inline-block;flex:0 0 125px;text-align:right;margin-left:auto;color:inherit;font-weight:700}.pcolh{display:flex;justify-content:flex-end;gap:8px;font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase}}
+/* Cifras alineadas dígito bajo dígito en toda la app: números con Inter de ancho fijo (DM Sans no lo trae) (Carlos 13-11) */@font-face{font-family:'Cifras';font-style:normal;font-weight:100 900;font-display:swap;src:url(https://fonts.gstatic.com/s/inter/v20/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7.woff2) format('woff2');unicode-range:U+0024,U+0025,U+002D,U+002E,U+0030-0039,U+2212}body,button,input,select,textarea{font-variant-numeric:tabular-nums}/* Columna Presupuesto junto a Real: solo con el teléfono horizontal (o pantalla ancha) (Carlos 08-11) */.pcol,.pcolh{display:none}@media (orientation:landscape){.pcol{display:inline-block;flex:0 0 125px;text-align:right;margin-left:auto;color:inherit;font-weight:700}.pcolh{display:flex;justify-content:flex-end;gap:8px;font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase}}
 #pc-dash .kpis{display:grid!important;grid-template-columns:1fr!important;gap:12px}@media (min-width:700px),(orientation:landscape){#pc-dash .kpis{grid-template-columns:1fr 1fr!important}}
 </style>
 </head>
@@ -1786,7 +1786,7 @@ function aplicarVista(){if(!(user&&['administrador','administracion','coordinado
   if(EMP_ACT!==EMPRESA){$('pcnav').innerHTML='<div class="t">KAPTURA · '+EMP_NOM[EMP_ACT].toUpperCase()+'</div><button data-s="s-home" onclick="ir(\'s-home\')">🏠 Inicio: tareas y alertas</button>'+cambiar+archNav();archNavCargar();return}
   const adm=esAdmOp(),sb='padding-left:24px';
   const bt=i=>$(i)&&$(i).style.display!=='none'?'<button data-s="'+NAV_SCR[i]+'" onclick="$(\''+i+'\').click()" style="'+sb+'">'+$(i).textContent.replace(/\s*\(\d+\)$/,'')+'</button>':'';
-  const grp=(t,h)=>h?'<details class="ng" ontoggle="if(this.open)document.querySelectorAll(\'#pcnav details.ng\').forEach(x=>{if(x!==this)x.open=false})"><summary style="list-style:none;cursor:pointer;font:700 14px \'DM Sans\',sans-serif;padding:10px;border-radius:8px">'+t+'</summary>'+h+'</details>':'';
+  const grp=(t,h)=>h?'<details class="ng" ontoggle="if(this.open)document.querySelectorAll(\'#pcnav details.ng\').forEach(x=>{if(x!==this)x.open=false})"><summary style="list-style:none;cursor:pointer;font:700 14px \'Cifras\',\'DM Sans\',sans-serif;padding:10px;border-radius:8px">'+t+'</summary>'+h+'</details>':'';
   /* Menú PC por ámbito (Carlos 06-11): grandes opciones; adentro, las mismas opciones y permisos de antes */
   /* Acordeón dentro del ámbito: una opción que se despliega con su lista (Carlos 08-11) */
   const subAc=(t,L)=>'<details class="sac"><summary style="list-style:none;cursor:pointer;padding:8px 10px 8px 24px;font-size:14px">▸ '+t+'</summary>'+L.map(([k,x])=>'<button data-s="s-car-'+k+'" onclick="verCar(\''+k+'\')" style="padding-left:44px">'+x+'</button>').join('')+'</details>';
