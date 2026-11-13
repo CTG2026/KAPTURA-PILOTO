@@ -520,7 +520,7 @@ const SERVICIOS=[
   {txt:'Ateuro: Las Petacas → Clee · 66 bins',servicio:'Ateuro: Las Petacas → Clee · 66 bins',cliente:'Ateuro / Zuria',origen:'LAS PETACAS',destino:'CLEE',tarifa:450000,soloTracto:true},
   {txt:'Otro (escribir en observación)',servicio:'SPOT – viaje puntual (escriba la tarifa en Servicios reales)',cliente:'',origen:'',destino:'',tarifa:0}
 ];
-const PATENTES=['DSBZ64','ZV7780','CWVH32-9','DZZW14','XJ3908','GXYD90']; // GXYD90: equipo de TM que trabaja en otra sociedad; tipo por confirmar (Carlos 13-11)
+const PATENTES=['DSBZ64','ZV7780','CWVH32-9','DZZW14','XJ3908','GXYD90']; // GXYD90: afurgonado de TM que trabaja en otra sociedad (Carlos 13-11)
 // peonetas por patente (afurgonados)
 const PEONETAS={'CWVH32-9':['Marcelo González']};
 const ACOPLADOS=['','JN4847','JB6234','GRFD91']; // GRFD91: thermo de reemplazo del dueño del JN (pana o mantención), Carlos 30-10
@@ -565,7 +565,7 @@ function entrar(p,auto){
 }
 /* ═══ FOTO NIVEL COMBUSTIBLE (Carlos 08-11) ═══ El conductor solo saca la foto y aprieta ✔. Se guarda la hora de la foto, la ubicación y el conductor; la patente se resuelve después (primer servicio del día de ese conductor, o asignación manual), y se cruza con las cargas Aramco por patente y hora. */
 let _fcF=null,_fcPos=null;
-const CAP_EST={DSBZ64:1200,ZV7780:1200,CWVH32:300,DZZW14:300}; /* litros al 100%: tractos con thermo 2×600 L, afurgonados 300 L (Carlos 12-11) */
+const CAP_EST={DSBZ64:1200,ZV7780:1200,CWVH32:300,DZZW14:300,GXYD90:300}; /* litros al 100%: tractos con thermo 2×600 L, afurgonados 300 L (Carlos 12-11) */
 const fcNiv=f=>{const m=String(f.nota||'').match(/nivel=([0-9.]+)/);return m?+m[1]:null};
 function fcFoto(){_fcPos=null;try{if(navigator.geolocation)navigator.geolocation.getCurrentPosition(p=>{_fcPos=p},()=>{},{enableHighAccuracy:true,timeout:20000})}catch(e){}$('fc-cam').value='';$('fc-cam').click()}
 function fcElegida(inp){const f=inp.files&&inp.files[0];if(!f)return;_fcF={f,t:new Date()};$('fc-img').src=URL.createObjectURL(f);$('fc-ok').disabled=false;$('fc-ok').textContent='✔ Guardar';$('fc-ov').style.display='block'}
@@ -832,7 +832,7 @@ async function enviar(reg,blobs){
 // Parámetros copiados del Excel del sistema v11.10 (Parámetros A y D, Resultados Mes) al 30-10-2026. Al cambiar el Excel, actualizar aquí.
 const COSTO={diesel:1185,rend:{A:3.5,T:2.6},com:0.10,ase:0.03,neum:20,mant:35,viatTracto:15000,viatAfur:7500,retSuper:0.397,fijoMes:4933572,fijos:[['Remuneraciones (costo empresa)',3228840],['Provisión vacaciones y finiquitos',126177],['Arriendo thermo JN',1000000],['Contador (Drival)',300000],['Camioneta: combustible',180000],['Seguros',50000],['Telefonía',28555],['GPS / telemetría',20000]],diasMes:20,alta:['2026-11-15','2027-03-31']};
 // Tipo de cada camión (rendimiento): A = afurgonado 3,5 km/l · T = tracto + thermo 2,6 km/l
-const TIPO_PAT={CWVH32:'A',DZZW14:'A',DSBZ64:'T',ZV7780:'T'};
+const TIPO_PAT={CWVH32:'A',DZZW14:'A',DSBZ64:'T',ZV7780:'T',GXYD90:'A'};
 const patTipo=p=>{const t=TIPO_PAT[PAT_GPS(p||'')];return p+(esAdmin()&&t?' · '+(t==='T'?'Tracto + thermo':'Afurgonado'):'')}; // tipo de equipo junto a la patente, solo administradores (Carlos 30-10)
 const SV_COSTO={"Ateuro: El Trébol → Clee · 66 bins": [100, "T", 5200, 0], "Ateuro: El Trébol → Clee · 20 bins": [100, "T", 5200, 0], "Ateuro: Santa Elena → Clee · 66 bins": [100, "T", 5200, 0], "Ateuro: Las Petacas → Clee · 66 bins": [100, "T", 5200, 0], "Planta EBLOOMS → Santiago centros distribución": [250, "A", 25000, 0.5], "Ateuro: campo / huertos → planta (Coltauco)": [30, "A", 0, 0.5], "Ateuro: campo / huertos → planta (Cuncumén)": [320, "A", 25000, 1], "Planta EBLOOMS → Supermercados Santiago (Temporada Baja)": [250, "A", 25000, 1], "Planta EBLOOMS → Supermercados Santiago · hasta 8 pallets": [250, "A", 25000, 1], "Planta EBLOOMS → Supermercados Santiago (Temporada Alta)": [250, "A", 25000, 1], "Planta EBLOOMS → Chillán (Cencosud)": [700, "T", 70000, 1], "CHILLÁN → LOS ÁNGELES": [250, "T", 22000, 1], "CHILLÁN → LOS ÁNGELES → TEMUCO": [570, "T", 22000, 1], "CHILLÁN → LOS ÁNGELES → VICTORIA → TEMUCO": [570, "T", 22000, 1], "CHILLÁN → CONCEPCIÓN": [200, "T", 6200, 1], "CHILLÁN → TEMUCO": [570, "T", 22000, 1], "CHILLÁN → VICTORIA": [440, "T", 22000, 1], "CHILLÁN → SAN FERNANDO": [0, "T", 0, 1], "CHILLÁN → SAN FERNANDO → RANCAGUA": [0, "T", 0, 1], "CHILLÁN → SANTIAGO CON TRASVASIJE": [200, "T", 25000, 1], "CHILLÁN → SANTIAGO · TRASVASIJE + TRASPALETEO": [200, "T", 25000, 1], "CHILLÁN → SANTIAGO": [200, "T", 25000, 1], "CHILLÁN → RANCAGUA": [0, "T", 0, 1], "CHILLÁN → TEMUCO → VICTORIA → LOS ÁNGELES": [570, "T", 22000, 1]};
 let _gpsRes=[],_cargas=[];
