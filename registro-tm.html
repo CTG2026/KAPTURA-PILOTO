@@ -1838,8 +1838,8 @@ async function pcDash(){const box=$('pc-dash');if(!box)return;const run=++_pcRun
     let rent='',projF=null;try{const ini=mes+'-01';let gp=[],cg=[];try{const d0=new Date(ini+'T12:00:00-03:00');d0.setDate(d0.getDate()-21);cg=((await pre.cg)||{}).data||[]}catch(e){}
       try{gp=((await pre.gp)||{}).data||[]}catch(e){}
       const F0=filas,G0=_gpsRes,C0=_cargas;let Z=[];try{filas=sv.map(r=>({...r,_n:parseNotas(r.notas)}));_gpsRes=gp;_cargas=cg;Z=filas.map(r=>({r,z:zRes(r)}))}finally{filas=F0;_gpsRes=G0;_cargas=C0}
-      /* Combustible real = cargas Aramco del mes a la fecha (neto); el estimado por km queda solo como referencia (Carlos 09-11) */
-      const cgM=cg.filter(x=>x.fecha>=ini&&x.fecha<=hasta),useA=cgM.length>0,araC=cgM.reduce((t,x)=>t+(+x.total||0)-(+x.iva||0),0),estC=Z.reduce((t,x)=>t+((x.z.v||{}).combustible||0),0);
+      /* Combustible en Variables = referencia por km (km ÷ rendimiento × precio neto/l); las cargas reales Aramco no se suman (Carlos 13-11) */
+      const cgM=cg.filter(x=>x.fecha>=ini&&x.fecha<=hasta),useA=false,araC=cgM.reduce((t,x)=>t+(+x.total||0)-(+x.iva||0),0),estC=Z.reduce((t,x)=>t+((x.z.v||{}).combustible||0),0);
       const V=Z.reduce((t,x)=>t+x.z.tarifa,0),CV=Z.reduce((t,x)=>t+x.z.tv,0)-(useA?estC-araC:0),CF=Z.reduce((t,x)=>t+x.z.fijo,0),U=V-CV-CF,m$=v=>(Math.round(v)<0?'<span style="color:#ff3b30">−'+fmt$(-v)+'</span>':fmt$(v)),pc=v=>V?' <span style="color:var(--muted);font-weight:400">('+String(Math.round(v/V*1000)/10).replace('.',',')+'%)</span>':'';
       const gR=(t,v,b,p)=>'<details style="padding:5px 0;border-top:1px solid var(--border)"><summary style="display:flex;justify-content:space-between;gap:8px;cursor:pointer;list-style:none"><span>▸ '+t+'</span>'+pcS(p)+'<b style="white-space:nowrap'+pcB(p)+'">'+v+'</b></summary><div style="padding-left:12px;font-size:12px;color:var(--muted)">'+b+'</div></details>';
       const byC={};Z.forEach(x=>{(byC[x.r.cliente||'Sin cliente']=byC[x.r.cliente||'Sin cliente']||[]).push(x)});
