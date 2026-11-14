@@ -26,7 +26,7 @@ body{padding:16px 16px 40px;max-width:520px;margin:0 auto}
 .hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
 .brand{font-weight:900;letter-spacing:.12em;font-size:13px;color:var(--gold)}
 .link{background:none;border:none;color:var(--muted);font-size:13px;font-family:inherit;text-decoration:underline;cursor:pointer}
-.screen{display:none}.screen.on{display:block}body.admhome:not(.pc) #s-home.on{display:flex;flex-direction:column}body.admhome:not(.pc) #s-home>#tareas-hoy,body.admhome:not(.pc) #s-home>#alerta-sinreg,body.admhome:not(.pc) #s-home>#alerta-adm,body.admhome:not(.pc) #s-home>#alerta-cxc{order:99;margin-top:12px}body.admhome:not(.pc) #s-home>#tareas-hoy{order:100} /* teléfono, administración: orden: menú, alertas y al final tareas (Carlos 12-11) */
+.screen{display:none}.screen.on{display:block}body.admhome:not(.pc) #s-home.on{display:flex;flex-direction:column}/* Teléfono administración: alertas (servicios sin registrar, cobranza) arriba, luego el menú y al final las tareas (Carlos 14-11) */body.admhome:not(.pc) #s-home>#tareas-hoy{order:100;margin-top:12px} /* teléfono, administración: orden: menú, alertas y al final tareas (Carlos 12-11) */
 #pcnav{display:none}
 /* ═══ VISTA PC ADMINISTRACIÓN: tema claro estilo sistema de gestión (Carlos 02-11). Teléfonos sin cambio ═══ */
 html:has(body.pc){background:#F4F6F9}
