@@ -721,8 +721,8 @@ const CLIENTES_REG=['EBLOOMS','Alimentos Valle Central','Ateuro / Zuria','DDC'];
 function pintarServicios(cli){
   const o=$('opts');o.innerHTML='';svcSel=null;pintarExtras();
   const btn=(t,f,cls)=>{const b=document.createElement('button');b.className=cls||'opt';b.textContent=t;b.onclick=f;o.appendChild(b);return b};
-  if(!cli){CLIENTES_REG.forEach(c=>btn(c,()=>pintarServicios(c)));btn('Otro / spot',()=>pintarServicios('Otro'));return}
-  btn('← Cambiar cliente ('+cli+')',()=>pintarServicios(),'btn2');
+  if(!cli){CLIENTES_REG.forEach(c=>btn(c.toUpperCase(),()=>pintarServicios(c)));btn('OTRO / SPOT',()=>pintarServicios('Otro'));return} /* nombres de clientes en mayúsculas (Carlos 16-11) */
+  btn('← Cambiar cliente ('+String(cli).toUpperCase()+')',()=>pintarServicios(),'btn2');
   const freq=JSON.parse(ls('tm_freq_'+user.pin)||'{}');
   const lista=SERVICIOS.filter(s=>cli==='Otro'?!CLIENTES_REG.includes(s.cliente):s.cliente===cli).sort((a,b)=>(freq[b.servicio]||0)-(freq[a.servicio]||0));
   lista.forEach(s=>{const b=btn(s.txt,()=>{svcSel=s;o.querySelectorAll('.opt').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');pintarExtras()})});
