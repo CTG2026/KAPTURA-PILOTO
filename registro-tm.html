@@ -504,7 +504,7 @@ const SERVICIOS=[
   {txt:'Coltauco → Santiago súper · 9 a 15 pallets',servicio:'Planta EBLOOMS → Supermercados Santiago (Temporada Baja)',cliente:'EBLOOMS',origen:'COLTAUCO',destino:'SANTIAGO',tarifa:407000,retorno:true},
   {txt:'Coltauco → Santiago centros de distribución',servicio:'Planta EBLOOMS → Santiago centros distribución',cliente:'EBLOOMS',origen:'COLTAUCO',destino:'SANTIAGO',tarifa:407000,retorno:true},
   {txt:'Limache (Greenveg) → Coltauco · con IFCO',servicio:'EBLOOMS: Limache (Greenveg) → Planta Coltauco · con IFCO',cliente:'EBLOOMS',origen:'LIMACHE',destino:'COLTAUCO',tarifa:685000,soloTracto:true},   {txt:'Limache (Greenveg) → Coltauco · sin IFCO',servicio:'EBLOOMS: Limache (Greenveg) → Planta Coltauco · sin IFCO',cliente:'EBLOOMS',origen:'LIMACHE',destino:'COLTAUCO',tarifa:650000,soloTracto:true}, // Carlos 14-11
-  {txt:'Fundo Viña María (Rosario) → Curicó',servicio:'DDC: Fundo Viña María (Rosario) → Curicó',cliente:'DDC',origen:'ROSARIO',destino:'CURICÓ',tarifa:446250,soloTracto:true}, // Carlos 16-11
+  {txt:'Fundo Viña María (Rosario) → Curicó',servicio:'DDC: Fundo Viña María (Rosario) → Curicó',cliente:'DDC',origen:'ROSARIO',destino:'CURICÓ',tarifa:446250,soloTracto:true,sinExtras:true}, // Carlos 16-11
   {txt:'Chillán → Santiago',servicio:'CHILLÁN → SANTIAGO',cliente:'Alimentos Valle Central',origen:'CHILLÁN',destino:'SANTIAGO',tarifa:280000},
   {txt:'Chillán → Concepción',servicio:'CHILLÁN → CONCEPCIÓN',cliente:'Alimentos Valle Central',origen:'CHILLÁN',destino:'CONCEPCIÓN',tarifa:350000},
   {txt:'Chillán → Los Ángeles → Victoria → Temuco',servicio:'CHILLÁN → LOS ÁNGELES → VICTORIA → TEMUCO',cliente:'Alimentos Valle Central',origen:'CHILLÁN',destino:'TEMUCO',tarifa:570000},
@@ -744,6 +744,7 @@ function pintarPeoneta(){
 $('patente').addEventListener('change',pintarPeoneta);
 function pintarExtras(){
   const c=$('chips');c.innerHTML='';
+  /* Servicios sin extras (DDC, Carlos 16-11): se oculta la sección Extras */const cd=c.closest('.card');if(svcSel&&svcSel.sinExtras){extrasSel.clear();if(cd)cd.style.display='none';document.querySelectorAll('.extra').forEach(e=>e.classList.remove('on'));return}if(cd)cd.style.display='';
   EXTRAS.forEach(x=>{ if(x.id==='retorno'&&!(svcSel&&svcSel.retorno)){extrasSel.delete('retorno');return}
     if(x.id==='ifco'&&!(svcSel&&svcSel.cliente==='EBLOOMS')){extrasSel.delete('ifco');return}
     const b=document.createElement('button');b.className='chip'+(extrasSel.has(x.id)?' sel':'');b.textContent=x.txt;
