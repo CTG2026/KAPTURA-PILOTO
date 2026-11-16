@@ -237,6 +237,7 @@ body.pc .tv{display:none}body:not(.pc) .tp{display:none}
       <select id="patente"></select>
       <select id="acoplado"></select>
     </div>
+    <input id="aco-otra" placeholder="Escribe la patente del acoplado (ej: JK2052)" autocapitalize="characters" style="display:none;width:100%;margin-top:8px;font-size:18px;padding:10px;border-radius:10px;border:2px solid var(--yellow,#F5B800);background:var(--surface2);color:var(--text)">
     <input id="pat-otra" placeholder="Escribe la patente (ej: ABCD12)" autocapitalize="characters" style="display:none;width:100%;margin-top:8px;font-size:18px;padding:10px;border-radius:10px;border:2px solid var(--yellow,#F5B800);background:var(--surface2);color:var(--text)">
     <div id="peo-box" style="display:none;margin-top:8px"><select id="peoneta" style="width:100%"></select></div>
   </div>
@@ -731,13 +732,13 @@ function pintarEquipo(){
   const pats=(user&&user.rol==='conductor'&&!LIC_A5.includes(user.pin))?PATENTES.filter(x=>!TRACTOS.includes(x)&&x!=='XJ3908'):PATENTES;
   /* Por defecto, la patente asignada al conductor; puede cambiarla en la lista (Carlos 13-11) */const def=(user&&pats.includes(user.patente))?user.patente:'';
   $('patente').innerHTML='<option value=""'+(def?'':' selected')+'>Elige patente</option>'+pats.map(x=>'<option'+(x===def?' selected':'')+'>'+x+'</option>').join('')+'<option value="OTRA">✏️ Otra patente (escribir)</option>';$('pat-otra').style.display='none';$('pat-otra').value='';
-  $('acoplado').innerHTML='<option value="?" selected>Elige acoplado</option>'+ACOPLADOS.map(x=>'<option value="'+x+'">'+(x||'Sin acoplado')+'</option>').join('');
+  $('acoplado').innerHTML='<option value="?" selected>Elige acoplado</option>'+ACOPLADOS.map(x=>'<option value="'+x+'">'+(x||'Sin acoplado')+'</option>').join('')+'<option value="OTRA">✏️ Otro acoplado (escribir)</option>';$('aco-otra').style.display='none';$('aco-otra').value='';
   pintarPeoneta();
 }
 function pintarPeoneta(){
-  const esTracto=TRACTOS.includes($('patente').value);
+  const pv=$('patente').value,esTracto=TRACTOS.includes(pv)||(!!pv&&pv!=='OTRA'&&!PATENTES.includes(pv)); /* patente escrita a mano: puede ser tracto de tercero → pide acoplado */
   $('acoplado').style.display=esTracto?'':'none';
-  if(!esTracto)$('acoplado').value='';else if($('acoplado').value==='')$('acoplado').value='?';
+  if(!esTracto){$('acoplado').value='';$('aco-otra').style.display='none'}else if($('acoplado').value==='')$('acoplado').value='?';
   const lista=PEONETAS[$('patente').value]||[];
   $('peo-box').style.display=lista.length?'block':'none';
   $('peoneta').innerHTML='<option value="?" selected>Elige peoneta</option>'+lista.map(x=>'<option>'+x+'</option>').join('')+'<option value="">Sin peoneta</option>';
@@ -745,6 +746,8 @@ function pintarPeoneta(){
 $('patente').addEventListener('change',pintarPeoneta);
 /* Otra patente escrita a mano (Carlos 16-11): se agrega a la lista y queda elegida */
 $('patente').addEventListener('change',()=>{const o=$('patente').value==='OTRA';$('pat-otra').style.display=o?'block':'none';if(o)$('pat-otra').focus()});
+$('acoplado').addEventListener('change',()=>{const o=$('acoplado').value==='OTRA';$('aco-otra').style.display=o?'block':'none';if(o)$('aco-otra').focus()});
+$('aco-otra').addEventListener('change',()=>{const v=$('aco-otra').value.toUpperCase().replace(/[^A-Z0-9]/g,'');if(v.length<5||v.length>7){toast('Patente no válida');return}const sel=$('acoplado');if(![...sel.options].some(o=>o.value===v)){const op=document.createElement('option');op.value=op.textContent=v;sel.insertBefore(op,sel.querySelector('option[value="OTRA"]'))}sel.value=v;$('aco-otra').style.display='none'});
 $('pat-otra').addEventListener('change',()=>{const v=$('pat-otra').value.toUpperCase().replace(/[^A-Z0-9]/g,'');if(v.length<5||v.length>7){toast('Patente no válida');return}const sel=$('patente');if(![...sel.options].some(o=>o.value===v)){const op=document.createElement('option');op.value=op.textContent=v;sel.insertBefore(op,sel.querySelector('option[value="OTRA"]'))}sel.value=v;$('pat-otra').style.display='none';pintarPeoneta()});
 function pintarExtras(){
   const c=$('chips');c.innerHTML='';
@@ -796,6 +799,7 @@ async function guardar2(){
   if(svcSel.soloTracto&&PATENTES.includes($('patente').value)&&!TRACTOS.includes($('patente').value)){err.textContent=/66 bins/.test(svcSel.servicio)?'Este servicio (66 bins) es solo para tracto + thermo. Con afurgonado elige el de 20 bins':'Este servicio es solo para tracto + thermo';return}
   if($('peo-box').style.display!=='none'&&$('peoneta').value==='?'){err.textContent='Elige el peoneta (o "Sin peoneta")';return}
   if($('acoplado').value==='?'){err.textContent='Elige el acoplado (o "Sin acoplado")';return}
+  if($('acoplado').value==='OTRA'){err.textContent='Escribe la patente del otro acoplado';return}
   const ex=leerExtras();
   if(ex.traspaleteo&&!ex.traspaleteo.pallets){err.textContent='Indica los pallets del traspaleteo';return}
   if(extrasSel.has('reemp')&&!ex.acoplado_reemplazo){err.textContent='Indica la patente del acoplado de reemplazo';return}
