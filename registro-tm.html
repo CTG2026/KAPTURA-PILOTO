@@ -57,7 +57,7 @@ body.pc #pcnav{display:flex;flex-direction:column;gap:4px;position:fixed;left:0;
 #pcnav button{background:none;border:none;color:var(--text);text-align:left;font:600 14px 'Cifras','DM Sans',sans-serif;padding:10px;border-radius:8px;cursor:pointer}
 #pcnav button:hover,#pcnav button.on{background:var(--surface2);color:var(--gold)}
 body.pc #s-home>button{display:none!important}
-body.global #s-home>button,body.global #alerta-sinreg,body.global #alerta-cxc,body.global #pc-dash{display:none!important}
+body.global #s-home>button,body.global #alerta-sinreg,body.global #alerta-sinreg2,body.global #alerta-cxc,body.global #pc-dash{display:none!important}
 body.pc #s-reg,body.pc #s-pin,body.pc #s-ok{max-width:560px}
 body.pc .tbl{font-size:14px}#rep-tbl tr.sec td{background:#1f3a5f;color:#fff;font-weight:900}#rep-tbl tr.n0 td{font-weight:900;background:#eef2f7}#rep-tbl tr.n1 td:first-child{padding-left:16px;font-weight:700}#rep-tbl tr.n2 td:first-child{padding-left:30px}#rep-tbl tr.n3 td:first-child{padding-left:44px}#rep-tbl tr.n4 td:first-child,#rep-tbl tr.n5 td:first-child{padding-left:58px;color:#555}#rep-tbl tr.x{cursor:pointer}#rep-tbl tr.oc{display:none}body.pc .tbl td{white-space:normal}
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin:10px 0 14px}
@@ -182,6 +182,7 @@ body.pc .tv{display:none}body:not(.pc) .tp{display:none}
   <div id="pc-dash"></div>
   <div id="tareas-hoy"></div>
   <div id="alerta-sinreg"></div>
+  <div id="alerta-sinreg2"></div>
   <div id="alerta-adm"></div>
   <div id="alerta-cxc"></div>
   <button class="big" id="btn-piloto" style="display:none;background:#7C3AED;color:#fff;margin-bottom:12px" onclick="verPiloto()">🧪 VISTA PILOTO</button>
@@ -542,7 +543,7 @@ let pin='', user=null, fotos=[], svcSel=null, extrasSel=new Set(), ultimo=null;
 function $(id){return document.getElementById(id)}
 function toast(t){const e=$('toast');e.textContent=t;e.classList.add('on');setTimeout(()=>e.classList.remove('on'),2800)}
 let _hist=[];function atras(){let p=_hist.pop();while(p&&!$(p))p=_hist.pop();ir(p||'s-home',true)} /* Atrás vuelve a la vista anterior (Carlos 08-11) */
-function ir(id,vuelta){const cur=(document.querySelector('.screen.on')||{}).id;if(!vuelta&&cur&&cur!==id){_hist.push(cur);if(_hist.length>30)_hist.shift()}if(id==='s-home')_hist=[];document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));$(id).classList.add('on');window.scrollTo(0,0);if(user)uso('pantalla',id);if(id==='s-home'&&user){alertaSinReg();alertaCxc();alertaAdm();tareasHoy();pcDash()}navMarcar(id)}
+function ir(id,vuelta){const cur=(document.querySelector('.screen.on')||{}).id;if(!vuelta&&cur&&cur!==id){_hist.push(cur);if(_hist.length>30)_hist.shift()}if(id==='s-home')_hist=[];document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));$(id).classList.add('on');window.scrollTo(0,0);if(user)uso('pantalla',id);if(id==='s-home'&&user){alertaSinReg();alertaSinRegEq();alertaCxc();alertaAdm();tareasHoy();pcDash()}navMarcar(id)}
 // Registro de uso de Kaptura (tabla kaptura_uso): entradas y pantallas por usuario. Pruebas internas marcadas con localStorage tm_prueba=1 (Carlos 30-10)
 function uso(accion,detalle){try{if(!supa||!user)return;const k=user.pin+'|'+accion+'|'+(detalle||'');if(uso._u===k)return;uso._u=k;
   supa.from('kaptura_uso').insert({empresa:EMPRESA,pin:user.pin,usuario:user.nombre,rol:user.rol,accion,detalle:detalle||null,dispositivo:/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)?'teléfono':'PC',prueba:ls('tm_prueba')==='1'}).then(()=>{},()=>{})}catch(e){}}
@@ -622,7 +623,7 @@ async function verFcomb(){ir('s-fcomb');const box=$('fc-box');box.textContent='C
 async function fcNivel(id,v){if(!v)return;let n0='';try{const r=await supa.from('fotos_combustible').select('nota').eq('id',id).single();n0=r.data&&r.data.nota||''}catch(e){}const {error}=await supa.from('fotos_combustible').update({nota:fcNota(n0,'nivel',v)}).eq('id',id);toast(error?'No se pudo guardar':'Nivel guardado');if(!error)verFcomb()}
 async function fcPat(id,p){if(!p)return;const {error}=await supa.from('fotos_combustible').update({patente:p}).eq('id',id);toast(error?'No se pudo guardar':'Patente asignada');if(!error)verFcomb()}
 function ordenHome(){document.body.classList.toggle('admhome',!!esAdmin());const h=$('s-home'),ids=esCliente()?['btn-ver','btn-misent','btn-ifco','btn-gps','btn-prof','btn-profA','btn-ent','btn-reg']:['btn-ent','btn-reg','btn-fcomb','btn-ver','btn-misent','btn-fcadm','btn-ifco','btn-gps','btn-prof','btn-profA','btn-flu','btn-res','btn-cos','btn-efe','btn-rsv','btn-pil','btn-caja','btn-cxc','btn-spot','btn-spotm','btn-emp','btn-ctc'];ids.forEach(i=>h.appendChild($(i)))} /* orden de inicio del cliente: servicios, entregas, IFCO, GPS (Carlos 30-10) */
-function salir(){ls('tm_pin',null);user=null;document.body.classList.remove('movnav','navabierto','navoculto','admhome');EMP_ACT=EMPRESA;document.body.classList.remove('global');['alerta-adm','alerta-cxc','tareas-hoy','pc-dash','alerta-sinreg','cxc-box','rep-tbl'].forEach(i=>{const e=$(i);if(e)e.innerHTML=''});document.body.classList.remove('pc');$('pcnav').innerHTML='';const bv=$('btn-vista');if(bv)bv.remove();pin='';pintarPin();$('btn-salir').style.display='none';$('hdr-user').textContent='';_dupOk=false;ir('s-pin')}
+function salir(){ls('tm_pin',null);user=null;document.body.classList.remove('movnav','navabierto','navoculto','admhome');EMP_ACT=EMPRESA;document.body.classList.remove('global');['alerta-adm','alerta-cxc','tareas-hoy','pc-dash','alerta-sinreg','alerta-sinreg2','cxc-box','rep-tbl'].forEach(i=>{const e=$(i);if(e)e.innerHTML=''});document.body.classList.remove('pc');$('pcnav').innerHTML='';const bv=$('btn-vista');if(bv)bv.remove();pin='';pintarPin();$('btn-salir').style.display='none';$('hdr-user').textContent='';_dupOk=false;ir('s-pin')}
 
 // ═══ REGISTRO ═══
 // Borrador: las fotos quedan guardadas en el celular hasta registrar el servicio
@@ -1395,6 +1396,19 @@ async function alertaSinReg(){const box=$('alerta-sinreg');if(!box)return;box.in
     box.innerHTML='<div style="'+st+'">⚠ Servicios sin registrar ('+ks.length+')'+ks.map(k=>{const [f,c]=k.split('|');const t='Hola '+c.split(' ')[0]+', tienes '+g[k]+' entrega(s) del '+f.split('-').reverse().join('-')+' sin servicio registrado en Kaptura. Entra a Kaptura y toca "Registrar ese servicio". Gracias.';
       return '<div style="color:var(--text);font-weight:600;margin-top:6px">'+c+' · '+f.split('-').reverse().join('-')+' · '+g[k]+' entrega(s)</div>'+(esAdmin()?'<button class="btn2" style="margin-top:4px;padding:8px;font-size:13px" onclick="window.open(\'https://wa.me/?text=\'+encodeURIComponent(this.dataset.t),\'_blank\')" data-t="'+t.replace(/"/g,'&quot;')+'">📤 Recordar por WhatsApp</button>':'')}).join('')+'</div>';
   }catch(e){}}
+/* ═══ VIAJES SIN SERVICIO (Carlos y Administración, Carlos 17-11): patente propia con carga Aramco (sin servicio el día antes, ese día ni el siguiente) o con más de 50 km de GPS sin servicio ese día; últimos 14 días ═══ */
+async function alertaSinRegEq(){const box=$('alerta-sinreg2');if(!box)return;box.innerHTML='';if(!user||!supa||EMP_ACT!==EMPRESA||!['administrador','administracion'].includes(user.rol))return;const u0=user;
+  try{const d0=new Date();d0.setDate(d0.getDate()-14);const desde=hoyISO(d0),hoy=hoyISO();
+    const [sv,cg,gp]=await Promise.all([conTope(supa.from('servicios_piloto').select('fecha,patente').eq('empresa',EMPRESA).neq('estado','anulado').gte('fecha',desde),8000),conTope(supa.from('combustible_cargas').select('fecha,patente,litros').eq('fuente','aramco').gte('fecha',desde),8000),conTope(supa.from('gps_viajes').select('patente,inicio,km').eq('tipo','viaje').gte('inicio',desde),8000)]);
+    const S=(sv&&sv.data)||[],tiene=(p,f)=>S.some(x=>PAT_GPS(x.patente)===p&&x.fecha===f),dd=(f,n)=>{const t=new Date(f+'T12:00:00');t.setDate(t.getDate()+n);return hoyISO(t)},flota=PATENTES.map(PAT_GPS),out={};
+    ((cg&&cg.data)||[]).forEach(c=>{const p=PAT_GPS(c.patente);if(!flota.includes(p)||c.fecha>=hoy||tiene(p,c.fecha)||tiene(p,dd(c.fecha,-1))||tiene(p,dd(c.fecha,1)))return;const k=c.fecha+'|'+p;out[k]=out[k]||{l:0,km:0};out[k].l+=+c.litros||0});
+    const gk={};((gp&&gp.data)||[]).forEach(v=>{const f=hoyISO(new Date(v.inicio)),p=PAT_GPS(v.patente);if(f>=hoy)return;gk[f+'|'+p]=(gk[f+'|'+p]||0)+(+v.km||0)});
+    Object.entries(gk).forEach(([k,km])=>{const [f,p]=k.split('|');if(km<50||tiene(p,f))return;out[k]=out[k]||{l:0,km:0};out[k].km=km});
+    const ks=Object.keys(out).sort();if(user!==u0||!ks.length)return;
+    const quien=p=>{const u=Object.values(USUARIOS).find(x=>PAT_GPS(x.patente)===p&&x.rol==='conductor');return u?u.nombre.split(' ')[0]:''};
+    box.innerHTML='<div style="border:2px solid #ff3b30;border-radius:12px;padding:10px;margin:8px 0 12px;color:#ff3b30;font-weight:800">⚠ Viajes sin servicio registrado ('+ks.length+')<div style="font-weight:500;font-size:12px;color:var(--muted)">Cargas Aramco o km de GPS de un camión propio que ese día no tiene servicio. Confirmar con el conductor y registrarlo.</div>'+ks.map(k=>{const [f,p]=k.split('|'),o=out[k],n=quien(p);
+      return '<div style="color:var(--text);font-weight:600;margin-top:6px">🚚 '+p+' · '+f.split('-').reverse().join('-')+(n?' · '+n:'')+' · '+[o.l?'cargó '+Math.round(o.l)+' L':'',o.km?'recorrió '+Math.round(o.km)+' km (GPS)':''].filter(Boolean).join(' y ')+'</div>'}).join('')+'</div>';
+  }catch(e){console.log('sinRegEq',e)}}
 // ═══ RESUMEN DE SERVICIOS (administradores): una fila por servicio; sin registrar al final en rojo (Carlos 31-10) ═══
 let rsvTit='',rsvFilas=[];
 function verResumenSvc(){if(!esAdmin())return;ir('s-rsv');const sel=$('rsv-q');
