@@ -400,6 +400,7 @@ body.pc .tv{display:none}body:not(.pc) .tp{display:none}
 <section class="screen" id="s-pil">
   <h1>🧪 Vista piloto</h1>
   <div class="sub">Caja de la semana · Resultado · Deudas y por cobrar. Todo desde Kaptura, base caja. Es una prueba: no cambia nada de lo existente.</div>
+  <div id="pil-proy"></div>
   <div id="pil-box"></div>
   <button class="btn2" onclick="atras()"><span class="tv">← Volver</span><span class="tp">← Atrás</span></button>
 </section>
@@ -2066,7 +2067,45 @@ function pilGrupo(cat,monto){const c=cat||'';if(monto>0)return /^Cobro/.test(c)?
 const PIL_ORD=['Cobros de clientes','Otras entradas','Sueldos, viáticos y Previred','Combustible','Mantención y repuestos','Peajes','Otros gastos','Deudas y convenios','Impuestos (F29)','Inversión','Retiros','Imprevistos','Por clasificar'];
 function pilCxpCat(c){c=c||'';if(/Deuda combustible/.test(c))return 'Combustible';if(/Tesorer|TAG|Arriendo Castro/.test(c))return 'Deudas y convenios';if(/Impuestos/.test(c))return 'Impuestos (F29)';if(/Inversi/.test(c))return 'Inversión';
   if(/Sueldos|Previred/.test(c))return 'Sueldos, viáticos y Previred';return 'Otros gastos'}
-async function verPiloto(dsem){if(!esCarlos())return;if(dsem)_pilSem+=dsem;else _pilSem=0;ir('s-pil');navMarcar('s-pil');const box=$('pil-box');box.innerHTML='<div class="sub">Cargando…</div>';
+/* ═══ CAJA PROYECTADA 6 SEMANAS (Carlos 17-11): saldo cartola Santander + cobros según plazos de cada cliente − compromisos pendientes − operación recurrente (promedio real de las últimas 4 semanas) ═══ */
+const CAJA_PISO=5261000;
+async function pilProy(){const box=$('pil-proy');if(!box)return;box.innerHTML='<div class="sub">Calculando caja proyectada…</div>';
+  try{const cs=await cartolaSaldo();if(!cs){box.innerHTML='';return}
+    const D=f=>new Date(f+'T12:00:00'),iso=d=>hoyISO(d),mas=(f,n)=>{const d=D(f);d.setDate(d.getDate()+n);return iso(d)};
+    const desde=mas(cs.hasta,1),lun0=(()=>{const d=D(desde);d.setDate(d.getDate()-((d.getDay()+6)%7));return iso(d)})();
+    const W=[...Array(6)].map((_,i)=>({ini:mas(lun0,7*i),fin:mas(lun0,7*i+6),ent:[],sal:[]}));const fin6=W[5].fin;
+    const wk=f=>W.find(w=>f>=w.ini&&f<=w.fin);
+    const [rp,rx,rc]=await Promise.all([conTope(supa.from('cxp_compromisos').select('fecha,acreedor,categoria,monto,estado').eq('empresa',EMPRESA).neq('estado','pagado').lte('fecha',fin6),10000),
+      conTope(supa.from('cxc_facturas').select('cliente,folio,total,vence,etapa,periodo_hasta,solo_contable,sin_monto').eq('empresa',EMPRESA).neq('etapa','cobrada'),10000),
+      conTope(supa.from('cartola_movimientos').select('fecha,monto,categoria').eq('empresa',EMPRESA).gt('fecha',mas(cs.hasta,-35)).lte('fecha',cs.hasta),10000)]);
+    const fuera=[];
+    ((rp&&rp.data)||[]).filter(c=>c.estado!=='anulado'&&c.fecha).forEach(c=>{const m=+c.monto||0;if(m<0){fuera.push('Entrada posible no incluida: '+c.acreedor+' '+fmt$(-m)+' ('+c.categoria+')');return}const f=c.fecha<desde?desde:c.fecha,w=wk(f);if(w)w.sal.push([c.acreedor+(c.fecha<desde?' (vencido)':''),m])});
+    const vie=f=>{const d=D(f);d.setDate(d.getDate()+((5-d.getDay()+7)%7||7));return iso(d)};
+    ((rx&&rx.data)||[]).filter(c=>!c.solo_contable&&!c.sin_monto&&+c.total>0).forEach(c=>{let f=c.vence;if(!f&&c.periodo_hasta)f=/EBLOOMS/i.test(c.cliente)?vie(mas(c.periodo_hasta,3)):mas(c.periodo_hasta,35);
+      if(!f||f<desde){fuera.push('Factura '+(c.folio?c.folio+' ':'')+c.cliente+' '+fmt$(+c.total)+(f?' (vencida, fecha de pago incierta)':' (sin fecha)'));return}const w=wk(f);if(w)w.ent.push([c.cliente+(c.etapa==='por_aprobar'?' (por aprobar)':''),+c.total])});
+    const mv=(rc&&rc.data)||[],sum=re=>-mv.filter(m=>m.monto<0&&re.test(m.categoria||'')).reduce((a,m)=>a+m.monto,0);
+    const k=7/35,comb=sum(/^(Combustible|Recarga prepago Aramco)$/)*k,var_=sum(/^(Viáticos|Peajes|Mantención y neumáticos|Traspaleteo)$/)*k;
+    const su=mv.filter(m=>m.monto<0&&m.categoria==='Sueldos'),s5=-su.filter(m=>+m.fecha.slice(8)<=10).reduce((a,m)=>a+m.monto,0),s15=-su.filter(m=>+m.fecha.slice(8)>10).reduce((a,m)=>a+m.monto,0);
+    W.forEach(w=>{if(comb)w.sal.push(['Combustible (promedio real)',comb]);if(var_)w.sal.push(['Viáticos, peajes y mantención (promedio)',var_]);
+      [[5,s5,'Sueldos: saldo del mes'],[15,s15,'Sueldos: anticipo']].forEach(([dd,v,t])=>{if(!v)return;let d=D(w.ini);for(let i=0;i<7;i++){if(d.getDate()===dd&&iso(d)>=desde){w.sal.push([t,v]);break}d.setDate(d.getDate()+1)}})});
+    let sal=cs.fin;W.forEach(w=>{w.e=w.ent.reduce((a,x)=>a+x[1],0);w.s=w.sal.reduce((a,x)=>a+x[1],0);sal+=w.e-w.s;w.cierre=sal});
+    const min=W.reduce((a,w)=>w.cierre<a.cierre?w:a,W[0]),bajo=W.filter(w=>w.cierre<CAJA_PISO).length;
+    const M=v=>(v<0?'−':'')+'$'+(Math.abs(v)/1e6).toFixed(1).replace('.',',')+' M',fc=f=>f.slice(8)+'-'+f.slice(5,7);
+    const col=v=>v<0?'var(--danger,#D64545)':v<CAJA_PISO?'#E8A317':'var(--green)';
+    // gráfico
+    const mx=Math.max(cs.fin,CAJA_PISO,...W.map(w=>w.cierre))*1.1,mn=Math.min(0,...W.map(w=>w.cierre))*1.15,H=190,Y=v=>12+(mx-v)/(mx-mn)*(H-40),bw=46,gx=i=>40+i*68;
+    const bars=W.map((w,i)=>{const y0=Y(0),y=Y(w.cierre);return '<rect x="'+gx(i)+'" y="'+Math.min(y,y0)+'" width="'+bw+'" height="'+Math.max(2,Math.abs(y0-y))+'" rx="6" fill="'+col(w.cierre)+'"/><text x="'+(gx(i)+bw/2)+'" y="'+(w.cierre<0?Math.max(y,y0)+14:Math.min(y,y0)-6)+'" text-anchor="middle" font-size="11" font-weight="800" fill="var(--text)">'+M(w.cierre).replace(' M','')+'</text><text x="'+(gx(i)+bw/2)+'" y="'+(H-6)+'" text-anchor="middle" font-size="10" fill="var(--muted)">'+fc(w.ini)+'</text>'}).join('');
+    const svg='<svg viewBox="0 0 450 '+H+'" style="width:100%;max-width:640px;display:block;margin:auto"><line x1="34" x2="446" y1="'+Y(0)+'" y2="'+Y(0)+'" stroke="var(--border)"/><line x1="34" x2="446" y1="'+Y(CAJA_PISO)+'" y2="'+Y(CAJA_PISO)+'" stroke="#E8A317" stroke-dasharray="5 4"/><text x="446" y="'+(Y(CAJA_PISO)-4)+'" text-anchor="end" font-size="10" fill="#E8A317">piso '+M(CAJA_PISO)+'</text>'+bars+'</svg>';
+    const kpi=(t,v,c,sub)=>'<div style="flex:1;min-width:130px;background:var(--surface2);border-radius:12px;padding:10px 12px"><div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em">'+t+'</div><div style="font-size:22px;font-weight:800;color:'+(c||'var(--text)')+'">'+v+'</div><div style="font-size:11px;color:var(--muted)">'+(sub||'')+'</div></div>';
+    const it=(a,sg)=>a.map(x=>'<div style="display:flex;justify-content:space-between;gap:8px;font-size:12px;padding:2px 0"><span style="color:var(--muted)">'+empEsc(x[0])+'</span><span style="white-space:nowrap;font-variant-numeric:tabular-nums">'+sg+fmt$(x[1])+'</span></div>').join('');
+    const card=w=>'<div style="flex:0 0 230px;background:var(--surface);border:1px solid var(--border);border-top:4px solid '+col(w.cierre)+';border-radius:12px;padding:10px 12px"><div style="font-size:12px;color:var(--muted)">Semana '+fc(w.ini)+' al '+fc(w.fin)+'</div><div style="font-size:20px;font-weight:800;color:'+col(w.cierre)+'">'+M(w.cierre)+'</div><div style="font-size:11px;color:var(--muted);margin-bottom:6px">saldo al cierre</div>'+(w.ent.length?'<div style="font-size:11px;font-weight:800;color:var(--green);margin-top:4px">Entradas '+fmt$(w.e)+'</div>'+it(w.ent,'+'):'')+'<div style="font-size:11px;font-weight:800;color:var(--danger,#D64545);margin-top:4px">Salidas '+fmt$(w.s)+'</div>'+it(w.sal.sort((a,b)=>b[1]-a[1]),'−')+'</div>';
+    box.innerHTML='<div class="card" style="padding:14px;margin-bottom:14px"><div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:6px"><div style="font-size:18px;font-weight:800">Caja proyectada · 6 semanas</div><div style="font-size:12px;color:var(--muted)">Cuenta Santander · cartola al '+fCL(cs.hasta)+'</div></div>'
+      +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0">'+kpi('Caja hoy',M(cs.fin),'','cartola al '+fc(cs.hasta))+kpi('Punto más bajo',M(min.cierre),col(min.cierre),'semana del '+fc(min.ini))+kpi('Semanas bajo el piso',String(bajo),bajo?'var(--danger,#D64545)':'var(--green)','piso '+M(CAJA_PISO))+'</div>'+svg
+      +'<div style="display:flex;gap:10px;overflow-x:auto;padding:10px 0 4px">'+W.map(card).join('')+'</div>'
+      +'<div style="font-size:11px;color:var(--muted);margin-top:6px;line-height:1.5"><b>Cómo se calcula:</b> saldo de la última cartola Santander + cobros según el plazo de cada cliente (EBLOOMS: viernes siguiente a la factura; Valle, Ateuro, DDC: 30 días) − compromisos pendientes (los vencidos van a la primera semana) − combustible, viáticos, peajes y mantención al promedio real de las últimas 5 semanas − sueldos (saldo el día 5 y anticipo el 15, según lo pagado el mes anterior).'
+      +(fuera.length?'<br><b>No incluido:</b> '+fuera.map(empEsc).join(' · '):'')+'</div></div>';
+  }catch(e){console.log('pilProy',e);box.innerHTML=''}}
+async function verPiloto(dsem){if(!esCarlos())return;if(dsem)_pilSem+=dsem;else _pilSem=0;ir('s-pil');navMarcar('s-pil');if(!dsem)pilProy();const box=$('pil-box');box.innerHTML='<div class="sub">Cargando…</div>';
   try{const hoy=hoyISO(),dH=new Date(hoy+'T12:00:00');
   const q=(p)=>conTope(p,12000);
   const [rc,rs,rp,rx,rr]=await Promise.all([
