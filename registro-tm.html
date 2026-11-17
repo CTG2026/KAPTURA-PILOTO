@@ -2585,6 +2585,10 @@ async function spotEnviar(btn){if(!_spot||!_spotFoto)return;btn.disabled=true;bt
   catch(e){btn.disabled=false;btn.textContent='✅ ENVIAR REGISTRO';toast('No se pudo enviar. Revise la señal e intente de nuevo.')}}
 const _spotTok=new URLSearchParams(location.search).get('spot'),_carpTok=new URLSearchParams(location.search).get('carpeta');
 const guardado=(_spotTok||_carpTok)?null:ls('tm_pin'); if(_carpTok)abrirCarpPub(_carpTok);else if(_spotTok)abrirSpot(_spotTok);else if(guardado&&USUARIOS[guardado]&&Date.now()-Number(ls('tm_ult')||0)<=INACT_MS)entrar(guardado,true); else if(guardado)ls('tm_pin',null);
+
+/* Tarjetas: primero el título y abajo el pilar (Carlos 17-11) */
+(function(){const voltear=r=>{(r.querySelectorAll?r.querySelectorAll('.kpi'):[]).forEach(k=>{const p=[...k.children].find(x=>x.classList.contains('p')),l=[...k.children].find(x=>x.classList.contains('l'));if(p&&l&&p.compareDocumentPosition(l)&Node.DOCUMENT_POSITION_FOLLOWING){k.insertBefore(l,p);p.style.marginTop='2px'}})};
+  new MutationObserver(ms=>ms.forEach(m=>m.addedNodes.forEach(n=>{if(n.nodeType!==1)return;if(n.classList&&n.classList.contains('kpi'))voltear(n.parentNode||n);else voltear(n)}))).observe(document.body,{childList:true,subtree:true});voltear(document)})();
 </script>
 </body>
 </html>
