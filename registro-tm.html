@@ -507,7 +507,7 @@ const USUARIOS={
 };
 // servicio = nombre exacto del sistema TM (hoja Servicios reales)
 const SERVICIOS=[
-  {txt:'Coltauco → CD Chillán (Cencosud)',servicio:'Planta EBLOOMS → Chillán (Cencosud)',cliente:'EBLOOMS',origen:'COLTAUCO',destino:'CHILLÁN',tarifa:0,pallets:[['6 a 8',576000],['9 a 10',576000],['11 a 16',576000],['17 a 24',670000,true]]},
+  {txt:'Coltauco → Chillán (Cencosud)',servicio:'Planta EBLOOMS → Chillán (Cencosud)',cliente:'EBLOOMS',origen:'COLTAUCO',destino:'CHILLÁN',tarifa:576000},
   // Desde 16-10-2026 EBLOOMS paga el súper según carga (Carlos 02-11): el conductor solo elige el botón; la tarifa la pone Kaptura
   {txt:'Coltauco → Santiago súper · hasta 8 pallets',servicio:'Planta EBLOOMS → Supermercados Santiago · hasta 8 pallets',cliente:'EBLOOMS',origen:'COLTAUCO',destino:'SANTIAGO',tarifa:300000,retorno:true},
   {txt:'Coltauco → Santiago súper · 9 a 15 pallets',servicio:'Planta EBLOOMS → Supermercados Santiago (Temporada Baja)',cliente:'EBLOOMS',origen:'COLTAUCO',destino:'SANTIAGO',tarifa:407000,retorno:true},
@@ -901,7 +901,7 @@ function kmGPS(r){
   return {km,txt:'GPS real, desde la salida de la planta EBLOOMS hasta la vuelta a Coltauco'};
 }
 function resultadoServicio(r){
-  const n=r._n||{},e=n.extras||{},sv=SV_COSTO[n.servicio_sistema||'']||SV_COSTO[String(n.servicio_sistema||'').replace(/ · \d+ a \d+ pallets$/,'')]; /* servicios con tramo de pallets usan el costo de la ruta base (Carlos 17-11) */if(!sv)return null;
+  const n=r._n||{},e=n.extras||{},sv=SV_COSTO[n.servicio_sistema||''];if(!sv)return null;
   const g=kmGPS(r),[kmT,tipo,peaje,dias]=sv,km=g?Math.round(g.km):kmT,kmTxt=g?g.txt:'teórico de la ruta (camión sin GPS)',base=+r.tarifa_neta||0,ret=(e.retorno&&/Supermercados/.test(n.servicio_sistema))?Math.round(base*COSTO.retSuper):0,tarifa=base+ret+(e.retiro_ifco?TARIFA_IFCO:0);
   const alta=r.fecha>=COSTO.alta[0]&&r.fecha<=COSTO.alta[1];
   const tipoC=TIPO_PAT[PAT_GPS(r.patente)]||tipo,pd=(n.diesel&&n.diesel.p)?{p:+n.diesel.p,txt:n.diesel.txt+' · fijado el '+String(n.diesel.fijado||'').split('-').reverse().slice(0,2).join('-')}:precioDiesel(r.fecha);
