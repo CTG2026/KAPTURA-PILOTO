@@ -2005,7 +2005,7 @@ async function tareasHoy(){const box=$('tareas-hoy');if(!box)return;box.innerHTM
     _tHechas=(await conTope(supa.from('tareas_admin').select('tarea,hecha_por,hora,fecha').eq('empresa',EMP_ACT).gte('fecha',hoy.slice(0,8)+'01'),8000)).data||[];
     const esTM=EMP_ACT===EMPRESA,cx=esTM?await leerCxc():[],it=[];
     // Tareas creadas por administración: única (hasta Hecha), semanal (sus días), mensual (desde su día, hasta Hecha en el mes)
-    const tm=((await conTope(supa.from('tareas').select('*').eq('empresa',EMP_ACT).eq('activa',true).order('id'),8000)).data||[]).filter(t=>t.recurrencia!=='pregunta'),dia=new Date().getDate(),dw7=dw||7;_tareasEd=tm;tm.sort((a,b)=>/^Agenda/i.test(b.titulo)-/^Agenda/i.test(a.titulo)); /* la agenda del día va primero (Carlos 09-11) */
+    const tm=((await conTope(supa.from('tareas').select('*').eq('empresa',EMP_ACT).eq('activa',true).order('id'),8000)).data||[]).filter(t=>t.recurrencia!=='pregunta'&&t.recurrencia!=='plan_caja'),dia=new Date().getDate(),dw7=dw||7;_tareasEd=tm;tm.sort((a,b)=>/^Agenda/i.test(b.titulo)-/^Agenda/i.test(a.titulo)); /* la agenda del día va primero (Carlos 09-11) */
     tm.forEach(t=>{const k='t'+t.id;let ver=false,roja=false,sub='';
       if(t.recurrencia==='semanal'){ver=(t.dias||[]).includes(dw7)&&!_tHechas.some(x=>x.tarea===k&&x.fecha===hoy);sub='Cada '+(t.dias||[]).map(d=>['','lun','mar','mié','jue','vie','sáb','dom'][d]).join(', ')}
       else if(t.recurrencia==='mensual'){ver=dia>=(t.dia_mes||1)&&!_tHechas.some(x=>x.tarea===k);roja=dia>(t.dia_mes||1);sub='Cada mes, día '+t.dia_mes}
@@ -2099,7 +2099,7 @@ async function pilProy(){const box=$('pil-proy');if(!box)return;box.innerHTML='<
     const wk=f=>W.find(w=>f>=w.ini&&f<=w.fin);
     const [rp,rx,rc,ra,rh]=await Promise.all([conTope(supa.from('cxp_compromisos').select('fecha,acreedor,concepto,categoria,monto,estado').eq('empresa',EMPRESA).neq('estado','pagado').lte('fecha',fin6),10000),
       conTope(supa.from('cxc_facturas').select('cliente,folio,total,vence,etapa,periodo_hasta,solo_contable,sin_monto').eq('empresa',EMPRESA).neq('etapa','cobrada'),10000),
-      conTope(supa.from('cartola_movimientos').select('fecha,monto,categoria').eq('empresa',EMPRESA).gt('fecha',mas(cs.hasta,-35)).lte('fecha',cs.hasta),10000),
+      conTope(supa.from('cartola_movimientos').select('fecha,monto,categoria,nota').eq('empresa',EMPRESA).gt('fecha',mas(cs.hasta,-35)).lte('fecha',cs.hasta),10000),
       conTope(supa.from('combustible_cargas').select('fecha,total').eq('fuente','aramco').gt('fecha',mas(cs.hasta,-28)).lte('fecha',cs.hasta),10000),
       conTope(supa.from('cxc_facturas').select('cliente,total,periodo_desde,periodo_hasta').eq('empresa',EMPRESA).order('periodo_hasta',{ascending:false}).limit(60),10000)]);
     const fuera=[],EV=[];
@@ -2110,9 +2110,22 @@ async function pilProy(){const box=$('pil-proy');if(!box)return;box.innerHTML='<
     /* Facturas aún no emitidas (estimadas con el promedio de las 2 últimas): EBLOOMS por quincena (paga el viernes siguiente), Valle por mes (30 días) */
     const H_=(rh&&rh.data)||[],ult=re=>{const a=H_.filter(x=>re.test(x.cliente)&&+x.total>0).slice(0,2);return a.length?a.reduce((t,x)=>t+(+x.total),0)/a.length:0},tiene=(re,h)=>H_.some(x=>re.test(x.cliente)&&x.periodo_hasta===h);
     const finMes=(y,m)=>iso(new Date(y,m+1,0,12));const per=[];for(let k2=-1;k2<3;k2++){const d=D(lun0);d.setDate(1);d.setMonth(d.getMonth()+k2);const y=d.getFullYear(),m=d.getMonth(),mm=String(m+1).padStart(2,'0'),mn=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'][m];per.push([y+'-'+mm+'-15','EBLOOMS 1-15 '+mn,/EBLOOMS/i,f=>vie(mas(f,3))],[finMes(y,m),'EBLOOMS 16-'+finMes(y,m).slice(8)+' '+mn,/EBLOOMS/i,f=>vie(mas(f,3))],[finMes(y,m),'Valle '+mn,/Valle/i,f=>mas(f,35)])}
-    per.forEach(([h,t,re,pf])=>{if(tiene(re,h))return;const f=pf(h),v=ult(re);if(!v||f<desde)return;const w=wk(f);if(w){w.ent.push([t+' (estimado)',v]);EV.push({f,t:t+' (estimado)',v})}});
+    /* Presupuesto de servicios (Carlos 18-11): plan guardado en "tareas" (recurrencia='plan_caja', título = JSON). Ventas entran según el plazo de cada cliente; pago a terceros según su plazo; combustible de los servicios propios consume el saldo Aramco */
+    let PL=null;try{const rpl=await supa.from('tareas').select('titulo').eq('empresa',EMPRESA).eq('recurrencia','plan_caja').eq('activa',true).order('id',{ascending:false}).limit(1);PL=rpl.data&&rpl.data[0]?JSON.parse(rpl.data[0].titulo):null}catch(e){PL=null}
+    const PLC={},plCons={};
+    if(PL&&PL.s){const iva=1+(PL.iva==null?0.19:PL.iva),ini=PL.desde||desde,cobro={EBLOOMS:[15,f=>vie(mas(f,3))],DDC:[15,f=>mas(f,35)],'Valle':[0,f=>mas(f,35)],'Ateuro':[0,f=>mas(f,35)]};
+      const perH=(cl,f)=>{const k=Object.keys(cobro).find(x=>cl.indexOf(x)===0)||'Valle',q=cobro[k][0],y=+f.slice(0,4),m=+f.slice(5,7)-1;const fm=finMes(y,m);return [k,q&&+f.slice(8)<=q?f.slice(0,8)+'15':fm,cobro[k][1]]};
+      const PT={};
+      for(let f=ini;f<=fin6;f=mas(f,1)){const wd=D(f).getDay();PL.s.forEach(s=>{if(!(s.d||[]).includes(wd))return;const n=s.n||1,[k,hh,pf]=perH(s.c,f),key=k+'|'+hh;PLC[key]=PLC[key]||{k,hh,pf,v:0,cl:s.c};PLC[key].v+=n*s.t;
+        if(s.p){const fp=mas(f,s.pd||30),kk=fp+'|'+(s.ter||'tercero');PT[kk]=PT[kk]||{f:fp,t:'Pago '+(s.ter||'tercero')+' (presupuesto)',v:0};PT[kk].v+=n*s.p*(s.fac?iva:1)}
+        else if(s.km&&s.kml)plCons[f]=(plCons[f]||0)+n*s.km/s.kml*(PL.precio||1600)})}
+      const MN=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+      Object.values(PLC).forEach(o=>{const re=new RegExp('^'+o.k,'i');if(tiene(re,o.hh))return;const fp=o.pf(o.hh),d0=+o.hh.slice(8)===15?'1-15':'16-'+o.hh.slice(8),t=o.cl+' '+(o.k==='EBLOOMS'||o.k==='DDC'?d0+' ':'')+MN[+o.hh.slice(5,7)-1]+' (presupuesto)',v=Math.round(o.v*iva);if(fp<desde||fp>fin6)return;const w=wk(fp);if(w){w.ent.push([t,v]);EV.push({f:fp,t,v})}});
+      Object.values(PT).forEach(o=>{if(o.f<desde||o.f>fin6)return;const w=wk(o.f),v=Math.round(o.v);if(w){w.sal.push([o.t,v]);EV.push({f:o.f,t:o.t,v:-v})}})}
+    window._pilPL=PL;
+    per.forEach(([h,t,re,pf])=>{if(PL&&PL.s&&PL.s.some(s=>re.test(s.c)))return;if(tiene(re,h))return;const f=pf(h),v=ult(re);if(!v||f<desde)return;const w=wk(f);if(w){w.ent.push([t+' (estimado)',v]);EV.push({f,t:t+' (estimado)',v})}});
     const mv=(rc&&rc.data)||[],sum=re=>-mv.filter(m=>m.monto<0&&re.test(m.categoria||'')).reduce((a,m)=>a+m.monto,0);
-    const k=7/35,comb=((ra&&ra.data)||[]).reduce((a,x)=>a+(+x.total||0),0)*7/28,var_=sum(/^(Viáticos|Peajes|Mantención y neumáticos|Traspaleteo)$/)*k,ret_=sum(/^Retiro de socios$/)*k;
+    const k=7/35,comb=((ra&&ra.data)||[]).reduce((a,x)=>a+(+x.total||0),0)*7/28,var_=sum(/^(Viáticos|Peajes|Mantención y neumáticos|Traspaleteo)$/)*k,ret_=-mv.filter(m=>m.monto<0&&/^Retiro de socios$/.test(m.categoria||'')&&!/puntual/i.test(m.nota||'')).reduce((a,m)=>a+m.monto,0)*k; /* retiros puntuales (nota con "puntual") no entran al promedio (Carlos 18-11) */
     const su=mv.filter(m=>m.monto<0&&m.categoria==='Sueldos'),s5=-su.filter(m=>+m.fecha.slice(8)<=10).reduce((a,m)=>a+m.monto,0),s15=-su.filter(m=>+m.fecha.slice(8)>10).reduce((a,m)=>a+m.monto,0);
     W.forEach(w=>{if(ret_)w.sal.push(['Retiros Claudio (promedio)',ret_]);if(var_)w.sal.push(['Viáticos, peajes y mantención (promedio)',var_]);
       [[5,s5,'Sueldos: saldo del mes'],[15,s15,'Sueldos: anticipo']].forEach(([dd,v,t])=>{if(!v)return;let d=D(w.ini);for(let i=0;i<7;i++){if(d.getDate()===dd&&iso(d)>=desde){w.sal.push([t,v]);break}d.setDate(d.getDate()+1)}})});
@@ -2123,7 +2136,7 @@ async function pilProy(){const box=$('pil-proy');if(!box)return;box.innerHTML='<
       const RECARGA=1000000,cDia=comb/6,AR={},hoyA=hoyISO();let sa=recT-sm(cg.filter(x=>x.fecha<=cs.hasta));
       for(let f=desde;f<=fin6;f=mas(f,1)){const o={parte:sa,rec:0,cons:0};
         if(f<=ultC)o.cons=sm(cg.filter(x=>x.fecha===f));
-        else if(D(f).getDay()!==0&&cDia){while(sa<cDia){o.rec+=RECARGA;sa+=RECARGA;const fr=f<hoyA?hoyA:f,w=wk(fr);EV.push({f:fr,t:'Recarga Aramco (saldo prepago)',v:-RECARGA});if(w)w.sal.push(['Recarga Aramco (saldo prepago)',RECARGA])}o.cons=cDia}
+        else{const cd=(PL&&PL.s&&f>=(PL.desde||desde))?(plCons[f]||0):(D(f).getDay()!==0?cDia:0);if(cd){while(sa<cd){o.rec+=RECARGA;sa+=RECARGA;const fr=f<hoyA?hoyA:f,w=wk(fr);EV.push({f:fr,t:'Recarga Aramco (saldo prepago)',v:-RECARGA});if(w)w.sal.push(['Recarga Aramco (saldo prepago)',RECARGA])}o.cons=cd}}
         sa-=o.cons;o.queda=sa;AR[f]=o}
       window._pilAR=AR}
     {const opd=(var_+ret_)/6;for(let f=desde;f<=fin6;f=mas(f,1)){const wd=D(f).getDay();if(wd!==0&&opd)EV.push({f,t:'Operación diaria (promedio)',v:-opd});const dd=+f.slice(8);if(dd===5&&s5)EV.push({f,t:'Sueldos: saldo del mes',v:-s5});if(dd===15&&s15)EV.push({f,t:'Sueldos: anticipo',v:-s15})}}
