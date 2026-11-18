@@ -1665,7 +1665,7 @@ async function docCliSubir(id,k){const x=(_carp&&_carp.eq||[]).find(r=>String(r.
     const upr=await supa.storage.from(BUCKET).upload(path,f,{contentType:f.type||'application/octet-stream',upsert:false});if(upr.error){toast('No se pudo subir');return}
     const url=supa.storage.from(BUCKET).getPublicUrl(path).data.publicUrl,o={actualizado:hoyISO()};
     if(k==='carga'){o.carga_url=url;o.carga_vence=v.d||null;if(v.u)o.carga_uf=+v.u;o.carga_nota=null}else{o[k+'_url']=url;if(campos.length)o[k]=v.d||null;o[k+'_nota']=k==='rt'&&cond?(v.n||null):null}
-    const {error}=await supa.from('carpeta_equipos').update(o).eq('id',x.id);toast(error?'No se pudo guardar':'Documento guardado');verCarp()};inp.click()}
+    const {data:dd,error}=await supa.from('carpeta_equipos').update(o).eq('id',x.id).select('id');toast(error||!(dd&&dd.length)?'No se pudo guardar (sin permiso en carpeta_equipos)':'Documento guardado');verCarp()};inp.click()}
 async function docCliConductor(){const v=await formulario('Agregar conductor',[{k:'n',l:'Nombre y apellidos'},{k:'r',l:'RUT'}]);if(!v||!(v.n||'').trim())return;
   const n=(_carp&&_carp.eq||[]).filter(x=>x.grupo==='Conductores').length;const {error}=await supa.from('carpeta_equipos').insert({empresa:EMPRESA,grupo:'Conductores',orden:n+1,patente:v.n.trim(),tipo:(v.r||'').trim()?'RUT '+v.r.trim():'Conductor',pc_nota:'Sin documento',rt_nota:'Sin documento',actualizado:hoyISO()});
   toast(error?'No se pudo agregar':'Conductor agregado: suba sus documentos con 📎');verCarp()}
