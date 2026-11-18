@@ -2126,9 +2126,9 @@ async function pilProy(){const box=$('pil-proy');if(!box)return;box.innerHTML='<
     window._pilPL=PL;
     per.forEach(([h,t,re,pf])=>{if(PL&&PL.s&&PL.s.some(s=>re.test(s.c)))return;if(tiene(re,h))return;const f=pf(h),v=ult(re);if(!v||f<desde)return;const w=wk(f);if(w){w.ent.push([t+' (estimado)',v]);EV.push({f,t:t+' (estimado)',v})}});
     const mv=(rc&&rc.data)||[],sum=re=>-mv.filter(m=>m.monto<0&&re.test(m.categoria||'')).reduce((a,m)=>a+m.monto,0);
-    const k=7/35,comb=((ra&&ra.data)||[]).reduce((a,x)=>a+(+x.total||0),0)*7/28,var_=sum(/^(Viáticos|Peajes|Mantención y neumáticos|Traspaleteo)$/)*k,ret_=-mv.filter(m=>m.monto<0&&/^Retiro de socios$/.test(m.categoria||'')&&!/puntual/i.test(m.nota||'')).reduce((a,m)=>a+m.monto,0)*k; /* retiros puntuales (nota con "puntual") no entran al promedio (Carlos 18-11) */
+    const k=7/35,comb=((ra&&ra.data)||[]).reduce((a,x)=>a+(+x.total||0),0)*7/28,var_=sum(/^(Viáticos|Peajes|Traspaleteo)$/)*k, /* mantención y neumáticos salen del promedio: van con fecha programada (Carlos 18-11) */ret_=-mv.filter(m=>m.monto<0&&/^Retiro de socios$/.test(m.categoria||'')&&!/puntual/i.test(m.nota||'')).reduce((a,m)=>a+m.monto,0)*k; /* retiros puntuales (nota con "puntual") no entran al promedio (Carlos 18-11) */
     const su=mv.filter(m=>m.monto<0&&m.categoria==='Sueldos'),s5=-su.filter(m=>+m.fecha.slice(8)<=10).reduce((a,m)=>a+m.monto,0),s15=-su.filter(m=>+m.fecha.slice(8)>10).reduce((a,m)=>a+m.monto,0);
-    W.forEach(w=>{if(ret_)w.sal.push(['Retiros Claudio (promedio)',ret_]);if(var_)w.sal.push(['Viáticos, peajes y mantención (promedio)',var_]);
+    W.forEach(w=>{if(ret_)w.sal.push(['Retiros Claudio (promedio)',ret_]);if(var_)w.sal.push(['Viáticos, peajes y traspaleteo (promedio)',var_]);
       [[5,s5,'Sueldos: saldo del mes'],[15,s15,'Sueldos: anticipo']].forEach(([dd,v,t])=>{if(!v)return;let d=D(w.ini);for(let i=0;i<7;i++){if(d.getDate()===dd&&iso(d)>=desde){w.sal.push([t,v]);break}d.setDate(d.getDate()+1)}})});
     /* Eventos diarios para la caja de la semana: operación promedio repartida de lunes a sábado; sueldos el día 5 y 15 */
     /* Saldo Aramco prepago (Carlos 18-11): el consumo sale del saldo Aramco, no de la caja; la caja solo ve las recargas ($1.000.000 cuando el saldo no alcanza para el día) */
@@ -2140,7 +2140,7 @@ async function pilProy(){const box=$('pil-proy');if(!box)return;box.innerHTML='<
         else{const cd=(PL&&PL.s&&PL.comb!=='real'&&f>=(PL.desde||desde))?(plCons[f]||0):(D(f).getDay()!==0?cDia:0);if(cd){while(sa<cd){o.rec+=RECARGA;sa+=RECARGA;const fr=f<hoyA?hoyA:f,w=wk(fr);EV.push({f:fr,t:'Recarga Aramco (saldo prepago)',v:-RECARGA});if(w)w.sal.push(['Recarga Aramco (saldo prepago)',RECARGA])}o.cons=cd}}
         sa-=o.cons;o.queda=sa;AR[f]=o}
       window._pilAR=AR}
-    {const opd=(var_+ret_)/6;for(let f=desde;f<=fin6;f=mas(f,1)){const wd=D(f).getDay();if(wd!==0&&opd)EV.push({f,t:'Operación diaria (promedio)',v:-opd});const dd=+f.slice(8);if(dd===5&&s5)EV.push({f,t:'Sueldos: saldo del mes',v:-s5});if(dd===15&&s15)EV.push({f,t:'Sueldos: anticipo',v:-s15})}}
+    {const opd=var_/6;for(let f=desde;f<=fin6;f=mas(f,1)){const wd=D(f).getDay();if(wd!==0&&opd)EV.push({f,t:'Viáticos, peajes y traspaleteo (promedio diario)',v:-opd});if(wd===5&&ret_)EV.push({f,t:'Retiros Claudio (promedio semanal)',v:-ret_});const dd=+f.slice(8);if(dd===5&&s5)EV.push({f,t:'Sueldos: saldo del mes',v:-s5});if(dd===15&&s15)EV.push({f,t:'Sueldos: anticipo',v:-s15})}}
     window._pilEv=EV;window._pilCS=cs;window._pilFin6=fin6;
     let sal=cs.fin;W.forEach(w=>{w.e=w.ent.reduce((a,x)=>a+x[1],0);w.s=w.sal.reduce((a,x)=>a+x[1],0);sal+=w.e-w.s;w.cierre=sal});
     const min=W.reduce((a,w)=>w.cierre<a.cierre?w:a,W[0]),bajo=W.filter(w=>w.cierre<CAJA_PISO).length;
@@ -2207,7 +2207,7 @@ async function pilSemana(dlt){const box=$('pil-sem');if(!box)return;const cs=win
     const te=dias.reduce((a,f)=>a+tot(E,f),0),ts=dias.reduce((a,f)=>a+tot(S,f),0);
     const N=v=>v?(v<0?'−':'')+Math.round(Math.abs(v)).toLocaleString('es-CL'):'',DN=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
     const real=f=>f<=cs.hasta,qc=v=>v<0?'var(--danger,#D64545)':v<CAJA_PISO?'#B7791F':'var(--green)';
-    const th='position:sticky;left:0;z-index:2;background:var(--surface);text-align:left;padding:5px 8px;border-right:1px solid var(--border);white-space:nowrap;max-width:210px;overflow:hidden;text-overflow:ellipsis';
+    const th='position:sticky;left:0;z-index:2;background:var(--surface);text-align:left;padding:5px 8px;border-right:1px solid var(--border);white-space:normal;min-width:200px;max-width:300px;line-height:1.3' /* nombres completos, sin cortar (Carlos 18-11) */;
     const td=(f)=>'text-align:right;padding:5px 8px;white-space:nowrap;font-variant-numeric:tabular-nums'+(f&&real(f)?';background:rgba(127,127,127,.06)':'');
     const ord=o=>Object.entries(o).sort((a,b)=>Math.abs(Object.values(b[1]).reduce((x,y)=>x+y,0))-Math.abs(Object.values(a[1]).reduce((x,y)=>x+y,0)));
     const fila=(t,o,col)=>{const w=dias.reduce((a,f)=>a+(o[f]||0),0);return '<tr style="border-bottom:1px solid var(--border)"><td style="'+th+';padding-left:16px" title="'+empEsc(t)+'">'+empEsc(t)+'</td>'+dias.map(f=>'<td style="'+td(f)+';color:'+col+'">'+N(o[f])+'</td>').join('')+'<td style="'+td()+';color:'+col+';font-weight:800">'+N(w)+'</td></tr>'};
