@@ -2165,7 +2165,7 @@ async function pilProy(){const box=$('pil-proy');if(!box)return;box.innerHTML='<
     if(PL&&PL.s){const iva=1+(PL.iva==null?0.19:PL.iva),ini=PL.desde||desde,cobro={EBLOOMS:[15,f=>vie(mas(f,3))],DDC:[15,f=>mas(f,35)],'Valle':[0,f=>mas(f,35)],'Ateuro':[15,f=>vie(mas(f,3))]};
       const perH=(cl,f)=>{const k=Object.keys(cobro).find(x=>cl.indexOf(x)===0)||'Valle',q=cobro[k][0],y=+f.slice(0,4),m=+f.slice(5,7)-1;const fm=finMes(y,m);return [k,q&&+f.slice(8)<=q?f.slice(0,8)+'15':fm,cobro[k][1]]};
       const PT={};
-      for(let f=ini;f<=fin6;f=mas(f,1)){const wd=D(f).getDay();PL.s.forEach(s=>{if(!(s.d||[]).includes(wd))return;const n=s.n||1,[k,hh,pf]=perH(s.c,f),key=k+'|'+hh;PLC[key]=PLC[key]||{k,hh,pf,v:0,cl:s.c};PLC[key].v+=n*s.t;
+      for(let f=ini;f<=fin6;f=mas(f,1)){const wd=D(f).getDay();PL.s.forEach(s=>{if(!(s.d||[]).includes(wd)||(s.desde&&f<s.desde))return;const n=s.n||1,[k,hh,pf]=perH(s.c,f),key=k+'|'+hh;PLC[key]=PLC[key]||{k,hh,pf,v:0,cl:s.c};PLC[key].v+=n*s.t;
         if(s.p){const fp=mas(f,s.pd||30),kk=fp+'|'+(s.ter||'tercero');PT[kk]=PT[kk]||{f:fp,t:'Pago '+(s.ter||'tercero')+' (presupuesto)',v:0};PT[kk].v+=n*s.p*(s.fac?iva:1)}
         else if(s.km&&s.kml)plCons[f]=(plCons[f]||0)+n*s.km/s.kml*(PL.precio||1600)})}
       const MN=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
