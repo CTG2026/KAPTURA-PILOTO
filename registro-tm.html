@@ -2099,25 +2099,25 @@ async function pilProy(){const box=$('pil-proy');if(!box)return;box.innerHTML='<
     const M=v=>(v<0?'−':'')+'$'+(Math.abs(v)/1e6).toFixed(1).replace('.',',')+' M',fc=f=>f.slice(8)+'-'+f.slice(5,7);
     const col=v=>v<0?'var(--danger,#D64545)':v<CAJA_PISO?'#E8A317':'var(--green)';
     /* Vista horizontal tipo Gantt con la columna de conceptos inmovilizada (Carlos 17-11) */
-    const MM=v=>(v<0?'−':'')+(Math.abs(v)/1e6).toFixed(1).replace('.',','),MES=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'],fl=f=>+f.slice(8)+' '+MES[+f.slice(5,7)-1];
+    const PCV=document.body.classList.contains('pc'),MM=v=>(v<0?'−':'')+(Math.abs(v)/1e6).toFixed(1).replace('.',','),MS=v=>PCV?(v<0?'−':'')+'$'+Math.round(Math.abs(v)).toLocaleString('es-CL'):(v<0?'−':'')+'$'+MM(Math.abs(v))+' M',CV=v=>PCV?MS(v):MM(v),MES=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'],fl=f=>+f.slice(8)+' '+MES[+f.slice(5,7)-1];
     const ico=v=>v<0?'🔴':v<CAJA_PISO?'🟡':'🟢';
     let ini=cs.fin;W.forEach(w=>{w.ini$=ini;ini=w.cierre});
     const crit=W.find(w=>w.cierre<0)||W.find(w=>w.cierre<CAJA_PISO);
     const prom=/promedio|Sueldos/;const grandes=W.slice(0,crit?W.indexOf(crit)+1:6).flatMap(w=>w.sal.filter(x=>!prom.test(x[0])).map(x=>[x[0],x[1],w.ini])).sort((a,b)=>b[1]-a[1]).slice(0,2);
-    const titulo=min.cierre<0?'⚠️ La plata se aprieta la semana del '+fl(min.ini)+': quedaría en <b style="color:var(--danger,#D64545)">$'+MM(min.cierre)+' M</b>.':crit?'⚠️ La plata queda justa la semana del '+fl(crit.ini)+': $'+MM(crit.cierre)+' M.':'✅ La plata alcanza las próximas 6 semanas.';
-    const porque=(crit&&grandes.length)?'<div style="font-size:13px;color:var(--muted);margin-top:4px">Pagos más grandes antes de esa fecha: '+grandes.map(g=>empEsc(g[0].replace(' (vencido)',''))+' $'+MM(g[1])+' M (semana del '+fl(g[2])+')').join(' · ')+'.</div>':'';
+    const titulo=min.cierre<0?'⚠️ La plata se aprieta la semana del '+fl(min.ini)+': quedaría en <b style="color:var(--danger,#D64545)">'+MS(min.cierre)+'</b>.':crit?'⚠️ La plata queda justa la semana del '+fl(crit.ini)+': '+MS(crit.cierre)+'.':'✅ La plata alcanza las próximas 6 semanas.';
+    const porque=(crit&&grandes.length)?'<div style="font-size:13px;color:var(--muted);margin-top:4px">Pagos más grandes antes de esa fecha: '+grandes.map(g=>empEsc(g[0].replace(' (vencido)',''))+' '+MS(g[1])+' (semana del '+fl(g[2])+')').join(' · ')+'.</div>':'';
     const th='position:sticky;left:0;z-index:2;background:var(--surface);text-align:left;font-weight:800;padding:8px 10px;border-right:1px solid var(--border);white-space:nowrap';
     const td='text-align:right;padding:8px 10px;white-space:nowrap;font-variant-numeric:tabular-nums;min-width:74px';
     const fila=(t,f,st)=>'<tr><td style="'+th+'">'+t+'</td>'+W.map(w=>'<td style="'+td+(st?';'+st(w):'')+'">'+f(w)+'</td>').join('')+'</tr>';
     window._pilW=W;
     const tabla='<div style="overflow-x:auto;border:1px solid var(--border);border-radius:12px;margin-top:10px"><table style="border-collapse:collapse;width:100%;font-size:14px">'
-      +'<tr><td style="'+th+';font-size:11px;color:var(--muted)">millones $</td>'+W.map((w,k)=>'<td style="'+td+';font-weight:800;cursor:pointer;color:var(--gold)" onclick="pilSemDet('+k+')">'+fl(w.ini)+' ›</td>').join('')+'</tr>'
-      +fila('Parte con',w=>MM(w.ini$),()=>'color:var(--muted)')
-      +fila('Entra',w=>w.e?'+'+MM(w.e):'—',()=>'color:var(--green)')
-      +fila('Sale',w=>'−'+MM(w.s),()=>'color:var(--danger,#D64545)')
-      +'<tr style="border-top:2px solid var(--border)"><td style="'+th+';font-size:15px">Queda</td>'+W.map(w=>'<td style="'+td+';font-size:16px;font-weight:800;color:'+col(w.cierre)+'">'+ico(w.cierre)+' '+MM(w.cierre)+'</td>').join('')+'</tr></table></div>';
-    box.innerHTML='<div class="card" style="padding:14px;margin-bottom:14px"><div style="font-size:12px;color:var(--muted)">CAJA PROYECTADA · Santander · cartola al '+fCL(cs.hasta)+' · hoy hay $'+MM(cs.fin)+' M</div><div style="font-size:17px;font-weight:700;margin-top:6px">'+titulo+'</div>'+porque+tabla
-      +'<div style="font-size:11px;color:var(--muted);margin-top:6px">🟢 sobre $'+MM(CAJA_PISO)+' M · 🟡 bajo $'+MM(CAJA_PISO)+' M · 🔴 negativo. Toca una semana para ver el detalle.</div><div id="pil-det"></div>'
+      +'<tr><td style="'+th+';font-size:11px;color:var(--muted)">'+(PCV?'pesos':'millones $')+'</td>'+W.map((w,k)=>'<td style="'+td+';font-weight:800;cursor:pointer;color:var(--gold)" onclick="pilSemDet('+k+')">'+fl(w.ini)+' ›</td>').join('')+'</tr>'
+      +fila('Parte con',w=>CV(w.ini$),()=>'color:var(--muted)')
+      +fila('Entra',w=>w.e?'+'+CV(w.e):'—',()=>'color:var(--green)')
+      +fila('Sale',w=>'−'+CV(w.s),()=>'color:var(--danger,#D64545)')
+      +'<tr style="border-top:2px solid var(--border)"><td style="'+th+';font-size:15px">Queda</td>'+W.map(w=>'<td style="'+td+';font-size:16px;font-weight:800;color:'+col(w.cierre)+'">'+ico(w.cierre)+' '+CV(w.cierre)+'</td>').join('')+'</tr></table></div>';
+    box.innerHTML='<div class="card" style="padding:14px;margin-bottom:14px"><div style="font-size:12px;color:var(--muted)">CAJA PROYECTADA · Santander · cartola al '+fCL(cs.hasta)+' · hoy hay '+MS(cs.fin)+'</div><div style="font-size:17px;font-weight:700;margin-top:6px">'+titulo+'</div>'+porque+tabla
+      +'<div style="font-size:11px;color:var(--muted);margin-top:6px">🟢 sobre '+MS(CAJA_PISO)+' · 🟡 bajo '+MS(CAJA_PISO)+' · 🔴 negativo. Toca una semana para ver el detalle.</div><div id="pil-det"></div>'
       +'<details style="margin-top:8px"><summary style="font-size:12px;color:var(--muted);cursor:pointer">Cómo se calcula</summary><div style="font-size:11px;color:var(--muted);line-height:1.5;margin-top:4px">Saldo de la última cartola Santander + cobros según el plazo de cada cliente (EBLOOMS: viernes siguiente a la factura; Valle, Ateuro, DDC: 30 días; las facturas aún no emitidas de EBLOOMS y Valle se estiman con el promedio de las dos últimas) − compromisos pendientes (los vencidos van a la primera semana) − combustible (cargas Aramco de las últimas 4 semanas), viáticos, peajes, mantención y retiros al promedio real − sueldos (saldo el día 5 y anticipo el 15).'+(fuera.length?'<br><b>No incluido:</b> '+fuera.map(empEsc).join(' · '):'')+'</div></details></div>';
   }catch(e){console.log('pilProy',e);box.innerHTML=''}}
 function pilSemDet(k){const w=(window._pilW||[])[k],b=$('pil-det');if(!w||!b)return;const it=(a,sg,c)=>a.map(x=>'<div style="display:flex;justify-content:space-between;gap:8px;font-size:13px;padding:3px 0;border-bottom:1px solid var(--border)"><span>'+empEsc(x[0])+'</span><span style="white-space:nowrap;color:'+c+';font-variant-numeric:tabular-nums">'+sg+fmt$(x[1])+'</span></div>').join('');
