@@ -182,6 +182,19 @@ body.pc .tv{display:none}body:not(.pc) .tp{display:none}
   <div class="sub">Servicios con respaldo (guías) que todavía no se confirman. No cuentan en ventas, rentabilidad, proformas ni caja hasta que se confirmen.</div>
   <div id="borr-box">Cargando…</div>
 </section>
+<section class="screen" id="s-preg">
+  <button class="btn2" onclick="atras()"><span class="tv">← Volver</span><span class="tp">← Atrás</span></button>
+  <h2>❓ Preguntas a Claudio</h2>
+  <div class="sub">Dudas abiertas para aclarar con Claudio Madrid Correa. Al responder, la pregunta queda guardada con la respuesta y la fecha.</div>
+  <div class="card" style="padding:12px;max-width:720px">
+    <div style="font-weight:800;margin-bottom:6px">Nueva pregunta</div>
+    <select id="preg-g" style="margin-bottom:6px"><option>Caja</option><option>DDC y terceros</option><option>Servicios</option><option>Otros</option></select>
+    <textarea id="preg-t" rows="2" placeholder="Escribe la pregunta (puedes incluir el monto)"></textarea>
+    <button class="btn" style="margin-top:6px" onclick="pregNueva()">Agregar pregunta</button>
+  </div>
+  <button class="btn2" style="width:auto;padding:8px 14px;margin:10px 0" onclick="pregWsp()">📋 Copiar lista para WhatsApp</button>
+  <div id="preg-box">Cargando…</div>
+</section>
 <section class="screen" id="s-links">
   <button class="btn2" onclick="atras()"><span class="tv">← Volver</span><span class="tp">← Atrás</span></button>
   <h2>🔗 Links spot enviados</h2>
@@ -407,6 +420,7 @@ body.pc .tv{display:none}body:not(.pc) .tp{display:none}
 <section class="screen" id="s-pil">
   <h1>🧪 Vista piloto</h1>
   <div class="sub">Caja de la semana · Resultado · Deudas y por cobrar. Todo desde Kaptura, base caja. Es una prueba: no cambia nada de lo existente.</div>
+  <button class="btn2" style="width:auto;padding:8px 14px;margin:6px 0 12px" onclick="verPreg()">❓ Preguntas a Claudio <span id="preg-n"></span></button>
   <div id="pil-sem"></div>
   <div id="pil-proy"></div>
   <div id="pil-box"></div>
@@ -1991,7 +2005,7 @@ async function tareasHoy(){const box=$('tareas-hoy');if(!box)return;box.innerHTM
     _tHechas=(await conTope(supa.from('tareas_admin').select('tarea,hecha_por,hora,fecha').eq('empresa',EMP_ACT).gte('fecha',hoy.slice(0,8)+'01'),8000)).data||[];
     const esTM=EMP_ACT===EMPRESA,cx=esTM?await leerCxc():[],it=[];
     // Tareas creadas por administración: única (hasta Hecha), semanal (sus días), mensual (desde su día, hasta Hecha en el mes)
-    const tm=(await conTope(supa.from('tareas').select('*').eq('empresa',EMP_ACT).eq('activa',true).order('id'),8000)).data||[],dia=new Date().getDate(),dw7=dw||7;_tareasEd=tm;tm.sort((a,b)=>/^Agenda/i.test(b.titulo)-/^Agenda/i.test(a.titulo)); /* la agenda del día va primero (Carlos 09-11) */
+    const tm=((await conTope(supa.from('tareas').select('*').eq('empresa',EMP_ACT).eq('activa',true).order('id'),8000)).data||[]).filter(t=>t.recurrencia!=='pregunta'),dia=new Date().getDate(),dw7=dw||7;_tareasEd=tm;tm.sort((a,b)=>/^Agenda/i.test(b.titulo)-/^Agenda/i.test(a.titulo)); /* la agenda del día va primero (Carlos 09-11) */
     tm.forEach(t=>{const k='t'+t.id;let ver=false,roja=false,sub='';
       if(t.recurrencia==='semanal'){ver=(t.dias||[]).includes(dw7)&&!_tHechas.some(x=>x.tarea===k&&x.fecha===hoy);sub='Cada '+(t.dias||[]).map(d=>['','lun','mar','mié','jue','vie','sáb','dom'][d]).join(', ')}
       else if(t.recurrencia==='mensual'){ver=dia>=(t.dia_mes||1)&&!_tHechas.some(x=>x.tarea===k);roja=dia>(t.dia_mes||1);sub='Cada mes, día '+t.dia_mes}
@@ -2201,7 +2215,7 @@ async function pilSemana(dlt){const box=$('pil-sem');if(!box)return;const cs=win
   }catch(e){console.log('pilSemana',e);box.innerHTML=''}}
 function pilSemDet(k){const w=(window._pilW||[])[k],b=$('pil-det');if(!w||!b)return;const it=(a,sg,c)=>a.map(x=>'<div style="display:flex;justify-content:space-between;gap:8px;font-size:13px;padding:3px 0;border-bottom:1px solid var(--border)"><span>'+empEsc(x[0])+'</span><span style="white-space:nowrap;color:'+c+';font-variant-numeric:tabular-nums">'+sg+fmt$(x[1])+'</span></div>').join('');
   b.innerHTML='<div style="margin-top:10px;padding:10px;border:1px solid var(--border);border-radius:10px;max-width:520px"><div style="font-weight:800;margin-bottom:6px">Semana del '+fCL(w.ini)+' al '+fCL(w.fin)+'</div>'+(w.ent.length?'<div style="font-size:12px;font-weight:800;color:var(--green)">Entra</div>'+it(w.ent,'+','var(--green)'):'')+'<div style="font-size:12px;font-weight:800;color:var(--danger,#D64545);margin-top:6px">Sale</div>'+it(w.sal.slice().sort((a,b)=>b[1]-a[1]),'−','var(--danger,#D64545)')+'<button class="btn2" style="margin-top:10px;padding:8px" onclick="pilEnviarImg('+k+')">📤 Enviar a Claudio (imagen)</button></div>'}
-async function verPiloto(dsem){if(!esCarlos())return;if(dsem)_pilSem+=dsem;else _pilSem=0;ir('s-pil');navMarcar('s-pil');if(!dsem)pilProy();const box=$('pil-box');box.innerHTML='<div class="sub">Cargando…</div>';
+async function verPiloto(dsem){if(!esCarlos())return;if(dsem)_pilSem+=dsem;else _pilSem=0;ir('s-pil');navMarcar('s-pil');if(!dsem){pilProy();pregContar()}const box=$('pil-box');box.innerHTML='<div class="sub">Cargando…</div>';
   try{const hoy=hoyISO(),dH=new Date(hoy+'T12:00:00');
   const q=(p)=>conTope(p,12000);
   const [rc,rs,rp,rx,rr]=await Promise.all([
@@ -2716,6 +2730,24 @@ async function crearSpot(){const nn=x=>+String(x||'').replace(/\D/g,'')||0;setTi
   window.open('https://wa.me/?text='+encodeURIComponent(txt),'_blank')}
 /* ═══ BORRADORES DE SERVICIOS (Carlos 17-11): se guardan en servicios_piloto con empresa '<EMPRESA>_borrador' para que no cuenten en nada; Carlos o Administración los confirman ═══ */
 const EMP_BORR=()=>EMPRESA+'_borrador';
+/* ═══ PREGUNTAS A CLAUDIO (Carlos 18-11): se guardan en "tareas" con recurrencia='pregunta'; creada_por = 'Pregunta Claudio · <grupo>'; la respuesta se agrega al título ═══ */
+const PREG_G=['Caja','DDC y terceros','Servicios','Otros'],PREG_SEP='\n↳ Respuesta ';
+async function pregCargar(){const r=await conTope(supa.from('tareas').select('*').eq('empresa',EMPRESA).eq('recurrencia','pregunta').order('id'),5000);return (r&&r.data)||[]}
+async function pregContar(){try{const L=await pregCargar(),n=L.filter(x=>x.activa).length;if($('preg-n'))$('preg-n').textContent=n?'('+n+')':''}catch(e){}}
+async function verPreg(){if(!esCarlos())return;ir('s-preg');const box=$('preg-box');box.textContent='Cargando…';
+  try{const L=await pregCargar(),gr=x=>String(x.creada_por||'').replace(/^Pregunta Claudio · /,'')||'Otros',ab=L.filter(x=>x.activa),re=L.filter(x=>!x.activa);
+    const item=(x,i)=>{const [q,r]=String(x.titulo).split(PREG_SEP);return '<div style="padding:8px 0;border-bottom:1px solid var(--border)"><div style="font-size:14px">'+(i!=null?'<b>'+(i+1)+'.</b> ':'')+empEsc(q)+'</div>'+(r?'<div style="font-size:13px;color:var(--green);margin-top:3px">↳ '+empEsc(r)+'</div>':'<div style="display:flex;gap:6px;margin-top:6px"><input id="preg-r-'+x.id+'" placeholder="Respuesta de Claudio" style="flex:1"><button class="btn2" style="width:auto;padding:6px 12px" onclick="pregResp('+x.id+')">Responder</button><button class="btn2" style="width:auto;padding:6px 10px" title="Eliminar" onclick="pregBorrar('+x.id+')">🗑</button></div>')+'</div>'};
+    let n=0;const bloques=PREG_G.map(g=>{const a=ab.filter(x=>gr(x)===g);if(!a.length)return '';const s='<div class="card" style="padding:12px;margin-bottom:10px;max-width:720px"><div style="font-weight:800">'+g+' ('+a.length+')</div>'+a.map(x=>item(x,n++)).join('')+'</div>';return s}).join('');
+    box.innerHTML=(bloques||'<div class="sub">No hay preguntas abiertas.</div>')+(re.length?'<details style="max-width:720px;margin-top:8px"><summary style="cursor:pointer;font-weight:800">Respondidas ('+re.length+')</summary>'+re.slice().reverse().map(x=>item(x)).join('')+'</details>':'');pregContar()}
+  catch(e){box.textContent='No se pudo cargar'}}
+async function pregNueva(){const t=($('preg-t').value||'').trim(),g=$('preg-g').value;if(!t){toast('Escribe la pregunta');return}
+  const {error}=await supa.from('tareas').insert({empresa:EMPRESA,titulo:t,recurrencia:'pregunta',activa:true,creada_por:'Pregunta Claudio · '+g});toast(error?'No se pudo guardar':'Pregunta agregada');if(!error){$('preg-t').value='';verPreg()}}
+async function pregResp(id){const v=($('preg-r-'+id).value||'').trim();if(!v){toast('Escribe la respuesta');return}const r=await supa.from('tareas').select('titulo').eq('id',id).single();if(r.error){toast('No se pudo guardar');return}
+  const {error}=await supa.from('tareas').update({titulo:r.data.titulo+PREG_SEP+'('+fCL(hoyISO())+', '+(user&&user.nombre||'')+'): '+v,activa:false}).eq('id',id).eq('empresa',EMPRESA);toast(error?'No se pudo guardar':'Respuesta guardada');verPreg()}
+async function pregBorrar(id){if(!confirm('¿Eliminar esta pregunta?'))return;const {error}=await supa.from('tareas').delete().eq('id',id).eq('empresa',EMPRESA).eq('recurrencia','pregunta');toast(error?'No se pudo eliminar':'Eliminada');verPreg()}
+async function pregWsp(){const L=(await pregCargar()).filter(x=>x.activa),gr=x=>String(x.creada_por||'').replace(/^Pregunta Claudio · /,'')||'Otros';let n=0;
+  const t='*Preguntas para Claudio* ('+fCL(hoyISO())+')\n'+PREG_G.map(g=>{const a=L.filter(x=>gr(x)===g);return a.length?'\n*'+g+'*\n'+a.map(x=>(++n)+'. '+x.titulo).join('\n'):''}).join('');
+  try{await navigator.clipboard.writeText(t);toast('Lista copiada: pégala en WhatsApp')}catch(e){prompt('Copia la lista:',t)}}
 async function verBorr(){if(!user||!['administrador','administracion'].includes(user.rol))return;ir('s-borr');const box=$('borr-box');box.textContent='Cargando…';
   try{const r=await conTope(supa.from('servicios_piloto').select('*').eq('empresa',EMP_BORR()).eq('estado','borrador').order('fecha'),10000);const L=(r&&r.data)||[];
     if(!L.length){box.innerHTML='<div class="sub">No hay borradores pendientes.</div>';return}
