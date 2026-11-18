@@ -184,13 +184,14 @@ body.pc .tv{display:none}body:not(.pc) .tp{display:none}
 </section>
 <section class="screen" id="s-preg">
   <button class="btn2" onclick="atras()"><span class="tv">← Volver</span><span class="tp">← Atrás</span></button>
-  <h2>❓ Preguntas a Claudio</h2>
-  <div class="sub">Dudas abiertas para aclarar con Claudio Madrid Correa. Al responder, la pregunta queda guardada con la respuesta y la fecha.</div>
+  <h2>❓ Claudio: notas y preguntas</h2>
+  <div class="sub">Preguntas para Claudio Madrid Correa (se responden) y notas de lo que informa (se marcan "Cerrado en Kap" cuando ya quedaron aplicadas en Kaptura oficial).</div>
   <div class="card" style="padding:12px;max-width:720px">
-    <div style="font-weight:800;margin-bottom:6px">Nueva pregunta</div>
+    <div style="font-weight:800;margin-bottom:6px">Nueva pregunta o nota</div>
+    <select id="preg-k" style="margin-bottom:6px"><option value="pregunta">Pregunta</option><option value="nota_claudio">Nota (lo que informó Claudio)</option></select>
     <select id="preg-g" style="margin-bottom:6px"><option>Caja</option><option>DDC y terceros</option><option>Servicios</option><option>Otros</option></select>
-    <textarea id="preg-t" rows="2" placeholder="Escribe la pregunta (puedes incluir el monto)"></textarea>
-    <button class="btn" style="margin-top:6px" onclick="pregNueva()">Agregar pregunta</button>
+    <textarea id="preg-t" rows="2" placeholder="Escribe la pregunta o la nota (puedes incluir el monto)"></textarea>
+    <button class="btn" style="margin-top:6px" onclick="pregNueva()">Agregar</button>
   </div>
   <button class="btn2" style="width:auto;padding:8px 14px;margin:10px 0" onclick="pregWsp()">📋 Copiar lista para WhatsApp</button>
   <div id="preg-box">Cargando…</div>
@@ -420,7 +421,7 @@ body.pc .tv{display:none}body:not(.pc) .tp{display:none}
 <section class="screen" id="s-pil">
   <h1>🧪 Vista piloto</h1>
   <div class="sub">Caja de la semana · Resultado · Deudas y por cobrar. Todo desde Kaptura, base caja. Es una prueba: no cambia nada de lo existente.</div>
-  <button class="btn2" style="width:auto;padding:8px 14px;margin:6px 0 12px" onclick="verPreg()">❓ Preguntas a Claudio <span id="preg-n"></span></button>
+  <button class="btn2" style="width:auto;padding:8px 14px;margin:6px 0 12px" onclick="verPreg()">❓ Claudio: notas y preguntas <span id="preg-n"></span></button>
   <div id="pil-sem"></div>
   <div id="pil-proy"></div>
   <div id="pil-box"></div>
@@ -2005,7 +2006,7 @@ async function tareasHoy(){const box=$('tareas-hoy');if(!box)return;box.innerHTM
     _tHechas=(await conTope(supa.from('tareas_admin').select('tarea,hecha_por,hora,fecha').eq('empresa',EMP_ACT).gte('fecha',hoy.slice(0,8)+'01'),8000)).data||[];
     const esTM=EMP_ACT===EMPRESA,cx=esTM?await leerCxc():[],it=[];
     // Tareas creadas por administración: única (hasta Hecha), semanal (sus días), mensual (desde su día, hasta Hecha en el mes)
-    const tm=((await conTope(supa.from('tareas').select('*').eq('empresa',EMP_ACT).eq('activa',true).order('id'),8000)).data||[]).filter(t=>t.recurrencia!=='pregunta'&&t.recurrencia!=='plan_caja'),dia=new Date().getDate(),dw7=dw||7;_tareasEd=tm;tm.sort((a,b)=>/^Agenda/i.test(b.titulo)-/^Agenda/i.test(a.titulo)); /* la agenda del día va primero (Carlos 09-11) */
+    const tm=((await conTope(supa.from('tareas').select('*').eq('empresa',EMP_ACT).eq('activa',true).order('id'),8000)).data||[]).filter(t=>!['pregunta','plan_caja','nota_claudio'].includes(t.recurrencia)),dia=new Date().getDate(),dw7=dw||7;_tareasEd=tm;tm.sort((a,b)=>/^Agenda/i.test(b.titulo)-/^Agenda/i.test(a.titulo)); /* la agenda del día va primero (Carlos 09-11) */
     tm.forEach(t=>{const k='t'+t.id;let ver=false,roja=false,sub='';
       if(t.recurrencia==='semanal'){ver=(t.dias||[]).includes(dw7)&&!_tHechas.some(x=>x.tarea===k&&x.fecha===hoy);sub='Cada '+(t.dias||[]).map(d=>['','lun','mar','mié','jue','vie','sáb','dom'][d]).join(', ')}
       else if(t.recurrencia==='mensual'){ver=dia>=(t.dia_mes||1)&&!_tHechas.some(x=>x.tarea===k);roja=dia>(t.dia_mes||1);sub='Cada mes, día '+t.dia_mes}
@@ -2105,7 +2106,7 @@ async function pilProy(){const box=$('pil-proy');if(!box)return;box.innerHTML='<
     const fuera=[],EV=[];
     ((rp&&rp.data)||[]).filter(c=>c.estado!=='anulado'&&c.fecha).forEach(c=>{const m=+c.monto||0;if(m<0){fuera.push('Entrada posible no incluida: '+c.acreedor+' '+fmt$(-m)+' ('+c.categoria+')');return}/* lo vencido y no pagado según la cartola pasa al día de hoy, con "(vencido)" (Carlos 18-11) */const hoyP=hoyISO()>desde?hoyISO():desde,venc=c.fecha<hoyP,f=venc?hoyP:c.fecha,w=wk(f),nm=c.acreedor+(/^Arriendo/i.test(c.concepto||'')?' · '+c.concepto.charAt(0).toLowerCase()+c.concepto.slice(1):'')+(venc?' (vencido)':''); /* arriendos con su concepto y patente (Carlos 18-11) */if(w){w.sal.push([nm,m]);EV.push({f,t:nm,v:-m})}});
     const vie=f=>{const d=D(f);d.setDate(d.getDate()+((5-d.getDay()+7)%7||7));return iso(d)};
-    ((rx&&rx.data)||[]).filter(c=>!c.solo_contable&&!c.sin_monto&&+c.total>0).forEach(c=>{let f=c.vence;if(!f&&c.periodo_hasta)f=/EBLOOMS/i.test(c.cliente)?vie(mas(c.periodo_hasta,3)):mas(c.periodo_hasta,35);
+    ((rx&&rx.data)||[]).filter(c=>!c.solo_contable&&!c.sin_monto&&+c.total>0).forEach(c=>{let f=c.vence;if(!f&&c.periodo_hasta)f=/EBLOOMS|Ateuro/i.test(c.cliente)?vie(mas(c.periodo_hasta,3)):mas(c.periodo_hasta,35); /* Ateuro: factura quincenal, paga el viernes siguiente (Carlos 18-11) */
       if(!f||f<desde){fuera.push('Factura '+(c.folio?c.folio+' ':'')+c.cliente+' '+fmt$(+c.total)+(f?' (vencida, fecha de pago incierta)':' (sin fecha)'));return}const w=wk(f);if(w){w.ent.push([c.cliente+(c.etapa==='por_aprobar'?' (por aprobar)':''),+c.total]);EV.push({f,t:c.cliente+(c.etapa==='por_aprobar'?' (por aprobar)':''),v:+c.total})}});
     /* Facturas aún no emitidas (estimadas con el promedio de las 2 últimas): EBLOOMS por quincena (paga el viernes siguiente), Valle por mes (30 días) */
     const H_=(rh&&rh.data)||[],ult=re=>{const a=H_.filter(x=>re.test(x.cliente)&&+x.total>0).slice(0,2);return a.length?a.reduce((t,x)=>t+(+x.total),0)/a.length:0},tiene=(re,h)=>H_.some(x=>re.test(x.cliente)&&x.periodo_hasta===h);
@@ -2113,14 +2114,14 @@ async function pilProy(){const box=$('pil-proy');if(!box)return;box.innerHTML='<
     /* Presupuesto de servicios (Carlos 18-11): plan guardado en "tareas" (recurrencia='plan_caja', título = JSON). Ventas entran según el plazo de cada cliente; pago a terceros según su plazo; combustible de los servicios propios consume el saldo Aramco */
     let PL=null;try{const rpl=await supa.from('tareas').select('titulo').eq('empresa',EMPRESA).eq('recurrencia','plan_caja').eq('activa',true).order('id',{ascending:false}).limit(1);PL=rpl.data&&rpl.data[0]?JSON.parse(rpl.data[0].titulo):null}catch(e){PL=null}
     const PLC={},plCons={};
-    if(PL&&PL.s){const iva=1+(PL.iva==null?0.19:PL.iva),ini=PL.desde||desde,cobro={EBLOOMS:[15,f=>vie(mas(f,3))],DDC:[15,f=>mas(f,35)],'Valle':[0,f=>mas(f,35)],'Ateuro':[0,f=>mas(f,35)]};
+    if(PL&&PL.s){const iva=1+(PL.iva==null?0.19:PL.iva),ini=PL.desde||desde,cobro={EBLOOMS:[15,f=>vie(mas(f,3))],DDC:[15,f=>mas(f,35)],'Valle':[0,f=>mas(f,35)],'Ateuro':[15,f=>vie(mas(f,3))]};
       const perH=(cl,f)=>{const k=Object.keys(cobro).find(x=>cl.indexOf(x)===0)||'Valle',q=cobro[k][0],y=+f.slice(0,4),m=+f.slice(5,7)-1;const fm=finMes(y,m);return [k,q&&+f.slice(8)<=q?f.slice(0,8)+'15':fm,cobro[k][1]]};
       const PT={};
       for(let f=ini;f<=fin6;f=mas(f,1)){const wd=D(f).getDay();PL.s.forEach(s=>{if(!(s.d||[]).includes(wd))return;const n=s.n||1,[k,hh,pf]=perH(s.c,f),key=k+'|'+hh;PLC[key]=PLC[key]||{k,hh,pf,v:0,cl:s.c};PLC[key].v+=n*s.t;
         if(s.p){const fp=mas(f,s.pd||30),kk=fp+'|'+(s.ter||'tercero');PT[kk]=PT[kk]||{f:fp,t:'Pago '+(s.ter||'tercero')+' (presupuesto)',v:0};PT[kk].v+=n*s.p*(s.fac?iva:1)}
         else if(s.km&&s.kml)plCons[f]=(plCons[f]||0)+n*s.km/s.kml*(PL.precio||1600)})}
       const MN=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
-      Object.values(PLC).forEach(o=>{const re=new RegExp('^'+o.k,'i');if(tiene(re,o.hh))return;const fp=o.pf(o.hh),d0=+o.hh.slice(8)===15?'1-15':'16-'+o.hh.slice(8),t=o.cl+' '+(o.k==='EBLOOMS'||o.k==='DDC'?d0+' ':'')+MN[+o.hh.slice(5,7)-1]+' (presupuesto)',v=Math.round(o.v*iva);if(fp<desde||fp>fin6)return;const w=wk(fp);if(w){w.ent.push([t,v]);EV.push({f:fp,t,v})}});
+      Object.values(PLC).forEach(o=>{const re=new RegExp('^'+o.k,'i');if(tiene(re,o.hh))return;const fp=o.pf(o.hh),d0=+o.hh.slice(8)===15?'1-15':'16-'+o.hh.slice(8),t=o.cl+' '+(o.k!=='Valle'?d0+' ':'')+MN[+o.hh.slice(5,7)-1]+' (presupuesto)',v=Math.round(o.v*iva);if(fp<desde||fp>fin6)return;const w=wk(fp);if(w){w.ent.push([t,v]);EV.push({f:fp,t,v})}});
       Object.values(PT).forEach(o=>{if(o.f<desde||o.f>fin6)return;const w=wk(o.f),v=Math.round(o.v);if(w){w.sal.push([o.t,v]);EV.push({f:o.f,t:o.t,v:-v})}})}
     window._pilPL=PL;
     per.forEach(([h,t,re,pf])=>{if(PL&&PL.s&&PL.s.some(s=>re.test(s.c)))return;if(tiene(re,h))return;const f=pf(h),v=ult(re);if(!v||f<desde)return;const w=wk(f);if(w){w.ent.push([t+' (estimado)',v]);EV.push({f,t:t+' (estimado)',v})}});
@@ -2744,21 +2745,26 @@ async function crearSpot(){const nn=x=>+String(x||'').replace(/\D/g,'')||0;setTi
 /* ═══ BORRADORES DE SERVICIOS (Carlos 17-11): se guardan en servicios_piloto con empresa '<EMPRESA>_borrador' para que no cuenten en nada; Carlos o Administración los confirman ═══ */
 const EMP_BORR=()=>EMPRESA+'_borrador';
 /* ═══ PREGUNTAS A CLAUDIO (Carlos 18-11): se guardan en "tareas" con recurrencia='pregunta'; creada_por = 'Pregunta Claudio · <grupo>'; la respuesta se agrega al título ═══ */
-const PREG_G=['Caja','DDC y terceros','Servicios','Otros'],PREG_SEP='\n↳ Respuesta ';
-async function pregCargar(){const r=await conTope(supa.from('tareas').select('*').eq('empresa',EMPRESA).eq('recurrencia','pregunta').order('id'),5000);return (r&&r.data)||[]}
-async function pregContar(){try{const L=await pregCargar(),n=L.filter(x=>x.activa).length;if($('preg-n'))$('preg-n').textContent=n?'('+n+')':''}catch(e){}}
+const PREG_G=['Caja','DDC y terceros','Servicios','Otros'],PREG_SEP='\n↳ Respuesta ',PREG_CER='\n↳ Cerrado en Kap ';
+async function pregCargar(){const r=await conTope(supa.from('tareas').select('*').eq('empresa',EMPRESA).in('recurrencia',['pregunta','nota_claudio']).order('id'),5000);return (r&&r.data)||[]}
+/* Pregunta diaria de Ateuro (Carlos 18-11): lun a sáb se crea sola si no existe */
+async function pregDiaria(L){const f=hoyISO(),wd=new Date(f+'T12:00').getDay();if(wd===0)return false;const t='Ateuro de hoy ('+fCL(f)+'): ¿cuántos servicios, de dónde a dónde y con equipo propio o tercero (quién)?';if(L.some(x=>String(x.titulo).indexOf(t)===0))return false;
+  const {error}=await supa.from('tareas').insert({empresa:EMPRESA,titulo:t,recurrencia:'pregunta',activa:true,creada_por:'Pregunta Claudio · Servicios'});return !error}
+async function pregContar(){try{let L=await pregCargar();if(await pregDiaria(L))L=await pregCargar();const n=L.filter(x=>x.activa).length;if($('preg-n'))$('preg-n').textContent=n?'('+n+')':''}catch(e){}}
 async function verPreg(){if(!esCarlos())return;ir('s-preg');const box=$('preg-box');box.textContent='Cargando…';
-  try{const L=await pregCargar(),gr=x=>String(x.creada_por||'').replace(/^Pregunta Claudio · /,'')||'Otros',ab=L.filter(x=>x.activa),re=L.filter(x=>!x.activa);
-    const item=(x,i)=>{const [q,r]=String(x.titulo).split(PREG_SEP);return '<div style="padding:8px 0;border-bottom:1px solid var(--border)"><div style="font-size:14px">'+(i!=null?'<b>'+(i+1)+'.</b> ':'')+empEsc(q)+'</div>'+(r?'<div style="font-size:13px;color:var(--green);margin-top:3px">↳ '+empEsc(r)+'</div>':'<div style="display:flex;gap:6px;margin-top:6px"><input id="preg-r-'+x.id+'" placeholder="Respuesta de Claudio" style="flex:1"><button class="btn2" style="width:auto;padding:6px 12px" onclick="pregResp('+x.id+')">Responder</button><button class="btn2" style="width:auto;padding:6px 10px" title="Eliminar" onclick="pregBorrar('+x.id+')">🗑</button></div>')+'</div>'};
+  try{let L0=await pregCargar();if(await pregDiaria(L0))L0=await pregCargar();const L=L0,gr=x=>String(x.creada_por||'').replace(/^Pregunta Claudio · /,'')||'Otros',ab=L.filter(x=>x.activa),re=L.filter(x=>!x.activa);
+    const item=(x,i)=>{const nota=x.recurrencia==='nota_claudio',[q,r]=String(x.titulo).split(nota?PREG_CER:PREG_SEP);return '<div style="padding:8px 0;border-bottom:1px solid var(--border)"><div style="font-size:14px">'+(i!=null?'<b>'+(i+1)+'.</b> ':'')+(nota?'<span style="font-size:11px;font-weight:800;color:#B7791F">NOTA</span> ':'')+empEsc(q)+'</div>'+(r?'<div style="font-size:13px;color:var(--green);margin-top:3px">↳ '+empEsc((nota?'Cerrado en Kap ':'')+r)+'</div>':nota?'<div style="display:flex;gap:6px;margin-top:6px"><button class="btn2" style="width:auto;padding:6px 12px" onclick="pregCerrar('+x.id+')">✅ Cerrado en Kap</button><button class="btn2" style="width:auto;padding:6px 10px" title="Eliminar" onclick="pregBorrar('+x.id+')">🗑</button></div>':'<div style="display:flex;gap:6px;margin-top:6px"><input id="preg-r-'+x.id+'" placeholder="Respuesta de Claudio" style="flex:1"><button class="btn2" style="width:auto;padding:6px 12px" onclick="pregResp('+x.id+')">Responder</button><button class="btn2" style="width:auto;padding:6px 10px" title="Eliminar" onclick="pregBorrar('+x.id+')">🗑</button></div>')+'</div>'};
     let n=0;const bloques=PREG_G.map(g=>{const a=ab.filter(x=>gr(x)===g);if(!a.length)return '';const s='<div class="card" style="padding:12px;margin-bottom:10px;max-width:720px"><div style="font-weight:800">'+g+' ('+a.length+')</div>'+a.map(x=>item(x,n++)).join('')+'</div>';return s}).join('');
-    box.innerHTML=(bloques||'<div class="sub">No hay preguntas abiertas.</div>')+(re.length?'<details style="max-width:720px;margin-top:8px"><summary style="cursor:pointer;font-weight:800">Respondidas ('+re.length+')</summary>'+re.slice().reverse().map(x=>item(x)).join('')+'</details>':'');pregContar()}
+    box.innerHTML=(bloques||'<div class="sub">No hay preguntas ni notas abiertas.</div>')+(re.length?'<details style="max-width:720px;margin-top:8px"><summary style="cursor:pointer;font-weight:800">Respondidas y cerradas ('+re.length+')</summary>'+re.slice().reverse().map(x=>item(x)).join('')+'</details>':'');pregContar()}
   catch(e){box.textContent='No se pudo cargar'}}
 async function pregNueva(){const t=($('preg-t').value||'').trim(),g=$('preg-g').value;if(!t){toast('Escribe la pregunta');return}
-  const {error}=await supa.from('tareas').insert({empresa:EMPRESA,titulo:t,recurrencia:'pregunta',activa:true,creada_por:'Pregunta Claudio · '+g});toast(error?'No se pudo guardar':'Pregunta agregada');if(!error){$('preg-t').value='';verPreg()}}
+  const k=($('preg-k')&&$('preg-k').value)||'pregunta';const {error}=await supa.from('tareas').insert({empresa:EMPRESA,titulo:t,recurrencia:k,activa:true,creada_por:'Pregunta Claudio · '+g});toast(error?'No se pudo guardar':k==='pregunta'?'Pregunta agregada':'Nota agregada');if(!error){$('preg-t').value='';verPreg()}}
 async function pregResp(id){const v=($('preg-r-'+id).value||'').trim();if(!v){toast('Escribe la respuesta');return}const r=await supa.from('tareas').select('titulo').eq('id',id).single();if(r.error){toast('No se pudo guardar');return}
   const {error}=await supa.from('tareas').update({titulo:r.data.titulo+PREG_SEP+'('+fCL(hoyISO())+', '+(user&&user.nombre||'')+'): '+v,activa:false}).eq('id',id).eq('empresa',EMPRESA);toast(error?'No se pudo guardar':'Respuesta guardada');verPreg()}
-async function pregBorrar(id){if(!confirm('¿Eliminar esta pregunta?'))return;const {error}=await supa.from('tareas').delete().eq('id',id).eq('empresa',EMPRESA).eq('recurrencia','pregunta');toast(error?'No se pudo eliminar':'Eliminada');verPreg()}
-async function pregWsp(){const L=(await pregCargar()).filter(x=>x.activa),gr=x=>String(x.creada_por||'').replace(/^Pregunta Claudio · /,'')||'Otros';let n=0;
+async function pregCerrar(id){const r=await supa.from('tareas').select('titulo').eq('id',id).single();if(r.error){toast('No se pudo guardar');return}
+  const {error}=await supa.from('tareas').update({titulo:r.data.titulo+PREG_CER+'('+fCL(hoyISO())+', '+(user&&user.nombre||'')+')',activa:false}).eq('id',id).eq('empresa',EMPRESA);toast(error?'No se pudo guardar':'Nota cerrada');verPreg()}
+async function pregBorrar(id){if(!confirm('¿Eliminar?'))return;const {error}=await supa.from('tareas').delete().eq('id',id).eq('empresa',EMPRESA).in('recurrencia',['pregunta','nota_claudio']);toast(error?'No se pudo eliminar':'Eliminada');verPreg()}
+async function pregWsp(){const L=(await pregCargar()).filter(x=>x.activa&&x.recurrencia==='pregunta'),gr=x=>String(x.creada_por||'').replace(/^Pregunta Claudio · /,'')||'Otros';let n=0;
   const t='*Preguntas para Claudio* ('+fCL(hoyISO())+')\n'+PREG_G.map(g=>{const a=L.filter(x=>gr(x)===g);return a.length?'\n*'+g+'*\n'+a.map(x=>(++n)+'. '+x.titulo).join('\n'):''}).join('');
   try{await navigator.clipboard.writeText(t);toast('Lista copiada: pégala en WhatsApp')}catch(e){prompt('Copia la lista:',t)}}
 async function verBorr(){if(!user||!['administrador','administracion'].includes(user.rol))return;ir('s-borr');const box=$('borr-box');box.textContent='Cargando…';
