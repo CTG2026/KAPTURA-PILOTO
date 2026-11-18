@@ -2137,7 +2137,7 @@ async function pilProy(){const box=$('pil-proy');if(!box)return;box.innerHTML='<
       const RECARGA=1000000,cDia=comb/6,AR={},hoyA=hoyISO();let sa=recT-sm(cg.filter(x=>x.fecha<=cs.hasta));
       for(let f=desde;f<=fin6;f=mas(f,1)){const o={parte:sa,rec:0,cons:0};
         if(f<=ultC)o.cons=sm(cg.filter(x=>x.fecha===f));
-        else{const cd=(PL&&PL.s&&f>=(PL.desde||desde))?(plCons[f]||0):(D(f).getDay()!==0?cDia:0);if(cd){while(sa<cd){o.rec+=RECARGA;sa+=RECARGA;const fr=f<hoyA?hoyA:f,w=wk(fr);EV.push({f:fr,t:'Recarga Aramco (saldo prepago)',v:-RECARGA});if(w)w.sal.push(['Recarga Aramco (saldo prepago)',RECARGA])}o.cons=cd}}
+        else{const cd=(PL&&PL.s&&PL.comb!=='real'&&f>=(PL.desde||desde))?(plCons[f]||0):(D(f).getDay()!==0?cDia:0);if(cd){while(sa<cd){o.rec+=RECARGA;sa+=RECARGA;const fr=f<hoyA?hoyA:f,w=wk(fr);EV.push({f:fr,t:'Recarga Aramco (saldo prepago)',v:-RECARGA});if(w)w.sal.push(['Recarga Aramco (saldo prepago)',RECARGA])}o.cons=cd}}
         sa-=o.cons;o.queda=sa;AR[f]=o}
       window._pilAR=AR}
     {const opd=(var_+ret_)/6;for(let f=desde;f<=fin6;f=mas(f,1)){const wd=D(f).getDay();if(wd!==0&&opd)EV.push({f,t:'Operación diaria (promedio)',v:-opd});const dd=+f.slice(8);if(dd===5&&s5)EV.push({f,t:'Sueldos: saldo del mes',v:-s5});if(dd===15&&s15)EV.push({f,t:'Sueldos: anticipo',v:-s15})}}
