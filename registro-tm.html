@@ -21,7 +21,7 @@
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{background:var(--bg);color:var(--text);font-family:'Cifras','DM Sans',system-ui,sans-serif;min-height:100%}
 body{padding:16px 16px 40px;max-width:520px;margin:0 auto}
-body:has(#s-carpub.on){max-width:1200px}
+body:has(#s-carpub.on),body.pubclaro:has(#s-pil.on){max-width:1200px}
 body.pubclaro{--bg:#F4F6F9;--surface:#FFFFFF;--surface2:#F1F4F8;--border:#DDE3EA;--text:#1E2B3A;--muted:#5B6B7D;--gold:#2563EB;--green:#2E8B57;--danger:#D64545;background:#F4F6F9;color:#1E2B3A} /* link de documentos con los colores de la vista PC (Carlos 18-11) */
 html:has(body.pubclaro){background:#F4F6F9} /* link de documentos para clientes: ancho completo en PC (Carlos 18-11) */
 @media (pointer:fine){html{overflow-y:scroll}::-webkit-scrollbar{width:12px;height:12px}::-webkit-scrollbar-track{background:#1b1b1b}::-webkit-scrollbar-thumb{background:#8a7a3a;border-radius:6px;border:2px solid #1b1b1b}::-webkit-scrollbar-thumb:hover{background:#c9a227}html{scrollbar-color:#8a7a3a #1b1b1b}}
@@ -422,9 +422,9 @@ body.pc .tv{display:none}body:not(.pc) .tp{display:none}
 </section>
 
 <section class="screen" id="s-pil">
-  <h1>🧪 Vista piloto</h1>
-  <div class="sub">Caja de la semana · Resultado · Deudas y por cobrar. Todo desde Kaptura, base caja. Es una prueba: no cambia nada de lo existente.</div>
-  <button class="btn2" style="width:auto;padding:8px 14px;margin:6px 0 12px" onclick="verPreg()">❓ Claudio: notas y preguntas <span id="preg-n"></span></button>
+  <h1 id="pil-h">🧪 Vista piloto</h1>
+  <div class="sub" id="pil-sub">Caja de la semana · Resultado · Deudas y por cobrar. Todo desde Kaptura, base caja. Es una prueba: no cambia nada de lo existente.</div>
+  <button class="btn2" id="btn-preg" style="width:auto;padding:8px 14px;margin:6px 0 12px" onclick="verPreg()">❓ Claudio: notas y preguntas <span id="preg-n"></span></button>
   <div id="pil-sem"></div>
   <div id="pil-proy"></div>
   <div id="pil-box"></div>
@@ -1675,6 +1675,11 @@ async function docCliConductor(){const v=await formulario('Agregar conductor',[{
 async function docCliLink(){const v=await formulario('Link de documentos para el cliente',[{k:'n',l:'Para (cliente o persona)'}]);if(!v)return;
   const token=Math.random().toString(36).slice(2,10)+Math.random().toString(36).slice(2,10);const {error}=await supa.from('carpeta_links').insert({token,empresa:EMPRESA,para:(v.n||'').trim()||null,incluye_terceros:true,creado_por:user.nombre});if(error){toast('No se pudo crear el link');return}
   window.open('https://wa.me/?text='+encodeURIComponent('Transportes Madrid Gaete SpA · Documentos de nuestros equipos y conductores. Toque cada documento para verlo o descargarlo:\n'+docCliUrl(token)),'_blank');verCarp()}
+/* Link de la caja para Claudio (Carlos 18-11): ?caja=token (carpeta_links con para que empieza con 'CAJA'); solo caja de la semana y proyectada, sin notas ni preguntas */
+async function abrirCajaPub(token){document.body.classList.add('pubclaro');ir('s-pil');['btn-preg','pil-box'].forEach(i=>{if($(i))$(i).style.display='none'});document.querySelectorAll('#s-pil > .btn2').forEach(b=>b.style.display='none');
+  $('pil-h').textContent='Kaptura · Sistema de Gestión Transportes Madrid';$('pil-sub').textContent='Cargando…';
+  try{const l=await conTope(supa.from('carpeta_links').select('*').eq('token',token).eq('activo',true).maybeSingle(),10000);if(!l.data||!/^CAJA/i.test(l.data.para||'')){$('pil-sub').textContent='Este link ya no está disponible.';return}
+    $('pil-sub').textContent='Caja de la semana y caja proyectada · cuenta Santander · al '+fCL(hoyISO());await pilProy()}catch(_){$('pil-sub').textContent='No se pudo cargar.'}}
 async function abrirDocsPub(token){document.body.classList.add('pubclaro');ir('s-carpub');$('carpub-h').innerHTML='Kaptura · Sistema de Gestión <span style="white-space:nowrap">Transportes Madrid</span>';try{const l=await conTope(supa.from('carpeta_links').select('*').eq('token',token).eq('activo',true).maybeSingle(),10000);if(!l.data){$('carpub-sub').textContent='Este link ya no está disponible.';return}
   const e=await conTope(supa.from('carpeta_equipos').select('*').eq('empresa',l.data.empresa).order('orden'),10000);
   $('carpub-sub').textContent='Documentos de equipos y conductores al '+fCL(hoyISO())+' · Toque un documento para verlo o descargarlo';
@@ -2853,8 +2858,8 @@ async function spotEnviar(btn){if(!_spot||!_spotFoto)return;btn.disabled=true;bt
     if(error)throw error;await supa.from('spot_links').update({usado:ahora,servicio_id:sid}).eq('token',_spot.token);
     $('spot-form').style.display='none';$('spot-info').innerHTML='<b>✅ Servicio registrado. Gracias.</b><br>Ya puede cerrar esta página.'}
   catch(e){btn.disabled=false;btn.textContent='✅ ENVIAR REGISTRO';toast('No se pudo enviar. Revise la señal e intente de nuevo.')}}
-const _spotTok=new URLSearchParams(location.search).get('spot'),_carpTok=new URLSearchParams(location.search).get('carpeta'),_docsTok=new URLSearchParams(location.search).get('docs');
-const guardado=(_spotTok||_carpTok||_docsTok)?null:ls('tm_pin'); if(_docsTok)abrirDocsPub(_docsTok);else if(_carpTok)abrirCarpPub(_carpTok);else if(_spotTok)abrirSpot(_spotTok);else if(guardado&&USUARIOS[guardado]&&Date.now()-Number(ls('tm_ult')||0)<=INACT_MS)entrar(guardado,true); else if(guardado)ls('tm_pin',null);
+const _spotTok=new URLSearchParams(location.search).get('spot'),_carpTok=new URLSearchParams(location.search).get('carpeta'),_docsTok=new URLSearchParams(location.search).get('docs'),_cajaTok=new URLSearchParams(location.search).get('caja');
+const guardado=(_spotTok||_carpTok||_docsTok||_cajaTok)?null:ls('tm_pin'); if(_cajaTok)abrirCajaPub(_cajaTok);else if(_docsTok)abrirDocsPub(_docsTok);else if(_carpTok)abrirCarpPub(_carpTok);else if(_spotTok)abrirSpot(_spotTok);else if(guardado&&USUARIOS[guardado]&&Date.now()-Number(ls('tm_ult')||0)<=INACT_MS)entrar(guardado,true); else if(guardado)ls('tm_pin',null);
 
 /* Tarjetas: primero el título y abajo el pilar (Carlos 17-11) */
 (function(){const voltear=r=>{(r.querySelectorAll?r.querySelectorAll('.kpi'):[]).forEach(k=>{const p=[...k.children].find(x=>x.classList.contains('p')),l=[...k.children].find(x=>x.classList.contains('l'));if(p&&l&&p.compareDocumentPosition(l)&Node.DOCUMENT_POSITION_FOLLOWING){k.insertBefore(l,p);p.style.marginTop='2px'}})};
