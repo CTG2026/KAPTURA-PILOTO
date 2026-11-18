@@ -2207,7 +2207,7 @@ async function pilSemana(dlt){const box=$('pil-sem');if(!box)return;const cs=win
     const te=dias.reduce((a,f)=>a+tot(E,f),0),ts=dias.reduce((a,f)=>a+tot(S,f),0);
     const N=v=>v?(v<0?'−':'')+Math.round(Math.abs(v)).toLocaleString('es-CL'):'',DN=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
     const real=f=>f<=cs.hasta,qc=v=>v<0?'var(--danger,#D64545)':v<CAJA_PISO?'#B7791F':'var(--green)';
-    const th='position:sticky;left:0;z-index:2;background:var(--surface);text-align:left;padding:5px 8px;border-right:1px solid var(--border);white-space:normal;min-width:200px;max-width:300px;line-height:1.3' /* nombres completos, sin cortar (Carlos 18-11) */;
+    const th='position:sticky;left:0;z-index:2;background:var(--surface);text-align:left;padding:5px 8px;border-right:1px solid var(--border);white-space:nowrap;min-width:330px' /* columna ancha, nombres completos en una línea (Carlos 18-11) */;
     const td=(f)=>'text-align:right;padding:5px 8px;white-space:nowrap;font-variant-numeric:tabular-nums'+(f&&real(f)?';background:rgba(127,127,127,.06)':'');
     const ord=o=>Object.entries(o).sort((a,b)=>Math.abs(Object.values(b[1]).reduce((x,y)=>x+y,0))-Math.abs(Object.values(a[1]).reduce((x,y)=>x+y,0)));
     const fila=(t,o,col)=>{const w=dias.reduce((a,f)=>a+(o[f]||0),0);return '<tr style="border-bottom:1px solid var(--border)"><td style="'+th+';padding-left:16px" title="'+empEsc(t)+'">'+empEsc(t)+'</td>'+dias.map(f=>'<td style="'+td(f)+';color:'+col+'">'+N(o[f])+'</td>').join('')+'<td style="'+td()+';color:'+col+';font-weight:800">'+N(w)+'</td></tr>'};
