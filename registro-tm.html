@@ -2192,7 +2192,7 @@ function simCalc(){const S=_sim,cs=window._LCS||window._pilCS,EV=window._LEv||wi
     if(/^Ateuro/.test(x.t)&&x.f<='2026-12-31'&&!/ dic| ene| feb| mar/.test(x.t)){if(S.ate)x.f=S.ate;
 }
     if(/^Alimentos Valle/.test(x.t)&&S.val)x.f=S.val;
-    if(S.ter==='S'&&/^Pago .*(Zamorano|Fuentes|tercero)/i.test(x.t))continue;
+    if(S.ter==='S'&&/^Pago .*(Zamorano|Fuentes|tercero)/i.test(x.t)){const tv=new Date(D(x.f).getTime()-30*864e5),tf=iso(tv),q=+tf.slice(8)<=15?tf.slice(0,8)+'15':iso(new Date(+tf.slice(0,4),+tf.slice(5,7),0,12));x.f=iso(new Date(D(q).getTime()+35*864e5));x.t+=' · cuando paga DDC'}
     L.push(x)}
   /* Factoring por cliente (Carlos 19-11): anticipa los cobros de ese cliente que vencen hasta 60 días después de la fecha del factoring */
   const FRE={Ateuro:/^Ateuro/,EBLOOMS:/^EBLOOMS/,Valle:/Valle/,DDC:/^DDC/,'Home Gardens':/^Home/,TRAST:/^TRAST/};
