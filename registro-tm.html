@@ -1649,7 +1649,7 @@ async function carpLinkOff(t){const v=await formulario('¿Desactivar este link?'
 /* ═══ DOCUMENTOS PARA CLIENTES (Carlos 18-11): todos los equipos juntos (TM y terceros sin distinguir), por tractos, semirremolques y camiones, más conductores. Conductores en carpeta_equipos con grupo='Conductores' (patente = nombre, pc = cédula, rt = licencia, soap = hoja de vida). Link público: ?docs=token (misma tabla carpeta_links) ═══ */
 const docCliUrl=t=>location.origin+location.pathname+'?docs='+t;
 function docCliHtml(eq,admin){const E=eq.filter(x=>x.grupo!=='Conductores'),C=eq.filter(x=>x.grupo==='Conductores').sort((a,b)=>String(a.patente).localeCompare(String(b.patente),'es'));
-  const B='border-bottom:1px solid var(--border,#ddd);padding:6px 8px;text-align:left;vertical-align:top',Cc=B+';white-space:nowrap',TH=t=>'<th style="'+Cc+'">'+t+'</th>';
+  const B='border-bottom:1px solid #ddd;padding:6px 8px;text-align:left;vertical-align:top',Cc=B+';white-space:nowrap',TH=t=>'<th style="'+Cc+'">'+t+'</th>';
   const lk=(t,u,c)=>u?'<a href="'+u+'" target="_blank" rel="noopener" style="color:'+c+';text-decoration:underline">'+t+'</a>':t;
   const up=(id,k)=>admin?' <a href="#" onclick="docCliSubir(\''+id+'\',\''+k+'\');return false" title="Subir o cambiar documento" style="text-decoration:none">📎</a>':'';
   const cel=(x,k,dk,nk,uk)=>{const s=carpSem(x[dk],x[nk]);return '<td style="'+Cc+';color:'+s.c+';font-weight:600">'+(s.ic||'')+lk(s.t,x[dk]?x[uk]:null,s.c)+up(x.id,k)+'</td>'};
