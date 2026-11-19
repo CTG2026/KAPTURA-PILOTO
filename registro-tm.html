@@ -2152,7 +2152,7 @@ const CAJA_PISO=5261000;
 
 /* Simulador simple de caja (Carlos 19-11): parte de la caja proyectada real (window._pilEv) y aplica supuestos. No guarda nada. */
 let _sim={dev:11000000,devf:'2026-11-30',ate:'2026-12-15',val:'2026-12-01',ter:'N',tc:0,tcf:'',fac:'N',facf:'2026-11-23',fact:1.5,ext:0,extf:'',min:3000000};
-async function simAbrir(){const b=$('pil-simbox');if(b.style.display!=='none'){b.style.display='none';return}b.style.display='block';if(!window._pilEv){b.innerHTML='<div class="sub">Cargando caja proyectada…</div>';await pilProy()}simPintar()}
+async function simAbrir(){const b=$('pil-simbox');if(b.style.display!=='none'){b.style.display='none';window._simOn=false;pilSemana('keep');return}b.style.display='block';window._simOn=true;if(!window._pilEv){b.innerHTML='<div class="sub">Cargando caja proyectada…</div>';await pilProy()}simPintar()}
 function simPintar(){const b=$('pil-simbox'),S=_sim,I='font-size:15px;padding:6px;border-radius:8px;border:2px solid var(--border);background:#FFF2CC;color:#000;width:100%;box-sizing:border-box',
   num=(k)=>'<input type="text" inputmode="numeric" style="'+I+'" value="'+(S[k]?Number(S[k]).toLocaleString('es-CL'):'0')+'" onchange="_sim.'+k+'=+this.value.replace(/\\D/g,\'\')||0;simCalc()">',
   fec=(k)=>'<input type="date" style="'+I+'" value="'+(S[k]||'')+'" onchange="_sim.'+k+'=this.value;simCalc()">',
@@ -2170,13 +2170,14 @@ function simCalc(){const S=_sim,cs=window._pilCS,EV=window._pilEv||[],box=$('sim
   const L=[];let fac=0;
   for(const e of EV){const x={...e};
     if(/^Ateuro/.test(x.t)){if(/dic/.test(x.t))continue;if(S.ate)x.f=S.ate;
-      if(S.fac==='S'&&S.facf&&S.facf<x.f){const c=x.v*(S.fact/100)*Math.max(dd(S.facf,x.f),0)/30;fac+=c;x.v-=c;x.f=S.facf}}
+      if(S.fac==='S'&&S.facf&&S.facf<x.f){const c=x.v*(S.fact/100)*Math.max(dd(S.facf,x.f),0)/30;fac+=c;x.v-=c;x.f=S.facf;x.t+=' · factoring'}}
     if(/^Alimentos Valle/.test(x.t)&&S.val)x.f=S.val;
     if(S.ter==='S'&&/Pago .*Zamorano|tercero DDC/.test(x.t))continue;
     L.push(x)}
-  if(S.dev&&S.devf)L.push({f:S.devf,v:S.dev});
-  if(S.ext&&S.extf)L.push({f:S.extf,v:S.ext});
-  if(S.tc&&S.tcf){L.push({f:S.tcf,v:S.tc});const d=D(S.tcf),m=d.getMonth()+(d.getDate()<=25?1:2);L.push({f:iso(new Date(d.getFullYear(),m,10,12)),v:-S.tc})}
+  if(S.dev&&S.devf)L.push({f:S.devf,t:'Devolución retiros Claudio (simulación)',v:S.dev});
+  if(S.ext&&S.extf)L.push({f:S.extf,t:'Ingreso extra / spot (simulación)',v:S.ext});
+  if(S.tc&&S.tcf){L.push({f:S.tcf,t:'Pago con tarjeta: no sale de la cuenta (simulación)',v:S.tc});const d=D(S.tcf),m=d.getMonth()+(d.getDate()<=25?1:2);L.push({f:iso(new Date(d.getFullYear(),m,10,12)),t:'Pago tarjeta de crédito (simulación)',v:-S.tc})}
+  window._simEv=L;
   const fin=window._pilFin6||'2026-12-27',ini=L.reduce((a,e)=>e.f<a?e.f:a,'9999');
   const lun=f=>{const d=D(f);d.setDate(d.getDate()-((d.getDay()+6)%7));return iso(d)};
   const dia={};L.forEach(e=>{if(e.f<=fin)dia[e.f]=(dia[e.f]||0)+e.v});
@@ -2188,8 +2189,8 @@ function simCalc(){const S=_sim,cs=window._pilCS,EV=window._pilEv||[],box=$('sim
   const th='padding:6px 8px;text-align:right;border-bottom:1px solid var(--border)',bad=v=>v<S.min;
   box.innerHTML='<div style="font-size:15px;margin-bottom:6px">Saldo mínimo: <b style="color:'+(bad(mn[0])?'#DC2626':'#15803D')+'">'+fm(mn[0])+'</b> el '+String(mn[1]).split('-').reverse().join('-')+(fac?' · costo factoring '+fm(fac):'')+'</div>'+
   '<div style="overflow-x:auto"><table style="border-collapse:collapse;width:100%;font-size:14px"><tr style="color:#888"><td style="'+th+';text-align:left">Semana</td><td style="'+th+'">Entra</td><td style="'+th+'">Sale</td><td style="'+th+'">Saldo al cierre</td><td style="'+th+'">Saldo mínimo</td></tr>'+
-  W.map(r=>{const f2=iso(new Date(D(r.w).getTime()+6*864e5));return '<tr style="'+(bad(r.min)?'background:rgba(220,38,38,.18)':'')+'"><td style="'+th+';text-align:left">'+r.w.slice(8)+'-'+r.w.slice(5,7)+' al '+f2.slice(8)+'-'+f2.slice(5,7)+'</td><td style="'+th+';color:#15803D">'+fm(r.in)+'</td><td style="'+th+';color:#DC2626">'+fm(r.out)+'</td><td style="'+th+';font-weight:800">'+fm(r.fin)+'</td><td style="'+th+'">'+fm(r.min)+(bad(r.min)?' ⚠':'')+'</td></tr>'}).join('')+'</table></div>'+
-  '<div style="font-size:12px;color:#888;margin-top:6px">Tarjeta: se paga el 10 del mes siguiente (cierre 25). Terceros = S: los de DDC se pagan en enero, cuando paga DDC. Base: caja proyectada de Kaptura (cartola al '+cs.hasta.split('-').reverse().join('-')+', cobros, compromisos y presupuesto). Ateuro de diciembre queda para enero.</div>'}
+  W.map(r=>{const f2=iso(new Date(D(r.w).getTime()+6*864e5));return '<tr onclick="pilSemana(\''+r.w+'\');$(\'pil-sem\').scrollIntoView({behavior:\'smooth\'})" style="cursor:pointer;'+(bad(r.min)?'background:rgba(220,38,38,.18)':'')+'"><td style="'+th+';text-align:left">'+r.w.slice(8)+'-'+r.w.slice(5,7)+' al '+f2.slice(8)+'-'+f2.slice(5,7)+'</td><td style="'+th+';color:#15803D">'+fm(r.in)+'</td><td style="'+th+';color:#DC2626">'+fm(r.out)+'</td><td style="'+th+';font-weight:800">'+fm(r.fin)+'</td><td style="'+th+'">'+fm(r.min)+(bad(r.min)?' ⚠':'')+'</td></tr>'}).join('')+'</table></div>'+
+  '<div style="font-size:12px;color:#888;margin-top:6px">👆 Toca una semana para verla día a día en "Caja de la semana" (con esta simulación). Tarjeta: se paga el 10 del mes siguiente (cierre 25). Terceros = S: los de DDC se pagan en enero, cuando paga DDC. Base: caja proyectada de Kaptura (cartola al '+cs.hasta.split('-').reverse().join('-')+', cobros, compromisos y presupuesto). Ateuro de diciembre queda para enero.</div>';pilSemana('keep')}
 async function pilProy(){const box=$('pil-proy');if(!box)return;box.innerHTML='<div class="sub">Calculando caja proyectada…</div>';
   try{const cs=await cartolaSaldo();if(!cs){box.innerHTML='';return}
     const D=f=>new Date(f+'T12:00:00'),iso=d=>hoyISO(d),mas=(f,n)=>{const d=D(f);d.setDate(d.getDate()+n);return iso(d)};
@@ -2288,7 +2289,7 @@ async function pilEnviarImg(k){const c=pilImgSemana(k);if(!c)return;const w=wind
   const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=f.name;a.click();toast('Imagen descargada: adjúntala en WhatsApp')}
 /* ═══ CAJA DE LA SEMANA, día a día (Carlos 18-11): días hasta la última cartola = real; después = proyectado (eventos de la caja proyectada). Flechas para semanas anteriores y siguientes ═══ */
 let _psw=0;
-async function pilSemana(dlt){const box=$('pil-sem');if(!box)return;const cs=window._pilCS,EV=window._pilEv||[];if(!cs){box.innerHTML='';return}_psw=dlt?_psw+dlt:0;
+async function pilSemana(dlt){const box=$('pil-sem');if(!box)return;const cs=window._pilCS,SIM=!!(window._simOn&&window._simEv),EV=(SIM?window._simEv:window._pilEv)||[];if(!cs){box.innerHTML='';return}_psw=dlt==='keep'?_psw:(typeof dlt==='number'&&dlt?_psw+dlt:(typeof dlt==='string'&&dlt.length===10?_psw:0));if(typeof dlt==='string'&&dlt.length===10){const a=new Date(hoyISO()+'T12:00:00'),b=new Date(dlt+'T12:00:00');a.setDate(a.getDate()-((a.getDay()+6)%7));_psw=Math.round((b-a)/(7*864e5))}
   const D=f=>new Date(f+'T12:00:00'),iso=d=>hoyISO(d),mas=(f,n)=>{const d=D(f);d.setDate(d.getDate()+n);return iso(d)};
   const lun=(()=>{const d=D(hoyISO());d.setDate(d.getDate()-((d.getDay()+6)%7)+7*_psw);return iso(d)})(),dias=[...Array(7)].map((_,i)=>mas(lun,i)),dom=dias[6];
   if(lun>(window._pilFin6||'')){_psw--;toast('No hay proyección más allá de 6 semanas');return}
@@ -2310,7 +2311,7 @@ async function pilSemana(dlt){const box=$('pil-sem');if(!box)return;const cs=win
     const ord=o=>Object.entries(o).sort((a,b)=>Math.abs(Object.values(b[1]).reduce((x,y)=>x+y,0))-Math.abs(Object.values(a[1]).reduce((x,y)=>x+y,0)));
     const fila=(t,o,col)=>{const w=dias.reduce((a,f)=>a+(o[f]||0),0);return '<tr style="border-bottom:1px solid var(--border)"><td style="'+th+';padding-left:16px" title="'+empEsc(t)+'">'+empEsc(t)+'</td>'+dias.map(f=>'<td style="'+td(f)+';color:'+col+'">'+N(o[f])+'</td>').join('')+'<td style="'+td()+';color:'+col+';font-weight:800">'+N(w)+'</td></tr>'};
     const k=(t,v,c)=>'<div style="min-width:110px"><div style="font-size:12px;color:var(--muted)">'+t+'</div><div style="font-size:18px;font-weight:800;color:'+c+';font-variant-numeric:tabular-nums">'+N(v)+'</div></div>';
-    box.innerHTML='<div class="card" style="padding:12px;margin-bottom:14px;max-width:980px">'
+    box.innerHTML=(SIM?'<div style="background:#FFF2CC;color:#000;border-radius:8px;padding:6px 10px;margin-bottom:6px;font-weight:700">🧮 Mostrando la SIMULACIÓN (cierra "Simular caja" para ver la caja real)</div>':'')+'<div class="card" style="padding:12px;margin-bottom:14px;max-width:980px">'
       +'<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><div><div style="font-size:17px;font-weight:800">Caja de la semana</div><div style="font-size:12px;color:var(--muted)">Semana del '+fCL(lun)+' al '+fCL(dom)+' · cuenta Santander · pesos</div></div>'
       +'<div style="display:flex;gap:6px"><button class="btn2" style="padding:6px 12px;width:auto" onclick="pilSemana(-1)">◀</button><button class="btn2" style="padding:6px 12px;width:auto" onclick="pilSemana()">Hoy</button><button class="btn2" style="padding:6px 12px;width:auto" onclick="pilSemana(1)">▶</button></div></div>'
       +'<div style="display:flex;gap:18px;flex-wrap:wrap;margin:10px 0">'+k('Parte con',p0,'var(--text)')+k('Entran',te,'var(--green)')+k('Salen',ts,'var(--danger,#D64545)')+k('Queda',Q[6],qc(Q[6]))+'</div>'
