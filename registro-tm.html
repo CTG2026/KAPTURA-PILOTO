@@ -2212,14 +2212,14 @@ async function pilProy(){const box=$('pil-proy');if(!box)return;box.innerHTML='<
     /* Presupuesto de servicios (Carlos 18-11): plan guardado en "tareas" (recurrencia='plan_caja', título = JSON). Ventas entran según el plazo de cada cliente; pago a terceros según su plazo; combustible de los servicios propios consume el saldo Aramco */
     let PL=null;try{const rpl=await supa.from('tareas').select('titulo').eq('empresa',EMPRESA).eq('recurrencia','plan_caja').eq('activa',true).order('id',{ascending:false}).limit(1);PL=rpl.data&&rpl.data[0]?JSON.parse(rpl.data[0].titulo):null}catch(e){PL=null}
     const PLC={},plCons={};
-    if(PL&&PL.s){const iva=1+(PL.iva==null?0.19:PL.iva),ini=PL.desde||desde,cobro={EBLOOMS:[15,f=>vie(mas(f,3))],DDC:[15,f=>mas(f,35)],'Valle':[0,f=>mas(f,35)],'Ateuro':[15,f=>vie(mas(f,3))]};
-      const perH=(cl,f)=>{const k=Object.keys(cobro).find(x=>cl.indexOf(x)===0)||'Valle',q=cobro[k][0],y=+f.slice(0,4),m=+f.slice(5,7)-1;const fm=finMes(y,m);return [k,q&&+f.slice(8)<=q?f.slice(0,8)+'15':fm,cobro[k][1]]};
+    if(PL&&PL.s){const iva=1+(PL.iva==null?0.19:PL.iva),ini=PL.desde||desde,cobro={EBLOOMS:[15,f=>vie(mas(f,3))],DDC:[15,f=>mas(f,35)],'Valle':[0,f=>mas(f,35)],'Ateuro':[15,f=>vie(mas(f,3))],'Home Gardens':['sem',f=>f]}; /* Home Gardens paga cada viernes (Carlos 19-11) */
+      const perH=(cl,f)=>{const k=Object.keys(cobro).find(x=>cl.indexOf(x)===0)||'Valle',q=cobro[k][0],y=+f.slice(0,4),m=+f.slice(5,7)-1;const fm=finMes(y,m);if(q==='sem')return [k,vie(mas(f,-1)),cobro[k][1]];return [k,q&&+f.slice(8)<=q?f.slice(0,8)+'15':fm,cobro[k][1]]};
       const PT={};
       for(let f=ini;f<=fin6;f=mas(f,1)){const wd=D(f).getDay();PL.s.forEach(s=>{if(!(s.d||[]).includes(wd)||(s.desde&&f<s.desde))return;const n=s.n||1,[k,hh,pf]=perH(s.c,f),key=k+'|'+hh;PLC[key]=PLC[key]||{k,hh,pf,v:0,cl:s.c};PLC[key].v+=n*s.t;
         if(s.p){const fp=mas(f,s.pd||30),kk=fp+'|'+(s.ter||'tercero');PT[kk]=PT[kk]||{f:fp,t:'Pago '+(s.ter||'tercero')+' (presupuesto)',v:0};PT[kk].v+=n*s.p*(s.fac?iva:1)}
         else if(s.km&&s.kml)plCons[f]=(plCons[f]||0)+n*s.km/s.kml*(PL.precio||1600)})}
       const MN=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
-      Object.values(PLC).forEach(o=>{const re=new RegExp('^'+o.k,'i');if(tiene(re,o.hh))return;const fp=o.pf(o.hh),d0=+o.hh.slice(8)===15?'1-15':'16-'+o.hh.slice(8),t=o.cl+' '+(o.k!=='Valle'?d0+' ':'')+MN[+o.hh.slice(5,7)-1]+' (presupuesto)',v=Math.round(o.v*iva);if(fp<desde||fp>fin6)return;const w=wk(fp);if(w){w.ent.push([t,v]);EV.push({f:fp,t,v})}});
+      Object.values(PLC).forEach(o=>{const re=new RegExp('^'+o.k,'i');if(tiene(re,o.hh))return;const fp=o.pf(o.hh),d0=+o.hh.slice(8)===15?'1-15':'16-'+o.hh.slice(8),t=o.k==='Home Gardens'?o.cl+' semana al '+o.hh.slice(8)+'-'+o.hh.slice(5,7)+' (presupuesto)':o.cl+' '+(o.k!=='Valle'?d0+' ':'')+MN[+o.hh.slice(5,7)-1]+' (presupuesto)',v=Math.round(o.v*iva);if(fp<desde||fp>fin6)return;const w=wk(fp);if(w){w.ent.push([t,v]);EV.push({f:fp,t,v})}});
       Object.values(PT).forEach(o=>{if(o.f<desde||o.f>fin6)return;const w=wk(o.f),v=Math.round(o.v);if(w){w.sal.push([o.t,v]);EV.push({f:o.f,t:o.t,v:-v})}})}
     window._pilPL=PL;
     per.forEach(([h,t,re,pf])=>{if(PL&&PL.s&&PL.s.some(s=>re.test(s.c)))return;if(tiene(re,h))return;const f=pf(h),v=ult(re);if(!v||f<desde)return;const w=wk(f);if(w){w.ent.push([t+' (estimado)',v]);EV.push({f,t:t+' (estimado)',v})}});
