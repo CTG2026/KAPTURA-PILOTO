@@ -1617,7 +1617,7 @@ function empWa(i){window.open('https://wa.me/?text='+encodeURIComponent(empTexto
 // ═══ CARPETA DE ARRANQUE TM (Carlos 09-11): ficha para clientes y bancos. Solo valen fechas con documento de respaldo. Tablas carpeta_equipos y seguros_polizas ═══
 let _carp=null;
 function carpSem(d,nota){const G='#15803D',Y='#CA8A04',R='#DC2626';if(!d){const n=nota||'Sin documento';return {t:n,c:/no aplica/i.test(n)?'#888':R}}const dias=Math.round((dISO(d)-dISO(hoyISO()))/864e5);return {t:fCL(d),c:dias<0?R:dias<=30?Y:G,ic:dias<0?'✗ ':dias<=30?'⚠ ':'✓ '}}
-function carpSemU(d,nota,url){if(d&&!url)return {t:fCL(d)+' · sin documento adjunto',c:'#888',ic:''};return carpSem(d,nota)} /* fecha sin archivo: gris, no verde (Carlos 18-11) */
+function carpSemU(d,nota,url){if(d&&!url){const v=dISO(d)<dISO(hoyISO());return {t:fCL(d)+' · sin documento adjunto',c:v?'#DC2626':'#888',ic:v?'✗ ':''}}return carpSem(d,nota)} /* fecha sin archivo: gris, no verde (Carlos 18-11) */
 function carpTblEq(L,mail){const B='border-bottom:1px solid '+(mail?'#ddd':'var(--border)')+';padding:6px 8px;text-align:left;vertical-align:top',C=B+';white-space:nowrap';
   const lk=(t,u,c)=>u?'<a href="'+u+'" target="_blank" rel="noopener" style="color:'+c+';text-decoration:underline">'+t+'</a>':t,cel=(d,n,u)=>{const x=carpSemU(d,n,u);return '<td style="'+C+';color:'+x.c+';font-weight:600">'+(x.ic||'')+lk(x.t,d?u:null,x.c)+'</td>'};
   return '<table style="border-collapse:collapse;width:100%;font-size:13px"><tr><th style="'+B+'">Patente</th><th style="'+B+'">Equipo</th><th style="'+C+'">Permiso circulación</th><th style="'+C+'">Revisión técnica</th><th style="'+C+'">SOAP</th><th style="'+C+'">Seguro carga</th></tr>'+
