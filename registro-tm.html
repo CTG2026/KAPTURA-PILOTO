@@ -543,7 +543,7 @@ const USUARIOS={
   '0002':{nombre:'Claudio Madrid Correa',rol:'coordinador',patente:'ZV7780',acoplado:'JB6234'},
   '0003':{nombre:'Esteban Acevedo Toro',rol:'conductor',patente:'DSBZ64',acoplado:'JN4847'},
   '0004':{nombre:'Cristóbal Núñez González',rol:'conductor',patente:'CWVH32-9',acoplado:''},
-  '0005':{nombre:'Víctor Medina',rol:'conductor',patente:'ZV7780',acoplado:'JB6234'},
+  '0005':{nombre:'Alfonso Medina',rol:'conductor',patente:'ZV7780',acoplado:'JB6234'},
   '0006':{nombre:'EBLOOMS',rol:'cliente',cliente:'EBLOOMS',patente:'',acoplado:''},
   '1313':{nombre:'Administración',rol:'administracion',patente:'',acoplado:''}
 };
@@ -1363,7 +1363,7 @@ async function verEfe(){if(!esCarlos())return;ir('s-efe');navMarcar('s-efe');lle
 async function efeNuevo(){if(!esCarlos())return;const d0=new Date();d0.setDate(d0.getDate()-60);
   const sv=((await conTope(supa.from('servicios_piloto').select('servicio_id,fecha,cliente,notas').eq('empresa',EMPRESA).eq('modo','registro_tm').neq('estado','anulado').gte('fecha',hoyISO(d0)).order('fecha',{ascending:false}),10000)).data||[]).map(r=>{const n=parseNotas(r.notas);return {id:r.servicio_id,cod:n.codigo||'',cli:r.cliente||'',txt:(n.codigo?n.codigo+' · ':'')+fCL(r.fecha)+' · '+(r.cliente||'')+' · '+SVC_VER(n.servicio_sistema||'')}});
   const ops=['Sin servicio asociado'].concat(sv.map(x=>x.txt));
-  const v=await formulario('Ingreso en efectivo',[{k:'fe',l:'Fecha',t:'date',v:hoyISO()},{k:'sv',l:'Servicio',t:'select',ops,v:ops[0]},{k:'cl',l:'Cliente (si no hay servicio)'},{k:'mo',l:'Monto recibido ($)',t:'number'},{k:'rp',l:'Quién lo recibió',t:'select',ops:['Claudio Madrid','Carlos Torres','Esteban Acevedo','Cristóbal Núñez','Víctor Medina','Otro (anotar en nota)'],v:'Claudio Madrid'},{k:'no',l:'Nota'}]);
+  const v=await formulario('Ingreso en efectivo',[{k:'fe',l:'Fecha',t:'date',v:hoyISO()},{k:'sv',l:'Servicio',t:'select',ops,v:ops[0]},{k:'cl',l:'Cliente (si no hay servicio)'},{k:'mo',l:'Monto recibido ($)',t:'number'},{k:'rp',l:'Quién lo recibió',t:'select',ops:['Claudio Madrid','Carlos Torres','Esteban Acevedo','Cristóbal Núñez','Alfonso Medina','Otro (anotar en nota)'],v:'Claudio Madrid'},{k:'no',l:'Nota'}]);
   if(!v)return;const mo=+String(v.mo||'').replace(/\D/g,'')||0;if(!mo){toast('Falta el monto');return}
   const s0=sv.find(x=>x.txt===v.sv);const {error}=await supa.from('caja_efectivo').insert({empresa:EMPRESA,fecha:v.fe||hoyISO(),servicio_id:s0?s0.id:null,codigo:s0?s0.cod:null,cliente:s0?s0.cli:(v.cl||null),monto:mo,recibido_por:v.rp,nota:v.no||null,creado_por:user.nombre});
   toast(error?'No se pudo guardar: '+error.message:'Ingreso registrado');if(!error){if(v.fe)$('efe-mes').value=v.fe.slice(0,7);verEfe()}}
@@ -2847,7 +2847,7 @@ async function cargarGPS(){
 
 // ═══ PROFORMA EBLOOMS ═══
 const RUT_COND={'Cristóbal Núñez González':'18465879-8','Esteban Acevedo Toro':'21066784-9','Claudio Madrid Correa':'19262293-K'};
-const CHOFER_CORTO=n=>({'Cristóbal Núñez González':'Cristobal Nuñez','Esteban Acevedo Toro':'Esteban Acevedo','Claudio Madrid Correa':'Claudio Madrid','Víctor Medina':'Victor Medina'})[n]||n;
+const CHOFER_CORTO=n=>({'Cristóbal Núñez González':'Cristobal Nuñez','Esteban Acevedo Toro':'Esteban Acevedo','Claudio Madrid Correa':'Claudio Madrid','Alfonso Medina':'Alfonso Medina'})[n]||n;
 const PAT_PROF=p=>{p=PAT_GPS(p);return p.charAt(0)+p.slice(1).toLowerCase()};
 const MESES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
 function semISO(d){const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));const n=t.getUTCDay()||7;t.setUTCDate(t.getUTCDate()+4-n);const y=new Date(Date.UTC(t.getUTCFullYear(),0,1));return Math.ceil(((t-y)/86400000+1)/7)}
@@ -2950,7 +2950,7 @@ setInterval(chkInact,30000);document.addEventListener('visibilitychange',()=>{if
 // ═══ SPOT CON TERCERO (Carlos 02-11): Administración crea el link, se lo manda a Claudio y él lo reenvía al chofer del tercero ═══
 let _spot=null,_spotFoto=null,_spotPos=null;
 /* Patentes del link spot (Carlos 06-11): propias (incluye camioneta) y terceros; 'Otra' se escribe en el campo siguiente */
-const SPOT_PAT={propio:['DSBZ64 · tracto + thermo','ZV7780 · tracto + thermo','CWVH32-9','DZZW14','XJ3908','KFXB58 · camioneta de servicio','Otra (escribir abajo)'],tercero:['CRGH71 + JN4316 · Francisco Fuentes (Volvo FM, conductor Ángel Zamorano)','BSBP47 · Francisco Fuentes (Volvo FH)','DBZH72 + JK2052 · Francisco Fuentes (thermo)','CWHG57 + JK2051 · Francisco Fuentes (thermo)','DKRK21 + JJ9653 · Diego Zamorano (thermo)','FDPY84 + JD7275 · Christian Peña (thermo)','JYJK63 · Víctor Medina (afurgonado)','DTCZ17 · José Parraguez','Otra (escribir abajo)']} // thermos de terceros (Carlos 16-11);
+const SPOT_PAT={propio:['DSBZ64 · tracto + thermo','ZV7780 · tracto + thermo','CWVH32-9','DZZW14','XJ3908','KFXB58 · camioneta de servicio','Otra (escribir abajo)'],tercero:['CRGH71 + JN4316 · Francisco Fuentes (Volvo FM, conductor Ángel Zamorano)','BSBP47 · Francisco Fuentes (Volvo FH)','DBZH72 + JK2052 · Francisco Fuentes (thermo)','CWHG57 + JK2051 · Francisco Fuentes (thermo)','DKRK21 + JJ9653 · Diego Zamorano (thermo)','FDPY84 + JD7275 · Christian Peña (thermo)','JYJK63 · Alfonso Medina (afurgonado)','DTCZ17 · José Parraguez','Otra (escribir abajo)']} // thermos de terceros (Carlos 16-11);
 // Registro manual de servicio sin link (Carlos 10-11): mismo formulario del spot, se guarda directo como "Registrado por Administración, sin link". Propio: costo neto opcional (costo_manual). Tercero: pago al tercero
 async function spotManual(){if(!esAdminTotal())return;setTimeout(()=>{const t=document.querySelector('select[data-k="tip"]'),pa=document.querySelector('select[data-k="pa"]');if(!t||!pa)return;const llenar=()=>{pa.innerHTML=SPOT_PAT[/^Propio/.test(t.value)?'propio':'tercero'].map(o=>'<option>'+o+'</option>').join('')};t.addEventListener('change',llenar);llenar();const cl=document.querySelector('select[data-k="cli"]'),sv=document.querySelector('[data-k="sv"]'),ta=document.querySelector('[data-k="ta"]');if(cl&&sv&&ta)cl.addEventListener('change',()=>{if(cl.value==='DDC'){if(!sv.value)sv.value='Fundo Viña María (Rosario) → Curicó';if(!ta.value)ta.value=446250}})},0);
   const v=await formulario('Registrar servicio sin link',[{k:'tip',l:'Tipo',t:'select',ops:['Propio (camión y chofer TM)','Con tercero (camión de otro)'],v:'Propio (camión y chofer TM)'},{k:'cli',l:'Cliente',t:'select',ops:['Ateuro / Zuria','EBLOOMS','Alimentos Valle Central','DDC','Ave Fenix','Otro'],v:'Ateuro / Zuria'},{k:'clo',l:'Otro cliente (solo si eligió "Otro")'},{k:'sv',l:'Servicio (origen → destino)'},{k:'ta',l:'Tarifa neta al cliente ($)',t:'number'},
