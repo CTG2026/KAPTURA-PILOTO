@@ -308,7 +308,9 @@ body.pc .tv{display:none}body:not(.pc) .tp{display:none}
   <h1 id="list-h">Servicios registrados – Transportes Madrid</h1>
   <div class="seg" id="seg"><button data-r="hoy" class="sel">Hoy</button><button data-r="7">7 días</button><button data-r="mes">Mes</button></div>
   <select id="seg-mes" style="width:100%;font-size:16px;padding:8px;border-radius:10px;border:2px solid var(--border);background:var(--surface);color:var(--text);margin:8px 0 4px"></select>
+  <select id="list-cli" onchange="_cliF=this.value;verRegistrosPintar()" style="display:none;width:100%;font-size:16px;padding:8px;border-radius:10px;border:2px solid var(--border);background:var(--surface);color:var(--text);margin:4px 0"></select>
   <div class="sub" id="list-sub">Cargando…</div>
+  <div class="sub" id="list-tot" style="font-weight:700"></div>
   <button class="big" id="btn-xls" onclick="descargarExcel()" disabled>⬇ Descargar Excel</button>
   <div style="height:14px"></div>
   <div id="lista"></div>
@@ -2359,7 +2361,13 @@ async function verRegistros(){
       r._ents=vivas.concat((r._n.entregas||[]).filter(e=>!fs.has(e.foto)))})}catch(e){}
   $('list-sub').textContent=filas.length+' registro(s)'+(rango.startsWith('m:')?rangoTxt(desde(),hasta()):' desde el '+desde().split('-').reverse().join('-'))+(pend.length?' · '+pend.length+' en este celular esperando señal':'');
   $('btn-xls').disabled=!filas.length;
-  $('lista').innerHTML=filas.map((r,i)=>{const n=r._n,ex=textoExtras(n.extras||{});
+  /* Filtro por cliente (Carlos 19-11) */
+  {const s=$('list-cli'),cl=[...new Set(filas.map(r=>r.cliente||'(sin cliente)'))].sort();if(!esCliente()){s.style.display='block';if(_cliF&&!cl.includes(_cliF))_cliF='';s.innerHTML='<option value="">Todos los clientes ('+filas.length+')</option>'+cl.map(c=>'<option'+(c===_cliF?' selected':'')+' value="'+c.replace(/"/g,'&quot;')+'">'+c+' ('+filas.filter(r=>(r.cliente||'(sin cliente)')===c).length+')</option>').join('')}else s.style.display='none'}
+  verRegistrosPintar()}
+let _cliF='';
+function verRegistrosPintar(){const vis=filas.filter(r=>!_cliF||(r.cliente||'(sin cliente)')===_cliF);
+  $('list-tot').textContent=_cliF?vis.length+' servicio(s) de '+_cliF+(esCliente()?'':' · Tarifa neta total $'+fmt(vis.reduce((a,r)=>a+(+r.tarifa_neta||0),0))):'';
+  $('lista').innerHTML=filas.map((r,i)=>{if(_cliF&&(r.cliente||'(sin cliente)')!==_cliF)return '';const n=r._n,ex=textoExtras(n.extras||{});
     return '<div class="reg" data-i="'+i+'">'+(esAdmin()?'<button class="del" onclick="pedirBorrar('+i+')">✕</button>':'')+'<div class="t">'+(n.codigo?'<span class="ul">'+n.codigo+'</span> · ':'')+r.fecha.split('-').reverse().join('-')+' · '+SVC_VER(n.servicio_sistema||((r.origen||'')+' → '+(r.destino||'')))+ifcoCab(r._ents||n.entregas||[])+'</div>'+
     '<div>'+r.conductor+(n.peoneta?' + '+n.peoneta:'')+' · '+patTipo(r.patente)+(n.acoplado?' / '+n.acoplado:'')+'</div>'+((n.guias||[]).length?'<div><b>Guías: '+n.guias.join(' - ')+'</b></div>':'')+(n.factura_salida?'<div><b>Factura salida: '+n.factura_salida+'</b></div>':'')+
     (ex&&!esCliente()?'<div class="m">Extras: '+ex+'</div>':'')+(n.observacion&&!esCliente()?'<div class="m">Obs.: '+n.observacion+'</div>':'')+
