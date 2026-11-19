@@ -2158,11 +2158,11 @@ function simPintar(){const b=$('pil-simbox'),S=_sim,I='font-size:15px;padding:6p
   fec=(k)=>'<input type="date" style="'+I+'" value="'+(S[k]||'')+'" onchange="_sim.'+k+'=this.value;simCalc()">',
   sn=(k)=>'<select style="'+I+'" onchange="_sim.'+k+'=this.value;simCalc()"><option'+(S[k]==='N'?' selected':'')+'>N</option><option'+(S[k]==='S'?' selected':'')+'>S</option></select>',
   pct=(k)=>'<input type="number" step="0.1" style="'+I+'" value="'+S[k]+'" onchange="_sim.'+k+'=+this.value||0;simCalc()">',
-  F=(n,t,a,c)=>'<tr><td style="padding:5px 6px;color:#888">'+n+'</td><td style="padding:5px 6px">'+t+'</td><td style="padding:5px 6px;width:150px">'+(a||'')+'</td><td style="padding:5px 6px;width:150px">'+(c||'')+'</td></tr>';
+  F=(n,t,a,c)=>'<tr><td style="padding:5px 6px;color:#888">'+n+'</td><td style="padding:5px 6px">'+t+'</td><td style="padding:5px 4px;width:118px">'+(a||'')+'</td><td style="padding:5px 4px;width:132px">'+(c||'')+'</td></tr>';
   b.innerHTML='<div class="card" style="padding:10px 12px;margin-bottom:12px"><div style="font-weight:800;margin-bottom:6px">🧮 Simular caja · cambia lo amarillo (no guarda nada)</div><div style="overflow-x:auto"><table style="border-collapse:collapse;width:100%;font-size:14px"><tr style="color:#888;font-size:12px"><td></td><td>Supuesto</td><td>Monto / S-N</td><td>Fecha</td></tr>'+
-  F(1,'Devolución retiros de Claudio',num('dev'),fec('devf'))+F(2,'Ateuro paga lo facturado al 30-11 el','',fec('ate'))+F(3,'Valle paga octubre el','',fec('val'))+
-  F(4,'Pagar a terceros cuando pague el cliente (DDC paga en enero)',sn('ter'),'')+F(5,'Pagar con tarjeta de crédito, 1 cuota (se paga el 10 del mes siguiente al cierre del 25)',num('tc'),fec('tcf'))+
-  F(6,'Factorizar Ateuro · fecha del factoring',sn('fac'),fec('facf'))+F(7,'Tasa mensual factoring (%)',pct('fact'),'')+F(8,'Ingreso extra o spot',num('ext'),fec('extf'))+F(9,'Caja mínima',num('min'),'')+
+  F(1,'Devolución Claudio',num('dev'),fec('devf'))+F(2,'Ateuro paga','',fec('ate'))+F(3,'Valle paga','',fec('val'))+
+  F(4,'Terceros cuando paga el cliente',sn('ter'),'')+F(5,'Tarjeta 1 cuota',num('tc'),fec('tcf'))+
+  F(6,'Factoring Ateuro',sn('fac'),fec('facf'))+F(7,'Tasa factoring % mes',pct('fact'),'')+F(8,'Ingreso extra / spot',num('ext'),fec('extf'))+F(9,'Caja mínima',num('min'),'')+
   '</table></div><div id="sim-res" style="margin-top:10px"></div><button class="btn2" style="width:auto;padding:6px 12px;margin-top:8px" onclick="_sim=null;simReset()">↺ Volver a los valores iniciales</button></div>';simCalc()}
 function simReset(){_sim={dev:11000000,devf:'2026-11-30',ate:'2026-12-15',val:'2026-12-01',ter:'N',tc:0,tcf:'',fac:'N',facf:'2026-11-23',fact:1.5,ext:0,extf:'',min:3000000};simPintar()}
 function simCalc(){const S=_sim,cs=window._pilCS,EV=window._pilEv||[],box=$('sim-res');if(!cs||!box)return;
@@ -2189,7 +2189,7 @@ function simCalc(){const S=_sim,cs=window._pilCS,EV=window._pilEv||[],box=$('sim
   box.innerHTML='<div style="font-size:15px;margin-bottom:6px">Saldo mínimo: <b style="color:'+(bad(mn[0])?'#DC2626':'#15803D')+'">'+fm(mn[0])+'</b> el '+String(mn[1]).split('-').reverse().join('-')+(fac?' · costo factoring '+fm(fac):'')+'</div>'+
   '<div style="overflow-x:auto"><table style="border-collapse:collapse;width:100%;font-size:14px"><tr style="color:#888"><td style="'+th+';text-align:left">Semana</td><td style="'+th+'">Entra</td><td style="'+th+'">Sale</td><td style="'+th+'">Saldo al cierre</td><td style="'+th+'">Saldo mínimo</td></tr>'+
   W.map(r=>{const f2=iso(new Date(D(r.w).getTime()+6*864e5));return '<tr style="'+(bad(r.min)?'background:rgba(220,38,38,.18)':'')+'"><td style="'+th+';text-align:left">'+r.w.slice(8)+'-'+r.w.slice(5,7)+' al '+f2.slice(8)+'-'+f2.slice(5,7)+'</td><td style="'+th+';color:#15803D">'+fm(r.in)+'</td><td style="'+th+';color:#DC2626">'+fm(r.out)+'</td><td style="'+th+';font-weight:800">'+fm(r.fin)+'</td><td style="'+th+'">'+fm(r.min)+(bad(r.min)?' ⚠':'')+'</td></tr>'}).join('')+'</table></div>'+
-  '<div style="font-size:12px;color:#888;margin-top:6px">Base: caja proyectada de Kaptura (cartola al '+cs.hasta.split('-').reverse().join('-')+', cobros, compromisos y presupuesto). Ateuro de diciembre queda para enero.</div>'}
+  '<div style="font-size:12px;color:#888;margin-top:6px">Tarjeta: se paga el 10 del mes siguiente (cierre 25). Terceros = S: los de DDC se pagan en enero, cuando paga DDC. Base: caja proyectada de Kaptura (cartola al '+cs.hasta.split('-').reverse().join('-')+', cobros, compromisos y presupuesto). Ateuro de diciembre queda para enero.</div>'}
 async function pilProy(){const box=$('pil-proy');if(!box)return;box.innerHTML='<div class="sub">Calculando caja proyectada…</div>';
   try{const cs=await cartolaSaldo();if(!cs){box.innerHTML='';return}
     const D=f=>new Date(f+'T12:00:00'),iso=d=>hoyISO(d),mas=(f,n)=>{const d=D(f);d.setDate(d.getDate()+n);return iso(d)};
