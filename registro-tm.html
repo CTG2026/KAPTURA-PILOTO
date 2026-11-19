@@ -22,7 +22,7 @@
 html,body{background:var(--bg);color:var(--text);font-family:'Cifras','DM Sans',system-ui,sans-serif;min-height:100%}
 body{padding:16px 16px 40px;max-width:520px;margin:0 auto}
 body:has(#s-carpub.on){max-width:1200px}
-body.pubclaro:has(#s-pil.on){max-width:none;padding-left:28px;padding-right:28px} /* link de caja para Claudio: mismo ancho que la vista PC de Carlos (Carlos 18-11) */
+body.pubcaja:has(#s-pil.on){max-width:none;padding-left:28px;padding-right:28px} /* link de caja para Claudio: mismo ancho que la vista PC de Carlos (Carlos 18-11) */
 body.pubclaro{--bg:#F4F6F9;--surface:#FFFFFF;--surface2:#F1F4F8;--border:#DDE3EA;--text:#1E2B3A;--muted:#5B6B7D;--gold:#2563EB;--green:#2E8B57;--danger:#D64545;background:#D9E1EA;color:#1E2B3A} /* link de documentos con los colores de la vista PC; fondo un tono más oscuro (Carlos 18-11) */
 html:has(body.pubclaro){background:#D9E1EA}
 body.pubclaro .hdr{display:none}
@@ -1680,12 +1680,12 @@ async function docCliLink(){const v=await formulario('Link de documentos para el
   const token=Math.random().toString(36).slice(2,10)+Math.random().toString(36).slice(2,10);const {error}=await supa.from('carpeta_links').insert({token,empresa:EMPRESA,para:(v.n||'').trim()||null,incluye_terceros:true,creado_por:user.nombre});if(error){toast('No se pudo crear el link');return}
   window.open('https://wa.me/?text='+encodeURIComponent('Transportes Madrid Gaete SpA · Documentos de nuestros equipos y conductores. Toque cada documento para verlo o descargarlo:\n'+docCliUrl(token)),'_blank');verCarp()}
 /* Link de la caja para Claudio (Carlos 18-11): ?caja=token (carpeta_links con para que empieza con 'CAJA'); solo caja de la semana y proyectada, sin notas ni preguntas */
-const PUBBAN='<div class="pubban"><span class="lg">KAPTURA</span><span class="tt">Sistema de Gestión Transportes Madrid</span></div>';
-async function abrirCajaPub(token){document.body.classList.add('pubclaro');ir('s-pil');['btn-preg','pil-box'].forEach(i=>{if($(i))$(i).style.display='none'});document.querySelectorAll('#s-pil > .btn2').forEach(b=>b.style.display='none');
-  $('pil-h').innerHTML=PUBBAN;$('pil-sub').textContent='Cargando…';
+const PUBHDR=()=>{const b=document.querySelector('.hdr .brand');if(b)b.textContent='KAPTURA · SISTEMA DE GESTIÓN'}; /* links públicos: tema oscuro original, sin repetir Transportes Madrid (Carlos 18-11) */
+async function abrirCajaPub(token){document.body.classList.add('pubcaja');ir('s-pil');['btn-preg','pil-box'].forEach(i=>{if($(i))$(i).style.display='none'});document.querySelectorAll('#s-pil > .btn2').forEach(b=>b.style.display='none');
+  $('pil-h').textContent='Transportes Madrid Gaete SpA';PUBHDR();$('pil-sub').textContent='Cargando…';
   try{const l=await conTope(supa.from('carpeta_links').select('*').eq('token',token).eq('activo',true).maybeSingle(),10000);if(!l.data||!/^CAJA/i.test(l.data.para||'')){$('pil-sub').textContent='Este link ya no está disponible.';return}
     $('pil-sub').textContent='Caja de la semana y caja proyectada · cuenta Santander · al '+fCL(hoyISO());await pilProy()}catch(_){$('pil-sub').textContent='No se pudo cargar.'}}
-async function abrirDocsPub(token){document.body.classList.add('pubclaro');ir('s-carpub');$('carpub-h').innerHTML=PUBBAN;try{const l=await conTope(supa.from('carpeta_links').select('*').eq('token',token).eq('activo',true).maybeSingle(),10000);if(!l.data){$('carpub-sub').textContent='Este link ya no está disponible.';return}
+async function abrirDocsPub(token){ir('s-carpub');$('carpub-h').textContent='Transportes Madrid Gaete SpA';PUBHDR();try{const l=await conTope(supa.from('carpeta_links').select('*').eq('token',token).eq('activo',true).maybeSingle(),10000);if(!l.data){$('carpub-sub').textContent='Este link ya no está disponible.';return}
   const e=await conTope(supa.from('carpeta_equipos').select('*').eq('empresa',l.data.empresa).order('orden'),10000);
   $('carpub-sub').textContent='Documentos de equipos y conductores al '+fCL(hoyISO())+' · Toque un documento para verlo o descargarlo';
   $('carpub-box').innerHTML='<div class="card" style="padding:10px 12px">'+docCliHtml(e.data||[],0)+'<div style="font-size:11px;color:#888;margin-top:8px">✓ vigente · ⚠ vence en 30 días o menos · ✗ vencido</div></div>'}catch(_){$('carpub-sub').textContent='No se pudo cargar.'}}
