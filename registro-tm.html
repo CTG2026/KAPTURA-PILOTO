@@ -2192,7 +2192,7 @@ function simCalc(){const S=_sim,cs=window._LCS||window._pilCS,EV=window._LEv||wi
     if(/^Ateuro/.test(x.t)&&x.f<='2026-12-31'&&!/ dic| ene| feb| mar/.test(x.t)){if(S.ate)x.f=S.ate;
 }
     if(/^Alimentos Valle/.test(x.t)&&S.val)x.f=S.val;
-    if(S.ter==='S'&&/Pago .*Zamorano|tercero DDC/.test(x.t))continue;
+    if(S.ter==='S'&&/^Pago .*(Zamorano|Fuentes|tercero)/i.test(x.t))continue;
     L.push(x)}
   /* Factoring por cliente (Carlos 19-11): anticipa los cobros de ese cliente que vencen hasta 60 días después de la fecha del factoring */
   const FRE={Ateuro:/^Ateuro/,EBLOOMS:/^EBLOOMS/,Valle:/Valle/,DDC:/^DDC/,'Home Gardens':/^Home/,TRAST:/^TRAST/};
@@ -2248,7 +2248,7 @@ function simCalc(){const S=_sim,cs=window._LCS||window._pilCS,EV=window._LEv||wi
 /* Caja proyectada con la simulación (Carlos 19-11): mismo formato, hasta marzo */
 function simAcc(k){if(k==='in')_sim.accIn=!_sim.accIn;else _sim.accOut=!_sim.accOut;simCalc()}
 function simGrp(t,sg){t=t||'';if(sg>0)return /^EBLOOMS/.test(t)?'EBLOOMS':/^Ateuro/.test(t)?'Ateuro / Zuria':/Valle/.test(t)?'Valle Central':/^DDC/.test(t)?'DDC':/^Home/.test(t)?'Home Gardens':/^TRAST/.test(t)?'TRAST':/Claudio/.test(t)?'Devolución Claudio':/tarjeta/i.test(t)?'Tarjeta':'Otros ingresos';
-  return /^Combustible ·/.test(t)?'Combustible':/tercero|Zamorano/i.test(t)?'Terceros':/Peumo/.test(t)?'Deuda Peumo':/SII|TGR|Tesorer|IVA|F29/.test(t)?'Impuestos':/Fogape|Castro|TAG|Schiaffino|thermo|Thermo|Santander/.test(t)?'Créditos, arriendos y thermo':/Sueldo|Previred/.test(t)?'Sueldos':/Retiro/.test(t)?'Retiros Claudio':/Viático/.test(t)?'Viáticos y peajes':/tarjeta/i.test(t)?'Pago tarjeta':'Otros egresos'}
+  return /^Combustible ·/.test(t)?'Combustible':/tercero|Zamorano|Fuentes/i.test(t)?'Terceros':/Peumo/.test(t)?'Deuda Peumo':/SII|TGR|Tesorer|IVA|F29/.test(t)?'Impuestos':/Fogape|Castro|TAG|Schiaffino|thermo|Thermo|Santander/.test(t)?'Créditos, arriendos y thermo':/Sueldo|Previred/.test(t)?'Sueldos':/Retiro/.test(t)?'Retiros Claudio':/Viático/.test(t)?'Viáticos y peajes':/tarjeta/i.test(t)?'Pago tarjeta':'Otros egresos'}
 function simAccRows(W,sg,c,L0,fm){const L=window._simList||[],h=(window._LCS||window._pilCS).hasta,rng=r=>r.a?[r.a,r.b]:[r.w,hoyISO(new Date(new Date(r.w+'T12:00:00').getTime()+6*864e5))],G={};
   W.forEach((r,i)=>{const [a,b]=rng(r);L.forEach(e=>{if(e.f>h&&e.f>=a&&e.f<=b&&(sg>0?e.v>0:e.v<0)){const g=simGrp(e.t,sg);G[g]=G[g]||W.map(()=>0);G[g][i]+=e.v}})});
   return Object.entries(G).sort((x,y)=>Math.abs(y[1].reduce((a,b)=>a+b,0))-Math.abs(x[1].reduce((a,b)=>a+b,0))).map(([g,v])=>'<tr><td style="'+L0+';padding-left:22px;font-size:12px">'+g+'</td>'+v.map(x=>'<td style="'+c+';font-size:12px;color:'+(sg>0?'#15803D':'#DC2626')+'">'+(x?fm(x):'')+'</td>').join('')+'</tr>').join('')}
