@@ -2384,7 +2384,7 @@ async function pilProy(nw,quiet){nw=nw||6;const SETW=(k,v)=>{window[(quiet?'_L':
     SETW('W',W);
     const tabla='<div style="overflow-x:auto;border:1px solid var(--border);border-radius:12px;margin-top:10px"><table style="border-collapse:collapse;width:100%;font-size:14px">'
       +'<tr><td style="'+th+';font-size:11px;color:var(--muted)">'+(PCV?'pesos':'millones $')+'</td>'+W.map((w,k)=>'<td style="'+td+';font-weight:800;cursor:pointer;color:var(--gold)" onclick="pilSemDet('+k+')">'+fl(w.ini)+' ›</td>').join('')+'</tr>'
-      +fila('Parte con',w=>CV(w.ini$),()=>'color:var(--muted)')
+      +fila('Parte con (1ª semana: saldo real hoy)',w=>CV(w.ini$),()=>'color:var(--muted)')
       +fila('Entra',w=>w.e?'+'+CV(w.e):'—',()=>'color:var(--green)')
       +fila('Sale',w=>'−'+CV(w.s),()=>'color:var(--danger,#D64545)')
       +'<tr style="border-top:2px solid var(--border)"><td style="'+th+';font-size:15px">Queda</td>'+W.map(w=>'<td style="'+td+';font-size:16px;font-weight:800;color:'+col(w.cierre)+'">'+ico(w.cierre)+' '+CV(w.cierre)+'</td>').join('')+'</tr></table></div>';
