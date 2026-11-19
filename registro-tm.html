@@ -2151,8 +2151,8 @@ function pilCxpCat(c){c=c||'';if(/Deuda combustible/.test(c))return 'Combustible
 const CAJA_PISO=5261000;
 
 /* Simulador simple de caja (Carlos 19-11): parte de la caja proyectada real (window._pilEv) y aplica supuestos. No guarda nada. */
-let _sim={dev:11000000,devf:'2026-11-30',ate:'2026-12-15',val:'2026-12-01',ter:'N',tc:0,tcf:'',fac:'N',facf:'2026-11-23',fact:1.5,ext:0,extf:'',min:3000000,wk:{}};
-async function simAbrir(){const b=$('pil-simbox');if(b.style.display!=='none'){b.style.display='none';window._simOn=false;pilSemana('keep');return}b.style.display='block';window._simOn=true;if(!window._pilEv){b.innerHTML='<div class="sub">Cargando caja proyectada…</div>';await pilProy()}simPintar()}
+let _sim={dev:11000000,devf:'2026-11-30',ate:'2026-12-15',val:'2026-12-01',ter:'N',tc:0,tcf:'',fac:'N',facf:'2026-11-23',fact:1.5,ext:0,extf:'',min:3000000,wk:{},trd:'2026-11-23',trv:836263,trc:310000,trp:30};
+async function simAbrir(){const b=$('pil-simbox');if(b.style.display!=='none'){b.style.display='none';window._simOn=false;pilSemana('keep');return}b.style.display='block';window._simOn=true;b.innerHTML='<div class="sub">Cargando proyección hasta marzo…</div>';await pilProy(20,true);simPintar()}
 function simPintar(){const b=$('pil-simbox'),S=_sim,I='font-size:15px;padding:6px;border-radius:8px;border:2px solid var(--border);background:#FFF2CC;color:#000;width:100%;box-sizing:border-box',
   num=(k)=>'<input type="text" inputmode="numeric" style="'+I+'" value="'+(S[k]?Number(S[k]).toLocaleString('es-CL'):'0')+'" onchange="_sim.'+k+'=+this.value.replace(/\\D/g,\'\')||0;simCalc()">',
   fec=(k)=>'<input type="date" style="'+I+'" value="'+(S[k]||'')+'" onchange="_sim.'+k+'=this.value;simCalc()">',
@@ -2162,11 +2162,11 @@ function simPintar(){const b=$('pil-simbox'),S=_sim,I='font-size:15px;padding:6p
   b.innerHTML='<div class="card" style="padding:10px 12px;margin-bottom:12px"><div style="font-weight:800;margin-bottom:6px">🧮 Simular caja · cambia lo amarillo (no guarda nada)</div><div style="overflow-x:auto"><table style="border-collapse:collapse;width:100%;font-size:14px"><tr style="color:#888;font-size:12px"><td></td><td>Supuesto</td><td>Monto / S-N</td><td>Fecha</td></tr>'+
   F(1,'Devolución Claudio',num('dev'),fec('devf'))+F(2,'Ateuro paga','',fec('ate'))+F(3,'Valle paga','',fec('val'))+
   F(4,'Terceros cuando paga el cliente',sn('ter'),'')+F(5,'Tarjeta 1 cuota',num('tc'),fec('tcf'))+
-  F(6,'Factoring Ateuro',sn('fac'),fec('facf'))+F(7,'Tasa factoring % mes',pct('fact'),'')+F(8,'Ingreso extra / spot',num('ext'),fec('extf'))+F(9,'Caja mínima',num('min'),'')+
+  F(6,'Factoring Ateuro',sn('fac'),fec('facf'))+F(7,'Tasa factoring % mes',pct('fact'),'')+F(8,'Ingreso extra / spot',num('ext'),fec('extf'))+F(9,'Caja mínima',num('min'),'')+F(10,'TRAST desde (1 tracto + thermo, lun a sáb)','',fec('trd'))+F(11,'TRAST venta por día (neto)',num('trv'),'')+F(12,'TRAST combustible por día (c/IVA)',num('trc'),'')+F(13,'TRAST paga a (días desde factura mensual)',num('trp'),'')+
   '</table></div><div id="sim-res" style="margin-top:10px"></div><button class="btn2" style="width:auto;padding:6px 12px;margin-top:8px" onclick="_sim=null;simReset()">↺ Volver a los valores iniciales</button></div>';simCalc()}
 function simWk(w,k,v){_sim.wk=_sim.wk||{};_sim.wk[w]=_sim.wk[w]||{};_sim.wk[w][k]=+String(v).replace(/\D/g,'')||0;simCalc()}
-function simReset(){_sim={dev:11000000,devf:'2026-11-30',ate:'2026-12-15',val:'2026-12-01',ter:'N',tc:0,tcf:'',fac:'N',facf:'2026-11-23',fact:1.5,ext:0,extf:'',min:3000000,wk:{}};simPintar()}
-function simCalc(){const S=_sim,cs=window._pilCS,EV=window._pilEv||[],box=$('sim-res');if(!cs||!box)return;
+function simReset(){_sim={dev:11000000,devf:'2026-11-30',ate:'2026-12-15',val:'2026-12-01',ter:'N',tc:0,tcf:'',fac:'N',facf:'2026-11-23',fact:1.5,ext:0,extf:'',min:3000000,wk:{},trd:'2026-11-23',trv:836263,trc:310000,trp:30};simPintar()}
+function simCalc(){const S=_sim,cs=window._LCS||window._pilCS,EV=window._LEv||window._pilEv||[],box=$('sim-res');if(!cs||!box)return;
   const D=f=>new Date(f+'T12:00:00'),iso=d=>hoyISO(d),dd=(a,b)=>Math.round((D(b)-D(a))/864e5),fm=v=>(v<0?'−':'')+'$'+Math.round(Math.abs(v)).toLocaleString('es-CL');
   const L=[];let fac=0;
   for(const e of EV){const x={...e};
@@ -2179,6 +2179,9 @@ function simCalc(){const S=_sim,cs=window._pilCS,EV=window._pilEv||[],box=$('sim
   if(S.ext&&S.extf)L.push({f:S.extf,t:'Ingreso extra / spot (simulación)',v:S.ext});
   if(S.tc&&S.tcf){L.push({f:S.tcf,t:'Pago con tarjeta: no sale de la cuenta (simulación)',v:S.tc});const d=D(S.tcf),m=d.getMonth()+(d.getDate()<=25?1:2);L.push({f:iso(new Date(d.getFullYear(),m,10,12)),t:'Pago tarjeta de crédito (simulación)',v:-S.tc})}
   window._simEv=L;
+  /* TRAST (Carlos 19-11): 1 equipo diario lun-sáb; factura al cierre de mes +5 días; paga a trp días */
+  if(S.trd&&(+S.trv||+S.trc)){const fx=window._LFin6||'2027-04-04',mes={};for(let f=S.trd;f<=fx;f=iso(new Date(D(f).getTime()+864e5))){if(D(f).getDay()===0)continue;if(+S.trc)L.push({f,t:'TRAST combustible (simulación)',v:-(+S.trc)});const k=f.slice(0,7);mes[k]=(mes[k]||0)+(+S.trv)*1.19}
+    Object.entries(mes).forEach(([k,v])=>{const y=+k.slice(0,4),m=+k.slice(5,7);const fm=iso(new Date(y,m,0,12));const pf=iso(new Date(D(fm).getTime()+(5+(+S.trp||30))*864e5));L.push({f:pf,t:'TRAST cobro '+k.slice(5)+'-'+k.slice(0,4)+' (simulación)',v})})}
   /* Ajustes por semana (Carlos 19-11): combustible, servicios extra, gastos extra */
   const lunOf=f=>{const d=D(f);d.setDate(d.getDate()-((d.getDay()+6)%7));return iso(d)},plus=(f,n)=>iso(new Date(D(f).getTime()+n*864e5)),hoy1=plus(cs.hasta,1),dia1=f=>f<hoy1?hoy1:f;
   const baseComb={};L.forEach(e=>{if(/Aramco/.test(e.t||'')){const w=lunOf(e.f);baseComb[w]=(baseComb[w]||0)-e.v}});window._simBaseComb=baseComb;
@@ -2188,7 +2191,7 @@ function simCalc(){const S=_sim,cs=window._pilCS,EV=window._pilEv||[],box=$('sim
     if(+a.inx)L.push({f:dia1(plus(w,4)),t:'Servicios extra proyectados (simulación)',v:+a.inx});
     if(+a.outx)L.push({f:dia1(w),t:'Gastos extra (simulación)',v:-(+a.outx)})});
   window._simEv=L;
-  const fin=window._pilFin6||'2026-12-27',ini=L.reduce((a,e)=>e.f<a?e.f:a,'9999');
+  const fin=(window._LFin6&&window._LFin6>'2027-03-31'?'2027-03-31':window._LFin6)||window._pilFin6||'2026-12-27',ini=L.reduce((a,e)=>e.f<a?e.f:a,'9999');
   const lun=f=>{const d=D(f);d.setDate(d.getDate()-((d.getDay()+6)%7));return iso(d)};
   const dia={};L.forEach(e=>{if(e.f<=fin)dia[e.f]=(dia[e.f]||0)+e.v});
   const W=[];let s=cs.fin,mn=[Infinity,''],w0=lun(ini<cs.hasta?cs.hasta:ini);
@@ -2201,11 +2204,11 @@ function simCalc(){const S=_sim,cs=window._pilCS,EV=window._pilEv||[],box=$('sim
   '<div style="overflow-x:auto"><table style="border-collapse:collapse;width:100%;font-size:14px"><tr style="color:#888"><td style="'+th+';text-align:left">Semana</td><td style="'+th+'">Entra</td><td style="'+th+'">Sale</td><td style="'+th+'">Saldo al cierre</td><td style="'+th+'">Saldo mínimo</td><td style="'+th+'">Combustible semana</td><td style="'+th+'">+ Servicios extra</td><td style="'+th+'">− Gastos extra</td></tr>'+
   W.map(r=>{const f2=iso(new Date(D(r.w).getTime()+6*864e5));return '<tr onclick="pilSemana(\''+r.w+'\');$(\'pil-sem\').scrollIntoView({behavior:\'smooth\'})" style="cursor:pointer;'+(bad(r.min)?'background:rgba(220,38,38,.18)':'')+'"><td style="'+th+';text-align:left">'+r.w.slice(8)+'-'+r.w.slice(5,7)+' al '+f2.slice(8)+'-'+f2.slice(5,7)+'</td><td style="'+th+';color:#15803D">'+fm(r.in)+'</td><td style="'+th+';color:#DC2626">'+fm(r.out)+'</td><td style="'+th+';font-weight:800">'+fm(r.fin)+'</td><td style="'+th+'">'+fm(r.min)+(bad(r.min)?' ⚠':'')+'</td>'+['comb','inx','outx'].map(k=>{const a=(S.wk[r.w]||{}),v=a[k]!=null&&a[k]!==''?+a[k]:(k==='comb'?Math.round((window._simBaseComb||{})[r.w]||0):0);return '<td style="'+th+'"><input type="text" inputmode="numeric" onclick="event.stopPropagation()" style="width:105px;font-size:14px;padding:4px;border-radius:6px;border:2px solid var(--border);background:#FFF2CC;color:#000;text-align:right" value="'+v.toLocaleString('es-CL')+'" onchange="simWk(\''+r.w+'\',\''+k+'\',this.value)"></td>'}).join('')+'</tr>'}).join('')+'</table></div>'+
   '<div style="font-size:12px;color:#888;margin-top:6px">👆 Toca una semana para verla día a día en "Caja de la semana" (con esta simulación). Tarjeta: se paga el 10 del mes siguiente (cierre 25). Terceros = S: los de DDC se pagan en enero, cuando paga DDC. Base: caja proyectada de Kaptura (cartola al '+cs.hasta.split('-').reverse().join('-')+', cobros, compromisos y presupuesto). Ateuro de diciembre queda para enero.</div>';pilSemana('keep')}
-async function pilProy(){const box=$('pil-proy');if(!box)return;box.innerHTML='<div class="sub">Calculando caja proyectada…</div>';
+async function pilProy(nw,quiet){nw=nw||6;const SETW=(k,v)=>{window[(quiet?'_L':'_pil')+k]=v};const box=quiet?{innerHTML:'',style:{}}:$('pil-proy');if(!box)return;box.innerHTML='<div class="sub">Calculando caja proyectada…</div>';
   try{const cs=await cartolaSaldo();if(!cs){box.innerHTML='';return}
     const D=f=>new Date(f+'T12:00:00'),iso=d=>hoyISO(d),mas=(f,n)=>{const d=D(f);d.setDate(d.getDate()+n);return iso(d)};
     const desde=mas(cs.hasta,1),lun0=(()=>{const d=D(desde);d.setDate(d.getDate()-((d.getDay()+6)%7));return iso(d)})();
-    const W=[...Array(6)].map((_,i)=>({ini:mas(lun0,7*i),fin:mas(lun0,7*i+6),ent:[],sal:[]}));const fin6=W[5].fin;
+    const W=[...Array(nw)].map((_,i)=>({ini:mas(lun0,7*i),fin:mas(lun0,7*i+6),ent:[],sal:[]}));const fin6=W[nw-1].fin;
     const wk=f=>W.find(w=>f>=w.ini&&f<=w.fin);
     const [rp,rx,rc,ra,rh]=await Promise.all([conTope(supa.from('cxp_compromisos').select('fecha,acreedor,concepto,categoria,monto,estado').eq('empresa',EMPRESA).neq('estado','pagado').lte('fecha',fin6),10000),
       conTope(supa.from('cxc_facturas').select('cliente,folio,total,vence,etapa,periodo_hasta,solo_contable,sin_monto').eq('empresa',EMPRESA).neq('etapa','cobrada'),10000),
@@ -2232,7 +2235,7 @@ async function pilProy(){const box=$('pil-proy');if(!box)return;box.innerHTML='<
       const MN=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
       Object.values(PLC).forEach(o=>{const re=new RegExp('^'+o.k,'i');if(tiene(re,o.hh))return;const fp=o.pf(o.hh),d0=+o.hh.slice(8)===15?'1-15':'16-'+o.hh.slice(8),t=o.k==='Home Gardens'?o.cl+' semana al '+o.hh.slice(8)+'-'+o.hh.slice(5,7)+' (presupuesto)':o.cl+' '+(o.k!=='Valle'?d0+' ':'')+MN[+o.hh.slice(5,7)-1]+' (presupuesto)',v=Math.round(o.v*iva);if(fp<desde||fp>fin6)return;const w=wk(fp);if(w){w.ent.push([t,v]);EV.push({f:fp,t,v})}});
       Object.values(PT).forEach(o=>{if(o.f<desde||o.f>fin6)return;const w=wk(o.f),v=Math.round(o.v);if(w){w.sal.push([o.t,v]);EV.push({f:o.f,t:o.t,v:-v})}})}
-    window._pilPL=PL;
+    SETW('PL',PL);
     per.forEach(([h,t,re,pf])=>{if(PL&&PL.s&&PL.s.some(s=>re.test(s.c)))return;if(tiene(re,h))return;const f=pf(h),v=ult(re);if(!v||f<desde)return;const w=wk(f);if(w){w.ent.push([t+' (estimado)',v]);EV.push({f,t:t+' (estimado)',v})}});
     const mv=(rc&&rc.data)||[],sum=re=>-mv.filter(m=>m.monto<0&&re.test(m.categoria||'')).reduce((a,m)=>a+m.monto,0);
     const k=7/35,comb=((ra&&ra.data)||[]).reduce((a,x)=>a+(+x.total||0),0)*7/28,var_=sum(/^(Viáticos|Peajes|Traspaleteo)$/)*k, /* mantención y neumáticos salen del promedio: van con fecha programada (Carlos 18-11) */ret_=-mv.filter(m=>m.monto<0&&/^Retiro de socios$/.test(m.categoria||'')&&!/puntual/i.test(m.nota||'')).reduce((a,m)=>a+m.monto,0)*k; /* retiros puntuales (nota con "puntual") no entran al promedio (Carlos 18-11) */
@@ -2248,9 +2251,9 @@ async function pilProy(){const box=$('pil-proy');if(!box)return;box.innerHTML='<
         if(f<=ultC)o.cons=sm(cg.filter(x=>x.fecha===f));
         else{const cd=(PL&&PL.s&&PL.comb!=='real'&&f>=(PL.desde||desde))?(plCons[f]||0):(D(f).getDay()!==0?cDia:0);if(cd){while(sa<cd){o.rec+=RECARGA;sa+=RECARGA;const fr=f<hoyA?hoyA:f,w=wk(fr);EV.push({f:fr,t:'Recarga Aramco (saldo prepago)',v:-RECARGA});if(w)w.sal.push(['Recarga Aramco (saldo prepago)',RECARGA])}o.cons=cd}}
         sa-=o.cons;o.queda=sa;AR[f]=o}
-      window._pilAR=AR}
+      SETW('AR',AR)}
     {const opd=var_/6;for(let f=desde;f<=fin6;f=mas(f,1)){const wd=D(f).getDay();if(wd!==0&&opd)EV.push({f,t:'Viáticos, peajes y traspaleteo (promedio diario)',v:-opd});if(wd===5&&ret_)EV.push({f,t:'Retiros Claudio (promedio semanal)',v:-ret_});const dd=+f.slice(8);if(dd===5&&s5)EV.push({f,t:'Sueldos: saldo del mes',v:-s5});if(dd===15&&s15)EV.push({f,t:'Sueldos: anticipo',v:-s15})}}
-    window._pilEv=EV;window._pilCS=cs;window._pilFin6=fin6;
+    SETW('Ev',EV);SETW('CS',cs);SETW('Fin6',fin6);
     let sal=cs.fin;W.forEach(w=>{w.e=w.ent.reduce((a,x)=>a+x[1],0);w.s=w.sal.reduce((a,x)=>a+x[1],0);sal+=w.e-w.s;w.cierre=sal});
     const min=W.reduce((a,w)=>w.cierre<a.cierre?w:a,W[0]),bajo=W.filter(w=>w.cierre<CAJA_PISO).length;
     const M=v=>(v<0?'−':'')+'$'+(Math.abs(v)/1e6).toFixed(1).replace('.',',')+' M',fc=f=>f.slice(8)+'-'+f.slice(5,7);
@@ -2266,7 +2269,7 @@ async function pilProy(){const box=$('pil-proy');if(!box)return;box.innerHTML='<
     const th='position:sticky;left:0;z-index:2;background:var(--surface);text-align:left;font-weight:800;padding:8px 10px;border-right:1px solid var(--border);white-space:nowrap';
     const td='text-align:right;padding:8px 10px;white-space:nowrap;font-variant-numeric:tabular-nums;min-width:74px';
     const fila=(t,f,st)=>'<tr><td style="'+th+'">'+t+'</td>'+W.map(w=>'<td style="'+td+(st?';'+st(w):'')+'">'+f(w)+'</td>').join('')+'</tr>';
-    window._pilW=W;
+    SETW('W',W);
     const tabla='<div style="overflow-x:auto;border:1px solid var(--border);border-radius:12px;margin-top:10px"><table style="border-collapse:collapse;width:100%;font-size:14px">'
       +'<tr><td style="'+th+';font-size:11px;color:var(--muted)">'+(PCV?'pesos':'millones $')+'</td>'+W.map((w,k)=>'<td style="'+td+';font-weight:800;cursor:pointer;color:var(--gold)" onclick="pilSemDet('+k+')">'+fl(w.ini)+' ›</td>').join('')+'</tr>'
       +fila('Parte con',w=>CV(w.ini$),()=>'color:var(--muted)')
@@ -2276,7 +2279,7 @@ async function pilProy(){const box=$('pil-proy');if(!box)return;box.innerHTML='<
     box.innerHTML='<div class="card" style="padding:14px;margin-bottom:14px"><div style="font-size:12px;color:var(--muted)">CAJA PROYECTADA · Santander · cartola al '+fCL(cs.hasta)+' · hoy hay '+MS(cs.fin)+'</div><div style="font-size:17px;font-weight:700;margin-top:6px">'+titulo+'</div>'+porque+tabla
       +'<div style="font-size:11px;color:var(--muted);margin-top:6px">🟢 sobre '+MS(CAJA_PISO)+' · 🟡 bajo '+MS(CAJA_PISO)+' · 🔴 negativo. Toca una semana para ver el detalle.</div><div id="pil-det"></div>'
       +'<details style="margin-top:8px"><summary style="font-size:12px;color:var(--muted);cursor:pointer">Cómo se calcula</summary><div style="font-size:11px;color:var(--muted);line-height:1.5;margin-top:4px">Saldo de la última cartola Santander + cobros según el plazo de cada cliente (EBLOOMS: viernes siguiente a la factura; Valle, Ateuro, DDC: 30 días; las facturas aún no emitidas de EBLOOMS y Valle se estiman con el promedio de las dos últimas) − compromisos pendientes (los vencidos van a la primera semana) − combustible (cargas Aramco de las últimas 4 semanas), viáticos, peajes, mantención y retiros al promedio real − sueldos (saldo el día 5 y anticipo el 15).'+(fuera.length?'<br><b>No incluido:</b> '+fuera.map(empEsc).join(' · '):'')+'</div></details></div>';
-  pilSemana(0);
+  if(!quiet)pilSemana(0);
   }catch(e){console.log('pilProy',e);box.innerHTML=''}}
 /* Imagen de la semana para enviar a Claudio por WhatsApp (Carlos 17-11) */
 function pilImgSemana(k){const w=(window._pilW||[])[k];if(!w)return null;const S=2,Wd=540,P=24,fm=v=>(v<0?'−':'')+'$'+Math.round(Math.abs(v)).toLocaleString('es-CL');
@@ -2302,7 +2305,7 @@ let _psw=0;
 async function pilSemana(dlt){const box=$('pil-sem');if(!box)return;const cs=window._pilCS,SIM=!!(window._simOn&&window._simEv),EV=(SIM?window._simEv:window._pilEv)||[];if(!cs){box.innerHTML='';return}_psw=dlt==='keep'?_psw:(typeof dlt==='number'&&dlt?_psw+dlt:(typeof dlt==='string'&&dlt.length===10?_psw:0));if(typeof dlt==='string'&&dlt.length===10){const a=new Date(hoyISO()+'T12:00:00'),b=new Date(dlt+'T12:00:00');a.setDate(a.getDate()-((a.getDay()+6)%7));_psw=Math.round((b-a)/(7*864e5))}
   const D=f=>new Date(f+'T12:00:00'),iso=d=>hoyISO(d),mas=(f,n)=>{const d=D(f);d.setDate(d.getDate()+n);return iso(d)};
   const lun=(()=>{const d=D(hoyISO());d.setDate(d.getDate()-((d.getDay()+6)%7)+7*_psw);return iso(d)})(),dias=[...Array(7)].map((_,i)=>mas(lun,i)),dom=dias[6];
-  if(lun>(window._pilFin6||'')){_psw--;toast('No hay proyección más allá de 6 semanas');return}
+  if(lun>((SIM&&window._LFin6)||window._pilFin6||'')){_psw--;toast('No hay proyección más allá de esa fecha');return}
   box.innerHTML='<div class="sub">Cargando semana…</div>';
   try{const ini0=mas(lun,-1);let mv=[];if(lun<=cs.hasta){const r=await conTope(supa.from('cartola_movimientos').select('fecha,monto,categoria').eq('empresa',EMPRESA).gt('fecha',ini0).lte('fecha',cs.hasta),15000);mv=(r&&r.data)||[]}
     const posterior=mv.reduce((a,m)=>a+(+m.monto||0),0),parte=lun<=cs.hasta?cs.fin-posterior:null;
