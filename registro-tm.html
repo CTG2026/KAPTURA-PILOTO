@@ -2170,7 +2170,7 @@ function simCalc(){const S=_sim,cs=window._LCS||window._pilCS,EV=window._LEv||wi
   const D=f=>new Date(f+'T12:00:00'),iso=d=>hoyISO(d),dd=(a,b)=>Math.round((D(b)-D(a))/864e5),fm=v=>(v<0?'−':'')+'$'+Math.round(Math.abs(v)).toLocaleString('es-CL');
   const L=[];let fac=0;
   for(const e of EV){const x={...e};
-    if(/^Ateuro/.test(x.t)){if(/dic/.test(x.t))continue;if(S.ate)x.f=S.ate;
+    if(/^Ateuro/.test(x.t)&&x.f<='2026-12-31'&&!/ dic| ene| feb| mar/.test(x.t)){if(S.ate)x.f=S.ate;
       if(S.fac==='S'&&S.facf&&S.facf<x.f){const c=x.v*(S.fact/100)*Math.max(dd(S.facf,x.f),0)/30;fac+=c;x.v-=c;x.f=S.facf;x.t+=' · factoring'}}
     if(/^Alimentos Valle/.test(x.t)&&S.val)x.f=S.val;
     if(S.ter==='S'&&/Pago .*Zamorano|tercero DDC/.test(x.t))continue;
