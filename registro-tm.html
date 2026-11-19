@@ -2225,7 +2225,7 @@ function simRefTar(c,s){const T=String(s||'');
   if(/^Ateuro/.test(c)){const x=SERVICIOS.find(y=>y.cliente==='Ateuro / Zuria'&&/Trébol.*66/.test(y.txt)&&/Trébol/.test(T));return x?x.tarifa:null}
   if(c==='TRAST')return +_sim.trv||null;return null}
 function simRef(c,s,pl,soloPlan,tRow){if(!SIM_REF_CLI.some(k=>String(c).indexOf(k)===0))return '';const PLs=((window._LPL||window._pilPL)||{}).s||[],k=String(s||'').split('(')[0].trim();
-  const p=pl||PLs.find(x=>x.c===c&&String(x.s).split('(')[0].trim()===k);let n,t,tp,pt;if(!p&&soloPlan)return '';
+  const p=pl||PLs.find(x=>x.c===c&&String(x.s).split('(')[0].trim()===k);let n,t,tp,pt;if(!p&&soloPlan&&c!=='TRAST')return '';
   if(c==='TRAST'){n=6;t=simRefTar(c,s);tp='tercero 90%';pt=null}
   else if(p){n=(p.n||1)*((p.d||[]).length);t=simRefTar(c,p.s);if(t==null&&!/^(DDC|EBLOOMS|Ateuro)/.test(c))t=p.t?{plan:+p.t}:null;tp=(p.ter||p.p)?'tercero':'propio';pt=p.pat||null}
   else{n=0;t=tRow!=null?tRow:simRefTar(c,s);tp=/tercero/i.test(s)||c==='DDC'?'tercero':'a confirmar';pt=null}
