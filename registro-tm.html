@@ -431,6 +431,8 @@ body.pc .tv{display:none}body:not(.pc) .tp{display:none}
   <h1 id="pil-h">🧪 Vista piloto</h1>
   <div class="sub" id="pil-sub">Caja de la semana · Resultado · Deudas y por cobrar. Todo desde Kaptura, base caja. Es una prueba: no cambia nada de lo existente.</div>
   <button class="btn2" id="btn-preg" style="width:auto;padding:8px 14px;margin:6px 0 12px" onclick="verPreg()">❓ Claudio: notas y preguntas <span id="preg-n"></span></button>
+  <button class="btn2" id="btn-sim" style="width:auto;padding:8px 14px;margin:6px 0 12px" onclick="simAbrir()">🧮 Simular caja</button>
+  <div id="pil-simbox" style="display:none"></div>
   <div id="pil-sem"></div>
   <div id="pil-proy"></div>
   <div id="pil-box"></div>
@@ -1684,7 +1686,7 @@ async function docCliLink(){const v=await formulario('Link de documentos para el
   window.open('https://wa.me/?text='+encodeURIComponent('Transportes Madrid Gaete SpA · Documentos de nuestros equipos y conductores. Toque cada documento para verlo o descargarlo:\n'+docCliUrl(token)),'_blank');verCarp()}
 /* Link de la caja para Claudio (Carlos 18-11): ?caja=token (carpeta_links con para que empieza con 'CAJA'); solo caja de la semana y proyectada, sin notas ni preguntas */
 const PUBHDR=()=>{const b=document.querySelector('.hdr .brand');if(b)b.textContent='KAPTURA · SISTEMA DE GESTIÓN'}; /* links públicos: tema oscuro original, sin repetir Transportes Madrid (Carlos 18-11) */
-async function abrirCajaPub(token){document.body.classList.add('pubcaja');ir('s-pil');['btn-preg','pil-box'].forEach(i=>{if($(i))$(i).style.display='none'});document.querySelectorAll('#s-pil > .btn2').forEach(b=>b.style.display='none');
+async function abrirCajaPub(token){document.body.classList.add('pubcaja');ir('s-pil');['btn-preg','btn-sim','pil-simbox','pil-box'].forEach(i=>{if($(i))$(i).style.display='none'});document.querySelectorAll('#s-pil > .btn2').forEach(b=>b.style.display='none');
   $('pil-h').textContent='Transportes Madrid Gaete SpA';PUBHDR();$('pil-sub').textContent='Cargando…';
   try{const l=await conTope(supa.from('carpeta_links').select('*').eq('token',token).eq('activo',true).maybeSingle(),10000);if(!l.data||!/^CAJA/i.test(l.data.para||'')){$('pil-sub').textContent='Este link ya no está disponible.';return}
     $('pil-sub').textContent='Caja de la semana y caja proyectada · cuenta Santander · al '+fCL(hoyISO());await pilProy()}catch(_){$('pil-sub').textContent='No se pudo cargar.'}}
@@ -2147,6 +2149,47 @@ function pilCxpCat(c){c=c||'';if(/Deuda combustible/.test(c))return 'Combustible
   if(/Sueldos|Previred/.test(c))return 'Sueldos, viáticos y Previred';return 'Otros gastos'}
 /* ═══ CAJA PROYECTADA 6 SEMANAS (Carlos 17-11): saldo cartola Santander + cobros según plazos de cada cliente − compromisos pendientes − operación recurrente (promedio real de las últimas 4 semanas) ═══ */
 const CAJA_PISO=5261000;
+
+/* Simulador simple de caja (Carlos 19-11): parte de la caja proyectada real (window._pilEv) y aplica supuestos. No guarda nada. */
+let _sim={dev:11000000,devf:'2026-11-30',ate:'2026-12-15',val:'2026-12-01',ter:'N',tc:0,tcf:'',fac:'N',facf:'2026-11-23',fact:1.5,ext:0,extf:'',min:3000000};
+async function simAbrir(){const b=$('pil-simbox');if(b.style.display!=='none'){b.style.display='none';return}b.style.display='block';if(!window._pilEv){b.innerHTML='<div class="sub">Cargando caja proyectada…</div>';await pilProy()}simPintar()}
+function simPintar(){const b=$('pil-simbox'),S=_sim,I='font-size:15px;padding:6px;border-radius:8px;border:2px solid var(--border);background:#FFF2CC;color:#000;width:100%;box-sizing:border-box',
+  num=(k)=>'<input type="text" inputmode="numeric" style="'+I+'" value="'+(S[k]?Number(S[k]).toLocaleString('es-CL'):'0')+'" onchange="_sim.'+k+'=+this.value.replace(/\\D/g,\'\')||0;simCalc()">',
+  fec=(k)=>'<input type="date" style="'+I+'" value="'+(S[k]||'')+'" onchange="_sim.'+k+'=this.value;simCalc()">',
+  sn=(k)=>'<select style="'+I+'" onchange="_sim.'+k+'=this.value;simCalc()"><option'+(S[k]==='N'?' selected':'')+'>N</option><option'+(S[k]==='S'?' selected':'')+'>S</option></select>',
+  pct=(k)=>'<input type="number" step="0.1" style="'+I+'" value="'+S[k]+'" onchange="_sim.'+k+'=+this.value||0;simCalc()">',
+  F=(n,t,a,c)=>'<tr><td style="padding:5px 6px;color:#888">'+n+'</td><td style="padding:5px 6px">'+t+'</td><td style="padding:5px 6px;width:150px">'+(a||'')+'</td><td style="padding:5px 6px;width:150px">'+(c||'')+'</td></tr>';
+  b.innerHTML='<div class="card" style="padding:10px 12px;margin-bottom:12px"><div style="font-weight:800;margin-bottom:6px">🧮 Simular caja · cambia lo amarillo (no guarda nada)</div><div style="overflow-x:auto"><table style="border-collapse:collapse;width:100%;font-size:14px"><tr style="color:#888;font-size:12px"><td></td><td>Supuesto</td><td>Monto / S-N</td><td>Fecha</td></tr>'+
+  F(1,'Devolución retiros de Claudio',num('dev'),fec('devf'))+F(2,'Ateuro paga lo facturado al 30-11 el','',fec('ate'))+F(3,'Valle paga octubre el','',fec('val'))+
+  F(4,'Pagar a terceros cuando pague el cliente (DDC paga en enero)',sn('ter'),'')+F(5,'Pagar con tarjeta de crédito, 1 cuota (se paga el 10 del mes siguiente al cierre del 25)',num('tc'),fec('tcf'))+
+  F(6,'Factorizar Ateuro · fecha del factoring',sn('fac'),fec('facf'))+F(7,'Tasa mensual factoring (%)',pct('fact'),'')+F(8,'Ingreso extra o spot',num('ext'),fec('extf'))+F(9,'Caja mínima',num('min'),'')+
+  '</table></div><div id="sim-res" style="margin-top:10px"></div><button class="btn2" style="width:auto;padding:6px 12px;margin-top:8px" onclick="_sim=null;simReset()">↺ Volver a los valores iniciales</button></div>';simCalc()}
+function simReset(){_sim={dev:11000000,devf:'2026-11-30',ate:'2026-12-15',val:'2026-12-01',ter:'N',tc:0,tcf:'',fac:'N',facf:'2026-11-23',fact:1.5,ext:0,extf:'',min:3000000};simPintar()}
+function simCalc(){const S=_sim,cs=window._pilCS,EV=window._pilEv||[],box=$('sim-res');if(!cs||!box)return;
+  const D=f=>new Date(f+'T12:00:00'),iso=d=>hoyISO(d),dd=(a,b)=>Math.round((D(b)-D(a))/864e5),fm=v=>(v<0?'−':'')+'$'+Math.round(Math.abs(v)).toLocaleString('es-CL');
+  const L=[];let fac=0;
+  for(const e of EV){const x={...e};
+    if(/^Ateuro/.test(x.t)){if(/dic/.test(x.t))continue;if(S.ate)x.f=S.ate;
+      if(S.fac==='S'&&S.facf&&S.facf<x.f){const c=x.v*(S.fact/100)*Math.max(dd(S.facf,x.f),0)/30;fac+=c;x.v-=c;x.f=S.facf}}
+    if(/^Alimentos Valle/.test(x.t)&&S.val)x.f=S.val;
+    if(S.ter==='S'&&/Pago .*Zamorano|tercero DDC/.test(x.t))continue;
+    L.push(x)}
+  if(S.dev&&S.devf)L.push({f:S.devf,v:S.dev});
+  if(S.ext&&S.extf)L.push({f:S.extf,v:S.ext});
+  if(S.tc&&S.tcf){L.push({f:S.tcf,v:S.tc});const d=D(S.tcf),m=d.getMonth()+(d.getDate()<=25?1:2);L.push({f:iso(new Date(d.getFullYear(),m,10,12)),v:-S.tc})}
+  const fin=window._pilFin6||'2026-12-27',ini=L.reduce((a,e)=>e.f<a?e.f:a,'9999');
+  const lun=f=>{const d=D(f);d.setDate(d.getDate()-((d.getDay()+6)%7));return iso(d)};
+  const dia={};L.forEach(e=>{if(e.f<=fin)dia[e.f]=(dia[e.f]||0)+e.v});
+  const W=[];let s=cs.fin,mn=[Infinity,''],w0=lun(ini<cs.hasta?cs.hasta:ini);
+  for(let w=w0;w<=fin;w=iso(new Date(D(w).getTime()+7*864e5))){const r={w,in:0,out:0,min:Infinity};
+    for(let k=0;k<7;k++){const f=iso(new Date(D(w).getTime()+k*864e5));if(f>fin)break;
+      L.forEach(e=>{if(e.f===f){e.v>0?r.in+=e.v:r.out+=e.v}});if(dia[f]){s+=dia[f];if(s<mn[0])mn=[s,f]}if(f>=cs.hasta&&s<r.min)r.min=s}
+    r.fin=s;if(r.min===Infinity)r.min=s;W.push(r)}
+  const th='padding:6px 8px;text-align:right;border-bottom:1px solid var(--border)',bad=v=>v<S.min;
+  box.innerHTML='<div style="font-size:15px;margin-bottom:6px">Saldo mínimo: <b style="color:'+(bad(mn[0])?'#DC2626':'#15803D')+'">'+fm(mn[0])+'</b> el '+String(mn[1]).split('-').reverse().join('-')+(fac?' · costo factoring '+fm(fac):'')+'</div>'+
+  '<div style="overflow-x:auto"><table style="border-collapse:collapse;width:100%;font-size:14px"><tr style="color:#888"><td style="'+th+';text-align:left">Semana</td><td style="'+th+'">Entra</td><td style="'+th+'">Sale</td><td style="'+th+'">Saldo al cierre</td><td style="'+th+'">Saldo mínimo</td></tr>'+
+  W.map(r=>{const f2=iso(new Date(D(r.w).getTime()+6*864e5));return '<tr style="'+(bad(r.min)?'background:rgba(220,38,38,.18)':'')+'"><td style="'+th+';text-align:left">'+r.w.slice(8)+'-'+r.w.slice(5,7)+' al '+f2.slice(8)+'-'+f2.slice(5,7)+'</td><td style="'+th+';color:#15803D">'+fm(r.in)+'</td><td style="'+th+';color:#DC2626">'+fm(r.out)+'</td><td style="'+th+';font-weight:800">'+fm(r.fin)+'</td><td style="'+th+'">'+fm(r.min)+(bad(r.min)?' ⚠':'')+'</td></tr>'}).join('')+'</table></div>'+
+  '<div style="font-size:12px;color:#888;margin-top:6px">Base: caja proyectada de Kaptura (cartola al '+cs.hasta.split('-').reverse().join('-')+', cobros, compromisos y presupuesto). Ateuro de diciembre queda para enero.</div>'}
 async function pilProy(){const box=$('pil-proy');if(!box)return;box.innerHTML='<div class="sub">Calculando caja proyectada…</div>';
   try{const cs=await cartolaSaldo();if(!cs){box.innerHTML='';return}
     const D=f=>new Date(f+'T12:00:00'),iso=d=>hoyISO(d),mas=(f,n)=>{const d=D(f);d.setDate(d.getDate()+n);return iso(d)};
