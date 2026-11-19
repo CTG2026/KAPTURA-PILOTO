@@ -2181,7 +2181,7 @@ function simReset(){_sim={dev:11000000,devf:'2026-11-30',ate:'2026-12-15',val:'2
 /* Programa por cliente y semana (Carlos 19-11) */
 function simKM(x){return /Limache/i.test(x)?[590,'A']:(/Chill[aá]n/i.test(x)&&/Santiago/i.test(x))?[200,'T']:/Chill[aá]n/i.test(x)?[700,'T']:/s[uú]per/i.test(x)?[250,'A']:/Santa Elena|Ateuro|Clee|Trébol/i.test(x)?[100,'T']:null}
 function simSvcs(){const PLs=((window._LPL||window._pilPL)||{}).s||[],S=_sim,L=PLs.map((p,j)=>({j:String(j),c:p.c,s:p.s,t:+p.t||0,n:p.n||1,d:p.d||[],desde:p.desde||'',p:+p.p||0,pd:+p.pd||30,ter:p.ter||''}));(window._tarEB||[]).forEach((x,i)=>{const m=L.findIndex(y=>y.c==='EBLOOMS'&&y.j[0]!=='E'&&x.p==='11 a 16 pallets'&&((/Limache/.test(y.s)&&/Limache/.test(x.d))||(/Chill[aá]n/.test(y.s)&&/CD Chill/.test(x.d))||(/s[uú]per/i.test(y.s)&&x.d==='Locales')));
-  if(m>=0){const y=L.splice(m,1)[0];L.push({...y,s:x.d+' · '+x.p+' (plan)',km:x.km})}else L.push({j:'E'+i,c:'EBLOOMS',s:x.d+' · '+x.p,t:x.t,n:1,d:[],desde:'',p:0,pd:0,km:x.km})});(S.extra||[]).forEach((x,i)=>L.push({j:'X'+i,c:x.c,s:x.s,t:x.t,n:1,d:[],desde:'',p:0,pd:0,km:x.km}));if(S.trd)L.push({j:'T',c:'TRAST',s:'1 tracto + thermo diario',t:+S.trv||0,n:1,d:[1,2,3,4,5,6],desde:S.trd,p:0,pd:0,comb:+S.trc||0});return L}
+  if(m>=0){const y=L.splice(m,1)[0];L.push({...y,s:x.d+' · '+x.p+' (plan)',km:y.ter?0:x.km})}else L.push({j:'E'+i,c:'EBLOOMS',s:x.d+' · '+x.p,t:x.t,n:1,d:[],desde:'',p:/Limache/.test(x.d)?Math.round(x.t*0.9):0,pd:30,ter:/Limache/.test(x.d)?'tercero Limache (90%)':'',km:/Limache/.test(x.d)?0:x.km})});(S.extra||[]).forEach((x,i)=>L.push({j:'X'+i,c:x.c,s:x.s,t:x.t,n:1,d:[],desde:'',p:0,pd:0,km:x.km}));if(S.trd)L.push({j:'T',c:'TRAST',s:'1 tracto + thermo diario',t:+S.trv||0,n:1,d:[1,2,3,4,5,6],desde:S.trd,p:0,pd:0,comb:+S.trc||0});return L}
 function simBase(sv,w,h){let n=0;for(let k=0;k<7;k++){const d=new Date(w+'T12:00:00');d.setDate(d.getDate()+k);const f=hoyISO(d);if(f<=h||(sv.desde&&f<sv.desde))continue;if(sv.d.includes(d.getDay()))n+=sv.n}return n}
 function simProg(w,j,v){_sim.prog=_sim.prog||{};_sim.prog[w+'|'+j]=+String(v).replace(/\D/g,'')||0;simCalc()}
 function simXp(){const d=$('sim-xd')&&$('sim-xd').value,p=$('sim-xp');if(!p)return;p.innerHTML=(window._tarEB||[]).filter(x=>x.d===d).map(x=>'<option value="'+pEsc(x.p)+'">'+pEsc(x.p)+' · $'+x.t.toLocaleString('es-CL')+'</option>').join('')}
@@ -2195,7 +2195,7 @@ function simCalc(){const S=_sim,cs=window._LCS||window._pilCS,EV=window._LEv||wi
     if(/^Ateuro/.test(x.t)&&x.f<='2026-12-31'&&!/ dic| ene| feb| mar/.test(x.t)){if(S.ate)x.f=S.ate;
 }
     if(/^Alimentos Valle/.test(x.t)&&S.val)x.f=S.val;
-    if(S.ter==='S'&&/^Pago .*(Zamorano|Fuentes|tercero)/i.test(x.t)){const tv=new Date(D(x.f).getTime()-30*864e5),tf=iso(tv),q=+tf.slice(8)<=15?tf.slice(0,8)+'15':iso(new Date(+tf.slice(0,4),+tf.slice(5,7),0,12));x.f=iso(new Date(D(q).getTime()+35*864e5));x.t+=' · cuando paga DDC'}
+    if(S.ter==='S'&&/^Pago .*(Zamorano|Fuentes|tercero)/i.test(x.t)){const tv=new Date(D(x.f).getTime()-30*864e5),tf=iso(tv),q=+tf.slice(8)<=15?tf.slice(0,8)+'15':iso(new Date(+tf.slice(0,4),+tf.slice(5,7),0,12));if(/Limache/.test(x.t)){const d=D(q);d.setDate(d.getDate()+3);d.setDate(d.getDate()+((5-d.getDay()+7)%7||7));x.f=iso(d);x.t+=' · cuando paga EBLOOMS'}else{x.f=iso(new Date(D(q).getTime()+35*864e5));x.t+=' · cuando paga DDC'}}
     L.push(x)}
   /* Factoring por cliente (Carlos 19-11): anticipa los cobros de ese cliente que vencen hasta 60 días después de la fecha del factoring */
   const FRE={Ateuro:/^Ateuro/,EBLOOMS:/^EBLOOMS/,Valle:/Valle/,DDC:/^DDC/,'Home Gardens':/^Home/,TRAST:/^TRAST/};
@@ -2218,7 +2218,7 @@ function simCalc(){const S=_sim,cs=window._LCS||window._pilCS,EV=window._LEv||wi
    Object.entries(S.prog||{}).forEach(([k,v])=>{const [w,j]=k.split('|'),sv=SV.find(x=>x.j===j);if(!sv)return;const dv=v-simBase(sv,w,cs.hasta);if(!dv)return;const mid=addd(w,2)>cs.hasta?addd(w,2):addd(cs.hasta,1);
      L.push({f:pay(sv.c,mid),t:sv.c+' · programa '+(+w.slice(8))+' '+MES3[+w.slice(5,7)-1]+' ('+(dv>0?'+':'')+dv+' viajes, simulación)',v:dv*sv.t*1.19});
      const km=sv.km!=null?[sv.km,'A']:simKM(sv.s+' '+sv.c),fc=sv.comb!=null?sv.comb:(km&&!/DDC/.test(sv.c)?km[0]/COSTO.rend[km[1]]*pD:0);if(fc&&!(S.fl&&mid>=S.fl))L.push({f:mid,t:'Combustible · '+sv.c,v:-dv*fc});
-     if(sv.p)L.push({f:addd(mid,sv.pd),t:'Pago tercero '+sv.ter+' (programa, simulación)',v:-dv*sv.p*1.19})})}
+     if(sv.p)L.push({f:S.ter==='S'?pay(sv.c,mid):addd(mid,sv.pd),t:'Pago tercero '+sv.ter+' (programa, simulación)',v:-dv*sv.p*1.19})})}
   /* Ajustes por semana (Carlos 19-11): combustible, servicios extra, gastos extra */
   const lunOf=f=>{const d=D(f);d.setDate(d.getDate()-((d.getDay()+6)%7));return iso(d)},plus=(f,n)=>iso(new Date(D(f).getTime()+n*864e5)),hoy1=plus(cs.hasta,1),dia1=f=>f<hoy1?hoy1:f;
   const baseComb={};L.forEach(e=>{if(/^Combustible ·/.test(e.t||'')){const w=lunOf(e.f);baseComb[w]=(baseComb[w]||0)-e.v}});window._simBaseComb=baseComb;
