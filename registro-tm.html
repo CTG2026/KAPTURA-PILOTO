@@ -1504,7 +1504,7 @@ function formulario(tit,campos){return new Promise(res=>{const w=document.create
 // Pago: EBLOOMS el viernes siguiente a la factura; Valle, Ateuro y Spot a 30 días; Los Tres Enanos 5 días. Aviso de cobranza 3 días antes del vencimiento.
 // Solo clientes con plazo conocido. Sin plazo (ej. Los Tres Enanos: factura a crédito sin fecha de vencimiento) NO se inventa vencimiento (Carlos 02-11)
 const CXC_PLAZO={'EBLOOMS':'viernes','Alimentos Valle Central':30,'Ateuro / Zuria':30,'Spot':30};
-const FAC_CLI=[{c:'EBLOOMS',q:true,doc:'proforma'},{c:'Ateuro / Zuria',q:true,doc:'proforma'},{c:'Alimentos Valle Central',q:false,doc:'liquidación (Anita)'}];
+const FAC_CLI=[{c:'EBLOOMS',q:true,doc:'proforma'},{c:'Ateuro / Zuria',q:false,doc:'proforma'} /* mensual, paga a 30 días; quincena solo si Claudio la consigue, a mano (Carlos 20-11) */,{c:'Alimentos Valle Central',q:false,doc:'liquidación (Anita)'}];
 // Servicios de un mes anterior que se cobran en otro período (Carlos 03-11: el viaje Ateuro del 30-10 va en la proforma de noviembre)
 const FAC_ARRASTRE={'Ateuro / Zuria':{'2026-11':'2026-10-30'}};
 const facDesde=(cli,ym,d)=>((FAC_ARRASTRE[cli]||{})[ym])||d;
@@ -1524,7 +1524,8 @@ async function cxcModo(id,m){const {error}=await supa.from('cxc_facturas').updat
 function cxcDias(a,b){return Math.round((dISO(b)-dISO(a))/86400000)}
 function cxcEstado(r){const hoy=hoyISO(),et=cxcEtapa(r),doc=(FAC_CLI.find(x=>x.c===r.cliente)||{}).doc||'liquidación';
   if(et==='pendiente')return {sem:'⏸',txt:'En espera'};
-  if(et==='por_aprobar')return {sem:'🔴',txt:'Aprobar '+doc+' (período cerrado el '+fCL(r.periodo_hasta)+')'};
+  if(et==='por_aprobar'&&r.debe_emitir&&r.debe_emitir>hoy){const de=cxcDias(hoy,r.debe_emitir);return de<=2?{sem:'🟡',txt:'Aprobar '+doc+': se factura el '+fCL(r.debe_emitir)+' (en '+de+' día(s))'}:{sem:'⏸',txt:doc.charAt(0).toUpperCase()+doc.slice(1)+' al '+fCL(r.debe_emitir)+' (en '+de+' días)'}} /* aviso 2 días antes de la fecha de emisión (Carlos 20-11) */
+  if(et==='por_aprobar')return {sem:'🔴',txt:'Aprobar '+doc+(r.debe_emitir?' (se factura el '+fCL(r.debe_emitir)+')':' (período cerrado el '+fCL(r.periodo_hasta)+')')};
   if(et==='por_facturar')return {sem:'🔴',txt:'Facturar ya ('+doc+' aprobada'+(r.aprobada?' el '+fCL(r.aprobada):'')+')'};
   const v=cxcVence(r),d=v?cxcDias(hoy,v):null;
   if(!v)return {sem:'⚪',txt:'Por cobrar · factura sin fecha de vencimiento'};
@@ -2344,7 +2345,7 @@ async function pilProy(nw,quiet){nw=nw||6;const SETW=(k,v)=>{window[(quiet?'_L':
     const fuera=[],EV=[];
     ((rp&&rp.data)||[]).filter(c=>c.estado!=='anulado'&&c.fecha).forEach(c=>{const m=+c.monto||0;if(m<0){fuera.push('Entrada posible no incluida: '+c.acreedor+' '+fmt$(-m)+' ('+c.categoria+')');return}/* lo vencido y no pagado según la cartola pasa al día de hoy, con "(vencido)" (Carlos 18-11) */const hoyP=hoyISO()>desde?hoyISO():desde,venc=c.fecha<hoyP,f=venc?hoyP:c.fecha,w=wk(f),cc=String(c.concepto||'').trim(),nm=c.acreedor+(cc&&cc.toLowerCase().indexOf(String(c.acreedor).toLowerCase())!==0?' · '+cc:'')+(venc?' (vencido)':''); /* todos los compromisos con su concepto (Carlos 18-11) */if(w){w.sal.push([nm,m]);EV.push({f,t:nm,v:-m})}});
     const vie=f=>{const d=D(f);d.setDate(d.getDate()+((5-d.getDay()+7)%7||7));return iso(d)};
-    ((rx&&rx.data)||[]).filter(c=>!c.solo_contable&&!c.sin_monto&&+c.total>0).forEach(c=>{let f=c.vence;if(!f&&c.periodo_hasta)f=/EBLOOMS|Ateuro/i.test(c.cliente)?vie(mas(c.periodo_hasta,3)):mas(c.periodo_hasta,35); /* Ateuro: factura quincenal, paga el viernes siguiente (Carlos 18-11) */
+    ((rx&&rx.data)||[]).filter(c=>!c.solo_contable&&!c.sin_monto&&+c.total>0).forEach(c=>{let f=c.vence;if(!f&&c.periodo_hasta)f=/EBLOOMS/i.test(c.cliente)?vie(mas(c.periodo_hasta,3)):/Ateuro/i.test(c.cliente)?mas(c.periodo_hasta,30):mas(c.periodo_hasta,35); /* Ateuro: factura a fin de mes, paga a 30 días (Carlos 20-11) */
       if(!f||f<desde){fuera.push('Factura '+(c.folio?c.folio+' ':'')+c.cliente+' '+fmt$(+c.total)+(f?' (vencida, fecha de pago incierta)':' (sin fecha)'));return}const w=wk(f);if(w){w.ent.push([c.cliente+(c.etapa==='por_aprobar'?' (por aprobar)':''),+c.total]);EV.push({f,t:c.cliente+(c.etapa==='por_aprobar'?' (por aprobar)':''),v:+c.total})}});
     /* Facturas aún no emitidas (estimadas con el promedio de las 2 últimas): EBLOOMS por quincena (paga el viernes siguiente), Valle por mes (30 días) */
     const H_=(rh&&rh.data)||[],ult=re=>{const a=H_.filter(x=>re.test(x.cliente)&&+x.total>0).slice(0,2);return a.length?a.reduce((t,x)=>t+(+x.total),0)/a.length:0},tiene=(re,h)=>H_.some(x=>re.test(x.cliente)&&x.periodo_hasta===h);
@@ -2352,14 +2353,14 @@ async function pilProy(nw,quiet){nw=nw||6;const SETW=(k,v)=>{window[(quiet?'_L':
     /* Presupuesto de servicios (Carlos 18-11): plan guardado en "tareas" (recurrencia='plan_caja', título = JSON). Ventas entran según el plazo de cada cliente; pago a terceros según su plazo; combustible de los servicios propios consume el saldo Aramco */
     let PL=null;try{const rpl=await supa.from('tareas').select('titulo').eq('empresa',EMPRESA).eq('recurrencia','plan_caja').eq('activa',true).order('id',{ascending:false}).limit(1);PL=rpl.data&&rpl.data[0]?JSON.parse(rpl.data[0].titulo):null}catch(e){PL=null}
     const PLC={},plCons={};
-    if(PL&&PL.s){const iva=1+(PL.iva==null?0.19:PL.iva),ini=PL.desde||desde,cobro={EBLOOMS:[15,f=>vie(mas(f,3))],DDC:[15,f=>mas(f,35)],'Valle':[0,f=>mas(f,35)],'Ateuro':[15,f=>vie(mas(f,3))],'Home Gardens':['sem',f=>f]}; /* Home Gardens paga cada viernes (Carlos 19-11) */
+    if(PL&&PL.s){const iva=1+(PL.iva==null?0.19:PL.iva),ini=PL.desde||desde,cobro={EBLOOMS:[15,f=>vie(mas(f,3))],DDC:[15,f=>mas(f,35)],'Valle':[0,f=>mas(f,35)],'Ateuro':[0,f=>mas(f,30)],'Home Gardens':['sem',f=>f]}; /* Home Gardens paga cada viernes (Carlos 19-11) */
       const perH=(cl,f)=>{const k=Object.keys(cobro).find(x=>cl.indexOf(x)===0)||'Valle',q=cobro[k][0],y=+f.slice(0,4),m=+f.slice(5,7)-1;const fm=finMes(y,m);if(q==='sem')return [k,vie(mas(f,-1)),cobro[k][1]];return [k,q&&+f.slice(8)<=q?f.slice(0,8)+'15':fm,cobro[k][1]]};
       const PT={};
       for(let f=ini;f<=fin6;f=mas(f,1)){const wd=D(f).getDay();PL.s.forEach(s=>{if(!(s.d||[]).includes(wd)||(s.desde&&f<s.desde)||(s.hasta&&f>s.hasta))return;const n=s.n||1,[k,hh,pf]=perH(s.c,f),key=k+'|'+hh;PLC[key]=PLC[key]||{k,hh,pf,v:0,cl:s.c,det:{}};PLC[key].v+=n*s.t;PLC[key].det[s.s]=(PLC[key].det[s.s]||0)+n*s.t;
         if(s.p){const fp=mas(f,s.pd||30),kk=fp+'|'+(s.ter||'tercero');PT[kk]=PT[kk]||{f:fp,t:'Pago '+(s.ter||'tercero')+' (presupuesto)',v:0};PT[kk].v+=n*s.p*(s.fac?iva:1)}
         else if(s.km&&s.kml)plCons[f]=(plCons[f]||0)+n*s.km/s.kml*(PL.precio||1600)})}
       const MN=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
-      Object.values(PLC).forEach(o=>{const re=new RegExp('^'+o.k,'i');if(tiene(re,o.hh))return;const fp=o.pf(o.hh),d0=+o.hh.slice(8)===15?'1-15':'16-'+o.hh.slice(8),t=o.k==='Home Gardens'?o.cl+' semana al '+o.hh.slice(8)+'-'+o.hh.slice(5,7)+' (presupuesto)':o.cl+' '+(o.k!=='Valle'?d0+' ':'')+MN[+o.hh.slice(5,7)-1]+' (presupuesto)',v=Math.round(o.v*iva);if(fp<desde||fp>fin6)return;const w=wk(fp);const det={};Object.entries(o.det||{}).forEach(([k2,x])=>det[k2]=Math.round(x*iva));if(w){w.ent.push([t,v])}EV.push({f:fp,t,v,det})});
+      Object.values(PLC).forEach(o=>{const re=new RegExp('^'+o.k,'i');if(tiene(re,o.hh))return;const fp=((PL&&PL.cobro_exc)||{})[o.k+'|'+o.hh]||o.pf(o.hh),/* excepción de pago puntual guardada en el plan (Carlos 20-11) */d0=+o.hh.slice(8)===15?'1-15':'16-'+o.hh.slice(8),t=o.k==='Home Gardens'?o.cl+' semana al '+o.hh.slice(8)+'-'+o.hh.slice(5,7)+' (presupuesto)':o.cl+' '+(o.k!=='Valle'&&o.k!=='Ateuro'?d0+' ':'')+MN[+o.hh.slice(5,7)-1]+' (presupuesto)',v=Math.round(o.v*iva);if(fp<desde||fp>fin6)return;const w=wk(fp);const det={};Object.entries(o.det||{}).forEach(([k2,x])=>det[k2]=Math.round(x*iva));if(w){w.ent.push([t,v])}EV.push({f:fp,t,v,det})});
       Object.values(PT).forEach(o=>{if(o.f<desde||o.f>fin6)return;const w=wk(o.f),v=Math.round(o.v);if(w){w.sal.push([o.t,v]);EV.push({f:o.f,t:o.t,v:-v})}})}
     SETW('PL',PL);
     per.forEach(([h,t,re,pf])=>{if(PL&&PL.s&&PL.s.some(s=>re.test(s.c)))return;if(tiene(re,h))return;const f=pf(h),v=ult(re);if(!v||f<desde)return;const w=wk(f);if(w){w.ent.push([t+' (estimado)',v]);EV.push({f,t:t+' (estimado)',v})}});
