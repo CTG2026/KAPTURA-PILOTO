@@ -1694,7 +1694,13 @@ function empWa(i){window.open('https://wa.me/?text='+encodeURIComponent(empTexto
 let _carp=null;
 function carpSem(d,nota){const G='#15803D',Y='#CA8A04',R='#DC2626';if(!d){const n=nota||'Sin documento';return {t:n,c:/no aplica/i.test(n)?'#888':R}}const dias=Math.round((dISO(d)-dISO(hoyISO()))/864e5);return {t:fCL(d),c:dias<0?R:dias<=30?Y:G,ic:dias<0?'✗ ':dias<=30?'⚠ ':'✓ '}}
 function carpSemU(d,nota,url){if(d&&!url){const v=dISO(d)<dISO(hoyISO());return {t:fCL(d)+' · sin documento adjunto',c:v?'#DC2626':'#888',ic:v?'✗ ':''}}return carpSem(d,nota)} /* fecha sin archivo: gris, no verde (Carlos 18-11) */
-function carpTblEq(L,mail){const B='border-bottom:1px solid '+(mail?'#ddd':'var(--border)')+';padding:6px 8px;text-align:left;vertical-align:top',C=B+';white-space:nowrap';
+/* Orden por cumplimiento (Carlos 20-11): primero los equipos y conductores con más documentos vigentes y adjuntos */
+function docCumple(x){const h=hoyISO(),ok=(d,u)=>!!(d&&u&&d>=h);let a=0,c=0;const t=(ap,v)=>{if(ap){a++;if(v)c++}};
+  if(x.grupo==='Conductores'){t(1,ok(x.pc,x.pc_url));t(1,ok(x.rt,x.rt_url));t(1,!!x.soap_url)}
+  else{t(1,ok(x.pc,x.pc_url));t(1,ok(x.rt,x.rt_url));t(1,ok(x.soap,x.soap_url));t(x.carga_nota!=='No aplica',ok(x.carga_vence,x.carga_url));t(x.rc_nota!=='No aplica',ok(x.rc_vence,x.rc_url))}
+  return {c,a,p:a?c/a:0}}
+const docOrden=(a,b)=>{const x=docCumple(a),y=docCumple(b);return y.p-x.p||y.c-x.c||String(a.patente).localeCompare(String(b.patente),'es')};
+function carpTblEq(L,mail){L=[...L].sort(docOrden);const B='border-bottom:1px solid '+(mail?'#ddd':'var(--border)')+';padding:6px 8px;text-align:left;vertical-align:top',C=B+';white-space:nowrap';
   const lk=(t,u,c)=>u?'<a href="'+u+'" target="_blank" rel="noopener" style="color:'+c+';text-decoration:underline">'+t+'</a>':t,cel=(d,n,u)=>{const x=carpSemU(d,n,u);return '<td style="'+C+';color:'+x.c+';font-weight:600">'+(x.ic||'')+lk(x.t,d?u:null,x.c)+'</td>'};
   return '<table style="border-collapse:collapse;width:100%;font-size:13px"><tr><th style="'+B+'">Patente</th><th style="'+B+'">Equipo</th><th style="'+C+'">Permiso circulación</th><th style="'+C+'">Revisión técnica</th><th style="'+C+'">SOAP</th><th style="'+C+'">Seguro carga</th></tr>'+
     L.map(x=>{const sc=x.carga_uf?carpSemU(x.carga_vence,null,x.carga_url):carpSem(null,x.carga_nota);return '<tr><td style="'+C+'"><b>'+x.patente+'</b></td><td style="'+B+'">'+(x.tipo||'')+(mail?'':'<div style="font-size:11px;color:#888">'+(x.propietario||'')+(x.obs?' · '+x.obs:'')+'</div>')+'</td>'+cel(x.pc,x.pc_nota,x.pc_url)+cel(x.rt,x.rt_nota,x.rt_url)+cel(x.soap,x.soap_nota,x.soap_url)+'<td style="'+C+';color:'+sc.c+';font-weight:600">'+(x.carga_uf?(sc.ic||'')+fmtN(x.carga_uf)+' UF · '+lk(sc.t,x.carga_url,sc.c):sc.t)+'</td></tr>'}).join('')+'</table>'}
@@ -1727,7 +1733,7 @@ async function carpLinkCopiar(t){try{await navigator.clipboard.writeText(carpUrl
 async function carpLinkOff(t){const v=await formulario('¿Desactivar este link?',[{k:'m',l:'Quien lo tenga ya no podrá abrir la carpeta',t:'select',ops:['No','Sí, desactivar'],v:'No'}]);if(!v||v.m!=='Sí, desactivar')return;const {error}=await supa.from('carpeta_links').update({activo:false}).eq('token',t);toast(error?'No se pudo desactivar':'Link desactivado');verCarp()}
 /* ═══ DOCUMENTOS PARA CLIENTES (Carlos 18-11): todos los equipos juntos (TM y terceros sin distinguir), por tractos, semirremolques y camiones, más conductores. Conductores en carpeta_equipos con grupo='Conductores' (patente = nombre, pc = cédula, rt = licencia, soap = hoja de vida). Link público: ?docs=token (misma tabla carpeta_links) ═══ */
 const docCliUrl=t=>location.origin+location.pathname+'?docs='+t;
-function docCliHtml(eq,admin){const E=eq.filter(x=>x.grupo!=='Conductores'),C=eq.filter(x=>x.grupo==='Conductores').sort((a,b)=>String(a.patente).localeCompare(String(b.patente),'es'));
+function docCliHtml(eq,admin){const E=eq.filter(x=>x.grupo!=='Conductores'),C=eq.filter(x=>x.grupo==='Conductores').sort(docOrden);
   const B='border-bottom:1px solid #ddd;padding:6px 8px;text-align:left;vertical-align:top',Cc=B+';white-space:nowrap',TH=t=>'<th style="'+Cc+'">'+t+'</th>';
   const lk=(t,u,c)=>u?'<a href="'+u+'" target="_blank" rel="noopener" style="color:'+c+';text-decoration:underline">'+t+'</a>':t;
   const up=(id,k)=>admin?' <a href="#" onclick="docCliSubir(\''+id+'\',\''+k+'\');return false" title="Subir o cambiar documento" style="text-decoration:none">📎</a>':'';
@@ -1738,8 +1744,8 @@ function docCliHtml(eq,admin){const E=eq.filter(x=>x.grupo!=='Conductores'),C=eq
   const hv=x=>'<td style="'+Cc+';font-weight:600">'+(x.soap_url?lk('Ver documento',x.soap_url,'var(--accent,#2563eb)'):'<span style="color:#DC2626">Sin documento</span>')+up(x.id,'soap')+'</td>';
   const tabC=L=>'<table style="border-collapse:collapse;width:100%;font-size:13px"><tr>'+TH('Conductor')+TH('Cédula de identidad')+TH('Licencia de conducir')+TH('Hoja de vida')+'</tr>'+L.map(x=>'<tr><td style="'+B+'"><b>'+x.patente+'</b>'+(x.tipo?'<div style="font-size:11px;color:#888">'+x.tipo+'</div>':'')+'</td>'+cel(x,'pc','pc','pc_nota','pc_url')+cel(x,'rt','rt','rt_nota','rt_url')+hv(x)+'</tr>').join('')+'</table>';
   const bl=(t,L,f)=>L.length?'<div style="font-weight:800;margin:10px 0 4px">'+t+' ('+L.length+')</div><div style="overflow-x:auto">'+f(L)+'</div>':'';
-  const usados=new Set();const grupos=[['Tractos',/^tracto/i],['Semirremolques',/^semirremolque/i],['Camiones',/^cami/i]].map(([t,re])=>{const L=E.filter(x=>re.test(x.tipo||'')).sort((a,b)=>String(a.patente).localeCompare(String(b.patente)));L.forEach(x=>usados.add(x.id));return bl(t,L,tabEq)}).join('');
-  const otros=E.filter(x=>!usados.has(x.id));
+  const usados=new Set();const grupos=[['Tractos',/^tracto/i],['Semirremolques',/^semirremolque/i],['Camiones',/^cami/i]].map(([t,re])=>{const L=E.filter(x=>re.test(x.tipo||'')).sort(docOrden);L.forEach(x=>usados.add(x.id));return bl(t,L,tabEq)}).join('');
+  const otros=E.filter(x=>!usados.has(x.id)).sort(docOrden);
   return grupos+bl('Otros equipos',otros,tabEq)+bl('Conductores',C,tabC)+(C.length?'':'<div style="font-weight:800;margin:10px 0 4px">Conductores</div><div style="color:#888;font-size:13px">Sin conductores cargados.</div>')}
 async function docCliSubir(id,k){const x=(_carp&&_carp.eq||[]).find(r=>String(r.id)===String(id));if(!x)return;const cond=x.grupo==='Conductores';
   const nom={pc:cond?'Cédula de identidad':'Permiso de circulación',rt:cond?'Licencia de conducir':'Revisión técnica',soap:cond?'Hoja de vida':'SOAP',carga:'Seguro de carga',rc:'Responsabilidad civil'}[k];
