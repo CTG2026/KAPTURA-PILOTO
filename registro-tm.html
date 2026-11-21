@@ -2212,10 +2212,10 @@ const demoEsc=t=>String(t==null?'':t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&
 const demoMotor=t=>(DEMO_TIPOS.find(x=>x[0]===t)||[0,0,0])[2]===1;
 const demoEnc=o=>btoa(String.fromCharCode(...new TextEncoder().encode(JSON.stringify(o)))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
 let _demo=null;
-function verDemo(cual){
+async function verDemo(cual){
   if(!user||user.rol!=='administracion')return;
-  let g=null;try{g=JSON.parse(localStorage.getItem('tm_demo_ob')||'null')}catch(e){}
-  _demo=JSON.parse(JSON.stringify(cual==='vacia'?{nombre:'',rut:'',dir:'',contacto:'',fono:'',equipos:[{p:'',t:'Tracto'}],ref:{},conductores:[],comb:'Aramco'}:cual==='gs'||!g?DEMO_GS:g));
+  let g=null;if(cual!=='vacia'&&supa){try{const r=await conTope(supa.from('empresas_onboarding').select('datos').eq('clave','global_solutions').maybeSingle(),8000);g=r&&r.data&&r.data.datos||null}catch(e){}} /* ficha fija en Supabase (Carlos 21-11) */
+  _demo=JSON.parse(JSON.stringify(cual==='vacia'?{nombre:'',rut:'',dir:'',contacto:'',fono:'',equipos:[{p:'',t:'Tracto'}],ref:{},conductores:[],comb:'Aramco'}:g||DEMO_GS));_demo._clave=cual==='vacia'?null:'global_solutions';
   const e=_demo,F='margin-top:10px;display:block;font-weight:700',D='style="margin-top:10px;border:1px solid var(--border);border-radius:10px;padding:0 10px"',S='style="cursor:pointer;padding:10px 0;font-weight:800"';
   $('demo-box').innerHTML='<div style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0"><button class="btn2" style="flex:1;margin:0" onclick="verDemo(\'gs\')">🌐 Cargar Global Solutions</button><button class="btn2" style="flex:1;margin:0" onclick="verDemo(\'vacia\')">➕ Empresa nueva (vacía)</button></div>'
   +'<details open '+D+'><summary '+S+'>1. Empresa</summary><label style="'+F+'">Nombre</label><input id="dm-nom" value="'+demoEsc(e.nombre)+'"><label style="'+F+'">RUT</label><input id="dm-rut" value="'+demoEsc(e.rut)+'"><label style="'+F+'">Dirección</label><input id="dm-dir" value="'+demoEsc(e.dir||'')+'"><label style="'+F+'">Contacto</label><input id="dm-con" value="'+demoEsc(e.contacto)+'"><label style="'+F+'">Teléfono del contacto</label><input id="dm-fono" type="tel" inputmode="tel" value="'+demoEsc(e.fono||'')+'" placeholder="+56 9 …" style="margin-bottom:10px"></details>'
@@ -2223,7 +2223,7 @@ function verDemo(cual){
   +'<details '+D+'><summary '+S+'>3. Rendimiento de referencia (km/l)</summary><div id="dm-ref" style="padding-bottom:10px"></div></details>'
   +'<details '+D+'><summary '+S+'>4. Conductores <span style="font-weight:400">(opcional)</span></summary><div id="dm-cd"></div><button class="btn2" style="margin-bottom:10px" onclick="demoLeer();_demo.conductores.push(\'\');demoCdPintar()">+ Agregar conductor</button></details>'
   +'<details '+D+'><summary '+S+'>5. Combustible</summary><label style="'+F+'">Proveedor de tarjeta</label><select id="dm-comb" style="margin-bottom:10px">'+DEMO_COMB.map(c=>'<option'+(c===e.comb?' selected':'')+'>'+c+'</option>').join('')+'</select></details>'
-  +'<button class="big" style="margin-top:14px" onclick="demoCrear()">✔ Crear empresa y generar link</button><div id="dm-out"></div>';
+  +'<button class="big" style="margin-top:14px" onclick="demoGuardar()">💾 Guardar en Kaptura</button><button class="btn2" onclick="demoCrear()">🔗 Generar link de la demo</button><div id="dm-out"></div>';
   demoEqPintar();demoCdPintar();ir('s-demo')}
 function demoLeer(){const e=_demo;e.nombre=$('dm-nom').value.trim();e.rut=$('dm-rut').value.trim();e.dir=$('dm-dir').value.trim();e.contacto=$('dm-con').value.trim();e.fono=$('dm-fono').value.trim();e.comb=$('dm-comb').value;
   e.equipos=[...document.querySelectorAll('.dm-eq-row')].map(r=>({p:r.querySelector('input').value.trim().toUpperCase().replace(/[^A-Z0-9]/g,''),t:r.querySelector('select').value}));
@@ -2236,10 +2236,21 @@ function demoCrear(){const e=demoLeer();e.equipos=e.equipos.filter(q=>q.p);
   if(!e.nombre)return toast('Falta el nombre de la empresa');
   if(!e.equipos.some(q=>demoMotor(q.t)))return toast('Agregue al menos un equipo con motor');
   const ts=new Set(e.equipos.filter(q=>demoMotor(q.t)).map(q=>q.t));Object.keys(e.ref).forEach(k=>{if(!ts.has(k))delete e.ref[k]});ts.forEach(t=>{if(!e.ref[t])e.ref[t]=(DEMO_TIPOS.find(x=>x[0]===t)||[])[1]});
-  try{localStorage.setItem('tm_demo_ob',JSON.stringify(e))}catch(x){}
   const url=new URL('combustible-demo.html',location.href).href+'#d='+demoEnc({v:1,...e});
   $('dm-out').innerHTML='<div style="margin-top:14px;font-weight:800">✔ Link de la demo de '+demoEsc(e.nombre)+':</div><div id="dm-url" style="word-break:break-all;font-size:12px;background:var(--surface2);border-radius:8px;padding:8px;margin-top:6px">'+demoEsc(url)+'</div><button class="btn2" onclick="demoCopiar()">📋 Copiar link</button><a class="btn2" style="display:block;text-align:center;text-decoration:none;box-sizing:border-box" target="_blank" rel="noopener" href="'+demoEsc(url)+'">Abrir la demo</a>'}
 function demoCopiar(){const t=$('dm-url').textContent;(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast('Link copiado'),()=>{const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();document.execCommand('copy');a.remove();toast('Link copiado')})}
+/* Guardar onboarding en Kaptura (Carlos 21-11): ficha en empresas_onboarding; en GS los conductores nuevos se agregan a kaptura_conductores */
+const demoNorm=t=>String(t||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/\s+/g,' ').trim();
+async function demoGuardar(){if(!supa)return toast('Sin conexión');const e=demoLeer();e.equipos=e.equipos.filter(q=>q.p);
+  if(!e.nombre)return toast('Falta el nombre de la empresa');
+  const clave=_demo._clave||(e.rut?'rut:'+e.rut.replace(/[^0-9kK]/g,'').toUpperCase():null);if(!clave)return toast('Falta el RUT de la empresa');
+  const datos={nombre:e.nombre,rut:e.rut,dir:e.dir,contacto:e.contacto,fono:e.fono,equipos:e.equipos,ref:e.ref,conductores:e.conductores,comb:e.comb};
+  const r=await supa.from('empresas_onboarding').upsert({clave,empresa:clave==='global_solutions'?'global_solutions':null,datos,actualizado:new Date().toISOString(),actualizado_por:user.nombre},{onConflict:'clave'});
+  if(r.error)return toast('No se pudo guardar');let nuevos=[];
+  if(clave==='global_solutions'){const ex=((await supa.from('kaptura_conductores').select('nombre')).data||[]).map(x=>demoNorm(x.nombre));
+    nuevos=e.conductores.filter(c=>!ex.includes(demoNorm(c)));if(nuevos.length){const ri=await supa.from('kaptura_conductores').insert(nuevos.map(n=>({nombre:n,empresa:'global_solutions',activo:true})));if(ri.error){toast('Ficha guardada; conductores nuevos no se pudieron agregar');return}}}
+  _demo._clave=clave;$('dm-out').innerHTML='<div style="margin-top:12px;font-weight:800">✔ Guardado en Kaptura'+(nuevos.length?' · conductores nuevos: '+nuevos.map(demoEsc).join(', '):'')+'</div>'}
+
 
 // ═══ ALERTAS DE ADMINISTRACIÓN (Carlos 01-11): tabla alertas_admin; las ven Carlos, Claudio y administración hasta marcarlas resueltas ═══
 let _alAdm=[];
