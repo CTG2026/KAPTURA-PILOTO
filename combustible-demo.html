@@ -130,7 +130,7 @@ function demo(){const R=regs(),M=E.equipos.filter(q=>MOTOR(q.t));
   +(R.some(r=>r.ej)?'<div class="mut" style="margin-top:8px">Incluye datos de ejemplo. <a href="#" style="color:var(--gold)" onclick="borrarEj();return false">Borrar ejemplo</a></div>':'')
   +'<details><summary>Equipos de la empresa ('+E.equipos.length+')</summary>'+E.equipos.map(q=>'<div class="row"><b style="flex:0 0 90px">'+esc(q.p)+'</b><span class="mut">'+esc(q.t)+(MOTOR(q.t)?' · ref. '+n2(E.ref[q.t])+' km/l':' · sin motor propio')+'</span></div>').join('')+'</details>'
   +'<details><summary>Cómo funciona en Kaptura</summary><div class="mut" style="font-size:15px">1. El conductor carga combustible.<br>2. Saca la foto del tablero en Kaptura y escribe el kilometraje.<br>3. Kaptura une la foto con la carga de la tarjeta '+esc(E.comb)+' por hora y patente.<br>4. El rendimiento por patente se calcula solo, con aviso ⚠ si cae más de 15% bajo la referencia.</div></details>'
-  +'<button class="btn b2" onclick="location.hash=\'\'">Crear otra empresa</button>';
+  +'';
 }
 function tog(p){const o=!(window._acc=window._acc||{})[p];window._acc[p]=o;$('ar-'+p).textContent=o?'▾':'▸';document.querySelectorAll('.fr-'+p).forEach(r=>r.style.display=o?'':'none')}
 function borrarEj(){ls.set(keyReg(),regs().filter(r=>!r.ej));demo()}
