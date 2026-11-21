@@ -462,6 +462,12 @@ body.pc .tv{display:none}body:not(.pc) .tp{display:none}
   <button class="btn2" onclick="atras()"><span class="tv">← Volver</span><span class="tp">← Atrás</span></button>
 </section>
 
+<section class="screen" id="s-demo">
+  <h1>⛽ Demo combustible</h1>
+  <div class="sub">Crear empresa y generar el link de la demo (foto del tablero + rendimiento km/l)</div>
+  <div id="demo-box"></div>
+  <button class="btn2" onclick="atras()"><span class="tv">← Volver</span><span class="tp">← Atrás</span></button>
+</section>
 <section class="screen" id="s-empresa">
   <h1>Empresa</h1>
   <div class="sub">Transportes Madrid Gaete SpA · datos para copiar y enviar</div>
@@ -2001,7 +2007,7 @@ function aplicarVista(){if(!(user&&['administrador','administracion','coordinado
   ['btn-res','btn-cos'].forEach(i=>{if($(i))$(i).style.display=verResultado()?'block':'none'});if($('btn-efe'))$('btn-efe').style.display=esCarlos()?'block':'none';if($('btn-piloto'))$('btn-piloto').style.display=esCarlos()?'block':'none';if($('btn-flu'))$('btn-flu').style.display=esCarlos()?'block':'none';['btn-pil','btn-spot','btn-caja'].forEach(i=>{if($(i))$(i).style.display=(esAdminTotal()||(i==='btn-spot'&&user&&user.rol==='coordinador'))?'block':'none'});
   const cambiar=user&&user.rol==='administracion'?'<button onclick="EMP_ELEGIDA=false;aplicarVista();ir(\'s-emp\')">🔄 Cambiar empresa</button>':'';
   if(user.rol==='administracion'&&!EMP_ELEGIDA){$('pcnav').innerHTML='<div class="t">KAPTURA</div><div class="m" style="padding:10px">Elige una empresa para ver su menú.</div>';return} /* sin menú hasta elegir empresa (Carlos 06-11) */
-  if(EMP_ACT!==EMPRESA){$('pcnav').innerHTML='<div class="t">KAPTURA · '+EMP_NOM[EMP_ACT].toUpperCase()+'</div><button data-s="s-home" onclick="ir(\'s-home\')">🏠 Inicio: tareas y alertas</button>'+cambiar+archNav();archNavCargar();return}
+  if(EMP_ACT!==EMPRESA){$('pcnav').innerHTML='<div class="t">KAPTURA · '+EMP_NOM[EMP_ACT].toUpperCase()+'</div><button data-s="s-home" onclick="ir(\'s-home\')">🏠 Inicio: tareas y alertas</button>'+(user&&user.rol==='administracion'?'<button data-s="s-demo" onclick="verDemo()">⛽ Demo combustible · crear empresa</button>':'')+cambiar+archNav();archNavCargar();return}
   const adm=esAdmOp(),sb='padding-left:24px';
   const bt=i=>$(i)&&$(i).style.display!=='none'?'<button data-s="'+NAV_SCR[i]+'" onclick="$(\''+i+'\').click()" style="'+sb+'">'+$(i).textContent.replace(/\s*\(\d+\)$/,'')+'</button>':'';
   const grp=(t,h)=>h?'<details class="ng" ontoggle="if(this.open)document.querySelectorAll(\'#pcnav details.ng\').forEach(x=>{if(x!==this)x.open=false})"><summary style="list-style:none;cursor:pointer;font:700 14px \'Cifras\',\'DM Sans\',sans-serif;padding:10px;border-radius:8px">'+t+'</summary>'+h+'</details>':'';
@@ -2192,6 +2198,46 @@ async function editarTarea(id){const t=_tareasEd.find(x=>x.id===id);if(!t)return
   else if(v.f)o.fecha_limite=v.f;
   const {error}=await supa.from('tareas').update(o).eq('id',id).eq('empresa',EMP_ACT);toast(error?'No se pudo guardar':o.activa?'Tarea guardada':'Tarea eliminada');tareasHoy()}
 function elegirEmp(e){EMP_ACT=e;EMP_ELEGIDA=true;ARCH.cur=null;ARCH.carps=[];document.body.classList.toggle('global',e!==EMPRESA);$('saludo').textContent=e===EMPRESA?'Hola '+user.nombre.split(' ')[0]:EMP_NOM[e];$('hdr-user').textContent='👤 '+user.nombre.split(' ')[0]+' · '+EMP_NOM[e];aplicarVista();ir('s-home')}
+/* ═══ DEMO COMBUSTIBLE · ONBOARDING (Carlos 21-11) ═══ Solo Administración, menú de Global Solutions. Arma el link de combustible-demo.html (datos en #d=, base64url). No guarda nada en Supabase; el último formulario queda en este equipo (localStorage). */
+const DEMO_TIPOS=[['Tracto',2.6,1],['Camión',3.5,1],['Camión thermo',3.5,1],['Camión con carro',2.6,1],['Semirremolque thermo',null,0],['Semirremolque',null,0],['Carro',null,0]];
+const DEMO_COMB=['Aramco','Copec','Shell','Otro'];
+const DEMO_GS={nombre:'Global Solutions',rut:'78.303.134-5',dir:'LT 1 Y 2 PARRAL DE PUREN, COLTAUCO',contacto:'Pablo Riquelme',fono:'',
+  equipos:[{p:'DSDV36',t:'Camión thermo'},{p:'XR8555',t:'Camión con carro'},{p:'WR9192',t:'Camión con carro'},{p:'GKFD84',t:'Camión con carro'},{p:'GCFF12',t:'Tracto'},{p:'BPLB35',t:'Tracto'},{p:'JK9506',t:'Semirremolque thermo'}],
+  ref:{'Tracto':2.5,'Camión con carro':2.5,'Camión thermo':3.5},
+  conductores:['Manuel Madrid','Francisco Mancilla','Felipe Madariaga','Francisco Medina','Pablo Riquelme','Sebastián Zúñiga'],comb:'Aramco'};
+const demoEsc=t=>String(t==null?'':t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
+const demoMotor=t=>(DEMO_TIPOS.find(x=>x[0]===t)||[0,0,0])[2]===1;
+const demoEnc=o=>btoa(String.fromCharCode(...new TextEncoder().encode(JSON.stringify(o)))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+let _demo=null;
+function verDemo(cual){
+  if(!user||user.rol!=='administracion')return;
+  let g=null;try{g=JSON.parse(localStorage.getItem('tm_demo_ob')||'null')}catch(e){}
+  _demo=JSON.parse(JSON.stringify(cual==='vacia'?{nombre:'',rut:'',dir:'',contacto:'',fono:'',equipos:[{p:'',t:'Tracto'}],ref:{},conductores:[],comb:'Aramco'}:cual==='gs'||!g?DEMO_GS:g));
+  const e=_demo,F='margin-top:10px;display:block;font-weight:700',D='style="margin-top:10px;border:1px solid var(--border);border-radius:10px;padding:0 10px"',S='style="cursor:pointer;padding:10px 0;font-weight:800"';
+  $('demo-box').innerHTML='<div style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0"><button class="btn2" style="flex:1;margin:0" onclick="verDemo(\'gs\')">🌐 Cargar Global Solutions</button><button class="btn2" style="flex:1;margin:0" onclick="verDemo(\'vacia\')">➕ Empresa nueva (vacía)</button></div>'
+  +'<details open '+D+'><summary '+S+'>1. Empresa</summary><label style="'+F+'">Nombre</label><input id="dm-nom" value="'+demoEsc(e.nombre)+'"><label style="'+F+'">RUT</label><input id="dm-rut" value="'+demoEsc(e.rut)+'"><label style="'+F+'">Dirección</label><input id="dm-dir" value="'+demoEsc(e.dir||'')+'"><label style="'+F+'">Contacto</label><input id="dm-con" value="'+demoEsc(e.contacto)+'"><label style="'+F+'">Teléfono del contacto</label><input id="dm-fono" type="tel" inputmode="tel" value="'+demoEsc(e.fono||'')+'" placeholder="+56 9 …" style="margin-bottom:10px"></details>'
+  +'<details '+D+'><summary '+S+'>2. Equipos <span id="dm-neq" style="font-weight:400"></span></summary><div id="dm-eq"></div><button class="btn2" style="margin-bottom:10px" onclick="demoLeer();_demo.equipos.push({p:\'\',t:\'Tracto\'});demoEqPintar()">+ Agregar equipo</button></details>'
+  +'<details '+D+'><summary '+S+'>3. Rendimiento de referencia (km/l)</summary><div id="dm-ref" style="padding-bottom:10px"></div></details>'
+  +'<details '+D+'><summary '+S+'>4. Conductores <span style="font-weight:400">(opcional)</span></summary><div id="dm-cd"></div><button class="btn2" style="margin-bottom:10px" onclick="demoLeer();_demo.conductores.push(\'\');demoCdPintar()">+ Agregar conductor</button></details>'
+  +'<details '+D+'><summary '+S+'>5. Combustible</summary><label style="'+F+'">Proveedor de tarjeta</label><select id="dm-comb" style="margin-bottom:10px">'+DEMO_COMB.map(c=>'<option'+(c===e.comb?' selected':'')+'>'+c+'</option>').join('')+'</select></details>'
+  +'<button class="big" style="margin-top:14px" onclick="demoCrear()">✔ Crear empresa y generar link</button><div id="dm-out"></div>';
+  demoEqPintar();demoCdPintar();ir('s-demo')}
+function demoLeer(){const e=_demo;e.nombre=$('dm-nom').value.trim();e.rut=$('dm-rut').value.trim();e.dir=$('dm-dir').value.trim();e.contacto=$('dm-con').value.trim();e.fono=$('dm-fono').value.trim();e.comb=$('dm-comb').value;
+  e.equipos=[...document.querySelectorAll('.dm-eq-row')].map(r=>({p:r.querySelector('input').value.trim().toUpperCase().replace(/[^A-Z0-9]/g,''),t:r.querySelector('select').value}));
+  document.querySelectorAll('.dm-ref-in').forEach(i=>{const v=parseFloat(String(i.value).replace(',','.'));if(v>0)e.ref[i.dataset.t]=v});
+  e.conductores=[...document.querySelectorAll('.dm-cd-row input')].map(i=>i.value.trim()).filter(Boolean);return e}
+function demoEqPintar(){const e=_demo;$('dm-eq').innerHTML=e.equipos.map((q,i)=>'<div class="dm-eq-row" style="display:flex;gap:6px;margin-top:8px"><input value="'+demoEsc(q.p)+'" placeholder="Patente" style="text-transform:uppercase;flex:0 0 110px" onchange="demoLeer();demoRefPintar()"><select onchange="demoLeer();demoRefPintar()">'+DEMO_TIPOS.map(t=>'<option'+(t[0]===q.t?' selected':'')+'>'+t[0]+'</option>').join('')+'</select><button class="btn2" style="width:auto;margin:0;padding:8px 12px" onclick="demoLeer();_demo.equipos.splice('+i+',1);demoEqPintar()">✕</button></div>').join('');$('dm-neq').textContent='('+e.equipos.filter(q=>q.p).length+')';demoRefPintar()}
+function demoRefPintar(){const e=_demo,ts=[...new Set(e.equipos.map(q=>q.t))].filter(demoMotor);$('dm-ref').innerHTML=ts.length?ts.map(t=>'<div style="display:flex;gap:8px;align-items:center;margin-top:8px"><div style="flex:1">'+t+'</div><input class="dm-ref-in" data-t="'+demoEsc(t)+'" type="number" step="0.1" inputmode="decimal" value="'+(e.ref[t]??(DEMO_TIPOS.find(x=>x[0]===t)||[])[1])+'" style="flex:0 0 100px;text-align:center"><div>km/l</div></div>').join('')+'<div class="sub" style="margin-top:6px">Semirremolques y carros no llevan motor propio: no se mide km/l.</div>':'<div class="sub">Agregue equipos primero.</div>'}
+function demoCdPintar(){$('dm-cd').innerHTML=_demo.conductores.map((c,i)=>'<div class="dm-cd-row" style="display:flex;gap:6px;margin-top:8px"><input value="'+demoEsc(c)+'" placeholder="Nombre"><button class="btn2" style="width:auto;margin:0;padding:8px 12px" onclick="demoLeer();_demo.conductores.splice('+i+',1);demoCdPintar()">✕</button></div>').join('')}
+function demoCrear(){const e=demoLeer();e.equipos=e.equipos.filter(q=>q.p);
+  if(!e.nombre)return toast('Falta el nombre de la empresa');
+  if(!e.equipos.some(q=>demoMotor(q.t)))return toast('Agregue al menos un equipo con motor');
+  const ts=new Set(e.equipos.filter(q=>demoMotor(q.t)).map(q=>q.t));Object.keys(e.ref).forEach(k=>{if(!ts.has(k))delete e.ref[k]});ts.forEach(t=>{if(!e.ref[t])e.ref[t]=(DEMO_TIPOS.find(x=>x[0]===t)||[])[1]});
+  try{localStorage.setItem('tm_demo_ob',JSON.stringify(e))}catch(x){}
+  const url=new URL('combustible-demo.html',location.href).href+'#d='+demoEnc({v:1,...e});
+  $('dm-out').innerHTML='<div style="margin-top:14px;font-weight:800">✔ Link de la demo de '+demoEsc(e.nombre)+':</div><div id="dm-url" style="word-break:break-all;font-size:12px;background:var(--surface2);border-radius:8px;padding:8px;margin-top:6px">'+demoEsc(url)+'</div><button class="btn2" onclick="demoCopiar()">📋 Copiar link</button><a class="btn2" style="display:block;text-align:center;text-decoration:none;box-sizing:border-box" target="_blank" rel="noopener" href="'+demoEsc(url)+'">Abrir la demo</a>'}
+function demoCopiar(){const t=$('dm-url').textContent;(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast('Link copiado'),()=>{const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();document.execCommand('copy');a.remove();toast('Link copiado')})}
+
 // ═══ ALERTAS DE ADMINISTRACIÓN (Carlos 01-11): tabla alertas_admin; las ven Carlos, Claudio y administración hasta marcarlas resueltas ═══
 let _alAdm=[];
 async function alertaAdm(){const box=$('alerta-adm');if(!box)return;box.innerHTML='';if(!esAdmin()||!supa)return;const u0=user;

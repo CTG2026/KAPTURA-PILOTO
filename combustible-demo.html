@@ -124,7 +124,7 @@ function demo(){const R=regs(),M=E.equipos.filter(q=>MOTOR(q.t));
       return '<tr class="sum" onclick="tog(\''+p+'\')"><td><b><span id="ar-'+p+'">'+(op?'▾':'▸')+'</span> '+esc(p)+'</b><div class="sub">'+esc(tp)+' · '+dm(L[0].d0)+' → '+dm(u.d1)+'</div></td><td><b>'+n1(tl)+'</b></td><td><b>'+n1(tk)+'</b></td><td></td><td>'+kl(u.ac,u.ref)+'</td><td></td></tr>'
       +L.map(o=>'<tr class="fr-'+p+'" style="'+(op?'':'display:none')+'"><td style="padding-left:18px;font-size:13px">'+dm(o.d0)+' → '+dm(o.d1)+'</td><td>'+n1(o.l)+'</td><td>'+n1(o.dk)+'</td><td>'+kl(o.kl,o.ref)+'</td><td>'+n2(o.ac)+'</td><td style="text-align:center">'+(o.img?'<a href="'+o.img+'" target="_blank" style="text-decoration:none;font-size:18px">📷</a>':'')+'</td></tr>').join('')}).join('')+'</table>':'<div class="mut">Aún no hay dos registros de la misma patente.</div>';
   const nm=E.equipos.filter(q=>!MOTOR(q.t));
-  $('app').innerHTML='<div class="brand">KAPTURA · '+esc(E.nombre.toUpperCase())+'</div>'
+  $('app').innerHTML='<div class="brand">KAPTURA · '+esc(E.nombre.toUpperCase())+'</div>'+(E.dir?'<div class="mut" style="margin-top:2px">'+esc(E.dir)+'</div>':'')
   +'<button class="btn b3" style="font-size:20px;padding:18px" onclick="$(\'cam\').click()">⛽ FOTO NIVEL COMBUSTIBLE</button>'
   +'<h1 style="margin-top:18px">⛽ Rendimiento combustible</h1><div class="mut">Km entre registro de odómetros.</div>'+tab
   +(R.some(r=>r.ej)?'<div class="mut" style="margin-top:8px">Incluye datos de ejemplo. <a href="#" style="color:var(--gold)" onclick="borrarEj();return false">Borrar ejemplo</a></div>':'')
@@ -156,7 +156,7 @@ $('ov-pat').onchange=ovVal;
 /* ---------- Inicio ---------- */
 window.addEventListener('hashchange',()=>location.reload());
 const h=location.hash.match(/#d=([\w-]+)/);
-if(h){try{E=dec(h[1]);demo()}catch(e){$('app').innerHTML='<h1>Link no válido</h1><button class="btn b2" onclick="location.hash=\'\';location.reload()">Crear empresa</button>'}}else onboarding();
+if(h){try{E=dec(h[1]);demo()}catch(e){$('app').innerHTML='<h1>Link no válido</h1><button class="btn b2" onclick="location.hash=\'\';location.reload()">Crear empresa</button>'}}else $('app').innerHTML='<div class="brand">KAPTURA</div><h1>⛽ Rendimiento combustible</h1><div class="mut">Esta demo se abre con el link que le envía Kaptura. Pida su link a su contacto en Kaptura.</div>';
 </script>
 </body>
 </html>
