@@ -1304,12 +1304,13 @@ async function difAprobar(i,bx){const x=(window._difL||[])[i];if(!x)return;const
   difPanel(bx);if(bx==='pil-dif')pilProy()}
 async function difDescartar(i,bx){const x=(window._difL||[])[i];if(!x)return;const {error}=await supa.from('flujo_diferencias').update({estado:'descartada',resuelto_por:user.nombre,resuelto:new Date().toISOString()}).eq('id',x.id);toast(error?'No se pudo guardar':'Descartada');difPanel(bx)}
 /* ── Aramco ── */
+/* Alias de patentes en cartolas Aramco (Carlos 21-11): la patente se graba corregida; el documento interno usa la original para no duplicar */ const PAT_ALIAS={BPBL35:'BPLB35',DSDV36:'DVDS36'};
 async function carAramco(hojas){let H=null,rows=null;/* Portal Aramco: 'Volumen (L)' en vez de litros (Carlos 09-11) */for(const h of hojas){H=carHdr(h.r,['fecha','patente','litro'])||carHdr(h.r,['fecha','patente','volumen']);if(H){rows=h.r;break}}if(!H){carPrev('Formato no reconocido (no encuentro FECHA / PATENTE / LITROS o VOLUMEN). Pásaselo a Claude.');return}
   const c=k=>H.col(k),cF=c('fecha'),cP=c('patente'),cL=c('litro')>=0?c('litro'):c('volumen'),cIva=H.h.findIndex(x=>/^iva/.test(x)),cT=[c('total pago'),c('monto pagado'),c('total pagado'),c('monto'),c('total')].find(x=>x>=0),cDoc=[c('autoriz'),c('guia'),c('folio'),c('documento'),c('n°')].find(x=>x>=0),cH=H.h.findIndex(x=>x==='hora');
   if(cT==null||cT<0){carPrev('No encuentro la columna del monto pagado. Pásaselo a Claude.');return}
   const cs=[];for(let i=H.i+1;i<rows.length;i++){const r=rows[i]||[],fe=carFecha(r[cF]),l=carNum(r[cL]),t=carNum(r[cT]);if(!fe||!l||!t)continue;const pa=String(r[cP]||'').replace(/[\s\-·.]/g,'').toUpperCase()||null;
     const doc=cDoc!=null&&cDoc>=0&&r[cDoc]!=null&&String(r[cDoc]).trim()?String(r[cDoc]).trim():fe+'-'+(cH>=0?String(r[cH]||''):'')+'-'+pa+'-'+l;const ivF=cIva>=0?carNum(r[cIva]):null,iva=ivF!=null?ivF:Math.round(t*19/119*100)/100,ts=r[cF] instanceof Date&&!isNaN(r[cF])?r[cF].toISOString():null;
-    cs.push({fuente:'aramco',documento:doc,fecha:fe,ts,patente:pa,litros:l,total:t,iva,nota:'Cargado desde Kaptura ('+_car.archivo+')'+(ivF!=null?'':'; IVA estimado')})}
+    cs.push({fuente:'aramco',documento:doc,fecha:fe,ts,patente:pa&&PAT_ALIAS[pa]||pa,litros:l,total:t,iva,nota:'Cargado desde Kaptura ('+_car.archivo+')'+(ivF!=null?'':'; IVA estimado')})}
   if(!cs.length){carPrev('No encontré cargas en el archivo.');return}
   const f0=cs.reduce((a,m)=>m.fecha<a?m.fecha:a,'9999'),f1=cs.reduce((a,m)=>m.fecha>a?m.fecha:a,'0000'),ex=((await supa.from('combustible_cargas').select('documento,fecha,patente,litros').eq('empresa',EMP_ACT).eq('fuente','aramco').gte('fecha',f0).lte('fecha',f1)).data||[]);
   const k=x=>x.fecha+'|'+x.patente+'|'+(+x.litros).toFixed(2),ya=new Set(ex.map(x=>x.documento)),yk=new Set(ex.map(k)),nu=cs.filter(x=>!ya.has(x.documento)&&!yk.has(k(x)));
