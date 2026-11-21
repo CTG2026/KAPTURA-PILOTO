@@ -16,6 +16,7 @@ Si haces cambios relevantes, actualiza ese registro (con autorización de Carlos
 - No tocar claves, tokens ni secretos (GitHub Secrets / Supabase Vault).
 - Respuestas breves, en español.
 - No escribir montos, deudas ni datos sensibles en archivos de este repo.
+- Bitácora en el momento (Carlos 21-11-2026): registrar cada cambio en la MISMA respuesta en que se hace — código/datos en `kaptura_bitacora_cambios` (con commit), preguntas/instrucciones de Carlos en `kaptura_bitacora_consultas`, reglas/procesos en `claude_contexto`. Al cerrar la sesión ("listo", "cerramos"), dejar un resumen de lo trabajado.
 
 ## Kaptura (este repo)
 - App: `registro-tm.html` (archivo único HTML+JS). GitHub Pages publica al hacer push a `main`.
