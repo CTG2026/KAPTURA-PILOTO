@@ -658,7 +658,7 @@ async function fcGuardar(btn){if(!_fcF||!user)return;btn.disabled=true;btn.textC
 /* Informe de cargas de combustible por patente (Carlos 19-11): fecha, patente, litros, $, odómetro y rendimiento */
 async function verCargas(){if(!esAdmin())return;ir('s-cargas');const box=$('cg-box');box.textContent='Cargando…';
   try{const n=+($('cg-dias').value||30),d0=new Date();d0.setDate(d0.getDate()-n);
-    const r=await conTope(supa.from('combustible_cargas').select('fecha,ts,patente,litros,total,fuente,nota').gte('fecha',hoyISO(d0)).order('fecha',{ascending:false}),10000);const C=(r&&r.data)||[];
+    const r=await conTope(supa.from('combustible_cargas').select('fecha,ts,patente,litros,total,fuente,nota').eq('empresa',EMPRESA).gte('fecha',hoyISO(d0)).order('fecha',{ascending:false}),10000);const C=(r&&r.data)||[];
     const odo=x=>{const m=String(x.nota||'').match(/od[oó]metro\s*~?\s*([\d\.]+(?:,\d+)?)\s*km/i);return m?+m[1].replace(/\./g,'').replace(',','.'):null};
     const G={};C.forEach(x=>{const p=(x.patente||'Sin patente').toUpperCase();(G[p]=G[p]||[]).push(x)});
     const M=v=>'$'+Math.round(v).toLocaleString('es-CL'),Lt=v=>(Math.round(v*10)/10).toLocaleString('es-CL')+' L',td='padding:5px 6px;border-bottom:1px solid var(--border);font-size:13px',tr=td+';text-align:right';
@@ -672,7 +672,7 @@ async function verFcomb(){ir('s-fcomb');const box=$('fc-box');box.textContent='C
   try{const d0=new Date();d0.setDate(d0.getDate()-31);const desde=hoyISO(d0);
     const [fs,sv,cg]=await Promise.all([conTope(supa.from('fotos_combustible').select('*').eq('empresa',EMPRESA).gte('tomada',new Date(desde+'T00:00:00-03:00').toISOString()).order('tomada',{ascending:false}),10000),
       conTope(supa.from('servicios_piloto').select('fecha,conductor,patente,created_at').eq('empresa',EMPRESA).eq('modo','registro_tm').neq('estado','anulado').gte('fecha',hoyISO(new Date(d0.getTime()-15*864e5))).order('fecha'),10000),
-      conTope(supa.from('combustible_cargas').select('fecha,ts,patente,litros,total,fuente').gte('fecha',desde).order('ts'),10000)]);
+      conTope(supa.from('combustible_cargas').select('fecha,ts,patente,litros,total,fuente').eq('empresa',EMPRESA).gte('fecha',desde).order('ts'),10000)]);
     const F=fs.data||[],S=sv.data||[],C=cg.data||[],pc=x=>String(x||'').toUpperCase().replace(/-\d$/,'').replace(/[^A-Z0-9]/g,'');
     const hm=x=>new Date(x).toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'America/Santiago'});
     const cgDe=f=>{const t=new Date(f.tomada).getTime();return C.filter(x=>x.ts&&x.patente).map(x=>({x,d:t-new Date(x.ts).getTime()})).filter(o=>o.d>=-5*6e4&&o.d<=10*6e4).sort((a,b)=>Math.abs(a.d)-Math.abs(b.d)).map(o=>o.x)[0]||null};
@@ -928,7 +928,7 @@ async function sigCodigo(){
 async function enviar(reg,blobs){
   if(!supa||!navigator.onLine)return false;
   const notas=JSON.parse(reg.notas); notas.fotos=[];
-  if(!notas.diesel){try{const d0=new Date(reg.fecha+'T12:00:00-03:00');d0.setDate(d0.getDate()-30);const rc=await conTope(supa.from('combustible_cargas').select('fecha,litros,total,iva').gte('fecha',hoyISO(d0)).lte('fecha',reg.fecha).order('fecha'),6000);const pd=precioDiesel(reg.fecha,rc.data||[]);if(pd.txt!=='parámetro del Excel')notas.diesel={p:Math.round(pd.p*100)/100,txt:pd.txt,fijado:hoyISO()}}catch(e){}}
+  if(!notas.diesel){try{const d0=new Date(reg.fecha+'T12:00:00-03:00');d0.setDate(d0.getDate()-30);const rc=await conTope(supa.from('combustible_cargas').select('fecha,litros,total,iva').eq('empresa',EMPRESA).gte('fecha',hoyISO(d0)).lte('fecha',reg.fecha).order('fecha'),6000);const pd=precioDiesel(reg.fecha,rc.data||[]);if(pd.txt!=='parámetro del Excel')notas.diesel={p:Math.round(pd.p*100)/100,txt:pd.txt,fijado:hoyISO()}}catch(e){}}
   if(!notas.codigo)notas.codigo=await sigCodigo();
   for(let i=0;i<blobs.length;i++){
     const path='tm/'+reg.fecha.slice(0,7)+'/'+reg.servicio_id+'_'+(i+1)+'_'+Math.random().toString(36).slice(2,10)+'.jpg';
@@ -1078,7 +1078,7 @@ async function verResMes(){
   const {data,error}=await supa.from('servicios_piloto').select('*').eq('empresa',EMPRESA).eq('modo','registro_tm').neq('estado','anulado').gte('fecha',ini).lte('fecha',fin).order('fecha',{ascending:false}).order('servicio_id',{ascending:false});
   if(error){$('res-sub').textContent='Error al leer: '+error.message;return}
   filas=(data||[]).map(r=>({...r,_n:parseNotas(r.notas)}));
-  _gpsRes=[];_cargas=[];try{const d0=new Date(ini+'T12:00:00-03:00');d0.setDate(d0.getDate()-21);const rc=await conTope(supa.from('combustible_cargas').select('fecha,litros,total,iva').gte('fecha',hoyISO(d0)).order('fecha'),10000);_cargas=rc.data||[]}catch(e){}
+  _gpsRes=[];_cargas=[];try{const d0=new Date(ini+'T12:00:00-03:00');d0.setDate(d0.getDate()-21);const rc=await conTope(supa.from('combustible_cargas').select('fecha,litros,total,iva').eq('empresa',EMPRESA).gte('fecha',hoyISO(d0)).order('fecha'),10000);_cargas=rc.data||[]}catch(e){}
   try{const r=await conTope(supa.from('gps_viajes').select('patente,tipo,inicio,fin,km,lat_ini,lon_ini,lat_fin,lon_fin').gte('inicio',new Date(ini+'T00:00:00-03:00').toISOString()).lte('inicio',new Date(fin+'T23:59:59-03:00').toISOString()).order('inicio'),15000);_gpsRes=r.data||[]}catch(e){}
   _resMes={ini,fin,filas,excel:null};try{const rx=await repRpc('resultados',ym);_resMes.excel=rx&&rx.datos?rx.datos:null}catch(e){}await expCargar('resultados',ym); // mes cerrado con informe del Excel (octubre congelado, Carlos 06-11)
   resMesTodo();
@@ -1212,7 +1212,7 @@ function fluSemData(ym,dias){const S=_fluSem,H=S.sc.hasta,dd=x=>new Date(x+'T12:
     heads:Wm.map((w,k)=>({t:'Semana '+(k+1)+(w.ini<=hoy&&hoy<=w.fin?' · en curso':''),s:dm(w.ini)+' al '+dm(w.fin)+' · '+(w.fin<hoy?'real':w.ini>hoy?'proyectado':'real a hoy'),cur:w.ini<=hoy&&hoy<=w.fin})),
     d:{efe:Wm.map(w=>ce.filter(x=>x.f<=w.fin).reduce((t,x)=>t+x.v,0)),noEn:aviso(true),noPa:aviso(false),meses:Wm.map(w=>w.ini),saldo_ini:Wm.map(w=>w.si),ingresos:grupos(true),egresos:grupos(false),neto:Wm.map(w=>w.en-w.sa),saldo_fin:Wm.map(w=>w.sf),piso:_flu.piso||0}}}
 /* ═══ SUBIR CARTOLAS (Carlos 08-11): Santander, Aramco, SII (RCV) y presupuesto de ventas. Cada carga es un lote: resumen antes de guardar, sin duplicados y se puede anular completa. Solo Carlos / Administración. ═══ */
-/* Cartolas por empresa (Carlos 21-11): usa la empresa activa (EMP_ACT); en Global Solutions: Santander, SII y Clasificar (Aramco pendiente: combustible_cargas sin columna empresa) */ let _car=null;
+/* Cartolas por empresa (Carlos 21-11): usa la empresa activa (EMP_ACT); en Global Solutions: Santander, SII y Clasificar (Aramco habilitado 21-11: combustible_cargas.empresa; lecturas de TM filtran por EMPRESA) */ let _car=null;
 const CAR_T={santander:'🏦 Cartola Santander',aramco:'⛽ Cartola Aramco',sii:'🧾 SII · RCV ventas o compras',ppto:'📊 Presupuesto de ventas'};
 const carN=s=>String(s==null?'':s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/\s+/g,' ').trim();
 const carNum=v=>{if(v==null||v==='')return null;if(typeof v==='number')return v;let s=String(v).replace(/[$\s]/g,'');if(/,\d{1,6}$/.test(s))s=s.replace(/\./g,'').replace(',','.');else s=s.replace(/[.,](?=\d{3}(\D|$))/g,'');const n=+s;return isNaN(n)?null:n};
@@ -1311,7 +1311,7 @@ async function carAramco(hojas){let H=null,rows=null;/* Portal Aramco: 'Volumen 
     const doc=cDoc!=null&&cDoc>=0&&r[cDoc]!=null&&String(r[cDoc]).trim()?String(r[cDoc]).trim():fe+'-'+(cH>=0?String(r[cH]||''):'')+'-'+pa+'-'+l;const ivF=cIva>=0?carNum(r[cIva]):null,iva=ivF!=null?ivF:Math.round(t*19/119*100)/100,ts=r[cF] instanceof Date&&!isNaN(r[cF])?r[cF].toISOString():null;
     cs.push({fuente:'aramco',documento:doc,fecha:fe,ts,patente:pa,litros:l,total:t,iva,nota:'Cargado desde Kaptura ('+_car.archivo+')'+(ivF!=null?'':'; IVA estimado')})}
   if(!cs.length){carPrev('No encontré cargas en el archivo.');return}
-  const f0=cs.reduce((a,m)=>m.fecha<a?m.fecha:a,'9999'),f1=cs.reduce((a,m)=>m.fecha>a?m.fecha:a,'0000'),ex=((await supa.from('combustible_cargas').select('documento,fecha,patente,litros').eq('fuente','aramco').gte('fecha',f0).lte('fecha',f1)).data||[]);
+  const f0=cs.reduce((a,m)=>m.fecha<a?m.fecha:a,'9999'),f1=cs.reduce((a,m)=>m.fecha>a?m.fecha:a,'0000'),ex=((await supa.from('combustible_cargas').select('documento,fecha,patente,litros').eq('empresa',EMP_ACT).eq('fuente','aramco').gte('fecha',f0).lte('fecha',f1)).data||[]);
   const k=x=>x.fecha+'|'+x.patente+'|'+(+x.litros).toFixed(2),ya=new Set(ex.map(x=>x.documento)),yk=new Set(ex.map(k)),nu=cs.filter(x=>!ya.has(x.documento)&&!yk.has(k(x)));
   const pp={};nu.forEach(x=>{pp[x.patente||'Sin patente']=(pp[x.patente||'Sin patente']||0)+x.total});_car.datos={cargas:nu};
   carPrev(li('Período',fCL(f0)+' al '+fCL(f1))+li('Cargas en el archivo',cs.length)+li('Nuevas (se guardan)',nu.length)+li('Ya cargadas antes (se omiten)',cs.length-nu.length)+li('Litros nuevos',nu.reduce((a,x)=>a+x.litros,0).toFixed(1)+' L')+li('Total pagado nuevo',fmt$(nu.reduce((a,x)=>a+x.total,0)))+acd('Por patente',Object.entries(pp).map(([p,v])=>li(p,fmt$(v)))),nu.length>0)}
@@ -1342,7 +1342,7 @@ async function carGuardar(){const t=_car.tipo,d=_car.datos;if(!d)return;/* clasi
       for(const x of rec)await supa.from('cartola_reglas').upsert({empresa:EMP_ACT,tipo:'rut',valor:x.rut,categoria:x.c,creado_por:user.nombre},{onConflict:'empresa,tipo,valor'});
       if(difR.length){const fr=difR.map(x=>difFila(x,id));await supa.from('flujo_diferencias').upsert(fr,{onConflict:'empresa,clave',ignoreDuplicates:true});R.dif=difR.length}
       R.sal=d.sal;R.desde=d.desde;R.hasta=d.hasta;const sc=d.movs.filter(m=>!m.categoria&&!m.conciliado).length;if(sc)await supa.from('tareas').insert({empresa:EMP_ACT,titulo:'Clasificar '+sc+' movimientos de la cartola Santander (carga '+fCL(hoyISO())+')',recurrencia:'unica',activa:true,creada_por:user.nombre})}
-    if(t==='aramco'){ok(await supa.from('combustible_cargas').insert(d.cargas.map(x=>({...x,lote_id:id}))));n=d.cargas.length}
+    if(t==='aramco'){ok(await supa.from('combustible_cargas').insert(d.cargas.map(x=>({...x,empresa:EMP_ACT,lote_id:id}))));n=d.cargas.length}
     if(t==='sii'){ok(await supa.from('rcv_documentos').insert(d.docs.map(x=>({...x,lote_id:id}))));n=d.docs.length;R.cxcN=[];R.cxcA=[];
       for(const x of d.cxcN){const cid='SII-'+x.d.folio;ok(await supa.from('cxc_facturas').insert({id:cid,empresa:EMP_ACT,cliente:x.cli,folio:x.d.folio,fecha_emision:x.d.fecha,neto:x.d.neto,total:x.d.total,etapa:'por_cobrar',nota:'Creada desde RCV ventas (Kaptura)',actualizado:new Date().toISOString()}));R.cxcN.push(cid)}
       for(const x of d.cxcA){const dif=Math.round(+x.x.total)!==Math.round(x.d.total);ok(await supa.from('cxc_facturas').update({folio:x.d.folio,fecha_emision:x.d.fecha,etapa:'por_cobrar',...(dif?{neto:x.d.neto,total:x.d.total,nota:(x.x.nota?x.x.nota+' · ':'')+'Factura '+x.d.folio+' del SII por '+fmt$(x.d.total)+' (Kaptura tenía '+fmt$(+x.x.total)+')'}:{}),actualizado:new Date().toISOString()}).eq('id',x.x.id));R.cxcA.push({id:x.x.id,etapa:x.x.etapa||null,...(dif?{neto:x.x.neto,total:x.x.total,nota:x.x.nota||null}:{})})}}
@@ -2007,7 +2007,7 @@ function aplicarVista(){if(!(user&&['administrador','administracion','coordinado
   ['btn-res','btn-cos'].forEach(i=>{if($(i))$(i).style.display=verResultado()?'block':'none'});if($('btn-efe'))$('btn-efe').style.display=esCarlos()?'block':'none';if($('btn-piloto'))$('btn-piloto').style.display=esCarlos()?'block':'none';if($('btn-flu'))$('btn-flu').style.display=esCarlos()?'block':'none';['btn-pil','btn-spot','btn-caja'].forEach(i=>{if($(i))$(i).style.display=(esAdminTotal()||(i==='btn-spot'&&user&&user.rol==='coordinador'))?'block':'none'});
   const cambiar=user&&user.rol==='administracion'?'<button onclick="EMP_ELEGIDA=false;aplicarVista();ir(\'s-emp\')">🔄 Cambiar empresa</button>':'';
   if(user.rol==='administracion'&&!EMP_ELEGIDA){$('pcnav').innerHTML='<div class="t">KAPTURA</div><div class="m" style="padding:10px">Elige una empresa para ver su menú.</div>';return} /* sin menú hasta elegir empresa (Carlos 06-11) */
-  if(EMP_ACT!==EMPRESA){$('pcnav').innerHTML='<div class="t">KAPTURA · '+EMP_NOM[EMP_ACT].toUpperCase()+'</div><button data-s="s-home" onclick="ir(\'s-home\')">🏠 Inicio: tareas y alertas</button>'+(user&&user.rol==='administracion'?'<button data-s="s-demo" onclick="verDemo()">⛽ Demo combustible · crear empresa</button>':'')+(esCarlos()?'<details class="sac"><summary style="list-style:none;cursor:pointer;padding:8px 10px 8px 24px;font-size:14px">▸ 📥 Cartolas</summary>'+[['santander','Santander'],['sii','SII (ventas y compras)'],['cla','Clasificar movimientos']].map(([k,x])=>'<button data-s="s-car-'+k+'" onclick="verCar(\''+k+'\')" style="padding-left:44px">'+x+'</button>').join('')+'</details>':'')+cambiar+archNav();archNavCargar();return}
+  if(EMP_ACT!==EMPRESA){$('pcnav').innerHTML='<div class="t">KAPTURA · '+EMP_NOM[EMP_ACT].toUpperCase()+'</div><button data-s="s-home" onclick="ir(\'s-home\')">🏠 Inicio: tareas y alertas</button>'+(user&&user.rol==='administracion'?'<button data-s="s-demo" onclick="verDemo()">⛽ Demo combustible · crear empresa</button>':'')+(esCarlos()?'<details class="sac"><summary style="list-style:none;cursor:pointer;padding:8px 10px 8px 24px;font-size:14px">▸ 📥 Cartolas</summary>'+[['santander','Santander'],['aramco','Aramco'],['sii','SII (ventas y compras)'],['cla','Clasificar movimientos']].map(([k,x])=>'<button data-s="s-car-'+k+'" onclick="verCar(\''+k+'\')" style="padding-left:44px">'+x+'</button>').join('')+'</details>':'')+cambiar+archNav();archNavCargar();return}
   const adm=esAdmOp(),sb='padding-left:24px';
   const bt=i=>$(i)&&$(i).style.display!=='none'?'<button data-s="'+NAV_SCR[i]+'" onclick="$(\''+i+'\').click()" style="'+sb+'">'+$(i).textContent.replace(/\s*\(\d+\)$/,'')+'</button>':'';
   const grp=(t,h)=>h?'<details class="ng" ontoggle="if(this.open)document.querySelectorAll(\'#pcnav details.ng\').forEach(x=>{if(x!==this)x.open=false})"><summary style="list-style:none;cursor:pointer;font:700 14px \'Cifras\',\'DM Sans\',sans-serif;padding:10px;border-radius:8px">'+t+'</summary>'+h+'</details>':'';
@@ -2041,14 +2041,14 @@ async function pcDash(){const box=$('pc-dash');if(!box)return;const run=++_pcRun
     /* Consultas en paralelo al abrir el inicio (Carlos 09-11): antes iban una tras otra (~9 s) */
     const pm=(()=>{const t=new Date(mes+'-01T12:00:00');t.setMonth(t.getMonth()-1);return hoyISO(t).slice(0,7)})(),ini0=mes+'-01',dC=new Date(ini0+'T12:00:00-03:00');dC.setDate(dC.getDate()-21);const fc0=finMes(pm),nada=Promise.resolve(null),sf=p=>p.catch(()=>null);
     const pre={sv:sf(conTope(supa.from('servicios_piloto').select('*').eq('empresa',EMPRESA).eq('modo','registro_tm').neq('estado','anulado').gte('fecha',ini0).lte('fecha',fin),8000)),cx:sf(leerCxc()),
-      cg:sf(conTope(supa.from('combustible_cargas').select('fecha,ts,patente,fuente,litros,total,iva').gte('fecha',hoyISO(dC)).order('fecha'),10000)),
+      cg:sf(conTope(supa.from('combustible_cargas').select('fecha,ts,patente,fuente,litros,total,iva').eq('empresa',EMPRESA).gte('fecha',hoyISO(dC)).order('fecha'),10000)),
       gp:sf(conTope(supa.from('gps_viajes').select('patente,tipo,inicio,fin,km,lat_ini,lon_ini,lat_fin,lon_fin').gte('inicio',new Date(ini0+'T00:00:00-03:00').toISOString()).lte('inicio',new Date(fin+'T23:59:59-03:00').toISOString()).order('inicio'),15000)),
       pvr:sf(conTope(supa.from('presupuesto_ventas').select('cliente,servicio,desde,viajes,tarifa,total').eq('empresa',EMPRESA).eq('activo',true).eq('mes',mes).order('desde'),8000)),
       pd:sf(conTope(supa.from('presupuesto_dia').select('*').eq('empresa',EMPRESA).eq('mes',mes).lte('fecha',hasta),8000)),
       pvt:sf(conTope(supa.from('presupuesto_ventas').select('total,desde,hasta').eq('empresa',EMPRESA).eq('mes',mes).eq('activo',true),8000)),
       res:esAct?nada:sf(repRpc('resultados',mes)),pil:esAdminTotal()?sf(repRpc('pilares',mes)):nada,flu:esAdminTotal()?sf(repRpc('flujo',mes)):nada,cs:esAct?sf(cartolaSaldo()):nada,prev:esAct&&esAdminTotal()?sf(repRpc('pilares',pm)):nada,
       rc:esAct?sf(conTope(supa.from('cartola_movimientos').select('fecha,monto,descripcion').eq('empresa',EMPRESA).eq('categoria','Recarga prepago Aramco').gt('fecha',fc0).order('fecha'),8000)):nada,
-      cgA:esAct?sf(conTope(supa.from('combustible_cargas').select('fecha,ts,patente,litros,total').eq('fuente','aramco').gt('fecha',fc0).order('ts'),8000)):nada};
+      cgA:esAct?sf(conTope(supa.from('combustible_cargas').select('fecha,ts,patente,litros,total').eq('empresa',EMPRESA).eq('fuente','aramco').gt('fecha',fc0).order('ts'),8000)):nada};
     pre.fs=pre.flu.then(r=>{if(esAct&&r&&r.datos&&esAdminTotal()){if(!_flu)_flu=r.datos;if(!_fluSem)return fluSemCargar()}}).catch(()=>{});
     const sv=((await pre.sv)||{}).data||[];
     const cx0=(await pre.cx)||[],cx=esAct?cx0:cx0.filter(r=>String(r.periodo_desde||r.periodo_hasta||'').slice(0,7)===mes),sum=a=>a.reduce((t,r)=>t+cxcCaja(r),0),hoy=hoyISO();
@@ -2476,7 +2476,7 @@ async function pilProy(nw,quiet){nw=nw||6;const SETW=(k,v)=>{window[(quiet?'_L':
     const [rp,rx,rc,ra,rh]=await Promise.all([conTope(supa.from('cxp_compromisos').select('fecha,acreedor,concepto,categoria,monto,estado').eq('empresa',EMPRESA).neq('estado','pagado').lte('fecha',fin6),10000),
       conTope(supa.from('cxc_facturas').select('cliente,folio,total,vence,etapa,periodo_hasta,solo_contable,sin_monto').eq('empresa',EMPRESA).neq('etapa','cobrada'),10000),
       conTope(supa.from('cartola_movimientos').select('fecha,monto,categoria,nota').eq('empresa',EMPRESA).gt('fecha',mas(cs.hasta,-35)).lte('fecha',cs.hasta),10000),
-      conTope(supa.from('combustible_cargas').select('fecha,total').eq('fuente','aramco').gt('fecha',mas(cs.hasta,-28)).lte('fecha',cs.hasta),10000),
+      conTope(supa.from('combustible_cargas').select('fecha,total').eq('empresa',EMPRESA).eq('fuente','aramco').gt('fecha',mas(cs.hasta,-28)).lte('fecha',cs.hasta),10000),
       conTope(supa.from('cxc_facturas').select('cliente,total,periodo_desde,periodo_hasta,sin_monto').eq('empresa',EMPRESA).order('periodo_hasta',{ascending:false}).limit(60),10000)]);
     const fuera=[],EV=[];
     ((rp&&rp.data)||[]).filter(c=>c.estado!=='anulado'&&c.fecha).forEach(c=>{const m=+c.monto||0;if(m<0){fuera.push('Entrada posible no incluida: '+c.acreedor+' '+fmt$(-m)+' ('+c.categoria+')');return}/* lo vencido y no pagado según la cartola pasa al día de hoy, con "(vencido)" (Carlos 18-11) */const hoyP=hoyISO()>desde?hoyISO():desde,venc=c.fecha<hoyP,f=venc?hoyP:c.fecha,w=wk(f),cc=String(c.concepto||'').trim(),nm=c.acreedor+(cc&&cc.toLowerCase().indexOf(String(c.acreedor).toLowerCase())!==0?' · '+cc:'')+(venc?' (vencido)':''); /* todos los compromisos con su concepto (Carlos 18-11) */if(w){w.sal.push([nm,m]);EV.push({f,t:nm,v:-m})}});
@@ -2525,7 +2525,7 @@ async function pilProy(nw,quiet){nw=nw||6;const SETW=(k,v)=>{window[(quiet?'_L':
       [[5,s5,'Sueldos: saldo del mes'],[15,s15,'Sueldos: anticipo']].forEach(([dd,v,t])=>{if(!v)return;let d=D(w.ini);for(let i=0;i<7;i++){if(d.getDate()===dd&&iso(d)>=desde){w.sal.push([t,v]);break}d.setDate(d.getDate()+1)}})});
     /* Eventos diarios para la caja de la semana: operación promedio repartida de lunes a sábado; sueldos el día 5 y 15 */
     /* Saldo Aramco prepago (Carlos 18-11): el consumo sale del saldo Aramco, no de la caja; la caja solo ve las recargas ($1.000.000 cuando el saldo no alcanza para el día) */
-    {const [rr,rt]=await Promise.all([conTope(supa.from('cartola_movimientos').select('fecha,monto').eq('empresa',EMPRESA).lt('monto',0).or('descripcion.ilike.%ESMAX%,categoria.eq.Recarga prepago Aramco').lte('fecha',cs.hasta),10000),conTope(supa.from('combustible_cargas').select('fecha,total').eq('fuente','aramco'),10000)]);
+    {const [rr,rt]=await Promise.all([conTope(supa.from('cartola_movimientos').select('fecha,monto').eq('empresa',EMPRESA).lt('monto',0).or('descripcion.ilike.%ESMAX%,categoria.eq.Recarga prepago Aramco').lte('fecha',cs.hasta),10000),conTope(supa.from('combustible_cargas').select('fecha,total').eq('empresa',EMPRESA).eq('fuente','aramco'),10000)]);
       const cg=(rt&&rt.data)||[],sm=a=>a.reduce((t,x)=>t+(+x.total||0),0),ultC=cg.reduce((a,x)=>x.fecha>a?x.fecha:a,''),recT=-((rr&&rr.data)||[]).reduce((t,m)=>t+(+m.monto||0),0);
       const RECARGA=1000000,cDia=comb/6,AR={},hoyA=hoyISO();let sa=recT-sm(cg.filter(x=>x.fecha<=cs.hasta));
       for(let f=desde;f<=fin6;f=mas(f,1)){const o={parte:sa,rec:0,cons:0};
@@ -2696,7 +2696,7 @@ async function verRegistros(){
   if(error){$('list-sub').textContent='Error al leer: '+error.message;return}
   filas=(data||[]).map(r=>({...r,_n:parseNotas(r.notas)}));
   // GPS de los días listados (solo para el resultado económico)
-  _gpsRes=[];_cargas=[];if(verResultado()){try{const d0=new Date(desde()+'T12:00:00-03:00');d0.setDate(d0.getDate()-21);const rc=await conTope(supa.from('combustible_cargas').select('fecha,litros,total,iva').gte('fecha',hoyISO(d0)).order('fecha'),10000);_cargas=rc.data||[]}catch(e){}try{const r=await conTope(supa.from('gps_viajes').select('patente,tipo,inicio,fin,km,lat_ini,lon_ini,lat_fin,lon_fin').gte('inicio',new Date(desde()+'T00:00:00-03:00').toISOString()).lte('inicio',new Date(hasta()+'T23:59:59-03:00').toISOString()).order('inicio'),10000);_gpsRes=r.data||[]}catch(e){}}
+  _gpsRes=[];_cargas=[];if(verResultado()){try{const d0=new Date(desde()+'T12:00:00-03:00');d0.setDate(d0.getDate()-21);const rc=await conTope(supa.from('combustible_cargas').select('fecha,litros,total,iva').eq('empresa',EMPRESA).gte('fecha',hoyISO(d0)).order('fecha'),10000);_cargas=rc.data||[]}catch(e){}try{const r=await conTope(supa.from('gps_viajes').select('patente,tipo,inicio,fin,km,lat_ini,lon_ini,lat_fin,lon_fin').gte('inicio',new Date(desde()+'T00:00:00-03:00').toISOString()).lte('inicio',new Date(hasta()+'T23:59:59-03:00').toISOString()).order('inicio'),10000);_gpsRes=r.data||[]}catch(e){}}
   // Entregas en vivo: todas las del conductor ese día (también las hechas después de registrar)
   try{const {data:ev}=await supa.from('entregas').select('*').eq('empresa',EMPRESA).gte('fecha',desde()).lte('fecha',hasta()).neq('estado','prueba').order('ts');
     filas.forEach(r=>{const vivas=(ev||[]).filter(e=>e.servicio_id?e.servicio_id===r.servicio_id:(e.fecha===r.fecha&&e.conductor===r.conductor));const fs=new Set(vivas.map(e=>e.foto));
