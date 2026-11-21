@@ -178,9 +178,9 @@ body.pc .tv{display:none}body:not(.pc) .tp{display:none}
   <div id="cg-box"></div>
 </section>
 <section class="screen" id="s-fcomb">
-  <button class="btn2" onclick="atras()"><span class="tv">← Volver</span><span class="tp">← Atrás</span></button>
   <h2>⛽ Rendimiento combustible</h2>
   <div id="fc-box">Cargando…</div>
+  <button class="btn2" style="margin-top:14px" onclick="atras()"><span class="tv">← Volver</span><span class="tp">← Atrás</span></button>
 </section>
 <section class="screen" id="s-deu">
   <button class="btn2" onclick="atras()"><span class="tv">← Volver</span><span class="tp">← Atrás</span></button>
@@ -230,7 +230,7 @@ body.pc .tv{display:none}body:not(.pc) .tp{display:none}
   <button class="btn2" id="btn-fcomb" style="display:none" onclick="fcFoto()">⛽ FOTO NIVEL COMBUSTIBLE</button>
   <input type="file" id="fc-cam" accept="image/*" capture="environment" style="display:none" onchange="fcElegida(this)">
   <div id="fc-ov" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;padding:16px;overflow:auto"><div style="background:#1c1c1e;color:#fff;border:1px solid #444;border-radius:14px;padding:14px;max-width:480px;margin:20px auto;text-align:center"><b>⛽ Foto nivel combustible</b><img id="fc-img" style="width:100%;border-radius:10px;margin:10px 0"><div style="font-size:12px;font-weight:800;color:#fff;margin-bottom:10px">🕒 La hora y el lugar en que se sacó esta foto quedan registrados.</div><div id="fc-km" style="font-size:14px;margin-bottom:10px"></div><button class="big" id="fc-ok" style="background:#1f7a3a;color:#fff" onclick="fcGuardar(this)">✔ Guardar</button><button class="btn2" onclick="$('fc-ov').style.display='none'">Cancelar</button></div></div>
-  <button class="btn2" id="btn-fcadm" style="display:none" onclick="verFcomb()">⛽ Fotos nivel combustible</button>
+  <button class="btn2" id="btn-fcadm" style="display:none" onclick="verFcomb()">⛽ Rendimiento combustible</button>
   <button class="btn2" id="btn-cargas" style="display:none" onclick="verCargas()">⛽ Cargas de combustible</button>
   <button class="btn2" id="btn-misent" style="display:none" onclick="misEntregas()">📦 Ver mis entregas - puntos</button>
   <button class="btn2" id="btn-ifco" style="display:none" onclick="verIfco()">📄 IFCO pendientes</button>
