@@ -2278,7 +2278,7 @@ async function verGsRend(mes){if(!user||user.rol!=='administracion')return;_gsMe
   const filas=Object.keys(P).sort().map(p=>{const M=[];P[p].forEach(c=>{const o=odo(p,c.t);const u=M.at(-1);if(u&&o!=null&&u.o!=null&&Math.abs(o-u.o)<1){u.l+=c.l;u.n++;return}M.push({t:c.t,l:c.l,o,n:1})});
     let prev=null,km=0,lt=0;M.forEach(x=>{x.km=(prev!=null&&x.o!=null)?x.o-prev:null;x.kml=x.km?x.km/x.l:null;if(x.km){km+=x.km;lt+=x.l}if(x.o!=null)prev=x.o});
     return {p,M,km,lt,kml:lt?km/lt:null,gps:!!G[p]}});
-  const fh=t=>new Date(t).toLocaleString('es-CL',{timeZone:'America/Santiago',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+  const fh=t=>new Date(t).toLocaleString('es-CL',{timeZone:'America/Santiago',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}).replace(',','');
   const meses=[];for(let i=0;i<6;i++){const d=new Date(Date.UTC(new Date().getFullYear(),new Date().getMonth()-i,1));meses.push(d.toISOString().slice(0,7))}
   box.innerHTML='<div style="display:flex;gap:8px;align-items:center;margin:8px 0"><span class="sub">Mes</span><select onchange="verGsRend(this.value)" style="width:auto">'+meses.map(x=>'<option'+(x===_gsMes?' selected':'')+'>'+x+'</option>').join('')+'</select></div>'
    +(()=>{const con=filas.filter(f=>f.kml),sin=filas.filter(f=>!f.kml),th='padding:6px 4px;border-bottom:1px solid var(--border);font-size:13px;color:var(--muted)',td='padding:8px 4px;border-bottom:1px solid var(--border)',tdd='padding:4px 4px 4px 22px;border-bottom:1px solid var(--border);font-size:12px;color:var(--muted)';
