@@ -80,10 +80,10 @@ const keyReg=()=>'kdemo_reg_'+(E.rut||E.nombre).replace(/\W/g,'');
 
 /* ---------- Onboarding ---------- */
 function onboarding(pre){
-  const e=pre||{nombre:'',rut:'',contacto:'',equipos:[{p:'',t:'Tracto'}],ref:{},conductores:[],comb:'Aramco'};
+  const e=pre||{nombre:'',rut:'',contacto:'',fono:'',equipos:[{p:'',t:'Tracto'}],ref:{},conductores:[],comb:'Aramco'};
   window._ob=e;
   $('app').innerHTML='<div class="brand">KAPTURA</div><h1>Nueva empresa</h1><div class="mut">Complete cada sección. Al final se genera el link de la demo.</div>'
-  +'<details open><summary>1. Empresa</summary><label>Nombre</label><input id="ob-nom" value="'+esc(e.nombre)+'" placeholder="Ej: Global Solutions SpA"><label>RUT</label><input id="ob-rut" value="'+esc(e.rut)+'" placeholder="Ej: 76.123.456-7"><label>Contacto</label><input id="ob-con" value="'+esc(e.contacto)+'" placeholder="Nombre de la persona"></details>'
+  +'<details open><summary>1. Empresa</summary><label>Nombre</label><input id="ob-nom" value="'+esc(e.nombre)+'" placeholder="Ej: Global Solutions SpA"><label>RUT</label><input id="ob-rut" value="'+esc(e.rut)+'" placeholder="Ej: 76.123.456-7"><label>Contacto</label><input id="ob-con" value="'+esc(e.contacto)+'" placeholder="Nombre de la persona"><label>Teléfono del contacto</label><input id="ob-fono" type="tel" inputmode="tel" value="'+esc(e.fono||'')+'" placeholder="Ej: +56 9 1234 5678"></details>'
   +'<details><summary>2. Equipos <span class="mut" id="ob-neq"></span></summary><div id="ob-eq"></div><button class="btn b2" onclick="obEqAdd()">+ Agregar equipo</button></details>'
   +'<details><summary>3. Rendimiento de referencia</summary><div class="mut">Km/l esperado por tipo. Valores sugeridos: puede cambiarlos.</div><div id="ob-ref"></div></details>'
   +'<details><summary>4. Conductores <span class="mut">(opcional)</span></summary><div id="ob-cd"></div><button class="btn b2" onclick="obCdAdd()">+ Agregar conductor</button></details>'
@@ -91,7 +91,7 @@ function onboarding(pre){
   +'<button class="btn b1" onclick="obCrear()">✔ Crear empresa</button><div id="ob-out"></div>';
   obEqPintar();obCdPintar();
 }
-function obLeer(){const e=window._ob;e.nombre=$('ob-nom').value.trim();e.rut=$('ob-rut').value.trim();e.contacto=$('ob-con').value.trim();e.comb=$('ob-comb').value;
+function obLeer(){const e=window._ob;e.nombre=$('ob-nom').value.trim();e.rut=$('ob-rut').value.trim();e.contacto=$('ob-con').value.trim();e.fono=$('ob-fono').value.trim();e.comb=$('ob-comb').value;
   e.equipos=[...document.querySelectorAll('.eq-row')].map(r=>({p:r.querySelector('input').value.trim().toUpperCase().replace(/[^A-Z0-9]/g,''),t:r.querySelector('select').value}));
   e.conductores=[...document.querySelectorAll('.cd-row input')].map(i=>i.value.trim()).filter(Boolean);
   document.querySelectorAll('.ref-in').forEach(i=>{const v=parseFloat(String(i.value).replace(',','.'));if(v>0)e.ref[i.dataset.t]=v});return e}
