@@ -625,7 +625,7 @@ const CAP_EST={DSBZ64:1200,ZV7780:1200,CWVH32:300,DZZW14:300,GXYD90:300}; /* lit
 const fcNiv=f=>{const m=String(f.nota||'').match(/nivel=([0-9.]+)/);return m?+m[1]:null};
 function fcFoto(){_fcPos=null;try{if(navigator.geolocation)navigator.geolocation.getCurrentPosition(p=>{_fcPos=p},()=>{},{enableHighAccuracy:true,timeout:20000})}catch(e){}$('fc-cam').value='';$('fc-cam').click()}
 function fcElegida(inp){const f=inp.files&&inp.files[0];if(!f)return;_fcF={f,t:new Date(),km:null,ocr:null,ult:null,leyendo:true};$('fc-img').src=URL.createObjectURL(f);$('fc-ok').disabled=true;$('fc-ok').textContent='✔ Guardar';
-  $('fc-km').innerHTML='<div style="font-weight:800;margin-bottom:6px">📏 Kilometraje del tablero</div><input id="fc-kmin" type="number" inputmode="decimal" step="0.1" oninput="this.dataset.manual=1;fcKmVal()" style="font-size:22px;width:100%;padding:8px;border-radius:8px;text-align:center;box-sizing:border-box"><div id="fc-kmmsg" style="font-size:12px;margin-top:6px"></div>'; /* la casilla aparece de inmediato; la lectura automática la completa si alcanza (Carlos 21-11) */
+  $('fc-km').innerHTML='<div style="font-weight:800;font-size:19px;margin-bottom:8px">📏 Kilometraje</div><input id="fc-kmin" type="number" inputmode="decimal" step="0.1" placeholder="Ej: 602850" oninput="this.dataset.manual=1;fcKmVal()" style="font-size:26px;width:100%;padding:10px;border-radius:10px;text-align:center;box-sizing:border-box"><div id="fc-kmmsg" style="font-size:18px;font-weight:700;margin-top:8px;line-height:1.3"></div>'; /* la casilla aparece de inmediato; la lectura automática la completa si alcanza (Carlos 21-11) */
   $('fc-ov').style.display='block';fcKmVal();fcLeerKm(f)}
 /* Kilometraje leído de la foto del tablero; si no se lee, se pide otra foto (Carlos 14-11) */
 let _fcKmTry=0;const fcKm=f=>{const m=String(f.nota||'').match(/odometro=([0-9.]+)/);return m?+m[1]:null};
@@ -641,9 +641,9 @@ async function fcLeerKm(f){let ult=null;
   const cands=await leerKm(f),km=ult!=null?(cands.filter(v=>v>=ult&&v<=ult+5000).sort((a,b)=>a-b)[0]??null):(cands.filter(v=>v>=10000).sort((a,b)=>b-a)[0]??null);
   if(!_fcF||_fcF.f!==f)return;_fcF.ocr=km;_fcF.leyendo=false;const i=$('fc-kmin');if(i&&km!=null&&!i.dataset.manual)i.value=km;fcKmVal()}
 function fcKmVal(){const i=$('fc-kmin'),ok=$('fc-ok'),m=$('fc-kmmsg');if(!i||!_fcF)return;const v=parseFloat(String(i.value).replace(',','.')),u=_fcF.ult;
-  if(!(v>=1000)){_fcF.km=null;ok.disabled=true;m.innerHTML=_fcF.leyendo?'Leyendo de la foto… o escríbalo mirando el tablero.':'Escríbalo mirando el tablero.';return}
+  if(!(v>=1000)){_fcF.km=null;ok.disabled=true;m.innerHTML='Escriba aquí el kilometraje que marca su tablero.';return}
   _fcF.km=v;ok.disabled=false;
-  m.innerHTML=u!=null&&v<u?'<span style="color:#FFB020;font-weight:800">⚠ Es menor que su último registro ('+u.toLocaleString('es-CL')+' km). Revise antes de guardar.</span>':u!=null&&v>u+5000?'<span style="color:#FFB020;font-weight:800">⚠ Son '+Math.round(v-u).toLocaleString('es-CL')+' km más que su último registro. Revise antes de guardar.</span>':(_fcF.ocr!=null&&v===_fcF.ocr?'Leído de la foto: confirme o corrija.':'Escrito a mano.')}
+  m.innerHTML=u!=null&&v<u?'<span style="color:#FFB020;font-weight:800">⚠ Es menor que su último registro ('+u.toLocaleString('es-CL')+' km). Revise antes de guardar.</span>':u!=null&&v>u+5000?'<span style="color:#FFB020;font-weight:800">⚠ Son '+Math.round(v-u).toLocaleString('es-CL')+' km más que su último registro. Revise antes de guardar.</span>':(_fcF.ocr!=null&&v===_fcF.ocr?'Revise que sea el kilometraje de su tablero y toque Guardar.':'✔ Listo, toque Guardar.')}
 async function fcGuardar(btn){if(!_fcF||!user)return;btn.disabled=true;btn.textContent='Guardando…';
   try{const b=await comprimir(_fcF.f),t=_fcF.t,path='tm/'+hoyISO(t).slice(0,7)+'/combustible_'+t.getTime()+'_'+user.pin+'.jpg';
     const up=await conTope(supa.storage.from(BUCKET).upload(path,b,{contentType:'image/jpeg',upsert:false}),25000);if(up.error)throw up.error;
