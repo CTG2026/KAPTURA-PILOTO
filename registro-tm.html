@@ -64,6 +64,7 @@ body.pc #pcnav{display:flex;flex-direction:column;gap:4px;position:fixed;left:0;
 #pcnav button{background:none;border:none;color:var(--text);text-align:left;font:600 14px 'Cifras','DM Sans',sans-serif;padding:10px;border-radius:8px;cursor:pointer}
 #pcnav button:hover,#pcnav button.on{background:var(--surface2);color:var(--gold)}
 body.pc #s-home>button{display:none!important}
+body.global.gsc #s-home>#btn-fcomb{display:block!important} /* conductor GS: solo foto combustible (Carlos 21-11) */
 body.global #s-home>button,body.global #alerta-sinreg,body.global #alerta-cxc,body.global #alerta-dif,body.global #pc-dash{display:none!important}
 body.pc #s-reg,body.pc #s-pin,body.pc #s-ok{max-width:560px}
 body.pc .tbl{font-size:14px}#rep-tbl tr.sec td{background:#1f3a5f;color:#fff;font-weight:900}#rep-tbl tr.n0 td{font-weight:900;background:#eef2f7}#rep-tbl tr.n1 td:first-child{padding-left:16px;font-weight:700}#rep-tbl tr.n2 td:first-child{padding-left:30px}#rep-tbl tr.n3 td:first-child{padding-left:44px}#rep-tbl tr.n4 td:first-child,#rep-tbl tr.n5 td:first-child{padding-left:58px;color:#555}#rep-tbl tr.x{cursor:pointer}#rep-tbl tr.oc{display:none}body.pc .tbl td{white-space:normal}
@@ -610,11 +611,18 @@ function fmt$(n){return '$'+Math.round(n||0).toLocaleString('es-CL')}
 function hoyISO(d){d=d||new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
 
 // ═══ PIN ═══
+/* Link de empresa (Carlos 21-11): registro-tm.html?e=gs → clave de 4 dígitos validada en Supabase (kaptura_login, tabla kaptura_accesos); sin ?e todo sigue igual */
+const EMP_LINKS={gs:'global_solutions'},EMP_LINK=EMP_LINKS[(new URLSearchParams(location.search).get('e')||ls('tm_emp_link')||'').toLowerCase()]||null; /* el teléfono recuerda la empresa del link */
+async function entrarEmp(p,auto,emp){emp=emp||EMP_LINK;if(!supa){$('pin-err').textContent='Sin conexión';pin='';setTimeout(pintarPin,800);return}
+  let u=null;try{const r=await conTope(supa.rpc('kaptura_login',{p_empresa:emp,p_pin:p}),8000);u=r&&r.data&&r.data[0]||null}catch(e){}
+  if(!u){if(auto){ls('tm_pin',null);return}$('pin-err').textContent='Clave no válida';pin='';setTimeout(pintarPin,600);return}
+  const k='emp:'+emp+':'+p;USUARIOS[k]={nombre:u.nombre,rol:u.rol,patente:'',acoplado:'',empresa:emp,gsc:true};document.body.classList.add('gsc');const cod=Object.keys(EMP_LINKS).find(c=>EMP_LINKS[c]===emp);if(cod)ls('tm_emp_link',cod);entrar(k,auto)}
+if(EMP_LINK){const sp=$('s-pin');if(sp){sp.querySelector('h1').textContent='Ingresa tu clave';sp.querySelector('.sub').textContent='KAPTURA · '+(EMP_NOM[EMP_LINK]||'').toUpperCase();const a=document.createElement('button');a.className='link';a.style.cssText='display:block;margin:18px auto 0';a.textContent='Cambiar empresa';a.onclick=()=>{ls('tm_emp_link',null);location.href=location.pathname};sp.appendChild(a)}}
 (function(){
   const pad=$('pad');
   ['1','2','3','4','5','6','7','8','9','','0','⌫'].forEach(k=>{
     const b=document.createElement('button');b.textContent=k;if(!k){b.style.visibility='hidden'}
-    b.onclick=()=>{ if(k==='⌫')pin=pin.slice(0,-1); else if(pin.length<4)pin+=k; pintarPin(); if(pin.length===4)entrar(); };
+    b.onclick=()=>{ if(k==='⌫')pin=pin.slice(0,-1); else if(pin.length<4)pin+=k; pintarPin(); if(pin.length===4){if(EMP_LINK)entrarEmp(pin);else entrar();} };
     pad.appendChild(b);
   });
 })();
@@ -643,7 +651,7 @@ async function leerKm(file){const out=[];try{if(!window.Tesseract)return out;con
   await leer(c);if(!out.length){const x=c.getContext('2d'),d=x.getImageData(0,0,c.width,c.height),q=d.data;for(let i=0;i<q.length;i+=4){q[i]=q[i+1]=q[i+2]=255-q[i]}x.putImageData(d,0,0);await leer(c)}
 }catch(e){console.log('km',e)}return out}
 async function fcLeerKm(f){let ult=null;
-  try{const r=await supa.from('fotos_combustible').select('nota').eq('pin',user.pin).like('nota','%odometro=%').order('tomada',{ascending:false}).limit(1);ult=r.data&&r.data[0]?fcKm(r.data[0]):null}catch(e){}
+  try{const r=await supa.from('fotos_combustible').select('nota').eq('pin',fcPinId()).like('nota','%odometro=%').order('tomada',{ascending:false}).limit(1);ult=r.data&&r.data[0]?fcKm(r.data[0]):null}catch(e){}
   if(!_fcF||_fcF.f!==f)return;_fcF.ult=ult;fcKmVal();
   const cands=await leerKm(f),km=ult!=null?(cands.filter(v=>v>=ult&&v<=ult+5000).sort((a,b)=>a-b)[0]??null):(cands.filter(v=>v>=10000).sort((a,b)=>b-a)[0]??null);
   if(!_fcF||_fcF.f!==f)return;_fcF.ocr=km;_fcF.leyendo=false;const i=$('fc-kmin');if(i&&km!=null&&!i.dataset.manual)i.value=km;fcKmVal()}
@@ -651,10 +659,11 @@ function fcKmVal(){const i=$('fc-kmin'),ok=$('fc-ok'),m=$('fc-kmmsg');if(!i||!_f
   if(!(v>=1000)){_fcF.km=null;ok.disabled=true;m.innerHTML='Escriba aquí el kilometraje que marca su tablero.';return}
   _fcF.km=v;ok.disabled=false;
   m.innerHTML=u!=null&&v<u?'<span style="color:#FFB020;font-weight:800">⚠ Es menor que su último registro ('+u.toLocaleString('es-CL')+' km). Revise antes de guardar.</span>':u!=null&&v>u+5000?'<span style="color:#FFB020;font-weight:800">⚠ Son '+Math.round(v-u).toLocaleString('es-CL')+' km más que su último registro. Revise antes de guardar.</span>':(_fcF.ocr!=null&&v===_fcF.ocr?'Revise que sea el kilometraje de su tablero y toque Guardar.':'✔ Listo, toque Guardar.')}
+const fcPinId=()=>user.gsc?'gs:'+String(user.nombre).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-'):user.pin; /* conductores por empresa: la clave no se graba en la foto (tabla y URL públicas) */
 async function fcGuardar(btn){if(!_fcF||!user)return;btn.disabled=true;btn.textContent='Guardando…';
-  try{const b=await comprimir(_fcF.f),t=_fcF.t,path='tm/'+hoyISO(t).slice(0,7)+'/combustible_'+t.getTime()+'_'+user.pin+'.jpg';
+  try{const b=await comprimir(_fcF.f),t=_fcF.t,path=(user.gsc?'gs/':'tm/')+hoyISO(t).slice(0,7)+'/combustible_'+t.getTime()+'_'+(user.gsc?fcPinId().slice(3):user.pin)+'.jpg';
     const up=await conTope(supa.storage.from(BUCKET).upload(path,b,{contentType:'image/jpeg',upsert:false}),25000);if(up.error)throw up.error;
-    const c=_fcPos&&_fcPos.coords,{error}=await supa.from('fotos_combustible').insert({empresa:EMPRESA,conductor:user.nombre,pin:user.pin,foto:supa.storage.from(BUCKET).getPublicUrl(path).data.publicUrl,tomada:t.toISOString(),lat:c?c.latitude:null,lon:c?c.longitude:null,precision_m:c?c.accuracy:null,nota:_fcF.km!=null?'odometro='+_fcF.km+(_fcF.ocr===_fcF.km?'':';km=manual'):(_fcF.sinKm?'km=no_leido':null)});if(error)throw error;_fcKmTry=0;
+    const c=_fcPos&&_fcPos.coords,{error}=await supa.from('fotos_combustible').insert({empresa:(user&&user.empresa)||EMPRESA,conductor:user.nombre,pin:fcPinId(),foto:supa.storage.from(BUCKET).getPublicUrl(path).data.publicUrl,tomada:t.toISOString(),lat:c?c.latitude:null,lon:c?c.longitude:null,precision_m:c?c.accuracy:null,nota:_fcF.km!=null?'odometro='+_fcF.km+(_fcF.ocr===_fcF.km?'':';km=manual'):(_fcF.sinKm?'km=no_leido':null)});if(error)throw error;_fcKmTry=0;
     $('fc-ov').style.display='none';_fcF=null;toast('✔ Foto guardada')}catch(e){btn.disabled=false;btn.textContent='✔ Guardar';toast('No se pudo guardar. Intente de nuevo.')}}
 /* Informe de cargas de combustible por patente (Carlos 19-11): fecha, patente, litros, $, odómetro y rendimiento */
 async function verCargas(){if(!esAdmin())return;ir('s-cargas');const box=$('cg-box');box.textContent='Cargando…';
@@ -706,7 +715,7 @@ async function fcNivel(id,v){if(!v)return;let n0='';try{const r=await supa.from(
 async function fcKmSet(id,v){v=parseFloat(String(v).replace(',','.'));if(!(v>=1000))return toast('Kilometraje no válido');let n0='';try{const r=await supa.from('fotos_combustible').select('nota').eq('id',id).single();n0=r.data&&r.data.nota||''}catch(e){}const a=String(n0).split(';').filter(x=>x&&!x.startsWith('odometro=')&&!x.startsWith('km='));a.unshift('odometro='+v);a.push('km=manual');const {error}=await supa.from('fotos_combustible').update({nota:a.join(';')}).eq('id',id);toast(error?'No se pudo guardar':'Kilometraje guardado');if(!error)verFcomb()}
 async function fcPat(id,p){if(!p)return;const {error}=await supa.from('fotos_combustible').update({patente:p}).eq('id',id);toast(error?'No se pudo guardar':'Patente asignada');if(!error)verFcomb()}
 function ordenHome(){document.body.classList.toggle('admhome',!!esAdmin());const h=$('s-home'),ids=esCliente()?['btn-ver','btn-misent','btn-ifco','btn-gps','btn-prof','btn-profA','btn-ent','btn-reg']:['btn-ent','btn-reg','btn-fcomb','btn-ver','btn-misent','btn-fcadm','btn-cargas','btn-ifco','btn-gps','btn-prof','btn-profA','btn-flu','btn-res','btn-cos','btn-efe','btn-rsv','btn-pil','btn-caja','btn-cxc','btn-spot','btn-spotm','btn-links','btn-borr','btn-emp','btn-ctc'];ids.forEach(i=>h.appendChild($(i)))} /* orden de inicio del cliente: servicios, entregas, IFCO, GPS (Carlos 30-10) */
-function salir(){ls('tm_pin',null);user=null;document.body.classList.remove('movnav','navabierto','navoculto','admhome');EMP_ACT=EMPRESA;hdrBrand(EMPRESA);document.body.classList.remove('global');['alerta-adm','alerta-cxc','alerta-dif','tareas-hoy','pc-dash','alerta-sinreg','cxc-box','rep-tbl'].forEach(i=>{const e=$(i);if(e)e.innerHTML=''});document.body.classList.remove('pc');$('pcnav').innerHTML='';const bv=$('btn-vista');if(bv)bv.remove();pin='';pintarPin();$('btn-salir').style.display='none';$('hdr-user').textContent='';_dupOk=false;ir('s-pin')}
+function salir(){ls('tm_pin',null);user=null;document.body.classList.remove('movnav','navabierto','navoculto','admhome','gsc');EMP_ACT=EMPRESA;hdrBrand(EMPRESA);document.body.classList.remove('global');['alerta-adm','alerta-cxc','alerta-dif','tareas-hoy','pc-dash','alerta-sinreg','cxc-box','rep-tbl'].forEach(i=>{const e=$(i);if(e)e.innerHTML=''});document.body.classList.remove('pc');$('pcnav').innerHTML='';const bv=$('btn-vista');if(bv)bv.remove();pin='';pintarPin();$('btn-salir').style.display='none';$('hdr-user').textContent='';_dupOk=false;ir('s-pin')}
 
 // ═══ REGISTRO ═══
 // Borrador: las fotos quedan guardadas en el celular hasta registrar el servicio
@@ -2009,6 +2018,7 @@ function aplicarVista(){if(!(user&&['administrador','administracion','coordinado
   ['btn-res','btn-cos'].forEach(i=>{if($(i))$(i).style.display=verResultado()?'block':'none'});if($('btn-efe'))$('btn-efe').style.display=esCarlos()?'block':'none';if($('btn-piloto'))$('btn-piloto').style.display=esCarlos()?'block':'none';if($('btn-flu'))$('btn-flu').style.display=esCarlos()?'block':'none';['btn-pil','btn-spot','btn-caja'].forEach(i=>{if($(i))$(i).style.display=(esAdminTotal()||(i==='btn-spot'&&user&&user.rol==='coordinador'))?'block':'none'});
   const cambiar=user&&user.rol==='administracion'?'<button onclick="EMP_ELEGIDA=false;aplicarVista();ir(\'s-emp\')">🔄 Cambiar empresa</button>':'';
   if(user.rol==='administracion'&&!EMP_ELEGIDA){$('pcnav').innerHTML='<div class="t">KAPTURA</div><div class="m" style="padding:10px">Elige una empresa para ver su menú.</div>';return} /* sin menú hasta elegir empresa (Carlos 06-11) */
+  if(EMP_ACT!==EMPRESA&&user&&user.gsc){$('pcnav').innerHTML='<div class="t">KAPTURA · '+EMP_NOM[EMP_ACT].toUpperCase()+'</div><button data-s="s-home" onclick="ir(\'s-home\')">🏠 Inicio</button>';return}
   if(EMP_ACT!==EMPRESA){$('pcnav').innerHTML='<div class="t">KAPTURA · '+EMP_NOM[EMP_ACT].toUpperCase()+'</div><button data-s="s-home" onclick="ir(\'s-home\')">🏠 Inicio: tareas y alertas</button>'+(user&&user.rol==='administracion'?'<button data-s="s-demo" onclick="verDemo()">⛽ Demo combustible · crear empresa</button>':'')+(esCarlos()?'<details class="sac"><summary style="list-style:none;cursor:pointer;padding:8px 10px 8px 24px;font-size:14px">▸ 📥 Cartolas</summary>'+[['santander','Santander'],['aramco','Aramco'],['sii','SII (ventas y compras)'],['cla','Clasificar movimientos']].map(([k,x])=>'<button data-s="s-car-'+k+'" onclick="verCar(\''+k+'\')" style="padding-left:44px">'+x+'</button>').join('')+'</details>':'')+cambiar+archNav();archNavCargar();return}
   const adm=esAdmOp(),sb='padding-left:24px';
   const bt=i=>$(i)&&$(i).style.display!=='none'?'<button data-s="'+NAV_SCR[i]+'" onclick="$(\''+i+'\').click()" style="'+sb+'">'+$(i).textContent.replace(/\s*\(\d+\)$/,'')+'</button>':'';
@@ -3230,7 +3240,7 @@ async function spotEnviar(btn){if(!_spot||!_spotFoto)return;btn.disabled=true;bt
     $('spot-form').style.display='none';$('spot-info').innerHTML='<b>✅ Servicio registrado. Gracias.</b><br>Ya puede cerrar esta página.'}
   catch(e){btn.disabled=false;btn.textContent='✅ ENVIAR REGISTRO';toast('No se pudo enviar. Revise la señal e intente de nuevo.')}}
 const _spotTok=new URLSearchParams(location.search).get('spot'),_carpTok=new URLSearchParams(location.search).get('carpeta'),_docsTok=new URLSearchParams(location.search).get('docs'),_cajaTok=new URLSearchParams(location.search).get('caja');
-const guardado=(_spotTok||_carpTok||_docsTok||_cajaTok)?null:ls('tm_pin'); if(_cajaTok)abrirCajaPub(_cajaTok);else if(_docsTok)abrirDocsPub(_docsTok);else if(_carpTok)abrirCarpPub(_carpTok);else if(_spotTok)abrirSpot(_spotTok);else if(guardado&&USUARIOS[guardado]&&Date.now()-Number(ls('tm_ult')||0)<=INACT_MS)entrar(guardado,true); else if(guardado)ls('tm_pin',null);
+const guardado=(_spotTok||_carpTok||_docsTok||_cajaTok)?null:ls('tm_pin'); if(_cajaTok)abrirCajaPub(_cajaTok);else if(_docsTok)abrirDocsPub(_docsTok);else if(_carpTok)abrirCarpPub(_carpTok);else if(_spotTok)abrirSpot(_spotTok);else if(guardado&&String(guardado).startsWith('emp:')&&Date.now()-Number(ls('tm_ult')||0)<=INACT_MS){const g=String(guardado).split(':');entrarEmp(g[2],true,g[1])}else if(guardado&&USUARIOS[guardado]&&Date.now()-Number(ls('tm_ult')||0)<=INACT_MS)entrar(guardado,true); else if(guardado)ls('tm_pin',null);
 
 /* Tarjetas: primero el título y abajo el pilar (Carlos 17-11) */
 (function(){const voltear=r=>{(r.querySelectorAll?r.querySelectorAll('.kpi'):[]).forEach(k=>{const p=[...k.children].find(x=>x.classList.contains('p')),l=[...k.children].find(x=>x.classList.contains('l'));if(p&&l&&p.compareDocumentPosition(l)&Node.DOCUMENT_POSITION_FOLLOWING){k.insertBefore(l,p);p.style.marginTop='2px'}})};
