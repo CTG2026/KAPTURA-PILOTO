@@ -463,6 +463,18 @@ body.pc .tv{display:none}body:not(.pc) .tp{display:none}
   <button class="btn2" onclick="atras()"><span class="tv">← Volver</span><span class="tp">← Atrás</span></button>
 </section>
 
+<section class="screen" id="s-gslink">
+  <h1>🔗 Link conductores</h1>
+  <div class="sub">Link para que cada conductor entre con su clave y registre la foto de combustible</div>
+  <div id="gslink-box"></div>
+  <button class="btn2" onclick="atras()"><span class="tv">← Volver</span><span class="tp">← Atrás</span></button>
+</section>
+<section class="screen" id="s-gsrend">
+  <h1>⛽ Rendimiento combustible</h1>
+  <div class="sub">Km entre cargas Aramco según odómetro GPS ÷ litros cargados</div>
+  <div id="gsrend-box"></div>
+  <button class="btn2" onclick="atras()"><span class="tv">← Volver</span><span class="tp">← Atrás</span></button>
+</section>
 <section class="screen" id="s-demo">
   <h1>⛽ Demo combustible</h1>
   <div class="sub">Crear empresa y generar el link de la demo (foto del tablero + rendimiento km/l)</div>
@@ -612,7 +624,7 @@ function hoyISO(d){d=d||new Date();return d.getFullYear()+'-'+String(d.getMonth(
 
 // ═══ PIN ═══
 /* Link de empresa (Carlos 21-11): registro-tm.html?e=gs → clave de 4 dígitos validada en Supabase (kaptura_login, tabla kaptura_accesos); sin ?e todo sigue igual */
-const EMP_LINKS={gs:'global_solutions'},EMP_LINK=EMP_LINKS[(new URLSearchParams(location.search).get('e')||ls('tm_emp_link')||'').toLowerCase()]||null; /* el teléfono recuerda la empresa del link */
+const EMP_LINKS={gs:'global_solutions'},EMP_URL=EMP_LINKS[(new URLSearchParams(location.search).get('e')||'').toLowerCase()]||null,EMP_LINK=EMP_URL||EMP_LINKS[(ls('tm_emp_link')||'').toLowerCase()]||null; /* el teléfono recuerda la empresa del link */
 async function entrarEmp(p,auto,emp){emp=emp||EMP_LINK;if(!supa){$('pin-err').textContent='Sin conexión';pin='';setTimeout(pintarPin,800);return}
   let u=null;try{const r=await conTope(supa.rpc('kaptura_login',{p_empresa:emp,p_pin:p}),8000);u=r&&r.data&&r.data[0]||null}catch(e){}
   if(!u){if(auto){ls('tm_pin',null);return}$('pin-err').textContent='Clave no válida';pin='';setTimeout(pintarPin,600);return}
@@ -2019,7 +2031,7 @@ function aplicarVista(){if(!(user&&['administrador','administracion','coordinado
   const cambiar=user&&user.rol==='administracion'?'<button onclick="EMP_ELEGIDA=false;aplicarVista();ir(\'s-emp\')">🔄 Cambiar empresa</button>':'';
   if(user.rol==='administracion'&&!EMP_ELEGIDA){$('pcnav').innerHTML='<div class="t">KAPTURA</div><div class="m" style="padding:10px">Elige una empresa para ver su menú.</div>';return} /* sin menú hasta elegir empresa (Carlos 06-11) */
   if(EMP_ACT!==EMPRESA&&user&&user.gsc){$('pcnav').innerHTML='<div class="t">KAPTURA · '+EMP_NOM[EMP_ACT].toUpperCase()+'</div><button data-s="s-home" onclick="ir(\'s-home\')">🏠 Inicio</button>';return}
-  if(EMP_ACT!==EMPRESA){$('pcnav').innerHTML='<div class="t">KAPTURA · '+EMP_NOM[EMP_ACT].toUpperCase()+'</div><button data-s="s-home" onclick="ir(\'s-home\')">🏠 Inicio: tareas y alertas</button>'+(user&&user.rol==='administracion'?'<button data-s="s-demo" onclick="verDemo()">⛽ Demo combustible · crear empresa</button>':'')+(esCarlos()?'<details class="sac"><summary style="list-style:none;cursor:pointer;padding:8px 10px 8px 24px;font-size:14px">▸ 📥 Cartolas</summary>'+[['santander','Santander'],['aramco','Aramco'],['sii','SII (ventas y compras)'],['cla','Clasificar movimientos']].map(([k,x])=>'<button data-s="s-car-'+k+'" onclick="verCar(\''+k+'\')" style="padding-left:44px">'+x+'</button>').join('')+'</details>':'')+cambiar+archNav();archNavCargar();return}
+  if(EMP_ACT!==EMPRESA){$('pcnav').innerHTML='<div class="t">KAPTURA · '+EMP_NOM[EMP_ACT].toUpperCase()+'</div><button data-s="s-home" onclick="ir(\'s-home\')">🏠 Inicio: tareas y alertas</button>'+(user&&user.rol==='administracion'?'<button data-s="s-gsrend" onclick="verGsRend()">⛽ Rendimiento combustible</button><button data-s="s-gslink" onclick="verGsLink()">🔗 Link conductores</button><button data-s="s-demo" onclick="verDemo()">⛽ Demo combustible · crear empresa</button>':'')+(esCarlos()?'<details class="sac"><summary style="list-style:none;cursor:pointer;padding:8px 10px 8px 24px;font-size:14px">▸ 📥 Cartolas</summary>'+[['santander','Santander'],['aramco','Aramco'],['sii','SII (ventas y compras)'],['cla','Clasificar movimientos']].map(([k,x])=>'<button data-s="s-car-'+k+'" onclick="verCar(\''+k+'\')" style="padding-left:44px">'+x+'</button>').join('')+'</details>':'')+cambiar+archNav();archNavCargar();return}
   const adm=esAdmOp(),sb='padding-left:24px';
   const bt=i=>$(i)&&$(i).style.display!=='none'?'<button data-s="'+NAV_SCR[i]+'" onclick="$(\''+i+'\').click()" style="'+sb+'">'+$(i).textContent.replace(/\s*\(\d+\)$/,'')+'</button>':'';
   const grp=(t,h)=>h?'<details class="ng" ontoggle="if(this.open)document.querySelectorAll(\'#pcnav details.ng\').forEach(x=>{if(x!==this)x.open=false})"><summary style="list-style:none;cursor:pointer;font:700 14px \'Cifras\',\'DM Sans\',sans-serif;padding:10px;border-radius:8px">'+t+'</summary>'+h+'</details>':'';
@@ -2249,6 +2261,31 @@ function demoCrear(){const e=demoLeer();e.equipos=e.equipos.filter(q=>q.p);
   const url=new URL('combustible-demo.html',location.href).href+'#d='+demoEnc({v:1,...e});
   $('dm-out').innerHTML='<div style="margin-top:14px;font-weight:800">✔ Link de la demo de '+demoEsc(e.nombre)+':</div><div id="dm-url" style="word-break:break-all;font-size:12px;background:var(--surface2);border-radius:8px;padding:8px;margin-top:6px">'+demoEsc(url)+'</div><button class="btn2" onclick="demoCopiar()">📋 Copiar link</button><a class="btn2" style="display:block;text-align:center;text-decoration:none;box-sizing:border-box" target="_blank" rel="noopener" href="'+demoEsc(url)+'">Abrir la demo</a>'}
 function demoCopiar(){const t=$('dm-url').textContent;(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast('Link copiado'),()=>{const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();document.execCommand('copy');a.remove();toast('Link copiado')})}
+/* ═══ GS: Link conductores y Rendimiento combustible (Carlos 21-11) ═══ Rendimiento = km entre cargas Aramco (combustible_cargas) según odómetro GPS (gps_odometro, Bermann) ÷ litros de la carga que cierra el tramo */
+function verGsLink(){if(!user||user.rol!=='administracion')return;const cod=Object.keys(EMP_LINKS).find(c=>EMP_LINKS[c]===EMP_ACT);if(!cod){toast('Sin link para esta empresa');return}
+  const url=new URL('registro-tm.html',location.href).href.split('?')[0]+'?e='+cod;
+  $('gslink-box').innerHTML='<div id="gsl-url" style="word-break:break-all;font-size:15px;background:var(--surface2);border-radius:10px;padding:12px;margin-top:10px">'+demoEsc(url)+'</div><button class="btn2" onclick="gsLinkCopiar()">📋 Copiar link</button><a class="btn2" style="display:block;text-align:center;text-decoration:none;box-sizing:border-box" target="_blank" rel="noopener" href="'+demoEsc(url)+'">👁 Probar como conductor</a><div class="sub" style="margin-top:12px">Cada conductor entra con su clave de 4 dígitos y solo ve "⛽ FOTO NIVEL COMBUSTIBLE".</div>';ir('s-gslink')}
+function gsLinkCopiar(){const t=$('gsl-url').textContent;(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast('Link copiado'),()=>{const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();document.execCommand('copy');a.remove();toast('Link copiado')})}
+let _gsMes=null;
+async function verGsRend(mes){if(!user||user.rol!=='administracion')return;_gsMes=mes||_gsMes||hoyISO().slice(0,7);ir('s-gsrend');const box=$('gsrend-box');box.innerHTML='<div class="sub">Cargando…</div>';
+  const [y,m]=_gsMes.split('-').map(Number),ini=new Date(Date.UTC(y,m-1,1,3)),fin=new Date(Date.UTC(y,m,1,3)),pre=new Date(ini.getTime()-86400000),pos=new Date(fin.getTime()+86400000);
+  const nf=(v,d)=>Number(v).toLocaleString('es-CL',{minimumFractionDigits:d,maximumFractionDigits:d});
+  let C=[],O=[];try{const [rc,ro]=await Promise.all([conTope(supa.from('combustible_cargas').select('patente,ts,litros').eq('empresa',EMP_ACT).eq('fuente','aramco').gte('ts',ini.toISOString()).lt('ts',fin.toISOString()).order('ts'),10000),
+    (async()=>{let all=[],f=0;for(;;){const r=await conTope(supa.from('gps_odometro').select('patente,ts,odometro').eq('empresa',EMP_ACT).gte('ts',pre.toISOString()).lt('ts',pos.toISOString()).order('ts').range(f,f+999),10000);const d=r.data||[];all=all.concat(d);if(d.length<1000)break;f+=1000}return all})()]);C=rc.data||[];O=ro}catch(e){box.innerHTML='<div class="m">No se pudo cargar.</div>';return}
+  const G={};O.forEach(o=>{(G[o.patente]=G[o.patente]||[]).push([new Date(o.ts).getTime(),+o.odometro])});
+  const odo=(p,t)=>{const R=G[p];if(!R||!R.length||t<R[0][0]||t>R.at(-1)[0])return null;let lo=0,hi=R.length-1;while(hi-lo>1){const mid=(lo+hi)>>1;if(R.at(mid)[0]<=t)lo=mid;else hi=mid}const a=R.at(lo),b=R.at(hi);if(Math.min(t-a[0],b[0]-t)>3600000)return null;return a[0]===b[0]?a[1]:a[1]+(b[1]-a[1])*(t-a[0])/(b[0]-a[0])};
+  const P={};C.forEach(c=>{(P[c.patente]=P[c.patente]||[]).push({t:new Date(c.ts).getTime(),l:+c.litros})});
+  const filas=Object.keys(P).sort().map(p=>{const M=[];P[p].forEach(c=>{const o=odo(p,c.t);const u=M.at(-1);if(u&&o!=null&&u.o!=null&&Math.abs(o-u.o)<1){u.l+=c.l;u.n++;return}M.push({t:c.t,l:c.l,o,n:1})});
+    let prev=null,km=0,lt=0;M.forEach(x=>{x.km=(prev!=null&&x.o!=null)?x.o-prev:null;x.kml=x.km?x.km/x.l:null;if(x.km){km+=x.km;lt+=x.l}if(x.o!=null)prev=x.o});
+    return {p,M,km,lt,kml:lt?km/lt:null,gps:!!G[p]}});
+  const fh=t=>new Date(t).toLocaleString('es-CL',{timeZone:'America/Santiago',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+  const meses=[];for(let i=0;i<6;i++){const d=new Date(Date.UTC(new Date().getFullYear(),new Date().getMonth()-i,1));meses.push(d.toISOString().slice(0,7))}
+  box.innerHTML='<div style="display:flex;gap:8px;align-items:center;margin:8px 0"><span class="sub">Mes</span><select onchange="verGsRend(this.value)" style="width:auto">'+meses.map(x=>'<option'+(x===_gsMes?' selected':'')+'>'+x+'</option>').join('')+'</select></div>'
+   +(filas.length?filas.map(f=>'<details class="card" style="padding:8px 12px;margin:6px 0"><summary style="cursor:pointer;display:flex;justify-content:space-between;gap:8px"><b>'+demoEsc(f.p)+'</b><span>'+(f.kml?'<b>'+nf(f.kml,2)+' km/l</b> · '+nf(f.km,0)+' km · '+nf(f.lt,0)+' L':(f.gps?'Sin tramos completos':'Sin odómetro GPS'))+'</span></summary>'
+     +'<div style="overflow-x:auto"><table style="width:100%;font-size:13px;border-collapse:collapse"><tr><th align="left">Carga</th><th align="right">Litros</th><th align="right">Odómetro GPS</th><th align="right">Km entre cargas</th><th align="right">km/l</th></tr>'
+     +f.M.map(x=>'<tr><td>'+fh(x.t)+(x.n>1?' ('+x.n+')':'')+'</td><td align="right">'+nf(x.l,1)+'</td><td align="right">'+(x.o!=null?nf(x.o,1):'—')+'</td><td align="right">'+(x.km!=null?nf(x.km,1):'—')+'</td><td align="right">'+(x.kml?nf(x.kml,2):'—')+'</td></tr>').join('')+'</table></div></details>').join(''):'<div class="m">Sin cargas Aramco en '+_gsMes+'.</div>')
+   +'<div class="sub" style="margin-top:10px">Odómetro GPS Bermann. El km/l de un tramo varía si no se llena el estanque; el dato confiable es el del período.</div>'}
+
 /* Guardar onboarding en Kaptura (Carlos 21-11): ficha en empresas_onboarding; en GS los conductores nuevos se agregan a kaptura_conductores */
 const demoNorm=t=>String(t||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/\s+/g,' ').trim();
 async function demoGuardar(){if(!supa)return toast('Sin conexión');const e=demoLeer();e.equipos=e.equipos.filter(q=>q.p);
@@ -3240,7 +3277,7 @@ async function spotEnviar(btn){if(!_spot||!_spotFoto)return;btn.disabled=true;bt
     $('spot-form').style.display='none';$('spot-info').innerHTML='<b>✅ Servicio registrado. Gracias.</b><br>Ya puede cerrar esta página.'}
   catch(e){btn.disabled=false;btn.textContent='✅ ENVIAR REGISTRO';toast('No se pudo enviar. Revise la señal e intente de nuevo.')}}
 const _spotTok=new URLSearchParams(location.search).get('spot'),_carpTok=new URLSearchParams(location.search).get('carpeta'),_docsTok=new URLSearchParams(location.search).get('docs'),_cajaTok=new URLSearchParams(location.search).get('caja');
-const guardado=(_spotTok||_carpTok||_docsTok||_cajaTok)?null:ls('tm_pin'); if(_cajaTok)abrirCajaPub(_cajaTok);else if(_docsTok)abrirDocsPub(_docsTok);else if(_carpTok)abrirCarpPub(_carpTok);else if(_spotTok)abrirSpot(_spotTok);else if(guardado&&String(guardado).startsWith('emp:')&&Date.now()-Number(ls('tm_ult')||0)<=INACT_MS){const g=String(guardado).split(':');entrarEmp(g[2],true,g[1])}else if(guardado&&USUARIOS[guardado]&&Date.now()-Number(ls('tm_ult')||0)<=INACT_MS)entrar(guardado,true); else if(guardado)ls('tm_pin',null);
+const guardado=(_spotTok||_carpTok||_docsTok||_cajaTok)?null:ls('tm_pin'); if(_cajaTok)abrirCajaPub(_cajaTok);else if(_docsTok)abrirDocsPub(_docsTok);else if(_carpTok)abrirCarpPub(_carpTok);else if(_spotTok)abrirSpot(_spotTok);else if(guardado&&String(guardado).startsWith('emp:')&&Date.now()-Number(ls('tm_ult')||0)<=INACT_MS){const g=String(guardado).split(':');entrarEmp(g[2],true,g[1])}else if(EMP_URL){} /* link ?e: pantalla de clave de esa empresa, sin borrar la sesión guardada (Carlos 21-11) */ else if(guardado&&USUARIOS[guardado]&&Date.now()-Number(ls('tm_ult')||0)<=INACT_MS)entrar(guardado,true); else if(guardado)ls('tm_pin',null);
 
 /* Tarjetas: primero el título y abajo el pilar (Carlos 17-11) */
 (function(){const voltear=r=>{(r.querySelectorAll?r.querySelectorAll('.kpi'):[]).forEach(k=>{const p=[...k.children].find(x=>x.classList.contains('p')),l=[...k.children].find(x=>x.classList.contains('l'));if(p&&l&&p.compareDocumentPosition(l)&Node.DOCUMENT_POSITION_FOLLOWING){k.insertBefore(l,p);p.style.marginTop='2px'}})};
