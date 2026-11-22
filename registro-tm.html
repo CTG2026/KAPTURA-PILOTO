@@ -64,7 +64,7 @@ body.pc #pcnav{display:flex;flex-direction:column;gap:4px;position:fixed;left:0;
 #pcnav button{background:none;border:none;color:var(--text);text-align:left;font:600 14px 'Cifras','DM Sans',sans-serif;padding:10px;border-radius:8px;cursor:pointer}
 #pcnav button:hover,#pcnav button.on{background:var(--surface2);color:var(--gold)}
 body.pc #s-home>button{display:none!important}
-body.global.gsc #s-home>#btn-gsfotos,body.global.gsc #s-home>#gs-hint,body.global.gscoord #s-home>#btn-gsrend{display:block!important} /* conductor GS: solo foto combustible (Carlos 21-11) */
+body.global.gsc #s-home>#btn-gsfotos,body.global.gscoord #s-home>#btn-gsrend{display:block!important} /* conductor GS: solo foto combustible (Carlos 21-11) */
 body.global #s-home>button,body.global #alerta-sinreg,body.global #alerta-cxc,body.global #alerta-dif,body.global #pc-dash{display:none!important}
 body.pc #s-reg,body.pc #s-pin,body.pc #s-ok{max-width:560px}
 body.pc .tbl{font-size:14px}#rep-tbl tr.sec td{background:#1f3a5f;color:#fff;font-weight:900}#rep-tbl tr.n0 td{font-weight:900;background:#eef2f7}#rep-tbl tr.n1 td:first-child{padding-left:16px;font-weight:700}#rep-tbl tr.n2 td:first-child{padding-left:30px}#rep-tbl tr.n3 td:first-child{padding-left:44px}#rep-tbl tr.n4 td:first-child,#rep-tbl tr.n5 td:first-child{padding-left:58px;color:#555}#rep-tbl tr.x{cursor:pointer}#rep-tbl tr.oc{display:none}body.pc .tbl td{white-space:normal}
@@ -139,7 +139,7 @@ body.pc .tv{display:none}body:not(.pc) .tp{display:none}
 </style>
 </head>
 <body>
-<div class="hdr"><button id="btn-menu" aria-label="Menú" onclick="menuToggle()">☰</button><div class="brand">KAPTURA · TRANSPORTES MADRID</div><span id="hdr-user" style="margin-left:auto;margin-right:10px;font-weight:800;font-size:14px"></span><button class="link" id="btn-salir" style="display:none" onclick="salir()">Salir</button></div>
+<div class="hdr"><button id="btn-menu" aria-label="Menú" onclick="menuToggle()">☰</button><div class="brand">KAPTURA<br>TRANSPORTES MADRID</div><span id="hdr-user" style="margin-left:auto;margin-right:10px;font-weight:800;font-size:14px"></span><button class="link" id="btn-salir" style="display:none" onclick="salir()">Salir</button></div>
 <nav id="pcnav"></nav><div id="navfondo" onclick="document.body.classList.remove('navabierto')"></div>
 <div class="pend" id="pend"></div>
 
@@ -232,7 +232,6 @@ body.pc .tv{display:none}body:not(.pc) .tp{display:none}
   <div id="gs-pend"></div>
   <button class="btn2" id="btn-gsrend" style="display:none" onclick="verGsRend()">⛽ Rendimiento combustible</button>
   <button class="big" id="btn-gsfotos" style="display:none" onclick="gsFotos()">⛽ FOTOS COMBUSTIBLE</button>
-  <div id="gs-hint" style="display:none;margin:14px auto 0;width:fit-content;font-size:17px;font-weight:700;color:var(--text)"><div style="margin-bottom:10px">1️⃣ Primero la MÁQUINA SURTIDORA</div><div>2️⃣ Después el TABLERO DEL CAMIÓN</div></div>
   <input type="file" id="fc-cam" accept="image/*" capture="environment" style="display:none" onchange="fcElegida(this)">
   <input type="file" id="gs-cam1" accept="image/*" capture="environment" style="position:absolute;width:1px;height:1px;opacity:0;left:-9999px" onclick="this.value=''" onchange="gsFoto(1,this)">
   <input type="file" id="gs-cam2" accept="image/*" capture="environment" style="position:absolute;width:1px;height:1px;opacity:0;left:-9999px" onclick="this.value=''" onchange="gsFoto(2,this)">
@@ -2232,7 +2231,7 @@ async function editarTarea(id){const t=_tareasEd.find(x=>x.id===id);if(!t)return
   else if(v.r==='Cada mes'){o.recurrencia='mensual';o.dia_mes=Math.min(28,Math.max(1,+v.m||1))}
   else if(v.f)o.fecha_limite=v.f;
   const {error}=await supa.from('tareas').update(o).eq('id',id).eq('empresa',EMP_ACT);toast(error?'No se pudo guardar':o.activa?'Tarea guardada':'Tarea eliminada');tareasHoy()}
-const hdrBrand=e=>{const b=document.querySelector('.hdr .brand');if(!b)return;const nm=(EMP_NOM[e]||EMP_NOM[EMPRESA]).toUpperCase();if(e&&e!==EMPRESA)b.innerHTML='KAPTURA<br>'+nm;else b.textContent='KAPTURA · '+nm}; /* GS en dos líneas (Carlos 21-11) */ /* encabezado según empresa activa (Carlos 21-11) */
+const hdrBrand=e=>{const b=document.querySelector('.hdr .brand');if(!b)return;const nm=(EMP_NOM[e]||EMP_NOM[EMPRESA]).toUpperCase();b.innerHTML='KAPTURA<br>'+nm}; /* encabezado en dos líneas, TM y GS (Carlos 21-11) */ /* encabezado según empresa activa (Carlos 21-11) */
 function elegirEmp(e){EMP_ACT=e;EMP_ELEGIDA=true;hdrBrand(e);ARCH.cur=null;ARCH.carps=[];document.body.classList.toggle('global',e!==EMPRESA);$('saludo').textContent=user.gsc?'Hola '+user.nombre:e===EMPRESA?'Hola '+user.nombre.split(' ')[0]:EMP_NOM[e];$('hdr-user').textContent='👤 '+(user.gsc?user.nombre:user.nombre.split(' ')[0]+' · '+EMP_NOM[e]);aplicarVista();ir('s-home')}
 /* ═══ DEMO COMBUSTIBLE · ONBOARDING (Carlos 21-11) ═══ Solo Administración, menú de Global Solutions. Arma el link de combustible-demo.html (datos en #d=, base64url). No guarda nada en Supabase; el último formulario queda en este equipo (localStorage). */
 const DEMO_TIPOS=[['Tracto',2.6,1],['Camión',3.5,1],['Camión thermo',3.5,1],['Camión con carro',2.6,1],['Semirremolque thermo',null,0],['Semirremolque',null,0],['Carro',null,0]];
