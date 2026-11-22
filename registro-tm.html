@@ -64,7 +64,7 @@ body.pc #pcnav{display:flex;flex-direction:column;gap:4px;position:fixed;left:0;
 #pcnav button{background:none;border:none;color:var(--text);text-align:left;font:600 14px 'Cifras','DM Sans',sans-serif;padding:10px;border-radius:8px;cursor:pointer}
 #pcnav button:hover,#pcnav button.on{background:var(--surface2);color:var(--gold)}
 body.pc #s-home>button{display:none!important}
-body.global.gsc #s-home>#btn-gsfotos,body.global.gscoord #s-home>#btn-gsrend{display:block!important} /* conductor GS: solo foto combustible (Carlos 21-11) */
+body.global.gsc #s-home>#btn-gsfotos{display:block!important} /* rendimiento oculto para el coordinador por ahora (Carlos 21-11) */ /* conductor GS: solo foto combustible (Carlos 21-11) */
 body.global #s-home>button,body.global #alerta-sinreg,body.global #alerta-cxc,body.global #alerta-dif,body.global #pc-dash{display:none!important}
 body.pc #s-reg,body.pc #s-pin,body.pc #s-ok{max-width:560px}
 body.pc .tbl{font-size:14px}#rep-tbl tr.sec td{background:#1f3a5f;color:#fff;font-weight:900}#rep-tbl tr.n0 td{font-weight:900;background:#eef2f7}#rep-tbl tr.n1 td:first-child{padding-left:16px;font-weight:700}#rep-tbl tr.n2 td:first-child{padding-left:30px}#rep-tbl tr.n3 td:first-child{padding-left:44px}#rep-tbl tr.n4 td:first-child,#rep-tbl tr.n5 td:first-child{padding-left:58px;color:#555}#rep-tbl tr.x{cursor:pointer}#rep-tbl tr.oc{display:none}body.pc .tbl td{white-space:normal}
@@ -2331,7 +2331,7 @@ async function gsLiberar(id){const v=await formulario('Liberar foto incompleta',
   const r=await supa.from('fotos_combustible').select('nota').eq('id',id).single();const n=String(r.data&&r.data.nota||'').replace('estado=incompleta','estado=liberada')+';liberada_por='+String(user.nombre).replace(/[;=]/g,' ')+';motivo='+String(v.m).replace(/[;=]/g,' ')+';liberada_en='+new Date().toISOString();
   const u=await supa.from('fotos_combustible').update({nota:n}).eq('id',id);toast(u.error?'No se pudo liberar':'Liberada');verGsRend()}
 let _gsMes=null;
-async function verGsRend(mes){if(!user||(user.rol!=='administracion'&&!(user.gsc&&user.rol==='coordinador_gs')))return;ir('s-gsrend');const box=$('gsrend-box');box.innerHTML='<div class="sub">Cargando…</div>';
+async function verGsRend(mes){if(!user||user.rol!=='administracion')return; /* solo Administración por ahora (Carlos 21-11) */ir('s-gsrend');const box=$('gsrend-box');box.innerHTML='<div class="sub">Cargando…</div>';
   let meses=[];try{const [a,b]=await Promise.all([conTope(supa.from('gps_odometro').select('ts').eq('empresa',EMP_ACT).order('ts',{ascending:true}).limit(1),8000),conTope(supa.from('gps_odometro').select('ts').eq('empresa',EMP_ACT).order('ts',{ascending:false}).limit(1),8000)]);meses=rendMeses(a.data&&a.data[0]&&hoyISO(new Date(a.data[0].ts)).slice(0,7),b.data&&b.data[0]&&hoyISO(new Date(b.data[0].ts)).slice(0,7))}catch(e){}
   if(!meses.length){box.innerHTML='<div class="m">Sin odómetro GPS cargado.</div>';return}
   _gsMes=mes||(_gsMes&&meses.includes(_gsMes)?_gsMes:meses[0]);const {ini,fin}=rendRango(_gsMes),pre=new Date(ini.getTime()-864e5),pos=new Date(fin.getTime()+864e5);
