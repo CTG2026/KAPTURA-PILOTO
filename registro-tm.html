@@ -64,7 +64,7 @@ body.pc #pcnav{display:flex;flex-direction:column;gap:4px;position:fixed;left:0;
 #pcnav button{background:none;border:none;color:var(--text);text-align:left;font:600 14px 'Cifras','DM Sans',sans-serif;padding:10px;border-radius:8px;cursor:pointer}
 #pcnav button:hover,#pcnav button.on{background:var(--surface2);color:var(--gold)}
 body.pc #s-home>button{display:none!important}
-body.global.gsc #s-home>#btn-gsfotos{display:block!important} /* rendimiento oculto para el coordinador por ahora (Carlos 21-11) */ /* conductor GS: solo foto combustible (Carlos 21-11) */
+body.global.gsc #s-home>#btn-gsfotos{display:block!important}body.global.gscoord #s-home>#btn-gsserv{display:block!important} /* Pablo: registro de servicios GS (Carlos 22-11) */ /* rendimiento oculto para el coordinador por ahora (Carlos 21-11) */ /* conductor GS: solo foto combustible (Carlos 21-11) */
 body.global #s-home>button,body.global #alerta-sinreg,body.global #alerta-cxc,body.global #alerta-dif,body.global #pc-dash{display:none!important}
 body.pc #s-reg,body.pc #s-pin,body.pc #s-ok{max-width:560px}
 body.pc .tbl{font-size:14px}#rep-tbl tr.sec td{background:#1f3a5f;color:#fff;font-weight:900}#rep-tbl tr.n0 td{font-weight:900;background:#eef2f7}#rep-tbl tr.n1 td:first-child{padding-left:16px;font-weight:700}#rep-tbl tr.n2 td:first-child{padding-left:30px}#rep-tbl tr.n3 td:first-child{padding-left:44px}#rep-tbl tr.n4 td:first-child,#rep-tbl tr.n5 td:first-child{padding-left:58px;color:#555}#rep-tbl tr.x{cursor:pointer}#rep-tbl tr.oc{display:none}body.pc .tbl td{white-space:normal}
@@ -232,6 +232,7 @@ body.pc .tv{display:none}body:not(.pc) .tp{display:none}
   <div id="gs-pend"></div>
   <button class="big" id="btn-gsfotos" style="display:none;font-size:18px;white-space:nowrap" onclick="gsFotos()">⛽ FOTOS COMBUSTIBLE</button>
   <button class="big" id="btn-gsrend" style="display:none;margin-top:12px;font-size:18px;white-space:nowrap" onclick="verGsRend()">⛽ RENDIMIENTO COMBUSTIBLE</button>
+  <button class="big" id="btn-gsserv" style="display:none;margin-top:12px;font-size:18px;white-space:nowrap" onclick="verGsGuias()">📋 REGISTRO DE SERVICIOS</button>
   <input type="file" id="fc-cam" accept="image/*" capture="environment" style="display:none" onchange="fcElegida(this)">
   <input type="file" id="gs-cam1" accept="image/*" capture="environment" style="position:absolute;width:1px;height:1px;opacity:0;left:-9999px" onclick="this.value=''" onchange="gsFoto(1,this)">
   <input type="file" id="gs-cam2" accept="image/*" capture="environment" style="position:absolute;width:1px;height:1px;opacity:0;left:-9999px" onclick="this.value=''" onchange="gsFoto(2,this)">
@@ -2368,6 +2369,7 @@ async function ggEnviar(btn){if(!_gg.f.length||!_gg.pat)return;const txt=$('gg-t
       const r=await supa.from('fotos_guias').insert({empresa:emp,conductor:user.nombre,pin:ggId(),envio:env,orden:i+1,patente:_gg.pat,foto:supa.storage.from(BUCKET).getPublicUrl(path).data.publicUrl,tomada:x.t.toISOString(),lat:c?c.latitude:null,lon:c?c.longitude:null,precision_m:c?c.accuracy:null,comentario:txt,prueba:!user.gsc});if(r.error)throw r.error}
     ggCancelar();btn.disabled=false;btn.textContent='🏁 FIN DEL RECORRIDO';toast('✔ Recorrido enviado');if((document.querySelector('.screen.on')||{}).id==='s-gsguias')verGsGuias()}
   catch(e){btn.disabled=false;btn.textContent='🏁 FIN DEL RECORRIDO';toast('No se pudo enviar. Revisa la señal e intenta de nuevo.')}}
+const gxEmp=()=>(user&&user.gsc&&user.empresa)||EMP_ACT;
 /* Etapa 2 Guías GS: 1 envío = 1 servicio; Kaptura lee las guías con Claude y Pablo confirma/completa (Carlos 21-11) */
 let _gx={env:[],svc:{},cli:[],filtro:'pend',leyendo:{},key:null};
 const gxFmt=n=>n==null||n===''||isNaN(n)?'':'$'+Math.round(n).toLocaleString('es-CL');
@@ -2394,11 +2396,11 @@ async function gxLeer(e){const id=e.x.envio;if(_gx.leyendo[id])return;_gx.leyend
     const row={envio:id,empresa:e.x.empresa,lectura:lec,actualizado:new Date().toISOString()};const r=await supa.from('gs_servicios').upsert(row,{onConflict:'envio'}).select().single();if(!r.error)e.s=r.data}
   catch(err){console.log('lectura guía',err);e.err=1}
   delete _gx.leyendo[id];gxPintar()}
-async function verGsGuias(){if(!user||user.rol!=='administracion')return;ir('s-gsguias');const box=$('gsguias-box');box.innerHTML='<div class="sub">Cargando…</div>';
+async function verGsGuias(){if(!user||!(user.rol==='administracion'||user.rol==='coordinador_gs'))return;ir('s-gsguias');const box=$('gsguias-box');box.innerHTML='<div class="sub">Cargando…</div>';
   const desde=new Date(Date.now()-31*864e5).toISOString();let rs=[],ss=[];
-  try{const [a,b,c]=await Promise.all([conTope(supa.from('fotos_guias').select('*').eq('empresa',EMP_ACT).gte('tomada',desde).order('tomada',{ascending:false}),10000),conTope(supa.from('gs_servicios').select('*').eq('empresa',EMP_ACT),10000),conTope(supa.from('kaptura_clientes').select('nombre,rut').eq('empresa',EMP_ACT).eq('activo',true).order('nombre'),8000)]);rs=a.data||[];ss=b.data||[];_gx.cli=c.data||[]}catch(e){}
-  try{const r=await conTope(supa.from('kaptura_flota').select('patente,tipo').eq('empresa',EMP_ACT).eq('activo',true),6000);const ps=(r.data||[]).filter(x=>/cami[oó]n|tracto/i.test(x.tipo||'')&&!/camioneta|semirremolque|tercero|por definir/i.test(x.tipo||'')).map(x=>x.patente);if(ps.length)_gx.pats=ps}catch(e){}
-  try{const r=await conTope(supa.from('kaptura_conductores').select('nombre').eq('empresa',EMP_ACT).eq('activo',true).order('nombre'),6000);_gx.cond=(r.data||[]).map(x=>x.nombre)}catch(e){}
+  try{const [a,b,c]=await Promise.all([conTope(supa.from('fotos_guias').select('*').eq('empresa',gxEmp()).gte('tomada',desde).order('tomada',{ascending:false}),10000),conTope(supa.from('gs_servicios').select('*').eq('empresa',gxEmp()),10000),conTope(supa.from('kaptura_clientes').select('nombre,rut').eq('empresa',gxEmp()).eq('activo',true).order('nombre'),8000)]);rs=a.data||[];ss=b.data||[];_gx.cli=c.data||[]}catch(e){}
+  try{const r=await conTope(supa.from('kaptura_flota').select('patente,tipo').eq('empresa',gxEmp()).eq('activo',true),6000);const ps=(r.data||[]).filter(x=>/cami[oó]n|tracto/i.test(x.tipo||'')&&!/camioneta|semirremolque|tercero|por definir/i.test(x.tipo||'')).map(x=>x.patente);if(ps.length)_gx.pats=ps}catch(e){}
+  try{const r=await conTope(supa.from('kaptura_conductores').select('nombre').eq('empresa',gxEmp()).eq('activo',true).order('nombre'),6000);_gx.cond=(r.data||[]).map(x=>x.nombre)}catch(e){}
   const m={},env=[];rs.forEach(x=>{if(!m[x.envio]){m[x.envio]={x,f:[]};env.push(m[x.envio])}m[x.envio].f.push(x)});env.forEach(e=>{e.f.sort((a,b)=>a.orden-b.orden);e.s=ss.find(s=>s.envio===e.x.envio)||null});
   _gx.env=env;gxPintar();for(const e of env){if(!(e.s&&e.s.lectura)){await gxLeer(e)}}} /* lee las guías que faltan, una a la vez */
 function gxPintar(){const f=$('gx-filtros'),box=$('gsguias-box');if(!box)return;const est=e=>e.s&&e.s.estado==='completo'?'ok':'pend';
@@ -2432,19 +2434,19 @@ async function gxGuardar(i,btn){const e=_gx.env[i];if(!e)return;const g=k=>{cons
 const gxFalta=r=>[!r.cliente&&'cliente',!r.gds&&'N° guía',!(r.monto_neto>0)&&'monto'].filter(Boolean);
 function gxPptSel(sel){const b=$('gx-neq');if(sel.value!=='__nuevo'){b.style.display='none';return}$('gx-npat').value='';b.style.display='block';$('gx-npat').focus()}
 async function gxNuevoEq(){const sel=$('gx-ppt'),pat=$('gx-npat').value.toUpperCase().replace(/[^A-Z0-9]/g,''),tipo=$('gx-ntipo').value;if(pat.length<5)return toast('Escribe la patente (ej: ABCD12)');
-  const r=await supa.from('kaptura_flota').insert({patente:pat,tipo,empresa:EMP_ACT,activo:true});if(r.error){toast(/duplicate|unique/i.test(r.error.message||'')?'Esa patente ya existe en Kaptura':'No se pudo crear el equipo');return}
+  const r=await supa.from('kaptura_flota').insert({patente:pat,tipo,empresa:gxEmp(),activo:true});if(r.error){toast(/duplicate|unique/i.test(r.error.message||'')?'Esa patente ya existe en Kaptura':'No se pudo crear el equipo');return}
   (_gx.pats=_gx.pats||GG_PATS.slice()).push(pat);const o=document.createElement('option');o.textContent=pat;sel.insertBefore(o,sel.querySelector('option[value="__nuevo"]'));sel.value=pat;$('gx-neq').style.display='none';toast('Equipo creado')}
 const gxCliOrd=n=>{const i=[/sollem/i,/trast/i,/aquagro/i].findIndex(r=>r.test(n||''));return i<0?9:i}; /* orden fijo arriba: Sollem, TRAST, Aquagro (Carlos 22-11) */
 function gxCondSel(sel){const b=$('gx-ncond');if(sel.value!=='__nuevo'){b.style.display='none';return}$('gx-ncnom').value='';b.style.display='block';$('gx-ncnom').focus()}
 async function gxNuevoCond(){const sel=$('gx-conductor'),nom=$('gx-ncnom').value.trim().replace(/\s+/g,' ');if(nom.split(' ').length<2)return toast('Escribe nombre y apellido');
-  const r=await supa.from('kaptura_conductores').insert({nombre:nom,empresa:EMP_ACT,activo:true});if(r.error){toast('No se pudo crear el conductor');return}
+  const r=await supa.from('kaptura_conductores').insert({nombre:nom,empresa:gxEmp(),activo:true});if(r.error){toast('No se pudo crear el conductor');return}
   (_gx.cond=_gx.cond||[]).push(nom);const o=document.createElement('option');o.textContent=nom;sel.insertBefore(o,sel.querySelector('option[value="__nuevo"]'));sel.value=nom;$('gx-ncond').style.display='none';toast('Conductor creado')}
 function gxCliSolo(){const sel=$('gx-cliente'),nom=$('gx-ncli').value.trim();if(!nom)return toast('Escribe el nombre del cliente'); /* se usa el nombre sin agregarlo a la lista de clientes (Carlos 22-11) */
   let o=[...sel.options].find(x=>x.value===nom);if(!o){o=document.createElement('option');o.textContent=nom;sel.insertBefore(o,sel.querySelector('option[value="__nuevo"]'))}sel.value=nom;$('gx-nuevo').style.display='none';toast('Cliente puesto solo en este servicio')}
 function gxCliSel(i,sel){const box=$('gx-nuevo');if(sel.value!=='__nuevo'){box.style.display='none';return}const e=_gx.env[i],L=(e&&e.s&&e.s.lectura&&e.s.lectura.guias)||[],g=L.find(g=>g.emisor)||{};
   $('gx-ncli').value=String(g.emisor||'').replace(/\s*\(.*\)\s*$/,'');$('gx-nrut').value=g.emisor_rut||'';box.style.display='block';$('gx-ncli').focus()}
 async function gxNuevoCli(i){const sel=$('gx-cliente'),nom=$('gx-ncli').value.trim(),rut=$('gx-nrut').value.trim();if(!nom)return toast('Escribe el nombre del cliente');if(!rut)return toast('Escribe el RUT del cliente');
-  const r=await supa.from('kaptura_clientes').insert({nombre:nom,rut,empresa:EMP_ACT,activo:true});if(r.error){toast(/duplicate|unique/i.test(r.error.message||'')?'Ese RUT ya existe en clientes':'No se pudo crear el cliente');return}
+  const r=await supa.from('kaptura_clientes').insert({nombre:nom,rut,empresa:gxEmp(),activo:true});if(r.error){toast(/duplicate|unique/i.test(r.error.message||'')?'Ese RUT ya existe en clientes':'No se pudo crear el cliente');return}
   _gx.cli.push({nombre:nom,rut});const o=document.createElement('option');o.textContent=nom;sel.insertBefore(o,sel.querySelector('option[value="__nuevo"]'));sel.value=nom;$('gx-nuevo').style.display='none';toast('Cliente creado')}
 function gxExcel(){const MES=['ene','feb','mar','abr','may','jun','jul','ago','sept','oct','nov','dic'];const L=_gx.env.filter(e=>_gx.filtro==='todos'||(e.s&&e.s.estado==='completo'?'ok':'pend')===_gx.filtro);if(!L.length)return toast('Sin servicios');if(!window.XLSX)return toast('No se pudo generar el Excel');
   const H=['Mes','Año','PPT Camión','Cliente','Fecha GD','Fecha descarga','GDs','Origen','Destino','Monto Flete Neto','Puntos','Sobreestadía','Total Neto','IVA','Flete Total','Conductor'];
@@ -2454,7 +2456,7 @@ function gxExcel(){const MES=['ene','feb','mar','abr','may','jun','jul','ago','s
   const ws=XLSX.utils.aoa_to_sheet([H,...rows,tot]);const C=c=>XLSX.utils.encode_col(c);
   for(let r=2;r<=ft;r++){[4,5].forEach(c=>{const x=ws[C(c)+r];if(x&&x.v!==''){x.t='n';x.z='dd-mm-yyyy'}});[9,10,11,12,13,14].forEach(c=>{const x=ws[C(c)+r];if(x&&x.v!=='')x.z='"$"#,##0'})}
   ws['!cols']=[{wch:6},{wch:6},{wch:11},{wch:22},{wch:11},{wch:13},{wch:16},{wch:18},{wch:20},{wch:15},{wch:12},{wch:13},{wch:14},{wch:12},{wch:14},{wch:24}];ws['!freeze']={xSplit:0,ySplit:1};ws['!views']=[{state:'frozen',ySplit:1}];
-  estiloXLS(ws,rows.length,H.length,ft);const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Servicios GS');XLSX.writeFile(wb,'Servicios_GS_'+hoyISO()+'.xlsx')}
+  ws['!autofilter']={ref:'A1:'+C(H.length-1)+(rows.length+1)};estiloXLS(ws,rows.length,H.length,ft);const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Servicios GS');XLSX.writeFile(wb,'Servicios_GS_'+hoyISO()+'.xlsx')}
 let _gsMes=null;
 async function verGsRend(mes){if(!user||user.rol!=='administracion')return; /* solo Administración por ahora (Carlos 21-11) */ir('s-gsrend');const box=$('gsrend-box');box.innerHTML='<div class="sub">Cargando…</div>';
   let meses=[];try{const [a,b]=await Promise.all([conTope(supa.from('gps_odometro').select('ts').eq('empresa',EMP_ACT).order('ts',{ascending:true}).limit(1),8000),conTope(supa.from('gps_odometro').select('ts').eq('empresa',EMP_ACT).order('ts',{ascending:false}).limit(1),8000)]);meses=rendMeses(a.data&&a.data[0]&&hoyISO(new Date(a.data[0].ts)).slice(0,7),b.data&&b.data[0]&&hoyISO(new Date(b.data[0].ts)).slice(0,7))}catch(e){}
