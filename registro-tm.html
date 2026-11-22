@@ -2477,7 +2477,10 @@ async function demoGuardar(){if(!supa)return toast('Sin conexión');const e=demo
   const r=await supa.from('empresas_onboarding').upsert({clave,empresa:clave==='global_solutions'?'global_solutions':null,datos,actualizado:new Date().toISOString(),actualizado_por:user.nombre},{onConflict:'clave'});
   if(r.error)return toast('No se pudo guardar');let nuevos=[];
   if(clave==='global_solutions'){const ex=((await supa.from('kaptura_conductores').select('nombre')).data||[]).map(x=>demoNorm(x.nombre));
-    nuevos=e.conductores.filter(c=>!ex.includes(demoNorm(c)));if(nuevos.length){const ri=await supa.from('kaptura_conductores').insert(nuevos.map(n=>({nombre:n,empresa:'global_solutions',activo:true})));if(ri.error){toast('Ficha guardada; conductores nuevos no se pudieron agregar');return}}}
+    nuevos=e.conductores.filter(c=>!ex.includes(demoNorm(c)));if(nuevos.length){const ri=await supa.from('kaptura_conductores').insert(nuevos.map(n=>({nombre:n,empresa:'global_solutions',activo:true})));if(ri.error){toast('Ficha guardada; conductores nuevos no se pudieron agregar');return}}
+    /* los eliminados del onboarding se borran de kaptura_conductores; los terceros no se tocan (Carlos 22-11) */
+    const ok=e.conductores.map(demoNorm),tb=((await supa.from('kaptura_conductores').select('nombre,empresa_tercero').eq('empresa','global_solutions')).data||[]),fuera=tb.filter(x=>!x.empresa_tercero&&!/tercero/i.test(x.nombre)&&!ok.includes(demoNorm(x.nombre))).map(x=>x.nombre);
+    if(fuera.length&&ok.length){const rd=await supa.from('kaptura_conductores').delete().eq('empresa','global_solutions').in('nombre',fuera);if(rd.error)toast('Ficha guardada; no se pudieron borrar conductores eliminados')}}
   _demo._clave=clave;$('dm-out').innerHTML='<div style="margin-top:12px;font-weight:800">✔ Guardado en Kaptura'+(nuevos.length?' · conductores nuevos: '+nuevos.map(demoEsc).join(', '):'')+'</div>'}
 
 
