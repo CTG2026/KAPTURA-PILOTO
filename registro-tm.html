@@ -3126,6 +3126,8 @@ function descargarExcel(){
 
 // ═══ REPORTE GPS ═══
 const regHora=r=>{if(!esAdmin()||!r.created_at)return '';const d=new Date(r.created_at),f=hoyISO(d),h=d.toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'America/Santiago'});return ' <span style="font-weight:400;opacity:.75">· registrado '+(f!==r.fecha?fCL(f).slice(0,5)+' ':'')+h+'</span>'}; /* hora de registro junto a la guía, solo administradores (Carlos 22-11) */
+const svcPats=r=>{const n=r._n||parseNotas(r.notas),e=(n&&n.extras)||{};return [r.patente,n&&n.acoplado,e.acoplado_reemplazo].filter(Boolean).join('/')}; /* tracto + acoplado del servicio */
+const PATS=p=>String(p||'').split(/[\/,]/).map(x=>PAT_GPS(x)).filter(Boolean); /* servicio con tracto y acoplado: 'ZV7780 / JB6234' → ['ZV7780','JB6234'] (Carlos 22-11) */
 const PAT_GPS=p=>String(p||'').toUpperCase().replace(/-\d$/,'').replace(/[^A-Z0-9]/g,'');
 const hhmm=d=>d?new Date(d).toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'America/Santiago'}):'—';
 const durTxt=s=>{s=Math.round(s||0);const h=Math.floor(s/3600),m=Math.round((s%3600)/60);return h?h+' h '+String(m).padStart(2,'0')+' min':m+' min'};
@@ -3280,7 +3282,7 @@ const fotosComoEnt=(r)=>{const n=r._n||{};return (n.fotos_ts||[]).map((t,k)=>t?{
 const entTxt=e=>(e.estado==='pendiente'?'⏳ Pendiente ':'✅ Entregado ')+e.hora+ifcoTag(e)+(e.obs?' · Guía '+e.obs:'')+(e.foto?' <a href="'+e.foto+'" target="_blank">📷</a>':'');
 function diaRango(dia){const ini=new Date(dia+'T00:00:00-03:00');return [ini.toISOString(),new Date(ini.getTime()+86400000).toISOString()]}
 let gpsPat=null, gpsVolver='s-home';
-function gpsServicio(i){const r=filas[i];if(!r)return;gpsPat=PAT_GPS(r.patente);gpsVolver='s-list';$('gps-dia').value=r.fecha;$('gps-dia').onchange=cargarGPS;verGPS()}
+function gpsServicio(i){const r=filas[i];if(!r)return;gpsPat=PATS(svcPats(r));gpsVolver='s-list';$('gps-dia').value=r.fecha;$('gps-dia').onchange=cargarGPS;verGPS()}
 async function verGPS(){
   ir('s-gps'); const inp=$('gps-dia');
   if(!inp.value){inp.value=hoyISO();inp.onchange=cargarGPS}
@@ -3300,7 +3302,7 @@ async function cargarGPS(){
   const {data:svs}=await q; const servs=(svs||[]).map(r=>({...r,_n:parseNotas(r.notas)}));
   servs.forEach(r=>{const ya=new Set(ents.map(e=>e.foto));fotosComoEnt(r).forEach(e=>{if(!ya.has(e.foto))ents.push(e)})});
   const geoE=(p)=>(ev||[]).filter(x=>{const g=x.patente===p&&x.tipo==='parada'&&enGeo(x.lat_ini,x.lon_ini);return g&&g.tipo==='planta'&&(!esCliente()||g.cliente===user.cliente)});
-  const pats=[...new Set((ev||[]).map(e=>e.patente))].filter(p=>!gpsPat||PAT_GPS(p)===gpsPat).filter(p=>!esCliente()||servs.some(s=>PAT_GPS(s.patente)===PAT_GPS(p))||geoE(p).length);
+  const pats=[...new Set((ev||[]).map(e=>e.patente))].filter(p=>!gpsPat||(Array.isArray(gpsPat)?gpsPat.includes(PAT_GPS(p)):PAT_GPS(p)===gpsPat)).filter(p=>!esCliente()||servs.some(s=>PATS(svcPats(s)).includes(PAT_GPS(p)))||geoE(p).length);
   let ult='';
   try{const {data:u}=await supa.from('gps_viajes').select('*').order('inicio',{ascending:false}).limit(1);
     if(u&&u[0]){const x=u[0],fd=t=>new Date(t).toLocaleString('es-CL',{timeZone:'America/Santiago',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});

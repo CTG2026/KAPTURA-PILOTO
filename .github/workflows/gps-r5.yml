@@ -1,0 +1,27 @@
+name: GPS R5 (Wialon) → Kaptura
+on:
+  schedule:
+    - cron: '17,47 * * * *'
+  push:
+    branches: [main]
+    paths: ['scripts/gps-r5.mjs', '.github/workflows/gps-r5.yml']
+  workflow_dispatch:
+    inputs:
+      dias:
+        description: 'Días hacia atrás a leer'
+        default: '3'
+jobs:
+  leer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: node scripts/gps-r5.mjs
+        env:
+          R5_WIALON_TOKEN: ${{ secrets.R5_WIALON_TOKEN }}
+          SUPA_URL: https://aqunzrukuruwzwywnurq.supabase.co
+          SUPA_KEY: sb_publishable_70t9UxFlcqYDj7AMybsrHg__IMGNA8C
+          DIAS: ${{ github.event.inputs.dias || (github.event_name == 'push' && '10') || '3' }}
