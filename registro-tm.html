@@ -561,7 +561,7 @@ const EMPRESA='transportes_madrid';
 // Versión publicada: si cambia el archivo publicado, Kaptura se recarga sola cuando el usuario no está registrando nada (Carlos 02-11)
 let _verTxt=null;const _verGet=()=>fetch(location.pathname+'?nc='+Date.now(),{cache:'no-store'}).then(r=>r.text()).then(t=>t.length+':'+t.slice(-200));
 _verGet().then(v=>_verTxt=v).catch(()=>{});
-setInterval(async()=>{try{const v=await _verGet();if(_verTxt&&v!==_verTxt){const sc=(document.querySelector('.screen.on')||{}).id;if(!['s-reg','s-ent','s-spot'].includes(sc)&&!window._simOn&&(document.getElementById('fc-ov')||{style:{}}).style.display!=='block')location.reload()}}catch(e){}},120000); /* con el simulador abierto no recarga (Carlos 19-11) */
+setInterval(async()=>{try{const v=await _verGet();if(_verTxt&&v!==_verTxt){const sc=(document.querySelector('.screen.on')||{}).id;if(!['s-reg','s-ent','s-spot'].includes(sc)&&!window._simOn&&(document.getElementById('fc-ov')||{style:{}}).style.display!=='block'&&(document.getElementById('gs-ov')||{style:{}}).style.display!=='block')location.reload()}}catch(e){}},120000); /* con el simulador abierto no recarga (Carlos 19-11) */
 // Empresa activa en Kaptura: el usuario Administración (1313) elige entre TM y Global Solutions (Carlos 02-11)
 let EMP_ACT=EMPRESA,EMP_ELEGIDA=true;const EMP_NOM={'transportes_madrid':'Transportes Madrid','global_solutions':'Global Solutions'};
 const BUCKET='kaptura-guias';
