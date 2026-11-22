@@ -426,8 +426,10 @@ body.pc .tv{display:none}body:not(.pc) .tp{display:none}
 <section class="screen" id="s-rsv">
   <h1>Resumen de servicios</h1>
   <select id="rsv-q" style="width:100%;font-size:17px;padding:10px;border-radius:10px;border:2px solid var(--border);background:var(--surface);color:var(--text);margin-bottom:12px"></select>
+  <div id="rsv-fil" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-bottom:10px"></div>
   <div class="sub" id="rsv-sub">Cargando…</div>
-  <div class="tblw"><table class="tbl" id="rsv-tbl"></table></div>
+  <div id="rsv-res"></div>
+  <details id="rsv-det"><summary style="cursor:pointer;list-style:none;font-weight:800;margin:10px 0">▸ Detalle de servicios</summary><div class="tblw"><table class="tbl" id="rsv-tbl"></table></div></details>
   <button class="big" id="btn-rsv-xls" onclick="descargarResumenSvc()" disabled>⬇ Descargar Excel</button>
   <div style="display:flex;gap:8px"><button class="btn2" style="flex:1" onclick="imgTabla('rsv-tbl','Resumen de servicios · '+rsvTit,true)">📤 Compartir imagen</button><button class="btn2" style="flex:1" onclick="imgTabla('rsv-tbl','Resumen de servicios · '+rsvTit,false)">🖼 Descargar imagen</button></div>
   <button class="btn2" onclick="atras()"><span class="tv">← Volver</span><span class="tp">← Atrás</span></button>
@@ -1588,23 +1590,40 @@ async function alertaSinReg(){const box=$('alerta-sinreg');if(!box)return;box.in
 // ═══ RESUMEN DE SERVICIOS (administradores): una fila por servicio; sin registrar al final en rojo (Carlos 31-10) ═══
 let rsvTit='',rsvFilas=[];
 function verResumenSvc(){if(!esAdmin())return;ir('s-rsv');const sel=$('rsv-q');
-  if(!sel.options.length){sel.innerHTML=quincenas().map(x=>'<option value="'+x.y+'-'+x.m+'-'+x.q+'">'+(x.q===1?'1ra':'2da')+' quincena '+MESES[x.m]+' '+x.y+'</option>').join('');sel.onchange=cargarResumenSvc}
+  if(!sel.options.length){const ym=[];quincenas().forEach(x=>{const k=x.y+'-'+x.m;if(!ym.includes(k))ym.push(k)});sel.innerHTML=ym.map(k=>{const [y,m]=k.split('-').map(Number),qs=quincenas().filter(x=>x.y===y&&x.m===m);return '<optgroup label="'+MESES[m]+' '+y+'"><option value="'+y+'-'+m+'-0">'+MESES[m]+' '+y+' · mes completo</option>'+qs.slice().reverse().map(x=>'<option value="'+y+'-'+m+'-'+x.q+'">'+(x.q===1?'1ra':'2da')+' quincena '+MESES[m]+' '+y+'</option>').join('')+'</optgroup>'}).join('');
+    const q0=quincenas()[0];sel.value=q0.y+'-'+q0.m+'-'+q0.q;sel.onchange=cargarResumenSvc} /* mes completo o quincena (Carlos 22-11) */
   cargarResumenSvc()}
-async function cargarResumenSvc(){const [y,m,q]=$('rsv-q').value.split('-').map(Number),d1=q===1?1:16,d2=q===1?15:new Date(y,m+1,0).getDate();
+async function cargarResumenSvc(){const [y,m,q]=$('rsv-q').value.split('-').map(Number),d1=q===2?16:1,d2=q===1?15:new Date(y,m+1,0).getDate();
   const desde=y+'-'+String(m+1).padStart(2,'0')+'-'+String(d1).padStart(2,'0'),hasta=y+'-'+String(m+1).padStart(2,'0')+'-'+String(d2).padStart(2,'0');
-  rsvTit=(q===1?'1ra':'2da')+' quincena '+MESES[m]+' '+y;$('rsv-tbl').innerHTML='';$('btn-rsv-xls').disabled=true;$('rsv-sub').textContent='Cargando…';
-  let sv=[],es=[];try{sv=(await conTope(supa.from('servicios_piloto').select('servicio_id,fecha,conductor,patente,cliente,notas').eq('empresa',EMPRESA).eq('modo','registro_tm').neq('estado','anulado').gte('fecha',desde).lte('fecha',hasta).order('fecha',{ascending:false}).order('servicio_id',{ascending:false}),10000)).data||[];
+  rsvTit=(q===0?'mes completo':(q===1?'1ra':'2da')+' quincena')+' '+MESES[m]+' '+y;$('rsv-tbl').innerHTML='';$('rsv-res').innerHTML='';$('btn-rsv-xls').disabled=true;$('rsv-sub').textContent='Cargando…';
+  let sv=[],es=[];try{sv=(await conTope(supa.from('servicios_piloto').select('servicio_id,fecha,conductor,patente,cliente,notas,tarifa_neta').eq('empresa',EMPRESA).eq('modo','registro_tm').neq('estado','anulado').gte('fecha',desde).lte('fecha',hasta).order('fecha',{ascending:false}).order('servicio_id',{ascending:false}),10000)).data||[];
     es=(await conTope(supa.from('entregas').select('fecha,conductor,cliente').eq('empresa',EMPRESA).is('servicio_id',null).neq('estado','prueba').gte('fecha',desde).lte('fecha',hasta),10000)).data||[]}catch(e){$('rsv-sub').textContent='No se pudo leer. Revise la señal.';return}
   const hoy=hoyISO(),tarde=new Date().getHours()>=21,g={},gc={};es.filter(e=>(e.fecha<hoy||tarde)&&!sv.some(x=>x.fecha===e.fecha&&x.conductor===e.conductor)).forEach(e=>{const k=e.fecha+'|'+e.conductor;g[k]=(g[k]||0)+1;gc[k]=e.cliente||''});
   const f=x=>x.split('-').reverse().join('-');
-  rsvFilas=sv.map(r=>{const n=parseNotas(r.notas);return {fecha:r.fecha,rojo:false,c:[n.codigo||'',f(r.fecha),r.cliente||'',SVC_VER(n.servicio_sistema||''),r.conductor,r.patente]}}).concat(Object.keys(g).map(k=>{const [fe,c]=k.split('|');return {fecha:fe,rojo:true,c:['',f(fe),gc[k],'⚠ Servicio sin registrar ('+g[k]+' entrega(s))',c,'']}}))
+  rsvFilas=sv.map(r=>{const n=parseNotas(r.notas),e=n.extras||{};return {fecha:r.fecha,rojo:false,v:+r.tarifa_neta||0,c:[n.codigo||'',f(r.fecha),r.cliente||'',SVC_VER(n.servicio_sistema||''),r.conductor,r.patente,e.acoplado_reemplazo||n.acoplado||'',+r.tarifa_neta||0]}}).concat(Object.keys(g).map(k=>{const [fe,c]=k.split('|');return {fecha:fe,rojo:true,v:0,c:['',f(fe),gc[k],'⚠ Servicio sin registrar ('+g[k]+' entrega(s))',c,'','','']}}))
     .sort((a,b)=>b.fecha.localeCompare(a.fecha)||(a.rojo-b.rojo)||b.c[0].localeCompare(a.c[0])); // por fecha (más reciente primero); los sin registrar en su fecha
-  $('rsv-tbl').innerHTML='<tr><th>ID</th><th>Fecha</th><th>Cliente</th><th>Servicio</th><th>Conductor</th><th>Patente</th></tr>'+rsvFilas.map(r=>'<tr'+(r.rojo?' style="color:#ff3b30;font-weight:800"':'')+'>'+r.c.map(x=>'<td>'+x+'</td>').join('')+'</tr>').join('');
-  const nS=Object.keys(g).length;$('rsv-sub').textContent=sv.length+' servicio(s) · '+rsvTit+(nS?' · '+nS+' sin registrar':'');$('btn-rsv-xls').disabled=!rsvFilas.length}
-function descargarResumenSvc(){if(!rsvFilas.length||!window.XLSX)return;const head=['ID','Fecha','Cliente','Servicio','Conductor','Patente'];
-  const ws=XLSX.utils.aoa_to_sheet([head,...rsvFilas.map(r=>r.c)]);estiloXLS(ws,rsvFilas.length,6,0);
-  rsvFilas.forEach((r,i)=>{if(r.rojo)for(const c of 'ABCDEF'){const x=ws[c+(i+2)];if(x)x.s={...(x.s||{}),font:{bold:true,color:{rgb:'FF3B30'}}}}});
-  ws['!cols']=[{wch:7},{wch:11},{wch:22},{wch:44},{wch:26},{wch:10}];const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Resumen');XLSX.writeFile(wb,'Resumen_servicios_TM_'+rsvTit.replace(/\s+/g,'_')+'.xlsx')}
+  rsvTodas=rsvFilas;rsvNS=Object.keys(g).length;rsvFiltros();rsvPintar()}
+/* Filtros del resumen (cliente, patente, semirremolque, conductor) y resumen contraído por cliente / patente / conductor (Carlos 22-11) */
+let rsvTodas=[],rsvNS=0,rsvF={c:'',p:'',a:'',d:''};
+function rsvFiltros(){const ops=(i,k,t)=>{const v=[...new Set(rsvTodas.filter(r=>!r.rojo).map(r=>r.c[i]).filter(Boolean))].sort();if(rsvF[k]&&!v.includes(rsvF[k]))rsvF[k]='';return '<select onchange="rsvF.'+k+'=this.value;rsvPintar()" style="font-size:15px;padding:8px;border-radius:10px;border:2px solid var(--border);background:var(--surface);color:var(--text)"><option value="">'+t+': todos</option>'+v.map(x=>'<option'+(rsvF[k]===x?' selected':'')+'>'+x+'</option>').join('')+'</select>'};
+  $('rsv-fil').innerHTML=ops(2,'c','Cliente')+ops(5,'p','Patente')+ops(6,'a','Semirremolque')+ops(4,'d','Conductor')}
+function rsvPintar(){const F=rsvF,ok=r=>(!F.c||r.c[2]===F.c)&&(!F.p||r.c[5]===F.p)&&(!F.a||r.c[6]===F.a)&&(!F.d||r.c[4]===F.d),hayF=F.c||F.p||F.a||F.d;
+  rsvFilas=rsvTodas.filter(r=>r.rojo?!hayF||((!F.c||r.c[2]===F.c)&&(!F.d||r.c[4]===F.d)&&!F.p&&!F.a):ok(r));
+  const S=rsvFilas.filter(r=>!r.rojo),tot=S.reduce((a,r)=>a+r.v,0),M=v=>'$'+fmt(Math.round(v));
+  const grp=(i,t,k)=>{const G={};S.forEach(r=>{const x=r.c[i]||'(sin dato)';(G[x]=G[x]||{n:0,v:0});G[x].n++;G[x].v+=r.v});const L=Object.entries(G).sort((a,b)=>b[1].v-a[1].v||b[1].n-a[1].n);
+    return '<details'+((window._acc||{})[k]?' open':'')+' ontoggle="(window._acc=window._acc||{})[\''+k+'\']=this.open" style="border:1px solid var(--border);border-radius:12px;padding:8px 12px;margin:0 0 8px"><summary style="cursor:pointer;list-style:none;font-weight:800">▸ '+t+' ('+L.length+')</summary><table style="width:100%;border-collapse:collapse;font-size:14px;margin-top:6px">'+L.map(([x,o])=>'<tr><td style="padding:5px 4px;border-bottom:1px solid var(--border)">'+x+'</td><td style="padding:5px 4px;border-bottom:1px solid var(--border);text-align:right">'+o.n+'</td><td style="padding:5px 4px;border-bottom:1px solid var(--border);text-align:right;white-space:nowrap">'+M(o.v)+'</td></tr>').join('')+'</table></details>'};
+  $('rsv-res').innerHTML='<div style="display:flex;gap:10px;flex-wrap:wrap;margin:6px 0 10px"><div class="card" style="flex:1;min-width:130px;padding:10px"><div class="sub" style="margin:0">Servicios</div><div style="font-size:22px;font-weight:800">'+S.length+'</div></div><div class="card" style="flex:1;min-width:130px;padding:10px"><div class="sub" style="margin:0">Venta neta</div><div style="font-size:22px;font-weight:800">'+M(tot)+'</div></div></div>'
+    +grp(2,'Por cliente','rsvc')+grp(5,'Por patente','rsvp')+grp(6,'Por semirremolque','rsva')+grp(4,'Por conductor','rsvd');
+  $('rsv-tbl').innerHTML='<tr><th>ID</th><th>Fecha</th><th>Cliente</th><th>Servicio</th><th>Conductor</th><th>Patente</th><th>Semirremolque</th><th>Venta neta</th></tr>'+rsvFilas.map(r=>'<tr'+(r.rojo?' style="color:#ff3b30;font-weight:800"':'')+'>'+r.c.map((x,i)=>'<td'+(i===7?' style="text-align:right;white-space:nowrap"':'')+'>'+(i===7?(x?M(x):''):x)+'</td>').join('')+'</tr>').join('');
+  const nS=rsvFilas.filter(r=>r.rojo).length;$('rsv-sub').textContent=S.length+' servicio(s) · '+rsvTit+(hayF?' · filtrado':'')+(nS?' · '+nS+' sin registrar':'');$('btn-rsv-xls').disabled=!rsvFilas.length}
+function descargarResumenSvc(){if(!rsvFilas.length||!window.XLSX)return;const head=['ID','Fecha','Cliente','Servicio','Conductor','Patente','Semirremolque','Venta neta'];
+  const ws=XLSX.utils.aoa_to_sheet([head,...rsvFilas.map(r=>r.c.map((x,i)=>i===7?(x||''):x))]);estiloXLS(ws,rsvFilas.length,8,0);
+  rsvFilas.forEach((r,i)=>{const x=ws['H'+(i+2)];if(x&&x.t==='n')x.z=x.s.numFmt='$#,##0';if(r.rojo)for(const c of 'ABCDEFGH'){const y=ws[c+(i+2)];if(y)y.s={...(y.s||{}),font:{bold:true,color:{rgb:'FF3B30'}}}}});
+  ws['!cols']=[{wch:7},{wch:11},{wch:22},{wch:44},{wch:26},{wch:10},{wch:14},{wch:13}];ws['!autofilter']={ref:'A1:H'+(rsvFilas.length+1)};
+  const S=rsvFilas.filter(r=>!r.rojo),R=[['Resumen de servicios · '+rsvTit+(rsvF.c||rsvF.p||rsvF.a||rsvF.d?' (filtrado)':'')],[],['Servicios',S.length],['Venta neta',S.reduce((a,r)=>a+r.v,0)]];
+  [[2,'Cliente'],[5,'Patente'],[6,'Semirremolque'],[4,'Conductor']].forEach(([i,t])=>{const G={};S.forEach(r=>{const x=r.c[i]||'(sin dato)';(G[x]=G[x]||[0,0]);G[x][0]++;G[x][1]+=r.v});R.push([],[t,'Servicios','Venta neta']);Object.entries(G).sort((a,b)=>b[1][1]-a[1][1]).forEach(([x,o])=>R.push([x,o[0],o[1]]))});
+  const wr=XLSX.utils.aoa_to_sheet(R);wr['!cols']=[{wch:28},{wch:11},{wch:14}];Object.keys(wr).forEach(k=>{const c=wr[k];if(c&&c.t==='n'&&/^C/.test(k)||k==='B4')c.z='$#,##0'});
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,wr,'Resumen');XLSX.utils.book_append_sheet(wb,ws,'Servicios');XLSX.writeFile(wb,'Resumen_servicios_TM_'+rsvTit.replace(/\s+/g,'_')+'.xlsx')}
 
 // ═══ FORMULARIO EN VENTANA (Carlos 02-11): fechas siempre con calendario desplegable, nunca escritas a mano ═══
 function formulario(tit,campos){return new Promise(res=>{const w=document.createElement('div');w.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;display:flex;align-items:center;justify-content:center;padding:16px';
