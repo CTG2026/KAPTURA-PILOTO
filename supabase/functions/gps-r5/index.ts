@@ -79,12 +79,15 @@ function aFilas(msgs: any[], unit: any, ahora = Date.now() / 1000, desde = 0) {
   return filas;
 }
 
+// claves nuevas de Supabase: vienen como diccionario JSON {nombre: clave}
+function claveNueva(v: string) { try { const o = JSON.parse(Deno.env.get(v) || '{}'); return o.default || Object.values(o)[0] || ''; } catch (_) { return ''; } }
+
 Deno.serve(async (req) => {
-  const TOKEN = Deno.env.get('R5_WIALON_TOKEN');
+  const TOKEN = (Deno.env.get('R5_WIALON_TOKEN') || Deno.env.get('R5_WIALON_TOKEN.') || '').replace(/^Token=/i, '').trim(); // el secreto quedó guardado con un punto al final (23-11)
   if (!TOKEN) return new Response('Falta el secreto R5_WIALON_TOKEN', { status: 200 });
   let dias = 1;
   try { const b = await req.json(); if (b && +b.dias > 0 && +b.dias <= 7) dias = +b.dias; } catch (_) { /* sin cuerpo */ }
-  const SUPA_URL = Deno.env.get('SUPABASE_URL')!, KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || Deno.env.get('SUPABASE_ANON_KEY')!;
+  const SUPA_URL = Deno.env.get('SUPABASE_URL')!, KEY = claveNueva('SUPABASE_SECRET_KEYS') || claveNueva('SUPABASE_PUBLISHABLE_KEYS'); // las claves antiguas están desactivadas en el proyecto
   const lg = await call('token/login', { token: TOKEN, fl: 1 });
   const sid = lg.eid;
   try {
