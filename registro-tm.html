@@ -656,7 +656,16 @@ const LIC_A5=['0003','0005','0007']; // conductores con licencia A5: ven tractos
 const EXTRAS=[{id:'trasp',txt:'Traspaleteo'},{id:'trasv',txt:'Trasvasije'},{id:'retorno',txt:'Retorno'},{id:'espera',txt:'Espera'},{id:'peaje',txt:'Peaje efectivo'},{id:'reemp',txt:'Acoplado reemplazo'},{id:'ifco',txt:'Retiro IFCO'}];
 // Retiro de cajas IFCO en bodega o centro de distribución: EBLOOMS paga $85.000 neto (Carlos 02-11)
 const TARIFA_IFCO=85000;
-function precioSvc(r){const n=r._n||parseNotas(r.notas),e=n.extras||{},base=+r.tarifa_neta||0,ret=(e.retorno&&/Supermercados/.test(n.servicio_sistema||''))?Math.round(base*COSTO.retSuper):0;return base+ret+(e.retiro_ifco?TARIFA_IFCO:0)}
+/* Cobros adicionales para TODOS los servicios (Carlos 23-11): retiro IFCO = $85.000 neto y rechazo = 39,7% de la tarifa (flete), una vez por servicio. Vale la marca del servicio (✏️ Editar), la de sus entregas o el extra del registro */
+const TARIFA_RECH=0.397;
+function extrasSvc(r){const n=r._n||parseNotas(r.notas),e=n.extras||{},m=n.marcas||{},me=n.marcas_ent||null,E=me?[]:(r._ents||n.entregas||[]),base=+r.tarifa_neta||0;
+  const rech=!!(m.rechazo||(me&&me.rechazo)||e.retorno||E.some(x=>x&&x.rechazo)),ret=!!(m.retiro||(me&&me.retiro)||e.retiro_ifco||E.some(x=>x&&x.retiro_ifco));
+  return {base,rech:rech?Math.round(base*TARIFA_RECH):0,ifco:ret?TARIFA_IFCO:0}}
+function precioSvc(r){const x=extrasSvc(r);return x.base+x.rech+x.ifco}
+/* Las marcas de las entregas se copian al servicio (notas.marcas_ent) para que el precio sea el mismo en todas las pantallas */
+async function marcasSync(sid){if(!sid)return;try{const E=(await supa.from('entregas').select('rechazo,retiro_ifco').eq('empresa',EMPRESA).eq('servicio_id',sid)).data||[];
+  const r=await supa.from('servicios_piloto').select('id,notas').eq('empresa',EMPRESA).eq('servicio_id',sid).maybeSingle();if(!r.data)return;const n=parseNotas(r.data.notas);
+  n.marcas_ent={rechazo:E.some(x=>x.rechazo),retiro:E.some(x=>x.retiro_ifco)};await supa.from('servicios_piloto').update({notas:JSON.stringify(n)}).eq('id',r.data.id)}catch(e){}}
 
 // ═══ ESTADO ═══
 let supa=null; try{ supa=window.supabase.createClient(SUPA_URL,SUPA_KEY); }catch(e){}
@@ -1058,7 +1067,7 @@ function kmGPS(r){
 }
 function resultadoServicio(r){
   const n=r._n||{},e=n.extras||{},sv=SV_COSTO[n.servicio_sistema||''];if(!sv)return null;
-  const g=kmGPS(r),[kmT,tipo,peaje,dias]=sv,km=g?Math.round(g.km):kmT,kmTxt=g?g.txt:'teórico de la ruta (camión sin GPS)',base=+r.tarifa_neta||0,ret=(e.retorno&&/Supermercados/.test(n.servicio_sistema))?Math.round(base*COSTO.retSuper):0,tarifa=base+ret+(e.retiro_ifco?TARIFA_IFCO:0);
+  const g=kmGPS(r),[kmT,tipo,peaje,dias]=sv,km=g?Math.round(g.km):kmT,kmTxt=g?g.txt:'teórico de la ruta (camión sin GPS)',XS=extrasSvc(r),base=XS.base,ret=XS.rech,tarifa=base+XS.rech+XS.ifco;
   const alta=r.fecha>=COSTO.alta[0]&&r.fecha<=COSTO.alta[1];
   const tipoC=TIPO_PAT[PAT_GPS(r.patente)]||tipo,pd=(n.diesel&&n.diesel.p)?{p:+n.diesel.p,txt:n.diesel.txt+' · fijado el '+String(n.diesel.fijado||'').split('-').reverse().slice(0,2).join('-')}:precioDiesel(r.fecha);
   const v={combustible:km/COSTO.rend[tipoC]*pd.p,peajes:peaje,comision:tarifa*COSTO.com,asesor:tarifa*COSTO.ase,neumMant:km*(COSTO.neum+COSTO.mant),
@@ -1099,7 +1108,7 @@ function bloqueRes(t,tit){const pct=t.tarifa?Math.round(t.res/t.tarifa*1000)/10:
 const PAT_PROPIAS=['DSBZ64','ZV7780','CWVH32','DZZW14','XJ3908','KFXB58'];
 /* Tercero = no usa recursos de TM: no absorbe costos fijos ni cuenta en el reparto del día (Carlos 08-11) */
 function esTerR(r){const n=r._n||{},p=String(r.patente||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6);return n.tipo_spot==='tercero'||(n.tipo_spot!=='compartido'&&n.tipo_spot!=='propio'&&(!!n.tercero||/^Tercero/i.test(r.conductor||'')||(p.length===6&&!PAT_PROPIAS.includes(p))))}
-function zRes(r){const n=r._n||{},t=+r.tarifa_neta||0,nDia=filas.filter(x=>x.fecha===r.fecha&&!esTerR(x)).length||1,fijo=esTerR(r)?0:COSTO.fijoMes/COSTO.diasMes/nDia;
+function zRes(r){const n=r._n||{},t=precioSvc(r),nDia=filas.filter(x=>x.fecha===r.fecha&&!esTerR(x)).length||1,fijo=esTerR(r)?0:COSTO.fijoMes/COSTO.diasMes/nDia;
   /* Servicio de tercero (no compartido): su costo es el pago acordado al tercero, editable (Carlos 08-11) */
   const esTer=esTerR(r);
   if(esTer){const aT=t*COSTO.ase;if(n.pago_tercero==null)return {tarifa:t,ret:0,v:{combustible:0,peajes:0,comision:0,asesor:aT,neumMant:0,viaticos:0},tv:aT,fijo,nDia,res:t-aT-fijo,km:0,sinCosto:true,editable:true,motivo:'Servicio de tercero: falta el pago al tercero'};const pT=+n.pago_tercero||0;return {tarifa:t,ret:0,v:{combustible:0,peajes:0,comision:0,asesor:aT,neumMant:0,viaticos:0,pagoTercero:pT},tv:pT+aT,fijo,nDia,res:t-pT-aT-fijo,km:0,tercero:true,editable:true,n}}
@@ -1126,7 +1135,7 @@ function bloqueRes2(rs,tit){const esc=t=>String(t==null?'':t).replace(/[&<>"]/g,
   const ln=(t,v,h)=>'<details style="border-top:1px solid var(--border);padding:6px 0"><summary style="display:flex;justify-content:space-between;cursor:pointer"><b>'+t+' ▸</b><b>'+fm$(v)+'</b></summary>'+h+'</details>';
   const grpBy=(arr,kf)=>{const m=new Map();arr.forEach(x=>{const k=kf(x);if(!m.has(k))m.set(k,[]);m.get(k).push(x)});return [...m.entries()]};
   // VENTAS
-  const svLine=x=>{const a=x.z.tarifa,ret=x.z.ret,ifc=a-ret-(+x.r.tarifa_neta||0);const sub=(ret||ifc>0)?fila('Tarifa de la ruta',+x.r.tarifa_neta||0,3)+(ret?fila('Retorno supermercado',ret,3):'')+(ifc>0?fila('Retiro IFCO',ifc,3):''):'';
+  const svLine=x=>{const a=x.z.tarifa,ret=x.z.ret,ifc=a-ret-(+x.r.tarifa_neta||0);const sub=(ret||ifc>0)?fila('Tarifa de la ruta',+x.r.tarifa_neta||0,3)+(ret?fila('Rechazo (39,7% del flete)',ret,3):'')+(ifc>0?fila('Retiro IFCO',ifc,3):''):'';
     const txt=id(x)+fe(x.r)+' · '+esc(sv(x))+' · '+esc(x.r.patente||'')+' · '+esc(cond(x))+(a?'':' · <b>sin tarifa</b>');return sub?det(txt,a,3,sub):fila(txt,a,2)};
   const grpVenta=x=>{const c=x.r.cliente||'';if(/EBLOOMS/i.test(c))return +x.r.fecha.slice(8,10)<=15?'Proforma 1ª quincena (1–15)':'Proforma 2ª quincena (16–fin de mes)';if(/Valle/i.test(c))return 'Liquidación del mes';return x.n.spot?'Spot':'Servicios'};
   const ventas=grpBy(Z,x=>x.r.cliente||'Sin cliente').map(([c,xs])=>{const v=xs.reduce((a,x)=>a+x.z.tarifa,0);return det(esc(c)+pc(v,T.tarifa),v,0,grpBy(xs,grpVenta).map(([g,ys])=>det(esc(g),ys.reduce((a,x)=>a+x.z.tarifa,0),1,ys.sort((a,b)=>a.r.fecha<b.r.fecha?-1:1).map(svLine).join(''),ys.length)).join(''),xs.length)}).join('');
@@ -1277,7 +1286,7 @@ function fluSemData(ym,dias){const S=_fluSem,H=S.sc.hasta,dd=x=>new Date(x+'T12:
   S.cp.forEach(r=>pr(r.fecha,-(+r.monto||0),r.categoria||'Otros compromisos',(r.acreedor||'')+' · '+(r.concepto||'')));
   /* Spot sin factura y pago a terceros de spot (Carlos 09-11): esperados en su fecha; "en efectivo" los marca como ocurridos aunque no pasen por el banco */
   (S.sp||[]).forEach(sv=>{let n={};try{n=JSON.parse(sv.notas||'{}')}catch(e){}if(!n.spot)return;const ad=(f,k)=>{const t=new Date(f+'T12:00:00');t.setDate(t.getDate()+k);return hoyISO(t)},lb=(n.codigo?n.codigo+' · ':'')+String(n.servicio_sistema||'').replace(/^SPOT · /,'')+(sv.patente?' · '+sv.patente:'');
-    if(!FAC_CLI.some(y=>y.c===sv.cliente)&&+sv.tarifa_neta&&!n.fuera_flujo){ /* fuera_flujo: cobro excluido del flujo a pedido de Carlos */const v=+sv.tarifa_neta,bt=esCarlos()?' <a href="#" onclick="event.preventDefault();event.stopPropagation();svEfectivo('+sv.id+',\'cobro\')" style="color:var(--gold);font-size:11px">cobrado en efectivo</a>':'';
+    if(!FAC_CLI.some(y=>y.c===sv.cliente)&&+sv.tarifa_neta&&!n.fuera_flujo){ /* fuera_flujo: cobro excluido del flujo a pedido de Carlos */const v=precioSvc(sv),bt=esCarlos()?' <a href="#" onclick="event.preventDefault();event.stopPropagation();svEfectivo('+sv.id+',\'cobro\')" style="color:var(--gold);font-size:11px">cobrado en efectivo</a>':'';
       if(n.cobro_efectivo){it.push({f:n.cobro_efectivo,v,r:true,g:sv.cliente,t:dm(sv.fecha)+' · spot '+lb+' (cobrado en efectivo, Claudio)'});ce.push({f:n.cobro_efectivo,v})}else pr(sv.fecha,v,sv.cliente||'Spot','Spot '+lb+' (sin factura, neto)',bt)}
     const pt=+n.pago_tercero||0;if(pt){const bt=esCarlos()?' <a href="#" onclick="event.preventDefault();event.stopPropagation();svEfectivo('+sv.id+',\'tercero\')" style="color:var(--gold);font-size:11px">pagado en efectivo</a>':'';
       if(n.pago_tercero_efectivo){it.push({f:n.pago_tercero_efectivo,v:-pt,r:true,g:'Pago a terceros (spot)',t:dm(sv.fecha)+' · '+(n.tercero||'Tercero')+' · '+lb+' (pagado en efectivo, Claudio)'});ce.push({f:n.pago_tercero_efectivo,v:-pt})}else if(!n.fecha_pago_tercero)pr(n.fecha_pago_programada||ad(sv.fecha,7),-pt,'Pago a terceros (spot)',(n.tercero||'Tercero')+' · '+lb,bt)}});
@@ -1647,7 +1656,7 @@ async function cargarResumenSvc(){const [y,m,q]=$('rsv-q').value.split('-').map(
     es=(await conTope(supa.from('entregas').select('fecha,conductor,cliente').eq('empresa',EMPRESA).is('servicio_id',null).neq('estado','prueba').gte('fecha',desde).lte('fecha',hasta),10000)).data||[]}catch(e){$('rsv-sub').textContent='No se pudo leer. Revise la señal.';return}
   const hoy=hoyISO(),tarde=new Date().getHours()>=21,g={},gc={};es.filter(e=>(e.fecha<hoy||tarde)&&!sv.some(x=>x.fecha===e.fecha&&x.conductor===e.conductor)).forEach(e=>{const k=e.fecha+'|'+e.conductor;g[k]=(g[k]||0)+1;gc[k]=e.cliente||''});
   const f=x=>x.split('-').reverse().join('-');
-  rsvFilas=sv.map(r=>{const n=parseNotas(r.notas),e=n.extras||{};return {fecha:r.fecha,rojo:false,v:+r.tarifa_neta||0,c:[n.codigo||'',f(r.fecha),r.cliente||'',SVC_VER(n.servicio_sistema||''),r.conductor,r.patente,e.acoplado_reemplazo||n.acoplado||'',+r.tarifa_neta||0]}}).concat(Object.keys(g).map(k=>{const [fe,c]=k.split('|');return {fecha:fe,rojo:true,v:0,c:['',f(fe),gc[k],'⚠ Servicio sin registrar ('+g[k]+' entrega(s))',c,'','','']}}))
+  rsvFilas=sv.map(r=>{const n=parseNotas(r.notas),e=n.extras||{};return {fecha:r.fecha,rojo:false,v:precioSvc(r),c:[n.codigo||'',f(r.fecha),r.cliente||'',SVC_VER(n.servicio_sistema||''),r.conductor,r.patente,e.acoplado_reemplazo||n.acoplado||'',precioSvc(r)]}}).concat(Object.keys(g).map(k=>{const [fe,c]=k.split('|');return {fecha:fe,rojo:true,v:0,c:['',f(fe),gc[k],'⚠ Servicio sin registrar ('+g[k]+' entrega(s))',c,'','','']}}))
     .sort((a,b)=>b.fecha.localeCompare(a.fecha)||(a.rojo-b.rojo)||b.c[0].localeCompare(a.c[0])); // por fecha (más reciente primero); los sin registrar en su fecha
   rsvTodas=rsvFilas;rsvNS=Object.keys(g).length;rsvFiltros();rsvPintar()}
 /* Filtros del resumen (cliente, patente, semirremolque, conductor) y resumen contraído por cliente / patente / conductor (Carlos 22-11) */
@@ -1726,8 +1735,8 @@ async function facAbrirPeriodos(){const hoy=hoyISO(),ps=[],d0=new Date();
       if(has<FAC_DESDE)continue;if(has>hoy)continue; /* la proforma se abre el día de cierre: el 15 y el último día del mes (Carlos 20-11) */ps.push({k,des,has,d0:k.q?des:facDesde(k.c,des.slice(0,7),des)})}} // quincena: al día siguiente; Valle: el último día del mes
   const vist=new Set();for(const p of ps){const id=p.k.c.split(' ')[0].toUpperCase()+'-'+p.des;if(vist.has(id))continue;vist.add(id);
     try{const ex=await supa.from('cxc_facturas').select('id').eq('id',id).maybeSingle();if(ex.data)continue;
-      const sv=(await supa.from('servicios_piloto').select('tarifa_neta').eq('empresa',EMPRESA).eq('modo','registro_tm').neq('estado','anulado').eq('cliente',p.k.c).gte('fecha',p.d0).lte('fecha',p.has)).data||[];if(!sv.length)continue;
-      const neto=sv.reduce((t,x)=>t+(+x.tarifa_neta||0),0);
+      const sv=(await supa.from('servicios_piloto').select('tarifa_neta,notas').eq('empresa',EMPRESA).eq('modo','registro_tm').neq('estado','anulado').eq('cliente',p.k.c).gte('fecha',p.d0).lte('fecha',p.has)).data||[];if(!sv.length)continue;
+      const neto=sv.reduce((t,x)=>t+precioSvc(x),0);
       await supa.from('cxc_facturas').insert({id,cliente:p.k.c,periodo_desde:p.d0,periodo_hasta:p.has,etapa:'por_aprobar',neto,total:Math.round(neto*1.19),nota:sv.length+' servicio(s) según Kaptura'})}catch(e){}}}
 async function leerCxc(){const r=await conTope(supa.from('cxc_facturas').select('*').eq('empresa',EMPRESA).is('fecha_cobro',null).order('periodo_hasta'),10000);if(r.error)throw r.error;return r.data||[]}
 let cxcRows=[];
@@ -2936,9 +2945,9 @@ function resPintar(){const bx=$('res-box'),cs=window._LCS||window._pilCS,S=_sim|
    Toma el primer elemento como título y el resto como contenido. */
 /* 8. Resultado del negocio (Carlos 23-11): ventas netas de servicios ejecutados (fecha del servicio) − costos de la cartola sin IVA (fecha de pago). No entran IVA/F29, créditos, activos, retiros ni devoluciones. */
 async function resResCargar(fm){const b=$('res-s8');if(!b)return;const h=hoyISO(),d=new Date(h+'T12:00:00');d.setDate(d.getDate()-((d.getDay()+6)%7)-7);const wa=hoyISO(d),d2=new Date(wa+'T12:00:00');d2.setDate(d2.getDate()+6);const wb=hoyISO(d2),ma=h.slice(0,8)+'01',ini=wa<ma?wa:ma;
-  const [sv,ca]=await Promise.all([supa.from('servicios_piloto').select('fecha,tarifa_neta,estado').eq('empresa',EMPRESA).gte('fecha',ini).lte('fecha',h),supa.from('cartola_movimientos').select('fecha,monto,categoria').eq('empresa',EMPRESA).lt('monto',0).gte('fecha',ini).lte('fecha',h)]);
+  const [sv,ca]=await Promise.all([supa.from('servicios_piloto').select('fecha,tarifa_neta,estado,notas').eq('empresa',EMPRESA).gte('fecha',ini).lte('fecha',h),supa.from('cartola_movimientos').select('fecha,monto,categoria').eq('empresa',EMPRESA).lt('monto',0).gte('fecha',ini).lte('fecha',h)]);
   const G=[['Combustible',/combustible$|^Combustible|Aramco/i,1.19],['Terceros',/tercero/i,1.19],['Remuneraciones',/sueldo|previred|vi[aá]tico|comisi[oó]n conductor/i,1],['Comisión asesor',/comisi[oó]n asesor|comercial/i,1],['Peajes y TAG',/peaje|^TAG/i,1.19],['Mantención y repuestos',/mantenci|neum|repuesto/i,1.19],['Arriendos de equipos',/arriendo/i,1]],NO=/retiro|tesorer|impuesto|SII|F29|IVA|activo|inversi|fogape|cr[eé]dito|deuda|devoluci|traspaso|pr[eé]stamo/i;
-  const calc=(a,z)=>{const v=(sv.data||[]).filter(x=>x.estado!=='anulado'&&x.fecha>=a&&x.fecha<=z).reduce((s,x)=>s+(+x.tarifa_neta||0),0),C={},M=(ca.data||[]).filter(x=>x.fecha>=a&&x.fecha<=z);let otros=0,sc=0;
+  const calc=(a,z)=>{const v=(sv.data||[]).filter(x=>x.estado!=='anulado'&&x.fecha>=a&&x.fecha<=z).reduce((s,x)=>s+precioSvc(x),0),C={},M=(ca.data||[]).filter(x=>x.fecha>=a&&x.fecha<=z);let otros=0,sc=0;
     const F={};M.forEach(x=>{const c=x.categoria||'';if(/deuda combustible/i.test(c)||(c&&NO.test(c)&&!/comisi/i.test(c))){const k=/IVA|F29|SII|impuesto|tesorer/i.test(c)?'IVA e impuestos (se netean en el F29)':/retiro|devoluci/i.test(c)?'Retiros y devoluciones socios':/activo|inversi/i.test(c)?'Compra de activos':'Deudas y créditos';F[k]=(F[k]||0)-x.monto;return}const g=G.find(g=>g[1].test(c));if(g)C[g[0]]=(C[g[0]]||0)-x.monto/g[2];else if(!c)sc-=x.monto;else otros-=x.monto/1.19});
     const tot=Object.values(C).reduce((a,b)=>a+b,0)+otros;return {v,C,otros,sc,tot,r:v-tot,F}};
   const A=calc(wa,wb),B=calc(ma,h),td='padding:7px 8px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--border)',tl='padding:7px 8px;text-align:left;border-bottom:1px solid var(--border)',row=(t,a,b,st)=>'<tr style="'+(st||'')+'"><td style="'+tl+'">'+t+'</td><td style="'+td+'">'+a+'</td><td style="'+td+'">'+b+'</td></tr>',m=v=>Math.round(v)?fm(v):'—';
@@ -3002,10 +3011,10 @@ async function resAddBorrar(j){if(!confirm('¿Quitar este servicio agregado?'))r
 async function resEjCargar(fd,fm){const b=$('res-ej');if(!b)return;const d=new Date(_resW+'T12:00:00');d.setDate(d.getDate()-7);const a=hoyISO(d),z=new Date(_resW+'T12:00:00');z.setDate(z.getDate()-1);const zz=hoyISO(z),key=a;
   b.innerHTML='<div>4. Servicios ejecutados semana '+fd(a)+' al '+fd(zz)+'</div><div class="sub">Cargando…</div>';resAcc(b,'s4');
   let sv=[];try{sv=(await conTope(supa.from('servicios_piloto').select('fecha,conductor,patente,cliente,notas,tarifa_neta').eq('empresa',EMPRESA).eq('modo','registro_tm').neq('estado','anulado').gte('fecha',a).lte('fecha',zz).order('fecha').order('servicio_id'),10000)).data||[]}catch(e){}
-  if(_resW!==hoyISO(new Date(d.getTime()+7*864e5))||!$('res-ej'))return;const td='padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top',tot=sv.reduce((s,r)=>s+(+r.tarifa_neta||0),0);
+  if(_resW!==hoyISO(new Date(d.getTime()+7*864e5))||!$('res-ej'))return;const td='padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top',tot=sv.reduce((s,r)=>s+precioSvc(r),0);
   b.innerHTML='<div>4. Servicios ejecutados semana '+fd(a)+' al '+fd(zz)+'</div><div style="font-size:13px;color:var(--muted);margin-bottom:6px">Registrados en Kaptura. Tarifa neta, sin IVA.</div>'+
    (sv.length?'<div style="overflow-x:auto"><table style="border-collapse:collapse;width:100%;font-size:15px"><tr style="color:#888;font-weight:800"><td style="'+td+'">Día</td><td style="'+td+'">Servicio</td><td style="'+td+'">Chofer · patente</td><td style="'+td+';text-align:right">Neto</td></tr>'+
-    sv.map(r=>{const n=parseNotas(r.notas),e=n.extras||{},ac=e.acoplado_reemplazo||n.acoplado||'';return '<tr><td style="'+td+';white-space:nowrap">'+fd(r.fecha)+'</td><td style="'+td+'"><b>'+pEsc(r.cliente||'')+'</b> · '+pEsc(SVC_VER(n.servicio_sistema||''))+'</td><td style="'+td+'">'+pEsc(r.conductor||'')+'<div style="font-size:12px;color:#888">'+pEsc(r.patente||'')+(ac?' + '+pEsc(ac):'')+'</div></td><td style="'+td+';text-align:right;white-space:nowrap">'+fm(+r.tarifa_neta||0)+'</td></tr>'}).join('')+
+    sv.map(r=>{const n=parseNotas(r.notas),e=n.extras||{},ac=e.acoplado_reemplazo||n.acoplado||'';return '<tr><td style="'+td+';white-space:nowrap">'+fd(r.fecha)+'</td><td style="'+td+'"><b>'+pEsc(r.cliente||'')+'</b> · '+pEsc(SVC_VER(n.servicio_sistema||''))+'</td><td style="'+td+'">'+pEsc(r.conductor||'')+'<div style="font-size:12px;color:#888">'+pEsc(r.patente||'')+(ac?' + '+pEsc(ac):'')+'</div></td><td style="'+td+';text-align:right;white-space:nowrap">'+fm(precioSvc(r))+'</td></tr>'}).join('')+
     '<tr style="font-weight:900"><td style="'+td+'">Neto</td><td style="'+td+'">'+sv.length+' servicios</td><td style="'+td+'"></td><td style="'+td+';text-align:right;white-space:nowrap">'+fm(tot)+'</td></tr>'+
     '<tr><td style="'+td+'">IVA 19%</td><td style="'+td+'"></td><td style="'+td+'"></td><td style="'+td+';text-align:right;white-space:nowrap">'+fm(Math.round(tot*0.19))+'</td></tr>'+
     '<tr style="font-weight:900"><td style="'+td+'">Total con IVA</td><td style="'+td+'"></td><td style="'+td+'"></td><td style="'+td+';text-align:right;white-space:nowrap">'+fm(Math.round(tot*1.19))+'</td></tr></table></div>':'<div class="sub">No hay servicios registrados esa semana.</div>')+
@@ -3054,7 +3063,7 @@ async function pilProy(nw,quiet){nw=nw||6;const SETW=(k,v)=>{window[(quiet?'_L':
       const PT={},hoyP=hoyISO(),VM={},vm=f=>VM[f.slice(0,7)]=VM[f.slice(0,7)]||{v:0,t:0},cub=(cl,f)=>H_.some(x=>x.cliente===cl&&!x.sin_monto&&x.periodo_desde&&x.periodo_desde<=f&&(x.periodo_hasta||x.periodo_desde)>=f);
       /* Días pasados = servicios registrados en Kaptura; el plan cuenta desde hoy (Carlos 20-11). Lo ya cubierto por una factura o proforma no se suma de nuevo */
       {const i0=hoyP.slice(0,8)+'01'<ini?hoyP.slice(0,8)+'01':ini;let RS=[];try{RS=((await conTope(supa.from('servicios_piloto').select('fecha,cliente,tarifa_neta,notas').eq('empresa',EMPRESA).eq('modo','registro_tm').neq('estado','anulado').gte('fecha',i0).lt('fecha',hoyP),10000)).data)||[]}catch(e){}
-        RS.forEach(r=>{const v=+r.tarifa_neta||0,n=parseNotas(r.notas);if(!v||n.fuera_flujo)return;const ter=n.pago_tercero!=null;vm(r.fecha).v+=v;if(ter)vm(r.fecha).t+=v;
+        RS.forEach(r=>{const v=precioSvc(r),n=parseNotas(r.notas);if(!v||n.fuera_flujo)return;const ter=n.pago_tercero!=null;vm(r.fecha).v+=v;if(ter)vm(r.fecha).t+=v;
           if(r.fecha<ini||!/^(EBLOOMS|DDC|Ateuro|Alimentos Valle|Valle)/.test(r.cliente||'')||cub(r.cliente,r.fecha))return;const [k,hh,pf]=perH(r.cliente,r.fecha),key=k+'|'+hh,nm=(n.servicio_sistema||'servicio').replace(/^[^:]*:\s*/,'')+' (registrado)';
           PLC[key]=PLC[key]||{k,hh,pf,v:0,cl:r.cliente,det:{}};PLC[key].v+=v;PLC[key].det[nm]=(PLC[key].det[nm]||0)+v;
           if(ter&&+n.pago_tercero){const fp=mas(r.fecha,30),kk=fp+'|tercero registrado';PT[kk]=PT[kk]||{f:fp,t:'Pago tercero (servicios registrados)',v:0};PT[kk].v+=+n.pago_tercero*iva}})}
@@ -3268,7 +3277,7 @@ async function verRegistros(){
   verRegistrosPintar()}
 let _cliF='';
 function verRegistrosPintar(){const vis=filas.filter(r=>!_cliF||(r.cliente||'(sin cliente)')===_cliF);
-  $('list-tot').textContent=_cliF?vis.length+' servicio(s) de '+_cliF+(esCliente()?'':' · Tarifa neta total $'+fmt(vis.reduce((a,r)=>a+(+r.tarifa_neta||0),0))):'';
+  $('list-tot').textContent=_cliF?vis.length+' servicio(s) de '+_cliF+(esCliente()?'':' · Tarifa neta total $'+fmt(vis.reduce((a,r)=>a+precioSvc(r),0))):'';
   $('lista').innerHTML=filas.map((r,i)=>{if(_cliF&&(r.cliente||'(sin cliente)')!==_cliF)return '';const n=r._n,ex=textoExtras(n.extras||{});
     return '<div class="reg" data-i="'+i+'">'+(esAdmin()?'<button class="del" onclick="pedirBorrar('+i+')">✕</button>':'')+'<div onclick="regTog('+i+')" style="cursor:pointer"><div class="t">'+(n.codigo?'<span class="ul">'+n.codigo+'</span> · ':'')+r.fecha.split('-').reverse().join('-')+' · '+SVC_VER(n.servicio_sistema||((r.origen||'')+' → '+(r.destino||'')))+ifcoCab(r._ents||n.entregas||[])+marcasSvc(n)+'</div>'+
     '<div>'+r.conductor+(n.peoneta?' + '+n.peoneta:'')+' · '+patTipo(r.patente)+(n.acoplado?' / '+n.acoplado:'')+'</div>'+((n.guias||[]).length?'<div><b>Guía '+n.guias.join(' - ')+'</b>'+regHora(r)+'</div>':'<div class="m"><span style="opacity:.6">Sin guía</span>'+regHora(r)+'</div>')+'<div class="m" id="regf'+i+'">▸ Ver detalle</div></div><div id="regd'+i+'" style="display:none">'+(n.factura_salida?'<div><b>Factura salida: '+n.factura_salida+'</b></div>':'')+
@@ -3283,7 +3292,7 @@ async function regEdit(i){const r=filas[i];if(!r||!esAdmin())return;const n=pars
   const nn={...n,servicio_sistema:v.s||n.servicio_sistema,acoplado:(v.a||'').trim()||null,guias:g,observacion:(v.o||'').trim()||null,marcas:{ifco:v.mi==='Sí',rechazo:v.mr==='Sí',retiro:v.mt==='Sí'},editado:[...(n.editado||[]),{por:user.nombre,en:new Date().toISOString()}]};
   const {error}=await supa.from('servicios_piloto').update({fecha:v.f||r.fecha,cliente:(v.c||'').trim()||r.cliente,conductor:(v.co||'').trim()||r.conductor,patente:(v.p||'').trim().toUpperCase()||r.patente,tarifa_neta:+v.t||0,num_guia:g[0]||null,notas:JSON.stringify(nn)}).eq('id',r.id);
   toast(error?'No se pudo guardar: '+error.message:'✔ Servicio actualizado');if(!error)verRegistros()}
-async function entMarca(id,campo,val){if(!esAdmin())return;const {error}=await supa.from('entregas').update({[campo]:val}).eq('id',id);toast(error?'No se pudo guardar':'✔ Marca actualizada');if(!error)verRegistros()}
+async function entMarca(id,campo,val){if(!esAdmin())return;const {data,error}=await supa.from('entregas').update({[campo]:val}).eq('id',id).select('servicio_id');toast(error?'No se pudo guardar':'✔ Marca actualizada');if(!error){await marcasSync(((data||[])[0]||{}).servicio_id);verRegistros()}}
 function regTog(i){const d=$('regd'+i),f=$('regf'+i);if(!d)return;const o=d.style.display==='none';d.style.display=o?'block':'none';if(f)f.textContent=o?'▾ Ocultar detalle':'▸ Ver detalle'}
 function fmt(n){return Number(n||0).toLocaleString('es-CL')}
 async function avisoCliente(i){
@@ -3441,7 +3450,7 @@ async function guardarEnt(btn){
     let sid=null,cli=g?g.cliente:null;try{const r=await conTope(supa.from('servicios_piloto').select('servicio_id,cliente').eq('empresa',EMPRESA).eq('modo','registro_tm').neq('estado','anulado').eq('fecha',fecha).eq('conductor',user.nombre).order('servicio_id',{ascending:false}).limit(1),6000);const s0=(r.data||[])[0]||{};sid=s0.servicio_id||null;cli=cli||s0.cliente||null}catch(e){}
     // Sin geocerca ni servicio del día: cliente del último servicio del conductor, para que el cliente vea su entrega (Carlos 02-11)
     if(!cli){try{const r=await conTope(supa.from('servicios_piloto').select('cliente').eq('empresa',EMPRESA).eq('modo','registro_tm').neq('estado','anulado').eq('conductor',user.nombre).not('cliente','is',null).order('fecha',{ascending:false}).limit(1),6000);cli=((r.data||[])[0]||{}).cliente||null}catch(e){}}
-    const {error}=await supa.from('entregas').insert({empresa:EMPRESA,fecha,hora,conductor:user.nombre,local,cliente:cli,lat:c?c.latitude:null,lon:c?c.longitude:null,precision_m:c?Math.round(c.accuracy):null,foto,estado:'entregado',ifco_pendiente:entPend,rechazo:entRech,retiro_ifco:entRet,servicio_id:sid,obs:($('ent-nro').value||'').replace(/\D/g,'')||null});
+    const {error}=await supa.from('entregas').insert({empresa:EMPRESA,fecha,hora,conductor:user.nombre,local,cliente:cli,lat:c?c.latitude:null,lon:c?c.longitude:null,precision_m:c?Math.round(c.accuracy):null,foto,estado:'entregado',ifco_pendiente:entPend,rechazo:entRech,retiro_ifco:entRet,servicio_id:sid,obs:($('ent-nro').value||'').replace(/\D/g,'')||null});if(!error&&sid&&(entRech||entRet))marcasSync(sid);
     if(error)throw error;
     toast((entPend?'📄 Entregado · IFCO pendiente: ':'✅ Entrega guardada: ')+local+' '+hora);ir('s-home');contarEnt();
   }catch(e){toast('No se pudo guardar. Revise la señal e intente de nuevo.')}
@@ -3676,7 +3685,7 @@ async function cargarProformaA(){
   const {data,error}=await supa.from('servicios_piloto').select('*').eq('empresa',EMPRESA).eq('modo','registro_tm').neq('estado','anulado').eq('cliente','Ateuro / Zuria').gte('fecha',desde).lte('fecha',hasta).order('fecha');
   if(error){$('profA-sub').textContent='Error: '+error.message;return}
   profAFilas=(data||[]).map(r=>{const n=parseNotas(r.notas),sv=(n.servicio_sistema||'').replace(/^Ateuro:\s*/,'').replace(/\s*·.*$/,''),[o,d]=sv.split('→').map(x=>(x||'').trim());
-    const neto=+r.tarifa_neta||0,iva=Math.round(neto*0.19),tipo=TRACTOS.includes(r.patente)?'Thermo':'Afurgonado';
+    const neto=precioSvc(r),iva=Math.round(neto*0.19),tipo=TRACTOS.includes(r.patente)?'Thermo':'Afurgonado';
     return {fecha:r.fecha,cells:[r.fecha.split('-').reverse().join('-'),(n.guias||[]).join(' - '),'Transportes Madrid Gaete',r.conductor,o||r.origen||'',d||r.destino||'',tipo,'Fruta',neto,iva,neto+iva]}});
   const tn=profAFilas.reduce((t,f)=>t+f.cells[8],0),ti=profAFilas.reduce((t,f)=>t+f.cells[9],0);
   $('profA-tbl').innerHTML='<tr>'+HEAD_A.map(h=>'<th>'+h+'</th>').join('')+'</tr>'+profAFilas.map(f=>'<tr>'+f.cells.map((c,i)=>'<td'+(i>=8?' class="n"':'')+'>'+(i>=8?Number(c).toLocaleString('es-CL'):c)+'</td>').join('')+'</tr>').join('')+
@@ -3700,7 +3709,7 @@ async function cargarProformaD(){const liq=$('profD-q').value;$('profD-tbl').inn
   const {data,error}=await supa.from('servicios_piloto').select('*').in('empresa',[EMPRESA,EMP_BORR()]).eq('cliente','DDC').gte('fecha',DDC_DESDE).order('fecha');
   if(error){$('profD-sub').textContent='Error: '+error.message;return}
   const L=(data||[]).filter(r=>!['anulado','descartado'].includes(r.estado)).map(r=>({r,n:parseNotas(r.notas)})).filter(x=>liq?x.n.liq_ddc===liq:!x.n.liq_ddc);
-  profDFilas=L.map(({r,n})=>{const sv=(n.servicio_sistema||'').replace(/^SPOT · /,'').replace(/^DDC:\s*/,''),[o,d]=sv.split('→').map(x=>(x||'').trim()),neto=+r.tarifa_neta||0,iva=Math.round(neto*0.19),borr=r.empresa===EMP_BORR();
+  profDFilas=L.map(({r,n})=>{const sv=(n.servicio_sistema||'').replace(/^SPOT · /,'').replace(/^DDC:\s*/,''),[o,d]=sv.split('→').map(x=>(x||'').trim()),neto=precioSvc(r),iva=Math.round(neto*0.19),borr=r.empresa===EMP_BORR();
     const tr=n.tipo_spot==='tercero'&&n.tercero?'Tercero: '+n.tercero:'Transportes Madrid Gaete',ch=String(n.conductor_tercero||r.conductor||'').replace(/^Tercero:\s*/,'');
     return {id:r.id,fecha:r.fecha,borr,sinT:!neto,fotos:n.fotos||[],cells:[fCL(r.fecha),(n.guias||[]).join(' - '),tr,ch,o||r.origen||'',d||r.destino||'',[r.patente,n.acoplado].filter(Boolean).join(' + '),n.spot?'Spot':'Normal',neto,iva,neto+iva]}});
   const tn=profDFilas.reduce((t,f)=>t+f.cells[8],0),ti=profDFilas.reduce((t,f)=>t+f.cells[9],0),nb=profDFilas.filter(f=>f.borr).length,nt=profDFilas.filter(f=>f.sinT).length;
