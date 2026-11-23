@@ -591,6 +591,7 @@ const USUARIOS={
   '0004':{nombre:'Cristóbal Núñez González',rol:'conductor',patente:'CWVH32-9',acoplado:''},
   '0005':{nombre:'Alfonso Medina',rol:'conductor',patente:'ZV7780',acoplado:'JB6234'},
   '0006':{nombre:'EBLOOMS',rol:'cliente',cliente:'EBLOOMS',patente:'',acoplado:''},
+  '0007':{nombre:'Fredy Fuentes',rol:'conductor',patente:'SP7733',acoplado:''}, /* tío de Claudio, maneja SP7733 (Carlos 22-11) */
   '1313':{nombre:'Administración',rol:'administracion',patente:'',acoplado:''},
   '2000':{nombre:'Carlos Torres',rol:'coordinador',patente:'',acoplado:'',empresa:'global_solutions'} /* Carlos ve Kaptura como coordinador de Global Solutions (Carlos 21-11) */
 };
@@ -627,7 +628,7 @@ const PATENTES=['DSBZ64','ZV7780','SP7733','CWVH32-9','DZZW14','XJ3908','GXYD90'
 const PEONETAS={'CWVH32-9':['Marcelo González']};
 const ACOPLADOS=['','JN4847','JB6234','JB1520','GRFD91']; // JB1520: thermo nuevo de TM (Carlos 22-11) // GRFD91: thermo de reemplazo del dueño del JN (pana o mantención), Carlos 30-10
 const TRACTOS=['DSBZ64','ZV7780','SP7733']; // solo los tractos llevan acoplado
-const LIC_A5=['0003','0005']; // conductores con licencia A5: ven tractos y afurgonados; el resto solo afurgonados (Carlos 30-10)
+const LIC_A5=['0003','0005','0007']; // conductores con licencia A5: ven tractos y afurgonados; el resto solo afurgonados (Carlos 30-10)
 const EXTRAS=[{id:'trasp',txt:'Traspaleteo'},{id:'trasv',txt:'Trasvasije'},{id:'retorno',txt:'Retorno'},{id:'espera',txt:'Espera'},{id:'peaje',txt:'Peaje efectivo'},{id:'reemp',txt:'Acoplado reemplazo'},{id:'ifco',txt:'Retiro IFCO'}];
 // Retiro de cajas IFCO en bodega o centro de distribución: EBLOOMS paga $85.000 neto (Carlos 02-11)
 const TARIFA_IFCO=85000;
