@@ -38,7 +38,7 @@ Deno.serve(async (req) => {
       if (!id || docs.has(doc) || yaPFL.has(clave(pat, fecha, lit))) continue;
       const odo = num(tag(t, 'Odometro'));
       nuevas.push({ empresa: EMPRESA, fuente: 'aramco', documento: doc, fecha, ts: f ? f + '-03:00' : null, patente: pat, litros: lit, total: num(tag(t, 'TotalPago')), iva: num(tag(t, 'IVA')),
-        nota: 'API Esmax · ' + tag(t, 'EstacionServicio') + ' (' + tag(t, 'Comuna') + ') · pizarra $' + tag(t, 'Pizarra') + ' · descuento $' + tag(t, 'TotalDescuento') + ' · factura ' + tag(t, 'Factura') + ' · guía ' + tag(t, 'GuiaDespacho') + (odo > 0 ? ' · odómetro ' + odo + ' km' : '') + (tag(t, 'RUTChofer') ? ' · chofer ' + tag(t, 'RUTChofer') : '') });
+        nota: 'API Esmax · ' + tag(t, 'EstacionServicio') + ' (' + tag(t, 'Comuna') + ') · pizarra $' + tag(t, 'Pizarra') + ' · descuento $' + tag(t, 'TotalDescuento') + ' · factura ' + tag(t, 'Factura') + ' · guía ' + tag(t, 'GuiaDespacho') + (odo > 0 ? ' · odómetro ' + Math.round(odo) + ' km' : '') + (tag(t, 'RUTChofer') ? ' · chofer ' + tag(t, 'RUTChofer') : '') });
     }
     if (!nuevas.length) return new Response('OK: ' + T.length + ' transacciones, 0 nuevas');
     const lr = await fetch(SUPA + '/rest/v1/cargas_lote', { method: 'POST', headers: { ...H, Prefer: 'return=representation' }, body: JSON.stringify({ empresa: EMPRESA, tipo: 'aramco', archivo: 'API Esmax ' + iso(fin), filas: nuevas.length, resumen: {}, creado_por: 'API Esmax (automático)' }) });
