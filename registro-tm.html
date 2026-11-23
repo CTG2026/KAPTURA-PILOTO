@@ -872,7 +872,7 @@ function pintarServicios(cli){
 }
 function pintarEquipo(){
   const pats=(user&&user.rol==='conductor'&&!LIC_A5.includes(user.pin))?PATENTES.filter(x=>!TRACTOS.includes(x)&&x!=='XJ3908'):PATENTES;
-  /* Por defecto, la patente asignada al conductor; puede cambiarla en la lista (Carlos 13-11) */const def=(user&&pats.includes(user.patente))?user.patente:'';
+  /* Sin patente por defecto: el conductor elige su tracto en cada servicio (Carlos 22-11; antes venía la asignada, 13-11) */const def='';
   $('patente').innerHTML='<option value=""'+(def?'':' selected')+'>Elige patente</option>'+pats.map(x=>'<option'+(x===def?' selected':'')+'>'+x+'</option>').join('')+'<option value="OTRA">✏️ Otra patente (escribir)</option>';$('pat-otra').style.display='none';$('pat-otra').value='';
   $('acoplado').innerHTML='<option value="?" selected>Elige acoplado</option>'+ACOPLADOS.map(x=>'<option value="'+x+'">'+(x||'Sin acoplado')+'</option>').join('')+'<option value="OTRA">✏️ Otro acoplado (escribir)</option>';$('aco-otra').style.display='none';$('aco-otra').value='';
   pintarPeoneta();
