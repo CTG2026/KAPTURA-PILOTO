@@ -363,6 +363,7 @@ body.pc .tv{display:none}body:not(.pc) .tp{display:none}
 </section>
 <section class="screen" id="s-gps">
   <h1>Reporte GPS</h1>
+  <div id="gps-fil" style="display:none;gap:8px;margin-bottom:8px;flex-wrap:wrap"><select id="gps-per" onchange="gpsFiltro()" style="flex:1;min-width:140px;font-size:16px;padding:8px;border-radius:10px;border:2px solid var(--border);background:var(--surface);color:var(--text)"><option value="dia">Un día</option><option value="7">Últimos 7 días</option><option value="30">Últimos 30 días</option></select><select id="gps-pat" onchange="gpsFiltro()" style="flex:1;min-width:160px;font-size:16px;padding:8px;border-radius:10px;border:2px solid var(--border);background:var(--surface);color:var(--text)"><option value="">Todas las patentes</option></select></div>
   <input type="date" id="gps-dia" style="width:100%;font-size:18px;padding:10px;border-radius:10px;border:2px solid var(--border);background:var(--surface);color:var(--text);margin-bottom:12px">
   <div class="sub" id="gps-sub">Cargando…</div>
   <div id="gps-lista"></div>
@@ -3293,10 +3294,28 @@ function gpsServicio(i){const r=filas[i];if(!r)return;gpsPat=PATS(svcPats(r));gp
 async function verGPS(){
   ir('s-gps'); const inp=$('gps-dia');
   if(!inp.value){inp.value=hoyISO();inp.onchange=cargarGPS}
+  $('gps-per').value='dia';inp.style.display='block';if(gpsPat==null)$('gps-pat').value='';gpsFilIni();
   cargarGPS();
   clearInterval(window._gpsT);window._gpsT=setInterval(()=>{if($('s-gps').classList.contains('on')&&!document.hidden&&$('gps-dia').value===hoyISO())cargarGPS()},180000);
 }
-async function cargarGPS(){
+/* Reporte GPS por período (7 / 30 días) y por patente con su tipo, en acordeón; solo administradores (Carlos 22-11) */
+let gpsTipos=null;
+async function gpsFilIni(){if(!esAdmin()){$('gps-fil').style.display='none';return}$('gps-fil').style.display='flex';
+  if(!gpsTipos){gpsTipos={};try{const [c,g]=await Promise.all([supa.from('carpeta_equipos').select('patente,tipo').eq('empresa',EMPRESA),supa.from('gps_viajes').select('patente').order('inicio',{ascending:false}).limit(2000)]);(c.data||[]).forEach(x=>gpsTipos[PAT_GPS(x.patente)]=x.tipo);const ps=[...new Set((g.data||[]).map(x=>PAT_GPS(x.patente)))].sort();
+    $('gps-pat').innerHTML='<option value="">Todas las patentes</option>'+ps.map(p=>'<option value="'+p+'">'+p+(gpsTipos[p]?' · '+String(gpsTipos[p]).toLowerCase():'')+'</option>').join('')}catch(e){}}}
+function gpsFiltro(){const per=$('gps-per').value,pp=$('gps-pat').value;gpsPat=pp?[pp]:null;$('gps-dia').style.display=per==='dia'?'block':'none';if(per==='dia')cargarGPS();else cargarGPSPer(+per)}
+async function cargarGPSPer(n){const run=window._gpsRun=(window._gpsRun||0)+1;const L=$('gps-lista');L.innerHTML='';$('gps-sub').textContent='Cargando…';const hoy=hoyISO(),d0=hoyISO(new Date(Date.now()-(n-1)*864e5)),[a]=diaRango(d0),[,b]=diaRango(hoy);
+  const [g,sv]=await Promise.all([supa.from('gps_viajes').select('patente,tipo,inicio,fin,duracion_s,km,vel_max').gte('inicio',a).lt('inicio',b).order('inicio'),supa.from('servicios_piloto').select('fecha,patente,notas,cliente').eq('empresa',EMPRESA).eq('modo','registro_tm').neq('estado','anulado').gte('fecha',d0).lte('fecha',hoy)]);
+  if(run!==window._gpsRun)return;if(g.error){$('gps-sub').textContent='Error: '+g.error.message;return}
+  const E=(g.data||[]).filter(x=>!gpsPat||gpsPat.includes(PAT_GPS(x.patente))),P=[...new Set(E.map(x=>PAT_GPS(x.patente)))].sort(),S=(sv.data||[]).map(r=>({...r,_n:parseNotas(r.notas)})),dl=t=>hoyISO(new Date(t));
+  if(!P.length){$('gps-sub').textContent='Sin datos GPS en los últimos '+n+' días.';return}
+  $('gps-sub').textContent='Últimos '+n+' días · '+fCL(d0)+' al '+fCL(hoy)+' · '+P.length+' patente(s)';
+  L.innerHTML=P.map(p=>{const e=E.filter(x=>PAT_GPS(x.patente)===p),v=e.filter(x=>x.tipo==='viaje'),km=v.reduce((t,x)=>t+(+x.km||0),0),co=v.reduce((t,x)=>t+(x.duracion_s||0),0),D=[...new Set(v.map(x=>dl(x.inicio)))].sort().reverse(),vm=Math.max(0,...v.map(x=>+x.vel_max||0));
+    const fil=D.map(d=>{const vd=v.filter(x=>dl(x.inicio)===d),kd=vd.reduce((t,x)=>t+(+x.km||0),0),cd=vd.reduce((t,x)=>t+(x.duracion_s||0),0),ns=S.filter(s=>s.fecha===d&&PATS(svcPats(s)).includes(p)).length;
+      return '<tr style="cursor:pointer" onclick="$(\'gps-per\').value=\'dia\';$(\'gps-dia\').value=\''+d+'\';gpsPat=[\''+p+'\'];$(\'gps-pat\').value=\''+p+'\';$(\'gps-dia\').style.display=\'block\';cargarGPS()"><td style="padding:5px 4px;border-bottom:1px solid var(--border)">'+fCL(d).slice(0,5)+'</td><td style="padding:5px 4px;border-bottom:1px solid var(--border)">'+hhmm(vd[0].inicio)+'–'+hhmm(vd[vd.length-1].fin||vd[vd.length-1].inicio)+'</td><td style="padding:5px 4px;border-bottom:1px solid var(--border);text-align:right">'+Math.round(kd)+'</td><td style="padding:5px 4px;border-bottom:1px solid var(--border);text-align:right">'+durTxt(cd)+'</td><td style="padding:5px 4px;border-bottom:1px solid var(--border);text-align:center">'+(ns?'✓ '+ns:'—')+'</td></tr>'}).join('');
+    return '<details class="gps" style="padding:10px 12px"'+((window._acc||{})['gps'+p]?' open':'')+' ontoggle="(window._acc=window._acc||{})[\'gps'+p+'\']=this.open"><summary style="cursor:pointer;list-style:none"><div class="t">▸ '+p+' <span style="font-weight:400;color:var(--muted);font-size:13px">'+(gpsTipos&&gpsTipos[p]?String(gpsTipos[p]).toLowerCase():'')+'</span></div><div class="m">'+Math.round(km)+' km · '+D.length+' día(s) con movimiento · '+durTxt(co)+' de conducción · máx. '+Math.round(vm)+' km/h</div></summary>'
+      +(D.length?'<table><tr><th>Día</th><th>Horario</th><th style="text-align:right">Km</th><th style="text-align:right">Conducción</th><th style="text-align:center">Servicio</th></tr>'+fil+'</table><div class="m">Toca un día para ver el detalle.</div>':'<div class="m">Sin viajes en el período (solo paradas).</div>')+'</details>'}).join('')}
+async function cargarGPS(){const run=window._gpsRun=(window._gpsRun||0)+1;
   const dia=$('gps-dia').value; $('gps-lista').innerHTML=''; $('gps-sub').textContent='Cargando…';
   if(!supa){$('gps-sub').textContent='Sin conexión con la base de datos.';return}
   const [a,b]=diaRango(dia);
@@ -3353,7 +3372,7 @@ async function cargarGPS(){
       filas+
       '<div class="kpi"><div>Km<b>'+Math.round(km)+'</b></div><div>Esperas<b>'+durTxt(esp)+'</b></div>'+(esAdmin()?'<div>Jornada<b>'+durTxt(jor)+'</b></div><div>Conducción<b>'+durTxt(cond)+'</b></div><div>Vel. máx.<b>'+Math.round(vmax)+' km/h</b></div><div>Tramos<b>'+vj.length+'</b></div>':'')+'</div>'+
       (esAdmin()&&al.length?'<div class="al">⚠ '+al.join('<br>⚠ ')+'</div>':'')+'</div>';
-    $('gps-lista').innerHTML=html;
+    if(run!==window._gpsRun)return;$('gps-lista').innerHTML=html;
   }
   $('gps-sub').textContent='';
 }
