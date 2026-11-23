@@ -10,9 +10,13 @@ const tag = (x: string, t: string) => { const m = x.match(new RegExp('<' + t + '
 const num = (s: string) => +(s || '0').replace(',', '.') || 0;
 const iso = (d: Date) => d.toISOString().slice(0, 10);
 
+const CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'content-type, authorization, apikey', 'Access-Control-Allow-Methods': 'POST, OPTIONS' };
 Deno.serve(async (req) => {
+  // todas las respuestas llevan CORS (botón "Actualizar Aramco" de Kaptura, Carlos 23-11)
+  const Response2 = (b: string, o: any = {}) => new Response(b, { ...o, headers: { ...CORS, ...(o.headers || {}) } });
+  if (req.method === 'OPTIONS') return Response2('ok');
   const CLAVE = (Deno.env.get('ARAMCO_TM_CLAVE') || '').trim();
-  if (!CLAVE) return new Response('Falta el secreto ARAMCO_TM_CLAVE', { status: 200 });
+  if (!CLAVE) return Response2('Falta el secreto ARAMCO_TM_CLAVE', { status: 200 });
   let dias = 3;
   try { const b = await req.json(); if (b && +b.dias > 0 && +b.dias <= 30) dias = +b.dias; } catch (_) { /* sin cuerpo */ }
   const SUPA = Deno.env.get('SUPABASE_URL')!, KEY = claveNueva('SUPABASE_SECRET_KEYS') || claveNueva('SUPABASE_PUBLISHABLE_KEYS');
@@ -27,7 +31,7 @@ Deno.serve(async (req) => {
     if (!r.ok) throw new Error('Esmax ' + r.status + ': ' + x.slice(0, 300));
     const errs = tag(tag(x, 'ListaErrores'), 'string') || tag(x, 'Mensaje');
     const T = x.split('<TransacoesExportacao>').slice(1).map((s) => s.split('</TransacoesExportacao>')[0]);
-    if (!T.length) return new Response('OK: 0 transacciones (' + iso(ini) + ' a ' + iso(fin) + ')' + (errs ? ' · aviso Esmax: ' + errs : ''));
+    if (!T.length) return Response2('OK: 0 transacciones (' + iso(ini) + ' a ' + iso(fin) + ')' + (errs ? ' · aviso Esmax: ' + errs : ''));
     // existentes para no duplicar
     const ex = await fetch(SUPA + '/rest/v1/combustible_cargas?select=id,documento,patente,fecha,litros,nota&empresa=eq.' + EMPRESA + '&fuente=eq.aramco&fecha=gte.' + iso(new Date(ini.getTime() - 86400000)), { headers: H }).then((r) => r.json());
     const docs = new Set((ex || []).map((e: any) => e.documento)), clave = (p: string, f: string, l: number) => p + '|' + f + '|' + l.toFixed(1);
@@ -43,14 +47,14 @@ Deno.serve(async (req) => {
       nuevas.push({ empresa: EMPRESA, fuente: 'aramco', documento: doc, fecha, ts: f ? f + '-03:00' : null, patente: pat, litros: lit, total: num(tag(t, 'TotalPago')), iva: num(tag(t, 'IVA')),
         nota: 'API Esmax · ' + tag(t, 'EstacionServicio') + ' (' + tag(t, 'Comuna') + ') · pizarra $' + tag(t, 'Pizarra') + ' · descuento $' + tag(t, 'TotalDescuento') + ' · factura ' + tag(t, 'Factura') + ' · guía ' + tag(t, 'GuiaDespacho') + (odo > 0 ? ' · odómetro ' + Math.round(odo) + ' km' : '') + (tag(t, 'RUTChofer') ? ' · chofer ' + tag(t, 'RUTChofer') : '') });
     }
-    if (!nuevas.length) return new Response('OK: ' + T.length + ' transacciones, 0 nuevas, odómetro agregado a ' + odoAgregados);
+    if (!nuevas.length) return Response2('OK: ' + T.length + ' transacciones, 0 nuevas, odómetro agregado a ' + odoAgregados);
     const lr = await fetch(SUPA + '/rest/v1/cargas_lote', { method: 'POST', headers: { ...H, Prefer: 'return=representation' }, body: JSON.stringify({ empresa: EMPRESA, tipo: 'aramco', archivo: 'API Esmax ' + iso(fin), filas: nuevas.length, resumen: {}, creado_por: 'API Esmax (automático)' }) });
     if (!lr.ok) throw new Error('Lote ' + lr.status + ': ' + (await lr.text()).slice(0, 300));
     const lote = (await lr.json())[0].id;
     const ir = await fetch(SUPA + '/rest/v1/combustible_cargas', { method: 'POST', headers: { ...H, Prefer: 'return=minimal' }, body: JSON.stringify(nuevas.map((n) => ({ ...n, lote_id: lote }))) });
     if (!ir.ok) throw new Error('Cargas ' + ir.status + ': ' + (await ir.text()).slice(0, 300));
-    return new Response('OK: ' + T.length + ' transacciones, ' + nuevas.length + ' nuevas guardadas, odómetro agregado a ' + odoAgregados);
+    return Response2('OK: ' + T.length + ' transacciones, ' + nuevas.length + ' nuevas guardadas, odómetro agregado a ' + odoAgregados);
   } catch (e) {
-    return new Response('ERROR: ' + (e as Error).message, { status: 500 });
+    return Response2('ERROR: ' + (e as Error).message, { status: 500 });
   }
 });
