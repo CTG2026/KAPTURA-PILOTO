@@ -29,24 +29,27 @@ Deno.serve(async (req) => {
     const T = x.split('<TransacoesExportacao>').slice(1).map((s) => s.split('</TransacoesExportacao>')[0]);
     if (!T.length) return new Response('OK: 0 transacciones (' + iso(ini) + ' a ' + iso(fin) + ')' + (errs ? ' · aviso Esmax: ' + errs : ''));
     // existentes para no duplicar
-    const ex = await fetch(SUPA + '/rest/v1/combustible_cargas?select=documento,patente,fecha,litros&empresa=eq.' + EMPRESA + '&fuente=eq.aramco&fecha=gte.' + iso(new Date(ini.getTime() - 86400000)), { headers: H }).then((r) => r.json());
+    const ex = await fetch(SUPA + '/rest/v1/combustible_cargas?select=id,documento,patente,fecha,litros,nota&empresa=eq.' + EMPRESA + '&fuente=eq.aramco&fecha=gte.' + iso(new Date(ini.getTime() - 86400000)), { headers: H }).then((r) => r.json());
     const docs = new Set((ex || []).map((e: any) => e.documento)), clave = (p: string, f: string, l: number) => p + '|' + f + '|' + l.toFixed(1);
-    const yaPFL = new Set((ex || []).map((e: any) => clave(String(e.patente || '').replace(/[\s-]/g, ''), e.fecha, +e.litros)));
+    const yaPFL = new Map((ex || []).map((e: any) => [clave(String(e.patente || '').replace(/[\s-]/g, ''), e.fecha, +e.litros), e]));
+    let odoAgregados = 0;
     const nuevas: any[] = [];
     for (const t of T) {
       const id = tag(t, 'IDTransaccion'), doc = 'API-' + id, f = tag(t, 'Fecha'), fecha = f.slice(0, 10), pat = tag(t, 'Patente').replace(/[\s-]/g, '').toUpperCase(), lit = num(tag(t, 'Volumen'));
-      if (!id || docs.has(doc) || yaPFL.has(clave(pat, fecha, lit))) continue;
-      const odo = num(tag(t, 'Odometro'));
+      const odo = num(tag(t, 'Odometro')), previa: any = yaPFL.get(clave(pat, fecha, lit));
+      // carga ya subida por Excel: solo se le agrega el odómetro de la API a la nota (para el rendimiento)
+      if (previa && odo > 0 && !/od[oó]metro/i.test(previa.nota || '')) { const pr = await fetch(SUPA + '/rest/v1/combustible_cargas?id=eq.' + previa.id, { method: 'PATCH', headers: { ...H, Prefer: 'return=minimal' }, body: JSON.stringify({ nota: (previa.nota ? previa.nota + ' · ' : '') + 'API Esmax · odómetro ' + Math.round(odo) + ' km' }) }); if (pr.ok) odoAgregados++; }
+      if (!id || docs.has(doc) || previa) continue;
       nuevas.push({ empresa: EMPRESA, fuente: 'aramco', documento: doc, fecha, ts: f ? f + '-03:00' : null, patente: pat, litros: lit, total: num(tag(t, 'TotalPago')), iva: num(tag(t, 'IVA')),
         nota: 'API Esmax · ' + tag(t, 'EstacionServicio') + ' (' + tag(t, 'Comuna') + ') · pizarra $' + tag(t, 'Pizarra') + ' · descuento $' + tag(t, 'TotalDescuento') + ' · factura ' + tag(t, 'Factura') + ' · guía ' + tag(t, 'GuiaDespacho') + (odo > 0 ? ' · odómetro ' + Math.round(odo) + ' km' : '') + (tag(t, 'RUTChofer') ? ' · chofer ' + tag(t, 'RUTChofer') : '') });
     }
-    if (!nuevas.length) return new Response('OK: ' + T.length + ' transacciones, 0 nuevas');
+    if (!nuevas.length) return new Response('OK: ' + T.length + ' transacciones, 0 nuevas, odómetro agregado a ' + odoAgregados);
     const lr = await fetch(SUPA + '/rest/v1/cargas_lote', { method: 'POST', headers: { ...H, Prefer: 'return=representation' }, body: JSON.stringify({ empresa: EMPRESA, tipo: 'aramco', archivo: 'API Esmax ' + iso(fin), filas: nuevas.length, resumen: {}, creado_por: 'API Esmax (automático)' }) });
     if (!lr.ok) throw new Error('Lote ' + lr.status + ': ' + (await lr.text()).slice(0, 300));
     const lote = (await lr.json())[0].id;
     const ir = await fetch(SUPA + '/rest/v1/combustible_cargas', { method: 'POST', headers: { ...H, Prefer: 'return=minimal' }, body: JSON.stringify(nuevas.map((n) => ({ ...n, lote_id: lote }))) });
     if (!ir.ok) throw new Error('Cargas ' + ir.status + ': ' + (await ir.text()).slice(0, 300));
-    return new Response('OK: ' + T.length + ' transacciones, ' + nuevas.length + ' nuevas guardadas');
+    return new Response('OK: ' + T.length + ' transacciones, ' + nuevas.length + ' nuevas guardadas, odómetro agregado a ' + odoAgregados);
   } catch (e) {
     return new Response('ERROR: ' + (e as Error).message, { status: 500 });
   }
