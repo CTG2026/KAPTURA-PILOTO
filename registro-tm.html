@@ -2834,7 +2834,7 @@ async function resAraCargar(fd,fm){const b=$('res-ara');if(!b)return;const w=_re
   for(let k=0;k<7;k++){const f=mas(k),c=Math.round(C[f]||0),p=s;s-=c;D.push({f,p,c,q:s});if(s<0&&!cae)cae=f}
   const tot=D.reduce((a,x)=>a+x.c,0);if(cae)falta=Math.ceil((tot-D[0].p)/1e6)*1e6;
   const c='padding:7px 8px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--border)',L0='padding:7px 8px;text-align:left;white-space:nowrap;border-bottom:1px solid var(--border);position:sticky;left:0;background:var(--surface);font-weight:800';
-  b.innerHTML='<div>⛽ Saldo Aramco'+(cae?' · <span style="color:#DC2626">recargar antes del '+fd(cae)+'</span>':'')+'</div>'+
+  b.innerHTML='<div>⛽ Saldo Aramco <span style="color:'+(D[0].p<0?'#DC2626':'var(--text)')+'">('+fm(D[0].p)+')</span></div>'+
    '<div style="font-size:13px;color:var(--muted);margin:6px 0">Saldo hoy (estimado): <b style="color:var(--text)">'+fm(hoy0)+'</b> = recargas pagadas '+fm(A.rec)+' − cargas registradas '+fm(usado)+(ultC?' (hasta el '+fd(ultC)+')':'')+'. Consumo de cada día: el combustible del simulador (un + es menos combustible por cambio del programa).'+(!act?' Esta semana parte suponiendo que antes se recargó lo indicado.':'')+'</div>'+
    '<div style="overflow-x:auto"><table style="border-collapse:collapse;font-size:15px;width:100%"><tr><td style="'+L0+';color:#888;font-weight:400">pesos</td>'+D.map(x=>'<td style="'+c+';color:#888;font-weight:800">'+fd(x.f)+'</td>').join('')+'</tr>'+
    '<tr><td style="'+L0+'">Parte con</td>'+D.map(x=>'<td style="'+c+'">'+fm(x.p)+'</td>').join('')+'</tr>'+
