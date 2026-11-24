@@ -1074,7 +1074,7 @@ function resultadoServicio(r){
     viaticos:tipo==='T'?COSTO.viatTracto*dias:(alta?COSTO.viatAfur*(n.peoneta?2:1):0)};
   const nDia=filas.filter(x=>x.fecha===r.fecha&&!esTerR(x)).length||1, fijo=COSTO.fijoMes/COSTO.diasMes/nDia;
   const tv=Object.values(v).reduce((a,b)=>a+b,0);
-  return {tarifa,ret,v,tv,fijo,nDia,res:tarifa-tv-fijo,km,kmTxt,tipoC,pd};
+  return {tarifa,ret,ifco:XS.ifco,v,tv,fijo,nDia,res:tarifa-tv-fijo,km,kmTxt,tipoC,pd};
 }
 const fm$=x=>(Math.round(x)===0?'$0':x<0?'<span style="color:#ff3b30">−$'+Math.round(-x).toLocaleString('es-CL')+'</span>':'$'+Math.round(x).toLocaleString('es-CL'));
 function resultadoHTML(r){
@@ -1083,8 +1083,8 @@ function resultadoHTML(r){
   const it=(t,x)=>'<div style="display:flex;justify-content:space-between;font-size:13px;color:var(--muted);padding:2px 0 2px 14px"><span>'+t+'</span><span>'+fm$(x)+'</span></div>';
   const ln=(t,x,det)=>'<details style="border-top:1px solid var(--border);padding:6px 0"><summary style="display:flex;justify-content:space-between;cursor:pointer"><b>'+t+'</b><b>'+fm$(x)+'</b></summary>'+det+'</details>';
   const kmF=Math.round(z.km).toLocaleString('es-CL'),rd=String(COSTO.rend[z.tipoC]).replace('.',',');
-  return '<details style="margin-top:8px;border:1px solid var(--border);border-radius:10px;padding:8px"><summary><b>📊 Resultado del servicio: '+fm$(z.res)+' ('+pctTxt+')</b></summary>'+
-    ln('VENTAS',z.tarifa,it('Tarifa de la ruta',z.tarifa-z.ret)+it('Retorno supermercado',z.ret))+
+  return '<details open style="margin-top:8px;border:1px solid var(--border);border-radius:10px;padding:8px"><summary><b>📊 Resultado del servicio: '+fm$(z.res)+' ('+pctTxt+')</b></summary>'+
+    ln('VENTAS',z.tarifa,it('Tarifa de la ruta',z.tarifa-z.ret-z.ifco)+(z.ret?it('Rechazo (39,7% del flete)',z.ret):'')+(z.ifco?it('Retiro IFCO',z.ifco):''))+
     ln('COSTOS VARIABLES',-z.tv,it('Combustible ('+kmF+' km ÷ '+rd+' km/l × $'+Math.round(z.pd.p).toLocaleString('es-CL')+' neto/l)',-z.v.combustible)+it('Peajes',-z.v.peajes)+it('Comisión conductor 10%',-z.v.comision)+it('Comisión asesor 3%',-z.v.asesor)+it('Neumáticos y mantención ('+kmF+' km × $'+(COSTO.neum+COSTO.mant)+')',-z.v.neumMant)+it('Viáticos',-z.v.viaticos)+'<div style="font-size:12px;color:var(--muted);padding-left:14px">Km: '+z.kmTxt+'<br>Diésel: '+z.pd.txt+'</div>')+
     ln('COSTOS FIJOS',-z.fijo,COSTO.fijos.map(([t,m])=>it(t+' ($'+m.toLocaleString('es-CL')+'/mes)',-m/COSTO.diasMes/z.nDia)).join('')+'<div style="font-size:11px;color:var(--muted);padding:4px 0 0 14px">Fijo del mes $'+COSTO.fijoMes.toLocaleString('es-CL')+' ÷ '+COSTO.diasMes+' días ÷ '+z.nDia+' servicio(s) del día. Fuente: Parámetros del sistema TM.</div>')+
     '<div style="display:flex;justify-content:space-between;border-top:2px solid var(--border);padding:8px 0 2px"><b>RESULTADO</b><b>'+fm$(z.res)+' ('+pctTxt+')</b></div>'+
