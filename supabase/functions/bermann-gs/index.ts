@@ -33,7 +33,7 @@ Deno.serve(async (req) => {
   let cuerpo: any = {}; try { cuerpo = await req.json(); } catch (_) { /* sin cuerpo */ }
   if (cuerpo && cuerpo.trayecto) {
     const t = cuerpo.trayecto;
-    const rt = await fetch(BASE + 'trayectovehiculorangodl?' + new URLSearchParams({ tk, Avserie: t.av_serie, Fecha: t.fecha, fecha2: t.fecha2 }), { headers: { 'Content-Type': 'application/json' } });
+    const rt = await fetch(BASE + 'trayectovehiculorangodl?' + new URLSearchParams({ tk, avserie: t.av_serie, fecha: t.fecha, fecha2: t.fecha2 }), { headers: { 'Content-Type': 'application/json' } });
     const tx = await rt.text();
     let jt: any = null; try { jt = JSON.parse(tx); } catch (_) { /* no json */ }
     const P = Array.isArray(jt?.mensaje) ? jt.mensaje : Array.isArray(jt) ? jt : [];
