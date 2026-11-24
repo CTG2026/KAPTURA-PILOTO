@@ -29,6 +29,19 @@ Deno.serve(async (req) => {
     if (r.ok && tok) { tk = tok; break; }
   }
   if (!tk) return R({ ok: false, intentos });
+  // PASO 2 (Carlos 23-11): recorrido de un camión entre dos fechas, solo lectura → resumen
+  let cuerpo: any = {}; try { cuerpo = await req.json(); } catch (_) { /* sin cuerpo */ }
+  if (cuerpo && cuerpo.trayecto) {
+    const t = cuerpo.trayecto;
+    const rt = await fetch(BASE + 'trayectovehiculorangodl?' + new URLSearchParams({ tk, Avserie: t.av_serie, Fecha: t.fecha, fecha2: t.fecha2 }), { headers: { 'Content-Type': 'application/json' } });
+    const tx = await rt.text();
+    let jt: any = null; try { jt = JSON.parse(tx); } catch (_) { /* no json */ }
+    const P = Array.isArray(jt?.mensaje) ? jt.mensaje : Array.isArray(jt) ? jt : [];
+    const odo = P.map((p: any) => +p.odometro).filter((x: number) => x > 0);
+    const ev: Record<string, number> = {}; for (const p of P) { const k = p.descripcion_evento || p.evento || String(p.id_tipo_evento ?? '?'); ev[k] = (ev[k] || 0) + 1; }
+    return R({ status: rt.status, puntos: P.length, campos: P[0] ? Object.keys(P[0]) : null, primero: P[0] || null, ultimo: P[P.length - 1] || null,
+      odometro_min: odo.length ? Math.min(...odo) : null, odometro_max: odo.length ? Math.max(...odo) : null, eventos: ev, texto: P.length ? undefined : tx.slice(0, 400) });
+  }
   const r = await fetch(BASE + 'vehiculo?' + new URLSearchParams({ tk, limit: '50', page: '1' }), { headers: { 'Content-Type': 'application/json' } });
   const t = await r.text();
   let j: any = null; try { j = JSON.parse(t); } catch (_) { /* no json */ }
