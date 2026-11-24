@@ -1366,7 +1366,8 @@ const DIF_OK=(p,r)=>Math.abs(Math.abs(r)-Math.abs(p))<=Math.min(50000,Math.abs(p
 const DIF_GRP=[{n:'Recarga Aramco',ev:/^Recarga Aramco/,mv:m=>/Recarga prepago Aramco/.test(m.categoria||'')||/ESMAX|ARAMCO/i.test(m.descripcion||'')},
   {n:'Sueldos',ev:/^Sueldos/,mv:m=>/^(Sueldos|Previred)/.test(m.categoria||'')},
   {n:'Retiros Claudio',ev:/^Retiros Claudio/,mv:m=>/Retiro de socios/.test(m.categoria||'')},
-  {n:'Viáticos, peajes y traspaleteo',ev:/^Viáticos, peajes/,mv:m=>/^(Viáticos|Peajes|Traspaleteo)/.test(m.categoria||'')}];
+  {n:'Anticipos trabajadores',ev:/^Anticipos trabajadores/,mv:m=>/^Sueldos/.test(m.categoria||'')&&ANT_RUT.some(r=>(m.descripcion||'').includes(r))},
+  {n:'Viáticos, peajes y traspaleteo',ev:/^Viáticos(,| y) peajes/,mv:m=>/^(Viáticos|Peajes|Traspaleteo)/.test(m.categoria||'')}];
 const DIF_NO=['pago','pagos','cuota','mensual','mensualidad','deuda','transferencia','transf','santander','abono','cargo','compra','arriendo','factura','servicio','servicios','noviembre','octubre','diciembre','enero','febrero'];
 const difPal=s=>carN(s).replace(/[^a-z0-9 ]/g,' ').split(' ').filter(w=>w.length>=5&&!DIF_NO.includes(w));
 const difMismo=(m,txt,cat)=>(m.categoria&&cat&&m.categoria===cat)||difPal(txt).some(w=>carN(m.descripcion).includes(w));
@@ -2856,7 +2857,7 @@ function simCalc(){const S=_sim,cs=window._LCS||window._pilCS,EV=window._LEv||wi
 /* Caja proyectada con la simulación (Carlos 19-11): mismo formato, hasta marzo */
 function simAcc(k){if(k==='in')_sim.accIn=!_sim.accIn;else _sim.accOut=!_sim.accOut;simCalc()}
 function simGrp(t,sg){t=t||'';if(sg>0)return /^EBLOOMS/.test(t)?'EBLOOMS':/^Ateuro/.test(t)?'Ateuro / Zuria':/Valle/.test(t)?'Valle Central':/^DDC/.test(t)?'DDC':/^Home/.test(t)?'Home Gardens':/^TRAST/.test(t)?'TRAST':/Claudio/.test(t)?'Devolución Claudio':/tarjeta/i.test(t)?'Tarjeta':'Otros ingresos';
-  return /^Combustible ·|^Recarga Aramco/.test(t)?'Combustible':/tercero|Zamorano|Fuentes/i.test(t)?'Terceros':/Peumo/.test(t)?'Deuda Peumo':/SII|TGR|Tesorer|IVA|F29/.test(t)?'Impuestos':/Fogape|Castro|TAG|Schiaffino|thermo|Thermo|Santander/.test(t)?'Créditos, arriendos y thermo':/Sueldo|Previred/.test(t)?'Sueldos':/Retiro/.test(t)?'Retiros Claudio':/Viático/.test(t)?'Viáticos y peajes':/tarjeta/i.test(t)?'Pago tarjeta':'Otros egresos'}
+  return /^Combustible ·|^Recarga Aramco/.test(t)?'Combustible':/tercero|Zamorano|Fuentes/i.test(t)?'Terceros':/Peumo/.test(t)?'Deuda Peumo':/SII|TGR|Tesorer|IVA|F29/.test(t)?'Impuestos':/Fogape|Castro|TAG|Schiaffino|thermo|Thermo|Santander/.test(t)?'Créditos, arriendos y thermo':/Sueldo|Previred|^Anticipos trabajadores/.test(t)?'Sueldos':/Retiro/.test(t)?'Retiros Claudio':/Viático/.test(t)?'Viáticos y peajes':/tarjeta/i.test(t)?'Pago tarjeta':'Otros egresos'}
 function simAccG(g){_sim.accG=_sim.accG||{};_sim.accG[g]=!_sim.accG[g];simCalc()}
 function simAccRows(W,sg,c,L0,fm){const L=window._simList||[],h=(window._LCS||window._pilCS).hasta,rng=r=>r.a?[r.a,r.b]:[r.w,hoyISO(new Date(new Date(r.w+'T12:00:00').getTime()+6*864e5))],G={},SB={};
   const sub=e=>{const t=(e.t||'').replace(/ · factoring.*/,'');if(sg>0&&e.det&&Object.keys(e.det).length){const tot=Object.values(e.det).reduce((a,b)=>a+b,0)||1;return Object.entries(e.det).map(([k,x])=>[k.split('(')[0].trim(),e.v*x/tot])}return [[sg>0?t.replace(/ \(presupuesto\)| \(por aprobar\)/,''):t.replace(/^Combustible · /,'Combustible ').replace(/ \(presupuesto\)/,''),e.v]]};
@@ -3091,6 +3092,7 @@ async function resCxcCargar(fd,fm){const b=$('res-cxc');if(!b)return;const w=_re
     '<tr style="font-weight:900"><td style="'+td+'" colspan="2">Por cobrar en la semana</td><td style="'+td+';text-align:right;white-space:nowrap">'+fm(cob)+'</td></tr></table></div>':'<div class="sub">Nada que cobrar, aprobar ni facturar esta semana.</div>');resAcc(b,'s5')}
 /* Viáticos y peajes por viaje del plan (Carlos 20-11): regla de costos de Kaptura (SV_COSTO): peaje de la ruta + viático tracto $15.000 por día; afurgonado solo en temporada alta */
 function planVP(s,f){const t=s.s+' '+s.c,k=Object.keys(SV_COSTO).find(k=>/Limache/.test(t)?/Limache \(Origen\) → Coltauco · 11 a 16/.test(k):(/Chill[aá]n/.test(t)&&/Coltauco/.test(t))?/Chillán \(Cencosud\)/.test(k):/s[uú]per|Locales/i.test(t)?/Supermercados Santiago \(Temporada Baja\)/.test(k):/Trébol/.test(t)?/El Trébol → Clee · 66/.test(k):false);if(!k)return null;const [km,tp0,peaje,dias]=SV_COSTO[k],tp=s.eq||tp0,alta=f>=COSTO.alta[0]&&f<=COSTO.alta[1];return peaje+(tp==='T'?COSTO.viatTracto*dias:(alta?COSTO.viatAfur:0))}
+const ANT_DIA=60000,VIA_DIA=40000,ANT_RUT=['15.994.622-3','18.465.879-8','21.066.784-9','21.610.735-7']; /* trabajadores con anticipos (cartola) */
 async function pilProy(nw,quiet){nw=nw||6;const SETW=(k,v)=>{window[(quiet?'_L':'_pil')+k]=v};const box=quiet?{innerHTML:'',style:{}}:$('pil-proy');if(!box)return;box.innerHTML='<div class="sub">Calculando caja proyectada…</div>';
   try{const cs=await cartolaSaldo();if(!cs){box.innerHTML='';return}
     const D=f=>new Date(f+'T12:00:00'),iso=d=>hoyISO(d),mas=(f,n)=>{const d=D(f);d.setDate(d.getDate()+n);return iso(d)};
@@ -3145,7 +3147,12 @@ async function pilProy(nw,quiet){nw=nw||6;const SETW=(k,v)=>{window[(quiet?'_L':
         l5=SU.T.reduce((t,x)=>t+Math.max(0,x.liq-(cur?x.pm+(pendA?x.a15:0):x.a15)),0);
         [[f15,'Sueldos: anticipo '+MNs[m-1],pendA?a15:0],[f5,'Sueldos: liquidación '+MNs[m-1]+' (menos anticipos)',l5]].forEach(([f,t,v])=>{v=Math.round(v);if(v<=0||f<desde||f>fin6)return;const w=wk(f);if(w)w.sal.push([t,v]);EV.push({f,t,v:-v})});
         ym=iso(new Date(y,m,1,12)).slice(0,7)}}
-    W.forEach(w=>{if(ret_)w.sal.push(['Retiros Claudio (170.000 semanal)',ret_]);{const vp=usePV?Object.entries(plVP).filter(([f])=>f>=w.ini&&f<=mas(w.ini,6)&&f>=desde).reduce((t,[,x])=>t+x,0):var_;if(vp)w.sal.push([usePV?'Viáticos, peajes (plan)':'Viáticos, peajes y traspaleteo (promedio)',vp])}
+    /* Anticipos trabajadores y viáticos (Carlos 24-11): lun-vie $60.000 anticipos + $40.000 viáticos y peajes. Lo que no salió en días ya pasados de esta semana se pasa al día siguiente */
+    let antPend=0;try{const hoyLun=lun0,dias=[];for(let f=hoyLun;f<=cs.hasta;f=mas(f,1)){const wd=D(f).getDay();if(wd>=1&&wd<=5)dias.push(f)}
+      if(dias.length){const rq=await conTope(supa.from('cartola_movimientos').select('monto,descripcion,categoria').eq('empresa',EMPRESA).lt('monto',0).gte('fecha',hoyLun).lte('fecha',cs.hasta).or(ANT_RUT.map(r=>'descripcion.ilike.%'+r+'%').join(',')),8000);
+        const pag=((rq&&rq.data)||[]).filter(m=>!m.categoria||/^Sueldos|Anticipo/i.test(m.categoria)).reduce((a,m)=>a-m.monto,0);antPend=Math.max(0,dias.length*ANT_DIA-pag)}}catch(e){}
+    const antDia=f=>{const wd=D(f).getDay();return wd>=1&&wd<=5};let antPrim=null;for(let f=desde;f<=fin6;f=mas(f,1))if(antDia(f)){antPrim=f;break}
+    W.forEach(w=>{if(ret_)w.sal.push(['Retiros Claudio (170.000 semanal)',ret_]);{let n=0;for(let f=w.ini;f<=w.fin;f=mas(f,1))if(f>=desde&&antDia(f))n++;if(n){w.sal.push(['Viáticos y peajes (40.000 lun-vie)',n*VIA_DIA]);w.sal.push(['Anticipos trabajadores (60.000 lun-vie)',n*ANT_DIA+(antPrim&&antPrim>=w.ini&&antPrim<=w.fin?antPend:0)])}}
       [[5,s5,'Sueldos: saldo del mes'],[15,s15,'Sueldos: anticipo']].forEach(([dd,v,t])=>{if(!v)return;let d=D(w.ini);for(let i=0;i<7;i++){if(d.getDate()===dd&&iso(d)>=desde){w.sal.push([t,v]);break}d.setDate(d.getDate()+1)}})});
     /* Eventos diarios para la caja de la semana: operación promedio repartida de lunes a sábado; sueldos el día 5 y 15 */
     /* Saldo Aramco prepago (Carlos 18-11): el consumo sale del saldo Aramco, no de la caja; la caja solo ve las recargas ($1.000.000 cuando el saldo no alcanza para el día) */
@@ -3157,7 +3164,7 @@ async function pilProy(nw,quiet){nw=nw||6;const SETW=(k,v)=>{window[(quiet?'_L':
         else{const cd=(PL&&PL.s&&PL.comb!=='real'&&f>=(PL.desde||desde))?(plCons[f]||0):(D(f).getDay()!==0?cDia:0);if(cd){while(sa<cd){o.rec+=RECARGA;sa+=RECARGA;const fr=f<hoyA?hoyA:f,w=wk(fr);EV.push({f:fr,t:'Recarga Aramco (saldo prepago)',v:-RECARGA});if(w)w.sal.push(['Recarga Aramco (saldo prepago)',RECARGA])}o.cons=cd}}
         sa-=o.cons;o.queda=sa;AR[f]=o}
       SETW('AR',AR)}
-    {const opd=var_/6;for(let f=desde;f<=fin6;f=mas(f,1)){const wd=D(f).getDay();if(usePV){if(plVP[f])EV.push({f,t:'Viáticos, peajes (plan)',v:-Math.round(plVP[f])})}else if(wd!==0&&opd)EV.push({f,t:'Viáticos, peajes y traspaleteo (promedio diario)',v:-opd});if(wd===5&&ret_)EV.push({f,t:'Retiros Claudio (170.000 semanal)',v:-ret_});const dd=+f.slice(8);if(dd===5&&s5)EV.push({f,t:'Sueldos: saldo del mes',v:-s5});if(dd===15&&s15)EV.push({f,t:'Sueldos: anticipo',v:-s15})}}
+    {const opd=var_/6;for(let f=desde;f<=fin6;f=mas(f,1)){const wd=D(f).getDay();if(wd>=1&&wd<=5){EV.push({f,t:'Viáticos y peajes (40.000 lun-vie)',v:-VIA_DIA});EV.push({f,t:'Anticipos trabajadores (60.000 lun-vie)'+(f===antPrim&&antPend?' + pendiente semana':''),v:-(ANT_DIA+(f===antPrim?antPend:0))})}if(wd===5&&ret_)EV.push({f,t:'Retiros Claudio (170.000 semanal)',v:-ret_});const dd=+f.slice(8);if(dd===5&&s5)EV.push({f,t:'Sueldos: saldo del mes',v:-s5});if(dd===15&&s15)EV.push({f,t:'Sueldos: anticipo',v:-s15})}}
     SETW('Ev',EV);SETW('CS',cs);SETW('Fin6',fin6);
     if(!quiet&&esCarlos()){difPanel('pil-dif');(async()=>{try{const k='tm_snap_'+EMPRESA,kv=cs.hasta+'|'+hoyISO();let la=null;try{la=localStorage.getItem(k)}catch(e){}if(la===kv)return; /* foto de lo programado (Carlos 20-11): se compara con la próxima cartola */
       const ev=EV.filter(e=>e.f<=mas(desde,34)).map(e=>({f:e.f,t:e.t,v:Math.round(+e.v||0)})),tt=JSON.stringify({hasta:cs.hasta,dia:hoyISO(),ev}),ex=await supa.from('tareas').select('id').eq('empresa',EMPRESA).eq('recurrencia','flujo_snapshot').like('titulo','{"hasta":"'+cs.hasta+'"%').limit(1);
