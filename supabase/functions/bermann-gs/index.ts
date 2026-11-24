@@ -1,55 +1,56 @@
-// Bermann GPS → Global Solutions. PASO 1: prueba de solo lectura (Carlos 23-11-2026).
-// Inicia sesión con los secretos BERMANN_USER / BERMANN_PASS, lista los camiones y devuelve un resumen.
-// No guarda nada y no devuelve el token.
-import { crypto } from 'jsr:@std/crypto@1';
-import { encodeHex } from 'jsr:@std/encoding@1/hex';
-
-const BASE = 'https://rest2.bermanngps.cl/BermannRest/api/';
-const CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'content-type, authorization, apikey', 'Access-Control-Allow-Methods': 'POST, GET, OPTIONS' };
-const md5 = async (s: string) => encodeHex(await crypto.subtle.digest('MD5', new TextEncoder().encode(s)));
+// Bermann GPS → gps_odometro de Global Solutions (Carlos 23-11-2026).
+// Cada 30 min (cron bermann_gs_lectura): inicia sesión con los secretos BERMANN_USER / BERMANN_PASS (clave tal cual),
+// lista los camiones (/vehiculo) y trae el recorrido de cada uno (/trayectovehiculorangodl) de las últimas `horas`
+// (por defecto 2; máx. 72). Guarda cada punto como odómetro en km (la API lo entrega en metros), igual que el Excel de Bermann.
+// No duplica: índice único (patente, ts). No devuelve el token.
+const BASE = 'https://rest2.bermanngps.cl/BermannRest/api/', EMPRESA = 'global_solutions';
+const CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'content-type, authorization, apikey', 'Access-Control-Allow-Methods': 'POST, OPTIONS' };
+function claveNueva(v: string) { try { const o = JSON.parse(Deno.env.get(v) || '{}'); return o.default || Object.values(o)[0] || ''; } catch (_) { return ''; } }
+const pad = (n: number) => String(n).padStart(2, '0');
+// fecha local de Chile (UTC-3) en formato 'yyyy-mm-dd hh:mi' que pide Bermann
+const local = (d: Date) => { const x = new Date(d.getTime() - 3 * 3600000); return x.getUTCFullYear() + '-' + pad(x.getUTCMonth() + 1) + '-' + pad(x.getUTCDate()) + ' ' + pad(x.getUTCHours()) + ':' + pad(x.getUTCMinutes()); };
+const espera = (ms: number) => new Promise((r) => setTimeout(r, ms));
+const getJ = async (url: string) => { const r = await fetch(url, { headers: { 'Content-Type': 'application/json' } }); const t = await r.text(); try { return { ok: r.ok, status: r.status, j: JSON.parse(t) }; } catch (_) { return { ok: false, status: r.status, j: null, t: t.slice(0, 200) }; } };
 
 Deno.serve(async (req) => {
-  const R = (o: unknown, status = 200) => new Response(JSON.stringify(o, null, 1), { status, headers: { ...CORS, 'Content-Type': 'application/json' } });
+  const R = (b: string, status = 200) => new Response(b, { status, headers: CORS });
   if (req.method === 'OPTIONS') return R('ok');
   const user = (Deno.env.get('BERMANN_USER') || '').trim(), pass = (Deno.env.get('BERMANN_PASS') || '').trim();
-  if (!user || !pass) return R({ error: 'Faltan secretos BERMANN_USER / BERMANN_PASS' });
-  const intentos: any[] = [];
-  let tk = '';
-  // la clave entregada parece ya estar en md5 (32 hex); se prueba tal cual y luego en md5
-  for (const [modo, p] of [['clave tal cual', pass], ['clave en md5', await md5(pass)]] as const) {
-    const u = BASE + 'login?' + new URLSearchParams({ user, pass: p, app: '2', os: '1' });
-    const r = await fetch(u, { headers: { 'Content-Type': 'application/json' } });
-    const t = await r.text();
-    let j: any = null; try { j = JSON.parse(t); } catch (_) { /* no json */ }
-    // forma de la respuesta sin mostrar valores largos (el token no se devuelve)
-    const forma = (v: any, d = 0): any => v === null ? null : Array.isArray(v) ? [v.length ? forma(v[0], d + 1) : 'vacío'] : typeof v === 'object' ? (d > 3 ? '{…}' : Object.fromEntries(Object.entries(v).map(([k, x]) => [k, forma(x, d + 1)]))) : typeof v === 'string' ? (v.length > 20 ? 'texto(' + v.length + ')' : v) : v;
-    const buscaTk = (v: any): string => { if (!v || typeof v !== 'object') return ''; for (const [k, x] of Object.entries(v)) { if (typeof x === 'string' && x.length > 20 && /^(tk|token|access_?token)$/i.test(k)) return x; const y = buscaTk(x); if (y) return y; } return ''; };
-    const tok = j ? (buscaTk(j) || (typeof j.mensaje === 'string' && j.mensaje.length > 20 ? j.mensaje : '')) : '';
-    intentos.push({ modo, status: r.status, forma: j ? forma(j) : null, texto: j ? undefined : t.slice(0, 200), token_recibido: !!tok });
-    if (r.ok && tok) { tk = tok; break; }
+  if (!user || !pass) return R('Faltan secretos BERMANN_USER / BERMANN_PASS');
+  let horas = 2;
+  try { const b = await req.json(); if (b && +b.horas > 0 && +b.horas <= 72) horas = +b.horas; } catch (_) { /* sin cuerpo */ }
+  const SUPA = Deno.env.get('SUPABASE_URL')!, KEY = claveNueva('SUPABASE_SECRET_KEYS') || claveNueva('SUPABASE_PUBLISHABLE_KEYS');
+  const H = { apikey: KEY, Authorization: 'Bearer ' + KEY, 'Content-Type': 'application/json' };
+  try {
+    const lg = await getJ(BASE + 'login?' + new URLSearchParams({ user, pass, app: '2', os: '1' }));
+    const tk = lg.j?.mensaje?.[0]?.token || '';
+    if (!tk) throw new Error('login Bermann ' + lg.status + ' sin token');
+    await espera(600);
+    const vh = await getJ(BASE + 'vehiculo?' + new URLSearchParams({ tk, limit: '50', page: '1' }));
+    const camiones = (Array.isArray(vh.j?.mensaje) ? vh.j.mensaje : []).filter((v: any) => v.av_serie && v.patente);
+    if (!camiones.length) throw new Error('vehiculo ' + vh.status + ': sin camiones');
+    const fin = new Date(), ini = new Date(Date.now() - horas * 3600000);
+    let total = 0; const det: string[] = [];
+    for (const c of camiones) {
+      await espera(600); // límite Bermann: máx. 2 consultas por segundo
+      const pat = String(c.patente).replace(/[\s-]/g, '').toUpperCase();
+      const tr = await getJ(BASE + 'trayectovehiculorangodl?' + new URLSearchParams({ tk, avserie: String(c.av_serie), fecha: local(ini), fecha2: local(fin) }));
+      const P = Array.isArray(tr.j?.mensaje) ? tr.j.mensaje : Array.isArray(tr.j) ? tr.j : [];
+      const filas = new Map<string, any>();
+      for (const p of P) {
+        const m = +p.odometro;
+        if (!p.evfecha || !(m > 0)) continue; // el último elemento es la línea del recorrido, sin fecha
+        const ts = String(p.evfecha).replace(' ', 'T') + '-03:00';
+        filas.set(ts, { empresa: EMPRESA, patente: pat, ts, odometro: Math.round(m / 100) / 10, fuente: 'bermann_api' });
+      }
+      if (filas.size) {
+        const ir = await fetch(SUPA + '/rest/v1/gps_odometro?on_conflict=patente,ts', { method: 'POST', headers: { ...H, Prefer: 'resolution=ignore-duplicates,return=minimal' }, body: JSON.stringify([...filas.values()]) });
+        if (!ir.ok) throw new Error('gps_odometro ' + ir.status + ': ' + (await ir.text()).slice(0, 200));
+      }
+      total += filas.size; det.push(pat + ' ' + filas.size);
+    }
+    return R('OK: ' + camiones.length + ' camiones, ' + total + ' puntos (' + local(ini) + ' a ' + local(fin) + ') · ' + det.join(', '));
+  } catch (e) {
+    return R('ERROR: ' + (e as Error).message, 500);
   }
-  if (!tk) return R({ ok: false, intentos });
-  // PASO 2 (Carlos 23-11): recorrido de un camión entre dos fechas, solo lectura → resumen
-  let cuerpo: any = {}; try { cuerpo = await req.json(); } catch (_) { /* sin cuerpo */ }
-  if (cuerpo && cuerpo.trayecto) {
-    const t = cuerpo.trayecto;
-    const rt = await fetch(BASE + 'trayectovehiculorangodl?' + new URLSearchParams({ tk, avserie: t.av_serie, fecha: t.fecha, fecha2: t.fecha2 }), { headers: { 'Content-Type': 'application/json' } });
-    const tx = await rt.text();
-    let jt: any = null; try { jt = JSON.parse(tx); } catch (_) { /* no json */ }
-    const P = Array.isArray(jt?.mensaje) ? jt.mensaje : Array.isArray(jt) ? jt : [];
-    const odo = P.map((p: any) => +p.odometro).filter((x: number) => x > 0);
-    const ev: Record<string, number> = {}; for (const p of P) { const k = p.descripcion_evento || p.evento || String(p.id_tipo_evento ?? '?'); ev[k] = (ev[k] || 0) + 1; }
-    return R({ status: rt.status, puntos: P.length, campos: P[0] ? Object.keys(P[0]) : null, primero: P[0] || null, ultimo: P[P.length - 1] || null,
-      odometro_min: odo.length ? Math.min(...odo) : null, odometro_max: odo.length ? Math.max(...odo) : null, eventos: ev, texto: P.length ? undefined : tx.slice(0, 400) });
-  }
-  const r = await fetch(BASE + 'vehiculo?' + new URLSearchParams({ tk, limit: '50', page: '1' }), { headers: { 'Content-Type': 'application/json' } });
-  const t = await r.text();
-  let j: any = null; try { j = JSON.parse(t); } catch (_) { /* no json */ }
-  const lista = Array.isArray(j?.mensaje) ? j.mensaje : Array.isArray(j) ? j : [];
-  return R({
-    ok: r.ok, intentos, vehiculo_status: r.status, total: lista.length,
-    camiones: lista.map((v: any) => ({ patente: v.patente, muestra: v.muestra, av_serie: v.av_serie, fecha: v.fecha, odometro_m: v.odometro, horometro: v.horometro,
-      canbus: v.canbus ? { odometro: v.canbus.odometro, litrosquemados: v.canbus.litrosquemados, nivelestanque: v.canbus.nivelestanque, fecha: v.canbus.fechacanbus } : null })),
-    texto: lista.length ? undefined : t.slice(0, 300),
-  });
 });
