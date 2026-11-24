@@ -685,6 +685,7 @@ function hoyISO(d){d=d||new Date();return d.getFullYear()+'-'+String(d.getMonth(
 // ═══ PIN ═══
 /* Link de empresa (Carlos 21-11): registro-tm.html?e=gs → clave de 4 dígitos validada en Supabase (kaptura_login, tabla kaptura_accesos); sin ?e todo sigue igual */
 const EMP_LINKS={gs:'global_solutions'},EMP_URL=EMP_LINKS[(new URLSearchParams(location.search).get('e')||'').toLowerCase()]||null,EMP_LINK=EMP_URL||EMP_LINKS[(ls('tm_emp_link')||'').toLowerCase()]||null; /* el teléfono recuerda la empresa del link */
+if(EMP_LINK==='global_solutions')document.title='KAPTURA · Global Solutions'; /* pestaña con el nombre de GS (Carlos 23-11) */
 async function entrarEmp(p,auto,emp){emp=emp||EMP_LINK;if(!supa){$('pin-err').textContent='Sin conexión';pin='';setTimeout(pintarPin,800);return}
   let u=null;try{const r=await conTope(supa.rpc('kaptura_login',{p_empresa:emp,p_pin:p}),8000);u=r&&r.data&&r.data[0]||null}catch(e){}
   if(!u){if(auto){ls('tm_pin',null);return}$('pin-err').textContent='Clave no válida';pin='';setTimeout(pintarPin,600);return}
