@@ -2728,7 +2728,7 @@ function simSvcs(){const PLs=((window._LPL||window._pilPL)||{}).s||[],S=_sim,L=P
 const SIM_REF_CLI=['DDC','EBLOOMS','Ateuro','TRAST','Valle','Home Gardens'];
 function simRefTar(c,s){const T=String(s||'');
   if(c==='DDC'){const L=window._tarDDC||[],T0=T.split(' · ')[0].trim(),x=L.find(y=>y.d===T0||y.d===T0.split('(')[0].trim())||(/Curic/.test(T)&&L.find(y=>y.d==='Camarico Rengo → Curicó DDC'))||(/Unifrutti/.test(T)&&L.find(y=>y.d==='Camarico Rengo → Unifrutti Requínoa'));return x?x.t:null}
-  if(c==='EBLOOMS'){const L=(window._tarEB||[]).filter(y=>y.p==='11 a 16 pallets'),x=(/Limache/.test(T)&&L.find(y=>/Limache/.test(y.d)))||(/Chill[aá]n/.test(T)&&L.find(y=>/CD Chill/.test(y.d)))||(/s[uú]per/i.test(T)&&L.find(y=>y.d==='Locales'));return x?x.t:null}
+  if(c==='EBLOOMS'){const L=(window._tarEB||[]).filter(y=>y.p==='11 a 16 pallets'),x=(/Limache/.test(T)&&L.find(y=>/Limache/.test(y.d)))||(/Chill[aá]n/.test(T)&&L.find(y=>/CD Chill/i.test(y.d)))||(/s[uú]per/i.test(T)&&L.find(y=>y.d==='Locales'));return x?x.t:null}
   if(/^Ateuro/.test(c)){const x=SERVICIOS.find(y=>y.cliente==='Ateuro / Zuria'&&/Trébol.*66/.test(y.txt)&&/Trébol/.test(T));return x?x.tarifa:null}
   if(c==='TRAST')return +_sim.trv||null;return null}
 function simRef(c,s,pl,soloPlan,tRow){if(!SIM_REF_CLI.some(k=>String(c).indexOf(k)===0))return '';const PLs=((window._LPL||window._pilPL)||{}).s||[],k=String(s||'').split('(')[0].trim();
@@ -3760,8 +3760,12 @@ function descargarProformaD(){if(!profDFilas.length||!window.XLSX)return;
    Se guarda en tareas (recurrencia='svc_dia', fecha_limite = día, titulo = JSON). Catálogo: SERVICIOS de Kaptura; Home Gardens y Spot se agregan a mano. ═══ */
 const SD_CLI=[['EBLOOMS','EBLOOMS'],['Ateuro','Ateuro / Zuria'],['DDC','DDC'],['Home Gardens',null],['Spot',null]];
 let _sd={f:null,it:[],id:null,por:null,ts:null},_sdHost=null,_sdRows=[],_sdOpen={},_sdSucio=false;
-const sdCat=c=>{const k=(SD_CLI.find(x=>x[0]===c)||[])[1];return k?SERVICIOS.filter(y=>y.cliente===k).map(y=>({s:y.servicio,t:+y.tarifa||0})):[]};
-async function sdAbrir(host,f){_sdHost=host;await sdCargar(f||_sd.f||hoyISO())}
+/* Catálogo (Carlos 24-11): EBLOOMS y DDC salen del tarifario oficial (tareas tarifario_eb / tarifario_ddc, tarifa = Propuesta TM): destino → variantes (pallets / tipo). Ateuro: catálogo de servicios de Kaptura */
+const sdCat=c=>{if(c==='EBLOOMS')return (window._tarEB||[]).filter(y=>+y.t).map(y=>({g:y.d,s:y.d+' · '+y.p,v:y.p,t:+y.t}));if(c==='DDC')return (window._tarDDC||[]).filter(y=>+y.t).map(y=>({g:y.d,s:y.d+' · '+y.p,v:y.p,t:+y.t}));
+  const k=(SD_CLI.find(x=>x[0]===c)||[])[1];return k?SERVICIOS.filter(y=>y.cliente===k).map(y=>({s:y.servicio,t:+y.tarifa||0})):[]};
+async function sdTarifarios(){const L=async rc=>{try{const r=await supa.from('tareas').select('titulo').eq('empresa',EMPRESA).eq('recurrencia',rc).eq('activa',true).order('id',{ascending:false}).limit(1);return r.data&&r.data[0]?JSON.parse(r.data[0].titulo).s||[]:[]}catch(e){return []}};
+  const [a,b]=await Promise.all([L('tarifario_eb'),L('tarifario_ddc')]);window._tarEB=a;window._tarDDC=b}
+async function sdAbrir(host,f){_sdHost=host;await sdTarifarios();await sdCargar(f||_sd.f||hoyISO())}
 async function resSdCargar(){const b=$('res-s9');if(!b)return;b.innerHTML='<div>9. Servicios del día</div><div id="res-s9b"></div>';resAcc(b,'s9');await sdAbrir('res-s9b',hoyISO())}
 async function sdCargar(f){if(_sdSucio&&!confirm('Hay cambios sin guardar. ¿Cambiar de día igual?'))return sdPintar();_sdSucio=false;
   _sd={f,it:[],id:null,por:null,ts:null};const h=$(_sdHost);if(h)h.innerHTML='<div class="sub">Cargando…</div>';
@@ -3769,17 +3773,20 @@ async function sdCargar(f){if(_sdSucio&&!confirm('Hay cambios sin guardar. ¿Cam
     if(x){const j=JSON.parse(x.titulo||'{}');_sd={f,it:j.it||[],id:x.id,por:j.por||null,ts:j.ts||null}}}catch(e){}
   sdPintar()}
 function sdPintar(){const h=$(_sdHost);if(!h)return;_sdRows=[];const it=_sd.it,ed=esAdmin()&&!esCliente(),I='font-size:15px;padding:6px;border-radius:8px;border:2px solid var(--border);background:var(--surface);color:var(--text)';
-  const fila=(c,s,t,x)=>{const i=_sdRows.push({c,s,t,x})-1,y=it.find(z=>z.c===c&&z.s===s);
-    return '<div style="display:flex;gap:8px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--border)"><input type="checkbox" '+(y?'checked ':'')+(ed?'':'disabled ')+'onchange="sdTog('+i+')" style="width:22px;height:22px;margin-top:2px;flex:none"><div style="flex:1"><div style="font-size:15px'+(y?';font-weight:800':'')+'">'+empEsc(s)+'</div><div style="font-size:12px;color:var(--muted)">'+(t?fmt$(t)+' neto':'tarifa por definir')+'</div>'+
+  const fila=(c,s,t,x,lb)=>{const i=_sdRows.push({c,s,t,x})-1,y=it.find(z=>z.c===c&&z.s===s);
+    return '<div style="display:flex;gap:8px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--border)"><input type="checkbox" '+(y?'checked ':'')+(ed?'':'disabled ')+'onchange="sdTog('+i+')" style="width:22px;height:22px;margin-top:2px;flex:none"><div style="flex:1"><div style="font-size:15px'+(y?';font-weight:800':'')+'">'+empEsc(lb||s)+'</div><div style="font-size:12px;color:var(--muted)">'+(t?fmt$(t)+' neto':'tarifa por definir')+'</div>'+
       (y?'<div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap"><label style="font-size:13px">Viajes <input type="number" min="1" value="'+(y.n||1)+'" '+(ed?'':'disabled ')+'onchange="sdSet('+i+',\'n\',this.value)" style="'+I+';width:64px"></label><select '+(ed?'':'disabled ')+'onchange="sdSet('+i+',\'r\',this.value)" style="'+I+'"><option value="0"'+(y.r?'':' selected')+'>🕓 Programado</option><option value="1"'+(y.r?' selected':'')+'>✅ Realizado</option></select></div>':'')+'</div></div>'};
   let H='<div style="display:flex;gap:8px;align-items:center;margin:8px 0"><input type="date" value="'+_sd.f+'" onchange="sdCargar(this.value)" style="'+I+';flex:1">'+(ed?'<button class="btn2" style="margin:0;padding:10px 14px;width:auto" onclick="sdGuardar()">💾 Guardar</button>':'')+'</div>'+
     '<div style="font-size:12px;color:var(--muted);margin-bottom:6px">'+(_sd.por?'Guardado por '+empEsc(_sd.por)+' · '+new Date(_sd.ts).toLocaleString('es-CL',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'Sin guardar para este día')+(_sdSucio?' · <b style="color:#B7791F">cambios sin guardar</b>':'')+'</div>';
   SD_CLI.forEach(([c])=>{const cat=sdCat(c),ex=it.filter(z=>z.c===c&&!cat.some(y=>y.s===z.s)),nS=it.filter(z=>z.c===c).reduce((a,z)=>a+(+z.n||1),0);
     H+='<details'+(_sdOpen[c]?' open':'')+' ontoggle="_sdOpen[\''+c+'\']=this.open" style="border-top:1px solid var(--border)"><summary style="font-size:17px;font-weight:800;padding:10px 0;cursor:pointer">'+c+(nS?' <span style="color:var(--gold)">· '+nS+' viaje(s)</span>':'')+'</summary>'+
-      cat.map(y=>fila(c,y.s,y.t,0)).join('')+ex.map(z=>fila(c,z.s,z.t,1)).join('')+(ed&&(c==='Home Gardens'||c==='Spot'||c==='DDC')?'<a href="#" onclick="sdAdd(\''+c+'\');return false" style="display:inline-block;color:var(--gold);font-weight:800;padding:8px 0">+ agregar servicio '+c+'</a>':'')+(!cat.length&&!ex.length&&!ed?'<div class="m">Sin servicios</div>':'')+'</details>'});
+      sdGrupos(c,cat,fila,it)+ex.map(z=>fila(c,z.s,z.t,1)).join('')+(ed&&(c==='Home Gardens'||c==='Spot'||c==='DDC')?'<a href="#" onclick="sdAdd(\''+c+'\');return false" style="display:inline-block;color:var(--gold);font-weight:800;padding:8px 0">+ agregar servicio '+c+'</a>':'')+(!cat.length&&!ex.length&&!ed?'<div class="m">Sin servicios</div>':'')+'</details>'});
   const nT=it.reduce((a,z)=>a+(+z.n||1),0),vT=it.reduce((a,z)=>a+(+z.t||0)*(+z.n||1),0),nR=it.filter(z=>z.r).reduce((a,z)=>a+(+z.n||1),0);
   H+='<div style="border-top:2px solid var(--border);padding:10px 0;font-weight:800">Total del día: '+nT+' viaje(s) · '+fmt$(vT)+' neto'+(nT?' · ✅ '+nR+' realizado(s)':'')+'</div>';h.innerHTML=H}
-function sdTog(i){const r=_sdRows[i];if(!r)return;const k=_sd.it.findIndex(z=>z.c===r.c&&z.s===r.s);if(k>=0)_sd.it.splice(k,1);else _sd.it.push({c:r.c,s:r.s,t:r.t,n:1,r:false});_sdOpen[r.c]=true;_sdSucio=true;sdPintar()}
+function sdGrupos(c,cat,fila,it){const G=[];cat.forEach(y=>{if(!y.g)return;if(!G.includes(y.g))G.push(y.g)});
+  return cat.filter(y=>!y.g).map(y=>fila(c,y.s,y.t,0)).join('')+G.map(g=>{const k=c+'|'+g,ys=cat.filter(y=>y.g===g),nS=it.filter(z=>z.c===c&&ys.some(y=>y.s===z.s)).reduce((a,z)=>a+(+z.n||1),0);
+    return '<details'+(_sdOpen[k]?' open':'')+' ontoggle="_sdOpen[\''+k.replace(/'/g,"\\'")+'\']=this.open" style="margin-left:10px;border-top:1px solid var(--border)"><summary style="font-size:16px;font-weight:700;padding:9px 0;cursor:pointer">'+empEsc(g)+(nS?' <span style="color:var(--gold)">· '+nS+'</span>':'')+'</summary><div style="margin-left:8px">'+ys.map(y=>fila(c,y.s,y.t,0,y.v)).join('')+'</div></details>'}).join('')}
+function sdTog(i){const r=_sdRows[i];if(!r)return;const k=_sd.it.findIndex(z=>z.c===r.c&&z.s===r.s);if(k>=0)_sd.it.splice(k,1);else _sd.it.push({c:r.c,s:r.s,t:r.t,n:1,r:false});_sdOpen[r.c]=true;const g=String(r.s).split(' · ')[0];_sdOpen[r.c+'|'+g]=true;_sdSucio=true;sdPintar()}
 function sdSet(i,campo,v){const r=_sdRows[i];if(!r)return;const y=_sd.it.find(z=>z.c===r.c&&z.s===r.s);if(!y)return;if(campo==='n')y.n=Math.max(1,parseInt(v)||1);else y.r=v==='1';_sdSucio=true;sdPintar()}
 async function sdAdd(c){const v=await formulario('Agregar servicio '+c,(c==='Spot'?[{k:'cl',l:'Cliente'}]:[]).concat([{k:'s',l:'Servicio / ruta (origen → destino)'},{k:'t',l:'Tarifa neta $ (vacío si no se sabe)',t:'number'}]));if(!v||!String(v.s||'').trim())return;
   const s=(c==='Spot'&&v.cl?String(v.cl).trim()+': ':'')+String(v.s).trim();if(_sd.it.some(z=>z.c===c&&z.s===s)){toast('Ya está en la lista');return}
