@@ -3799,7 +3799,7 @@ async function sdAdd(c){if(c==='DDC'){const w=await formulario('Spot DDC',[{k:'o
 async function sdGuardar(){if(!esAdmin())return;const ts=new Date().toISOString(),por=(user&&user.nombre)||'Kaptura',tit=JSON.stringify({f:_sd.f,it:_sd.it,por,ts});let r;
   if(_sd.id)r=await supa.from('tareas').update({titulo:tit}).eq('id',_sd.id);
   else{r=await supa.from('tareas').insert({empresa:EMPRESA,titulo:tit,recurrencia:'svc_dia',fecha_limite:_sd.f,activa:true,creada_por:por}).select('id');if(!r.error&&r.data&&r.data[0])_sd.id=r.data[0].id}
-  if(r.error){toast('No se pudo guardar');return}_sd.por=por;_sd.ts=ts;_sdSucio=false;toast('✔ Servicios del día guardados');sdPintar()}
+  if(r.error){toast('No se pudo guardar');return}_sd.por=por;_sd.ts=ts;_sdSucio=false;_sdOpen={};toast('✔ Servicios del día guardados');sdPintar()} /* al guardar se contraen las listas (Carlos 24-11) */
 function estiloXLS(ws,nFilas,nCols,filaTot){
   const L=c=>XLSX.utils.encode_col(c), bd={style:'thin',color:{rgb:'DDDDDD'}}, B={top:bd,bottom:bd,left:bd,right:bd};
   for(let c=0;c<nCols;c++){
