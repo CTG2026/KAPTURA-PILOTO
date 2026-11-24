@@ -1048,9 +1048,11 @@ const SV_COSTO={"Ateuro: El Trébol → Clee · 66 bins": [100, "T", 5200, 0], "
 let _gpsRes=[],_cargas=[];
 // Precio diésel neto (sin IVA) por litro: promedio ponderado de las cargas de los 7 días hasta la fecha del servicio (Aramco + Peumo).
 // Sin cargas en esa semana: la semana de la última carga anterior. Sin datos: parámetro del Excel.
+const DIESEL_3D='2026-11-24';
 function precioDiesel(fecha,lista){
   const f=x=>new Date(x+'T12:00:00-03:00'),ant=(lista||_cargas).filter(c=>c.fecha<=fecha);if(!ant.length)return {p:COSTO.diesel,txt:'parámetro del Excel'};
-  const fin=ant.some(c=>(f(fecha)-f(c.fecha))/86400000<7)?fecha:ant[ant.length-1].fecha,ini=new Date(f(fin).getTime()-6*86400000);
+  const D=fecha>=DIESEL_3D?3:7; /* desde el 24-11: promedio de 3 días; los servicios anteriores siguen con 7 (Carlos 23-11) */
+  const fin=ant.some(c=>(f(fecha)-f(c.fecha))/86400000<D)?fecha:ant[ant.length-1].fecha,ini=new Date(f(fin).getTime()-(D-1)*86400000);
   const sem=ant.filter(c=>f(c.fecha)>=ini&&c.fecha<=fin),l=sem.reduce((t,c)=>t+(+c.litros),0),n=sem.reduce((t,c)=>t+(+c.total-+c.iva),0);
   return l?{p:n/l,txt:'promedio '+sem.length+' carga(s) del '+hoyISO(ini).split('-').reverse().slice(0,2).join('-')+' al '+fin.split('-').reverse().slice(0,2).join('-')}:{p:COSTO.diesel,txt:'parámetro del Excel'};
 }
