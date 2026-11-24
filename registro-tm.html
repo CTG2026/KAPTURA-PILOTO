@@ -2821,10 +2821,10 @@ function simCalc(){const S=_sim,cs=window._LCS||window._pilCS,EV=window._LEv||wi
   /* Imprevistos del planificador (Carlos 19-11): se guardan; al pasar a oficial se vuelven compromiso de pago */
   (window._simImp||[]).forEach(x=>{if(x.f&&+x.v)L.push({f:dia1(x.f),t:'Imprevisto · '+x.t+' (simulación)',v:+x.v})});
   /* COMBUSTIBLE EN EL FLUJO = RECARGAS ARAMCO (Carlos 24-11): el consumo por servicio no sale de caja día a día; sale cuando se recarga.
-     Consumo diario = combustible de los servicios programados × k, con k = promedio real de cargas Aramco (21 días) ÷ promedio programado (próximos 21 días), entre 0,5 y 2.
+     Consumo diario = combustible de los servicios programados × k, con k = promedio real de cargas Aramco (21 días) ÷ promedio programado (próximos 21 días), entre 0,2 y 2 (los próximos 21 días quedan al nivel real; después sube o baja con el programa).
      Parte del saldo real Aramco (portal + recargas − cargas) y pone una recarga de $1.000.000 cada vez que el saldo proyectado baja de $300.000. */
   {const A=window._araEst,CM=L.filter(e=>/^Combustible ·/.test(e.t||''));
-   if(A&&CM.length){const h0=plus(cs.hasta,1),man=plus(hoyISO(),1),d0=man>h0?man:h0,d21=plus(d0,20),sim21=CM.filter(e=>e.f>=d0&&e.f<=d21).reduce((a,e)=>a-e.v,0)/21,k=sim21>0?Math.min(2,Math.max(0.5,A.dia/sim21)):1;
+   if(A&&CM.length){const h0=plus(cs.hasta,1),man=plus(hoyISO(),1),d0=man>h0?man:h0,d21=plus(d0,20),sim21=CM.filter(e=>e.f>=d0&&e.f<=d21).reduce((a,e)=>a-e.v,0)/21,k=sim21>0?Math.min(2,Math.max(0.2,A.dia/sim21)):1;window._simSim21=sim21;
      for(let i=L.length-1;i>=0;i--)if(/^Combustible ·/.test(L[i].t||''))L.splice(i,1);
      const cons={};CM.forEach(e=>{if(e.f>=d0)cons[e.f]=(cons[e.f]||0)-e.v*k});window._simComb=Object.entries(cons).map(([f,v])=>({f,t:'Combustible · consumo estimado',v:-v}));window._simCombK=k;
      let s=A.saldo;Object.keys(cons).sort().forEach(f=>{s-=cons[f];while(s<300000){L.push({f:plus(f,-1)<d0?d0:plus(f,-1),t:'Recarga Aramco (proyectada)',v:-1000000});s+=1000000}})}
