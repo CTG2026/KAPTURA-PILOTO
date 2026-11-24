@@ -21,8 +21,11 @@ Deno.serve(async (req) => {
     const r = await fetch(u, { headers: { 'Content-Type': 'application/json' } });
     const t = await r.text();
     let j: any = null; try { j = JSON.parse(t); } catch (_) { /* no json */ }
-    const tok = j && (j.token || j.tk || j.mensaje?.token || j.mensaje?.tk || (typeof j.mensaje === 'string' ? j.mensaje : ''));
-    intentos.push({ modo, status: r.status, claves_respuesta: j ? Object.keys(j) : null, texto: j ? undefined : t.slice(0, 200), token_recibido: !!tok });
+    // forma de la respuesta sin mostrar valores largos (el token no se devuelve)
+    const forma = (v: any, d = 0): any => v === null ? null : Array.isArray(v) ? [v.length ? forma(v[0], d + 1) : 'vacío'] : typeof v === 'object' ? (d > 3 ? '{…}' : Object.fromEntries(Object.entries(v).map(([k, x]) => [k, forma(x, d + 1)]))) : typeof v === 'string' ? (v.length > 20 ? 'texto(' + v.length + ')' : v) : v;
+    const buscaTk = (v: any): string => { if (!v || typeof v !== 'object') return ''; for (const [k, x] of Object.entries(v)) { if (typeof x === 'string' && x.length > 20 && /^(tk|token|access_?token)$/i.test(k)) return x; const y = buscaTk(x); if (y) return y; } return ''; };
+    const tok = j ? (buscaTk(j) || (typeof j.mensaje === 'string' && j.mensaje.length > 20 ? j.mensaje : '')) : '';
+    intentos.push({ modo, status: r.status, forma: j ? forma(j) : null, texto: j ? undefined : t.slice(0, 200), token_recibido: !!tok });
     if (r.ok && tok) { tk = tok; break; }
   }
   if (!tk) return R({ ok: false, intentos });
