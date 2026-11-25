@@ -3741,6 +3741,19 @@ async function puntosGPS(ev,fecha,patente){
   const out=[];for(const x of par.slice(i0>=0?i0:0)){const g=enGeo(x.lat_ini,x.lon_ini);if(g&&g.tipo==='local'&&out[out.length-1]!==g.nombre)out.push(g.nombre)}
   return out;
 }
+/* Proformas (Carlos 25-11): suman lo ✅ realizado del plan de Claudio que no esté registrado en Kaptura (sobre todo terceros).
+   Cruce por día: primero mismo servicio; en EBLOOMS (nombres distintos) por cantidad. Si en un día el plan y lo registrado no calzan, ⚠ alerta: manda el plan de Claudio */
+async function profPlanExtra(c,desde,hasta,reg){const hoy=hoyISO(),out=[],al=[];let rq=[];
+  try{rq=(await supa.from('tareas').select('titulo,fecha_limite').eq('empresa',EMPRESA).eq('recurrencia','svc_dia').eq('activa',true).gte('fecha_limite',desde).lte('fecha_limite',hasta)).data||[]}catch(e){}
+  rq.forEach(x=>{let j;try{j=JSON.parse(x.titulo)}catch(e){return}const f=x.fecha_limite;if(f>=hoy)return;
+    const P=[];(j.it||[]).filter(y=>y.c===c&&y.r&&+y.t).forEach(y=>{for(let k=0;k<(+y.n||1);k++)P.push(y)});if(!P.length)return;
+    const Rr=(reg||[]).filter(r=>r.fecha===f).map(r=>parseNotas(r.notas).servicio_sistema||'');
+    for(let a=P.length-1;a>=0;a--){const b=Rr.indexOf(P[a].s);if(b>=0){Rr.splice(b,1);P.splice(a,1)}}
+    if(c==='EBLOOMS'){const k=Math.min(P.length,Rr.length);P.splice(0,k);Rr.splice(0,k)}
+    else if(P.length&&Rr.length)al.push(fCL(f)+': plan dice '+[...new Set(P.map(y=>y.s.replace(/^[^:]*:\s*/,'')))].join(', ')+' y registrado '+[...new Set(Rr.map(z=>z.replace(/^[^:]*:\s*/,'')))].join(', '));
+    P.forEach(y=>out.push({fecha:f,s:y.s,t:+y.t+(y.ifco?85000:0)+(y.dev?Math.round(+y.t*TARIFA_RECH):0),ter:!!y.ter,tp:y.tp||'',tc:y.tc||''}))});
+  return {rows:out.sort((a,b)=>a.fecha<b.fecha?-1:1),al}}
+const profAlerta=al=>al.length?'<div style="background:rgba(220,38,38,.12);border-left:4px solid #DC2626;padding:6px 8px;margin:6px 0;font-size:13px">⚠ Plan de Claudio y registro no calzan (manda el plan; revisar):<br>'+al.map(empEsc).join('<br>')+'</div>':'';
 async function cargarProforma(){
   const [y,m,q]=$('prof-q').value.split('-').map(Number); const d1=q===1?1:16, d2=q===1?15:new Date(y,m+1,0).getDate();
   const desde=y+'-'+String(m+1).padStart(2,'0')+'-'+String(d1).padStart(2,'0'), hasta=y+'-'+String(m+1).padStart(2,'0')+'-'+String(d2).padStart(2,'0');
@@ -3760,11 +3773,12 @@ async function cargarProforma(){
     const obs=[n.observacion_cliente].filter(Boolean).join(' ');if(obs)dst[4]=obs;
     const [yy,mm,dd]=r.fecha.split('-').map(Number);
     return {fecha:r.fecha,cells:[profTit,'',semISO(new Date(yy,mm-1,dd)),'Transporte Madrid',r.fecha.split('-').reverse().join('-'),'Coltauco El Trebol',...dst,PAT_PROF(r.patente),RUT_COND[r.conductor]||'',CHOFER_CORTO(r.conductor),precioSvc(r)]};});
+  const PX=await profPlanExtra('EBLOOMS',desde,hasta,data);PX.rows.forEach(x=>{const [yy,mm,dd]=x.fecha.split('-').map(Number);profFilas.push({fecha:x.fecha,plan:1,cells:[profTit,'',semISO(new Date(yy,mm-1,dd)),'Transporte Madrid',x.fecha.split('-').reverse().join('-'),'Coltauco El Trebol',x.s,'','','','',x.ter?PAT_PROF(x.tp):'','',x.ter?x.tc:'',x.t]})});profFilas.sort((a,b)=>a.fecha<b.fecha?-1:a.fecha>b.fecha?1:0);
   const head=['Factura','Canal','Semana','Transporte','Fecha Origen','Origen','Destino 1','Destino 2','Destino 3','Retorno','Destino 5','Patente','RUT','Chofer','Precio'];
   const tot=profFilas.reduce((t,f)=>t+f.cells[14],0);
-  $('prof-tbl').innerHTML='<tr>'+head.map(h=>'<th>'+h+'</th>').join('')+'</tr>'+profFilas.map(f=>'<tr>'+f.cells.map((c,i)=>'<td'+(i===14?' class="n"':'')+'>'+(i===14?Number(c).toLocaleString('es-CL'):c)+'</td>').join('')+'</tr>').join('')+
+  $('prof-tbl').innerHTML='<tr>'+head.map(h=>'<th>'+h+'</th>').join('')+'</tr>'+profFilas.map(f=>'<tr'+(f.plan?' style="background:rgba(37,99,235,.10)"':'')+'>'+f.cells.map((c,i)=>'<td'+(i===14?' class="n"':'')+'>'+(i===14?Number(c).toLocaleString('es-CL'):c)+(i===4&&f.plan?'<br><small style="color:#2563EB">plan Claudio</small>':'')+'</td>').join('')+'</tr>').join('')+
     '<tr class="tot"><td colspan="14">Total '+profTit+'</td><td class="n">'+tot.toLocaleString('es-CL')+'</td></tr>';
-  $('prof-sub').textContent=profFilas.length+' viaje(s) · total $'+tot.toLocaleString('es-CL')+' neto';
+  $('prof-sub').innerHTML=profFilas.length+' viaje(s) · total $'+tot.toLocaleString('es-CL')+' neto'+(PX.rows.length?' · <span style="color:#2563EB">'+PX.rows.length+' desde el plan de Claudio</span>':'')+profAlerta(PX.al);
   $('btn-prof-xls').disabled=!profFilas.length;
 }
 // ═══ PROFORMA ATEURO / ZURIA: formato de la planilla Zuria de la temporada pasada (Carlos 31-10) ═══
@@ -3782,10 +3796,11 @@ async function cargarProformaA(){
   profAFilas=(data||[]).map(r=>{const n=parseNotas(r.notas),sv=(n.servicio_sistema||'').replace(/^Ateuro:\s*/,'').replace(/\s*·.*$/,''),[o,d]=sv.split('→').map(x=>(x||'').trim());
     const neto=precioSvc(r),iva=Math.round(neto*0.19),tipo=TRACTOS.includes(r.patente)?'Thermo':'Afurgonado';
     return {fecha:r.fecha,cells:[r.fecha.split('-').reverse().join('-'),(n.guias||[]).join(' - '),'Transportes Madrid Gaete',r.conductor,o||r.origen||'',d||r.destino||'',tipo,'Fruta',neto,iva,neto+iva]}});
+  const PX=await profPlanExtra('Ateuro',desde,hasta,data);PX.rows.forEach(x=>{const sv=x.s.replace(/^Ateuro:\s*/,'').replace(/\s*·.*$/,''),[o,d]=sv.split('→').map(z=>(z||'').trim()),iva=Math.round(x.t*0.19);profAFilas.push({fecha:x.fecha,plan:1,cells:[x.fecha.split('-').reverse().join('-'),'',x.ter?'Tercero'+(x.tp?' '+x.tp:''):'Transportes Madrid Gaete',x.tc||'',o,d,'Thermo','Fruta',x.t,iva,x.t+iva]})});profAFilas.sort((a,b)=>a.fecha<b.fecha?-1:a.fecha>b.fecha?1:0);
   const tn=profAFilas.reduce((t,f)=>t+f.cells[8],0),ti=profAFilas.reduce((t,f)=>t+f.cells[9],0);
-  $('profA-tbl').innerHTML='<tr>'+HEAD_A.map(h=>'<th>'+h+'</th>').join('')+'</tr>'+profAFilas.map(f=>'<tr>'+f.cells.map((c,i)=>'<td'+(i>=8?' class="n"':'')+'>'+(i>=8?Number(c).toLocaleString('es-CL'):c)+'</td>').join('')+'</tr>').join('')+
+  $('profA-tbl').innerHTML='<tr>'+HEAD_A.map(h=>'<th>'+h+'</th>').join('')+'</tr>'+profAFilas.map(f=>'<tr'+(f.plan?' style="background:rgba(37,99,235,.10)"':'')+'>'+f.cells.map((c,i)=>'<td'+(i>=8?' class="n"':'')+'>'+(i>=8?Number(c).toLocaleString('es-CL'):c)+(i===0&&f.plan?'<br><small style="color:#2563EB">plan Claudio</small>':'')+'</td>').join('')+'</tr>').join('')+
     '<tr class="tot"><td colspan="8">Total '+profATit+'</td><td class="n">'+tn.toLocaleString('es-CL')+'</td><td class="n">'+ti.toLocaleString('es-CL')+'</td><td class="n">'+(tn+ti).toLocaleString('es-CL')+'</td></tr>';
-  $('profA-sub').textContent=profAFilas.length+' viaje(s) · neto $'+tn.toLocaleString('es-CL')+' · total $'+(tn+ti).toLocaleString('es-CL');$('btn-profA-xls').disabled=!profAFilas.length}
+  $('profA-sub').innerHTML=profAFilas.length+' viaje(s) · neto $'+tn.toLocaleString('es-CL')+' · total $'+(tn+ti).toLocaleString('es-CL')+(PX.rows.length?' · <span style="color:#2563EB">'+PX.rows.length+' desde el plan de Claudio</span>':'')+profAlerta(PX.al);$('btn-profA-xls').disabled=!profAFilas.length}
 function descargarProformaA(){if(!profAFilas.length||!window.XLSX)return;
   const rows=profAFilas.map(f=>{const c=f.cells.slice();const [y,m,d]=f.fecha.split('-').map(Number);c[0]=(Date.UTC(y,m-1,d)-Date.UTC(1899,11,30))/86400000;return c});
   const ws=XLSX.utils.aoa_to_sheet([HEAD_A,...rows]);const nR=rows.length+1;
@@ -3807,17 +3822,19 @@ async function cargarProformaD(){const liq=$('profD-q').value;$('profD-tbl').inn
   profDFilas=L.map(({r,n})=>{const sv=(n.servicio_sistema||'').replace(/^SPOT · /,'').replace(/^DDC:\s*/,''),[o,d]=sv.split('→').map(x=>(x||'').trim()),neto=precioSvc(r),iva=Math.round(neto*0.19),borr=r.empresa===EMP_BORR();
     const tr=n.tipo_spot==='tercero'&&n.tercero?'Tercero: '+n.tercero:'Transportes Madrid Gaete',ch=String(n.conductor_tercero||r.conductor||'').replace(/^Tercero:\s*/,'');
     return {id:r.id,fecha:r.fecha,borr,sinT:!neto,fotos:n.fotos||[],cells:[fCL(r.fecha),(n.guias||[]).join(' - '),tr,ch,o||r.origen||'',d||r.destino||'',[r.patente,n.acoplado].filter(Boolean).join(' + '),n.spot?'Spot':'Normal',neto,iva,neto+iva]}});
+  let PX={rows:[],al:[]};if(!liq){const hD=hoyISO(),regD=(data||[]).filter(r=>!['anulado','descartado'].includes(r.estado)&&r.fecha>='2026-11-24');PX=await profPlanExtra('DDC','2026-11-24',hD,regD);
+    PX.rows.forEach(x=>{const sv=x.s.replace(/^Spot:\s*/,''),[o,d]=sv.split('→').map(z=>(z||'').trim()),iva=Math.round(x.t*0.19);profDFilas.push({id:'',fecha:x.fecha,borr:false,plan:1,sinT:!x.t,fotos:[],cells:[fCL(x.fecha),'',x.ter?'Tercero'+(x.tp?' '+x.tp:''):'Transportes Madrid Gaete',x.tc||'',o,d,x.tp||'',/^Spot/.test(x.s)?'Spot':'Normal',x.t,iva,x.t+iva]})});profDFilas.sort((a,b)=>a.fecha<b.fecha?-1:a.fecha>b.fecha?1:0)} /* plan de Claudio desde el 24-11 (antes: borradores) */
   const tn=profDFilas.reduce((t,f)=>t+f.cells[8],0),ti=profDFilas.reduce((t,f)=>t+f.cells[9],0),nb=profDFilas.filter(f=>f.borr).length,nt=profDFilas.filter(f=>f.sinT).length;
   const d0=profDFilas.length?profDFilas[0].fecha:'',d1=profDFilas.length?profDFilas[profDFilas.length-1].fecha:'';
   profDTit=(liq?'Liquidación N° '+(+liq.replace('DDC-LIQ-','')):'Liquidación N° '+(profDLiq.length+1))+(d0?' · '+fCL(d0)+' al '+fCL(d1):'');
-  const adj=f=>' '+f.fotos.map((u,k)=>'<a href="'+u+'" target="_blank" title="Ver guía" style="text-decoration:none">📎</a>').join('')+(liq?'':' <a href="#" onclick="event.preventDefault();_profDSv=\''+f.id+'\';$(\'profD-file\').click()" title="Adjuntar guía" style="color:var(--gold);font-size:11px">+ adjuntar</a>');
-  $('profD-tbl').innerHTML='<tr>'+HEAD_D.map(h=>'<th>'+h+'</th>').join('')+'</tr>'+profDFilas.map(f=>'<tr'+(f.borr?' style="background:rgba(183,121,31,.10)"':'')+'>'+f.cells.map((c,i)=>'<td'+(i>=8?' class="n"':'')+'>'+(i>=8?(f.sinT?'<i style="color:#B7791F">por definir</i>':Number(c).toLocaleString('es-CL')):empEsc(String(c)))+(i===1?adj(f):'')+(i===0&&f.borr?'<br><small style="color:#B7791F">borrador</small>':'')+'</td>').join('')+'</tr>').join('')+
+  const adj=f=>!f.id?'':' '+f.fotos.map((u,k)=>'<a href="'+u+'" target="_blank" title="Ver guía" style="text-decoration:none">📎</a>').join('')+(liq?'':' <a href="#" onclick="event.preventDefault();_profDSv=\''+f.id+'\';$(\'profD-file\').click()" title="Adjuntar guía" style="color:var(--gold);font-size:11px">+ adjuntar</a>');
+  $('profD-tbl').innerHTML='<tr>'+HEAD_D.map(h=>'<th>'+h+'</th>').join('')+'</tr>'+profDFilas.map(f=>'<tr'+(f.borr?' style="background:rgba(183,121,31,.10)"':f.plan?' style="background:rgba(37,99,235,.10)"':'')+'>'+f.cells.map((c,i)=>'<td'+(i>=8?' class="n"':'')+'>'+(i>=8?(f.sinT?'<i style="color:#B7791F">por definir</i>':Number(c).toLocaleString('es-CL')):empEsc(String(c)))+(i===1?adj(f):'')+(i===0&&f.borr?'<br><small style="color:#B7791F">borrador</small>':'')+(i===0&&f.plan?'<br><small style="color:#2563EB">plan Claudio</small>':'')+'</td>').join('')+'</tr>').join('')+
     '<tr class="tot"><td colspan="8">Total '+profDTit+'</td><td class="n">'+tn.toLocaleString('es-CL')+'</td><td class="n">'+ti.toLocaleString('es-CL')+'</td><td class="n">'+(tn+ti).toLocaleString('es-CL')+'</td></tr>';
   const ap=liq&&profDLiq.find(x=>x.id===liq);
-  $('profD-sub').textContent=profDFilas.length+' servicio(s) · neto $'+tn.toLocaleString('es-CL')+' · total $'+(tn+ti).toLocaleString('es-CL')+(ap?' · aprobada el '+fCL(ap.aprobada):(nb?' · '+nb+' borrador(es) por confirmar':'')+(nt?' · '+nt+' sin tarifa':''));
+  $('profD-sub').textContent=profDFilas.length+' servicio(s) · neto $'+tn.toLocaleString('es-CL')+' · total $'+(tn+ti).toLocaleString('es-CL')+(ap?' · aprobada el '+fCL(ap.aprobada):(nb?' · '+nb+' borrador(es) por confirmar':'')+(nt?' · '+nt+' sin tarifa':''))+(PX.rows.length?' · '+PX.rows.length+' desde el plan de Claudio':'');if(PX.al.length)$('profD-sub').insertAdjacentHTML('beforeend',profAlerta(PX.al));
   $('btn-profD-xls').disabled=!profDFilas.length;$('btn-profD-ok').style.display=liq?'none':'';
   $('btn-profD-ok').disabled=!!liq||!profDFilas.length||nb>0||nt>0;$('btn-profD-ok').title=nb||nt?'Para aprobar: confirma los borradores y pon la tarifa a todos':''}
-async function profDAprobar(){if(!esAdmin()||!profDFilas.length)return;if(profDFilas.some(f=>f.borr||f.sinT)){toast('Hay borradores o servicios sin tarifa');return}
+async function profDAprobar(){if(!esAdmin()||!profDFilas.length)return;if(profDFilas.some(f=>f.plan)){toast('Hay servicios del plan de Claudio sin registrar: regístrelos antes de aprobar');return}if(profDFilas.some(f=>f.borr||f.sinT)){toast('Hay borradores o servicios sin tarifa');return}
   const n=profDLiq.length+1,id='DDC-LIQ-'+String(n).padStart(3,'0'),tn=profDFilas.reduce((t,f)=>t+f.cells[8],0);
   if(!confirm('¿Aprobar la liquidación DDC N° '+n+'?\n\n'+profDFilas.length+' servicio(s) · neto '+fmt$(tn)+' · total '+fmt$(Math.round(tn*1.19))+'\n\nQueda guardada y pasa a Facturación como "por facturar". La siguiente parte con los servicios no liquidados.'))return;
   const {error}=await supa.from('cxc_facturas').insert({id,empresa:EMPRESA,cliente:'DDC',periodo_desde:profDFilas[0].fecha,periodo_hasta:profDFilas[profDFilas.length-1].fecha,etapa:'por_facturar',aprobada:hoyISO(),neto:tn,total:Math.round(tn*1.19),nota:'Liquidación DDC N° '+n+' · '+profDFilas.length+' servicio(s) · aprobada por '+user.nombre,actualizado:new Date().toISOString()});
