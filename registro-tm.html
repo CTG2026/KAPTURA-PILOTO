@@ -140,6 +140,9 @@ body.pc .tv{display:none}body:not(.pc) .tp{display:none}
 
 /* Teléfono en horizontal (Carlos 24-11): usar todo el ancho de la pantalla */
 @media (orientation:landscape) and (max-height:560px){body{max-width:none!important;padding-left:12px;padding-right:12px}}
+/* Calendario: el ícono se ve en tema oscuro y tocar cualquier parte del campo abre el selector (Carlos 25-11) */
+input[type=date]{color-scheme:dark;cursor:pointer}body.pubclaro input[type=date]{color-scheme:light}
+input[type=date]::-webkit-calendar-picker-indicator{opacity:1;cursor:pointer}
 </style>
 </head>
 <body>
@@ -4043,5 +4046,6 @@ const guardado=(_spotTok||_carpTok||_docsTok||_cajaTok)?null:ls('tm_pin'); if(_c
 (function(){const voltear=r=>{(r.querySelectorAll?r.querySelectorAll('.kpi'):[]).forEach(k=>{const p=[...k.children].find(x=>x.classList.contains('p')),l=[...k.children].find(x=>x.classList.contains('l'));if(p&&l&&p.compareDocumentPosition(l)&Node.DOCUMENT_POSITION_FOLLOWING){k.insertBefore(l,p);p.style.marginTop='2px'}})};
   new MutationObserver(ms=>ms.forEach(m=>m.addedNodes.forEach(n=>{if(n.nodeType!==1)return;if(n.classList&&n.classList.contains('kpi'))voltear(n.parentNode||n);else voltear(n)}))).observe(document.body,{childList:true,subtree:true});voltear(document)})();
 </script>
+<script>/* abrir el calendario al tocar el campo de fecha (Carlos 25-11) */document.addEventListener('click',e=>{const t=e.target;if(t&&t.tagName==='INPUT'&&t.type==='date'&&t.showPicker){try{t.showPicker()}catch(_){}}},true);</script>
 </body>
 </html>
