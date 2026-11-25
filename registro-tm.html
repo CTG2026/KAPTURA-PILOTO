@@ -2999,8 +2999,8 @@ function resPintar(){const bx=$('res-box'),cs=window._LCS||window._pilCS,S=_sim|
     '<div id="res-s1"><div>1. Flujo de caja</div><div>'+VB('dia','Día')+VB('sem','Semanal')+VB('mes','Mensual · 6 meses')+'</div>'+(_resV==='sem'?'<div style="font-size:12px;color:var(--muted);margin-bottom:6px">Toca una semana para verla día a día.</div>':'')+tabla+'</div>'+
     '<div id="res-ara"></div>'+
     '<div id="res-s2"><div>2. Detalle de lo que entra y sale</div>'+det(1,'Entra','#15803D')+det(-1,'Sale','#DC2626')+'</div>'+
-    '<div id="res-s3">'+resSvcHtml(cs,fd,fm)+'</div><div id="res-ej"></div><div id="res-cxc"></div><div id="res-ag"></div><div id="res-s8"></div><div id="res-s9"></div><button class="btn2" style="margin-top:14px" onclick="resInforme()">📄 Generar informe (ítems y filas marcadas)</button><div class="sub" style="margin-top:4px">Marca el ítem con la casilla “informe” y desmarca las filas que no quieras (cada fila trae su casilla ☑).</div>';
-  resAcc($('res-s1'),'s1');resAcc($('res-s2'),'s2');resAcc($('res-s3'),'s3');window._resFmt={fd,fm};resAraCargar(fd,fm);resEjCargar(fd,fm);resCxcCargar(fd,fm);resAgCargar(fd);resResCargar(fm);resSdCargar()}
+    '<div id="res-s3">'+resSvcHtml(cs,fd,fm)+'</div><div id="res-ej"></div><div id="res-cxc"></div><div id="res-ag"></div><div id="res-s8"></div><div id="res-s9"></div><div id="res-s10"></div><button class="btn2" style="margin-top:14px" onclick="resInforme()">📄 Generar informe (ítems y filas marcadas)</button><div class="sub" style="margin-top:4px">Marca el ítem con la casilla “informe” y desmarca las filas que no quieras (cada fila trae su casilla ☑).</div>';
+  resAcc($('res-s1'),'s1');resAcc($('res-s2'),'s2');resAcc($('res-s3'),'s3');window._resFmt={fd,fm};resAraCargar(fd,fm);resEjCargar(fd,fm);resCxcCargar(fd,fm);resAgCargar(fd);resResCargar(fm);resSdCargar();resAvCargar()}
 /* Acordeón del Resumen (Carlos 23-11): cada sección parte contraída; si la abres, queda abierta mientras uses la pantalla.
    Toma el primer elemento como título y el resto como contenido. */
 /* 8. Resultado del negocio (Carlos 23-11): ventas netas de servicios ejecutados (fecha del servicio) − costos de la cartola sin IVA (fecha de pago). No entran IVA/F29, créditos, activos, retiros ni devoluciones. */
@@ -3870,6 +3870,38 @@ async function sdGuardar(auto){if(!esAdmin())return;clearTimeout(_sdAuto);const 
   if(_sd.id)r=await supa.from('tareas').update({titulo:tit}).eq('id',_sd.id);
   else{r=await supa.from('tareas').insert({empresa:EMPRESA,titulo:tit,recurrencia:'svc_dia',fecha_limite:_sd.f,activa:true,creada_por:por}).select('id');if(!r.error&&r.data&&r.data[0])_sd.id=r.data[0].id}
   if(r.error){toast('No se pudo guardar');return}_sdLast=tit;_sd.por=por;_sd.ts=ts;_sdSucio=false;if(auto){sdPintar();return}_sdOpen={};_sdDet={};_sd.it.forEach(z=>{if(z.tp&&!(window._sdMemP||[]).includes(z.tp))(window._sdMemP=window._sdMemP||[]).push(z.tp);if(z.tc&&!(window._sdMemC||[]).includes(z.tc))(window._sdMemC=window._sdMemC||[]).push(z.tc)});toast('✔ Servicios del día guardados');sdPintar()} /* al guardar se contraen las listas (Carlos 24-11) */
+/* ═══ 10. AVISOS DE TRANSFERENCIAS POR CORREO (Carlos 24-11): tabla transferencias_avisos. Kaptura busca su movimiento en la cartola
+   (mismo monto exacto, fecha del aviso −1 a +4 días y mismo RUT si el aviso lo trae; primero los avisos con RUT). Si hay un solo calce lo propone; con ✔ se aplican
+   categoría y nota al movimiento de la cartola. Si hay varios posibles o ninguno, no liga nada. ═══ */
+let _avL=[];
+const avRk=s=>String(s||'').replace(/[^0-9kK]/g,'').toLowerCase();
+const avCat=x=>{const s=(x.clasificacion||'')+' '+(x.mensaje||''),rc=avRk(x.rut_destino);
+  if(/mantenci|neum[aá]tic|pulm[oó]n|repuesto|mano de obra/i.test(s))return 'Mantención y neumáticos';
+  if(rc==='108280670'||/comisi[oó]n/i.test(s))return 'Comisión asesor (Carlos Torres)';
+  if(/anticipo|sueldo|pr[eé]stamo|adelanto/i.test(s))return 'Sueldos';
+  if(/tercero|flete/i.test(s))return 'Pago a terceros';
+  if(/combust|petr[oó]leo|di[eé]sel/i.test(s))return 'Combustible';
+  if(/peaje/i.test(s))return 'Peajes';if(/vi[aá]tico/i.test(s))return 'Viáticos';return ''};
+async function resAvCargar(){const b=$('res-s10');if(!b)return;
+  try{const d0=new Date();d0.setDate(d0.getDate()-60);const [a,m]=await Promise.all([supa.from('transferencias_avisos').select('*').eq('empresa',EMPRESA).order('fecha'),
+      supa.from('cartola_movimientos').select('id,fecha,monto,descripcion,categoria,nota').eq('empresa',EMPRESA).lt('monto',0).gte('fecha',hoyISO(d0))]);
+    const A=(a.data||[]),M=(m.data||[]),usados=new Set(A.filter(x=>x.cartola_id).map(x=>x.cartola_id)),dd=(x,y)=>Math.round((new Date(y+'T12:00:00')-new Date(x+'T12:00:00'))/864e5);
+    const P=A.filter(x=>!x.confirmado&&x.estado!=='descartado').sort((x,y)=>(y.rut_destino?1:0)-(x.rut_destino?1:0));
+    P.forEach(x=>{const c=M.filter(v=>Math.round(-v.monto)===Math.round(+x.monto)&&dd(x.fecha,v.fecha)>=-1&&dd(x.fecha,v.fecha)<=4&&!usados.has(v.id)&&(!x.rut_destino||avRk(v.descripcion).includes(avRk(x.rut_destino))));
+      x._c=c;if(c.length===1){x._m=c[0];usados.add(c[0].id)}});
+    _avL=P;const nC=A.filter(x=>x.confirmado).length,f=s=>s?s.slice(8,10)+'-'+s.slice(5,7):'',I='font-size:14px;padding:6px;border-radius:8px;border:2px solid var(--border);background:var(--surface);color:var(--text)';
+    b.innerHTML='<div>10. Avisos de transferencias'+(P.length?' ('+P.length+' por revisar)':'')+'</div><div>'+(P.length?P.map((x,i)=>'<div style="border-bottom:1px solid var(--border);padding:10px 0"><div style="font-weight:800">'+f(x.fecha)+' · '+fm$(+x.monto)+' · '+empEsc(x.nombre_destino||x.rut_destino||'—')+'</div><div style="font-size:13px;color:var(--muted)">'+empEsc(x.clasificacion||'')+(x.mensaje?' · “'+empEsc(x.mensaje)+'”':'')+(x.patente?' · '+empEsc(x.patente):'')+'</div>'+
+        (x._m?'<div style="font-size:13px;margin-top:4px;color:#15803D">✓ Calza con la cartola del '+f(x._m.fecha)+' · '+empEsc(x._m.descripcion||'')+(x._m.categoria?' · hoy: '+empEsc(x._m.categoria):' · sin categoría')+'</div><div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap"><select id="avc'+i+'" style="'+I+';flex:1;min-width:180px">'+claOps(avCat(x)||x._m.categoria||'')+'</select><button class="btn2" style="margin:0;width:auto;padding:8px 14px;background:#16A34A;border-color:#16A34A;color:#fff;font-weight:800" onclick="avConfirmar('+i+')">✔ Confirmar</button></div>'
+         :x._c.length>1?'<div style="font-size:13px;margin-top:4px;color:#B7791F">⚠ '+x._c.length+' movimientos posibles en la cartola: no se liga solo, revisar</div>'
+         :'<div style="font-size:13px;margin-top:4px;color:var(--muted)">⏳ Aún no aparece en la cartola</div>')+'</div>').join(''):'<div class="sub">Sin avisos por revisar.</div>')+
+      '<div style="font-size:12px;color:var(--muted);margin-top:6px">'+nC+' aviso(s) ya confirmados.</div></div>';
+    resAcc(b,'s10')}catch(e){b.innerHTML=''}}
+async function avConfirmar(i){if(!esAdmin())return;const x=_avL[i];if(!x||!x._m)return;const cat=($('avc'+i)||{}).value||'';if(!cat){toast('Elige la categoría');return}
+  const nn=(x.clasificacion||'')+(x.mensaje?' · “'+x.mensaje+'”':'')+(x.patente&&!String(x.clasificacion||'').includes(x.patente)?' · '+x.patente:'')+' (aviso correo #'+x.id+')',ant=String(x._m.nota||'');
+  const nota=ant.includes('aviso correo #'+x.id)?ant:(ant?ant+' | ':'')+nn;
+  const r1=await supa.from('cartola_movimientos').update({categoria:cat,nota}).eq('id',x._m.id);if(r1.error){toast('No se pudo actualizar la cartola');return}
+  const r2=await supa.from('transferencias_avisos').update({cartola_id:x._m.id,categoria:cat,estado:'confirmado',confirmado:new Date().toISOString(),confirmado_por:(user&&user.nombre)||''}).eq('id',x.id);
+  toast(r2.error?'Cartola actualizada; el aviso no se marcó':'✔ Aviso aplicado a la cartola');resAvCargar()}
 function estiloXLS(ws,nFilas,nCols,filaTot){
   const L=c=>XLSX.utils.encode_col(c), bd={style:'thin',color:{rgb:'DDDDDD'}}, B={top:bd,bottom:bd,left:bd,right:bd};
   for(let c=0;c<nCols;c++){
