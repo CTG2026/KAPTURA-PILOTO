@@ -3861,7 +3861,8 @@ function sdGrupos(c,cat,fila,it){const G=[];cat.forEach(y=>{if(!y.g)return;if(!G
 /* En línea (Carlos 24-11): cada cambio se guarda solo a los 2 s (sin contraer) y la pantalla abierta se refresca cada 15 s con lo que guardó el otro */
 let _sdAuto=null,_sdPoll=null,_sdLast='';
 function sdCambio(){_sdSucio=true;clearTimeout(_sdAuto);_sdAuto=setTimeout(()=>sdGuardar(true),2000)}
-function sdVigilar(){clearInterval(_sdPoll);_sdPoll=setInterval(async()=>{const h=$(_sdHost);if(!h||!h.offsetParent||_sdSucio||!_sd.f)return;
+function sdVigilar(){clearInterval(_sdPoll);if(!window._sdHoyRef)window._sdHoyRef=hoyISO();_sdPoll=setInterval(async()=>{const h=$(_sdHost);if(!h||!h.offsetParent||_sdSucio||!_sd.f)return;
+  {const hy=hoyISO();if(hy!==window._sdHoyRef){const era=_sd.f===window._sdHoyRef;window._sdHoyRef=hy;if(era){sdCargar(hy);return}}} /* pasada la medianoche, si estaba en "hoy" salta solo al día nuevo (Carlos 24-11) */
   try{const r=await supa.from('tareas').select('id,titulo').eq('empresa',EMPRESA).eq('recurrencia','svc_dia').eq('fecha_limite',_sd.f).eq('activa',true).order('id',{ascending:false}).limit(1);const x=r.data&&r.data[0];if(!x||x.titulo===_sdLast)return;
     if(_sdSucio)return;const j=JSON.parse(x.titulo||'{}');_sdLast=x.titulo;_sd={f:_sd.f,it:j.it||[],id:x.id,por:j.por||null,ts:j.ts||null};sdPintar()}catch(e){}},15000)}
 function sdDet(i){const r=_sdRows[i];if(!r)return;const k=r.c+'|'+r.s;_sdDet[k]=!_sdDet[k];sdPintar()}
