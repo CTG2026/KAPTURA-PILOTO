@@ -3150,7 +3150,7 @@ async function pilProy(nw,quiet){nw=nw||6;const SETW=(k,v)=>{window[(quiet?'_L':
         const SDC={EBLOOMS:'EBLOOMS',Ateuro:'Ateuro / Zuria',DDC:'DDC','Home Gardens':'Home Gardens'};
         Object.entries(SDD).forEach(([f,its])=>its.forEach(y=>{const cl=SDC[y.c];if(!y.r||!cl||!(+y.t))return;const n=+y.n||1,u=(+y.t)+(y.ifco?85000:0)+(y.dev?Math.round((+y.t)*TARIFA_RECH):0),v=n*u,nt=sdNT(y);vm(f).v+=v;vm(f).t+=nt*u;
           if(f<ini||cub(cl,f))return;const [k,hh,pf]=perH(cl,f),key=k+'|'+hh,nm=String(y.s).replace(/^[^:]*:\s*/,'')+' (plan Claudio)';PLC[key]=PLC[key]||{k,hh,pf,v:0,cl,det:{}};PLC[key].v+=v;PLC[key].det[nm]=(PLC[key].det[nm]||0)+v;
-          if(nt&&y.c==='DDC'){const fp=mas(f,30),kk=fp+'|tercero DDC';PT[kk]=PT[kk]||{f:fp,t:'Pago tercero DDC 90% (plan Claudio)',v:0};PT[kk].v+=nt*u*0.9*iva}})); /* tercero DDC = 90% de la tarifa (Carlos 19-11) */
+          if(nt&&y.c==='DDC'){const fp=mas(f,30),kk=fp+'|tercero DDC';PT[kk]=PT[kk]||{f:fp,t:'Pago tercero DDC 90% (plan Claudio)',v:0};PT[kk].v+=nt*(/Viña María → Curicó/i.test(y.s||'')?425000:u*0.9)*iva} /* Viña María → Curicó: $425.000 acordado por Claudio; resto 90% (Carlos 25-11) */})); /* tercero DDC = 90% de la tarifa (Carlos 19-11) */
         RS.forEach(r=>{const v=precioSvc(r),n=parseNotas(r.notas);if(!v||n.fuera_flujo||SDD[r.fecha])return;const ter=n.pago_tercero!=null;vm(r.fecha).v+=v;if(ter)vm(r.fecha).t+=v;
           if(r.fecha<ini||!/^(EBLOOMS|DDC|Ateuro|Alimentos Valle|Valle)/.test(r.cliente||'')||cub(r.cliente,r.fecha))return;const [k,hh,pf]=perH(r.cliente,r.fecha),key=k+'|'+hh,nm=(n.servicio_sistema||'servicio').replace(/^[^:]*:\s*/,'')+' (registrado)';
           PLC[key]=PLC[key]||{k,hh,pf,v:0,cl:r.cliente,det:{}};PLC[key].v+=v;PLC[key].det[nm]=(PLC[key].det[nm]||0)+v;
