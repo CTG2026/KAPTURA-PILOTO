@@ -23,7 +23,7 @@
 html,body{background:var(--bg);color:var(--text);font-family:'Cifras','DM Sans',system-ui,sans-serif;min-height:100%}
 body{padding:16px 16px 40px;max-width:520px;margin:0 auto}
 body:has(#s-carpub.on){max-width:1200px}
-body.gscarp:has(#s-carp.on){max-width:1200px} /* carpeta de arranque GS más ancha en PC (Carlos 26-11) */
+body:has(#s-carp.on){max-width:1200px} /* carpeta de arranque GS más ancha en PC (Carlos 26-11) */
 body.pubcaja:has(#s-pil.on){max-width:none;padding-left:28px;padding-right:28px} /* link de caja para Claudio: mismo ancho que la vista PC de Carlos (Carlos 18-11) */
 body.pubclaro{--bg:#F4F6F9;--surface:#FFFFFF;--surface2:#F1F4F8;--border:#DDE3EA;--text:#1E2B3A;--muted:#5B6B7D;--gold:#2563EB;--green:#2E8B57;--danger:#D64545;background:#D9E1EA;color:#1E2B3A} /* link de documentos con los colores de la vista PC; fondo un tono más oscuro (Carlos 18-11) */
 html:has(body.pubclaro){background:#D9E1EA}
@@ -1911,7 +1911,10 @@ function docCliHtml(eq,admin){const E=eq.filter(x=>x.grupo!=='Conductores'),C=eq
   const tipo=x=>String(x.tipo||'').replace(/\s*\((arrendado|propio)\)/i,'');
   const tabEq=L=>'<table style="border-collapse:collapse;width:100%;font-size:13px"><tr>'+TH('Patente')+TH('Equipo')+TH('Permiso circulación')+TH('Revisión técnica')+TH('SOAP')+TH('Seguro carga')+TH('Responsabilidad civil')+'</tr>'+L.map(x=>'<tr><td style="'+Cc+'"><b>'+x.patente+'</b></td><td style="'+B+'">'+tipo(x)+'</td>'+cel(x,'pc','pc','pc_nota','pc_url')+cel(x,'rt','rt','rt_nota','rt_url')+cel(x,'soap','soap','soap_nota','soap_url')+carga(x)+pol(x,'rc')+'</tr>').join('')+'</table>';
   const hv=x=>'<td style="'+Cc+';font-weight:600">'+(x.soap_url?lk('Ver documento',x.soap_url,'var(--accent,#2563eb)'):'<span style="color:#DC2626">Sin documento</span>')+up(x.id,'soap')+'</td>';
-  const tabC=L=>'<table style="border-collapse:collapse;width:100%;font-size:13px"><tr>'+TH('Conductor')+TH('Cédula de identidad')+TH('Licencia de conducir')+TH('Hoja de vida')+'</tr>'+L.map(x=>'<tr><td style="'+B+'"><b>'+x.patente+'</b>'+(x.tipo?'<div style="font-size:11px;color:#888">'+x.tipo+'</div>':'')+'</td>'+cel(x,'pc','pc','pc_nota','pc_url')+cel(x,'rt','rt','rt_nota','rt_url')+hv(x)+'</tr>').join('')+'</table>';
+  /* Licencias (Carlos 26-11): prórroga automática Ley 21.806 art. 120 — vencidas en 2025 valen hasta 31-12-2026; las que vencen en 2026, 6 meses más desde su fecha */
+  const licPr=d=>{if(!d)return d;const y=+String(d).slice(0,4);if(y===2025)return '2026-12-31';if(y===2026){const t=new Date(d+'T12:00:00');t.setMonth(t.getMonth()+6);return t.toISOString().slice(0,10)}return d};
+  const celLic=x=>{const p=licPr(x.rt);if(p===x.rt)return cel(x,'rt','rt','rt_nota','rt_url');return cel({...x,rt:p},'rt','rt','rt_nota','rt_url').replace('</td>','<div style="font-size:11px;color:#888;font-weight:400">prorrogada (Ley 21.806) · vencía '+fCL(x.rt)+'</div></td>')};
+  const tabC=L=>'<table style="border-collapse:collapse;width:100%;font-size:13px"><tr>'+TH('Conductor')+TH('Cédula de identidad')+TH('Licencia de conducir')+TH('Hoja de vida')+'</tr>'+L.map(x=>'<tr><td style="'+B+'"><b>'+x.patente+'</b>'+(x.tipo?'<div style="font-size:11px;color:#888">'+x.tipo+'</div>':'')+'</td>'+cel(x,'pc','pc','pc_nota','pc_url')+celLic(x)+hv(x)+'</tr>').join('')+'</table>';
   const bl=(t,L,f)=>L.length?'<div style="font-weight:800;margin:10px 0 4px">'+t+' ('+L.length+')</div><div style="overflow-x:auto">'+f(L)+'</div>':'';
   const usados=new Set();const GRP=[['Tractos',/^tracto/i],['Semirremolques',/^semirremolque/i],['Camiones',/^cami/i],['Acoplados',/^acoplado/i]] /* Acoplados GS (Carlos 25-11) */;const grupos=((eq[0]&&eq[0].empresa)==='global_solutions'?[GRP[2],GRP[3],GRP[0],GRP[1]]:GRP) /* GS: camiones, acoplados, tractos, semirremolques (Carlos 25-11) */.map(([t,re])=>{const L=E.filter(x=>re.test(x.tipo||'')).sort(docOrden);L.forEach(x=>usados.add(x.id));return bl(t,L,tabEq)}).join('');
   const otros=E.filter(x=>!usados.has(x.id)).sort(docOrden);
