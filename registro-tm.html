@@ -1653,7 +1653,7 @@ function esAdminTotal(){return !!(user&&(user.rol==='administrador'||user.rol===
 function verResultado(){return esAdminTotal()} // Carlos y administración; Claudio todavía no (Carlos 02-11)
 function esCliente(){return user&&user.rol==='cliente'}
 // ═══ SERVICIOS SIN REGISTRAR: entregas sin servicio de días anteriores, o de hoy después de las 21:00 (Carlos 31-10) ═══
-async function alertaSinReg(){const box=$('alerta-sinreg');if(!box)return;box.innerHTML='';if(!user||!supa||EMP_ACT!==EMPRESA)return;const u0=user;
+async function alertaSinReg(){const box=$('alerta-sinreg');if(!box)return;box.innerHTML='';if(!user||!supa||EMP_ACT!==EMPRESA||esCliente())return; /* clientes nunca ven servicios sin registrar: es interno de TM (Carlos 26-11) */const u0=user;
   try{const d0=new Date();d0.setDate(d0.getDate()-14);const hoy=hoyISO(),tarde=new Date().getHours()>=21;
     let q=supa.from('entregas').select('fecha,conductor,cliente').eq('empresa',EMPRESA).is('servicio_id',null).neq('estado','prueba').gte('fecha',hoyISO(d0));
     if(esCliente())q=q.eq('cliente',user.cliente);else if(!esAdmin())q=q.eq('conductor',user.nombre);
@@ -3576,7 +3576,7 @@ async function cargarEntregas(){ // Hoy / 7 días / Mes, igual que servicios (Ca
   const g={};es.forEach(e=>{const k=e.fecha+'|'+e.conductor;(g[k]=g[k]||[]).push(e)});
   $('misent-lista').innerHTML=Object.keys(g).sort((a,b)=>{const [fa]=a.split('|'),[fb]=b.split('|');return fb.localeCompare(fa)||g[a][0].hora.localeCompare(g[b][0].hora)}).map(k=>{const [f,c]=k.split('|');
     const lis=g[k].slice().sort((a,b)=>(a.hora||'').localeCompare(b.hora||'')),ss=sv.filter(x=>x.fecha===f&&x.conductor===c);
-    const cab=ss.length?ss.map(x=>{const n=parseNotas(x.notas);return (n.codigo?'<span class="ul">'+n.codigo+'</span> · ':'')+patTipo(x.patente)+' · '+SVC_VER(n.servicio_sistema||'')}).join(' / '):'<span class="ifco">⚠ Servicio sin registrar</span>';
+    const cab=ss.length?ss.map(x=>{const n=parseNotas(x.notas);return (n.codigo?'<span class="ul">'+n.codigo+'</span> · ':'')+patTipo(x.patente)+' · '+SVC_VER(n.servicio_sistema||'')}).join(' / '):(esCliente()?'':'<span class="ifco">⚠ Servicio sin registrar</span>');
     return '<div class="reg" style="margin-top:12px"><div class="t"><b>'+f.split('-').reverse().join('-')+(esAdmin()||esCliente()?' · '+c:'')+'</b> · '+lis.length+' entrega(s)'+ifcoCab(lis)+'</div><div class="m">'+cab+'</div></div>'+lis.map(item).join('');
   }).join('');
 }
@@ -3603,7 +3603,7 @@ async function verIfco(){
     if(mio)b=env?bt('📤 Enviar a EBLOOMS por WhatsApp','waIfco(ifcoMsg(ifcoFilas['+i+']))','#1f7a3a'):bt('📷 IFCO pendiente recibido (tomar foto)','ifcoFoto('+i+')','#1f7a3a');
     else if(esCliente())b=env?bt('✅ IFCO pendiente recibido','pedirIfcoOk('+i+',this)','#1f7a3a'):'';
     else if(esAdmin())b=bt('✅ Marcar IFCO recibido','pedirIfcoOk('+i+',this)');
-    return '<div class="gl" data-i="'+i+'">'+(e.foto?'<a href="'+e.foto+'" target="_blank"><img src="'+e.foto+'"></a>':'')+'<div class="gi"><b>'+(e._cod?'<span class="ul">'+e._cod+'</span> · ':'<span class="ifco">⚠ Servicio sin registrar</span> · ')+e.fecha.split('-').reverse().join('-')+' '+e.hora+' · '+e.local+'</b><div class="msg">'+e.conductor+(e.obs?' · Guía N° '+e.obs:' · sin N° de guía')+'</div><div class="msg">'+(env?'<span style="color:#c77d00;font-weight:900">📤 IFCO enviado – por confirmar EBLOOMS</span>':'<span class="ifco">📄 IFCO pendiente · '+ifcoDias(e.fecha)+' día(s)</span>')+'</div>'+(e.ifco_foto?'<div class="msg"><a href="'+e.ifco_foto+'" target="_blank">📷 Ver foto del IFCO</a>'+(e.ifco_enviado_por?' · por '+e.ifco_enviado_por.split(' ')[0]:'')+'</div>':'')+b+'</div></div>'}).join('');
+    return '<div class="gl" data-i="'+i+'">'+(e.foto?'<a href="'+e.foto+'" target="_blank"><img src="'+e.foto+'"></a>':'')+'<div class="gi"><b>'+(e._cod?'<span class="ul">'+e._cod+'</span> · ':esCliente()?'':'<span class="ifco">⚠ Servicio sin registrar</span> · ')+e.fecha.split('-').reverse().join('-')+' '+e.hora+' · '+e.local+'</b><div class="msg">'+e.conductor+(e.obs?' · Guía N° '+e.obs:' · sin N° de guía')+'</div><div class="msg">'+(env?'<span style="color:#c77d00;font-weight:900">📤 IFCO enviado – por confirmar EBLOOMS</span>':'<span class="ifco">📄 IFCO pendiente · '+ifcoDias(e.fecha)+' día(s)</span>')+'</div>'+(e.ifco_foto?'<div class="msg"><a href="'+e.ifco_foto+'" target="_blank">📷 Ver foto del IFCO</a>'+(e.ifco_enviado_por?' · por '+e.ifco_enviado_por.split(' ')[0]:'')+'</div>':'')+b+'</div></div>'}).join('');
 }
 // Estado del IFCO para las listas: rojo = pendiente · naranjo = enviado por el conductor, por confirmar
 const marcasTag=e=>(e.rechazo?' · <span style="color:#B91C1C;font-weight:900">⚠ Rechazo</span>':'')+(e.retiro_ifco?' · <span style="color:#1D4ED8;font-weight:900">📦 Retiro IFCO</span>':'');
