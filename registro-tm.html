@@ -1905,7 +1905,7 @@ function docCliHtml(eq,admin){const E=eq.filter(x=>x.grupo!=='Conductores'),C=eq
   const B='border-bottom:1px solid #ddd;padding:6px 8px;text-align:left;vertical-align:top',Cc=B+';white-space:nowrap',TH=t=>'<th style="'+Cc+'">'+t+'</th>';
   const lk=(t,u,c)=>u?'<a href="'+u+'" target="_blank" rel="noopener" style="color:'+c+';text-decoration:underline">'+t+'</a>':t;
   const up=(id,k)=>admin?' <a href="#" onclick="docCliSubir(\''+id+'\',\''+k+'\');return false" title="Subir o cambiar documento" style="text-decoration:none">📎</a>':'';
-  const amar=(x,s)=>{if(x.empresa==='global_solutions'&&s.ic==='⚠ ')s.c='#15803D';return s}; /* GS: por vencer en verde solo con ⚠ (Carlos 25-11) */
+  const amar=(x,s)=>{if(x.empresa==='global_solutions'){if(s.ic==='⚠ ')s.c='#15803D';if(/sin documento adjunto/.test(s.t||'')){s.c='#DC2626';if(!s.ic)s.ic='✗ '}}return s}; /* GS: fecha sin documento adjunto = rojo (Carlos 26-11) */ /* GS: por vencer en verde solo con ⚠ (Carlos 25-11) */
   const cel=(x,k,dk,nk,uk)=>{const s=amar(x,carpSemU(x[dk],x[nk],x[uk]));return '<td style="'+Cc+';color:'+s.c+';font-weight:600">'+(s.ic||'')+lk(s.t,x[dk]?x[uk]:null,s.c)+up(x.id,k)+'</td>'};
   const pol=(x,k)=>{const s=amar(x,x[k+'_uf']?carpSemU(x[k+'_vence'],null,x[k+'_url']):carpSem(null,x[k+'_nota']));return '<td style="'+Cc+';color:'+s.c+';font-weight:600">'+(s.ic||'')+lk((x[k+'_uf']?fmtN(x[k+'_uf'])+' UF · ':'')+s.t,x[k+'_vence']?x[k+'_url']:null,s.c)+up(x.id,k)+'</td>'},carga=x=>pol(x,'carga');
   const tipo=x=>String(x.tipo||'').replace(/\s*\((arrendado|propio)\)/i,'');
