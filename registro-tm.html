@@ -3478,23 +3478,23 @@ async function avisoCliente(i){
     }
     if(sel.length){const fin=new Date(sel[sel.length-1].fin||sel[sel.length-1].inicio);km=e.filter(x=>x.tipo==='viaje'&&(!desde||new Date(x.inicio)>=desde)&&new Date(x.inicio)<fin).reduce((t,x)=>t+(+x.km||0),0)}
   }catch(err){}
-  const L0=['🟡 *KAPTURA · Transportes Madrid*','_Notificación automática de servicio_','━━━━━━━━━━━━━━━━━━','✅ *SERVICIO COMPLETADO*',
-    (n.codigo?'🔖 Servicio '+n.codigo:null),
-    '📅 '+r.fecha.split('-').reverse().join('-')+' · '+SVC_VER(n.servicio_sistema),
-    '🚚 '+pat+' · Conductor: '+r.conductor.split(' ').slice(0,2).join(' ')+(n.peoneta?' · Peoneta: '+n.peoneta:'')];
-  const L=L0.filter(x=>x!==null);
-  if(n.factura_salida)L.push('🧾 Factura de salida: '+n.factura_salida);
-  if((n.guias||[]).length)L.push('🧾 Guías: '+n.guias.join(' - '));
-  if(puntos.length){L.push('','📍 *Recorrido y entregas:*');
-    puntos.forEach(p=>{L.push(p.ic+' *'+p.nom+'*','     '+p.h);
-      if(p.ul)L.push('     📄 Doc. Unidades logísticas '+(p.ul.nro||'')+': '+(p.ul.items||[]).map(it=>it.cant+' '+it.desc.toLowerCase()).join(' · '));
-      p.ez.forEach(z=>L.push('     '+(z.estado==='pendiente'?'⏳ Pendiente ':'✅ Entregado ')+z.hora+((z.ifco_pendiente&&!z.ifco_recibido)?' · 📄 IFCO pendiente':'')))});
-    L.push('','📏 Km recorridos: '+Math.round(km)+' · ⏱ Esperas en locales: '+durTxt(esp));
-  }else if(uls.length){L.push('','🏬 *Entregas confirmadas:*');
-    uls.forEach(u=>{L.push('• '+(u.hora||'')+' · '+u.local+' '+(u.nombre||'')+(u.nro?' · Doc. Unidades logísticas '+u.nro:''));(u.items||[]).forEach(it=>L.push('   • '+it.cant+' '+it.desc.toLowerCase()))});}
-  if(tot.cajas||tot.pallets)L.push('📦 Total recibido: '+[tot.cajas?tot.cajas+' cajas':'',tot.pallets?tot.pallets+' pallets':''].filter(Boolean).join(' · '));
-  if(n.observacion_cliente)L.push('📝 '+n.observacion_cliente);
-  L.push('━━━━━━━━━━━━━━━━━━','_Mensaje generado automáticamente por Kaptura, sistema de gestión de Transportes Madrid._');
+  /* Sin emojis: WhatsApp de escritorio los mostraba como � (Carlos 26-11). Bloques separados por líneas en blanco */
+  const L=['*KAPTURA · Transportes Madrid*','_Notificación automática de servicio_','━━━━━━━━━━━━━━━━━━','*SERVICIO COMPLETADO*',''];
+  if(n.codigo)L.push('*Servicio:* '+n.codigo);
+  L.push('*Fecha:* '+r.fecha.split('-').reverse().join('-'),'*Detalle:* '+SVC_VER(n.servicio_sistema),'');
+  L.push('*Camión:* '+pat,'*Conductor:* '+r.conductor.split(' ').slice(0,2).join(' ')+(n.peoneta?' · Peoneta: '+n.peoneta:''));
+  if(n.factura_salida)L.push('*Factura de salida:* '+n.factura_salida);
+  if((n.guias||[]).length)L.push('*Guías:* '+n.guias.join(' - '));
+  if(puntos.length){L.push('','*Recorrido y entregas:*');
+    puntos.forEach(p=>{L.push('','▸ *'+p.nom+'*','   '+p.h);
+      if(p.ul)L.push('   Doc. Unidades logísticas '+(p.ul.nro||'')+': '+(p.ul.items||[]).map(it=>it.cant+' '+it.desc.toLowerCase()).join(' · '));
+      p.ez.forEach(z=>L.push('   '+(z.estado==='pendiente'?'Pendiente ':'Entregado ')+z.hora+((z.ifco_pendiente&&!z.ifco_recibido)?' · IFCO pendiente':'')))});
+    L.push('','*Km recorridos:* '+Math.round(km),'*Esperas en locales:* '+durTxt(esp));
+  }else if(uls.length){L.push('','*Entregas confirmadas:*');
+    uls.forEach(u=>{L.push('• '+(u.hora||'')+' · '+u.local+' '+(u.nombre||'')+(u.nro?' · Doc. Unidades logísticas '+u.nro:''));(u.items||[]).forEach(it=>L.push('   - '+it.cant+' '+it.desc.toLowerCase()))});}
+  if(tot.cajas||tot.pallets)L.push('','*Total recibido:* '+[tot.cajas?tot.cajas+' cajas':'',tot.pallets?tot.pallets+' pallets':''].filter(Boolean).join(' · '));
+  if(n.observacion_cliente)L.push('','*Observación:* '+n.observacion_cliente);
+  L.push('','━━━━━━━━━━━━━━━━━━','_Mensaje generado automáticamente por Kaptura, sistema de gestión de Transportes Madrid._');
   const url='https://wa.me/?text='+encodeURIComponent(L.join('\n'));
   if(win)win.location.href=url;else location.href=url;
   window._ultimoAviso=L.join('\n');
