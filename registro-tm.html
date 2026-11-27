@@ -2093,8 +2093,10 @@ async function archCargarCarps(){const {data,error}=await supa.from('tm_carpetas
 function archNav(){return '<div id="arch-nav"></div>'}
 function archMarcar(){document.querySelectorAll('#pcnav button').forEach(b=>b.classList.toggle('on',b.dataset.s==='arch:'+ARCH.cur))}
 function archNavPintar(){const el=$('arch-nav');if(!el)return;const act=ARCH.carps.filter(c=>!c.eliminado);
-  const rec=(p,d)=>act.filter(c=>(c.padre_id||null)===p).sort((a,b)=>a.nombre.localeCompare(b.nombre,'es')).map(c=>'<button data-s="arch:'+c.id+'" data-drop="'+c.id+'" onclick="verArch(\''+c.id+'\')" style="padding-left:'+(14+d*14)+'px">📁 '+archEsc(c.nombre)+'</button>'+rec(c.id,d+1)).join('');
-  el.innerHTML='<div style="font-size:11px;font-weight:800;color:var(--muted);letter-spacing:.08em;margin:10px 10px 2px">📁 ARCHIVOS</div><button data-s="arch:null" data-drop="root" onclick="verArch(null)" style="padding-left:14px">🗂 Inicio</button>'+rec(null,1)+'<button data-s="arch:papelera" onclick="verArch(\'papelera\')" style="padding-left:14px">🗑 Papelera</button>';archMarcar()}
+  const BL='display:block;width:100%;text-align:left;box-sizing:border-box;';
+  const rec=(p,d)=>act.filter(c=>(c.padre_id||null)===p).sort((a,b)=>a.nombre.localeCompare(b.nombre,'es')).map(c=>'<button data-s="arch:'+c.id+'" data-drop="'+c.id+'" onclick="verArch(\''+c.id+'\')" style="'+BL+'padding-left:'+(14+d*14)+'px">📁 '+archEsc(c.nombre)+'</button>'+rec(c.id,d+1)).join('');
+  /* Archivos contraído por defecto y una carpeta por línea (Carlos 27-11) */
+  el.innerHTML='<details class="sac"'+(window._archAbre?' open':'')+' ontoggle="window._archAbre=this.open"><summary style="list-style:none;cursor:pointer;padding:8px 10px;font-size:14px">▸ 📁 Archivos</summary><button data-s="arch:null" data-drop="root" onclick="verArch(null)" style="'+BL+'padding-left:24px">🗂 Inicio</button>'+rec(null,1)+'<button data-s="arch:papelera" onclick="verArch(\'papelera\')" style="'+BL+'padding-left:24px">🗑 Papelera</button></details>';archMarcar()}
 async function archNavCargar(){if(!$('arch-nav'))return;if(await archCargarCarps())archNavPintar()}
 async function verArch(id){if(!esAdminTotal())return;if(id!==undefined)ARCH.cur=id;
   ir('s-arch');$('arch-box').innerHTML='';$('arch-sub').textContent='Cargando…';
