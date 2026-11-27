@@ -1890,7 +1890,7 @@ let _nr=null;
 function verNotasReu(){if(!esCarlos())return;const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(_nr&&_nr.w){_nr.w.style.display='flex';return}
   const w=document.createElement('div');w.style.cssText='position:fixed;inset:0;background:var(--bg,#111);z-index:300;display:flex;flex-direction:column;padding:12px;gap:8px';
   w.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center"><div style="font-weight:900;font-size:18px">🎙 Notas de reunión</div><button class="btn2" style="width:auto;margin:0;padding:6px 12px" data-a="x">✕ Cerrar</button></div>'+
-    '<div style="font-size:12px;color:var(--muted)">No se guarda nada: al cerrar se borra. Deja la pantalla encendida y el teléfono cerca del parlante. Avisa al inicio que estás tomando notas.</div>'+
+    '<div style="font-size:12px;color:var(--muted)">No se guarda nada: al cerrar se borra. Deja la pantalla encendida (en iPhone: Ajustes › Pantalla y brillo › Bloqueo automático › Nunca, y sin modo ahorro de batería) y el teléfono cerca del parlante. Avisa al inicio que estás tomando notas.</div>'+
     '<div id="nr-est" style="font-weight:800">'+(SR?'Listo para grabar':'⚠️ Este navegador no transcribe. Usa Chrome.')+'</div>'+
     '<div id="nr-txt" style="flex:1;overflow:auto;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:10px;font-size:16px;line-height:1.45;white-space:pre-wrap"></div>'+
     '<div style="display:flex;gap:8px"><button class="btn2" style="flex:2;margin:0;font-size:17px;font-weight:900" data-a="g"'+(SR?'':' disabled')+'>🎙 Grabar</button><button class="btn2" style="flex:1;margin:0" data-a="c">📋 Copiar</button><button class="btn2" style="flex:1;margin:0;color:#DC2626" data-a="b">🗑 Borrar</button></div>';
@@ -1902,15 +1902,18 @@ function verNotasReu(){if(!esCarlos())return;const SR=window.SpeechRecognition||
   const ini=()=>{const r=new SR();r.lang='es-CL';r.continuous=true;r.interimResults=true;
     r.onresult=ev=>{let it='';for(let i=ev.resultIndex;i<ev.results.length;i++){const x=ev.results[i];if(x.isFinal){const tx=x[0].transcript.trim();if(tx)_nr.seg.push('['+mm()+'] '+tx)}else it+=x[0].transcript}_nr.int=it;pin()};
     r.onerror=ev=>{if(ev.error==='not-allowed'||ev.error==='service-not-allowed'){_nr.on=false;$e.textContent='⚠️ Sin permiso de micrófono';$g.textContent='🎙 Grabar'}};
-    r.onend=()=>{_nr.int='';pin();if(_nr.on){try{r.start()}catch(e){setTimeout(()=>{try{r.start()}catch(x){}},400)}}}; /* Chrome corta tras una pausa: se reinicia solo mientras esté grabando */
+    r.onstart=()=>{_nr.act=true;if(_nr.on)$e.textContent='🔴 Grabando…'};
+    r.onend=()=>{_nr.act=false;_nr.int='';pin();if(_nr.on){if(document.visibilityState!=='visible'){$e.textContent='⚠️ Pantalla apagada: se reanuda al volver';return}try{r.start()}catch(e){setTimeout(()=>{try{r.start()}catch(x){}},400)}}}; /* Chrome corta tras una pausa: se reinicia solo mientras esté grabando */
     return r};
   const parar=()=>{_nr.on=false;try{_nr.rec&&_nr.rec.stop()}catch(e){}try{_nr.lock&&_nr.lock.release()}catch(e){}_nr.lock=null;$e.textContent='⏸ Detenido · '+_nr.seg.length+' frases';$g.textContent='🎙 Grabar'};
-  document.addEventListener('visibilitychange',()=>{if(_nr&&_nr.on&&document.visibilityState==='visible')lockOn()});
+  /* Si la pantalla se apagó o se cambió de app, el navegador corta el micrófono: al volver se reanuda solo (Carlos 27-11) */
+  const rean=()=>{if(!_nr||!_nr.on||document.visibilityState!=='visible')return;lockOn();if(!_nr.act){_nr.seg.push('[ '+mm()+' ] ⚠️ (se cortó: pantalla apagada o se cambió de app)');pin();try{_nr.rec.start()}catch(e){}}};
+  document.addEventListener('visibilitychange',rean);_nr.vig=setInterval(()=>{if(_nr&&_nr.on&&!_nr.act&&document.visibilityState==='visible'){try{_nr.rec.start()}catch(e){}}},3000);
   w.querySelectorAll('[data-a]').forEach(b=>b.onclick=async()=>{const a=b.dataset.a;
     if(a==='g'){if(_nr.on){parar();return}if(!_nr.t0)_nr.t0=Date.now();_nr.rec=_nr.rec||ini();_nr.on=true;try{_nr.rec.start()}catch(e){}await lockOn();$e.textContent='🔴 Grabando…';$g.textContent='⏸ Detener'}
     if(a==='c'){const tx=_nr.seg.join('\n');if(!tx){toast('Aún no hay texto');return}try{await navigator.clipboard.writeText('Notas de reunión '+fCL(hoyISO())+'\n'+tx);toast('✔ Copiado: pégalo a Claude')}catch(e){const r=document.createRange();r.selectNodeContents($t);const sel=getSelection();sel.removeAllRanges();sel.addRange(r);toast('Texto seleccionado: cópialo')}}
     if(a==='b'){if(_nr.seg.length&&!confirm('¿Borrar todo el texto?'))return;_nr.seg=[];_nr.int='';_nr.t0=_nr.on?Date.now():null;pin()}
-    if(a==='x'){if(_nr.seg.length&&!confirm('Al cerrar se borra el texto. ¿Ya lo copiaste?'))return;parar();w.remove();_nr=null}})}
+    if(a==='x'){if(_nr.seg.length&&!confirm('Al cerrar se borra el texto. ¿Ya lo copiaste?'))return;parar();clearInterval(_nr.vig);document.removeEventListener('visibilitychange',rean);w.remove();_nr=null}})}
 let _calc=null;
 async function verCalc(){if(!esCarlos())return;ir('s-calc');
   if(!_cargas.length){try{const d0=new Date();d0.setDate(d0.getDate()-10);const rc=await conTope(supa.from('combustible_cargas').select('fecha,litros,total,iva').eq('empresa',EMPRESA).gte('fecha',hoyISO(d0)).order('fecha'),8000);_cargas=rc.data||[]}catch(e){}}
