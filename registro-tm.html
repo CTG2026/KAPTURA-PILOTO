@@ -2923,6 +2923,8 @@ function simCalc(){const S=_sim,cs=window._LCS||window._pilCS,EV=window._LEv||wi
     if(+a.outx)L.push({f:dia1(w),t:'Gastos extra (simulación)',v:-(+a.outx)})});
   /* Imprevistos del planificador (Carlos 19-11): se guardan; al pasar a oficial se vuelven compromiso de pago */
   (window._simImp||[]).forEach(x=>{if(x.f&&+x.v)L.push({f:dia1(x.f),t:'Imprevisto · '+x.t+' (simulación)',v:+x.v})});
+  /* Avisos de transferencia por correo aún no llegados a la cartola (Carlos 28-11): salen del flujo al tiro; cuando la cartola trae el movimiento (mismo monto, fecha −1 a +4) el aviso deja de contarse */
+  (window._avPend||[]).forEach(a=>L.push({f:dia1(a.fecha),t:'Aviso correo · '+(a.clasificacion||a.mensaje||a.nombre_destino||'Transferencia'),v:-(+a.monto||0),src:'Aviso de transferencia por correo (#'+a.id+', '+fCL(a.fecha)+(a.mensaje?' · "'+a.mensaje+'"':'')+'): aún no llega en la cartola Santander'}));
   /* COMBUSTIBLE EN EL FLUJO = RECARGAS ARAMCO (Carlos 24-11): el consumo por servicio no sale de caja día a día; sale cuando se recarga.
      Consumo diario = combustible de los servicios programados × k, con k = promedio real de cargas Aramco (21 días) ÷ promedio programado (próximos 21 días), entre 0,2 y 2 (los próximos 21 días quedan al nivel real; después sube o baja con el programa).
      Parte del saldo real Aramco (portal + recargas − cargas) y pone una recarga de $1.000.000 cada vez que el saldo proyectado baja de $300.000. */
@@ -3253,8 +3255,12 @@ async function resCxcCargar(fd,fm){const b=$('res-cxc');if(!b)return;const w=_re
 /* Viáticos y peajes por viaje del plan (Carlos 20-11): regla de costos de Kaptura (SV_COSTO): peaje de la ruta + viático tracto $15.000 por día; afurgonado solo en temporada alta */
 function planVP(s,f){const t=s.s+' '+s.c,k=Object.keys(SV_COSTO).find(k=>/Limache/.test(t)?/Limache \(Origen\) → Coltauco · 11 a 16/.test(k):(/Chill[aá]n/.test(t)&&/Coltauco/.test(t))?/Chillán \(Cencosud\)/.test(k):/s[uú]per|Locales/i.test(t)?/Supermercados Santiago \(Temporada Baja\)/.test(k):/Trébol/.test(t)?/El Trébol → Clee · 66/.test(k):false);if(!k)return null;const [km,tp0,peaje,dias]=SV_COSTO[k],tp=s.eq||tp0,alta=f>=COSTO.alta[0]&&f<=COSTO.alta[1];return peaje+(tp==='T'?COSTO.viatTracto*dias:(alta?COSTO.viatAfur:0))}
 const ANT_DIA=60000,VIA_DIA=40000,ANT_RUT=['15.994.622-3','18.465.879-8','21.066.784-9','21.610.735-7']; /* trabajadores con anticipos (cartola) */
+/* Avisos de correo pendientes de cartola (Carlos 28-11) */
+async function avPendCargar(){const d0=new Date();d0.setDate(d0.getDate()-40);const [a,m]=await Promise.all([supa.from('transferencias_avisos').select('id,fecha,monto,mensaje,clasificacion,nombre_destino,estado,cartola_id').eq('empresa',EMPRESA).is('cartola_id',null).gte('fecha',hoyISO(d0)),supa.from('cartola_movimientos').select('id,fecha,monto').eq('empresa',EMPRESA).lt('monto',0).gte('fecha',hoyISO(d0))]);
+  const M=(m.data||[]),usa=new Set(),dd=(x,y)=>Math.round((new Date(y+'T12:00:00')-new Date(x+'T12:00:00'))/864e5);
+  window._avPend=(a.data||[]).filter(x=>x.estado!=='anulado'&&+x.monto>0).sort((x,y)=>String(x.fecha).localeCompare(y.fecha)).filter(x=>{const c=M.find(z=>!usa.has(z.id)&&Math.round(-z.monto)===Math.round(+x.monto)&&dd(x.fecha,z.fecha)>=-1&&dd(x.fecha,z.fecha)<=4);if(c){usa.add(c.id);return false}return true})}
 async function pilProy(nw,quiet){nw=nw||6;const SETW=(k,v)=>{window[(quiet?'_L':'_pil')+k]=v};const box=quiet?{innerHTML:'',style:{}}:$('pil-proy');if(!box)return;box.innerHTML='<div class="sub">Calculando caja proyectada…</div>';
-  try{const cs=await cartolaSaldo();if(!cs){box.innerHTML='';return}
+  try{const cs=await cartolaSaldo();if(!cs){box.innerHTML='';return}try{await avPendCargar()}catch(e){window._avPend=[]}
     const D=f=>new Date(f+'T12:00:00'),iso=d=>hoyISO(d),mas=(f,n)=>{const d=D(f);d.setDate(d.getDate()+n);return iso(d)};
     const desde=mas(cs.hasta,1),lun0=(()=>{const d=D(desde);d.setDate(d.getDate()-((d.getDay()+6)%7));return iso(d)})();
     const W=[...Array(nw)].map((_,i)=>({ini:mas(lun0,7*i),fin:mas(lun0,7*i+6),ent:[],sal:[]}));const fin6=W[nw-1].fin;
