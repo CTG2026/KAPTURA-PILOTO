@@ -3035,11 +3035,14 @@ async function resAraSaldo(){if(!esAdminTotal())return;const v=await formulario(
   const tit=JSON.stringify({saldo:+v.s,ts:new Date().toISOString(),por:(user&&user.nombre)||''});const r=await supa.from('tareas').insert({empresa:EMPRESA,titulo:tit,recurrencia:'aramco_saldo',activa:true,creada_por:(user&&user.nombre)||'Kaptura'});
   toast(r.error?'No se pudo guardar':'✔ Saldo guardado');window._resAra=null;resAbrir()}
 async function resAraCargar(fd,fm){const b=$('res-ara');if(!b)return;const w=_resW;
-  if(!window._resAra){try{const [rr,rt]=await Promise.all([conTope(supa.from('cartola_movimientos').select('fecha,monto').eq('empresa',EMPRESA).lt('monto',0).or('descripcion.ilike.%ESMAX%,categoria.eq.Recarga prepago Aramco'),10000),conTope(supa.from('combustible_cargas').select('fecha,ts,total').eq('empresa',EMPRESA).eq('fuente','aramco'),10000)]);
+  if(!window._resAra){try{const [rr,rt]=await Promise.all([conTope(supa.from('cartola_movimientos').select('id,fecha,monto,creado').eq('empresa',EMPRESA).lt('monto',0).or('descripcion.ilike.%ESMAX%,categoria.eq.Recarga prepago Aramco'),10000),conTope(supa.from('combustible_cargas').select('fecha,ts,total').eq('empresa',EMPRESA).eq('fuente','aramco'),10000)]);
     /* Saldo REAL (Carlos 24-11): parte del último saldo leído en el portal Aramco (tareas 'aramco_saldo') y suma recargas / resta cargas posteriores; no supone consumos */
     let an=null;try{const q=await supa.from('tareas').select('id,titulo').eq('empresa',EMPRESA).eq('recurrencia','aramco_saldo').eq('activa',true).order('id',{ascending:false}).limit(1);an=q.data&&q.data[0]?{id:q.data[0].id,...JSON.parse(q.data[0].titulo)}:null}catch(e){}
-    let R=(rr&&rr.data)||[],G=(rt&&rt.data)||[];if(an){const tA=new Date(an.ts).getTime(),fA=hoyISO(new Date(an.ts));R=R.filter(m=>m.fecha>fA);G=G.filter(x=>new Date(x.ts||x.fecha+'T12:00:00').getTime()>tA)}
-    window._resAra={an,base:an?+an.saldo:0,rec:-R.reduce((t,m)=>t+(+m.monto||0),0),cg:G}}catch(e){b.innerHTML='';return}}
+    let R=(rr&&rr.data)||[],G=(rt&&rt.data)||[],pend=[];if(an){const tA=new Date(an.ts).getTime(),fA=hoyISO(new Date(an.ts)),inc=an.inc||{};
+      /* Recarga del MISMO día de la lectura (Carlos 27-11): la cartola no trae hora. Se decide con un toque si el saldo del portal ya la incluía; mientras no se decida, se suma solo si llegó a la cartola después de la lectura */
+      R=R.filter(m=>{if(m.fecha>fA)return true;if(m.fecha<fA)return false;if(m.id in inc)return !!inc[m.id];const def=m.creado?new Date(m.creado).getTime()>tA:false;pend.push({...m,def});return def});
+      G=G.filter(x=>new Date(x.ts||x.fecha+'T12:00:00').getTime()>tA)}
+    window._resAra={an,base:an?+an.saldo:0,rec:-R.reduce((t,m)=>t+(+m.monto||0),0),cg:G,pend}}catch(e){b.innerHTML='';return}}
   if(_resW!==w||!$('res-ara'))return;const A=window._resAra,ultC=A.cg.reduce((a,x)=>x.fecha>a?x.fecha:a,''),usado=A.cg.reduce((t,x)=>t+(+x.total||0),0),hoy0=A.base+A.rec-usado,C={};
   (window._simComb||[]).forEach(e=>{if(e.f>ultC)C[e.f]=(C[e.f]||0)-e.v}); /* consumo estimado (servicios × factor histórico Aramco) */
   let s=hoy0,act=w<=hoyISO();Object.keys(C).sort().forEach(f=>{if(f<w)s-=C[f]});if(!act&&s<0)s=0; /* semanas siguientes: se supone que antes se recargó lo indicado */const D=[],mas=n=>{const d=new Date(w+'T12:00:00');d.setDate(d.getDate()+n);return hoyISO(d)};let cae=null,falta=0;
@@ -3053,7 +3056,13 @@ async function resAraCargar(fd,fm){const b=$('res-ara');if(!b)return;const w=_re
    '<tr><td style="'+L0+';color:#DC2626">− Consumo</td>'+D.map(x=>'<td style="'+c+';color:'+(x.c<0?'#15803D':'#DC2626')+'">'+(x.c?(x.c<0?'+'+fm(-x.c):fm(-x.c)):'—')+'</td>').join('')+'</tr>'+
    '<tr><td style="'+L0+'">Queda</td>'+D.map(x=>'<td style="'+c+';font-weight:900">'+(x.q<0?'🔴 ':'🟢 ')+fm(x.q)+'</td>').join('')+'</tr></table></div>'+
    '<div style="margin-top:8px;font-size:16px;font-weight:900;color:'+(cae?'#DC2626':'#15803D')+'">'+(cae?'⚠ El saldo se acaba el '+fd(cae)+': recargar '+fm(falta)+' antes ('+(falta/1e6)+' recarga'+(falta>1e6?'s':'')+' de $1.000.000).':'✔ Alcanza toda la semana: quedan '+fm(D[6].q)+'.')+'</div>'+
-   '<div style="font-size:12px;color:var(--muted);margin-top:4px">Las cargas que aún no llegan desde Aramco no están descontadas: el saldo real puede ser menor.</div>';resAcc(b,'ara')}
+   '<div style="font-size:12px;color:var(--muted);margin-top:4px">Las cargas que aún no llegan desde Aramco no están descontadas: el saldo real puede ser menor.</div>';
+  (A.pend||[]).forEach(m=>{const d=document.createElement('div');d.style.cssText='margin:8px 0;padding:10px;border:2px solid #B7791F;border-radius:10px';
+    d.innerHTML='<div style="font-weight:800">⚠ Recarga ESMAX '+fm(-m.monto)+' del '+fCL(m.fecha)+', mismo día del saldo leído en el portal ('+new Date(A.an.ts).toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'})+'). ¿Ese saldo ya la incluía?</div><div style="font-size:12px;color:var(--muted)">Ahora '+(m.def?'se está sumando':'no se está sumando')+'.</div><button class="btn2" style="width:auto;margin:6px 6px 0 0;padding:6px 12px" data-i="1">Sí, ya estaba</button><button class="btn2" style="width:auto;margin:6px 0 0;padding:6px 12px" data-i="0">No, sumarla</button>';
+    d.querySelectorAll('[data-i]').forEach(x=>x.onclick=()=>resAraInc(m.id,x.dataset.i==='0'));b.insertBefore(d,b.children[1]||null)});resAcc(b,'ara')}
+async function resAraInc(id,sumar){const A=window._resAra;if(!A||!A.an)return;const j={saldo:A.an.saldo,ts:A.an.ts,por:A.an.por,inc:{...(A.an.inc||{}),[id]:!!sumar}};
+  const r=await supa.from('tareas').update({titulo:JSON.stringify(j)}).eq('id',A.an.id);if(r.error){toast('No se pudo guardar');return}
+  toast(sumar?'✔ Recarga sumada al saldo':'✔ Recarga ya incluida en el saldo');window._resAra=null;const F=window._resFmt;if(F)resAraCargar(F.fd,F.fm)}
 /* 6. Agenda de la semana (Carlos 23-11): las tareas de administración (únicas con plazo, semanales, mensuales y sin plazo) con su pilar
    (Rentabilidad / Liquidez / Solvencia), ✔ Hecha, ✏️ Editar, 🗑 Eliminar y ➕ Nueva. Misma tabla "tareas" que el Inicio. */
 const PIL=['Rentabilidad','Liquidez','Solvencia'],PILC={Rentabilidad:'#2563EB',Liquidez:'#15803D',Solvencia:'#7C3AED'};
