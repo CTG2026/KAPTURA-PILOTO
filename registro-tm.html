@@ -144,6 +144,8 @@ body.pc .tv{display:none}body:not(.pc) .tp{display:none}
 /* Calendario: el ícono se ve en tema oscuro y tocar cualquier parte del campo abre el selector (Carlos 25-11) */
 input[type=date]{color-scheme:dark;cursor:pointer}body.pubclaro input[type=date]{color-scheme:light}
 input[type=date]::-webkit-calendar-picker-indicator{opacity:1;cursor:pointer}
+/* iPhone: la fecha salía en negro sobre fondo oscuro (Carlos 28-11) */
+@supports (-webkit-touch-callout:none){input[type=date]{-webkit-appearance:none;appearance:none;color:var(--text)!important;-webkit-text-fill-color:var(--text);background:var(--surface);min-height:42px;display:flex;align-items:center}input[type=date]::-webkit-date-and-time-value{color:var(--text);-webkit-text-fill-color:var(--text);text-align:left}body.pubclaro input[type=date]{color:#111!important;-webkit-text-fill-color:#111;background:#fff}}
 </style>
 </head>
 <body>
