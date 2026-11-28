@@ -145,7 +145,7 @@ body.pc .tv{display:none}body:not(.pc) .tp{display:none}
 input[type=date]{color-scheme:dark;cursor:pointer}body.pubclaro input[type=date]{color-scheme:light}
 input[type=date]::-webkit-calendar-picker-indicator{opacity:1;cursor:pointer}
 /* iPhone: la fecha salía en negro sobre fondo oscuro (Carlos 28-11) */
-@supports (-webkit-touch-callout:none){input[type=date]{-webkit-appearance:none;appearance:none;color:var(--text)!important;-webkit-text-fill-color:var(--text);background:var(--surface);min-height:42px;display:flex;align-items:center}input[type=date]::-webkit-date-and-time-value{color:var(--text);-webkit-text-fill-color:var(--text);text-align:left}body.pubclaro input[type=date]{color:#111!important;-webkit-text-fill-color:#111;background:#fff}}
+/* iPhone (Carlos 28-11): el calendario que se despliega salía negro; campo y calendario en claro */@supports (-webkit-touch-callout:none){input[type=date]{color-scheme:light!important;-webkit-appearance:none;appearance:none;color:#111!important;-webkit-text-fill-color:#111;background:#fff!important;min-height:42px;display:flex;align-items:center}input[type=date]::-webkit-date-and-time-value{color:#111;-webkit-text-fill-color:#111;text-align:left}}
 </style>
 </head>
 <body>
